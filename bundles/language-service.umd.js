@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+66.sha-f8b995d.with-local-changes
+ * @license Angular v9.0.0-next.2+68.sha-cfed0c0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17675,9 +17675,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var _a = baseDirectiveFields(meta, constantPool, bindingParser), definitionMap = _a.definitionMap, statements = _a.statements;
         addFeatures(definitionMap, meta);
         var expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
-        if (!meta.selector) {
-            throw new Error("Directive " + meta.name + " has no selector, please add it!");
-        }
         var type = createTypeForDef(meta, Identifiers$1.DirectiveDefWithMeta);
         return { expression: expression, type: type, statements: statements };
     }
@@ -18603,7 +18600,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+66.sha-f8b995d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+68.sha-cfed0c0.with-local-changes');
 
     /**
      * @license
@@ -51309,7 +51306,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+66.sha-f8b995d.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+68.sha-cfed0c0.with-local-changes');
 
     /**
      * @license
@@ -58870,6 +58867,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
         var exports = maybeUnwrapFn(ngModuleDef.exports);
         declarations.forEach(verifyDeclarationsHaveDefinitions);
+        declarations.forEach(verifyDirectivesHaveSelector);
         var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$2(imports.map(computeCombinedExports)).map(resolveForwardRef$1));
         exports.forEach(verifyExportsAreDeclaredOrReExported);
         declarations.forEach(function (decl) { return verifyDeclarationIsUnique(decl, allowDuplicateDeclarationsInRoot); });
@@ -58896,6 +58894,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             var def = getComponentDef(type) || getDirectiveDef(type) || getPipeDef(type);
             if (!def) {
                 errors.push("Unexpected value '" + stringifyForError(type) + "' declared by the module '" + stringifyForError(moduleType) + "'. Please add a @Pipe/@Directive/@Component annotation.");
+            }
+        }
+        function verifyDirectivesHaveSelector(type) {
+            type = resolveForwardRef$1(type);
+            var def = getDirectiveDef(type);
+            if (!getComponentDef(type) && def && def.selectors.length == 0) {
+                errors.push("Directive " + stringifyForError(type) + " has no selector, please add it!");
             }
         }
         function verifyExportsAreDeclaredOrReExported(type) {
@@ -59234,7 +59239,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var name_1 = type && type.name;
                     var sourceMapUrl = "ng:///" + name_1 + "/ngDirectiveDef.js";
                     var compiler = getCompilerFacade();
-                    var facade = directiveMetadata(type, directive);
+                    // `directive` can be null in the case of abstract directives as a base class
+                    // that use `@Directive()` with no selector. In that case, pass empty object to the
+                    // `directiveMetadata` function instead of null.
+                    var facade = directiveMetadata(type, directive || {});
                     facade.typeSourceSpan = compiler.createParseSourceSpan('Directive', name_1, sourceMapUrl);
                     if (facade.usesInheritance) {
                         addBaseDefToUndecoratedParents(type);
@@ -61238,8 +61246,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -64463,7 +64470,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+66.sha-f8b995d.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+68.sha-cfed0c0.with-local-changes');
 
     /**
      * @license
@@ -65188,6 +65195,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         ErrorCode[ErrorCode["COMPONENT_MISSING_TEMPLATE"] = 2001] = "COMPONENT_MISSING_TEMPLATE";
         ErrorCode[ErrorCode["PIPE_MISSING_NAME"] = 2002] = "PIPE_MISSING_NAME";
         ErrorCode[ErrorCode["PARAM_MISSING_TOKEN"] = 2003] = "PARAM_MISSING_TOKEN";
+        ErrorCode[ErrorCode["DIRECTIVE_MISSING_SELECTOR"] = 2004] = "DIRECTIVE_MISSING_SELECTOR";
         ErrorCode[ErrorCode["SYMBOL_NOT_EXPORTED"] = 3001] = "SYMBOL_NOT_EXPORTED";
         ErrorCode[ErrorCode["SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME"] = 3002] = "SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME";
         ErrorCode[ErrorCode["CONFIG_FLAT_MODULE_NO_INDEX"] = 4001] = "CONFIG_FLAT_MODULE_NO_INDEX";
@@ -68142,6 +68150,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         function CompoundMetadataReader(readers) {
             this.readers = readers;
         }
+        CompoundMetadataReader.prototype.isAbstractDirective = function (node) {
+            return this.readers.some(function (r) { return r.isAbstractDirective(node); });
+        };
         CompoundMetadataReader.prototype.getDirectiveMetadata = function (node) {
             var e_1, _a;
             try {
@@ -69460,6 +69471,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 var ref = new Reference$1(node);
                 this.metaRegistry.registerDirectiveMetadata(__assign({ ref: ref, name: node.name.text, selector: analysis.selector, exportAs: analysis.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.queries.map(function (query) { return query.propertyName; }), isComponent: false }, extractDirectiveGuards(node, this.reflector), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
             }
+            if (analysis && !analysis.selector) {
+                this.metaRegistry.registerAbstractDirective(node);
+            }
             if (analysis === undefined) {
                 return {};
             }
@@ -69486,18 +69500,27 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return DirectiveDecoratorHandler;
     }());
     /**
-     * Helper function to extract metadata from a `Directive` or `Component`.
+     * Helper function to extract metadata from a `Directive` or `Component`. `Directive`s without a
+     * selector are allowed to be used for abstract base classes. These abstract directives should not
+     * appear in the declarations of an `NgModule` and additional verification is done when processing
+     * the module.
      */
     function extractDirectiveMetadata(clazz, decorator, reflector, evaluator, defaultImportRecorder, isCore, defaultSelector) {
         if (defaultSelector === void 0) { defaultSelector = null; }
-        if (decorator.args === null || decorator.args.length !== 1) {
+        var directive;
+        if (decorator.args === null || decorator.args.length === 0) {
+            directive = new Map();
+        }
+        else if (decorator.args.length !== 1) {
             throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, decorator.node, "Incorrect number of arguments to @" + decorator.name + " decorator");
         }
-        var meta = unwrapExpression(decorator.args[0]);
-        if (!ts.isObjectLiteralExpression(meta)) {
-            throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, "@" + decorator.name + " argument must be literal.");
+        else {
+            var meta = unwrapExpression(decorator.args[0]);
+            if (!ts.isObjectLiteralExpression(meta)) {
+                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, "@" + decorator.name + " argument must be literal.");
+            }
+            directive = reflectObjectLiteral(meta);
         }
-        var directive = reflectObjectLiteral(meta);
         if (directive.has('jit')) {
             // The only allowed value is true, so there's no need to expand further.
             return undefined;
@@ -69538,9 +69561,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             // use default selector in case selector is an empty string
             selector = resolved === '' ? defaultSelector : resolved;
-        }
-        if (!selector) {
-            throw new Error("Directive " + clazz.name.text + " has no selector, please add it!");
+            if (!selector) {
+                throw new FatalDiagnosticError(ErrorCode.DIRECTIVE_MISSING_SELECTOR, expr, "Directive " + clazz.name.text + " has no selector, please add it!");
+            }
         }
         var host = extractHostBindings$1(decoratedElements, evaluator, coreModule, directive);
         var providers = directive.has('providers') ? new WrappedNodeExpr(directive.get('providers')) : null;
@@ -70021,6 +70044,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.checker = checker;
             this.reflector = reflector;
         }
+        DtsMetadataReader.prototype.isAbstractDirective = function (ref) {
+            var meta = this.getDirectiveMetadata(ref);
+            return meta !== null && meta.selector === null;
+        };
         /**
          * Read the metadata from a class that has already been compiled somehow (either it's in a .d.ts
          * file, or in a .ts file with a handwritten definition).
@@ -70153,10 +70180,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
     var LocalMetadataRegistry = /** @class */ (function () {
         function LocalMetadataRegistry() {
+            this.abstractDirectives = new Set();
             this.directives = new Map();
             this.ngModules = new Map();
             this.pipes = new Map();
         }
+        LocalMetadataRegistry.prototype.isAbstractDirective = function (ref) {
+            return this.abstractDirectives.has(ref.node);
+        };
         LocalMetadataRegistry.prototype.getDirectiveMetadata = function (ref) {
             return this.directives.has(ref.node) ? this.directives.get(ref.node) : null;
         };
@@ -70166,6 +70197,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         LocalMetadataRegistry.prototype.getPipeMetadata = function (ref) {
             return this.pipes.has(ref.node) ? this.pipes.get(ref.node) : null;
         };
+        LocalMetadataRegistry.prototype.registerAbstractDirective = function (clazz) { this.abstractDirectives.add(clazz); };
         LocalMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) { this.directives.set(meta.ref.node, meta); };
         LocalMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) { this.ngModules.set(meta.ref.node, meta); };
         LocalMetadataRegistry.prototype.registerPipeMetadata = function (meta) { this.pipes.set(meta.ref.node, meta); };
@@ -70178,12 +70210,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         function CompoundMetadataRegistry(registries) {
             this.registries = registries;
         }
-        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
+        CompoundMetadataRegistry.prototype.registerAbstractDirective = function (clazz) {
             var e_1, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerDirectiveMetadata(meta);
+                    registry.registerAbstractDirective(clazz);
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -70194,12 +70226,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 finally { if (e_1) throw e_1.error; }
             }
         };
-        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
+        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
             var e_2, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerNgModuleMetadata(meta);
+                    registry.registerDirectiveMetadata(meta);
                 }
             }
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
@@ -70210,12 +70242,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 finally { if (e_2) throw e_2.error; }
             }
         };
-        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
+        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
             var e_3, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerPipeMetadata(meta);
+                    registry.registerNgModuleMetadata(meta);
                 }
             }
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -70224,6 +70256,22 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_3) throw e_3.error; }
+            }
+        };
+        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
+            var e_4, _a;
+            try {
+                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var registry = _c.value;
+                    registry.registerPipeMetadata(meta);
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_4) throw e_4.error; }
             }
         };
         return CompoundMetadataRegistry;
@@ -71257,9 +71305,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * TODO(alxhub): handle injector side of things as well.
      */
     var NgModuleDecoratorHandler = /** @class */ (function () {
-        function NgModuleDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, defaultImportRecorder, localeId) {
+        function NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, defaultImportRecorder, localeId) {
             this.reflector = reflector;
             this.evaluator = evaluator;
+            this.metaReader = metaReader;
             this.metaRegistry = metaRegistry;
             this.scopeRegistry = scopeRegistry;
             this.referencesRegistry = referencesRegistry;
@@ -71406,16 +71455,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             };
         };
         NgModuleDecoratorHandler.prototype.resolve = function (node, analysis) {
-            var e_1, _a;
+            var e_1, _a, e_2, _b;
             var scope = this.scopeRegistry.getScopeOfModule(node);
             var diagnostics = this.scopeRegistry.getDiagnosticsOfModule(node) || undefined;
-            // Using the scope information, extend the injector's imports using the modules that are
-            // specified as module exports.
             if (scope !== null) {
+                // Using the scope information, extend the injector's imports using the modules that are
+                // specified as module exports.
                 var context = getSourceFile(node);
                 try {
-                    for (var _b = __values(analysis.exports), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var exportRef = _c.value;
+                    for (var _c = __values(analysis.exports), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var exportRef = _d.value;
                         if (isNgModule$1(exportRef.node, scope.compilation)) {
                             analysis.ngInjectorDef.imports.push(this.refEmitter.emit(exportRef, context));
                         }
@@ -71424,9 +71473,24 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }
                 finally {
                     try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
                     finally { if (e_1) throw e_1.error; }
+                }
+                try {
+                    for (var _e = __values(analysis.declarations), _f = _e.next(); !_f.done; _f = _e.next()) {
+                        var decl = _f.value;
+                        if (this.metaReader.isAbstractDirective(decl)) {
+                            throw new FatalDiagnosticError(ErrorCode.DIRECTIVE_MISSING_SELECTOR, decl.node, "Directive " + decl.node.name.text + " has no selector, please add it!");
+                        }
+                    }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                    }
+                    finally { if (e_2) throw e_2.error; }
                 }
             }
             if (scope === null || scope.reexports === null) {
@@ -71440,7 +71504,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         };
         NgModuleDecoratorHandler.prototype.compile = function (node, analysis) {
-            var e_2, _a;
+            var e_3, _a;
             var _this = this;
             var ngInjectorDef = compileInjector(analysis.ngInjectorDef);
             var ngModuleDef = compileNgModule(analysis.ngModuleDef);
@@ -71468,12 +71532,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             var res = [
                 {
@@ -71562,7 +71626,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * @returns the identifier of the NgModule type if found, or null otherwise.
          */
         NgModuleDecoratorHandler.prototype._reflectModuleFromLiteralType = function (type) {
-            var e_3, _a, e_4, _b;
+            var e_4, _a, e_5, _b;
             if (!ts.isIntersectionTypeNode(type)) {
                 return null;
             }
@@ -71571,7 +71635,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var t = _d.value;
                     if (ts.isTypeLiteralNode(t)) {
                         try {
-                            for (var _e = (e_4 = void 0, __values(t.members)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            for (var _e = (e_5 = void 0, __values(t.members)), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var m = _f.value;
                                 var ngModuleType = ts.isPropertySignature(m) && ts.isIdentifier(m.name) &&
                                     m.name.text === 'ngModule' && m.type ||
@@ -71582,22 +71646,22 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                                 }
                             }
                         }
-                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
                         finally {
                             try {
                                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                             }
-                            finally { if (e_4) throw e_4.error; }
+                            finally { if (e_5) throw e_5.error; }
                         }
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
             return null;
         };
@@ -72251,6 +72315,17 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             var metadata = this.ensureMetadata(meta.ref.node.getSourceFile());
             metadata.ngModuleMeta.set(meta.ref.node, meta);
         };
+        IncrementalState.prototype.isAbstractDirective = function (ref) {
+            if (!this.metadata.has(ref.node.getSourceFile())) {
+                return false;
+            }
+            var metadata = this.metadata.get(ref.node.getSourceFile());
+            return metadata.abstractDirectives.has(ref.node);
+        };
+        IncrementalState.prototype.registerAbstractDirective = function (clazz) {
+            var metadata = this.ensureMetadata(clazz.getSourceFile());
+            metadata.abstractDirectives.add(clazz);
+        };
         IncrementalState.prototype.getDirectiveMetadata = function (ref) {
             if (!this.metadata.has(ref.node.getSourceFile())) {
                 return null;
@@ -72337,6 +72412,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             /** A set of source files that this file depends upon. */
             this.fileDependencies = new Set();
             this.resourcePaths = new Set();
+            this.abstractDirectives = new Set();
             this.directiveMeta = new Map();
             this.ngModuleMeta = new Map();
             this.pipeMeta = new Map();
@@ -73735,6 +73811,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 finally { if (e_1) throw e_1.error; }
             }
         };
+        LocalModuleScopeRegistry.prototype.registerAbstractDirective = function (clazz) { };
         LocalModuleScopeRegistry.prototype.registerDirectiveMetadata = function (directive) { };
         LocalModuleScopeRegistry.prototype.registerPipeMetadata = function (pipe) { };
         LocalModuleScopeRegistry.prototype.getScopeForComponent = function (clazz) {
@@ -77439,7 +77516,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 new ComponentDecoratorHandler(this.reflector, evaluator, metaRegistry, this.metaReader, scopeReader, scopeRegistry, this.isCore, this.resourceManager, this.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.moduleResolver, this.cycleAnalyzer, this.refEmitter, this.defaultImportTracker, this.incrementalState),
                 new DirectiveDecoratorHandler(this.reflector, evaluator, metaRegistry, this.defaultImportTracker, this.isCore),
                 new InjectableDecoratorHandler(this.reflector, this.defaultImportTracker, this.isCore, this.options.strictInjectionParameters || false),
-                new NgModuleDecoratorHandler(this.reflector, evaluator, metaRegistry, scopeRegistry, referencesRegistry, this.isCore, this.routeAnalyzer, this.refEmitter, this.defaultImportTracker, this.options.i18nInLocale),
+                new NgModuleDecoratorHandler(this.reflector, evaluator, this.metaReader, metaRegistry, scopeRegistry, referencesRegistry, this.isCore, this.routeAnalyzer, this.refEmitter, this.defaultImportTracker, this.options.i18nInLocale),
                 new PipeDecoratorHandler(this.reflector, evaluator, metaRegistry, this.defaultImportTracker, this.isCore),
             ];
             return new IvyCompilation(handlers, this.reflector, this.importRewriter, this.incrementalState, this.perfRecorder, this.sourceToFactorySymbols, scopeRegistry);
@@ -81090,7 +81167,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+66.sha-f8b995d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+68.sha-cfed0c0.with-local-changes');
 
     /**
      * @license
