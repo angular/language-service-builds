@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+74.sha-10ea3a9.with-local-changes
+ * @license Angular v9.0.0-next.2+76.sha-6477057.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2626,6 +2626,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     // Check __global first, because in Node tests both __global and __window may be defined and _global
     // should be __global in that case.
     var _global = __global || __window || __self;
+    function newArray(size, value) {
+        var list = [];
+        for (var i = 0; i < size; i++) {
+            list.push(value);
+        }
+        return list;
+    }
 
     /**
      * @license
@@ -4311,7 +4318,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var utf8 = utf8Encode(str);
         var words32 = stringToWords32(utf8, Endian.Big);
         var len = utf8.length * 8;
-        var w = new Array(80);
+        var w = newArray(80);
         var _c = __read([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0], 5), a = _c[0], b = _c[1], c = _c[2], d = _c[3], e = _c[4];
         words32[len >> 5] |= 0x80 << (24 - len % 32);
         words32[((len + 64 >> 9) << 4) + 15] = len;
@@ -4459,8 +4466,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return [h, l];
     }
     function stringToWords32(str, endian) {
-        var words32 = Array((str.length + 3) >>> 2);
-        for (var i = 0; i < words32.length; i++) {
+        var size = (str.length + 3) >>> 2;
+        var words32 = [];
+        for (var i = 0; i < size; i++) {
             words32[i] = wordAt(str, i * 4, endian);
         }
         return words32;
@@ -7451,7 +7459,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             return new KeyedWrite(ast.span, ast.obj.visit(this), ast.key.visit(this), ast.value.visit(this));
         };
         AstTransformer.prototype.visitAll = function (asts) {
-            var res = new Array(asts.length);
+            var res = [];
             for (var i = 0; i < asts.length; ++i) {
                 res[i] = asts[i].visit(this);
             }
@@ -7595,7 +7603,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitAll = function (asts) {
-            var res = new Array(asts.length);
+            var res = [];
             var modified = false;
             for (var i = 0; i < asts.length; ++i) {
                 var original = asts[i];
@@ -12485,7 +12493,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             // Need to sort the directives so that we get consistent results throughout,
             // as selectorMatcher uses Maps inside.
             // Also deduplicate directives as they might match more than one time!
-            var directives = new Array(this.directivesIndex.size);
+            var directives = newArray(this.directivesIndex.size);
             // Whether any directive selector matches on the element name
             var matchElement = false;
             selectorMatcher.match(elementCssSelector, function (selector, directive) {
@@ -18600,7 +18608,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+74.sha-10ea3a9.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+76.sha-6477057.with-local-changes');
 
     /**
      * @license
@@ -25406,7 +25414,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 // to the constructor function itself.
                 var suppliedTypeParams = typeParams || [];
                 var missingTypeParamsCount = arity - suppliedTypeParams.length;
-                var allTypeParams = suppliedTypeParams.concat(new Array(missingTypeParamsCount).fill(DYNAMIC_TYPE));
+                var allTypeParams = suppliedTypeParams.concat(newArray(missingTypeParamsCount, DYNAMIC_TYPE));
                 return members.reduce(function (expr, memberName) { return expr.prop(memberName); }, importExpr(new ExternalReference(moduleName, name, null), allTypeParams));
             };
             return { statements: [], genFilePath: genFilePath, importExpr: importExpr$1, constantPool: new ConstantPool() };
@@ -34764,6 +34772,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         else {
             return arr.splice(index, 1)[0];
         }
+    }
+    function newArray$1(size, value) {
+        var list = [];
+        for (var i = 0; i < size; i++) {
+            list.push(value);
+        }
+        return list;
     }
 
     /**
@@ -44354,10 +44369,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         ReflectionCapabilities.prototype._zipTypesAndAnnotations = function (paramTypes, paramAnnotations) {
             var result;
             if (typeof paramTypes === 'undefined') {
-                result = new Array(paramAnnotations.length);
+                result = newArray$1(paramAnnotations.length);
             }
             else {
-                result = new Array(paramTypes.length);
+                result = newArray$1(paramTypes.length);
             }
             for (var i = 0; i < result.length; i++) {
                 // TS outputs Object for parameters without types, while Traceur omits
@@ -44417,7 +44432,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             // based on function.length.
             // Note: We know that this is a real constructor as we checked
             // the content of the constructor above.
-            return new Array(type.length).fill(undefined);
+            return newArray$1(type.length);
         };
         ReflectionCapabilities.prototype.parameters = function (type) {
             // Note: only report metadata if we have at least one class decorator
@@ -45102,7 +45117,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         // If the token has parameters then it has dependencies that we cannot resolve implicitly.
         var paramLength = token.length;
         if (paramLength > 0) {
-            var args = new Array(paramLength).fill('?');
+            var args = newArray$1(paramLength, '?');
             throw new Error("Can't resolve all parameters for " + stringify$1(token) + ": (" + args.join(', ') + ").");
         }
         // The constructor function appears to have no parameters.
@@ -45955,8 +45970,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this._providers = _providers;
             this.parent = _parent || null;
             var len = _providers.length;
-            this.keyIds = new Array(len);
-            this.objs = new Array(len);
+            this.keyIds = [];
+            this.objs = [];
             for (var i = 0; i < len; i++) {
                 this.keyIds[i] = _providers[i].key.id;
                 this.objs[i] = UNDEFINED;
@@ -45997,7 +46012,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         ReflectiveInjector_.prototype._getMaxNumberOfObjects = function () { return this.objs.length; };
         ReflectiveInjector_.prototype._instantiateProvider = function (provider) {
             if (provider.multiProvider) {
-                var res = new Array(provider.resolvedFactories.length);
+                var res = [];
                 for (var i = 0; i < provider.resolvedFactories.length; ++i) {
                     res[i] = this._instantiate(provider, provider.resolvedFactories[i]);
                 }
@@ -46106,7 +46121,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return ReflectiveInjector_;
     }());
     function _mapProviders(injector, fn) {
-        var res = new Array(injector._providers.length);
+        var res = [];
         for (var i = 0; i < injector._providers.length; ++i) {
             res[i] = fn(injector.getProviderAtIndex(i));
         }
@@ -48585,6 +48600,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
 
     /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Checks a given node against matching projection slots and returns the
      * determined slot index. Returns "null" if no slot matched the given node.
      *
@@ -48645,7 +48667,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             // projection slot with the wildcard selector.
             var numProjectionSlots = projectionSlots ? projectionSlots.length : 1;
             var projectionHeads = componentNode.projection =
-                new Array(numProjectionSlots).fill(null);
+                newArray$1(numProjectionSlots, null);
             var tails = projectionHeads.slice();
             var componentChild = componentNode.child;
             while (componentChild !== null) {
@@ -51306,7 +51328,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+74.sha-10ea3a9.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+76.sha-6477057.with-local-changes');
 
     /**
      * @license
@@ -52881,7 +52903,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     var NgModuleRefTokenKey = tokenKey(NgModuleRef);
     function initNgModule(data) {
         var def = data._def;
-        var providers = data._providers = new Array(def.providers.length);
+        var providers = data._providers = newArray$1(def.providers.length);
         for (var i = 0; i < def.providers.length; i++) {
             var provDef = def.providers[i];
             if (!(provDef.flags & 4096 /* LazyProvider */)) {
@@ -52988,7 +53010,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             case 3:
                 return new ctor(resolveNgModuleDep(ngModule, deps[0]), resolveNgModuleDep(ngModule, deps[1]), resolveNgModuleDep(ngModule, deps[2]));
             default:
-                var depValues = new Array(len);
+                var depValues = [];
                 for (var i = 0; i < len; i++) {
                     depValues[i] = resolveNgModuleDep(ngModule, deps[i]);
                 }
@@ -53007,7 +53029,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             case 3:
                 return factory(resolveNgModuleDep(ngModule, deps[0]), resolveNgModuleDep(ngModule, deps[1]), resolveNgModuleDep(ngModule, deps[2]));
             default:
-                var depValues = Array(len);
+                var depValues = [];
                 for (var i = 0; i < len; i++) {
                     depValues[i] = resolveNgModuleDep(ngModule, deps[i]);
                 }
@@ -53773,9 +53795,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             case 3:
                 return new ctor(resolveDep(view, elDef, allowPrivateServices, deps[0]), resolveDep(view, elDef, allowPrivateServices, deps[1]), resolveDep(view, elDef, allowPrivateServices, deps[2]));
             default:
-                var depValues = new Array(len);
+                var depValues = [];
                 for (var i = 0; i < len; i++) {
-                    depValues[i] = resolveDep(view, elDef, allowPrivateServices, deps[i]);
+                    depValues.push(resolveDep(view, elDef, allowPrivateServices, deps[i]));
                 }
                 return new (ctor.bind.apply(ctor, __spread([void 0], depValues)))();
         }
@@ -53792,9 +53814,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             case 3:
                 return factory(resolveDep(view, elDef, allowPrivateServices, deps[0]), resolveDep(view, elDef, allowPrivateServices, deps[1]), resolveDep(view, elDef, allowPrivateServices, deps[2]));
             default:
-                var depValues = Array(len);
+                var depValues = [];
                 for (var i = 0; i < len; i++) {
-                    depValues[i] = resolveDep(view, elDef, allowPrivateServices, deps[i]);
+                    depValues.push(resolveDep(view, elDef, allowPrivateServices, deps[i]));
                 }
                 return factory.apply(void 0, __spread(depValues));
         }
@@ -58068,7 +58090,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             var tQueries = tView.queries;
             if (tQueries !== null) {
                 var noOfInheritedQueries = tView.contentQueries !== null ? tView.contentQueries[0] : tQueries.length;
-                var viewLQueries = new Array(noOfInheritedQueries);
+                var viewLQueries = [];
                 // An embedded view has queries propagated from a declaration view at the beginning of the
                 // TQueries collection and up until a first content query declared in the embedded view. Only
                 // propagated LQueries are created at this point (LQuery corresponding to declared content
@@ -58076,7 +58098,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 for (var i = 0; i < noOfInheritedQueries; i++) {
                     var tQuery = tQueries.getByIndex(i);
                     var parentLQuery = this.queries[tQuery.indexInDeclarationView];
-                    viewLQueries[i] = parentLQuery.clone();
+                    viewLQueries.push(parentLQuery.clone());
                 }
                 return new LQueries_(viewLQueries);
             }
@@ -58313,20 +58335,19 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         if (lQuery.matches === null) {
             var tViewData = lView[TVIEW].data;
             var tQueryMatches = tQuery.matches;
-            var result = new Array(tQueryMatches.length / 2);
+            var result = [];
             for (var i = 0; i < tQueryMatches.length; i += 2) {
                 var matchedNodeIdx = tQueryMatches[i];
                 if (matchedNodeIdx < 0) {
                     // we at the <ng-template> marker which might have results in views created based on this
                     // <ng-template> - those results will be in separate views though, so here we just leave
                     // null as a placeholder
-                    result[i / 2] = null;
+                    result.push(null);
                 }
                 else {
                     ngDevMode && assertDataInRange(tViewData, matchedNodeIdx);
                     var tNode = tViewData[matchedNodeIdx];
-                    result[i / 2] =
-                        createResultForNode(lView, tNode, tQueryMatches[i + 1], tQuery.metadata.read);
+                    result.push(createResultForNode(lView, tNode, tQueryMatches[i + 1], tQuery.metadata.read));
                 }
             }
             lQuery.matches = result;
@@ -62552,27 +62573,27 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             var value = void 0;
             switch (def.flags & 201347067 /* Types */) {
                 case 32 /* TypePureArray */:
-                    value = new Array(bindings.length);
+                    value = [];
                     if (bindLen > 0)
-                        value[0] = v0;
+                        value.push(v0);
                     if (bindLen > 1)
-                        value[1] = v1;
+                        value.push(v1);
                     if (bindLen > 2)
-                        value[2] = v2;
+                        value.push(v2);
                     if (bindLen > 3)
-                        value[3] = v3;
+                        value.push(v3);
                     if (bindLen > 4)
-                        value[4] = v4;
+                        value.push(v4);
                     if (bindLen > 5)
-                        value[5] = v5;
+                        value.push(v5);
                     if (bindLen > 6)
-                        value[6] = v6;
+                        value.push(v6);
                     if (bindLen > 7)
-                        value[7] = v7;
+                        value.push(v7);
                     if (bindLen > 8)
-                        value[8] = v8;
+                        value.push(v8);
                     if (bindLen > 9)
-                        value[9] = v9;
+                        value.push(v9);
                     break;
                 case 64 /* TypePureObject */:
                     value = {};
@@ -64471,7 +64492,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+74.sha-10ea3a9.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+76.sha-6477057.with-local-changes');
 
     /**
      * @license
@@ -81160,7 +81181,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+74.sha-10ea3a9.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+76.sha-6477057.with-local-changes');
 
     /**
      * @license
