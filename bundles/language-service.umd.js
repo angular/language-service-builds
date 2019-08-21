@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+80.sha-0db1b5d.with-local-changes
+ * @license Angular v9.0.0-next.2+83.sha-0287b23.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18608,7 +18608,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+80.sha-0db1b5d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+83.sha-0287b23.with-local-changes');
 
     /**
      * @license
@@ -51328,7 +51328,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+80.sha-0db1b5d.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+83.sha-0287b23.with-local-changes');
 
     /**
      * @license
@@ -64491,7 +64491,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+80.sha-0db1b5d.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+83.sha-0287b23.with-local-changes');
 
     /**
      * @license
@@ -70560,17 +70560,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             // Extract a closure of the template parsing code so that it can be reparsed with different
             // options if needed, like in the indexing pipeline.
             var parseTemplate;
+            // Track the origin of the template to determine how the ParseSourceSpans should be interpreted.
+            var templateSourceMapping;
             if (this.preanalyzeTemplateCache.has(node)) {
                 // The template was parsed in preanalyze. Use it and delete it to save memory.
                 var template_1 = this.preanalyzeTemplateCache.get(node);
                 this.preanalyzeTemplateCache.delete(node);
-                // A pre-analyzed template cannot be reparsed. Pre-analysis is never run with the indexing
-                // pipeline.
-                parseTemplate = function (options) {
-                    if (options !== undefined) {
-                        throw new Error("Cannot reparse a pre-analyzed template with new options");
-                    }
-                    return template_1;
+                parseTemplate = template_1.parseTemplate;
+                // A pre-analyzed template is always an external mapping.
+                templateSourceMapping = {
+                    type: 'external',
+                    componentClass: node,
+                    node: component.get('templateUrl'),
+                    template: template_1.template,
+                    templateUrl: template_1.templateUrl,
                 };
             }
             else {
@@ -70586,6 +70589,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     this.resourceDependencies.recordResourceDependency(node.getSourceFile(), templateUrl_1);
                     parseTemplate = function (options) { return _this._parseTemplate(component, templateStr_1, sourceMapUrl(templateUrl_1), /* templateRange */ undefined, 
                     /* escapedString */ false, options); };
+                    templateSourceMapping = {
+                        type: 'external',
+                        componentClass: node,
+                        node: templateUrlExpr,
+                        template: templateStr_1,
+                        templateUrl: templateUrl_1,
+                    };
                 }
                 else {
                     // Expect an inline template to be present.
@@ -70595,6 +70605,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     var templateStr_2 = inlineTemplate.templateStr, templateUrl_2 = inlineTemplate.templateUrl, templateRange_1 = inlineTemplate.templateRange, escapedString_1 = inlineTemplate.escapedString;
                     parseTemplate = function (options) { return _this._parseTemplate(component, templateStr_2, templateUrl_2, templateRange_1, escapedString_1, options); };
+                    if (escapedString_1) {
+                        templateSourceMapping = {
+                            type: 'direct',
+                            node: component.get('template'),
+                        };
+                    }
+                    else {
+                        templateSourceMapping = {
+                            type: 'indirect',
+                            node: component.get('template'),
+                            componentClass: node,
+                            template: templateStr_2,
+                        };
+                    }
                 }
             }
             var template = parseTemplate();
@@ -70670,7 +70694,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         animations: animations,
                         viewProviders: viewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath: relativeContextFilePath }),
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore),
-                    parsedTemplate: template, parseTemplate: parseTemplate,
+                    parsedTemplate: template, parseTemplate: parseTemplate, templateSourceMapping: templateSourceMapping,
                 },
                 typeCheck: true,
             };
@@ -70724,8 +70748,22 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (!ts.isClassDeclaration(node)) {
                 return;
             }
-            var scope = this.scopeReader.getScopeForComponent(node);
+            // There are issues with parsing the template under certain configurations (namely with
+            // `preserveWhitespaces: false`) which cause inaccurate positional information within the
+            // template AST, particularly within interpolation expressions.
+            //
+            // To work around this, the template is re-parsed with settings that guarantee the spans are as
+            // accurate as possible. This is only a temporary solution until the whitespace removal step can
+            // be rewritten as a transform against the expression AST instead of against the HTML AST.
+            //
+            // TODO(alxhub): remove this when whitespace removal no longer corrupts span information.
+            var template = meta.parseTemplate({
+                preserveWhitespaces: true,
+                leadingTriviaChars: [],
+            });
             var matcher = new SelectorMatcher();
+            var pipes = new Map();
+            var scope = this.scopeReader.getScopeForComponent(node);
             if (scope !== null) {
                 try {
                     for (var _c = __values(scope.compilation.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -70741,8 +70779,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     finally { if (e_3) throw e_3.error; }
                 }
-                var bound = new R3TargetBinder(matcher).bind({ template: meta.parsedTemplate.nodes });
-                var pipes = new Map();
                 try {
                     for (var _e = __values(scope.compilation.pipes), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var _g = _f.value, name_1 = _g.name, ref = _g.ref;
@@ -70759,8 +70795,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     finally { if (e_4) throw e_4.error; }
                 }
-                ctx.addTemplate(new Reference$1(node), bound, pipes, meta.parsedTemplate.file);
             }
+            var bound = new R3TargetBinder(matcher).bind({ template: template.nodes });
+            ctx.addTemplate(new Reference$1(node), bound, pipes, meta.templateSourceMapping, template.file);
         };
         ComponentDecoratorHandler.prototype.resolve = function (node, analysis) {
             var e_5, _a, e_6, _b, e_7, _c, e_8, _d;
@@ -70958,9 +70995,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     return templatePromise.then(function () {
                         var templateStr = _this.resourceLoader.load(resourceUrl_1);
                         _this.resourceDependencies.recordResourceDependency(node.getSourceFile(), resourceUrl_1);
-                        var template = _this._parseTemplate(component, templateStr, sourceMapUrl(resourceUrl_1), /* templateRange */ undefined, 
-                        /* escapedString */ false);
-                        _this.preanalyzeTemplateCache.set(node, template);
+                        var parseTemplate = function (options) { return _this._parseTemplate(component, templateStr, sourceMapUrl(resourceUrl_1), 
+                        /* templateRange */ undefined, 
+                        /* escapedString */ false, options); };
+                        var template = parseTemplate();
+                        _this.preanalyzeTemplateCache.set(node, __assign({}, template, { parseTemplate: parseTemplate }));
                         return template;
                     });
                 }
@@ -70973,9 +71012,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (inlineTemplate === null) {
                     throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, decorator.node, 'component is missing a template');
                 }
-                var templateStr = inlineTemplate.templateStr, templateUrl = inlineTemplate.templateUrl, escapedString = inlineTemplate.escapedString, templateRange = inlineTemplate.templateRange;
-                var template = this._parseTemplate(component, templateStr, templateUrl, templateRange, escapedString);
-                this.preanalyzeTemplateCache.set(node, template);
+                var templateStr_3 = inlineTemplate.templateStr, templateUrl_3 = inlineTemplate.templateUrl, escapedString_2 = inlineTemplate.escapedString, templateRange_2 = inlineTemplate.templateRange;
+                var parseTemplate_1 = function (options) { return _this._parseTemplate(component, templateStr_3, templateUrl_3, templateRange_2, escapedString_2, options); };
+                var template = parseTemplate_1();
+                this.preanalyzeTemplateCache.set(node, __assign({}, template, { parseTemplate: parseTemplate_1 }));
                 return Promise.resolve(template);
             }
         };
@@ -71029,7 +71069,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
                 interpolation = InterpolationConfig.fromArray(value);
             }
-            return __assign({ interpolation: interpolation }, parseTemplate(templateStr, templateUrl, __assign({ preserveWhitespaces: preserveWhitespaces, interpolationConfig: interpolation, range: templateRange, escapedString: escapedString }, options)), { isInline: component.has('template'), file: new ParseSourceFile(templateStr, templateUrl) });
+            return __assign({ interpolation: interpolation }, parseTemplate(templateStr, templateUrl, __assign({ preserveWhitespaces: preserveWhitespaces, interpolationConfig: interpolation, range: templateRange, escapedString: escapedString }, options)), { template: templateStr, templateUrl: templateUrl, isInline: component.has('template'), file: new ParseSourceFile(templateStr, templateUrl) });
         };
         ComponentDecoratorHandler.prototype._expressionToImportedFile = function (expr, origin) {
             if (!(expr instanceof ExternalExpr)) {
@@ -74881,13 +74921,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Adds a synthetic comment to the function declaration that contains the source location
      * of the class declaration.
      */
-    function addSourceReferenceName(tcb, source) {
-        var commentText = getSourceReferenceName(source);
-        ts.addSyntheticLeadingComment(tcb, ts.SyntaxKind.MultiLineCommentTrivia, commentText, true);
-    }
-    function getSourceReferenceName(source) {
-        var fileName = getSourceFile(source).fileName;
-        return fileName + "#" + source.name.text;
+    function addSourceId(tcb, id) {
+        ts.addSyntheticLeadingComment(tcb, ts.SyntaxKind.MultiLineCommentTrivia, id, true);
     }
     /**
      * Determines if the diagnostic should be reported. Some diagnostics are produced because of the
@@ -74915,7 +74950,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * should not be reported at all. This prevents diagnostics from non-TCB code in a user's source
      * file from being reported as type-check errors.
      */
-    function translateDiagnostic(diagnostic, resolveParseSource) {
+    function translateDiagnostic(diagnostic, resolver) {
         if (diagnostic.file === undefined || diagnostic.start === undefined) {
             return null;
         }
@@ -74926,7 +74961,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return null;
         }
         // Now use the external resolver to obtain the full `ParseSourceFile` of the template.
-        var span = resolveParseSource(sourceLocation);
+        var span = resolver.sourceLocationToSpan(sourceLocation);
         if (span === null) {
             return null;
         }
@@ -74937,11 +74972,59 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         else {
             messageText = diagnostic.messageText.messageText;
         }
-        return {
-            source: 'angular',
-            code: diagnostic.code,
-            category: diagnostic.category, messageText: messageText, span: span,
-        };
+        var mapping = resolver.getSourceMapping(sourceLocation.id);
+        if (mapping.type === 'direct') {
+            // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
+            // constant within the `@Component` decorator for the template. This allows us to map the error
+            // directly into the bytes of the source file.
+            return {
+                source: 'ngtsc',
+                file: mapping.node.getSourceFile(),
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                code: diagnostic.code, messageText: messageText,
+                category: diagnostic.category,
+            };
+        }
+        else if (mapping.type === 'indirect' || mapping.type === 'external') {
+            // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
+            // to a string constant in the decorator), the component's file name is given with a suffix
+            // indicating it's not the TS file being displayed, but a template.
+            // For external temoplates, the HTML filename is used.
+            var componentSf = mapping.componentClass.getSourceFile();
+            var componentName = mapping.componentClass.name.text;
+            // TODO(alxhub): remove cast when TS in g3 supports this narrowing.
+            var fileName = mapping.type === 'indirect' ?
+                componentSf.fileName + " (" + componentName + " template)" :
+                mapping.templateUrl;
+            // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
+            // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
+            // Also investigate caching the file to avoid running the parser multiple times.
+            var sf = ts.createSourceFile(fileName, mapping.template, ts.ScriptTarget.Latest, false, ts.ScriptKind.JSX);
+            return {
+                source: 'ngtsc',
+                file: sf,
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                messageText: diagnostic.messageText,
+                category: diagnostic.category,
+                code: diagnostic.code,
+                // Show a secondary message indicating the component whose template contains the error.
+                relatedInformation: [{
+                        category: ts.DiagnosticCategory.Message,
+                        code: 0,
+                        file: componentSf,
+                        // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
+                        // and getEnd() are used because they don't include surrounding whitespace.
+                        start: mapping.node.getStart(),
+                        length: mapping.node.getEnd() - mapping.node.getStart(),
+                        messageText: "Error occurs in the template of component " + componentName + ".",
+                    }],
+            };
+        }
+        else {
+            throw new Error("Unexpected source mapping type: " + mapping.type);
+        }
     }
     function findSourceLocation(node, sourceFile) {
         // Search for comments until the TCB's function declaration is encountered.
@@ -74972,18 +75055,18 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 return null;
             }
         }
-        var sourceReference = ts.forEachLeadingCommentRange(sourceFile.text, tcb.getFullStart(), function (pos, end, kind) {
+        var id = ts.forEachLeadingCommentRange(sourceFile.text, tcb.getFullStart(), function (pos, end, kind) {
             if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             var commentText = sourceFile.text.substring(pos, end);
             return commentText.substring(2, commentText.length - 2);
         }) || null;
-        if (sourceReference === null) {
+        if (id === null) {
             return null;
         }
         return {
-            sourceReference: sourceReference,
+            id: id,
             start: parseSpan.start,
             end: parseSpan.end,
         };
@@ -75818,7 +75901,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         /* parameters */ paramList, 
         /* type */ undefined, 
         /* body */ body);
-        addSourceReferenceName(fnDecl, ref.node);
+        addSourceId(fnDecl, meta.id);
         return fnDecl;
     }
     /**
@@ -76831,10 +76914,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
              * queued.
              */
             this.typeCtorPending = new Set();
+            this.nextTcbId = 1;
             /**
-             * This map keeps track of all template sources that have been type-checked by the reference name
-             * that is attached to a TCB's function declaration as leading trivia. This enables translation
-             * of diagnostics produced for TCB code to their source location in the template.
+             * This map keeps track of all template sources that have been type-checked by the id that is
+             * attached to a TCB's function declaration as leading trivia. This enables translation of
+             * diagnostics produced for TCB code to their source location in the template.
              */
             this.templateSources = new Map();
             this.typeCheckFile = new TypeCheckFile(typeCheckFilePath, this.config, this.refEmitter);
@@ -76847,9 +76931,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * @param template AST nodes of the template being recorded.
          * @param matcher `SelectorMatcher` which tracks directives that are in scope for this template.
          */
-        TypeCheckContext.prototype.addTemplate = function (ref, boundTarget, pipes, file) {
+        TypeCheckContext.prototype.addTemplate = function (ref, boundTarget, pipes, sourceMapping, file) {
             var e_1, _a;
-            this.templateSources.set(getSourceReferenceName(ref.node), new TemplateSource(file));
+            var id = "tcb" + this.nextTcbId++;
+            this.templateSources.set(id, new TemplateSource(sourceMapping, file));
             try {
                 // Get all of the directives used in the template and record type constructors for all of them.
                 for (var _b = __values(boundTarget.getUsedDirectives()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -76883,11 +76968,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (requiresInlineTypeCheckBlock(ref.node)) {
                 // This class didn't meet the requirements for external type checking, so generate an inline
                 // TCB for the class.
-                this.addInlineTypeCheckBlock(ref, { boundTarget: boundTarget, pipes: pipes });
+                this.addInlineTypeCheckBlock(ref, { id: id, boundTarget: boundTarget, pipes: pipes });
             }
             else {
                 // The class can be type-checked externally as normal.
-                this.typeCheckFile.addTypeCheckBlock(ref, { boundTarget: boundTarget, pipes: pipes });
+                this.typeCheckFile.addTypeCheckBlock(ref, { id: id, boundTarget: boundTarget, pipes: pipes });
             }
         };
         /**
@@ -76977,21 +77062,29 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 oldProgram: originalProgram,
                 rootNames: originalProgram.getRootFileNames(),
             });
-            var diagnostics = [];
-            var resolveSpan = function (sourceLocation) {
-                if (!_this.templateSources.has(sourceLocation.sourceReference)) {
-                    return null;
-                }
-                var templateSource = _this.templateSources.get(sourceLocation.sourceReference);
-                return templateSource.toParseSourceSpan(sourceLocation.start, sourceLocation.end);
+            var tcbResolver = {
+                getSourceMapping: function (id) {
+                    if (!_this.templateSources.has(id)) {
+                        throw new Error("Unexpected unknown TCB ID: " + id);
+                    }
+                    return _this.templateSources.get(id).mapping;
+                },
+                sourceLocationToSpan: function (location) {
+                    if (!_this.templateSources.has(location.id)) {
+                        return null;
+                    }
+                    var templateSource = _this.templateSources.get(location.id);
+                    return templateSource.toParseSourceSpan(location.start, location.end);
+                },
             };
+            var diagnostics = [];
             var collectDiagnostics = function (diags) {
                 var e_4, _a;
                 try {
                     for (var diags_1 = __values(diags), diags_1_1 = diags_1.next(); !diags_1_1.done; diags_1_1 = diags_1.next()) {
                         var diagnostic = diags_1_1.value;
                         if (shouldReportDiagnostic(diagnostic)) {
-                            var translated = translateDiagnostic(diagnostic, resolveSpan);
+                            var translated = translateDiagnostic(diagnostic, tcbResolver);
                             if (translated !== null) {
                                 diagnostics.push(translated);
                             }
@@ -77039,7 +77132,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * used when translating parse offsets in diagnostics back to their original line/column location.
      */
     var TemplateSource = /** @class */ (function () {
-        function TemplateSource(file) {
+        function TemplateSource(mapping, file) {
+            this.mapping = mapping;
             this.file = file;
             this.lineStarts = null;
         }
@@ -81184,7 +81278,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+80.sha-0db1b5d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+83.sha-0287b23.with-local-changes');
 
     /**
      * @license
