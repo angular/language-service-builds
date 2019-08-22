@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.3+20.sha-d443a28.with-local-changes
+ * @license Angular v9.0.0-next.3+22.sha-c624b14.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18634,7 +18634,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.3+20.sha-d443a28.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.3+22.sha-c624b14.with-local-changes');
 
     /**
      * @license
@@ -43351,7 +43351,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.3+20.sha-d443a28.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.3+22.sha-c624b14.with-local-changes');
 
     /**
      * @license
@@ -53606,7 +53606,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.3+20.sha-d443a28.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.3+22.sha-c624b14.with-local-changes');
 
     /**
      * @license
@@ -69927,30 +69927,32 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return ExternalTemplate;
     }(BaseTemplate));
     /**
-     * Given a template node, return the ClassDeclaration node that corresponds to
-     * the component class for the template.
+     * Returns a property assignment from the assignment value, or `undefined` if there is no
+     * assignment.
+     */
+    function getPropertyAssignmentFromValue(value) {
+        if (!value.parent || !ts.isPropertyAssignment(value.parent)) {
+            return;
+        }
+        return value.parent;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
      *
      * For example,
      *
      * @Component({
-     *   template: '<div></div>' <-- template node
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
      * })
      * class AppComponent {}
      *           ^---- class declaration node
      *
-     * @param node template node
+     * @param propAsgn property assignment
      */
-    function getClassDeclFromTemplateNode(node) {
-        if (!ts.isStringLiteralLike(node)) {
-            return;
-        }
-        if (!node.parent || !ts.isPropertyAssignment(node.parent)) {
-            return;
-        }
-        var propAsgnNode = node.parent;
-        if (propAsgnNode.name.getText() !== 'template') {
-            return;
-        }
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
         if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
             return;
         }
@@ -70281,7 +70283,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (!ts.isStringLiteralLike(node)) {
                 return;
             }
-            var classDecl = getClassDeclFromTemplateNode(node);
+            var tmplAsgn = getPropertyAssignmentFromValue(node);
+            if (!tmplAsgn || tmplAsgn.name.getText() !== 'template') {
+                return;
+            }
+            var classDecl = getClassDeclFromDecoratorProp(tmplAsgn);
             if (!classDecl || !classDecl.name) { // Does not handle anonymous class
                 return;
             }
@@ -70632,7 +70638,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.3+20.sha-d443a28.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.3+22.sha-c624b14.with-local-changes');
 
     /**
      * @license
