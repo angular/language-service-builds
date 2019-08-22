@@ -9,25 +9,14 @@
 import { CompileDirectiveMetadata, CompileDirectiveSummary, CompilePipeSummary, CssSelector, Node as HtmlAst, ParseError, Parser, TemplateAst } from '@angular/compiler';
 import { Diagnostic, TemplateSource } from './types';
 export interface AstResult {
-    htmlAst?: HtmlAst[];
-    templateAst?: TemplateAst[];
-    directive?: CompileDirectiveMetadata;
-    directives?: CompileDirectiveSummary[];
-    pipes?: CompilePipeSummary[];
-    parseErrors?: ParseError[];
-    expressionParser?: Parser;
-    errors?: Diagnostic[];
-}
-export interface TemplateInfo {
-    position?: number;
-    fileName?: string;
-    template: TemplateSource;
     htmlAst: HtmlAst[];
+    templateAst: TemplateAst[];
     directive: CompileDirectiveMetadata;
     directives: CompileDirectiveSummary[];
     pipes: CompilePipeSummary[];
-    templateAst: TemplateAst[];
+    parseErrors?: ParseError[];
     expressionParser: Parser;
+    template: TemplateSource;
 }
 export interface AttrInfo {
     name: string;
@@ -40,3 +29,4 @@ export declare type SelectorInfo = {
     selectors: CssSelector[];
     map: Map<CssSelector, CompileDirectiveSummary>;
 };
+export declare function isAstResult(result: AstResult | Diagnostic): result is AstResult;

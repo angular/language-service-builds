@@ -12,10 +12,9 @@ import { AstResult } from './common';
 import * as ng from './types';
 /**
  * Return diagnostic information for the parsed AST of the template.
- * @param template source of the template and class information
  * @param ast contains HTML and template AST
  */
-export declare function getTemplateDiagnostics(template: ng.TemplateSource, ast: AstResult): ng.Diagnostic[];
+export declare function getTemplateDiagnostics(ast: AstResult): ng.Diagnostic[];
 export declare function getDeclarationDiagnostics(declarations: ng.Declaration[], modules: NgAnalyzedModules): ng.Diagnostic[];
 /**
  * Convert ng.Diagnostic to ts.Diagnostic.

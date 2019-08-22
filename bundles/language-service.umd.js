@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.3+12.sha-6b245a3.with-local-changes
+ * @license Angular v9.0.0-next.3+13.sha-6d11154.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -145,6 +145,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         for (var ar = [], i = 0; i < arguments.length; i++)
             ar = ar.concat(__read(arguments[i]));
         return ar;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function isAstResult(result) {
+        return result.hasOwnProperty('templateAst');
     }
 
     /**
@@ -18623,7 +18634,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.3+13.sha-6d11154.with-local-changes');
 
     /**
      * @license
@@ -32155,7 +32166,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function diagnosticInfoFromTemplateInfo(info) {
         return {
-            fileName: info.fileName,
+            fileName: info.template.fileName,
             offset: info.template.span.start,
             query: info.template.query,
             members: info.template.members,
@@ -32889,75 +32900,73 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         head: true,
         link: true,
     };
-    function getTemplateCompletions(templateInfo) {
+    function getTemplateCompletions(templateInfo, position) {
         var result = undefined;
-        var htmlAst = templateInfo.htmlAst, templateAst = templateInfo.templateAst, template = templateInfo.template;
+        var htmlAst = templateInfo.htmlAst, template = templateInfo.template;
         // The templateNode starts at the delimiter character so we add 1 to skip it.
-        if (templateInfo.position != null) {
-            var templatePosition_1 = templateInfo.position - template.span.start;
-            var path_1 = findNode(htmlAst, templatePosition_1);
-            var mostSpecific = path_1.tail;
-            if (path_1.empty || !mostSpecific) {
-                result = elementCompletions(templateInfo, path_1);
-            }
-            else {
-                var astPosition_1 = templatePosition_1 - mostSpecific.sourceSpan.start.offset;
-                mostSpecific.visit({
-                    visitElement: function (ast) {
-                        var startTagSpan = spanOf$2(ast.sourceSpan);
-                        var tagLen = ast.name.length;
-                        if (templatePosition_1 <=
-                            startTagSpan.start + tagLen + 1 /* 1 for the opening angle bracked */) {
-                            // If we are in the tag then return the element completions.
-                            result = elementCompletions(templateInfo, path_1);
-                        }
-                        else if (templatePosition_1 < startTagSpan.end) {
-                            // We are in the attribute section of the element (but not in an attribute).
-                            // Return the attribute completions.
-                            result = attributeCompletions(templateInfo, path_1);
-                        }
-                    },
-                    visitAttribute: function (ast) {
-                        if (!ast.valueSpan || !inSpan(templatePosition_1, spanOf$2(ast.valueSpan))) {
-                            // We are in the name of an attribute. Show attribute completions.
-                            result = attributeCompletions(templateInfo, path_1);
-                        }
-                        else if (ast.valueSpan && inSpan(templatePosition_1, spanOf$2(ast.valueSpan))) {
-                            result = attributeValueCompletions(templateInfo, templatePosition_1, ast);
-                        }
-                    },
-                    visitText: function (ast) {
-                        // Check if we are in a entity.
-                        result = entityCompletions(getSourceText(template, spanOf$2(ast)), astPosition_1);
-                        if (result)
-                            return result;
-                        result = interpolationCompletions(templateInfo, templatePosition_1);
-                        if (result)
-                            return result;
-                        var element = path_1.first(Element$1);
-                        if (element) {
-                            var definition = getHtmlTagDefinition(element.name);
-                            if (definition.contentType === TagContentType.PARSABLE_DATA) {
-                                result = voidElementAttributeCompletions(templateInfo, path_1);
-                                if (!result) {
-                                    // If the element can hold content Show element completions.
-                                    result = elementCompletions(templateInfo, path_1);
-                                }
-                            }
-                        }
-                        else {
-                            // If no element container, implies parsable data so show elements.
-                            result = voidElementAttributeCompletions(templateInfo, path_1);
+        var templatePosition = position - template.span.start;
+        var path = findNode(htmlAst, templatePosition);
+        var mostSpecific = path.tail;
+        if (path.empty || !mostSpecific) {
+            result = elementCompletions(templateInfo, path);
+        }
+        else {
+            var astPosition_1 = templatePosition - mostSpecific.sourceSpan.start.offset;
+            mostSpecific.visit({
+                visitElement: function (ast) {
+                    var startTagSpan = spanOf$2(ast.sourceSpan);
+                    var tagLen = ast.name.length;
+                    if (templatePosition <=
+                        startTagSpan.start + tagLen + 1 /* 1 for the opening angle bracket */) {
+                        // If we are in the tag then return the element completions.
+                        result = elementCompletions(templateInfo, path);
+                    }
+                    else if (templatePosition < startTagSpan.end) {
+                        // We are in the attribute section of the element (but not in an attribute).
+                        // Return the attribute completions.
+                        result = attributeCompletions(templateInfo, path);
+                    }
+                },
+                visitAttribute: function (ast) {
+                    if (!ast.valueSpan || !inSpan(templatePosition, spanOf$2(ast.valueSpan))) {
+                        // We are in the name of an attribute. Show attribute completions.
+                        result = attributeCompletions(templateInfo, path);
+                    }
+                    else if (ast.valueSpan && inSpan(templatePosition, spanOf$2(ast.valueSpan))) {
+                        result = attributeValueCompletions(templateInfo, templatePosition, ast);
+                    }
+                },
+                visitText: function (ast) {
+                    // Check if we are in a entity.
+                    result = entityCompletions(getSourceText(template, spanOf$2(ast)), astPosition_1);
+                    if (result)
+                        return result;
+                    result = interpolationCompletions(templateInfo, templatePosition);
+                    if (result)
+                        return result;
+                    var element = path.first(Element$1);
+                    if (element) {
+                        var definition = getHtmlTagDefinition(element.name);
+                        if (definition.contentType === TagContentType.PARSABLE_DATA) {
+                            result = voidElementAttributeCompletions(templateInfo, path);
                             if (!result) {
-                                result = elementCompletions(templateInfo, path_1);
+                                // If the element can hold content, show element completions.
+                                result = elementCompletions(templateInfo, path);
                             }
                         }
-                    },
-                    visitComment: function (ast) { },
-                    visitExpansion: function (ast) { },
-                    visitExpansionCase: function (ast) { }
-                }, null);
-            }
+                    }
+                    else {
+                        // If no element container, implies parsable data so show elements.
+                        result = voidElementAttributeCompletions(templateInfo, path);
+                        if (!result) {
+                            result = elementCompletions(templateInfo, path);
+                        }
+                    }
+                },
+                visitComment: function (ast) { },
+                visitExpansion: function (ast) { },
+                visitExpansionCase: function (ast) { }
+            }, null);
         }
         return result;
     }
@@ -33338,17 +33347,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function locateSymbol(info) {
-        if (!info.position)
-            return undefined;
-        var templatePosition = info.position - info.template.span.start;
+    /**
+     * Traverse the template AST and locate the Symbol at the specified `position`.
+     * @param info Ast and Template Source
+     * @param position location to look for
+     */
+    function locateSymbol(info, position) {
+        var templatePosition = position - info.template.span.start;
         var path = findTemplateAstAt(info.templateAst, templatePosition);
         if (path.tail) {
             var symbol_1 = undefined;
             var span_1 = undefined;
             var attributeValueSymbol_1 = function (ast, inEvent) {
                 if (inEvent === void 0) { inEvent = false; }
-                var attribute = findAttribute(info);
+                var attribute = findAttribute(info, position);
                 if (attribute) {
                     if (inSpan(templatePosition, spanOf$2(attribute.valueSpan))) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
@@ -33429,12 +33441,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
         }
     }
-    function findAttribute(info) {
-        if (info.position) {
-            var templatePosition = info.position - info.template.span.start;
-            var path = findNode(info.htmlAst, templatePosition);
-            return path.first(Attribute);
-        }
+    function findAttribute(info, position) {
+        var templatePosition = position - info.template.span.start;
+        var path = findNode(info.htmlAst, templatePosition);
+        return path.first(Attribute);
     }
     function findInputBinding(info, path, binding) {
         var e_1, _a;
@@ -33580,8 +33590,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             length: span.end - span.start,
         };
     }
-    function getDefinitionAndBoundSpan(info) {
-        var symbolInfo = locateSymbol(info);
+    /**
+     * Traverse the template AST and look for the symbol located at `position`, then
+     * return its definition and span of bound text.
+     * @param info
+     * @param position
+     */
+    function getDefinitionAndBoundSpan(info, position) {
+        var symbolInfo = locateSymbol(info, position);
         if (!symbolInfo) {
             return;
         }
@@ -33619,13 +33635,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     /**
      * Return diagnostic information for the parsed AST of the template.
-     * @param template source of the template and class information
      * @param ast contains HTML and template AST
      */
-    function getTemplateDiagnostics(template, ast) {
+    function getTemplateDiagnostics(ast) {
         var results = [];
-        if (ast.parseErrors && ast.parseErrors.length) {
-            results.push.apply(results, __spread(ast.parseErrors.map(function (e) {
+        var parseErrors = ast.parseErrors, templateAst = ast.templateAst, htmlAst = ast.htmlAst, template = ast.template;
+        if (parseErrors) {
+            results.push.apply(results, __spread(parseErrors.map(function (e) {
                 return {
                     kind: DiagnosticKind$1.Error,
                     span: offsetSpan$1(spanOf$2(e.span), template.span.start),
@@ -33633,25 +33649,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 };
             })));
         }
-        else if (ast.templateAst && ast.htmlAst) {
-            var expressionDiagnostics = getTemplateExpressionDiagnostics({
-                templateAst: ast.templateAst,
-                htmlAst: ast.htmlAst,
-                offset: template.span.start,
-                query: template.query,
-                members: template.members,
-            });
-            results.push.apply(results, __spread(expressionDiagnostics));
-        }
-        if (ast.errors) {
-            results.push.apply(results, __spread(ast.errors.map(function (e) {
-                return {
-                    kind: e.kind,
-                    span: e.span || template.span,
-                    message: e.message,
-                };
-            })));
-        }
+        var expressionDiagnostics = getTemplateExpressionDiagnostics({
+            templateAst: templateAst,
+            htmlAst: htmlAst,
+            offset: template.span.start,
+            query: template.query,
+            members: template.members,
+        });
+        results.push.apply(results, __spread(expressionDiagnostics));
         return results;
     }
     /**
@@ -33831,8 +33836,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     // Reverse mappings of enum would generate strings
     var SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
     var SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
-    function getHover(info) {
-        var symbolInfo = locateSymbol(info);
+    /**
+     * Traverse the template AST and look for the symbol located at `position`, then
+     * return the corresponding quick info.
+     * @param info template AST
+     * @param position location of the symbol
+     */
+    function getHover(info, position) {
+        var symbolInfo = locateSymbol(info, position);
         if (!symbolInfo) {
             return;
         }
@@ -33893,8 +33904,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             try {
                 for (var templates_1 = __values(templates), templates_1_1 = templates_1.next(); !templates_1_1.done; templates_1_1 = templates_1.next()) {
                     var template = templates_1_1.value;
-                    var ast = this.host.getTemplateAst(template);
-                    results.push.apply(results, __spread(getTemplateDiagnostics(template, ast)));
+                    var astOrDiagnostic = this.host.getTemplateAst(template);
+                    if (isAstResult(astOrDiagnostic)) {
+                        results.push.apply(results, __spread(getTemplateDiagnostics(astOrDiagnostic)));
+                    }
+                    else {
+                        results.push(astOrDiagnostic);
+                    }
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -33916,11 +33932,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         };
         LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
-            var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
-            if (!templateInfo) {
+            var ast = this.host.getTemplateAstAtPosition(fileName, position);
+            if (!ast) {
                 return;
             }
-            var results = getTemplateCompletions(templateInfo);
+            var results = getTemplateCompletions(ast, position);
             if (!results || !results.length) {
                 return;
             }
@@ -33935,14 +33951,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
-                return getDefinitionAndBoundSpan(templateInfo);
+                return getDefinitionAndBoundSpan(templateInfo, position);
             }
         };
         LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
-                return getHover(templateInfo);
+                return getHover(templateInfo, position);
             }
         };
         return LanguageServiceImpl;
@@ -43335,7 +43351,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.3+13.sha-6d11154.with-local-changes');
 
     /**
      * @license
@@ -53590,7 +53606,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.3+13.sha-6d11154.with-local-changes');
 
     /**
      * @license
@@ -69855,7 +69871,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         // TODO: There is circular dependency here between TemplateSource and
                         // TypeScriptHost. Consider refactoring the code to break this cycle.
                         var ast = _this.host.getTemplateAst(_this);
-                        return getPipesTable(sourceFile_1, program_1, typeChecker_1, ast.pipes || []);
+                        var pipes = isAstResult(ast) ? ast.pipes : [];
+                        return getPipesTable(sourceFile_1, program_1, typeChecker_1, pipes);
                     });
                 }
                 return this.queryCache;
@@ -70357,71 +70374,116 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 return;
             }
             var astResult = this.getTemplateAst(template);
-            if (astResult && astResult.htmlAst && astResult.templateAst && astResult.directive &&
-                astResult.directives && astResult.pipes && astResult.expressionParser) {
-                return {
-                    position: position,
-                    fileName: fileName,
-                    template: template,
-                    htmlAst: astResult.htmlAst,
-                    directive: astResult.directive,
-                    directives: astResult.directives,
-                    pipes: astResult.pipes,
-                    templateAst: astResult.templateAst,
-                    expressionParser: astResult.expressionParser
-                };
+            if (!isAstResult(astResult)) {
+                return;
             }
+            return astResult;
         };
-        TypeScriptServiceHost.prototype.getTemplateAst = function (template) {
-            var _this = this;
+        /**
+         * Find the NgModule which the directive associated with the `classSymbol`
+         * belongs to, then return its schema and transitive directives and pipes.
+         * @param classSymbol Angular Symbol that defines a directive
+         */
+        TypeScriptServiceHost.prototype.getModuleMetadataForDirective = function (classSymbol) {
+            var e_4, _a, e_5, _b, _c;
+            var result = {
+                directives: [],
+                pipes: [],
+                schemas: [],
+            };
+            // First find which NgModule the directive belongs to.
+            var ngModule = this.analyzedModules.ngModuleByPipeOrDirective.get(classSymbol) ||
+                findSuitableDefaultModule(this.analyzedModules);
+            if (!ngModule) {
+                return result;
+            }
+            // Then gather all transitive directives and pipes.
+            var _d = ngModule.transitiveModule, directives = _d.directives, pipes = _d.pipes;
             try {
-                var resolvedMetadata = this.resolver.getNonNormalizedDirectiveMetadata(template.type);
-                var metadata = resolvedMetadata && resolvedMetadata.metadata;
-                if (!metadata) {
-                    return {};
+                for (var directives_1 = __values(directives), directives_1_1 = directives_1.next(); !directives_1_1.done; directives_1_1 = directives_1.next()) {
+                    var directive = directives_1_1.value;
+                    var data = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
+                    if (data) {
+                        result.directives.push(data.metadata.toSummary());
+                    }
                 }
-                var rawHtmlParser = new HtmlParser();
-                var htmlParser = new I18NHtmlParser(rawHtmlParser);
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (directives_1_1 && !directives_1_1.done && (_a = directives_1.return)) _a.call(directives_1);
+                }
+                finally { if (e_4) throw e_4.error; }
+            }
+            try {
+                for (var pipes_1 = __values(pipes), pipes_1_1 = pipes_1.next(); !pipes_1_1.done; pipes_1_1 = pipes_1.next()) {
+                    var pipe = pipes_1_1.value;
+                    var metadata = this.resolver.getOrLoadPipeMetadata(pipe.reference);
+                    result.pipes.push(metadata.toSummary());
+                }
+            }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            finally {
+                try {
+                    if (pipes_1_1 && !pipes_1_1.done && (_b = pipes_1.return)) _b.call(pipes_1);
+                }
+                finally { if (e_5) throw e_5.error; }
+            }
+            (_c = result.schemas).push.apply(_c, __spread(ngModule.schemas));
+            return result;
+        };
+        /**
+         * Parse the `template` and return its AST if there's no error. Otherwise
+         * return a Diagnostic message.
+         * @param template template to be parsed
+         */
+        TypeScriptServiceHost.prototype.getTemplateAst = function (template) {
+            var classSymbol = template.type, fileName = template.fileName;
+            try {
+                var data = this.resolver.getNonNormalizedDirectiveMetadata(classSymbol);
+                if (!data) {
+                    return {
+                        kind: DiagnosticKind$1.Error,
+                        message: "No metadata found for '" + classSymbol.name + "' in " + fileName + ".",
+                        span: template.span,
+                    };
+                }
+                var htmlParser = new I18NHtmlParser(new HtmlParser());
                 var expressionParser = new Parser$1(new Lexer());
-                var config = new CompilerConfig();
-                var parser = new TemplateParser(config, this.reflector, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
-                var errors = undefined;
-                var ngModule = this.analyzedModules.ngModuleByPipeOrDirective.get(template.type) ||
-                    // Reported by the the declaration diagnostics.
-                    findSuitableDefaultModule(this.analyzedModules);
-                if (!ngModule) {
-                    return {};
+                var parser = new TemplateParser(new CompilerConfig(), this.reflector, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, // console
+                [] // tranforms
+                );
+                var htmlResult = htmlParser.parse(template.source, fileName, {
+                    tokenizeExpansionForms: true,
+                });
+                var _a = this.getModuleMetadataForDirective(classSymbol), directives = _a.directives, pipes = _a.pipes, schemas = _a.schemas;
+                var parseResult = parser.tryParseHtml(htmlResult, data.metadata, directives, pipes, schemas);
+                if (!parseResult.templateAst) {
+                    return {
+                        kind: DiagnosticKind$1.Error,
+                        message: "Failed to parse template for '" + classSymbol.name + "' in " + fileName,
+                        span: template.span,
+                    };
                 }
-                var directives = ngModule.transitiveModule.directives
-                    .map(function (d) { return _this.resolver.getNonNormalizedDirectiveMetadata(d.reference); })
-                    .filter(function (d) { return d; })
-                    .map(function (d) { return d.metadata.toSummary(); });
-                var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
-                var schemas = ngModule.schemas;
-                var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
                 return {
                     htmlAst: htmlResult.rootNodes,
                     templateAst: parseResult.templateAst,
-                    directive: metadata, directives: directives, pipes: pipes,
-                    parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
+                    directive: data.metadata, directives: directives, pipes: pipes,
+                    parseErrors: parseResult.errors, expressionParser: expressionParser, template: template,
                 };
             }
             catch (e) {
-                var span = e.fileName === template.fileName && template.query.getSpanAt(e.line, e.column) ||
-                    template.span;
                 return {
-                    errors: [{
-                            kind: DiagnosticKind$1.Error,
-                            message: e.message, span: span,
-                        }],
+                    kind: DiagnosticKind$1.Error,
+                    message: e.message,
+                    span: e.fileName === fileName && template.query.getSpanAt(e.line, e.column) || template.span,
                 };
             }
         };
         return TypeScriptServiceHost;
     }());
     function findSuitableDefaultModule(modules) {
-        var e_4, _a;
+        var e_6, _a;
         var result = undefined;
         var resultSize = 0;
         try {
@@ -70434,12 +70496,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_6) throw e_6.error; }
         }
         return result;
     }
@@ -70570,7 +70632,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.3+13.sha-6d11154.with-local-changes');
 
     /**
      * @license
