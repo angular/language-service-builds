@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.3+10.sha-0677cf0.with-local-changes
+ * @license Angular v9.0.0-next.3+12.sha-6b245a3.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18608,7 +18608,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.3+10.sha-0677cf0.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
 
     /**
      * @license
@@ -41603,12 +41603,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var flags = lView[FLAGS];
         try {
             resetPreOrderHookFlags(lView);
-            if (templateFn !== null) {
-                executeTemplate(lView, templateFn, 2 /* Update */, context);
-            }
             // Resetting the bindingIndex of the current LView as the next steps may trigger change
             // detection.
             lView[BINDING_INDEX] = tView.bindingStartIndex;
+            if (templateFn !== null) {
+                executeTemplate(lView, templateFn, 2 /* Update */, context);
+            }
             var checkNoChangesMode = getCheckNoChangesMode();
             var hooksInitPhaseCompleted = (flags & 3 /* InitPhaseStateMask */) === 3 /* InitPhaseCompleted */;
             // execute pre-order hooks (OnInit, OnChanges, DoChanges)
@@ -51384,7 +51384,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.3+10.sha-0677cf0.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
 
     /**
      * @license
@@ -61323,8 +61323,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -64548,7 +64547,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.3+10.sha-0677cf0.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
 
     /**
      * @license
@@ -77544,7 +77543,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             generators.push(new TypeCheckShimGenerator(this.typeCheckFilePath));
             rootFiles.push(this.typeCheckFilePath);
             var entryPoint = null;
-            if (options.flatModuleOutFile !== undefined) {
+            if (options.flatModuleOutFile != null && options.flatModuleOutFile !== '') {
                 entryPoint = findFlatIndexEntryPoint(normalizedRootNames);
                 if (entryPoint === null) {
                     // This error message talks specifically about having a single .ts file in "files". However
@@ -81528,7 +81527,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.3+10.sha-0677cf0.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.3+12.sha-6b245a3.with-local-changes');
 
     /**
      * @license
