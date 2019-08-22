@@ -8,7 +8,7 @@
 /// <amd-module name="@angular/language-service/src/types" />
 import { CompileDirectiveMetadata, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
 import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from '@angular/compiler-cli/src/language_services';
-import { AstResult, TemplateInfo } from './common';
+import { AstResult } from './common';
 export { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, StaticSymbol, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable };
 /**
  * The information `LanguageService` needs from the `LanguageServiceHost` to describe the content of
@@ -158,11 +158,11 @@ export interface LanguageServiceHost {
     /**
      * Return the AST for both HTML and template for the contextFile.
      */
-    getTemplateAst(template: TemplateSource): AstResult;
+    getTemplateAst(template: TemplateSource): AstResult | Diagnostic;
     /**
      * Return the template AST for the node that corresponds to the position.
      */
-    getTemplateAstAtPosition(fileName: string, position: number): TemplateInfo | undefined;
+    getTemplateAstAtPosition(fileName: string, position: number): AstResult | undefined;
 }
 /**
  * An item of the completion result to be displayed by an editor.

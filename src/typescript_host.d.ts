@@ -8,8 +8,8 @@
 /// <amd-module name="@angular/language-service/src/typescript_host" />
 import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
 import * as ts from 'typescript';
-import { AstResult, TemplateInfo } from './common';
-import { Declaration, LanguageService, LanguageServiceHost, TemplateSource } from './types';
+import { AstResult } from './common';
+import { Declaration, Diagnostic, LanguageService, LanguageServiceHost, TemplateSource } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
@@ -113,6 +113,17 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * @param fileName TS or HTML file
      * @param position Position of the template in the TS file, otherwise ignored.
      */
-    getTemplateAstAtPosition(fileName: string, position: number): TemplateInfo | undefined;
-    getTemplateAst(template: TemplateSource): AstResult;
+    getTemplateAstAtPosition(fileName: string, position: number): AstResult | undefined;
+    /**
+     * Find the NgModule which the directive associated with the `classSymbol`
+     * belongs to, then return its schema and transitive directives and pipes.
+     * @param classSymbol Angular Symbol that defines a directive
+     */
+    private getModuleMetadataForDirective;
+    /**
+     * Parse the `template` and return its AST if there's no error. Otherwise
+     * return a Diagnostic message.
+     * @param template template to be parsed
+     */
+    getTemplateAst(template: TemplateSource): AstResult | Diagnostic;
 }

@@ -7,5 +7,11 @@
  */
 /// <amd-module name="@angular/language-service/src/hover" />
 import * as ts from 'typescript';
-import { TemplateInfo } from './common';
-export declare function getHover(info: TemplateInfo): ts.QuickInfo | undefined;
+import { AstResult } from './common';
+/**
+ * Traverse the template AST and look for the symbol located at `position`, then
+ * return the corresponding quick info.
+ * @param info template AST
+ * @param position location of the symbol
+ */
+export declare function getHover(info: AstResult, position: number): ts.QuickInfo | undefined;

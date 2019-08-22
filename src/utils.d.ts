@@ -9,7 +9,7 @@
 import { CompileTypeMetadata, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import { DiagnosticTemplateInfo } from '@angular/compiler-cli/src/language_services';
 import * as ts from 'typescript';
-import { SelectorInfo, TemplateInfo } from './common';
+import { AstResult, SelectorInfo } from './common';
 import { Span } from './types';
 export interface SpanHolder {
     sourceSpan: ParseSourceSpan;
@@ -24,14 +24,14 @@ export declare function inSpan(position: number, span?: Span, exclusive?: boolea
 export declare function offsetSpan(span: Span, amount: number): Span;
 export declare function isNarrower(spanA: Span, spanB: Span): boolean;
 export declare function hasTemplateReference(type: CompileTypeMetadata): boolean;
-export declare function getSelectors(info: TemplateInfo): SelectorInfo;
+export declare function getSelectors(info: AstResult): SelectorInfo;
 export declare function flatten<T>(a: T[][]): T[];
 export declare function removeSuffix(value: string, suffix: string): string;
 export declare function uniqueByName<T extends {
     name: string;
 }>(elements: T[] | undefined): T[] | undefined;
 export declare function isTypescriptVersion(low: string, high?: string): boolean;
-export declare function diagnosticInfoFromTemplateInfo(info: TemplateInfo): DiagnosticTemplateInfo;
+export declare function diagnosticInfoFromTemplateInfo(info: AstResult): DiagnosticTemplateInfo;
 export declare function findTemplateAstAt(ast: TemplateAst[], position: number, allowWidening?: boolean): TemplateAstPath;
 /**
  * Return the node that most tightly encompass the specified `position`.

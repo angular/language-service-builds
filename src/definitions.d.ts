@@ -7,5 +7,11 @@
  */
 /// <amd-module name="@angular/language-service/src/definitions" />
 import * as ts from 'typescript';
-import { TemplateInfo } from './common';
-export declare function getDefinitionAndBoundSpan(info: TemplateInfo): ts.DefinitionInfoAndBoundSpan | undefined;
+import { AstResult } from './common';
+/**
+ * Traverse the template AST and look for the symbol located at `position`, then
+ * return its definition and span of bound text.
+ * @param info
+ * @param position
+ */
+export declare function getDefinitionAndBoundSpan(info: AstResult, position: number): ts.DefinitionInfoAndBoundSpan | undefined;
