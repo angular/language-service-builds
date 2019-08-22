@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.3+9.sha-904a201.with-local-changes
+ * @license Angular v9.0.0-next.3+11.sha-4f7c971.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18608,7 +18608,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.3+9.sha-904a201.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.3+11.sha-4f7c971.with-local-changes');
 
     /**
      * @license
@@ -51384,7 +51384,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.3+9.sha-904a201.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.3+11.sha-4f7c971.with-local-changes');
 
     /**
      * @license
@@ -61323,8 +61323,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -64548,7 +64547,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.3+9.sha-904a201.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.3+11.sha-4f7c971.with-local-changes');
 
     /**
      * @license
@@ -65312,6 +65311,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * expression.
          */
         ErrorCode[ErrorCode["NGCC_MIGRATION_DYNAMIC_BASE_CLASS"] = 7003] = "NGCC_MIGRATION_DYNAMIC_BASE_CLASS";
+        /**
+         * An element name failed validation against the DOM schema.
+         */
+        ErrorCode[ErrorCode["SCHEMA_INVALID_ELEMENT"] = 8001] = "SCHEMA_INVALID_ELEMENT";
+        /**
+         * An element's attribute name failed validation against the DOM schema.
+         */
+        ErrorCode[ErrorCode["SCHEMA_INVALID_ATTRIBUTE"] = 8002] = "SCHEMA_INVALID_ATTRIBUTE";
     })(ErrorCode || (ErrorCode = {}));
     function ngErrorCode(code) {
         return parseInt('-99' + code);
@@ -70155,6 +70162,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 declarations: extractReferencesFromType(this.checker, declarationMetadata, ref.ownedByModuleGuess, resolutionContext),
                 exports: extractReferencesFromType(this.checker, exportMetadata, ref.ownedByModuleGuess, resolutionContext),
                 imports: extractReferencesFromType(this.checker, importMetadata, ref.ownedByModuleGuess, resolutionContext),
+                schemas: [],
             };
         };
         /**
@@ -70820,6 +70828,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             });
             var matcher = new SelectorMatcher();
             var pipes = new Map();
+            var schemas = [];
             var scope = this.scopeReader.getScopeForComponent(node);
             if (scope !== null) {
                 try {
@@ -70852,9 +70861,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     finally { if (e_4) throw e_4.error; }
                 }
+                schemas = scope.schemas;
             }
             var bound = new R3TargetBinder(matcher).bind({ template: template.nodes });
-            ctx.addTemplate(new Reference$1(node), bound, pipes, meta.templateSourceMapping, template.file);
+            ctx.addTemplate(new Reference$1(node), bound, pipes, schemas, meta.templateSourceMapping, template.file);
         };
         ComponentDecoratorHandler.prototype.resolve = function (node, analysis) {
             var e_5, _a, e_6, _b, e_7, _c, e_8, _d;
@@ -71453,7 +71463,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         };
         NgModuleDecoratorHandler.prototype.analyze = function (node, decorator) {
-            var _a;
+            var _a, e_1, _b;
             var _this = this;
             var name = node.name.text;
             if (decorator.args === null || decorator.args.length > 1) {
@@ -71503,15 +71513,56 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 var bootstrapMeta = this.evaluator.evaluate(expr, forwardRefResolver);
                 bootstrapRefs = this.resolveTypeList(expr, bootstrapMeta, name, 'bootstrap');
             }
+            var schemas = [];
+            if (ngModule.has('schemas')) {
+                var rawExpr = ngModule.get('schemas');
+                var result = this.evaluator.evaluate(rawExpr);
+                if (!Array.isArray(result)) {
+                    throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, rawExpr, "NgModule.schemas must be an array");
+                }
+                try {
+                    for (var result_1 = __values(result), result_1_1 = result_1.next(); !result_1_1.done; result_1_1 = result_1.next()) {
+                        var schemaRef = result_1_1.value;
+                        if (!(schemaRef instanceof Reference$1)) {
+                            throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, rawExpr, 'NgModule.schemas must be an array of schemas');
+                        }
+                        var id_1 = schemaRef.getIdentityIn(schemaRef.node.getSourceFile());
+                        if (id_1 === null || schemaRef.ownedByModuleGuess !== '@angular/core') {
+                            throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, rawExpr, 'NgModule.schemas must be an array of schemas');
+                        }
+                        // Since `id` is the `ts.Identifer` within the schema ref's declaration file, it's safe to
+                        // use `id.text` here to figure out which schema is in use. Even if the actual reference was
+                        // renamed when the user imported it, these names will match.
+                        switch (id_1.text) {
+                            case 'CUSTOM_ELEMENTS_SCHEMA':
+                                schemas.push(CUSTOM_ELEMENTS_SCHEMA);
+                                break;
+                            case 'NO_ERRORS_SCHEMA':
+                                schemas.push(NO_ERRORS_SCHEMA);
+                                break;
+                            default:
+                                throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, rawExpr, "'" + schemaRef.debugName + "' is not a valid NgModule schema");
+                        }
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (result_1_1 && !result_1_1.done && (_b = result_1.return)) _b.call(result_1);
+                    }
+                    finally { if (e_1) throw e_1.error; }
+                }
+            }
             var id = ngModule.has('id') ? new WrappedNodeExpr(ngModule.get('id')) : null;
             // Register this module's information with the LocalModuleScopeRegistry. This ensures that
             // during the compile() phase, the module's metadata is available for selector scope
             // computation.
             this.metaRegistry.registerNgModuleMetadata({
                 ref: new Reference$1(node),
+                schemas: schemas,
                 declarations: declarationRefs,
                 imports: importRefs,
-                exports: exportRefs
+                exports: exportRefs,
             });
             var valueContext = node.getSourceFile();
             var typeContext = valueContext;
@@ -71573,7 +71624,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             };
         };
         NgModuleDecoratorHandler.prototype.resolve = function (node, analysis) {
-            var e_1, _a, e_2, _b;
+            var e_2, _a, e_3, _b;
             var scope = this.scopeRegistry.getScopeOfModule(node);
             var diagnostics = this.scopeRegistry.getDiagnosticsOfModule(node) || undefined;
             if (scope !== null) {
@@ -71588,12 +71639,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         }
                     }
                 }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
                         if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_1) throw e_1.error; }
+                    finally { if (e_2) throw e_2.error; }
                 }
                 try {
                     for (var _e = __values(analysis.declarations), _f = _e.next(); !_f.done; _f = _e.next()) {
@@ -71603,12 +71654,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         }
                     }
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
                 finally {
                     try {
                         if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                     }
-                    finally { if (e_2) throw e_2.error; }
+                    finally { if (e_3) throw e_3.error; }
                 }
             }
             if (scope === null || scope.reexports === null) {
@@ -71622,7 +71673,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         };
         NgModuleDecoratorHandler.prototype.compile = function (node, analysis) {
-            var e_3, _a;
+            var e_4, _a;
             var _this = this;
             var ngInjectorDef = compileInjector(analysis.ngInjectorDef);
             var ngModuleDef = compileNgModule(analysis.ngModuleDef);
@@ -71650,12 +71701,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
             var res = [
                 {
@@ -71744,7 +71795,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * @returns the identifier of the NgModule type if found, or null otherwise.
          */
         NgModuleDecoratorHandler.prototype._reflectModuleFromLiteralType = function (type) {
-            var e_4, _a, e_5, _b;
+            var e_5, _a, e_6, _b;
             if (!ts.isIntersectionTypeNode(type)) {
                 return null;
             }
@@ -71753,7 +71804,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var t = _d.value;
                     if (ts.isTypeLiteralNode(t)) {
                         try {
-                            for (var _e = (e_5 = void 0, __values(t.members)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            for (var _e = (e_6 = void 0, __values(t.members)), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var m = _f.value;
                                 var ngModuleType = ts.isPropertySignature(m) && ts.isIdentifier(m.name) &&
                                     m.name.text === 'ngModule' && m.type ||
@@ -71764,22 +71815,22 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                                 }
                             }
                         }
-                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
                         finally {
                             try {
                                 if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                             }
-                            finally { if (e_5) throw e_5.error; }
+                            finally { if (e_6) throw e_6.error; }
                         }
                     }
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_5) throw e_5.error; }
             }
             return null;
         };
@@ -74263,6 +74314,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 },
                 exported: exported,
                 reexports: reexports,
+                schemas: ngModule.schemas,
             };
             this.cache.set(ref.node, scope);
             return scope;
@@ -75030,17 +75082,24 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             messageText = diagnostic.messageText.messageText;
         }
         var mapping = resolver.getSourceMapping(sourceLocation.id);
+        return makeTemplateDiagnostic(mapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
+    }
+    /**
+     * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
+     */
+    function makeTemplateDiagnostic(mapping, span, category, code, messageText) {
         if (mapping.type === 'direct') {
             // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
             // constant within the `@Component` decorator for the template. This allows us to map the error
             // directly into the bytes of the source file.
             return {
                 source: 'ngtsc',
+                code: code,
+                category: category,
+                messageText: messageText,
                 file: mapping.node.getSourceFile(),
                 start: span.start.offset,
                 length: span.end.offset - span.start.offset,
-                code: diagnostic.code, messageText: messageText,
-                category: diagnostic.category,
             };
         }
         else if (mapping.type === 'indirect' || mapping.type === 'external') {
@@ -75060,12 +75119,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             var sf = ts.createSourceFile(fileName, mapping.template, ts.ScriptTarget.Latest, false, ts.ScriptKind.JSX);
             return {
                 source: 'ngtsc',
+                category: category,
+                code: code,
+                messageText: messageText,
                 file: sf,
                 start: span.start.offset,
                 length: span.end.offset - span.start.offset,
-                messageText: diagnostic.messageText,
-                category: diagnostic.category,
-                code: diagnostic.code,
                 // Show a secondary message indicating the component whose template contains the error.
                 relatedInformation: [{
                         category: ts.DiagnosticCategory.Message,
@@ -75136,6 +75195,45 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         return { start: +match[1], end: +match[2] };
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var REGISTRY = new DomElementSchemaRegistry();
+    /**
+     * Checks non-Angular elements and properties against the `DomElementSchemaRegistry`, a schema
+     * maintained by the Angular team via extraction from a browser IDL.
+     */
+    var RegistryDomSchemaChecker = /** @class */ (function () {
+        function RegistryDomSchemaChecker(resolver) {
+            this.resolver = resolver;
+            this._diagnostics = [];
+        }
+        Object.defineProperty(RegistryDomSchemaChecker.prototype, "diagnostics", {
+            get: function () { return this._diagnostics; },
+            enumerable: true,
+            configurable: true
+        });
+        RegistryDomSchemaChecker.prototype.checkElement = function (id, element, schemas) {
+            if (!REGISTRY.hasElement(element.name, schemas)) {
+                var mapping = this.resolver.getSourceMapping(id);
+                var diag = makeTemplateDiagnostic(mapping, element.sourceSpan, ts.DiagnosticCategory.Error, ErrorCode.SCHEMA_INVALID_ELEMENT, "'" + element.name + "' is not a valid HTML element.");
+                this._diagnostics.push(diag);
+            }
+        };
+        RegistryDomSchemaChecker.prototype.checkProperty = function (id, element, name, span, schemas) {
+            if (!REGISTRY.hasProperty(element.name, name, schemas)) {
+                var mapping = this.resolver.getSourceMapping(id);
+                var diag = makeTemplateDiagnostic(mapping, span, ts.DiagnosticCategory.Error, ErrorCode.SCHEMA_INVALID_ATTRIBUTE, "'" + name + "' is not a valid property of <" + element.name + ">.");
+                this._diagnostics.push(diag);
+            }
+        };
+        return RegistryDomSchemaChecker;
+    }());
 
     /**
      * @license
@@ -75730,6 +75828,77 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Represents the source of a template that was processed during type-checking. This information is
+     * used when translating parse offsets in diagnostics back to their original line/column location.
+     */
+    var TemplateSource = /** @class */ (function () {
+        function TemplateSource(mapping, file) {
+            this.mapping = mapping;
+            this.file = file;
+            this.lineStarts = null;
+        }
+        TemplateSource.prototype.toParseSourceSpan = function (start, end) {
+            var startLoc = this.toParseLocation(start);
+            var endLoc = this.toParseLocation(end);
+            return new ParseSourceSpan(startLoc, endLoc);
+        };
+        TemplateSource.prototype.toParseLocation = function (position) {
+            var lineStarts = this.acquireLineStarts();
+            var _a = getLineAndCharacterFromPosition(lineStarts, position), line = _a.line, character = _a.character;
+            return new ParseLocation(this.file, position, line, character);
+        };
+        TemplateSource.prototype.acquireLineStarts = function () {
+            if (this.lineStarts === null) {
+                this.lineStarts = computeLineStartsMap(this.file.content);
+            }
+            return this.lineStarts;
+        };
+        return TemplateSource;
+    }());
+    /**
+     * Assigns IDs to templates and keeps track of their origins.
+     *
+     * Implements `TcbSourceResolver` to resolve the source of a template based on these IDs.
+     */
+    var TcbSourceManager = /** @class */ (function () {
+        function TcbSourceManager() {
+            this.nextTcbId = 1;
+            /**
+             * This map keeps track of all template sources that have been type-checked by the id that is
+             * attached to a TCB's function declaration as leading trivia. This enables translation of
+             * diagnostics produced for TCB code to their source location in the template.
+             */
+            this.templateSources = new Map();
+        }
+        TcbSourceManager.prototype.captureSource = function (mapping, file) {
+            var id = "tcb" + this.nextTcbId++;
+            this.templateSources.set(id, new TemplateSource(mapping, file));
+            return id;
+        };
+        TcbSourceManager.prototype.getSourceMapping = function (id) {
+            if (!this.templateSources.has(id)) {
+                throw new Error("Unexpected unknown TCB ID: " + id);
+            }
+            return this.templateSources.get(id).mapping;
+        };
+        TcbSourceManager.prototype.sourceLocationToSpan = function (location) {
+            if (!this.templateSources.has(location.id)) {
+                return null;
+            }
+            var templateSource = this.templateSources.get(location.id);
+            return templateSource.toParseSourceSpan(location.start, location.end);
+        };
+        return TcbSourceManager;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var NULL_AS_ANY = ts.createAsExpression(ts.createNull(), ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
     var UNDEFINED$1 = ts.createIdentifier('undefined');
     var BINARY_OPS = new Map([
@@ -75936,8 +76105,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param meta metadata about the component's template and the function being generated.
      * @param importManager an `ImportManager` for the file into which the TCB will be written.
      */
-    function generateTypeCheckBlock(env, ref, name, meta) {
-        var tcb = new Context$1(env, meta.boundTarget, meta.pipes);
+    function generateTypeCheckBlock(env, ref, name, meta, domSchemaChecker) {
+        var tcb = new Context$1(env, domSchemaChecker, meta.id, meta.boundTarget, meta.pipes, meta.schemas);
         var scope = Scope$1.forNodes(tcb, null, tcb.boundTarget.target.template);
         var ctxRawType = env.referenceType(ref);
         if (!ts.isTypeReferenceNode(ctxRawType)) {
@@ -76224,6 +76393,59 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return TcbDirectiveOp;
     }(TcbOp));
     /**
+     * A `TcbOp` which feeds elements and unclaimed properties to the `DomSchemaChecker`.
+     *
+     * The DOM schema is not checked via TCB code generation. Instead, the `DomSchemaChecker` ingests
+     * elements and property bindings and accumulates synthetic `ts.Diagnostic`s out-of-band. These are
+     * later merged with the diagnostics generated from the TCB.
+     *
+     * For convenience, the TCB iteration of the template is used to drive the `DomSchemaChecker` via
+     * the `TcbDomSchemaCheckerOp`.
+     */
+    var TcbDomSchemaCheckerOp = /** @class */ (function (_super) {
+        __extends(TcbDomSchemaCheckerOp, _super);
+        function TcbDomSchemaCheckerOp(tcb, element, checkElement, claimedInputs) {
+            var _this = _super.call(this) || this;
+            _this.tcb = tcb;
+            _this.element = element;
+            _this.checkElement = checkElement;
+            _this.claimedInputs = claimedInputs;
+            return _this;
+        }
+        TcbDomSchemaCheckerOp.prototype.execute = function () {
+            var e_2, _a;
+            if (this.checkElement) {
+                this.tcb.domSchemaChecker.checkElement(this.tcb.id, this.element, this.tcb.schemas);
+            }
+            try {
+                // TODO(alxhub): this could be more efficient.
+                for (var _b = __values(this.element.inputs), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var binding = _c.value;
+                    if (binding.type === 0 /* Property */ && this.claimedInputs.has(binding.name)) {
+                        // Skip this binding as it was claimed by a directive.
+                        continue;
+                    }
+                    if (binding.type === 0 /* Property */) {
+                        if (binding.name !== 'style' && binding.name !== 'class') {
+                            // A direct binding to a property.
+                            var propertyName = ATTR_TO_PROP$1[binding.name] || binding.name;
+                            this.tcb.domSchemaChecker.checkProperty(this.tcb.id, this.element, propertyName, binding.sourceSpan, this.tcb.schemas);
+                        }
+                    }
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+            return null;
+        };
+        return TcbDomSchemaCheckerOp;
+    }(TcbOp));
+    /**
      * Mapping between attributes names that don't correspond to their element property names.
      * Note: this mapping has to be kept in sync with the equally named mapping in the runtime.
      */
@@ -76240,6 +76462,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * not attributed to any directive or component, and are instead processed against the HTML element
      * itself.
      *
+     * Currently, only the expressions of these bindings are checked. The targets of the bindings are
+     * checked against the DOM schema via a `TcbDomSchemaCheckerOp`.
+     *
      * Executing this operation returns nothing.
      */
     var TcbUnclaimedInputsOp = /** @class */ (function (_super) {
@@ -76253,7 +76478,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return _this;
         }
         TcbUnclaimedInputsOp.prototype.execute = function () {
-            var e_2, _a;
+            var e_3, _a;
             // `this.inputs` contains only those bindings not matched by any directive. These bindings go to
             // the element itself.
             var elId = this.scope.resolve(this.element);
@@ -76268,10 +76493,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var expr = tcbExpression(binding.value, this.tcb, this.scope, binding.valueSpan || binding.sourceSpan);
                     // If checking the type of bindings is disabled, cast the resulting expression to 'any' before
                     // the assignment.
-                    if (!this.tcb.env.config.checkTypeOfBindings) {
+                    if (!this.tcb.env.config.checkTypeOfInputBindings) {
                         expr = tsCastToAny(expr);
                     }
-                    if (binding.type === 0 /* Property */) {
+                    if (this.tcb.env.config.checkTypeOfDomBindings && binding.type === 0 /* Property */) {
                         if (binding.name !== 'style' && binding.name !== 'class') {
                             // A direct binding to a property.
                             var propertyName = ATTR_TO_PROP$1[binding.name] || binding.name;
@@ -76292,12 +76517,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             return null;
         };
@@ -76319,10 +76544,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * also contains the template metadata itself.
      */
     var Context$1 = /** @class */ (function () {
-        function Context(env, boundTarget, pipes) {
+        function Context(env, domSchemaChecker, id, boundTarget, pipes, schemas) {
             this.env = env;
+            this.domSchemaChecker = domSchemaChecker;
+            this.id = id;
             this.boundTarget = boundTarget;
             this.pipes = pipes;
+            this.schemas = schemas;
             this.nextId = 1;
         }
         /**
@@ -76408,7 +76636,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * calculate the `Scope`, or a list of nodes if no outer template object is available.
          */
         Scope.forNodes = function (tcb, parent, templateOrNodes) {
-            var e_3, _a, e_4, _b;
+            var e_4, _a, e_5, _b;
             var scope = new Scope(tcb, parent);
             var children;
             // If given an actual `TmplAstTemplate` instance, then process any additional information it
@@ -76422,12 +76650,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         scope.varMap.set(v, opIndex);
                     }
                 }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                catch (e_4_1) { e_4 = { error: e_4_1 }; }
                 finally {
                     try {
                         if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_3) throw e_3.error; }
+                    finally { if (e_4) throw e_4.error; }
                 }
                 children = templateOrNodes.children;
             }
@@ -76440,12 +76668,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     scope.appendNode(node);
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
                     if (children_1_1 && !children_1_1.done && (_b = children_1.return)) _b.call(children_1);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_5) throw e_5.error; }
             }
             return scope;
         };
@@ -76555,7 +76783,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return res;
         };
         Scope.prototype.appendNode = function (node) {
-            var e_5, _a;
+            var e_6, _a;
             if (node instanceof Element) {
                 var opIndex = this.opQueue.push(new TcbElementOp(this.tcb, this, node)) - 1;
                 this.elementOpMap.set(node, opIndex);
@@ -76566,12 +76794,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         this.appendNode(child);
                     }
                 }
-                catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
                 finally {
                     try {
                         if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_5) throw e_5.error; }
+                    finally { if (e_6) throw e_6.error; }
                 }
             }
             else if (node instanceof Template) {
@@ -76588,7 +76816,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         };
         Scope.prototype.appendDirectivesAndInputsOfNode = function (node) {
-            var e_6, _a, e_7, _b, e_8, _c;
+            var e_7, _a, e_8, _b, e_9, _c;
             // Collect all the inputs on the element.
             var claimedInputs = new Set();
             var directives = this.tcb.boundTarget.getDirectivesOfNode(node);
@@ -76597,6 +76825,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 // to add them if needed.
                 if (node instanceof Element) {
                     this.opQueue.push(new TcbUnclaimedInputsOp(this.tcb, this, node, claimedInputs));
+                    this.opQueue.push(new TcbDomSchemaCheckerOp(this.tcb, node, /* checkElement */ true, claimedInputs));
                 }
                 return;
             }
@@ -76608,12 +76837,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     dirMap.set(dir, dirIndex);
                 }
             }
-            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            catch (e_7_1) { e_7 = { error: e_7_1 }; }
             finally {
                 try {
                     if (directives_2_1 && !directives_2_1.done && (_a = directives_2.return)) _a.call(directives_2);
                 }
-                finally { if (e_6) throw e_6.error; }
+                finally { if (e_7) throw e_7.error; }
             }
             this.directiveOpMap.set(node, dirMap);
             // After expanding the directives, we might need to queue an operation to check any unclaimed
@@ -76624,29 +76853,35 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     for (var directives_3 = __values(directives), directives_3_1 = directives_3.next(); !directives_3_1.done; directives_3_1 = directives_3.next()) {
                         var dir = directives_3_1.value;
                         try {
-                            for (var _d = (e_8 = void 0, __values(Object.keys(dir.inputs))), _e = _d.next(); !_e.done; _e = _d.next()) {
+                            for (var _d = (e_9 = void 0, __values(Object.keys(dir.inputs))), _e = _d.next(); !_e.done; _e = _d.next()) {
                                 var fieldName = _e.value;
                                 var value = dir.inputs[fieldName];
                                 claimedInputs.add(Array.isArray(value) ? value[0] : value);
                             }
                         }
-                        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
                         finally {
                             try {
                                 if (_e && !_e.done && (_c = _d.return)) _c.call(_d);
                             }
-                            finally { if (e_8) throw e_8.error; }
+                            finally { if (e_9) throw e_9.error; }
                         }
                     }
                 }
-                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                catch (e_8_1) { e_8 = { error: e_8_1 }; }
                 finally {
                     try {
                         if (directives_3_1 && !directives_3_1.done && (_b = directives_3.return)) _b.call(directives_3);
                     }
-                    finally { if (e_7) throw e_7.error; }
+                    finally { if (e_8) throw e_8.error; }
                 }
                 this.opQueue.push(new TcbUnclaimedInputsOp(this.tcb, this, node, claimedInputs));
+                // If there are no directives which match this element, then it's a "plain" DOM element (or a
+                // web component), and should be checked against the DOM schema. If any directives match,
+                // we must assume that the element could be custom (either a component, or a directive like
+                // <router-outlet>) and shouldn't validate the element name itself.
+                var checkElement = directives.length === 0;
+                this.opQueue.push(new TcbDomSchemaCheckerOp(this.tcb, node, checkElement, claimedInputs));
             }
         };
         return Scope;
@@ -76695,7 +76930,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         // matching binding.
         var members = bindings.map(function (_a) {
             var field = _a.field, expression = _a.expression, sourceSpan = _a.sourceSpan;
-            if (!tcb.env.config.checkTypeOfBindings) {
+            if (!tcb.env.config.checkTypeOfInputBindings) {
                 expression = tsCastToAny(expression);
             }
             var assignment = ts.createPropertyAssignment(field, wrapForDiagnostics(expression));
@@ -76876,9 +77111,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             _this.tcbStatements = [];
             return _this;
         }
-        TypeCheckFile.prototype.addTypeCheckBlock = function (ref, meta) {
+        TypeCheckFile.prototype.addTypeCheckBlock = function (ref, meta, domSchemaChecker) {
             var fnId = ts.createIdentifier("_tcb" + this.nextTcbId++);
-            var fn = generateTypeCheckBlock(this, ref, fnId, meta);
+            var fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker);
             this.tcbStatements.push(fn);
         };
         TypeCheckFile.prototype.render = function () {
@@ -76971,13 +77206,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
              * queued.
              */
             this.typeCtorPending = new Set();
-            this.nextTcbId = 1;
-            /**
-             * This map keeps track of all template sources that have been type-checked by the id that is
-             * attached to a TCB's function declaration as leading trivia. This enables translation of
-             * diagnostics produced for TCB code to their source location in the template.
-             */
-            this.templateSources = new Map();
+            this.sourceManager = new TcbSourceManager();
+            this.domSchemaChecker = new RegistryDomSchemaChecker(this.sourceManager);
             this.typeCheckFile = new TypeCheckFile(typeCheckFilePath, this.config, this.refEmitter);
         }
         /**
@@ -76988,10 +77218,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * @param template AST nodes of the template being recorded.
          * @param matcher `SelectorMatcher` which tracks directives that are in scope for this template.
          */
-        TypeCheckContext.prototype.addTemplate = function (ref, boundTarget, pipes, sourceMapping, file) {
+        TypeCheckContext.prototype.addTemplate = function (ref, boundTarget, pipes, schemas, sourceMapping, file) {
             var e_1, _a;
-            var id = "tcb" + this.nextTcbId++;
-            this.templateSources.set(id, new TemplateSource(sourceMapping, file));
+            var id = this.sourceManager.captureSource(sourceMapping, file);
             try {
                 // Get all of the directives used in the template and record type constructors for all of them.
                 for (var _b = __values(boundTarget.getUsedDirectives()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -77022,14 +77251,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
                 finally { if (e_1) throw e_1.error; }
             }
+            var tcbMetadata = { id: id, boundTarget: boundTarget, pipes: pipes, schemas: schemas };
             if (requiresInlineTypeCheckBlock(ref.node)) {
                 // This class didn't meet the requirements for external type checking, so generate an inline
                 // TCB for the class.
-                this.addInlineTypeCheckBlock(ref, { id: id, boundTarget: boundTarget, pipes: pipes });
+                this.addInlineTypeCheckBlock(ref, tcbMetadata);
             }
             else {
                 // The class can be type-checked externally as normal.
-                this.typeCheckFile.addTypeCheckBlock(ref, { id: id, boundTarget: boundTarget, pipes: pipes });
+                this.typeCheckFile.addTypeCheckBlock(ref, tcbMetadata, this.domSchemaChecker);
             }
         };
         /**
@@ -77119,21 +77349,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 oldProgram: originalProgram,
                 rootNames: originalProgram.getRootFileNames(),
             });
-            var tcbResolver = {
-                getSourceMapping: function (id) {
-                    if (!_this.templateSources.has(id)) {
-                        throw new Error("Unexpected unknown TCB ID: " + id);
-                    }
-                    return _this.templateSources.get(id).mapping;
-                },
-                sourceLocationToSpan: function (location) {
-                    if (!_this.templateSources.has(location.id)) {
-                        return null;
-                    }
-                    var templateSource = _this.templateSources.get(location.id);
-                    return templateSource.toParseSourceSpan(location.start, location.end);
-                },
-            };
             var diagnostics = [];
             var collectDiagnostics = function (diags) {
                 var e_4, _a;
@@ -77141,7 +77356,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     for (var diags_1 = __values(diags), diags_1_1 = diags_1.next(); !diags_1_1.done; diags_1_1 = diags_1.next()) {
                         var diagnostic = diags_1_1.value;
                         if (shouldReportDiagnostic(diagnostic)) {
-                            var translated = translateDiagnostic(diagnostic, tcbResolver);
+                            var translated = translateDiagnostic(diagnostic, _this.sourceManager);
                             if (translated !== null) {
                                 diagnostics.push(translated);
                             }
@@ -77169,6 +77384,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
                 finally { if (e_3) throw e_3.error; }
             }
+            diagnostics.push.apply(diagnostics, __spread(this.domSchemaChecker.diagnostics));
             return {
                 diagnostics: diagnostics,
                 program: typeCheckProgram,
@@ -77180,46 +77396,19 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 this.opMap.set(sf, []);
             }
             var ops = this.opMap.get(sf);
-            ops.push(new TcbOp$1(ref, tcbMeta, this.config));
+            ops.push(new TcbOp$1(ref, tcbMeta, this.config, this.domSchemaChecker));
         };
         return TypeCheckContext;
-    }());
-    /**
-     * Represents the source of a template that was processed during type-checking. This information is
-     * used when translating parse offsets in diagnostics back to their original line/column location.
-     */
-    var TemplateSource = /** @class */ (function () {
-        function TemplateSource(mapping, file) {
-            this.mapping = mapping;
-            this.file = file;
-            this.lineStarts = null;
-        }
-        TemplateSource.prototype.toParseSourceSpan = function (start, end) {
-            var startLoc = this.toParseLocation(start);
-            var endLoc = this.toParseLocation(end);
-            return new ParseSourceSpan(startLoc, endLoc);
-        };
-        TemplateSource.prototype.toParseLocation = function (position) {
-            var lineStarts = this.acquireLineStarts();
-            var _a = getLineAndCharacterFromPosition(lineStarts, position), line = _a.line, character = _a.character;
-            return new ParseLocation(this.file, position, line, character);
-        };
-        TemplateSource.prototype.acquireLineStarts = function () {
-            if (this.lineStarts === null) {
-                this.lineStarts = computeLineStartsMap(this.file.content);
-            }
-            return this.lineStarts;
-        };
-        return TemplateSource;
     }());
     /**
      * A type check block operation which produces type check code for a particular component.
      */
     var TcbOp$1 = /** @class */ (function () {
-        function TcbOp(ref, meta, config) {
+        function TcbOp(ref, meta, config, domSchemaChecker) {
             this.ref = ref;
             this.meta = meta;
             this.config = config;
+            this.domSchemaChecker = domSchemaChecker;
         }
         Object.defineProperty(TcbOp.prototype, "splitPoint", {
             /**
@@ -77232,7 +77421,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         TcbOp.prototype.execute = function (im, sf, refEmitter, printer) {
             var env = new Environment(this.config, im, refEmitter, sf);
             var fnName = ts.createIdentifier("_tcb_" + this.ref.node.pos);
-            var fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta);
+            var fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta, this.domSchemaChecker);
             return printer.printNode(ts.EmitHint.Unspecified, fn, sf);
         };
         return TcbOp;
@@ -77354,7 +77543,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             generators.push(new TypeCheckShimGenerator(this.typeCheckFilePath));
             rootFiles.push(this.typeCheckFilePath);
             var entryPoint = null;
-            if (options.flatModuleOutFile !== undefined) {
+            if (options.flatModuleOutFile != null && options.flatModuleOutFile !== '') {
                 entryPoint = findFlatIndexEntryPoint(normalizedRootNames);
                 if (entryPoint === null) {
                     // This error message talks specifically about having a single .ts file in "files". However
@@ -77600,7 +77789,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     applyTemplateContextGuards: true,
                     checkQueries: false,
                     checkTemplateBodies: true,
-                    checkTypeOfBindings: true,
+                    checkTypeOfInputBindings: true,
+                    // Even in full template type-checking mode, DOM binding checks are not quite ready yet.
+                    checkTypeOfDomBindings: false,
                     checkTypeOfPipes: true,
                     strictSafeNavigationTypes: true,
                 };
@@ -77610,7 +77801,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     applyTemplateContextGuards: false,
                     checkQueries: false,
                     checkTemplateBodies: false,
-                    checkTypeOfBindings: false,
+                    checkTypeOfInputBindings: false,
+                    checkTypeOfDomBindings: false,
                     checkTypeOfPipes: false,
                     strictSafeNavigationTypes: false,
                 };
@@ -81335,7 +81527,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.3+9.sha-904a201.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.3+11.sha-4f7c971.with-local-changes');
 
     /**
      * @license
