@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.3+41.sha-860b5d0.with-local-changes
+ * @license Angular v9.0.0-next.3+43.sha-e63a7b0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18634,7 +18634,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.3+41.sha-860b5d0.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.3+43.sha-e63a7b0.with-local-changes');
 
     /**
      * @license
@@ -35438,34 +35438,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     function setCheckNoChangesMode(mode) {
         checkNoChangesMode = mode;
     }
-    /**
-     * The root index from which pure function instructions should calculate their binding
-     * indices. In component views, this is TView.bindingStartIndex. In a host binding
-     * context, this is the TView.expandoStartIndex + any dirs/hostVars before the given dir.
-     */
-    var bindingRootIndex = -1;
     function setBindingRoot(value) {
-        bindingRootIndex = value;
     }
     /**
-     * Swap the current state with a new state.
+     * Swap the current lView with a new lView.
      *
-     * For performance reasons we store the state in the top level of the module.
+     * For performance reasons we store the lView in the top level of the module.
      * This way we minimize the number of properties to read. Whenever a new view
-     * is entered we have to store the state for later, and when the view is
+     * is entered we have to store the lView for later, and when the view is
      * exited the state has to be restored
      *
-     * @param newView New state to become active
+     * @param newView New lView to become active
      * @param host Element to which the View is a child of
-     * @returns the previous state;
+     * @returns the previously active lView;
      */
-    function enterView(newView, hostTNode) {
+    function selectView(newView, hostTNode) {
         ngDevMode && assertLViewOrUndefined(newView);
         var oldView = lView;
-        if (newView) {
-            var tView = newView[TVIEW];
-            bindingRootIndex = tView.bindingStartIndex;
-        }
         previousOrParentTNode = hostTNode;
         isParent = true;
         lView = contextLView = newView;
@@ -35479,15 +35468,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         previousOrParentTNode = null;
         setCurrentStyleSanitizer(null);
         resetAllStylingState();
-    }
-    /**
-     * Used in lieu of enterView to make it clear when we are exiting a child view. This makes
-     * the direction of traversal (up or down the view tree) a bit clearer.
-     *
-     * @param newView New LView to become active
-     */
-    function leaveView(newView) {
-        enterView(newView, null);
     }
     var _currentSanitizer;
     function setCurrentStyleSanitizer(sanitizer) {
@@ -38595,7 +38575,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         try {
             if (tView.expandoInstructions !== null) {
                 var bindingRootIndex = viewData[BINDING_INDEX] = tView.expandoStartIndex;
-                setBindingRoot(bindingRootIndex);
                 var currentDirectiveIndex = -1;
                 var currentElementIndex = -1;
                 for (var i = 0; i < tView.expandoInstructions.length; i++) {
@@ -38616,7 +38595,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                             // (to get to the next set of host bindings on this node).
                             bindingRootIndex += instruction;
                         }
-                        setBindingRoot(bindingRootIndex);
                     }
                     else {
                         // If it's not a number, it's a host binding function that needs to be executed.
@@ -38752,7 +38730,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     function renderView(lView, tView, context) {
         ngDevMode && assertEqual(isCreationMode(lView), true, 'Should be run in creation mode');
-        var oldView = enterView(lView, lView[T_HOST]);
+        var oldView = selectView(lView, lView[T_HOST]);
         try {
             var viewQuery = tView.viewQuery;
             if (viewQuery !== null) {
@@ -38792,7 +38770,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         }
         finally {
             lView[FLAGS] &= ~4 /* CreationMode */;
-            leaveView(oldView);
+            selectView(oldView, null);
         }
     }
     /**
@@ -38805,13 +38783,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     function refreshView(lView, tView, templateFn, context) {
         ngDevMode && assertEqual(isCreationMode(lView), false, 'Should be run in update mode');
-        var oldView = enterView(lView, lView[T_HOST]);
+        var oldView = selectView(lView, lView[T_HOST]);
         var flags = lView[FLAGS];
         try {
             resetPreOrderHookFlags(lView);
-            // Resetting the bindingIndex of the current LView as the next steps may trigger change
-            // detection.
-            lView[BINDING_INDEX] = tView.bindingStartIndex;
+            setBindingRoot(lView[BINDING_INDEX] = tView.bindingStartIndex);
             if (templateFn !== null) {
                 executeTemplate(lView, templateFn, 2 /* Update */, context);
             }
@@ -38886,8 +38862,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         }
         finally {
             lView[FLAGS] &= ~(64 /* Dirty */ | 8 /* FirstLViewPass */);
-            lView[BINDING_INDEX] = tView.bindingStartIndex;
-            leaveView(oldView);
+            selectView(oldView, null);
         }
     }
     function renderComponentOrTemplate(hostView, templateFn, context) {
@@ -43351,7 +43326,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.3+41.sha-860b5d0.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.3+43.sha-e63a7b0.with-local-changes');
 
     /**
      * @license
@@ -46217,7 +46192,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             var rootTView = createTView(-1, null, 1, 0, null, null, null, null);
             var rootLView = createLView(null, rootTView, rootContext, rootFlags, null, null, rendererFactory, renderer, sanitizer, rootViewInjector);
             // rootView is the parent when bootstrapping
-            var oldLView = enterView(rootLView, null);
+            var oldLView = selectView(rootLView, null);
             var component;
             var tElementNode;
             try {
@@ -46237,7 +46212,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 renderView(rootLView, rootTView, null);
             }
             finally {
-                leaveView(oldLView);
+                selectView(oldLView, null);
             }
             var componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootLView), rootLView, tElementNode);
             if (!rootSelectorOrNode || isIsolated) {
@@ -50365,7 +50340,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -53606,7 +53581,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.3+41.sha-860b5d0.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.3+43.sha-e63a7b0.with-local-changes');
 
     /**
      * @license
@@ -70638,7 +70613,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.3+41.sha-860b5d0.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.3+43.sha-e63a7b0.with-local-changes');
 
     /**
      * @license
