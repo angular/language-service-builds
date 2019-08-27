@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.3+53.sha-14feb56.with-local-changes
+ * @license Angular v9.0.0-next.3+55.sha-7c7fcd7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3601,6 +3601,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             name: 'ɵɵComponentDefWithMeta',
             moduleName: CORE$1,
         };
+        Identifiers.FactoryDef = {
+            name: 'ɵɵFactoryDef',
+            moduleName: CORE$1,
+        };
         Identifiers.defineDirective = {
             name: 'ɵɵdefineDirective',
             moduleName: CORE$1,
@@ -3653,6 +3657,58 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         Identifiers.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
         return Identifiers;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Convert an object map with `Expression` values into a `LiteralMapExpr`.
+     */
+    function mapToMapExpression(map) {
+        var result = Object.keys(map).map(function (key) { return ({ key: key, value: map[key], quoted: false }); });
+        return literalMap(result);
+    }
+    /**
+     * Convert metadata into an `Expression` in the given `OutputContext`.
+     *
+     * This operation will handle arrays, references to symbols, or literal `null` or `undefined`.
+     */
+    function convertMetaToOutput(meta, ctx) {
+        if (Array.isArray(meta)) {
+            return literalArr(meta.map(function (entry) { return convertMetaToOutput(entry, ctx); }));
+        }
+        if (meta instanceof StaticSymbol) {
+            return ctx.importExpr(meta);
+        }
+        if (meta == null) {
+            return literal(meta);
+        }
+        throw new Error("Internal error: Unsupported or unknown metadata: " + meta);
+    }
+    function typeWithParameters(type, numParams) {
+        var params = null;
+        if (numParams > 0) {
+            params = [];
+            for (var i = 0; i < numParams; i++) {
+                params.push(DYNAMIC_TYPE);
+            }
+        }
+        return expressionType(type, null, params);
+    }
+    var ANIMATE_SYMBOL_PREFIX = '@';
+    function prepareSyntheticPropertyName(name) {
+        return "" + ANIMATE_SYMBOL_PREFIX + name;
+    }
+    function prepareSyntheticListenerName(name, phase) {
+        return "" + ANIMATE_SYMBOL_PREFIX + name + "." + phase;
+    }
+    function prepareSyntheticListenerFunctionName(name, phase) {
+        return "animation_" + name + "_" + phase;
+    }
 
     /**
      * @license
@@ -5447,7 +5503,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return {
             factory: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, meta.name + "_Factory"),
             statements: statements,
+            type: expressionType(importExpr(Identifiers$1.FactoryDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]))
         };
+    }
+    /**
+     * Constructs the `ngFactoryDef` from directive/component/pipe metadata.
+     */
+    function compileFactoryFromMetadata(meta) {
+        return compileFactoryFunction({
+            name: meta.name,
+            type: meta.type,
+            deps: meta.deps,
+            typeArgumentCount: meta.typeArgumentCount,
+            // TODO(crisbeto): this should be refactored once we start using it for injectables.
+            injectFn: Identifiers$1.directiveInject,
+        }, meta.isPipe);
     }
     function injectDependencies(deps, injectFn, isPipe) {
         return deps.map(function (dep) { return compileInjectDependency(dep, injectFn, isPipe); });
@@ -5548,63 +5618,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Convert an object map with `Expression` values into a `LiteralMapExpr`.
-     */
-    function mapToMapExpression(map) {
-        var result = Object.keys(map).map(function (key) { return ({ key: key, value: map[key], quoted: false }); });
-        return literalMap(result);
-    }
-    /**
-     * Convert metadata into an `Expression` in the given `OutputContext`.
-     *
-     * This operation will handle arrays, references to symbols, or literal `null` or `undefined`.
-     */
-    function convertMetaToOutput(meta, ctx) {
-        if (Array.isArray(meta)) {
-            return literalArr(meta.map(function (entry) { return convertMetaToOutput(entry, ctx); }));
-        }
-        if (meta instanceof StaticSymbol) {
-            return ctx.importExpr(meta);
-        }
-        if (meta == null) {
-            return literal(meta);
-        }
-        throw new Error("Internal error: Unsupported or unknown metadata: " + meta);
-    }
-    function typeWithParameters(type, numParams) {
-        var params = null;
-        if (numParams > 0) {
-            params = [];
-            for (var i = 0; i < numParams; i++) {
-                params.push(DYNAMIC_TYPE);
-            }
-        }
-        return expressionType(type, null, params);
-    }
-    var ANIMATE_SYMBOL_PREFIX = '@';
-    function prepareSyntheticPropertyName(name) {
-        return "" + ANIMATE_SYMBOL_PREFIX + name;
-    }
-    function prepareSyntheticListenerName(name, phase) {
-        return "" + ANIMATE_SYMBOL_PREFIX + name + "." + phase;
-    }
-    function prepareSyntheticListenerFunctionName(name, phase) {
-        return "animation_" + name + "_" + phase;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function compileInjectable(meta) {
         var result = null;
         var factoryMeta = {
             name: meta.name,
             type: meta.type,
+            typeArgumentCount: meta.typeArgumentCount,
             deps: meta.ctorDeps,
             injectFn: Identifiers.inject,
         };
@@ -6830,6 +6849,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var result = compileFactoryFunction({
             name: meta.name,
             type: meta.type,
+            typeArgumentCount: 0,
             deps: meta.deps,
             injectFn: Identifiers$1.inject,
         });
@@ -6891,13 +6911,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         definitionMapValues.push({ key: 'name', value: literal(metadata.pipeName), quoted: false });
         // e.g. `type: MyPipe`
         definitionMapValues.push({ key: 'type', value: metadata.type, quoted: false });
-        var templateFactory = compileFactoryFunction({
-            name: metadata.name,
-            type: metadata.type,
-            deps: metadata.deps,
-            injectFn: Identifiers$1.directiveInject,
-        }, true);
-        definitionMapValues.push({ key: 'factory', value: templateFactory.factory, quoted: false });
         // e.g. `pure: true`
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         var expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
@@ -6905,7 +6918,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             typeWithParameters(metadata.type, metadata.typeArgumentCount),
             new ExpressionType(new LiteralExpr(metadata.pipeName)),
         ]));
-        return { expression: expression, type: type, statements: templateFactory.statements };
+        return { expression: expression, type: type };
     }
     /**
      * Write a pipe definition to the output context.
@@ -6924,8 +6937,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             pure: pipe.pure,
         };
         var res = compilePipeFromMetadata(metadata);
+        var factoryRes = compileFactoryFromMetadata(__assign({}, metadata, { isPipe: true }));
         var definitionField = outputCtx.constantPool.propertyNameOf(3 /* Pipe */);
-        outputCtx.statements.push(new ClassStmt(
+        var ngFactoryDefStatement = new ClassStmt(
+        /* name */ name, 
+        /* parent */ null, 
+        /* fields */
+        [new ClassField(
+            /* name */ 'ngFactoryDef', 
+            /* type */ INFERRED_TYPE, 
+            /* modifiers */ [StmtModifier.Static], 
+            /* initializer */ factoryRes.factory)], 
+        /* getters */ [], 
+        /* constructorMethod */ new ClassMethod(null, [], []), 
+        /* methods */ []);
+        var pipeDefStatement = new ClassStmt(
         /* name */ name, 
         /* parent */ null, 
         /* fields */ [new ClassField(
@@ -6935,7 +6961,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             /* initializer */ res.expression)], 
         /* getters */ [], 
         /* constructorMethod */ new ClassMethod(null, [], []), 
-        /* methods */ []));
+        /* methods */ []);
+        outputCtx.statements.push(ngFactoryDefStatement, pipeDefStatement);
     }
 
     /**
@@ -17651,14 +17678,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         definitionMap.set('type', meta.type);
         // e.g. `selectors: [['', 'someDir', '']]`
         definitionMap.set('selectors', createDirectiveSelector(meta.selector));
-        // e.g. `factory: () => new MyApp(directiveInject(ElementRef))`
-        var result = compileFactoryFunction({
-            name: meta.name,
-            type: meta.type,
-            deps: meta.deps,
-            injectFn: Identifiers$1.directiveInject,
-        });
-        definitionMap.set('factory', result.factory);
         if (meta.queries.length > 0) {
             // e.g. `contentQueries: (rf, ctx, dirIndex) => { ... }
             definitionMap.set('contentQueries', createContentQueriesFunction(meta.queries, constantPool, meta.name));
@@ -17675,7 +17694,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (meta.exportAs !== null) {
             definitionMap.set('exportAs', literalArr(meta.exportAs.map(function (e) { return literal(e); })));
         }
-        return { definitionMap: definitionMap, statements: result.statements };
+        return definitionMap;
     }
     /**
      * Add features to the definition map.
@@ -17706,11 +17725,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Compile a directive for the render3 runtime as defined by the `R3DirectiveMetadata`.
      */
     function compileDirectiveFromMetadata(meta, constantPool, bindingParser) {
-        var _a = baseDirectiveFields(meta, constantPool, bindingParser), definitionMap = _a.definitionMap, statements = _a.statements;
+        var definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         addFeatures(definitionMap, meta);
         var expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
         var type = createTypeForDef(meta, Identifiers$1.DirectiveDefWithMeta);
-        return { expression: expression, type: type, statements: statements };
+        return { expression: expression, type: type };
     }
     /**
      * Compile a base definition for the render3 runtime as defined by {@link R3BaseRefMetadata}
@@ -17753,7 +17772,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     function compileComponentFromMetadata(meta, constantPool, bindingParser) {
         var e_1, _a;
-        var _b = baseDirectiveFields(meta, constantPool, bindingParser), definitionMap = _b.definitionMap, statements = _b.statements;
+        var definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         addFeatures(definitionMap, meta);
         var selector = meta.selector && CssSelector.parse(meta.selector);
         var firstSelector = selector && selector[0];
@@ -17771,15 +17790,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (meta.directives.length > 0) {
             var matcher = new SelectorMatcher();
             try {
-                for (var _c = __values(meta.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var _e = _d.value, selector_1 = _e.selector, expression_1 = _e.expression;
+                for (var _b = __values(meta.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var _d = _c.value, selector_1 = _d.selector, expression_1 = _d.expression;
                     matcher.addSelectables(CssSelector.parse(selector_1), expression_1);
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
@@ -17853,7 +17872,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var selectorForType = (meta.selector || '').replace(/\n/g, '');
         var expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
         var type = createTypeForDef(meta, Identifiers$1.ComponentDefWithMeta);
-        return { expression: expression, type: type, statements: statements };
+        return { expression: expression, type: type };
     }
     /**
      * A wrapper around `compileDirective` which depends on render2 global analysis data as its input
@@ -17868,8 +17887,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var definitionField = outputCtx.constantPool.propertyNameOf(1 /* Directive */);
         var meta = directiveMetadataFromGlobalMetadata(directive, outputCtx, reflector);
         var res = compileDirectiveFromMetadata(meta, outputCtx.constantPool, bindingParser);
+        var factoryRes = compileFactoryFromMetadata(meta);
+        var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ngFactoryDef', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
+        var directiveDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
-        outputCtx.statements.push(new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []));
+        outputCtx.statements.push(ngFactoryDefStatement, directiveDefStatement);
     }
     /**
      * A wrapper around `compileComponent` which depends on render2 global analysis data as its input
@@ -17886,8 +17908,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         // Compute the R3ComponentMetadata from the CompileDirectiveMetadata
         var meta = __assign({}, directiveMetadataFromGlobalMetadata(component, outputCtx, reflector), { selector: component.selector, template: { nodes: render3Ast.nodes }, directives: [], pipes: typeMapToExpressionMap(pipeTypeByName, outputCtx), viewQueries: queriesFromGlobalMetadata(component.viewQueries, outputCtx), wrapDirectivesAndPipesInClosure: false, styles: (summary.template && summary.template.styles) || EMPTY_ARRAY, encapsulation: (summary.template && summary.template.encapsulation) || ViewEncapsulation.Emulated, interpolation: DEFAULT_INTERPOLATION_CONFIG, animations: null, viewProviders: component.viewProviders.length > 0 ? new WrappedNodeExpr(component.viewProviders) : null, relativeContextFilePath: '', i18nUseExternalIds: true });
         var res = compileComponentFromMetadata(meta, outputCtx.constantPool, bindingParser);
+        var factoryRes = compileFactoryFromMetadata(meta);
+        var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ngFactoryDef', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
+        var componentDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
-        outputCtx.statements.push(new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []));
+        outputCtx.statements.push(ngFactoryDefStatement, componentDefStatement);
     }
     /**
      * Compute `R3DirectiveMetadata` given `CompileDirectiveMetadata` and a `CompileReflector`.
@@ -18392,15 +18417,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
         CompilerFacadeImpl.prototype.compilePipe = function (angularCoreEnv, sourceMapUrl, facade) {
-            var res = compilePipeFromMetadata({
+            var metadata = {
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
                 typeArgumentCount: facade.typeArgumentCount,
                 deps: convertR3DependencyMetadataArray(facade.deps),
                 pipeName: facade.pipeName,
                 pure: facade.pure,
-            });
-            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
+            };
+            var res = compilePipeFromMetadata(metadata);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         };
         CompilerFacadeImpl.prototype.compileInjectable = function (angularCoreEnv, sourceMapUrl, facade) {
             var _a = compileInjectable({
@@ -18448,8 +18474,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             var bindingParser = makeBindingParser();
             var meta = convertDirectiveFacadeToMetadata(facade);
             var res = compileDirectiveFromMetadata(meta, constantPool, bindingParser);
-            var preStatements = __spread(constantPool.statements, res.statements);
-            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, constantPool.statements);
         };
         CompilerFacadeImpl.prototype.compileComponent = function (angularCoreEnv, sourceMapUrl, facade) {
             // The ConstantPool is a requirement of the JIT'er.
@@ -18465,10 +18490,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
             // Compile the component metadata, including template, into an expression.
             // TODO(alxhub): implement inputs, outputs, queries, etc.
-            var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, interpolation: interpolationConfig, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
-                    null, relativeContextFilePath: '', i18nUseExternalIds: true }), constantPool, makeBindingParser(interpolationConfig));
-            var preStatements = __spread(constantPool.statements, res.statements);
-            return this.jitExpression(res.expression, angularCoreEnv, "ng:///" + facade.name + ".js", preStatements);
+            var metadata = __assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, interpolation: interpolationConfig, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
+                    null, relativeContextFilePath: '', i18nUseExternalIds: true });
+            var res = compileComponentFromMetadata(metadata, constantPool, makeBindingParser(interpolationConfig));
+            var jitExpressionSourceMap = "ng:///" + facade.name + ".js";
+            return this.jitExpression(res.expression, angularCoreEnv, jitExpressionSourceMap, constantPool.statements);
+        };
+        CompilerFacadeImpl.prototype.compileFactory = function (angularCoreEnv, sourceMapUrl, meta, isPipe) {
+            if (isPipe === void 0) { isPipe = false; }
+            var factoryRes = compileFactoryFromMetadata({
+                name: meta.name,
+                type: new WrappedNodeExpr(meta.type),
+                typeArgumentCount: meta.typeArgumentCount,
+                deps: convertR3DependencyMetadataArray(meta.deps), isPipe: isPipe
+            });
+            return this.jitExpression(factoryRes.factory, angularCoreEnv, sourceMapUrl, factoryRes.statements);
         };
         CompilerFacadeImpl.prototype.compileBase = function (angularCoreEnv, sourceMapUrl, facade) {
             var constantPool = new ConstantPool();
@@ -18634,7 +18670,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.3+53.sha-14feb56.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.3+55.sha-7c7fcd7.with-local-changes');
 
     /**
      * @license
@@ -35035,6 +35071,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
     var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
     var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
+    var NG_FACTORY_DEF = getClosureSafeProperty({ ngFactoryDef: getClosureSafeProperty });
     /**
      * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
      * the key and the directive's unique ID as the value. This allows us to map directives to their
@@ -35057,6 +35094,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     function getComponentDef(type) {
         return type[NG_COMPONENT_DEF] || null;
+    }
+    function getFactoryDef(type, throwNotFound) {
+        var factoryFn = type[NG_FACTORY_DEF] || null;
+        if (!factoryFn && throwNotFound === true && ngDevMode) {
+            throw new Error("Type " + stringify$1(type) + " does not have 'ngFactoryDef' property.");
+        }
+        return factoryFn;
     }
     function getNgModuleDef(type, throwNotFound) {
         var ngModuleDef = type[NG_MODULE_DEF] || null;
@@ -39106,7 +39150,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             if (def.providersResolver)
                 def.providersResolver(def);
             generateExpandoInstructionBlock(tView, rootTNode, 1);
-            baseResolveDirective(tView, viewData, def, def.factory);
+            baseResolveDirective(tView, viewData, def);
         }
         var directive = getNodeInjectable(tView.data, viewData, viewData.length - 1, rootTNode);
         postProcessBaseDirective(viewData, rootTNode, directive);
@@ -39173,8 +39217,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         tNode.directiveEnd = index + numberOfDirectives;
         tNode.providerIndexes = index;
     }
-    function baseResolveDirective(tView, viewData, def, directiveFactory) {
+    function baseResolveDirective(tView, viewData, def) {
         tView.data.push(def);
+        var directiveFactory = def.factory || (def.factory = getFactoryDef(def.type, true));
         var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
@@ -40948,8 +40993,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     function injectableDefOrInjectorDefFactory(token) {
         // Most tokens will have an ngInjectableDef directly on them, which specifies a factory directly.
         var injectableDef = getInjectableDef(token);
-        if (injectableDef !== null) {
-            return injectableDef.factory;
+        var factory = injectableDef !== null ? injectableDef.factory : getFactoryDef(token);
+        if (factory !== null) {
+            return factory;
         }
         // If the token is an NgModule, it's also injectable but the factory is on its ngInjectorDef.
         var injectorDef = getInjectorDef(token);
@@ -43326,7 +43372,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.3+53.sha-14feb56.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.3+55.sha-7c7fcd7.with-local-changes');
 
     /**
      * @license
@@ -50340,7 +50386,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -53592,7 +53638,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.3+53.sha-14feb56.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.3+55.sha-7c7fcd7.with-local-changes');
 
     /**
      * @license
@@ -54243,6 +54289,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ngInjectorDef',
         'ngModuleDef',
         'ngPipeDef',
+        'ngFactoryDef',
     ].join('|');
     // Pattern matching `Identifier.property` where property is a Render3 property.
     var R3_DEF_ACCESS_PATTERN = "[^\\s\\.()[\\]]+.(" + R3_DEF_NAME_PATTERN + ")";
@@ -58178,6 +58225,23 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function compileNgFactoryDefField(metadata) {
+        var res = compileFactoryFromMetadata(metadata);
+        return {
+            name: 'ngFactoryDef',
+            initializer: res.factory,
+            statements: res.statements,
+            type: res.type
+        };
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var ConstructorDepErrorKind;
     (function (ConstructorDepErrorKind) {
         ConstructorDepErrorKind[ConstructorDepErrorKind["NO_SUITABLE_TOKEN"] = 0] = "NO_SUITABLE_TOKEN";
@@ -58615,17 +58679,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             };
         };
         DirectiveDecoratorHandler.prototype.compile = function (node, analysis, pool) {
-            var res = compileDirectiveFromMetadata(analysis.meta, pool, makeBindingParser());
-            var statements = res.statements;
+            var meta = analysis.meta;
+            var res = compileDirectiveFromMetadata(meta, pool, makeBindingParser());
+            var factoryRes = compileNgFactoryDefField(meta);
             if (analysis.metadataStmt !== null) {
-                statements.push(analysis.metadataStmt);
+                factoryRes.statements.push(analysis.metadataStmt);
             }
-            return {
-                name: 'ngDirectiveDef',
-                initializer: res.expression,
-                statements: statements,
-                type: res.type,
-            };
+            return [
+                factoryRes, {
+                    name: 'ngDirectiveDef',
+                    initializer: res.expression,
+                    statements: [],
+                    type: res.type,
+                }
+            ];
         };
         return DirectiveDecoratorHandler;
     }());
@@ -60039,16 +60106,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return {};
         };
         ComponentDecoratorHandler.prototype.compile = function (node, analysis, pool) {
-            var res = compileComponentFromMetadata(analysis.meta, pool, makeBindingParser());
-            var statements = res.statements;
+            var meta = analysis.meta;
+            var res = compileComponentFromMetadata(meta, pool, makeBindingParser());
+            var factoryRes = compileNgFactoryDefField(meta);
             if (analysis.metadataStmt !== null) {
-                statements.push(analysis.metadataStmt);
+                factoryRes.statements.push(analysis.metadataStmt);
             }
-            return {
-                name: 'ngComponentDef',
-                initializer: res.expression, statements: statements,
-                type: res.type,
-            };
+            return [
+                factoryRes, {
+                    name: 'ngComponentDef',
+                    initializer: res.expression,
+                    statements: [],
+                    type: res.type,
+                }
+            ];
         };
         ComponentDecoratorHandler.prototype._resolveLiteral = function (decorator) {
             if (this.literalCache.has(decorator)) {
@@ -61005,16 +61076,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             };
         };
         PipeDecoratorHandler.prototype.compile = function (node, analysis) {
-            var res = compilePipeFromMetadata(analysis.meta);
-            var statements = res.statements;
+            var meta = analysis.meta;
+            var res = compilePipeFromMetadata(meta);
+            var factoryRes = compileNgFactoryDefField(__assign({}, meta, { isPipe: true }));
             if (analysis.metadataStmt !== null) {
-                statements.push(analysis.metadataStmt);
+                factoryRes.statements.push(analysis.metadataStmt);
             }
-            return {
-                name: 'ngPipeDef',
-                initializer: res.expression, statements: statements,
-                type: res.type,
-            };
+            return [
+                factoryRes, {
+                    name: 'ngPipeDef',
+                    initializer: res.expression,
+                    statements: [],
+                    type: res.type,
+                }
+            ];
         };
         return PipeDecoratorHandler;
     }());
@@ -70624,7 +70699,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.3+53.sha-14feb56.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.3+55.sha-7c7fcd7.with-local-changes');
 
     /**
      * @license
