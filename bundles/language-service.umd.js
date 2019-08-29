@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+30.sha-63dff9c.with-local-changes
+ * @license Angular v9.0.0-next.4+31.sha-d5101df.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18669,7 +18669,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+31.sha-d5101df.with-local-changes');
 
     /**
      * @license
@@ -33931,7 +33931,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+31.sha-d5101df.with-local-changes');
 
     /**
      * @license
@@ -60165,7 +60165,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+31.sha-d5101df.with-local-changes');
 
     /**
      * @license
@@ -63941,7 +63941,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -70791,7 +70791,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+31.sha-d5101df.with-local-changes');
 
     /**
      * @license
