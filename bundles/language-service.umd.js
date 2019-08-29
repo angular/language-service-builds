@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+17.sha-97fc45f.with-local-changes
+ * @license Angular v9.0.0-next.4+21.sha-18ce58c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18670,7 +18670,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
 
     /**
      * @license
@@ -32097,6 +32097,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
         DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
     })(DiagnosticKind$1 || (DiagnosticKind$1 = {}));
+    /**
+     * The type of Angular directive. Used for QuickInfo in template.
+     */
+    var DirectiveKind;
+    (function (DirectiveKind) {
+        DirectiveKind["COMPONENT"] = "component";
+        DirectiveKind["DIRECTIVE"] = "directive";
+        DirectiveKind["EVENT"] = "event";
+    })(DirectiveKind || (DirectiveKind = {}));
 
     /**
      * @license
@@ -33421,7 +33430,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                     var component = ast.directives.find(function (d) { return d.directive.isComponent; });
                     if (component) {
                         symbol_1 = info.template.query.getTypeSymbol(component.directive.type.reference);
-                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'component');
+                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.COMPONENT);
                         span_1 = spanOf$2(ast);
                     }
                     else {
@@ -33429,7 +33438,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                         var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
                         if (directive) {
                             symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                            symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'directive');
+                            symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.DIRECTIVE);
                             span_1 = spanOf$2(ast);
                         }
                     }
@@ -33442,7 +33451,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 visitEvent: function (ast) {
                     if (!attributeValueSymbol_1(ast.handler, /* inEvent */ true)) {
                         symbol_1 = findOutputBinding(info, path, ast);
-                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'event');
+                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.EVENT);
                         span_1 = spanOf$2(ast);
                     }
                 },
@@ -33923,7 +33932,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
 
     /**
      * @license
@@ -55503,11 +55512,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         // Keep this function short, so that the VM will inline it.
         var adjustedIndex = index + HEADER_OFFSET;
         var tNode = tView.data[adjustedIndex] ||
-            createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs, index);
+            createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs);
         setPreviousOrParentTNode(tNode, true);
         return tNode;
     }
-    function createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs, index) {
+    function createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs) {
         var previousOrParentTNode = getPreviousOrParentTNode();
         var isParent = getIsParent();
         var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
@@ -55517,9 +55526,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var tParentNode = parentInSameView ? parent : null;
         var tNode = tView.data[adjustedIndex] =
             createTNode(tView, tParentNode, type, adjustedIndex, name, attrs);
-        // The first node is not always the one at index 0, in case of i18n, index 0 can be the
-        // instruction `i18nStart` and the first node has the index 1 or more
-        if (index === 0 || !tView.firstChild) {
+        // Assign a pointer to the first child node of a given view. The first node is not always the one
+        // at index 0, in case of i18n, index 0 can be the instruction `i18nStart` and the first node has
+        // the index 1 or more, so we can't just check node index.
+        if (tView.firstChild === null) {
             tView.firstChild = tNode;
         }
         if (previousOrParentTNode) {
@@ -60156,7 +60166,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
 
     /**
      * @license
@@ -67170,7 +67180,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -70782,7 +70792,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
 
     /**
      * @license

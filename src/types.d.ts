@@ -208,6 +208,14 @@ export declare enum DiagnosticKind {
     Warning = 1
 }
 /**
+ * The type of Angular directive. Used for QuickInfo in template.
+ */
+export declare enum DirectiveKind {
+    COMPONENT = "component",
+    DIRECTIVE = "directive",
+    EVENT = "event"
+}
+/**
  * A template diagnostics message chain. This is similar to the TypeScript
  * DiagnosticMessageChain. The messages are intended to be formatted as separate
  * sentence fragments and indented.
