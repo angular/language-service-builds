@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/typescript_host" />
-import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
+import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader, StaticReflector } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult } from './common';
 import { Declaration, Diagnostic, LanguageService, LanguageServiceHost, TemplateSource } from './types';
@@ -43,8 +43,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly summaryResolver;
     private readonly reflectorHost;
     private readonly staticSymbolResolver;
-    private readonly reflector;
-    private readonly resolver;
+    private resolver;
     private readonly staticSymbolCache;
     private readonly fileToComponent;
     private readonly collectedErrors;
@@ -54,7 +53,8 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private analyzedModules;
     constructor(host: ts.LanguageServiceHost, tsLS: ts.LanguageService);
     /**
-     * Creates a new metadata resolver. This should only be called once.
+     * Creates a new metadata resolver. This is needed whenever the program
+     * changes.
      */
     private createMetadataResolver;
     getTemplateReferences(): string[];
@@ -81,6 +81,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     getDeclarations(fileName: string): Declaration[];
     getSourceFile(fileName: string): ts.SourceFile | undefined;
     readonly program: ts.Program;
+    readonly reflector: StaticReflector;
     /**
      * Checks whether the program has changed, and invalidate caches if it has.
      * Returns true if modules are up-to-date, false otherwise.
