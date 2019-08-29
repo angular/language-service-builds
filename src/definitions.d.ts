@@ -15,3 +15,7 @@ import { AstResult } from './common';
  * @param position
  */
 export declare function getDefinitionAndBoundSpan(info: AstResult, position: number): ts.DefinitionInfoAndBoundSpan | undefined;
+/**
+ * Gets an Angular-specific definition in a TypeScript source file.
+ */
+export declare function getTsDefinitionAndBoundSpan(sf: ts.SourceFile, position: number, tsLsHost: Readonly<ts.LanguageServiceHost>): ts.DefinitionInfoAndBoundSpan | undefined;
