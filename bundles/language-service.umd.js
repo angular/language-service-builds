@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+21.sha-18ce58c.with-local-changes
+ * @license Angular v9.0.0-next.4+30.sha-63dff9c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3527,7 +3527,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         Identifiers.nextContext = { name: 'ɵɵnextContext', moduleName: CORE$1 };
         Identifiers.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵɵtext', moduleName: CORE$1 };
-        Identifiers.textBinding = { name: 'ɵɵtextBinding', moduleName: CORE$1 };
         Identifiers.enableBindings = { name: 'ɵɵenableBindings', moduleName: CORE$1 };
         Identifiers.disableBindings = { name: 'ɵɵdisableBindings', moduleName: CORE$1 };
         Identifiers.allocHostVars = { name: 'ɵɵallocHostVars', moduleName: CORE$1 };
@@ -16833,7 +16832,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 this.updateInstruction(nodeIndex, text.sourceSpan, getTextInterpolationExpression(value), function () { return _this.getUpdateInstructionArguments(value); });
             }
             else {
-                this.updateInstruction(nodeIndex, text.sourceSpan, Identifiers$1.textBinding, function () { return [_this.convertPropertyBinding(value)]; });
+                error('Text nodes should be interpolated and never bound directly.');
             }
         };
         TemplateDefinitionBuilder.prototype.visitText = function (text) {
@@ -18670,7 +18669,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
 
     /**
      * @license
@@ -33932,7 +33931,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
 
     /**
      * @license
@@ -50781,7 +50780,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             if (fileName.endsWith('.ts')) {
                 var sf = this.host.getSourceFile(fileName);
                 if (sf) {
-                    return getTsDefinitionAndBoundSpan(sf, position, this.host.host);
+                    return getTsDefinitionAndBoundSpan(sf, position, this.host.tsLsHost);
                 }
             }
         };
@@ -60166,7 +60165,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
 
     /**
      * @license
@@ -63942,7 +63941,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -66984,7 +66983,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             this.componentTypes.push(componentFactory.componentType);
             // Create a factory associated with the current module if it's not bound to some other
-            var ngModule = isBoundToModule(componentFactory) ? null : this._injector.get(NgModuleRef);
+            var ngModule = isBoundToModule(componentFactory) ? undefined : this._injector.get(NgModuleRef);
             var selectorOrNode = rootSelectorOrNode || componentFactory.selector;
             var compRef = componentFactory.create(Injector.NULL, [], selectorOrNode, ngModule);
             compRef.onDestroy(function () { _this._unloadComponent(compRef); });
@@ -70166,9 +70165,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @publicApi
      */
     var TypeScriptServiceHost = /** @class */ (function () {
-        function TypeScriptServiceHost(host, tsLS) {
+        function TypeScriptServiceHost(tsLsHost, tsLS) {
             var _this = this;
-            this.host = host;
+            this.tsLsHost = tsLsHost;
             this.tsLS = tsLS;
             this.staticSymbolCache = new StaticSymbolCache();
             this.fileToComponent = new Map();
@@ -70187,7 +70186,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 toSummaryFileName: function (sourceFilePath) { return sourceFilePath; },
                 fromSummaryFileName: function (filePath) { return filePath; },
             }, this.staticSymbolCache);
-            this.reflectorHost = new ReflectorHost(function () { return _this.program; }, host);
+            this.reflectorHost = new ReflectorHost(function () { return _this.program; }, tsLsHost);
             this.staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this.staticSymbolCache, this.summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             this.resolver = this.createMetadataResolver();
         }
@@ -70396,7 +70395,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var sourceFile = _c.value;
                     var fileName = sourceFile.fileName;
                     seen.add(fileName);
-                    var version = this.host.getScriptVersion(fileName);
+                    var version = this.tsLsHost.getScriptVersion(fileName);
                     var lastVersion = this.fileVersions.get(fileName);
                     if (version !== lastVersion) {
                         this.fileVersions.set(fileName, version);
@@ -70455,7 +70454,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          */
         TypeScriptServiceHost.prototype.getExternalTemplate = function (fileName) {
             // First get the text for the template
-            var snapshot = this.host.getScriptSnapshot(fileName);
+            var snapshot = this.tsLsHost.getScriptSnapshot(fileName);
             if (!snapshot) {
                 return;
             }
@@ -70792,7 +70791,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+21.sha-18ce58c.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+30.sha-63dff9c.with-local-changes');
 
     /**
      * @license

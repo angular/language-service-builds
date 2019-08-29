@@ -38,7 +38,7 @@ export declare class DummyResourceLoader extends ResourceLoader {
  * @publicApi
  */
 export declare class TypeScriptServiceHost implements LanguageServiceHost {
-    readonly host: ts.LanguageServiceHost;
+    readonly tsLsHost: ts.LanguageServiceHost;
     private readonly tsLS;
     private readonly summaryResolver;
     private readonly reflectorHost;
@@ -51,7 +51,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private lastProgram;
     private templateReferences;
     private analyzedModules;
-    constructor(host: ts.LanguageServiceHost, tsLS: ts.LanguageService);
+    constructor(tsLsHost: ts.LanguageServiceHost, tsLS: ts.LanguageService);
     /**
      * Creates a new metadata resolver. This is needed whenever the program
      * changes.
