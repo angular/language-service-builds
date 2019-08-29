@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+19.sha-d4703d9.with-local-changes
+ * @license Angular v9.0.0-next.4+17.sha-97fc45f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18670,7 +18670,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+19.sha-d4703d9.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
 
     /**
      * @license
@@ -33923,7 +33923,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+19.sha-d4703d9.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
 
     /**
      * @license
@@ -55503,11 +55503,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         // Keep this function short, so that the VM will inline it.
         var adjustedIndex = index + HEADER_OFFSET;
         var tNode = tView.data[adjustedIndex] ||
-            createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs);
+            createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs, index);
         setPreviousOrParentTNode(tNode, true);
         return tNode;
     }
-    function createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs) {
+    function createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs, index) {
         var previousOrParentTNode = getPreviousOrParentTNode();
         var isParent = getIsParent();
         var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
@@ -55517,10 +55517,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var tParentNode = parentInSameView ? parent : null;
         var tNode = tView.data[adjustedIndex] =
             createTNode(tView, tParentNode, type, adjustedIndex, name, attrs);
-        // Assign a pointer to the first child node of a given view. The first node is not always the one
-        // at index 0, in case of i18n, index 0 can be the instruction `i18nStart` and the first node has
-        // the index 1 or more, so we can't just check node index.
-        if (tView.firstChild === null) {
+        // The first node is not always the one at index 0, in case of i18n, index 0 can be the
+        // instruction `i18nStart` and the first node has the index 1 or more
+        if (index === 0 || !tView.firstChild) {
             tView.firstChild = tNode;
         }
         if (previousOrParentTNode) {
@@ -60157,7 +60156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+19.sha-d4703d9.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
 
     /**
      * @license
@@ -70783,7 +70782,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+19.sha-d4703d9.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+17.sha-97fc45f.with-local-changes');
 
     /**
      * @license
