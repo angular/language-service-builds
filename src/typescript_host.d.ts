@@ -38,7 +38,7 @@ export declare class DummyResourceLoader extends ResourceLoader {
  * @publicApi
  */
 export declare class TypeScriptServiceHost implements LanguageServiceHost {
-    private readonly host;
+    readonly host: ts.LanguageServiceHost;
     private readonly tsLS;
     private readonly summaryResolver;
     private readonly reflectorHost;
