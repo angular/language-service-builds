@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+11.sha-60a056d.with-local-changes
+ * @license Angular v9.0.0-next.4+15.sha-a1e91b0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18670,7 +18670,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+11.sha-60a056d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+15.sha-a1e91b0.with-local-changes');
 
     /**
      * @license
@@ -33923,7 +33923,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+11.sha-60a056d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+15.sha-a1e91b0.with-local-changes');
 
     /**
      * @license
@@ -53881,8 +53881,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * @param initialPreOrderCheckHooksLength same as previous for pre-order check hooks
      */
     function registerPreOrderHooks(directiveIndex, directiveDef, tView, nodeIndex, initialPreOrderHooksLength, initialPreOrderCheckHooksLength) {
-        ngDevMode &&
-            assertEqual(tView.firstTemplatePass, true, 'Should only be called on first template pass');
+        ngDevMode && assertFirstTemplatePass(tView);
         var onChanges = directiveDef.onChanges, onInit = directiveDef.onInit, doCheck = directiveDef.doCheck;
         if (initialPreOrderHooksLength >= 0 &&
             (!tView.preOrderHooks || initialPreOrderHooksLength === tView.preOrderHooks.length) &&
@@ -53926,29 +53925,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * @param tNode The TNode whose directives are to be searched for hooks to queue
      */
     function registerPostOrderHooks(tView, tNode) {
-        if (tView.firstTemplatePass) {
-            // It's necessary to loop through the directives at elementEnd() (rather than processing in
-            // directiveCreate) so we can preserve the current hook order. Content, view, and destroy
-            // hooks for projected components and directives must be called *before* their hosts.
-            for (var i = tNode.directiveStart, end = tNode.directiveEnd; i < end; i++) {
-                var directiveDef = tView.data[i];
-                if (directiveDef.afterContentInit) {
-                    (tView.contentHooks || (tView.contentHooks = [])).push(-i, directiveDef.afterContentInit);
-                }
-                if (directiveDef.afterContentChecked) {
-                    (tView.contentHooks || (tView.contentHooks = [])).push(i, directiveDef.afterContentChecked);
-                    (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, directiveDef.afterContentChecked);
-                }
-                if (directiveDef.afterViewInit) {
-                    (tView.viewHooks || (tView.viewHooks = [])).push(-i, directiveDef.afterViewInit);
-                }
-                if (directiveDef.afterViewChecked) {
-                    (tView.viewHooks || (tView.viewHooks = [])).push(i, directiveDef.afterViewChecked);
-                    (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, directiveDef.afterViewChecked);
-                }
-                if (directiveDef.onDestroy != null) {
-                    (tView.destroyHooks || (tView.destroyHooks = [])).push(i, directiveDef.onDestroy);
-                }
+        ngDevMode && assertFirstTemplatePass(tView);
+        // It's necessary to loop through the directives at elementEnd() (rather than processing in
+        // directiveCreate) so we can preserve the current hook order. Content, view, and destroy
+        // hooks for projected components and directives must be called *before* their hosts.
+        for (var i = tNode.directiveStart, end = tNode.directiveEnd; i < end; i++) {
+            var directiveDef = tView.data[i];
+            if (directiveDef.afterContentInit) {
+                (tView.contentHooks || (tView.contentHooks = [])).push(-i, directiveDef.afterContentInit);
+            }
+            if (directiveDef.afterContentChecked) {
+                (tView.contentHooks || (tView.contentHooks = [])).push(i, directiveDef.afterContentChecked);
+                (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, directiveDef.afterContentChecked);
+            }
+            if (directiveDef.afterViewInit) {
+                (tView.viewHooks || (tView.viewHooks = [])).push(-i, directiveDef.afterViewInit);
+            }
+            if (directiveDef.afterViewChecked) {
+                (tView.viewHooks || (tView.viewHooks = [])).push(i, directiveDef.afterViewChecked);
+                (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, directiveDef.afterViewChecked);
+            }
+            if (directiveDef.onDestroy != null) {
+                (tView.destroyHooks || (tView.destroyHooks = [])).push(i, directiveDef.onDestroy);
             }
         }
     }
@@ -60158,7 +60156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+11.sha-60a056d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+15.sha-a1e91b0.with-local-changes');
 
     /**
      * @license
@@ -70775,7 +70773,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+11.sha-60a056d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+15.sha-a1e91b0.with-local-changes');
 
     /**
      * @license
