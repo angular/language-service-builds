@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+59.sha-60f9639.with-local-changes
+ * @license Angular v9.0.0-next.4+61.sha-260217a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18669,7 +18669,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+59.sha-60f9639.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+61.sha-260217a.with-local-changes');
 
     /**
      * @license
@@ -33931,7 +33931,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+59.sha-60f9639.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+61.sha-260217a.with-local-changes');
 
     /**
      * @license
@@ -60195,7 +60195,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+59.sha-60f9639.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+61.sha-260217a.with-local-changes');
 
     /**
      * @license
@@ -67602,7 +67602,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
              *  - attribute bindings (e.g. `[attr.role]="menu"`)
              */
             get: function () {
-                var context = loadLContext(this.nativeNode);
+                var context = loadLContext(this.nativeNode, false);
+                if (context == null) {
+                    return {};
+                }
                 var lView = context.lView;
                 var tData = lView[TVIEW].data;
                 var tNode = tData[context.nodeIndex];
@@ -67625,7 +67628,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (!element) {
                     return attributes;
                 }
-                var context = loadLContext(element);
+                var context = loadLContext(element, false);
+                if (context == null) {
+                    return {};
+                }
                 var lView = context.lView;
                 var tNodeAttrs = lView[TVIEW].data[context.nodeIndex].attrs;
                 var lowercaseTNodeAttrs = [];
@@ -67746,23 +67752,23 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return DebugElement__POST_R3__;
     }(DebugNode__POST_R3__));
     function _getStylingDebugInfo(element, isClassBased) {
-        if (element) {
-            var context = loadLContextFromNode(element);
-            var lView = context.lView;
-            var tData = lView[TVIEW].data;
-            var tNode = tData[context.nodeIndex];
-            if (isClassBased) {
-                return isStylingContext(tNode.classes) ?
-                    new NodeStylingDebug(tNode.classes, lView, true).values :
-                    stylingMapToStringMap(tNode.classes);
-            }
-            else {
-                return isStylingContext(tNode.styles) ?
-                    new NodeStylingDebug(tNode.styles, lView, false).values :
-                    stylingMapToStringMap(tNode.styles);
-            }
+        var context = loadLContext(element, false);
+        if (!context) {
+            return {};
         }
-        return {};
+        var lView = context.lView;
+        var tData = lView[TVIEW].data;
+        var tNode = tData[context.nodeIndex];
+        if (isClassBased) {
+            return isStylingContext(tNode.classes) ?
+                new NodeStylingDebug(tNode.classes, lView, true).values :
+                stylingMapToStringMap(tNode.classes);
+        }
+        else {
+            return isStylingContext(tNode.styles) ?
+                new NodeStylingDebug(tNode.styles, lView, false).values :
+                stylingMapToStringMap(tNode.styles);
+        }
     }
     function _queryAllR3(parentElement, predicate, matches, elementsOnly) {
         var context = loadLContext(parentElement.nativeNode);
@@ -70825,7 +70831,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+59.sha-60f9639.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+61.sha-260217a.with-local-changes');
 
     /**
      * @license
