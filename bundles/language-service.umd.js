@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+39.sha-3758978.with-local-changes
+ * @license Angular v9.0.0-next.4+44.sha-1537791.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18654,7 +18654,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
@@ -33916,7 +33916,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
@@ -61639,7 +61639,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * as a root scoped injector when processing requests for unknown tokens which may indicate
      * they are provided in the root scope.
      */
-    var APP_ROOT = new InjectionToken('The presence of this token marks an injector as being the root injector.');
+    var INJECTOR_SCOPE = new InjectionToken('Set Injector scope.');
 
     /**
      * @license
@@ -61689,6 +61689,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.parent = parent;
             /**
              * Map of tokens to records which contain the instances of those tokens.
+             * - `null` value implies that we don't have the record. Used by tree-shakable injectors
+             * to prevent further searches.
              */
             this.records = new Map();
             /**
@@ -61709,7 +61711,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.records.set(INJECTOR, makeRecord(undefined, this));
             // Detect whether this injector has the APP_ROOT_SCOPE token and thus should provide
             // any injectable scoped to APP_ROOT_SCOPE.
-            this.isRootInjector = this.records.has(APP_ROOT);
+            var record = this.records.get(INJECTOR_SCOPE);
+            this.scope = record != null ? record.value : null;
             // Eagerly instantiate the InjectorType classes themselves.
             this.injectorDefTypes.forEach(function (defType) { return _this.get(defType); });
             // Source name, used for debugging
@@ -61763,11 +61766,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                             // Found an ngInjectableDef and it's scoped to this injector. Pretend as if it was here
                             // all along.
                             record = makeRecord(injectableDefOrInjectorDefFactory(token), NOT_YET);
-                            this.records.set(token, record);
                         }
+                        else {
+                            record = null;
+                        }
+                        this.records.set(token, record);
                     }
                     // If a record was found, get the instance for it and return it.
-                    if (record !== undefined) {
+                    if (record != null /* NOT null || undefined */) {
                         return this.hydrate(token, record);
                     }
                 }
@@ -61952,7 +61958,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 return false;
             }
             else if (typeof def.providedIn === 'string') {
-                return def.providedIn === 'any' || (def.providedIn === 'root' && this.isRootInjector);
+                return def.providedIn === 'any' || (def.providedIn === this.scope);
             }
             else {
                 return this.injectorDefTypes.has(def.providedIn);
@@ -68213,7 +68219,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
@@ -69854,8 +69860,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return ngModule._def.modules.indexOf(scope) > -1;
     }
     function targetsModule(ngModule, def) {
-        return def.providedIn != null && (moduleTransitivelyPresent(ngModule, def.providedIn) ||
-            def.providedIn === 'root' && ngModule._def.isRoot);
+        var providedIn = def.providedIn;
+        return providedIn != null && (providedIn === 'any' || providedIn === ngModule._def.scope ||
+            moduleTransitivelyPresent(ngModule, providedIn));
     }
     function _createProviderInstance(ngModule, providerDef) {
         var injectable;
@@ -77613,7 +77620,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     parentPlatformFactory(providers.concat(extraProviders).concat({ provide: marker, useValue: true }));
                 }
                 else {
-                    var injectedProviders = providers.concat(extraProviders).concat({ provide: marker, useValue: true });
+                    var injectedProviders = providers.concat(extraProviders).concat({ provide: marker, useValue: true }, {
+                        provide: INJECTOR_SCOPE,
+                        useValue: 'platform'
+                    });
                     createPlatform(Injector.create({ providers: injectedProviders, name: desc }));
                 }
             }
@@ -78203,7 +78213,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -80966,7 +80977,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         return {
             factory: def.factory,
-            isRoot: def.isRoot, providers: providers, modules: modules, providersByKey: providersByKey,
+            scope: def.scope, providers: providers, modules: modules, providersByKey: providersByKey,
         };
     }
     var NgModuleFactory_ = /** @class */ (function (_super) {
@@ -81798,7 +81809,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
