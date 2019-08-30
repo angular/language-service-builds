@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+39.sha-3758978.with-local-changes
+ * @license Angular v9.0.0-next.4+44.sha-1537791.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18669,7 +18669,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
@@ -33931,7 +33931,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
@@ -57392,7 +57392,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         }
         else if (provider.useExisting) {
             var existingProvider_1 = provider;
-            return function () { return ɵɵinject(existingProvider_1.useExisting); };
+            return function () { return ɵɵinject(resolveForwardRef$1(existingProvider_1.useExisting)); };
         }
         else if (provider.useFactory) {
             var factoryProvider_1 = provider;
@@ -57407,7 +57407,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
             return function () {
                 var _a;
-                return new ((_a = classProvider_1.useClass).bind.apply(_a, __spread([void 0], injectArgs(deps_2))))();
+                return new ((_a = (resolveForwardRef$1(classProvider_1.useClass))).bind.apply(_a, __spread([void 0], injectArgs(deps_2))))();
             };
         }
         else {
@@ -57462,7 +57462,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * as a root scoped injector when processing requests for unknown tokens which may indicate
      * they are provided in the root scope.
      */
-    var APP_ROOT = new InjectionToken('The presence of this token marks an injector as being the root injector.');
+    var INJECTOR_SCOPE = new InjectionToken('Set Injector scope.');
 
     /**
      * @license
@@ -57512,6 +57512,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.parent = parent;
             /**
              * Map of tokens to records which contain the instances of those tokens.
+             * - `null` value implies that we don't have the record. Used by tree-shakable injectors
+             * to prevent further searches.
              */
             this.records = new Map();
             /**
@@ -57532,7 +57534,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.records.set(INJECTOR, makeRecord(undefined, this));
             // Detect whether this injector has the APP_ROOT_SCOPE token and thus should provide
             // any injectable scoped to APP_ROOT_SCOPE.
-            this.isRootInjector = this.records.has(APP_ROOT);
+            var record = this.records.get(INJECTOR_SCOPE);
+            this.scope = record != null ? record.value : null;
             // Eagerly instantiate the InjectorType classes themselves.
             this.injectorDefTypes.forEach(function (defType) { return _this.get(defType); });
             // Source name, used for debugging
@@ -57586,11 +57589,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                             // Found an ngInjectableDef and it's scoped to this injector. Pretend as if it was here
                             // all along.
                             record = makeRecord(injectableDefOrInjectorDefFactory(token), NOT_YET);
-                            this.records.set(token, record);
                         }
+                        else {
+                            record = null;
+                        }
+                        this.records.set(token, record);
                     }
                     // If a record was found, get the instance for it and return it.
-                    if (record !== undefined) {
+                    if (record != null /* NOT null || undefined */) {
                         return this.hydrate(token, record);
                     }
                 }
@@ -57775,7 +57781,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 return false;
             }
             else if (typeof def.providedIn === 'string') {
-                return def.providedIn === 'any' || (def.providedIn === 'root' && this.isRootInjector);
+                return def.providedIn === 'any' || (def.providedIn === this.scope);
             }
             else {
                 return this.injectorDefTypes.has(def.providedIn);
@@ -57983,16 +57989,35 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             var records = this._records = new Map();
             records.set(Injector, { token: Injector, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
             records.set(INJECTOR, { token: INJECTOR, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
-            recursivelyProcessProviders(records, providers);
+            this.scope = recursivelyProcessProviders(records, providers);
         }
         StaticInjector.prototype.get = function (token, notFoundValue, flags) {
             if (flags === void 0) { flags = InjectFlags.Default; }
-            var record = this._records.get(token);
+            var records = this._records;
+            var record = records.get(token);
+            if (record === undefined) {
+                // This means we have never seen this record, see if it is tree shakable provider.
+                var injectableDef = getInjectableDef(token);
+                if (injectableDef) {
+                    var providedIn = injectableDef && injectableDef.providedIn;
+                    if (providedIn === 'any' || providedIn != null && providedIn === this.scope) {
+                        records.set(token, record = resolveProvider({ provide: token, useFactory: injectableDef.factory, deps: EMPTY$1 }));
+                    }
+                }
+                if (record === undefined) {
+                    // Set record to null to make sure that we don't go through expensive lookup above again.
+                    records.set(token, null);
+                }
+            }
+            var lastInjector = setCurrentInjector(this);
             try {
-                return tryResolveToken(token, record, this._records, this.parent, notFoundValue, flags);
+                return tryResolveToken(token, record, records, this.parent, notFoundValue, flags);
             }
             catch (e) {
                 return catchInjectorError(e, token, 'StaticInjectorError', this.source);
+            }
+            finally {
+                setCurrentInjector(lastInjector);
             }
         };
         StaticInjector.prototype.toString = function () {
@@ -58033,12 +58058,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return staticError('Cannot mix multi providers and regular providers', token);
     }
     function recursivelyProcessProviders(records, provider) {
+        var scope = null;
         if (provider) {
             provider = resolveForwardRef$1(provider);
             if (provider instanceof Array) {
                 // if we have an array recurse into the array
                 for (var i = 0; i < provider.length; i++) {
-                    recursivelyProcessProviders(records, provider[i]);
+                    scope = recursivelyProcessProviders(records, provider[i]) || scope;
                 }
             }
             else if (typeof provider === 'function') {
@@ -58076,12 +58102,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 if (record && record.fn == MULTI_PROVIDER_FN) {
                     throw multiProviderMixError(token);
                 }
+                if (token === INJECTOR_SCOPE) {
+                    scope = resolvedProvider.value;
+                }
                 records.set(token, resolvedProvider);
             }
             else {
                 throw staticError('Unexpected provider', provider);
             }
         }
+        return scope;
     }
     function tryResolveToken(token, record, records, parent, notFoundValue, flags) {
         try {
@@ -60165,7 +60195,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
@@ -61813,8 +61843,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return ngModule._def.modules.indexOf(scope) > -1;
     }
     function targetsModule(ngModule, def) {
-        return def.providedIn != null && (moduleTransitivelyPresent(ngModule, def.providedIn) ||
-            def.providedIn === 'root' && ngModule._def.isRoot);
+        var providedIn = def.providedIn;
+        return providedIn != null && (providedIn === 'any' || providedIn === ngModule._def.scope ||
+            moduleTransitivelyPresent(ngModule, providedIn));
     }
     function _createProviderInstance(ngModule, providerDef) {
         var injectable;
@@ -66581,7 +66612,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     parentPlatformFactory(providers.concat(extraProviders).concat({ provide: marker, useValue: true }));
                 }
                 else {
-                    var injectedProviders = providers.concat(extraProviders).concat({ provide: marker, useValue: true });
+                    var injectedProviders = providers.concat(extraProviders).concat({ provide: marker, useValue: true }, {
+                        provide: INJECTOR_SCOPE,
+                        useValue: 'platform'
+                    });
                     createPlatform(Injector.create({ providers: injectedProviders, name: desc }));
                 }
             }
@@ -67179,7 +67213,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -69959,7 +69993,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         return {
             factory: def.factory,
-            isRoot: def.isRoot, providers: providers, modules: modules, providersByKey: providersByKey,
+            scope: def.scope, providers: providers, modules: modules, providersByKey: providersByKey,
         };
     }
     var NgModuleFactory_ = /** @class */ (function (_super) {
@@ -70791,7 +70825,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+39.sha-3758978.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+44.sha-1537791.with-local-changes');
 
     /**
      * @license
