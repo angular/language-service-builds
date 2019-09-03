@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+61.sha-260217a.with-local-changes
+ * @license Angular v9.0.0-next.4+70.sha-f5bec3f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -1454,6 +1454,25 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         };
         return LiteralExpr;
     }(Expression));
+    var LocalizedString = /** @class */ (function (_super) {
+        __extends(LocalizedString, _super);
+        function LocalizedString(messageParts, placeHolderNames, expressions, sourceSpan) {
+            var _this = _super.call(this, STRING_TYPE, sourceSpan) || this;
+            _this.messageParts = messageParts;
+            _this.placeHolderNames = placeHolderNames;
+            _this.expressions = expressions;
+            return _this;
+        }
+        LocalizedString.prototype.isEquivalent = function (e) {
+            // return e instanceof LocalizedString && this.message === e.message;
+            return false;
+        };
+        LocalizedString.prototype.isConstant = function () { return false; };
+        LocalizedString.prototype.visitExpression = function (visitor, context) {
+            return visitor.visitLocalizedString(this, context);
+        };
+        return LocalizedString;
+    }(Expression));
     var ExternalExpr = /** @class */ (function (_super) {
         __extends(ExternalExpr, _super);
         function ExternalExpr(value, type, typeParams, sourceSpan) {
@@ -1992,6 +2011,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             return this.transformExpr(new InstantiateExpr(ast.classExpr.visitExpression(this, context), this.visitAllExpressions(ast.args, context), ast.type, ast.sourceSpan), context);
         };
         AstTransformer.prototype.visitLiteralExpr = function (ast, context) { return this.transformExpr(ast, context); };
+        AstTransformer.prototype.visitLocalizedString = function (ast, context) {
+            return this.transformExpr(new LocalizedString(ast.messageParts, ast.placeHolderNames, this.visitAllExpressions(ast.expressions, context), ast.sourceSpan), context);
+        };
         AstTransformer.prototype.visitExternalExpr = function (ast, context) {
             return this.transformExpr(ast, context);
         };
@@ -2135,6 +2157,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             return this.visitExpression(ast, context);
         };
         RecursiveAstVisitor.prototype.visitLiteralExpr = function (ast, context) {
+            return this.visitExpression(ast, context);
+        };
+        RecursiveAstVisitor.prototype.visitLocalizedString = function (ast, context) {
             return this.visitExpression(ast, context);
         };
         RecursiveAstVisitor.prototype.visitExternalExpr = function (ast, context) {
@@ -2396,6 +2421,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function literal(value, type, sourceSpan) {
         return new LiteralExpr(value, type, sourceSpan);
+    }
+    function localizedString(messageParts, placeholderNames, expressions, sourceSpan) {
+        return new LocalizedString(messageParts, placeholderNames, expressions, sourceSpan);
     }
     function isNull(exp) {
         return exp instanceof LiteralExpr && exp.value === null;
@@ -2856,6 +2884,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.visitReadPropExpr = invalid;
             this.visitReadKeyExpr = invalid;
             this.visitCommaExpr = invalid;
+            this.visitLocalizedString = invalid;
         }
         KeyVisitor.prototype.visitLiteralExpr = function (ast) {
             return "" + (typeof ast.value === 'string' ? '"' + ast.value + '"' : ast.value);
@@ -3561,7 +3590,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         Identifiers.i18nEnd = { name: 'ɵɵi18nEnd', moduleName: CORE$1 };
         Identifiers.i18nApply = { name: 'ɵɵi18nApply', moduleName: CORE$1 };
         Identifiers.i18nPostprocess = { name: 'ɵɵi18nPostprocess', moduleName: CORE$1 };
-        Identifiers.i18nLocalize = { name: 'ɵɵi18nLocalize', moduleName: CORE$1 };
         Identifiers.pipe = { name: 'ɵɵpipe', moduleName: CORE$1 };
         Identifiers.projection = { name: 'ɵɵprojection', moduleName: CORE$1 };
         Identifiers.projectionDef = { name: 'ɵɵprojectionDef', moduleName: CORE$1 };
@@ -4929,40 +4957,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return internalName.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
     }
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function mapLiteral(obj, quoted) {
-        if (quoted === void 0) { quoted = false; }
-        return literalMap(Object.keys(obj).map(function (key) { return ({
-            key: key,
-            quoted: quoted,
-            value: obj[key],
-        }); }));
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /* Closure variables holding messages must be named `MSG_[A-Z0-9]+` */
     var CLOSURE_TRANSLATION_PREFIX = 'MSG_';
     /* Prefix for non-`goog.getMsg` i18n-related vars */
     var TRANSLATION_PREFIX = 'I18N_';
-    /** Closure uses `goog.getMsg(message)` to lookup translations */
-    var GOOG_GET_MSG = 'goog.getMsg';
-    /** Name of the global variable that is used to determine if we use Closure translations or not */
-    var NG_I18N_CLOSURE_MODE = 'ngI18nClosureMode';
-    /** I18n separators for metadata **/
-    var I18N_MEANING_SEPARATOR = '|';
-    var I18N_ID_SEPARATOR = '@@';
     /** Name of the i18n attributes **/
     var I18N_ATTR = 'i18n';
     var I18N_ATTR_PREFIX = 'i18n-';
@@ -4972,41 +4970,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     var I18N_ICU_MAPPING_PREFIX = 'I18N_EXP_';
     /** Placeholder wrapper for i18n expressions **/
     var I18N_PLACEHOLDER_SYMBOL = '�';
-    function i18nTranslationToDeclStmt(variable$1, closureVar, message, meta, params) {
-        var statements = [];
-        // var I18N_X;
-        statements.push(new DeclareVarStmt(variable$1.name, undefined, INFERRED_TYPE, null, variable$1.sourceSpan));
-        var args = [literal(message)];
-        if (params && Object.keys(params).length) {
-            args.push(mapLiteral(params, true));
-        }
-        // Closure JSDoc comments
-        var docStatements = i18nMetaToDocStmt(meta);
-        var thenStatements = docStatements ? [docStatements] : [];
-        var googFnCall = variable(GOOG_GET_MSG).callFn(args);
-        // const MSG_... = goog.getMsg(..);
-        thenStatements.push(closureVar.set(googFnCall).toConstDecl());
-        // I18N_X = MSG_...;
-        thenStatements.push(new ExpressionStatement(variable$1.set(closureVar)));
-        var localizeFnCall = importExpr(Identifiers$1.i18nLocalize).callFn(args);
-        // I18N_X = i18nLocalize(...);
-        var elseStatements = [new ExpressionStatement(variable$1.set(localizeFnCall))];
-        // if(ngI18nClosureMode) { ... } else { ... }
-        statements.push(ifStmt(variable(NG_I18N_CLOSURE_MODE), thenStatements, elseStatements));
-        return statements;
-    }
-    // Converts i18n meta information for a message (id, description, meaning)
-    // to a JsDoc statement formatted as expected by the Closure compiler.
-    function i18nMetaToDocStmt(meta) {
-        var tags = [];
-        if (meta.description) {
-            tags.push({ tagName: "desc" /* Desc */, text: meta.description });
-        }
-        if (meta.meaning) {
-            tags.push({ tagName: "meaning" /* Meaning */, text: meta.meaning });
-        }
-        return tags.length == 0 ? null : new JSDocCommentStmt(tags);
-    }
     function isI18nAttribute(name) {
         return name === I18N_ATTR || name.startsWith(I18N_ATTR_PREFIX);
     }
@@ -5018,14 +4981,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function hasI18nAttrs(element) {
         return element.attrs.some(function (attr) { return isI18nAttribute(attr.name); });
-    }
-    function metaFromI18nMessage(message, id) {
-        if (id === void 0) { id = null; }
-        return {
-            id: typeof id === 'string' ? id : message.id || '',
-            meaning: message.meaning || '',
-            description: message.description || ''
-        };
     }
     function icuFromI18nMessage(message) {
         return message.nodes[0];
@@ -5086,39 +5041,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         }
         return placeholders;
     }
-    function findIndex(items, callback) {
-        for (var i = 0; i < items.length; i++) {
-            if (callback(items[i])) {
-                return i;
-            }
-        }
-        return -1;
-    }
     /**
-     * Parses i18n metas like:
-     *  - "@@id",
-     *  - "description[@@id]",
-     *  - "meaning|description[@@id]"
-     * and returns an object with parsed output.
+     * Format the placeholder names in a map of placeholders to expressions.
      *
-     * @param meta String that represents i18n meta
-     * @returns Object with id, meaning and description fields
+     * The placeholder names are converted from "internal" format (e.g. `START_TAG_DIV_1`) to "external"
+     * format (e.g. `startTagDiv_1`).
+     *
+     * @param params A map of placeholder names to expressions.
+     * @param useCamelCase whether to camelCase the placeholder name when formatting.
+     * @returns A new map of formatted placeholder names to expressions.
      */
-    function parseI18nMeta(meta) {
-        var _a, _b;
-        var id;
-        var meaning;
-        var description;
-        if (meta) {
-            var idIndex = meta.indexOf(I18N_ID_SEPARATOR);
-            var descIndex = meta.indexOf(I18N_MEANING_SEPARATOR);
-            var meaningAndDesc = void 0;
-            _a = __read((idIndex > -1) ? [meta.slice(0, idIndex), meta.slice(idIndex + 2)] : [meta, ''], 2), meaningAndDesc = _a[0], id = _a[1];
-            _b = __read((descIndex > -1) ?
-                [meaningAndDesc.slice(0, descIndex), meaningAndDesc.slice(descIndex + 1)] :
-                ['', meaningAndDesc], 2), meaning = _b[0], description = _b[1];
+    function i18nFormatPlaceholderNames(params, useCamelCase) {
+        if (params === void 0) { params = {}; }
+        var _params = {};
+        if (params && Object.keys(params).length) {
+            Object.keys(params).forEach(function (key) { return _params[formatI18nPlaceholderName(key, useCamelCase)] = params[key]; });
         }
-        return { id: id, meaning: meaning, description: description };
+        return _params;
     }
     /**
      * Converts internal placeholder names to public-facing format
@@ -5160,24 +5099,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return ("" + CLOSURE_TRANSLATION_PREFIX + extra).toUpperCase();
     }
     /**
-     * Generates translation declaration statements.
-     *
-     * @param variable Translation value reference
-     * @param closureVar Variable for Closure `goog.getMsg` calls
-     * @param message Text message to be translated
-     * @param meta Object that contains meta information (id, meaning and description)
-     * @param params Object with placeholders key-value pairs
-     * @param transformFn Optional transformation (post processing) function reference
-     * @returns Array of Statements that represent a given translation
+     * Generate AST to declare a variable. E.g. `var I18N_1;`.
+     * @param variable the name of the variable to declare.
      */
-    function getTranslationDeclStmts(variable, closureVar, message, meta, params, transformFn) {
-        if (params === void 0) { params = {}; }
-        var statements = [];
-        statements.push.apply(statements, __spread(i18nTranslationToDeclStmt(variable, closureVar, message, meta, params)));
-        if (transformFn) {
-            statements.push(new ExpressionStatement(variable.set(transformFn(variable))));
-        }
-        return statements;
+    function declareI18nVariable(variable) {
+        return new DeclareVarStmt(variable.name, undefined, INFERRED_TYPE, null, variable.sourceSpan);
     }
 
     /**
@@ -6211,6 +6137,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
             return null;
         };
+        AbstractEmitterVisitor.prototype.visitLocalizedString = function (ast, ctx) {
+            ctx.print(ast, '$localize `' + ast.messageParts[0]);
+            for (var i = 1; i < ast.messageParts.length; i++) {
+                ctx.print(ast, '${');
+                ast.expressions[i - 1].visitExpression(this, ctx);
+                // Add the placeholder name annotation to support runtime inlining
+                ctx.print(ast, "}:" + ast.placeHolderNames[i - 1] + ":");
+                ctx.print(ast, ast.messageParts[i]);
+            }
+            ctx.print(ast, '`');
+            return null;
+        };
         AbstractEmitterVisitor.prototype.visitConditionalExpr = function (ast, ctx) {
             ctx.print(ast, "(");
             ast.condition.visitExpression(this, ctx);
@@ -6745,6 +6683,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         R3JitReflector.prototype.componentModuleUrl = function (type, cmpMetadata) { throw new Error('Not implemented.'); };
         return R3JitReflector;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function mapLiteral(obj, quoted) {
+        if (quoted === void 0) { quoted = false; }
+        return literalMap(Object.keys(obj).map(function (key) { return ({
+            key: key,
+            quoted: quoted,
+            value: obj[key],
+        }); }));
+    }
 
     /**
      * @license
@@ -15526,7 +15480,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                     return;
                 }
                 // try to find matching template...
-                var tmplIdx = findIndex(phs, findTemplateFn(context.id, context.templateIndex));
+                var tmplIdx = phs.findIndex(findTemplateFn(context.id, context.templateIndex));
                 if (tmplIdx >= 0) {
                     // ... if found - replace it with nested template content
                     var isCloseTag = key.startsWith('CLOSE');
@@ -15591,6 +15545,47 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             default:
                 return value;
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var IcuSerializerVisitor = /** @class */ (function () {
+        function IcuSerializerVisitor() {
+        }
+        IcuSerializerVisitor.prototype.visitText = function (text) { return text.value; };
+        IcuSerializerVisitor.prototype.visitContainer = function (container) {
+            var _this = this;
+            return container.children.map(function (child) { return child.visit(_this); }).join('');
+        };
+        IcuSerializerVisitor.prototype.visitIcu = function (icu) {
+            var _this = this;
+            var strCases = Object.keys(icu.cases).map(function (k) { return k + " {" + icu.cases[k].visit(_this) + "}"; });
+            var result = "{" + icu.expressionPlaceholder + ", " + icu.type + ", " + strCases.join(' ') + "}";
+            return result;
+        };
+        IcuSerializerVisitor.prototype.visitTagPlaceholder = function (ph) {
+            var _this = this;
+            return ph.isVoid ?
+                this.formatPh(ph.startName) :
+                "" + this.formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + this.formatPh(ph.closeName);
+        };
+        IcuSerializerVisitor.prototype.visitPlaceholder = function (ph) { return this.formatPh(ph.name); };
+        IcuSerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
+            return this.formatPh(ph.name);
+        };
+        IcuSerializerVisitor.prototype.formatPh = function (value) {
+            return "{" + formatI18nPlaceholderName(value, /* useCamelCase */ false) + "}";
+        };
+        return IcuSerializerVisitor;
+    }());
+    var serializer = new IcuSerializerVisitor();
+    function serializeIcuNode(icu) {
+        return icu.visit(serializer);
     }
 
     /**
@@ -15955,63 +15950,219 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         I18nMetaVisitor.prototype.visitExpansionCase = function (expansionCase, context) { return expansionCase; };
         return I18nMetaVisitor;
     }());
-
+    function metaFromI18nMessage(message, id) {
+        if (id === void 0) { id = null; }
+        return {
+            id: typeof id === 'string' ? id : message.id || '',
+            meaning: message.meaning || '',
+            description: message.description || ''
+        };
+    }
+    /** I18n separators for metadata **/
+    var I18N_MEANING_SEPARATOR = '|';
+    var I18N_ID_SEPARATOR = '@@';
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
+     * Parses i18n metas like:
+     *  - "@@id",
+     *  - "description[@@id]",
+     *  - "meaning|description[@@id]"
+     * and returns an object with parsed output.
      *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
+     * @param meta String that represents i18n meta
+     * @returns Object with id, meaning and description fields
      */
+    function parseI18nMeta(meta) {
+        var _a, _b;
+        var id;
+        var meaning;
+        var description;
+        if (meta) {
+            var idIndex = meta.indexOf(I18N_ID_SEPARATOR);
+            var descIndex = meta.indexOf(I18N_MEANING_SEPARATOR);
+            var meaningAndDesc = void 0;
+            _a = __read((idIndex > -1) ? [meta.slice(0, idIndex), meta.slice(idIndex + 2)] : [meta, ''], 2), meaningAndDesc = _a[0], id = _a[1];
+            _b = __read((descIndex > -1) ?
+                [meaningAndDesc.slice(0, descIndex), meaningAndDesc.slice(descIndex + 1)] :
+                ['', meaningAndDesc], 2), meaning = _b[0], description = _b[1];
+        }
+        return { id: id, meaning: meaning, description: description };
+    }
+    // Converts i18n meta information for a message (id, description, meaning)
+    // to a JsDoc statement formatted as expected by the Closure compiler.
+    function i18nMetaToDocStmt(meta) {
+        var tags = [];
+        if (meta.description) {
+            tags.push({ tagName: "desc" /* Desc */, text: meta.description });
+        }
+        if (meta.meaning) {
+            tags.push({ tagName: "meaning" /* Meaning */, text: meta.meaning });
+        }
+        return tags.length == 0 ? null : new JSDocCommentStmt(tags);
+    }
+
+    /** Closure uses `goog.getMsg(message)` to lookup translations */
+    var GOOG_GET_MSG = 'goog.getMsg';
+    function createGoogleGetMsgStatements(variable$1, message, closureVar, params) {
+        var messageString = serializeI18nMessageForGetMsg(message);
+        var args = [literal(messageString)];
+        if (Object.keys(params).length) {
+            args.push(mapLiteral(params, true));
+        }
+        // /** Description and meaning of message */
+        // const MSG_... = goog.getMsg(..);
+        // I18N_X = MSG_...;
+        var statements = [];
+        var jsdocComment = i18nMetaToDocStmt(metaFromI18nMessage(message));
+        if (jsdocComment !== null) {
+            statements.push(jsdocComment);
+        }
+        statements.push(closureVar.set(variable(GOOG_GET_MSG).callFn(args)).toConstDecl());
+        statements.push(new ExpressionStatement(variable$1.set(closureVar)));
+        return statements;
+    }
     /**
      * This visitor walks over i18n tree and generates its string representation, including ICUs and
      * placeholders in `{$placeholder}` (for plain messages) or `{PLACEHOLDER}` (inside ICUs) format.
      */
-    var SerializerVisitor = /** @class */ (function () {
-        function SerializerVisitor() {
-            /**
-             * Keeps track of ICU nesting level, allowing to detect that we are processing elements of an ICU.
-             *
-             * This is needed due to the fact that placeholders in ICUs and in other messages are represented
-             * differently in Closure:
-             * - {$placeholder} in non-ICU case
-             * - {PLACEHOLDER} inside ICU
-             */
-            this.icuNestingLevel = 0;
+    var GetMsgSerializerVisitor = /** @class */ (function () {
+        function GetMsgSerializerVisitor() {
         }
-        SerializerVisitor.prototype.formatPh = function (value) {
-            var isInsideIcu = this.icuNestingLevel > 0;
-            var formatted = formatI18nPlaceholderName(value, /* useCamelCase */ !isInsideIcu);
-            return isInsideIcu ? "{" + formatted + "}" : "{$" + formatted + "}";
-        };
-        SerializerVisitor.prototype.visitText = function (text, context) { return text.value; };
-        SerializerVisitor.prototype.visitContainer = function (container, context) {
+        GetMsgSerializerVisitor.prototype.formatPh = function (value) { return "{$" + formatI18nPlaceholderName(value) + "}"; };
+        GetMsgSerializerVisitor.prototype.visitText = function (text) { return text.value; };
+        GetMsgSerializerVisitor.prototype.visitContainer = function (container) {
             var _this = this;
             return container.children.map(function (child) { return child.visit(_this); }).join('');
         };
-        SerializerVisitor.prototype.visitIcu = function (icu, context) {
-            var _this = this;
-            this.icuNestingLevel++;
-            var strCases = Object.keys(icu.cases).map(function (k) { return k + " {" + icu.cases[k].visit(_this) + "}"; });
-            var result = "{" + icu.expressionPlaceholder + ", " + icu.type + ", " + strCases.join(' ') + "}";
-            this.icuNestingLevel--;
-            return result;
-        };
-        SerializerVisitor.prototype.visitTagPlaceholder = function (ph, context) {
+        GetMsgSerializerVisitor.prototype.visitIcu = function (icu) { return serializeIcuNode(icu); };
+        GetMsgSerializerVisitor.prototype.visitTagPlaceholder = function (ph) {
             var _this = this;
             return ph.isVoid ?
                 this.formatPh(ph.startName) :
                 "" + this.formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + this.formatPh(ph.closeName);
         };
-        SerializerVisitor.prototype.visitPlaceholder = function (ph, context) { return this.formatPh(ph.name); };
-        SerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
+        GetMsgSerializerVisitor.prototype.visitPlaceholder = function (ph) { return this.formatPh(ph.name); };
+        GetMsgSerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
             return this.formatPh(ph.name);
         };
-        return SerializerVisitor;
+        return GetMsgSerializerVisitor;
     }());
-    var serializerVisitor$1 = new SerializerVisitor();
-    function getSerializedI18nContent(message) {
+    var serializerVisitor$1 = new GetMsgSerializerVisitor();
+    function serializeI18nMessageForGetMsg(message) {
         return message.nodes.map(function (node) { return node.visit(serializerVisitor$1, null); }).join('');
+    }
+
+    function createLocalizeStatements(variable, message, params) {
+        var statements = [];
+        var jsdocComment = i18nMetaToDocStmt(metaFromI18nMessage(message));
+        if (jsdocComment !== null) {
+            statements.push(jsdocComment);
+        }
+        var _a = serializeI18nMessageForLocalize(message), messageParts = _a.messageParts, placeHolders = _a.placeHolders;
+        statements.push(new ExpressionStatement(variable.set(localizedString(messageParts, placeHolders, placeHolders.map(function (ph) { return params[ph]; })))));
+        return statements;
+    }
+    var MessagePiece = /** @class */ (function () {
+        function MessagePiece(text) {
+            this.text = text;
+        }
+        return MessagePiece;
+    }());
+    var LiteralPiece = /** @class */ (function (_super) {
+        __extends(LiteralPiece, _super);
+        function LiteralPiece() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return LiteralPiece;
+    }(MessagePiece));
+    var PlaceholderPiece = /** @class */ (function (_super) {
+        __extends(PlaceholderPiece, _super);
+        function PlaceholderPiece(name) {
+            return _super.call(this, formatI18nPlaceholderName(name)) || this;
+        }
+        return PlaceholderPiece;
+    }(MessagePiece));
+    /**
+     * This visitor walks over an i18n tree, capturing literal strings and placeholders.
+     *
+     * The result can be used for generating the `$localize` tagged template literals.
+     */
+    var LocalizeSerializerVisitor = /** @class */ (function () {
+        function LocalizeSerializerVisitor() {
+        }
+        LocalizeSerializerVisitor.prototype.visitText = function (text, context) {
+            context.push(new LiteralPiece(text.value));
+        };
+        LocalizeSerializerVisitor.prototype.visitContainer = function (container, context) {
+            var _this = this;
+            container.children.forEach(function (child) { return child.visit(_this, context); });
+        };
+        LocalizeSerializerVisitor.prototype.visitIcu = function (icu, context) {
+            context.push(new LiteralPiece(serializeIcuNode(icu)));
+        };
+        LocalizeSerializerVisitor.prototype.visitTagPlaceholder = function (ph, context) {
+            var _this = this;
+            context.push(new PlaceholderPiece(ph.startName));
+            if (!ph.isVoid) {
+                ph.children.forEach(function (child) { return child.visit(_this, context); });
+                context.push(new PlaceholderPiece(ph.closeName));
+            }
+        };
+        LocalizeSerializerVisitor.prototype.visitPlaceholder = function (ph, context) {
+            context.push(new PlaceholderPiece(ph.name));
+        };
+        LocalizeSerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
+            context.push(new PlaceholderPiece(ph.name));
+        };
+        return LocalizeSerializerVisitor;
+    }());
+    var serializerVisitor$2 = new LocalizeSerializerVisitor();
+    /**
+     * Serialize an i18n message into two arrays: messageParts and placeholders.
+     *
+     * These arrays will be used to generate `$localize` tagged template literals.
+     *
+     * @param message The message to be serialized.
+     * @returns an object containing the messageParts and placeholders.
+     */
+    function serializeI18nMessageForLocalize(message) {
+        var pieces = [];
+        message.nodes.forEach(function (node) { return node.visit(serializerVisitor$2, pieces); });
+        return processMessagePieces(pieces);
+    }
+    /**
+     * Convert the list of serialized MessagePieces into two arrays.
+     *
+     * One contains the literal string pieces and the other the placeholders that will be replaced by
+     * expressions when rendering `$localize` tagged template literals.
+     *
+     * @param pieces The pieces to process.
+     * @returns an object containing the messageParts and placeholders.
+     */
+    function processMessagePieces(pieces) {
+        var messageParts = [];
+        var placeHolders = [];
+        if (pieces[0] instanceof PlaceholderPiece) {
+            // The first piece was a placeholder so we need to add an initial empty message part.
+            messageParts.push('');
+        }
+        for (var i = 0; i < pieces.length; i++) {
+            var part = pieces[i];
+            if (part instanceof LiteralPiece) {
+                messageParts.push(part.text);
+            }
+            else {
+                placeHolders.push(part.text);
+                if (pieces[i - 1] instanceof PlaceholderPiece) {
+                    // There were two placeholders in a row, so we need to add an empty message part.
+                    messageParts.push('');
+                }
+            }
+        }
+        if (pieces[pieces.length - 1] instanceof PlaceholderPiece) {
+            // The last piece was a placeholder so we need to add a final empty message part.
+            messageParts.push('');
+        }
+        return { messageParts: messageParts, placeHolders: placeHolders };
     }
 
     /**
@@ -16143,25 +16294,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 _this.creationInstruction(null, Identifiers$1.pipe, [literal(slot), literal(name)]);
             });
         }
-        TemplateDefinitionBuilder.prototype.registerContextVariables = function (variable$1) {
-            var scopedName = this._bindingScope.freshReferenceName();
-            var retrievalLevel = this.level;
-            var lhs = variable(variable$1.name + scopedName);
-            this._bindingScope.set(retrievalLevel, variable$1.name, lhs, 1 /* CONTEXT */, function (scope, relativeLevel) {
-                var rhs;
-                if (scope.bindingLevel === retrievalLevel) {
-                    // e.g. ctx
-                    rhs = variable(CONTEXT_NAME);
-                }
-                else {
-                    var sharedCtxVar = scope.getSharedContextName(retrievalLevel);
-                    // e.g. ctx_r0   OR  x(2);
-                    rhs = sharedCtxVar ? sharedCtxVar : generateNextContextExpr(relativeLevel);
-                }
-                // e.g. const $item$ = x(2).$implicit;
-                return [lhs.set(rhs.prop(variable$1.value || IMPLICIT_REFERENCE)).toConstDecl()];
-            });
-        };
         TemplateDefinitionBuilder.prototype.buildTemplateFunction = function (nodes, variables, ngContentSelectorsOffset, i18n) {
             var _this = this;
             if (ngContentSelectorsOffset === void 0) { ngContentSelectorsOffset = 0; }
@@ -16246,20 +16378,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             // Closure Compiler requires const names to start with `MSG_` but disallows any other const to
             // start with `MSG_`. We define a variable starting with `MSG_` just for the `goog.getMsg` call
             var closureVar = this.i18nGenerateClosureVar(message.id);
-            var formattedParams = this.i18nFormatPlaceholderNames(params, /* useCamelCase */ true);
-            var meta = metaFromI18nMessage(message);
-            var content = getSerializedI18nContent(message);
-            var statements = getTranslationDeclStmts(_ref, closureVar, content, meta, formattedParams, transformFn);
+            var statements = getTranslationDeclStmts(message, _ref, closureVar, params, transformFn);
             (_a = this.constantPool.statements).push.apply(_a, __spread(statements));
             return _ref;
         };
-        TemplateDefinitionBuilder.prototype.i18nFormatPlaceholderNames = function (params, useCamelCase) {
-            if (params === void 0) { params = {}; }
-            var _params = {};
-            if (params && Object.keys(params).length) {
-                Object.keys(params).forEach(function (key) { return _params[formatI18nPlaceholderName(key, useCamelCase)] = params[key]; });
-            }
-            return _params;
+        TemplateDefinitionBuilder.prototype.registerContextVariables = function (variable$1) {
+            var scopedName = this._bindingScope.freshReferenceName();
+            var retrievalLevel = this.level;
+            var lhs = variable(variable$1.name + scopedName);
+            this._bindingScope.set(retrievalLevel, variable$1.name, lhs, 1 /* CONTEXT */, function (scope, relativeLevel) {
+                var rhs;
+                if (scope.bindingLevel === retrievalLevel) {
+                    // e.g. ctx
+                    rhs = variable(CONTEXT_NAME);
+                }
+                else {
+                    var sharedCtxVar = scope.getSharedContextName(retrievalLevel);
+                    // e.g. ctx_r0   OR  x(2);
+                    rhs = sharedCtxVar ? sharedCtxVar : generateNextContextExpr(relativeLevel);
+                }
+                // e.g. const $item$ = x(2).$implicit;
+                return [lhs.set(rhs.prop(variable$1.value || IMPLICIT_REFERENCE)).toConstDecl()];
+            });
         };
         TemplateDefinitionBuilder.prototype.i18nAppendBindings = function (expressions) {
             var _this = this;
@@ -16392,6 +16532,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
             this.i18n = null; // reset local i18n context
         };
+        TemplateDefinitionBuilder.prototype.getNamespaceInstruction = function (namespaceKey) {
+            switch (namespaceKey) {
+                case 'math':
+                    return Identifiers$1.namespaceMathML;
+                case 'svg':
+                    return Identifiers$1.namespaceSVG;
+                default:
+                    return Identifiers$1.namespaceHTML;
+            }
+        };
+        TemplateDefinitionBuilder.prototype.addNamespaceInstruction = function (nsInstruction, element) {
+            this._namespace = nsInstruction;
+            this.creationInstruction(element.sourceSpan, nsInstruction);
+        };
+        /**
+         * Adds an update instruction for an interpolated property or attribute, such as
+         * `prop="{{value}}"` or `attr.title="{{value}}"`
+         */
+        TemplateDefinitionBuilder.prototype.interpolatedUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
+            var _this = this;
+            this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () { return __spread([literal(attrName)], _this.getUpdateInstructionArguments(value), params); });
+        };
         TemplateDefinitionBuilder.prototype.visitContent = function (ngContent) {
             var slot = this.allocateDataSlot();
             var projectionSlotIdx = this._ngContentSelectorsOffset + this._ngContentReservedSlots.length;
@@ -16417,20 +16579,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             if (this.i18n) {
                 this.i18n.appendProjection(ngContent.i18n, slot);
             }
-        };
-        TemplateDefinitionBuilder.prototype.getNamespaceInstruction = function (namespaceKey) {
-            switch (namespaceKey) {
-                case 'math':
-                    return Identifiers$1.namespaceMathML;
-                case 'svg':
-                    return Identifiers$1.namespaceSVG;
-                default:
-                    return Identifiers$1.namespaceHTML;
-            }
-        };
-        TemplateDefinitionBuilder.prototype.addNamespaceInstruction = function (nsInstruction, element) {
-            this._namespace = nsInstruction;
-            this.creationInstruction(element.sourceSpan, nsInstruction);
         };
         TemplateDefinitionBuilder.prototype.visitElement = function (element) {
             var e_1, _a;
@@ -16730,14 +16878,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 this.creationInstruction(span, isNgContainer$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
             }
         };
-        /**
-         * Adds an update instruction for an interpolated property or attribute, such as
-         * `prop="{{value}}"` or `attr.title="{{value}}"`
-         */
-        TemplateDefinitionBuilder.prototype.interpolatedUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
-            var _this = this;
-            this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () { return __spread([literal(attrName)], _this.getUpdateInstructionArguments(value), params); });
-        };
         TemplateDefinitionBuilder.prototype.visitTemplate = function (template) {
             var _this = this;
             var NG_TEMPLATE_TAG_NAME = 'ng-template';
@@ -16829,7 +16969,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
         };
         TemplateDefinitionBuilder.prototype.visitIcu = function (icu) {
-            var _this = this;
             var initWasInvoked = false;
             // if an ICU was created outside of i18n block, we still treat
             // it as a translatable entity and invoke i18nStart and i18nEnd
@@ -16850,7 +16989,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             // - all ICU vars (such as `VAR_SELECT` or `VAR_PLURAL`) are replaced with correct values
             var transformFn = function (raw) {
                 var params = __assign({}, vars, placeholders);
-                var formatted = _this.i18nFormatPlaceholderNames(params, /* useCamelCase */ false);
+                var formatted = i18nFormatPlaceholderNames(params, /* useCamelCase */ false);
                 return instruction(null, Identifiers$1.i18nPostprocess, [raw, mapLiteral(formatted, true)]);
             };
             // in case the whole i18n message is a single ICU - we do not need to
@@ -17643,6 +17782,46 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function hasTextChildrenOnly(children) {
         return children.every(isTextNode);
+    }
+    /** Name of the global variable that is used to determine if we use Closure translations or not */
+    var NG_I18N_CLOSURE_MODE = 'ngI18nClosureMode';
+    /**
+     * Generate statements that define a given translation message.
+     *
+     * ```
+     * var I18N_1;
+     * if (ngI18nClosureMode) {
+     *     var MSG_EXTERNAL_XXX = goog.getMsg(
+     *          "Some message with {$interpolation}!",
+     *          { "interpolation": "\uFFFD0\uFFFD" }
+     *     );
+     *     I18N_1 = MSG_EXTERNAL_XXX;
+     * }
+     * else {
+     *     I18N_1 = $localize`Some message with ${'\uFFFD0\uFFFD'}!`;
+     * }
+     * ```
+     *
+     * @param message The original i18n AST message node
+     * @param variable The variable that will be assigned the translation, e.g. `I18N_1`.
+     * @param closureVar The variable for Closure `goog.getMsg` calls, e.g. `MSG_EXTERNAL_XXX`.
+     * @param params Object mapping placeholder names to their values (e.g.
+     * `{ "interpolation": "\uFFFD0\uFFFD" }`).
+     * @param transformFn Optional transformation function that will be applied to the translation (e.g.
+     * post-processing).
+     * @returns An array of statements that defined a given translation.
+     */
+    function getTranslationDeclStmts(message, variable$1, closureVar, params, transformFn) {
+        if (params === void 0) { params = {}; }
+        var formattedParams = i18nFormatPlaceholderNames(params, /* useCamelCase */ true);
+        var statements = [
+            declareI18nVariable(variable$1),
+            ifStmt(variable(NG_I18N_CLOSURE_MODE), createGoogleGetMsgStatements(variable$1, message, closureVar, formattedParams), createLocalizeStatements(variable$1, message, formattedParams)),
+        ];
+        if (transformFn) {
+            statements.push(new ExpressionStatement(variable$1.set(transformFn(variable$1))));
+        }
+        return statements;
     }
 
     /**
@@ -18654,7 +18833,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+61.sha-260217a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+70.sha-f5bec3f.with-local-changes');
 
     /**
      * @license
@@ -26935,14 +27114,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function createOfflineCompileUrlResolver() {
         return new UrlResolver('.');
     }
@@ -33916,7 +34087,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+61.sha-260217a.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+70.sha-f5bec3f.with-local-changes');
 
     /**
      * @license
@@ -36397,6 +36568,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.setSourceMapRange(expr, ast);
             return expr;
         };
+        ExpressionTranslatorVisitor.prototype.visitLocalizedString = function (ast, context) {
+            return visitLocalizedString(ast, context, this);
+        };
         ExpressionTranslatorVisitor.prototype.visitExternalExpr = function (ast, context) {
             if (ast.value.moduleName === null || ast.value.name === null) {
                 throw new Error("Import unknown module or symbol " + ast.value);
@@ -36542,6 +36716,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         TypeTranslatorVisitor.prototype.visitLiteralExpr = function (ast, context) {
             return ts.createLiteral(ast.value);
         };
+        TypeTranslatorVisitor.prototype.visitLocalizedString = function (ast, context) {
+            return visitLocalizedString(ast, context, this);
+        };
         TypeTranslatorVisitor.prototype.visitExternalExpr = function (ast, context) {
             var _this = this;
             if (ast.value.moduleName === null || ast.value.name === null) {
@@ -36605,6 +36782,44 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         };
         return TypeTranslatorVisitor;
     }());
+    /**
+     * A helper to reduce duplication, since this functionality is required in both
+     * `ExpressionTranslatorVisitor` and `TypeTranslatorVisitor`.
+     */
+    function visitLocalizedString(ast, context, visitor) {
+        var template;
+        if (ast.messageParts.length === 1) {
+            template = ts.createNoSubstitutionTemplateLiteral(ast.messageParts[0]);
+        }
+        else {
+            var head = ts.createTemplateHead(ast.messageParts[0]);
+            var spans = [];
+            for (var i = 1; i < ast.messageParts.length; i++) {
+                var resolvedExpression = ast.expressions[i - 1].visitExpression(visitor, context);
+                spans.push(ts.createTemplateSpan(resolvedExpression, ts.createTemplateMiddle(prefixWithPlaceholderMarker(ast.messageParts[i], ast.placeHolderNames[i - 1]))));
+            }
+            if (spans.length > 0) {
+                // The last span is supposed to have a tail rather than a middle
+                spans[spans.length - 1].literal.kind = ts.SyntaxKind.TemplateTail;
+            }
+            template = ts.createTemplateExpression(head, spans);
+        }
+        return ts.createTaggedTemplate(ts.createIdentifier('$localize'), template);
+    }
+    /**
+     * We want our tagged literals to include placeholder name information to aid runtime translation.
+     *
+     * The expressions are marked with placeholder names by postfixing the expression with
+     * `:placeHolderName:`. To achieve this, we actually "prefix" the message part that follows the
+     * expression.
+     *
+     * @param messagePart the message part that follows the current expression.
+     * @param placeHolderName the name of the placeholder for the current expression.
+     * @returns the prefixed message part.
+     */
+    function prefixWithPlaceholderMarker(messagePart, placeHolderName) {
+        return ":" + placeHolderName + ":" + messagePart;
+    }
 
     /**
      * @license
@@ -48548,6 +48763,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             return this.record(expr, ts.createNew(expr.classExpr.visitExpression(this, null), /* typeArguments */ undefined, expr.args.map(function (arg) { return arg.visitExpression(_this, null); })));
         };
         NodeEmitterVisitor.prototype.visitLiteralExpr = function (expr) { return this.record(expr, createLiteral(expr.value)); };
+        NodeEmitterVisitor.prototype.visitLocalizedString = function (expr, context) {
+            throw new Error('localized strings are not supported in pre-ivy mode.');
+        };
         NodeEmitterVisitor.prototype.visitExternalExpr = function (expr) {
             return this.record(expr, this._visitIdentifier(expr.value));
         };
@@ -68219,7 +68437,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+61.sha-260217a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+70.sha-f5bec3f.with-local-changes');
 
     /**
      * @license
@@ -71334,13 +71552,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     var DEFAULT_LOCALE_ID = 'en-US';
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var MARKER = "\uFFFD";
     var ICU_BLOCK_REGEXP = /^\s*(�\d+:?\d*�)\s*,\s*(select|plural)\s*,/;
     var SUBTEMPLATE_REGEXP = /�\/?\*(\d+:\d+)�/gi;
@@ -72453,27 +72664,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     var NGSP_UNICODE_REGEXP = /\uE500/g;
     function replaceNgsp$1(value) {
         return value.replace(NGSP_UNICODE_REGEXP, ' ');
-    }
-    var TRANSLATIONS = {};
-    var LOCALIZE_PH_REGEXP = /\{\$(.*?)\}/g;
-    /**
-     * A goog.getMsg-like function for users that do not use Closure.
-     *
-     * This method is required as a *temporary* measure to prevent i18n tests from being blocked while
-     * running outside of Closure Compiler. This method will not be needed once runtime translation
-     * service support is introduced.
-     *
-     * @codeGenApi
-     * @deprecated this method is temporary & should not be used as it will be removed soon
-     */
-    function ɵɵi18nLocalize(input, placeholders) {
-        if (typeof TRANSLATIONS[input] !== 'undefined') { // to account for empty string
-            input = TRANSLATIONS[input];
-        }
-        if (placeholders !== undefined && Object.keys(placeholders).length) {
-            return input.replace(LOCALIZE_PH_REGEXP, function (_, key) { return placeholders[key] || ''; });
-        }
-        return input;
     }
     /**
      * The locale id that the application is currently using (for translations and ICU expressions).
@@ -75614,7 +75804,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵi18nEnd': ɵɵi18nEnd,
         'ɵɵi18nApply': ɵɵi18nApply,
         'ɵɵi18nPostprocess': ɵɵi18nPostprocess,
-        'ɵɵi18nLocalize': ɵɵi18nLocalize,
         'ɵɵresolveWindow': ɵɵresolveWindow,
         'ɵɵresolveDocument': ɵɵresolveDocument,
         'ɵɵresolveBody': ɵɵresolveBody,
@@ -76759,7 +76948,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @publicApi
      */
-    var TRANSLATIONS$1 = new InjectionToken('Translations');
+    var TRANSLATIONS = new InjectionToken('Translations');
     /**
      * Provide this token at bootstrap to set the format of your {@link TRANSLATIONS}: `xtb`,
      * `xlf` or `xlf2`.
@@ -81048,6 +81237,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    if (ngDevMode) {
+        // This helper is to give a reasonable error message to people upgrading to v9 that have not yet
+        // installed `@angular/localize` in their app.
+        // tslint:disable-next-line: no-toplevel-property-access
+        _global$1.$localize = _global$1.$localize || function () {
+            throw new Error('The global function `$localize` is missing. Please add `import \'@angular/localize\';` to your polyfills.ts file.');
+        };
+    }
 
     /**
      * @license
@@ -81814,7 +82011,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+61.sha-260217a.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+70.sha-f5bec3f.with-local-changes');
 
     /**
      * @license
