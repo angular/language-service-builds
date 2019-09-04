@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+88.sha-7cc4225.with-local-changes
+ * @license Angular v9.0.0-next.4+84.sha-f0bdf2a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+88.sha-7cc4225.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+84.sha-f0bdf2a.with-local-changes');
 
     /**
      * @license
@@ -32276,24 +32276,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         DirectiveKind["DIRECTIVE"] = "directive";
         DirectiveKind["EVENT"] = "event";
     })(DirectiveKind || (DirectiveKind = {}));
-    /**
-     * ScriptElementKind for completion.
-     */
-    var CompletionKind;
-    (function (CompletionKind) {
-        CompletionKind["ATTRIBUTE"] = "attribute";
-        CompletionKind["COMPONENT"] = "component";
-        CompletionKind["ELEMENT"] = "element";
-        CompletionKind["ENTITY"] = "entity";
-        CompletionKind["HTML_ATTRIBUTE"] = "html attribute";
-        CompletionKind["KEY"] = "key";
-        CompletionKind["METHOD"] = "method";
-        CompletionKind["PIPE"] = "pipe";
-        CompletionKind["PROPERTY"] = "property";
-        CompletionKind["REFERENCE"] = "reference";
-        CompletionKind["TYPE"] = "type";
-        CompletionKind["VARIABLE"] = "variable";
-    })(CompletionKind || (CompletionKind = {}));
 
     /**
      * @license
@@ -32372,6 +32354,30 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (value.endsWith(suffix))
             return value.substring(0, value.length - suffix.length);
         return value;
+    }
+    function uniqueByName(elements) {
+        var e_2, _a;
+        if (elements) {
+            var result = [];
+            var set = new Set();
+            try {
+                for (var elements_1 = __values(elements), elements_1_1 = elements_1.next(); !elements_1_1.done; elements_1_1 = elements_1.next()) {
+                    var element = elements_1_1.value;
+                    if (!set.has(element.name)) {
+                        set.add(element.name);
+                        result.push(element);
+                    }
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+            return result;
+        }
     }
     function diagnosticInfoFromTemplateInfo(info) {
         return {
@@ -32466,7 +32472,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * @param node Potential node that represents an Angular directive.
      */
     function getDirectiveClassLike(node) {
-        var e_2, _a;
+        var e_3, _a;
         if (!ts.isClassDeclaration(node) || !node.name || !node.decorators) {
             return;
         }
@@ -32487,12 +32493,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 }
             }
         }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_2) throw e_2.error; }
+            finally { if (e_3) throw e_3.error; }
         }
     }
 
@@ -33110,7 +33116,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         link: true,
     };
     function getTemplateCompletions(templateInfo, position) {
-        var result = [];
+        var result = undefined;
         var htmlAst = templateInfo.htmlAst, template = templateInfo.template;
         // The templateNode starts at the delimiter character so we add 1 to skip it.
         var templatePosition = position - template.span.start;
@@ -33125,8 +33131,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 visitElement: function (ast) {
                     var startTagSpan = spanOf$2(ast.sourceSpan);
                     var tagLen = ast.name.length;
-                    // + 1 for the opening angle bracket
-                    if (templatePosition <= startTagSpan.start + tagLen + 1) {
+                    if (templatePosition <=
+                        startTagSpan.start + tagLen + 1 /* 1 for the opening angle bracket */) {
                         // If we are in the tag then return the element completions.
                         result = elementCompletions(templateInfo, path);
                     }
@@ -33148,17 +33154,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 visitText: function (ast) {
                     // Check if we are in a entity.
                     result = entityCompletions(getSourceText(template, spanOf$2(ast)), astPosition_1);
-                    if (result.length)
+                    if (result)
                         return result;
                     result = interpolationCompletions(templateInfo, templatePosition);
-                    if (result.length)
+                    if (result)
                         return result;
                     var element = path.first(Element$1);
                     if (element) {
                         var definition = getHtmlTagDefinition(element.name);
                         if (definition.contentType === TagContentType.PARSABLE_DATA) {
                             result = voidElementAttributeCompletions(templateInfo, path);
-                            if (!result.length) {
+                            if (!result) {
                                 // If the element can hold content, show element completions.
                                 result = elementCompletions(templateInfo, path);
                             }
@@ -33167,7 +33173,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                     else {
                         // If no element container, implies parsable data so show elements.
                         result = voidElementAttributeCompletions(templateInfo, path);
-                        if (!result.length) {
+                        if (!result) {
                             result = elementCompletions(templateInfo, path);
                         }
                     }
@@ -33184,21 +33190,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (item instanceof Element$1) {
             return attributeCompletionsForElement(info, item.name, item);
         }
-        return [];
+        return undefined;
     }
     function attributeCompletionsForElement(info, elementName, element) {
         var attributes = getAttributeInfosForElement(info, elementName, element);
         // Map all the attributes to a completion
-        return attributes.map(function (attr) {
-            var kind = attr.fromHtml ? CompletionKind.HTML_ATTRIBUTE : CompletionKind.ATTRIBUTE;
-            return {
-                name: nameOfAttr(attr),
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
-                kind: kind,
-                sortText: attr.name,
-            };
-        });
+        return attributes.map(function (attr) { return ({
+            kind: attr.fromHtml ? 'html attribute' : 'attribute',
+            name: nameOfAttr(attr),
+            sort: attr.name
+        }); });
     }
     function getAttributeInfosForElement(info, elementName, element) {
         var attributes = [];
@@ -33260,22 +33261,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function attributeValueCompletions(info, position, attr) {
         var path = findTemplateAstAt(info.templateAst, position);
-        if (!path.tail) {
-            return [];
-        }
+        var mostSpecific = path.tail;
         var dinfo = diagnosticInfoFromTemplateInfo(info);
-        var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, path, false); });
-        path.tail.visit(visitor, null);
-        if (!visitor.result || !visitor.result.length) {
-            // Try allwoing widening the path
-            var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
-            if (widerPath_1.tail) {
-                var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
-                widerPath_1.tail.visit(widerVisitor, null);
-                return widerVisitor.result || [];
+        if (mostSpecific) {
+            var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, path, false); });
+            mostSpecific.visit(visitor, null);
+            if (!visitor.result || !visitor.result.length) {
+                // Try allwoing widening the path
+                var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
+                if (widerPath_1.tail) {
+                    var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
+                    widerPath_1.tail.visit(widerVisitor, null);
+                    return widerVisitor.result;
+                }
             }
+            return visitor.result;
         }
-        return visitor.result || [];
     }
     function elementCompletions(info, path) {
         var htmlNames = elementNames().filter(function (name) { return !(name in hiddenHtmlElements); });
@@ -33283,70 +33284,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         var directiveElements = getSelectors(info)
             .selectors.map(function (selector) { return selector.element; })
             .filter(function (name) { return !!name; });
-        var components = directiveElements.map(function (name) {
-            return {
-                name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
-                kind: CompletionKind.COMPONENT,
-                sortText: name,
-            };
-        });
-        var htmlElements = htmlNames.map(function (name) {
-            return {
-                name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
-                kind: CompletionKind.ELEMENT,
-                sortText: name,
-            };
-        });
+        var components = directiveElements.map(function (name) { return ({ kind: 'component', name: name, sort: name }); });
+        var htmlElements = htmlNames.map(function (name) { return ({ kind: 'element', name: name, sort: name }); });
         // Return components and html elements
         return uniqueByName(htmlElements.concat(components));
-    }
-    /**
-     * Filter the specified `entries` by unique name.
-     * @param entries Completion Entries
-     */
-    function uniqueByName(entries) {
-        var e_1, _a;
-        var results = [];
-        var set = new Set();
-        try {
-            for (var entries_1 = __values(entries), entries_1_1 = entries_1.next(); !entries_1_1.done; entries_1_1 = entries_1.next()) {
-                var entry = entries_1_1.value;
-                if (!set.has(entry.name)) {
-                    set.add(entry.name);
-                    results.push(entry);
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (entries_1_1 && !entries_1_1.done && (_a = entries_1.return)) _a.call(entries_1);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        return results;
     }
     function entityCompletions(value, position) {
         // Look for entity completions
         var re = /&[A-Za-z]*;?(?!\d)/g;
         var found;
-        var result = [];
+        var result = undefined;
         while (found = re.exec(value)) {
             var len = found[0].length;
             if (position >= found.index && position < (found.index + len)) {
-                result = Object.keys(NAMED_ENTITIES).map(function (name) {
-                    return {
-                        name: "&" + name + ";",
-                        // Need to cast to unknown because Angular's CompletionKind includes
-                        // HTML entites.
-                        kind: CompletionKind.ENTITY,
-                        sortText: name,
-                    };
-                });
+                result = Object.keys(NAMED_ENTITIES)
+                    .map(function (name) { return ({ kind: 'entity', name: "&" + name + ";", sort: name }); });
                 break;
             }
         }
@@ -33355,12 +33307,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     function interpolationCompletions(info, position) {
         // Look for an interpolation in at the position.
         var templatePath = findTemplateAstAt(info.templateAst, position);
-        if (!templatePath.tail) {
-            return [];
+        var mostSpecific = templatePath.tail;
+        if (mostSpecific) {
+            var visitor = new ExpressionVisitor(info, position, undefined, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
+            mostSpecific.visit(visitor, null);
+            return uniqueByName(visitor.result);
         }
-        var visitor = new ExpressionVisitor(info, position, undefined, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
-        templatePath.tail.visit(visitor, null);
-        return uniqueByName(visitor.result || []);
     }
     // There is a special case of HTML where text that contains a unclosed tag is treated as
     // text. For exaple '<h1> Some <a text </h1>' produces a text nodes inside of the H1
@@ -33379,7 +33331,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 return attributeCompletionsForElement(info, match[3]);
             }
         }
-        return [];
     }
     var ExpressionVisitor = /** @class */ (function (_super) {
         __extends(ExpressionVisitor, _super);
@@ -33425,15 +33376,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                             .map(function (name) { return lowerName(name.substr(key_1.length)); });
                     }
                     keys.push('let');
-                    _this.result = keys.map(function (key) {
-                        return {
-                            name: key,
-                            // Need to cast to unknown because Angular's CompletionKind includes
-                            // HTML entites.
-                            kind: CompletionKind.KEY,
-                            sortText: key,
-                        };
-                    });
+                    _this.result = keys.map(function (key) { return ({ kind: 'key', name: key, sort: key }); });
                 };
                 if (!binding || (binding.key == key_1 && !binding.expression)) {
                     // We are in the root binding. We should return `let` and keys that are left in the
@@ -33491,13 +33434,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
         };
         ExpressionVisitor.prototype.symbolsToCompletions = function (symbols) {
-            return symbols.filter(function (s) { return !s.name.startsWith('__') && s.public; }).map(function (symbol) {
-                return {
-                    name: symbol.name,
-                    kind: symbol.kind,
-                    sortText: symbol.name,
-                };
-            });
+            return symbols.filter(function (s) { return !s.name.startsWith('__') && s.public; })
+                .map(function (symbol) { return ({ kind: symbol.kind, name: symbol.name, sort: symbol.name }); });
         };
         Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
             get: function () {
@@ -33536,7 +33474,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     var templateAttr = /^(\w+:)?(template$|^\*)/;
     function createElementCssSelector$1(element) {
-        var e_2, _a;
+        var e_1, _a;
         var cssSelector = new CssSelector();
         var elNameNoNs = splitNsName(element.name)[1];
         cssSelector.setElement(elNameNoNs);
@@ -33553,12 +33491,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 }
             }
         }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_2) throw e_2.error; }
+            finally { if (e_1) throw e_1.error; }
         }
         return cssSelector;
     }
@@ -33607,6 +33545,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function lowerName(name) {
         return name && (name[0].toLowerCase() + name.substr(1));
+    }
+    function ngCompletionToTsCompletionEntry(completion) {
+        return {
+            name: completion.name,
+            kind: completion.kind,
+            kindModifiers: '',
+            sortText: completion.sort,
+        };
     }
 
     /**
@@ -34156,7 +34102,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+88.sha-7cc4225.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+84.sha-f0bdf2a.with-local-changes');
 
     /**
      * @license
@@ -51038,7 +50984,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 isGlobalCompletion: false,
                 isMemberCompletion: false,
                 isNewIdentifierLocation: false,
-                entries: results,
+                entries: results.map(ngCompletionToTsCompletionEntry),
             };
         };
         LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
@@ -52586,16 +52532,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     function getCurrentStyleSanitizer() {
         return _currentSanitizer;
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /** A special value which designates that a value has not changed. */
-    var NO_CHANGE = {};
 
     function getConfig(context) {
         return context[1 /* ConfigPosition */];
@@ -54488,6 +54424,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     function setStylingMapsSyncFn(fn) {
         _activeStylingMapApplyFn = fn;
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
 
     /**
      * @license
@@ -60458,7 +60404,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+88.sha-7cc4225.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+84.sha-f0bdf2a.with-local-changes');
 
     /**
      * @license
@@ -71046,7 +70992,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+88.sha-7cc4225.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+84.sha-f0bdf2a.with-local-changes');
 
     /**
      * @license
