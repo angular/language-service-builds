@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.4+81.sha-cfa09b8.with-local-changes
+ * @license Angular v9.0.0-next.4+82.sha-a383a5a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.4+81.sha-cfa09b8.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.4+82.sha-a383a5a.with-local-changes');
 
     /**
      * @license
@@ -34102,7 +34102,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.4+81.sha-cfa09b8.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.4+82.sha-a383a5a.with-local-changes');
 
     /**
      * @license
@@ -52708,13 +52708,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     var INTERPOLATION_DELIMITER = "\uFFFD";
     /**
-     * Determines whether or not the given string is a property metadata string.
-     * See storeBindingMetadata().
-     */
-    function isPropMetadataString(str) {
-        return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
-    }
-    /**
      * Unwrap a value which might be behind a closure (for forward declaration reasons).
      */
     function maybeUnwrapFn(value) {
@@ -54999,8 +54992,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         injectorIndex, //
         directiveStart, //
         directiveEnd, //
-        propertyMetadataStartIndex, //
-        propertyMetadataEndIndex, //
+        propertyBindings, //
         flags, //
         providerIndexes, //
         tagName, //
@@ -55023,8 +55015,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             this.injectorIndex = injectorIndex;
             this.directiveStart = directiveStart;
             this.directiveEnd = directiveEnd;
-            this.propertyMetadataStartIndex = propertyMetadataStartIndex;
-            this.propertyMetadataEndIndex = propertyMetadataEndIndex;
+            this.propertyBindings = propertyBindings;
             this.flags = flags;
             this.providerIndexes = providerIndexes;
             this.tagName = tagName;
@@ -56108,8 +56099,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         injectorIndex, // injectorIndex: number
         -1, // directiveStart: number
         -1, // directiveEnd: number
-        -1, // propertyMetadataStartIndex: number
-        -1, // propertyMetadataEndIndex: number
+        null, // propertyBindings: number[]|null
         0, // flags: TNodeFlags
         0, // providerIndexes: TNodeProviderIndexes
         tagName, // tagName: string|null
@@ -56132,8 +56122,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 injectorIndex: injectorIndex,
                 directiveStart: -1,
                 directiveEnd: -1,
-                propertyMetadataStartIndex: -1,
-                propertyMetadataEndIndex: -1,
+                propertyBindings: null,
                 flags: 0,
                 providerIndexes: 0,
                 tagName: tagName,
@@ -60413,7 +60402,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.4+81.sha-cfa09b8.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.4+82.sha-a383a5a.with-local-changes');
 
     /**
      * @license
@@ -67424,7 +67413,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -67821,13 +67810,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 var tData = lView[TVIEW].data;
                 var tNode = tData[context.nodeIndex];
                 var properties = collectPropertyBindings(tNode, lView, tData);
-                var hostProperties = collectHostPropertyBindings(tNode, lView, tData);
                 var className = collectClassNames(this);
-                var output = __assign({}, properties, hostProperties);
                 if (className) {
-                    output['className'] = output['className'] ? output['className'] + (" " + className) : className;
+                    properties['className'] =
+                        properties['className'] ? properties['className'] + (" " + className) : className;
                 }
-                return output;
+                return properties;
             },
             enumerable: true,
             configurable: true
@@ -68160,72 +68148,24 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
     function collectPropertyBindings(tNode, lView, tData) {
         var properties = {};
-        var bindingIndex = getFirstBindingIndex(tNode.propertyMetadataStartIndex, tData);
-        while (bindingIndex < tNode.propertyMetadataEndIndex) {
-            var value = void 0;
-            var propMetadata = tData[bindingIndex];
-            while (!isPropMetadataString(propMetadata)) {
-                // This is the first value for an interpolation. We need to build up
-                // the full interpolation by combining runtime values in LView with
-                // the static interstitial values stored in TData.
-                value = (value || '') + renderStringify(lView[bindingIndex]) + tData[bindingIndex];
-                propMetadata = tData[++bindingIndex];
+        var bindingIndexes = tNode.propertyBindings;
+        if (bindingIndexes !== null) {
+            for (var i = 0; i < bindingIndexes.length; i++) {
+                var bindingIndex = bindingIndexes[i];
+                var propMetadata = tData[bindingIndex];
+                var metadataParts = propMetadata.split(INTERPOLATION_DELIMITER);
+                var propertyName = metadataParts[0];
+                if (metadataParts.length > 1) {
+                    var value = metadataParts[1];
+                    for (var j = 1; j < metadataParts.length - 1; j++) {
+                        value += renderStringify(lView[bindingIndex + j - 1]) + metadataParts[j + 1];
+                    }
+                    properties[propertyName] = value;
+                }
+                else {
+                    properties[propertyName] = lView[bindingIndex];
+                }
             }
-            value = value === undefined ? lView[bindingIndex] : value += lView[bindingIndex];
-            // Property metadata string has 3 parts: property name, prefix, and suffix
-            var metadataParts = propMetadata.split(INTERPOLATION_DELIMITER);
-            var propertyName = metadataParts[0];
-            // Attr bindings don't have property names and should be skipped
-            if (propertyName) {
-                // Wrap value with prefix and suffix (will be '' for normal bindings), if they're defined.
-                // Avoid wrapping for normal bindings so that the value doesn't get cast to a string.
-                properties[propertyName] = (metadataParts[1] && metadataParts[2]) ?
-                    metadataParts[1] + value + metadataParts[2] :
-                    value;
-            }
-            bindingIndex++;
-        }
-        return properties;
-    }
-    /**
-     * Retrieves the first binding index that holds values for this property
-     * binding.
-     *
-     * For normal bindings (e.g. `[id]="id"`), the binding index is the
-     * same as the metadata index. For interpolations (e.g. `id="{{id}}-{{name}}"`),
-     * there can be multiple binding values, so we might have to loop backwards
-     * from the metadata index until we find the first one.
-     *
-     * @param metadataIndex The index of the first property metadata string for
-     * this node.
-     * @param tData The data array for the current TView
-     * @returns The first binding index for this binding
-     */
-    function getFirstBindingIndex(metadataIndex, tData) {
-        var currentBindingIndex = metadataIndex - 1;
-        // If the slot before the metadata holds a string, we know that this
-        // metadata applies to an interpolation with at least 2 bindings, and
-        // we need to search further to access the first binding value.
-        var currentValue = tData[currentBindingIndex];
-        // We need to iterate until we hit either a:
-        // - TNode (it is an element slot marking the end of `consts` section), OR a
-        // - metadata string (slot is attribute metadata or a previous node's property metadata)
-        while (typeof currentValue === 'string' && !isPropMetadataString(currentValue)) {
-            currentValue = tData[--currentBindingIndex];
-        }
-        return currentBindingIndex + 1;
-    }
-    function collectHostPropertyBindings(tNode, lView, tData) {
-        var properties = {};
-        // Host binding values for a node are stored after directives on that node
-        var hostPropIndex = tNode.directiveEnd;
-        var propMetadata = tData[hostPropIndex];
-        // When we reach a value in TView.data that is not a string, we know we've
-        // hit the next node's providers and directives and should stop copying data.
-        while (typeof propMetadata === 'string') {
-            var propertyName = propMetadata.split(INTERPOLATION_DELIMITER)[0];
-            properties[propertyName] = lView[hostPropIndex];
-            propMetadata = tData[++hostPropIndex];
         }
         return properties;
     }
@@ -71050,7 +70990,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.4+81.sha-cfa09b8.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.4+82.sha-a383a5a.with-local-changes');
 
     /**
      * @license
