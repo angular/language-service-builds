@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+14.sha-fed6b25.with-local-changes
+ * @license Angular v9.0.0-next.5+20.sha-497d6b1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13004,9 +13004,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         };
         StylingBuilder.prototype.registerInputBasedOnName = function (name, expression, sourceSpan) {
             var binding = null;
-            var nameToMatch = name.substring(0, 5); // class | style
-            var isStyle = nameToMatch === 'style';
-            var isClass = isStyle ? false : (nameToMatch === 'class');
+            var prefix = name.substring(0, 6);
+            var isStyle = name === 'style' || prefix === 'style.' || prefix === 'style!';
+            var isClass = !isStyle &&
+                (name === 'class' || name === 'className' || prefix === 'class.' || prefix === 'class!');
             if (isStyle || isClass) {
                 var isMapBased = name.charAt(5) !== '.'; // style.prop or class.prop makes this a no
                 var property = name.substr(isMapBased ? 5 : 6); // the dot explains why there's a +1
@@ -18840,7 +18841,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
@@ -34148,7 +34149,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
@@ -60553,12 +60554,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             var lView = lContainer[nextViewIndex];
             ngDevMode && assertDefined(lView[T_HOST], 'Missing Host TNode');
             var tViewNodeChild = lView[T_HOST].child;
-            return tViewNodeChild !== null ? getNativeByTNodeOrNull(tViewNodeChild, lView) :
-                lContainer[NATIVE];
+            if (tViewNodeChild !== null) {
+                if (tViewNodeChild.type === 4 /* ElementContainer */ ||
+                    tViewNodeChild.type === 5 /* IcuContainer */) {
+                    var currentChild = tViewNodeChild.child;
+                    while (currentChild && (currentChild.type === 4 /* ElementContainer */ ||
+                        currentChild.type === 5 /* IcuContainer */)) {
+                        currentChild = currentChild.child;
+                    }
+                    tViewNodeChild = currentChild || tViewNodeChild;
+                }
+                return getNativeByTNodeOrNull(tViewNodeChild, lView);
+            }
         }
-        else {
-            return lContainer[NATIVE];
-        }
+        return lContainer[NATIVE];
     }
     /**
      * Removes a native node itself using a given renderer. To remove the node we are looking up its
@@ -63769,44 +63778,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Update a property on a selected element.
-     *
-     * Operates on the element selected by index via the {@link select} instruction.
-     *
-     * If the property name also exists as an input property on one of the element's directives,
-     * the component property will be set instead of the element property. This check must
-     * be conducted at runtime so child components that add new `@Inputs` don't have to be re-compiled
-     *
-     * @param propName Name of property. Because it is going to DOM, this is not subject to
-     *        renaming as part of minification.
-     * @param value New value to write.
-     * @param sanitizer An optional function used to sanitize the value.
-     * @returns This function returns itself so that it may be chained
-     * (e.g. `property('name', ctx.name)('title', ctx.title)`)
-     *
-     * @codeGenApi
-     */
-    function ɵɵproperty(propName, value, sanitizer) {
-        var lView = getLView();
-        var bindingIndex = lView[BINDING_INDEX]++;
-        if (bindingUpdated(lView, bindingIndex, value)) {
-            var nodeIndex = getSelectedIndex();
-            elementPropertyInternal(nodeIndex, propName, value, sanitizer);
-            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, propName, bindingIndex);
-        }
-        return ɵɵproperty;
-    }
-    /**
-     * Creates a single value binding.
-     *
-     * @param lView Current view
-     * @param value Value to diff
-     */
-    function bind(lView, value) {
-        return bindingUpdated(lView, lView[BINDING_INDEX]++, value) ? value : NO_CHANGE;
-    }
-
-    /**
      * Updates the value of or removes a bound attribute on an Element.
      *
      * Used in the case of `[attr.title]="value"`
@@ -63820,11 +63791,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * @codeGenApi
      */
     function ɵɵattribute(name, value, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
-        var bound = bind(lView, value);
-        if (bound !== NO_CHANGE) {
-            elementAttributeInternal(index, name, bound, lView, sanitizer, namespace);
+        if (bindingUpdated(lView, lView[BINDING_INDEX]++, value)) {
+            elementAttributeInternal(getSelectedIndex(), name, value, lView, sanitizer, namespace);
         }
         return ɵɵattribute;
     }
@@ -65562,9 +65531,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                     existingListener = findExistingListener(lView, eventName, tNode.index);
                 }
                 if (existingListener !== null) {
-                    // Attach a new listener at the head of the coalesced listeners list.
-                    listenerFn.__ngNextListenerFn__ = existingListener.__ngNextListenerFn__;
-                    existingListener.__ngNextListenerFn__ = listenerFn;
+                    // Attach a new listener to coalesced listeners list, maintaining the order in which
+                    // listeners are registered. For performance reasons, we keep a reference to the last
+                    // listener in that list (in `__ngLastListenerFn__` field), so we can avoid going through
+                    // the entire set each time we need to add a new listener.
+                    var lastListenerFn = existingListener.__ngLastListenerFn__ || existingListener;
+                    lastListenerFn.__ngNextListenerFn__ = listenerFn;
+                    existingListener.__ngLastListenerFn__ = listenerFn;
                     processOutputs = false;
                 }
                 else {
@@ -65818,6 +65791,42 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             // re-distribution of projectable nodes is stored on a component's view level
             applyProjection(lView, tProjectionNode);
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Update a property on a selected element.
+     *
+     * Operates on the element selected by index via the {@link select} instruction.
+     *
+     * If the property name also exists as an input property on one of the element's directives,
+     * the component property will be set instead of the element property. This check must
+     * be conducted at runtime so child components that add new `@Inputs` don't have to be re-compiled
+     *
+     * @param propName Name of property. Because it is going to DOM, this is not subject to
+     *        renaming as part of minification.
+     * @param value New value to write.
+     * @param sanitizer An optional function used to sanitize the value.
+     * @returns This function returns itself so that it may be chained
+     * (e.g. `property('name', ctx.name)('title', ctx.title)`)
+     *
+     * @codeGenApi
+     */
+    function ɵɵproperty(propName, value, sanitizer) {
+        var lView = getLView();
+        var bindingIndex = lView[BINDING_INDEX]++;
+        if (bindingUpdated(lView, bindingIndex, value)) {
+            var nodeIndex = getSelectedIndex();
+            elementPropertyInternal(nodeIndex, propName, value, sanitizer);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, propName, bindingIndex);
+        }
+        return ɵɵproperty;
     }
 
     /**
@@ -68449,7 +68458,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
@@ -72426,8 +72435,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      */
     function ɵɵi18nExp(value) {
         var lView = getLView();
-        var expression = bind(lView, value);
-        if (expression !== NO_CHANGE) {
+        if (bindingUpdated(lView, lView[BINDING_INDEX]++, value)) {
             changeMask = changeMask | (1 << shiftsCounter);
         }
         shiftsCounter++;
@@ -81206,7 +81214,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         // installed `@angular/localize` in their app.
         // tslint:disable-next-line: no-toplevel-property-access
         _global$1.$localize = _global$1.$localize || function () {
-            throw new Error('The global function `$localize` is missing. Please add `import \'@angular/localize\';` to your polyfills.ts file.');
+            throw new Error('It looks like your application or one of its dependencies is using i18n.\n' +
+                'Angular 9 introduced a global `$localize()` function that needs to be loaded.\n' +
+                'Please add `import \'@angular/localize\';` to your polyfills.ts file.');
         };
     }
 
@@ -81975,7 +81985,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
