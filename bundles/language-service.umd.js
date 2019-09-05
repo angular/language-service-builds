@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+16.sha-da42a76.with-local-changes
+ * @license Angular v9.0.0-next.5+17.sha-a9ff48e.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18840,7 +18840,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+16.sha-da42a76.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+17.sha-a9ff48e.with-local-changes');
 
     /**
      * @license
@@ -34148,7 +34148,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+16.sha-da42a76.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+17.sha-a9ff48e.with-local-changes');
 
     /**
      * @license
@@ -68453,7 +68453,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+16.sha-da42a76.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+17.sha-a9ff48e.with-local-changes');
 
     /**
      * @license
@@ -81209,7 +81209,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         // installed `@angular/localize` in their app.
         // tslint:disable-next-line: no-toplevel-property-access
         _global$1.$localize = _global$1.$localize || function () {
-            throw new Error('The global function `$localize` is missing. Please add `import \'@angular/localize\';` to your polyfills.ts file.');
+            throw new Error('It looks like your application or one of its dependencies is using i18n.\n' +
+                'Angular 9 introduced a global `$localize()` function that needs to be loaded.\n' +
+                'Please add `import \'@angular/localize\';` to your polyfills.ts file.');
         };
     }
 
@@ -81978,7 +81980,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+16.sha-da42a76.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+17.sha-a9ff48e.with-local-changes');
 
     /**
      * @license
