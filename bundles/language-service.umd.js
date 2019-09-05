@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+14.sha-fed6b25.with-local-changes
+ * @license Angular v9.0.0-next.5+20.sha-497d6b1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13019,9 +13019,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         };
         StylingBuilder.prototype.registerInputBasedOnName = function (name, expression, sourceSpan) {
             var binding = null;
-            var nameToMatch = name.substring(0, 5); // class | style
-            var isStyle = nameToMatch === 'style';
-            var isClass = isStyle ? false : (nameToMatch === 'class');
+            var prefix = name.substring(0, 6);
+            var isStyle = name === 'style' || prefix === 'style.' || prefix === 'style!';
+            var isClass = !isStyle &&
+                (name === 'class' || name === 'className' || prefix === 'class.' || prefix === 'class!');
             if (isStyle || isClass) {
                 var isMapBased = name.charAt(5) !== '.'; // style.prop or class.prop makes this a no
                 var property = name.substr(isMapBased ? 5 : 6); // the dot explains why there's a +1
@@ -18855,7 +18856,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
@@ -34163,7 +34164,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
@@ -59826,6 +59827,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Returns the component instance associated with a given DOM host element.
      * Elements which don't represent components return `null`.
@@ -60465,7 +60474,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
@@ -70284,7 +70293,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         // installed `@angular/localize` in their app.
         // tslint:disable-next-line: no-toplevel-property-access
         _global$1.$localize = _global$1.$localize || function () {
-            throw new Error('The global function `$localize` is missing. Please add `import \'@angular/localize\';` to your polyfills.ts file.');
+            throw new Error('It looks like your application or one of its dependencies is using i18n.\n' +
+                'Angular 9 introduced a global `$localize()` function that needs to be loaded.\n' +
+                'Please add `import \'@angular/localize\';` to your polyfills.ts file.');
         };
     }
 
@@ -71053,7 +71064,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+14.sha-fed6b25.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+20.sha-497d6b1.with-local-changes');
 
     /**
      * @license
