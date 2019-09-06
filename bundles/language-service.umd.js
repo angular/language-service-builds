@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+21.sha-4c3674f.with-local-changes
+ * @license Angular v9.0.0-next.5+22.sha-bc061b7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18841,7 +18841,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+21.sha-4c3674f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+22.sha-bc061b7.with-local-changes');
 
     /**
      * @license
@@ -34149,7 +34149,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+21.sha-4c3674f.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+22.sha-bc061b7.with-local-changes');
 
     /**
      * @license
@@ -59161,13 +59161,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             propName = ATTR_TO_PROP$1[propName] || propName;
             if (ngDevMode) {
                 validateAgainstEventProperties(propName);
-                validateAgainstUnknownProperties(lView, element, propName, tNode);
+                if (!validateProperty(lView, element, propName, tNode)) {
+                    // Return here since we only log warnings for unknown properties.
+                    warnAboutUnknownProperty(propName, tNode);
+                    return;
+                }
                 ngDevMode.rendererSetProperty++;
             }
             var renderer = loadRendererFn ? loadRendererFn(tNode, lView) : lView[RENDERER];
             // It is assumed that the sanitizer is only added when the compiler determines that the
-            // property
-            // is risky, so sanitization can be done without further checks.
+            // property is risky, so sanitization can be done without further checks.
             value = sanitizer != null ? sanitizer(value, tNode.tagName || '', propName) : value;
             if (isProceduralRenderer(renderer)) {
                 renderer.setProperty(element, propName, value);
@@ -59181,7 +59184,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             // If the node is a container and the property didn't
             // match any of the inputs or schemas we should throw.
             if (ngDevMode && !matchingSchemas(lView, tNode.tagName)) {
-                throw createUnknownPropertyError(propName, tNode);
+                warnAboutUnknownProperty(propName, tNode);
             }
         }
     }
@@ -59219,20 +59222,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             }
         }
     }
-    function validateAgainstUnknownProperties(hostView, element, propName, tNode) {
-        // If the tag matches any of the schemas we shouldn't throw.
-        if (matchingSchemas(hostView, tNode.tagName)) {
-            return;
-        }
-        // If prop is not a known property of the HTML element...
-        if (!(propName in element) &&
-            // and we are in a browser context... (web worker nodes should be skipped)
-            typeof Node === 'function' && element instanceof Node &&
-            // and isn't a synthetic animation property...
-            propName[0] !== ANIMATION_PROP_PREFIX) {
-            // ... it is probably a user error and we should throw.
-            throw createUnknownPropertyError(propName, tNode);
-        }
+    function validateProperty(hostView, element, propName, tNode) {
+        // The property is considered valid if the element matches the schema, it exists on the element
+        // or it is synthetic, and we are in a browser context (web worker nodes should be skipped).
+        return matchingSchemas(hostView, tNode.tagName) || propName in element ||
+            propName[0] === ANIMATION_PROP_PREFIX || typeof Node !== 'function' ||
+            !(element instanceof Node);
     }
     function matchingSchemas(hostView, tagName) {
         var schemas = hostView[TVIEW].schemas;
@@ -59248,12 +59243,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         return false;
     }
     /**
-    * Creates an error that should be thrown when encountering an unknown property on an element.
-    * @param propName Name of the invalid property.
-    * @param tNode Node on which we encountered the error.
-    */
-    function createUnknownPropertyError(propName, tNode) {
-        return new Error("Template error: Can't bind to '" + propName + "' since it isn't a known property of '" + tNode.tagName + "'.");
+     * Logs a warning that a property is not supported on an element.
+     * @param propName Name of the invalid property.
+     * @param tNode Node on which we encountered the property.
+     */
+    function warnAboutUnknownProperty(propName, tNode) {
+        console.warn("Can't bind to '" + propName + "' since it isn't a known property of '" + tNode.tagName + "'.");
     }
     /**
      * Instantiate a root component.
@@ -68458,7 +68453,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+21.sha-4c3674f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+22.sha-bc061b7.with-local-changes');
 
     /**
      * @license
@@ -81984,7 +81979,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+21.sha-4c3674f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+22.sha-bc061b7.with-local-changes');
 
     /**
      * @license
