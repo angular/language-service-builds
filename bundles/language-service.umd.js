@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+28.sha-a65d3fa.with-local-changes
+ * @license Angular v9.0.0-next.5+27.sha-b5eda60.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -8,10 +8,7 @@ var $reflect = {defineMetadata: function() {}, getOwnMetadata: function() {}};
 var Reflect = (typeof global !== 'undefined' ? global : {})['Reflect'] || {};
 Object.keys($reflect).forEach(function(key) { Reflect[key] = Reflect[key] || $reflect[key]; });
 var $deferred, $resolved, $provided;
-function $getModule(name) {
-  if (name === 'typescript/lib/tsserverlibrary') return $provided['typescript'] || require(name);
-  return $provided[name] || require(name);
-}
+function $getModule(name) { return $provided[name] || require(name); }
 function define(modules, cb) { $deferred = { modules: modules, cb: cb }; }
 module.exports = function(provided) {
   if ($resolved) return $resolved;
@@ -22,7 +19,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlibrary'], function (exports, path, ts, os, fs$1, tss) { 'use strict';
+define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, ts, os, fs$1) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -18859,7 +18856,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+28.sha-a65d3fa.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+27.sha-b5eda60.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34164,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+28.sha-a65d3fa.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+27.sha-b5eda60.with-local-changes');
 
     /**
      * @license
@@ -60477,7 +60474,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+28.sha-a65d3fa.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+27.sha-b5eda60.with-local-changes');
 
     /**
      * @license
@@ -67488,7 +67485,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -70972,45 +70969,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * A note about importing TypeScript module.
-     * The TypeScript module is supplied by tsserver at runtime to ensure version
-     * compatibility. In Angular language service, the rollup output is augmented
-     * with a "banner" shim that overwrites 'typescript' and
-     * 'typescript/lib/tsserverlibrary' imports with the value supplied by tsserver.
-     * This means import of either modules will not be "required", but they'll work
-     * just like regular imports.
-     */
     var projectHostMap = new WeakMap();
-    /**
-     * Return the external templates discovered through processing all NgModules in
-     * the specified `project`.
-     * This function is called in a few situations:
-     * 1. When a ConfiguredProject is created
-     *    https://github.com/microsoft/TypeScript/blob/c26c44d5fceb04ea14da20b6ed23449df777ff34/src/server/editorServices.ts#L1755
-     * 2. When updateGraph() is called on a Project
-     *    https://github.com/microsoft/TypeScript/blob/c26c44d5fceb04ea14da20b6ed23449df777ff34/src/server/project.ts#L915
-     * @param project Most likely a ConfiguredProject
-     */
     function getExternalFiles(project) {
-        if (!project.hasRoots()) {
-            // During project initialization where there is no root files yet we should
-            // not do any work.
-            return [];
+        var host = projectHostMap.get(project);
+        if (host) {
+            host.getAnalyzedModules();
+            var externalFiles = host.getTemplateReferences();
+            return externalFiles;
         }
-        var ngLSHost = projectHostMap.get(project);
-        if (!ngLSHost) {
-            // Without an Angular host there is no way to get template references.
-            return [];
-        }
-        ngLSHost.getAnalyzedModules();
-        var templates = ngLSHost.getTemplateReferences();
-        var logger = project.projectService.logger;
-        if (logger.hasLevel(tss.server.LogLevel.verbose)) {
-            // Log external files to help debugging.
-            logger.info("External files in " + project.projectName + ": " + JSON.stringify(templates));
-        }
-        return templates;
     }
     function create(info) {
         var project = info.project, tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config;
@@ -71098,7 +71064,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+28.sha-a65d3fa.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+27.sha-b5eda60.with-local-changes');
 
     /**
      * @license
