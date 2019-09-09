@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+48.sha-9166baf.with-local-changes
+ * @license Angular v9.0.0-next.5+49.sha-ea6a2e9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16101,7 +16101,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var PlaceholderPiece = /** @class */ (function (_super) {
         __extends(PlaceholderPiece, _super);
         function PlaceholderPiece(name) {
-            return _super.call(this, formatI18nPlaceholderName(name)) || this;
+            return _super.call(this, formatI18nPlaceholderName(name, /* useCamelCase */ false)) || this;
         }
         return PlaceholderPiece;
     }(MessagePiece));
@@ -17839,10 +17839,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function getTranslationDeclStmts(message, variable$1, closureVar, params, transformFn) {
         if (params === void 0) { params = {}; }
-        var formattedParams = i18nFormatPlaceholderNames(params, /* useCamelCase */ true);
         var statements = [
             declareI18nVariable(variable$1),
-            ifStmt(variable(NG_I18N_CLOSURE_MODE), createGoogleGetMsgStatements(variable$1, message, closureVar, formattedParams), createLocalizeStatements(variable$1, message, formattedParams)),
+            ifStmt(variable(NG_I18N_CLOSURE_MODE), createGoogleGetMsgStatements(variable$1, message, closureVar, i18nFormatPlaceholderNames(params, /* useCamelCase */ true)), createLocalizeStatements(variable$1, message, i18nFormatPlaceholderNames(params, /* useCamelCase */ false))),
         ];
         if (transformFn) {
             statements.push(new ExpressionStatement(variable$1.set(transformFn(variable$1))));
@@ -18859,7 +18858,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+48.sha-9166baf.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+49.sha-ea6a2e9.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34166,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+48.sha-9166baf.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+49.sha-ea6a2e9.with-local-changes');
 
     /**
      * @license
@@ -60470,7 +60469,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+48.sha-9166baf.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+49.sha-ea6a2e9.with-local-changes');
 
     /**
      * @license
@@ -71091,7 +71090,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+48.sha-9166baf.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+49.sha-ea6a2e9.with-local-changes');
 
     /**
      * @license
