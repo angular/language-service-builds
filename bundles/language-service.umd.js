@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+45.sha-c3a1ef2.with-local-changes
+ * @license Angular v9.0.0-next.5+46.sha-a391aeb.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18859,7 +18859,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+45.sha-c3a1ef2.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34167,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+45.sha-c3a1ef2.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
 
     /**
      * @license
@@ -50691,44 +50691,58 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Attempts to get the definition of a file whose URL is specified in a property assignment in a
      * directive decorator.
-     * Currently applies to `templateUrl` properties.
+     * Currently applies to `templateUrl` and `styleUrls` properties.
      */
     function getUrlFromProperty(urlNode, tsLsHost) {
+        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
+        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
+        // an array of strings:
+        //   {
+        //        templateUrl: './template.ng.html',
+        //        styleUrls: ['./style.css', './other-style.css']
+        //   }
+        // `templateUrl`'s property assignment can be found from the string literal node;
+        // `styleUrls`'s property assignment can be found from the array (parent) node.
+        //
+        // First search for `templateUrl`.
         var asgn = getPropertyAssignmentFromValue(urlNode);
-        if (!asgn)
-            return;
-        // If the URL is not a property of a class decorator, don't generate definitions for it.
+        if (!asgn || asgn.name.getText() !== 'templateUrl') {
+            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
+            asgn = getPropertyAssignmentFromValue(urlNode.parent);
+            if (!asgn || asgn.name.getText() !== 'styleUrls') {
+                // Nothing found, bail.
+                return;
+            }
+        }
+        // If the property assignment is not a property of a class decorator, don't generate definitions
+        // for it.
         if (!isClassDecoratorProperty(asgn))
             return;
         var sf = urlNode.getSourceFile();
-        switch (asgn.name.getText()) {
-            case 'templateUrl':
-                // Extract definition of the template file specified by this `templateUrl` property.
-                var url = path.join(path.dirname(sf.fileName), urlNode.text);
-                // If the file does not exist, bail. It is possible that the TypeScript language service host
-                // does not have a `fileExists` method, in which case optimistically assume the file exists.
-                if (tsLsHost.fileExists && !tsLsHost.fileExists(url))
-                    return;
-                var templateDefinitions = [{
-                        kind: ts.ScriptElementKind.externalModuleName,
-                        name: url,
-                        containerKind: ts.ScriptElementKind.unknown,
-                        containerName: '',
-                        // Reading the template is expensive, so don't provide a preview.
-                        textSpan: { start: 0, length: 0 },
-                        fileName: url,
-                    }];
-                return {
-                    definitions: templateDefinitions,
-                    textSpan: {
-                        // Exclude opening and closing quotes in the url span.
-                        start: urlNode.getStart() + 1,
-                        length: urlNode.getWidth() - 2,
-                    },
-                };
-            default:
-                return undefined;
-        }
+        // Extract url path specified by the url node, which is relative to the TypeScript source file
+        // the url node is defined in.
+        var url = path.join(path.dirname(sf.fileName), urlNode.text);
+        // If the file does not exist, bail. It is possible that the TypeScript language service host
+        // does not have a `fileExists` method, in which case optimistically assume the file exists.
+        if (tsLsHost.fileExists && !tsLsHost.fileExists(url))
+            return;
+        var templateDefinitions = [{
+                kind: ts.ScriptElementKind.externalModuleName,
+                name: url,
+                containerKind: ts.ScriptElementKind.unknown,
+                containerName: '',
+                // Reading the template is expensive, so don't provide a preview.
+                textSpan: { start: 0, length: 0 },
+                fileName: url,
+            }];
+        return {
+            definitions: templateDefinitions,
+            textSpan: {
+                // Exclude opening and closing quotes in the url span.
+                start: urlNode.getStart() + 1,
+                length: urlNode.getWidth() - 2,
+            },
+        };
     }
 
     /**
@@ -60477,7 +60491,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+45.sha-c3a1ef2.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
 
     /**
      * @license
@@ -67488,7 +67502,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -71098,7 +71112,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+45.sha-c3a1ef2.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
 
     /**
      * @license
