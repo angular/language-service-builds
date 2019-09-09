@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+46.sha-a391aeb.with-local-changes
+ * @license Angular v9.0.0-next.5+48.sha-9166baf.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18859,7 +18859,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+48.sha-9166baf.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34167,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+48.sha-9166baf.with-local-changes');
 
     /**
      * @license
@@ -40276,7 +40276,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         ComponentDecoratorHandler.prototype.analyze = function (node, decorator) {
             var e_1, _a;
-            var _this = this;
             var containingFile = node.getSourceFile().fileName;
             this.literalCache.delete(decorator);
             // @Component inherits @Directive, so begin by extracting the @Directive metadata and building
@@ -40314,61 +40313,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var templateSourceMapping;
             if (this.preanalyzeTemplateCache.has(node)) {
                 // The template was parsed in preanalyze. Use it and delete it to save memory.
-                var template_1 = this.preanalyzeTemplateCache.get(node);
+                var preanalyzed = this.preanalyzeTemplateCache.get(node);
                 this.preanalyzeTemplateCache.delete(node);
-                parseTemplate = template_1.parseTemplate;
-                // A pre-analyzed template is always an external mapping.
-                templateSourceMapping = {
-                    type: 'external',
-                    componentClass: node,
-                    node: component.get('templateUrl'),
-                    template: template_1.template,
-                    templateUrl: template_1.templateUrl,
-                };
+                parseTemplate = preanalyzed.parseTemplate;
+                templateSourceMapping = preanalyzed.templateSourceMapping;
             }
             else {
                 // The template was not already parsed. Either there's a templateUrl, or an inline template.
                 if (component.has('templateUrl')) {
                     var templateUrlExpr = component.get('templateUrl');
-                    var evalTemplateUrl = this.evaluator.evaluate(templateUrlExpr);
-                    if (typeof evalTemplateUrl !== 'string') {
+                    var templateUrl = this.evaluator.evaluate(templateUrlExpr);
+                    if (typeof templateUrl !== 'string') {
                         throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, templateUrlExpr, 'templateUrl must be a string');
                     }
-                    var templateUrl_1 = this.resourceLoader.resolve(evalTemplateUrl, containingFile);
-                    var templateStr_1 = this.resourceLoader.load(templateUrl_1);
-                    this.resourceDependencies.recordResourceDependency(node.getSourceFile(), templateUrl_1);
-                    parseTemplate = function (options) { return _this._parseTemplate(component, templateStr_1, sourceMapUrl(templateUrl_1), /* templateRange */ undefined, 
-                    /* escapedString */ false, options); };
-                    templateSourceMapping = {
-                        type: 'external',
-                        componentClass: node,
-                        node: templateUrlExpr,
-                        template: templateStr_1,
-                        templateUrl: templateUrl_1,
-                    };
+                    var resourceUrl = this.resourceLoader.resolve(templateUrl, containingFile);
+                    var external_1 = this._extractExternalTemplate(node, component, templateUrlExpr, resourceUrl);
+                    parseTemplate = external_1.parseTemplate;
+                    templateSourceMapping = external_1.templateSourceMapping;
                 }
                 else {
                     // Expect an inline template to be present.
-                    var inlineTemplate = this._extractInlineTemplate(component, containingFile);
-                    if (inlineTemplate === null) {
-                        throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, decorator.node, 'component is missing a template');
-                    }
-                    var templateStr_2 = inlineTemplate.templateStr, templateUrl_2 = inlineTemplate.templateUrl, templateRange_1 = inlineTemplate.templateRange, escapedString_1 = inlineTemplate.escapedString;
-                    parseTemplate = function (options) { return _this._parseTemplate(component, templateStr_2, templateUrl_2, templateRange_1, escapedString_1, options); };
-                    if (escapedString_1) {
-                        templateSourceMapping = {
-                            type: 'direct',
-                            node: component.get('template'),
-                        };
-                    }
-                    else {
-                        templateSourceMapping = {
-                            type: 'indirect',
-                            node: component.get('template'),
-                            componentClass: node,
-                            template: templateStr_2,
-                        };
-                    }
+                    var inline = this._extractInlineTemplate(node, decorator, component, containingFile);
+                    parseTemplate = inline.parseTemplate;
+                    templateSourceMapping = inline.templateSourceMapping;
                 }
             }
             var template = parseTemplate();
@@ -40738,10 +40705,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var _this = this;
             if (component.has('templateUrl')) {
                 // Extract the templateUrl and preload it.
-                var templateUrlExpr = component.get('templateUrl');
-                var templateUrl = this.evaluator.evaluate(templateUrlExpr);
+                var templateUrlExpr_1 = component.get('templateUrl');
+                var templateUrl = this.evaluator.evaluate(templateUrlExpr_1);
                 if (typeof templateUrl !== 'string') {
-                    throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, templateUrlExpr, 'templateUrl must be a string');
+                    throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, templateUrlExpr_1, 'templateUrl must be a string');
                 }
                 var resourceUrl_1 = this.resourceLoader.resolve(templateUrl, containingFile);
                 var templatePromise = this.resourceLoader.preload(resourceUrl_1);
@@ -40749,13 +40716,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // URLs to resolve.
                 if (templatePromise !== undefined) {
                     return templatePromise.then(function () {
-                        var templateStr = _this.resourceLoader.load(resourceUrl_1);
-                        _this.resourceDependencies.recordResourceDependency(node.getSourceFile(), resourceUrl_1);
-                        var parseTemplate = function (options) { return _this._parseTemplate(component, templateStr, sourceMapUrl(resourceUrl_1), 
-                        /* templateRange */ undefined, 
-                        /* escapedString */ false, options); };
+                        var _a = _this._extractExternalTemplate(node, component, templateUrlExpr_1, resourceUrl_1), parseTemplate = _a.parseTemplate, templateSourceMapping = _a.templateSourceMapping;
                         var template = parseTemplate();
-                        _this.preanalyzeTemplateCache.set(node, __assign({}, template, { parseTemplate: parseTemplate }));
+                        _this.preanalyzeTemplateCache.set(node, __assign({}, template, { parseTemplate: parseTemplate, templateSourceMapping: templateSourceMapping }));
                         return template;
                     });
                 }
@@ -40764,26 +40727,38 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
             else {
-                var inlineTemplate = this._extractInlineTemplate(component, containingFile);
-                if (inlineTemplate === null) {
-                    throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, decorator.node, 'component is missing a template');
-                }
-                var templateStr_3 = inlineTemplate.templateStr, templateUrl_3 = inlineTemplate.templateUrl, escapedString_2 = inlineTemplate.escapedString, templateRange_2 = inlineTemplate.templateRange;
-                var parseTemplate_1 = function (options) { return _this._parseTemplate(component, templateStr_3, templateUrl_3, templateRange_2, escapedString_2, options); };
+                var _a = this._extractInlineTemplate(node, decorator, component, containingFile), parseTemplate_1 = _a.parseTemplate, templateSourceMapping = _a.templateSourceMapping;
                 var template = parseTemplate_1();
-                this.preanalyzeTemplateCache.set(node, __assign({}, template, { parseTemplate: parseTemplate_1 }));
+                this.preanalyzeTemplateCache.set(node, __assign({}, template, { parseTemplate: parseTemplate_1, templateSourceMapping: templateSourceMapping }));
                 return Promise.resolve(template);
             }
         };
-        ComponentDecoratorHandler.prototype._extractInlineTemplate = function (component, containingFile) {
-            // If there is no inline template, then return null.
+        ComponentDecoratorHandler.prototype._extractExternalTemplate = function (node, component, templateUrlExpr, resourceUrl) {
+            var _this = this;
+            var templateStr = this.resourceLoader.load(resourceUrl);
+            this.resourceDependencies.recordResourceDependency(node.getSourceFile(), resourceUrl);
+            var parseTemplate = function (options) { return _this._parseTemplate(component, templateStr, sourceMapUrl(resourceUrl), 
+            /* templateRange */ undefined, 
+            /* escapedString */ false, options); };
+            var templateSourceMapping = {
+                type: 'external',
+                componentClass: node,
+                node: templateUrlExpr,
+                template: templateStr,
+                templateUrl: resourceUrl,
+            };
+            return { parseTemplate: parseTemplate, templateSourceMapping: templateSourceMapping };
+        };
+        ComponentDecoratorHandler.prototype._extractInlineTemplate = function (node, decorator, component, containingFile) {
+            var _this = this;
             if (!component.has('template')) {
-                return null;
+                throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, decorator.node, 'component is missing a template');
             }
             var templateExpr = component.get('template');
             var templateStr;
             var templateUrl = '';
             var templateRange = undefined;
+            var templateSourceMapping;
             var escapedString = false;
             // We only support SourceMaps for inline templates that are simple string literals.
             if (ts.isStringLiteral(templateExpr) || ts.isNoSubstitutionTemplateLiteral(templateExpr)) {
@@ -40794,6 +40769,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 templateStr = templateExpr.getSourceFile().text;
                 templateUrl = containingFile;
                 escapedString = true;
+                templateSourceMapping = {
+                    type: 'direct',
+                    node: templateExpr,
+                };
             }
             else {
                 var resolvedTemplate = this.evaluator.evaluate(templateExpr);
@@ -40801,8 +40780,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, templateExpr, 'template must be a string');
                 }
                 templateStr = resolvedTemplate;
+                templateSourceMapping = {
+                    type: 'indirect',
+                    node: templateExpr,
+                    componentClass: node,
+                    template: templateStr,
+                };
             }
-            return { templateStr: templateStr, templateUrl: templateUrl, templateRange: templateRange, escapedString: escapedString };
+            var parseTemplate = function (options) { return _this._parseTemplate(component, templateStr, templateUrl, templateRange, escapedString, options); };
+            return { parseTemplate: parseTemplate, templateSourceMapping: templateSourceMapping };
         };
         ComponentDecoratorHandler.prototype._parseTemplate = function (component, templateStr, templateUrl, templateRange, escapedString, options) {
             if (options === void 0) { options = {}; }
@@ -44766,13 +44752,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var span = resolver.sourceLocationToSpan(sourceLocation);
         if (span === null) {
             return null;
-        }
-        var messageText;
-        if (typeof diagnostic.messageText === 'string') {
-            messageText = diagnostic.messageText;
-        }
-        else {
-            messageText = diagnostic.messageText.messageText;
         }
         var mapping = resolver.getSourceMapping(sourceLocation.id);
         return makeTemplateDiagnostic(mapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
@@ -60491,7 +60470,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+48.sha-9166baf.with-local-changes');
 
     /**
      * @license
@@ -67502,7 +67481,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -71112,7 +71091,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+46.sha-a391aeb.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+48.sha-9166baf.with-local-changes');
 
     /**
      * @license
