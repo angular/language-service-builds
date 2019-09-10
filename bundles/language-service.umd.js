@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+62.sha-7280710.with-local-changes
+ * @license Angular v9.0.0-next.5+63.sha-2124588.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18863,7 +18863,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+62.sha-7280710.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+63.sha-2124588.with-local-changes');
 
     /**
      * @license
@@ -34171,7 +34171,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+62.sha-7280710.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+63.sha-2124588.with-local-changes');
 
     /**
      * @license
@@ -57802,11 +57802,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             this.onDestroy = new Set();
             this._destroyed = false;
-            // Start off by creating Records for every provider declared in every InjectorType
-            // included transitively in `def`.
             var dedupStack = [];
-            deepForEach([def], function (injectorDef) { return _this.processInjectorType(injectorDef, [], dedupStack); });
+            // Start off by creating Records for every provider declared in every InjectorType
+            // included transitively in additional providers then do the same for `def`. This order is
+            // important because `def` may include providers that override ones in additionalProviders.
             additionalProviders && deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider, def, additionalProviders); });
+            deepForEach([def], function (injectorDef) { return _this.processInjectorType(injectorDef, [], dedupStack); });
             // Make sure the INJECTOR token provides this injector.
             this.records.set(INJECTOR, makeRecord(undefined, this));
             // Detect whether this injector has the APP_ROOT_SCOPE token and thus should provide
@@ -60480,7 +60481,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+62.sha-7280710.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+63.sha-2124588.with-local-changes');
 
     /**
      * @license
@@ -71103,7 +71104,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+62.sha-7280710.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+63.sha-2124588.with-local-changes');
 
     /**
      * @license
