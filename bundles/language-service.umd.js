@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+67.sha-8a7129e.with-local-changes
+ * @license Angular v9.0.0-next.5+68.sha-3b37469.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3531,7 +3531,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Identifiers.elementContainerStart = { name: 'ɵɵelementContainerStart', moduleName: CORE$1 };
         Identifiers.elementContainerEnd = { name: 'ɵɵelementContainerEnd', moduleName: CORE$1 };
         Identifiers.elementContainer = { name: 'ɵɵelementContainer', moduleName: CORE$1 };
-        Identifiers.styling = { name: 'ɵɵstyling', moduleName: CORE$1 };
         Identifiers.styleMap = { name: 'ɵɵstyleMap', moduleName: CORE$1 };
         Identifiers.classMap = { name: 'ɵɵclassMap', moduleName: CORE$1 };
         Identifiers.classMapInterpolate1 = { name: 'ɵɵclassMapInterpolate1', moduleName: CORE$1 };
@@ -3553,7 +3552,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Identifiers.stylePropInterpolate7 = { name: 'ɵɵstylePropInterpolate7', moduleName: CORE$1 };
         Identifiers.stylePropInterpolate8 = { name: 'ɵɵstylePropInterpolate8', moduleName: CORE$1 };
         Identifiers.stylePropInterpolateV = { name: 'ɵɵstylePropInterpolateV', moduleName: CORE$1 };
-        Identifiers.stylingApply = { name: 'ɵɵstylingApply', moduleName: CORE$1 };
         Identifiers.styleSanitizer = { name: 'ɵɵstyleSanitizer', moduleName: CORE$1 };
         Identifiers.elementHostAttrs = { name: 'ɵɵelementHostAttrs', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵɵcontainer', moduleName: CORE$1 };
@@ -12947,7 +12945,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *   classMap(...)
      *   styleProp(...)
      *   classProp(...)
-     *   stylingApply(...)
      * }
      *
      * The creation/update methods within the builder class produce these instructions.
@@ -12963,6 +12960,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              *  (i.e. `[style]`, `[class]`, `[style.prop]` or `[class.name]`)
              */
             this.hasBindings = false;
+            this.hasBindingsWithPipes = false;
             /** the input for [class] (if it exists) */
             this._classMapInput = null;
             /** the input for [style] (if it exists) */
@@ -13060,6 +13058,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             this._lastStylingInput = entry;
             this._firstStylingInput = this._firstStylingInput || entry;
+            this._checkForPipes(value);
             this.hasBindings = true;
             return entry;
         };
@@ -13078,8 +13077,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             this._lastStylingInput = entry;
             this._firstStylingInput = this._firstStylingInput || entry;
+            this._checkForPipes(value);
             this.hasBindings = true;
             return entry;
+        };
+        StylingBuilder.prototype._checkForPipes = function (value) {
+            if ((value instanceof ASTWithSource) && (value.ast instanceof BindingPipe)) {
+                this.hasBindingsWithPipes = true;
+            }
         };
         /**
          * Registers the element's static style string value to the builder.
@@ -13143,23 +13148,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             literalArr(attrs);
                         return [attrArray];
                     }
-                };
-            }
-            return null;
-        };
-        /**
-         * Builds an instruction with all the expressions and parameters for `styling`.
-         *
-         * The instruction generation code below is used for producing the AOT statement code which is
-         * responsible for registering style/class bindings to an element.
-         */
-        StylingBuilder.prototype.buildStylingInstruction = function (sourceSpan, constantPool) {
-            if (this.hasBindings) {
-                return {
-                    sourceSpan: sourceSpan,
-                    allocateBindingSlots: 0,
-                    reference: Identifiers$1.styling,
-                    params: function () { return []; },
                 };
             }
             return null;
@@ -13260,14 +13248,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             return [];
         };
-        StylingBuilder.prototype._buildApplyFn = function () {
-            return {
-                sourceSpan: this._lastStylingInput ? this._lastStylingInput.sourceSpan : null,
-                reference: Identifiers$1.stylingApply,
-                allocateBindingSlots: 0,
-                params: function () { return []; }
-            };
-        };
         StylingBuilder.prototype._buildSanitizerFn = function () {
             return {
                 sourceSpan: this._firstStylingInput ? this._firstStylingInput.sourceSpan : null,
@@ -13296,7 +13276,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
                 instructions.push.apply(instructions, __spread(this._buildStyleInputs(valueConverter)));
                 instructions.push.apply(instructions, __spread(this._buildClassInputs(valueConverter)));
-                instructions.push(this._buildApplyFn());
             }
             return instructions;
         };
@@ -16708,10 +16687,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // so we exclude them while calculating whether current element has children
             var hasChildren = (!isI18nRootElement && this.i18n) ? !hasTextChildrenOnly(element.children) :
                 element.children.length > 0;
-            var createSelfClosingInstruction = !stylingBuilder.hasBindings &&
+            var createSelfClosingInstruction = !stylingBuilder.hasBindingsWithPipes &&
                 element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren;
-            var createSelfClosingI18nInstruction = !createSelfClosingInstruction &&
-                !stylingBuilder.hasBindings && hasTextChildrenOnly(element.children);
+            var createSelfClosingI18nInstruction = !createSelfClosingInstruction && hasTextChildrenOnly(element.children);
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainer : Identifiers$1.element, trimTrailingNulls(parameters));
             }
@@ -16759,13 +16737,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         }
                     }
                 }
-                // The style bindings code is placed into two distinct blocks within the template function AOT
-                // code: creation and update. The creation code contains the `styling` instructions
-                // which will apply the collected binding values to the element. `styling` is
-                // designed to run inside of `elementStart` and `elementEnd`. The update instructions
-                // (things like `styleProp`, `classProp`, etc..) are applied later on in this
-                // file
-                this.processStylingInstruction(elementIndex, stylingBuilder.buildStylingInstruction(element.sourceSpan, this.constantPool), true);
                 // Generate Listeners (outputs)
                 element.outputs.forEach(function (outputAst) {
                     _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter(element.name, outputAst, elementIndex));
@@ -18387,15 +18358,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
         }
         if (styleBuilder.hasBindings) {
-            // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
-            // MUST be registered on a given element within the component/directive
-            // templateFn/hostBindingsFn functions. The instruction below will figure out
-            // what all the bindings are and then generate the statements required to register
-            // those bindings to the element via `styling`.
-            var stylingInstruction = styleBuilder.buildStylingInstruction(null, constantPool);
-            if (stylingInstruction) {
-                createStatements.push(createStylingStmt(stylingInstruction, bindingContext, bindingFn));
-            }
             // finally each binding that was registered in the statement above will need to be added to
             // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
             // are evaluated and updated for the element.
@@ -18863,7 +18825,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+67.sha-8a7129e.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+68.sha-3b37469.with-local-changes');
 
     /**
      * @license
@@ -34171,7 +34133,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+67.sha-8a7129e.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+68.sha-3b37469.with-local-changes');
 
     /**
      * @license
@@ -51958,8 +51920,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             flushStyling: 0,
             classesApplied: 0,
             stylesApplied: 0,
-            stylingWritePersistedState: 0,
-            stylingReadPersistedState: 0,
         };
         // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
         var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
@@ -52483,15 +52443,116 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
 
     /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    var _stateStorage = new Map();
-    function resetAllStylingState() {
-        _stateStorage.clear();
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
+
+    function getConfig(context) {
+        return context[0 /* ConfigPosition */];
+    }
+    function hasConfig(context, flag) {
+        return (getConfig(context) & flag) !== 0;
+    }
+    /**
+     * Determines whether or not to apply styles/classes directly or via context resolution.
+     *
+     * There are three cases that are matched here:
+     * 1. context is locked for template or host bindings (depending on `hostBindingsMode`)
+     * 2. There are no collisions (i.e. properties with more than one binding)
+     * 3. There are only "prop" or "map" bindings present, but not both
+     */
+    function allowDirectStyling(context, hostBindingsMode) {
+        var config = getConfig(context);
+        return ((config & getLockedConfig(hostBindingsMode)) !== 0) &&
+            ((config & 4 /* HasCollisions */) === 0) &&
+            ((config & 3 /* HasPropAndMapBindings */) !== 3 /* HasPropAndMapBindings */);
+    }
+    function getProp(context, index) {
+        return context[index + 3 /* PropOffset */];
+    }
+    function getPropConfig(context, index) {
+        return context[index + 0 /* ConfigOffset */] &
+            1 /* Mask */;
+    }
+    function isSanitizationRequired(context, index) {
+        return (getPropConfig(context, index) & 1 /* SanitizationRequired */) !==
+            0;
+    }
+    function getGuardMask(context, index, isHostBinding) {
+        var position = index + (isHostBinding ? 2 /* HostBindingsBitGuardOffset */ :
+            1 /* TemplateBitGuardOffset */);
+        return context[position];
+    }
+    function getValuesCount(context) {
+        return getTotalSources(context) + 1;
+    }
+    function getTotalSources(context) {
+        return context[1 /* TotalSourcesPosition */];
+    }
+    function getBindingValue(context, index, offset) {
+        return context[index + 4 /* BindingsStartOffset */ + offset];
+    }
+    function getDefaultValue(context, index) {
+        return context[index + 4 /* BindingsStartOffset */ + getTotalSources(context)];
+    }
+    function getValue(data, bindingIndex) {
+        return bindingIndex > 0 ? data[bindingIndex] : null;
+    }
+    function isContextLocked(context, hostBindingsMode) {
+        return hasConfig(context, getLockedConfig(hostBindingsMode));
+    }
+    function getLockedConfig(hostBindingsMode) {
+        return hostBindingsMode ? 128 /* HostBindingsLocked */ :
+            64 /* TemplateBindingsLocked */;
+    }
+    function getPropValuesStartPosition(context) {
+        var startPosition = 3 /* ValuesStartPosition */;
+        if (hasConfig(context, 2 /* HasMapBindings */)) {
+            startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
+        }
+        return startPosition;
+    }
+    /**
+     * Determines whether the provided styling value is truthy or falsy.
+     */
+    function isStylingValueDefined(value) {
+        // the reason why null is compared against is because
+        // a CSS class value that is set to `false` must be
+        // respected (otherwise it would be treated as falsy).
+        // Empty string values are because developers usually
+        // set a value to an empty string to remove it.
+        return value != null && value !== '';
+    }
+    function isStylingContext(value) {
+        // the StylingMapArray is in the format of [initial, prop, string, prop, string]
+        // and this is the defining value to distinguish between arrays
+        return Array.isArray(value) && value.length >= 3 /* ValuesStartPosition */ &&
+            typeof value[1] !== 'string';
+    }
+    function getMapProp(map, index) {
+        return map[index + 0 /* PropOffset */];
+    }
+    function getMapValue(map, index) {
+        return map[index + 1 /* ValueOffset */];
+    }
+    /**
+     * Converts the provided styling map array into a key value map.
+     */
+    function stylingMapToStringMap(map) {
+        var stringMap = {};
+        if (map) {
+            for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
+                var prop = getMapProp(map, i);
+                var value = getMapValue(map, i);
+                stringMap[prop] = value;
+            }
+        }
+        return stringMap;
     }
 
     /**
@@ -52503,6 +52564,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function getLView() {
         return lView;
+    }
+    /**
+     * Determines whether or not a flag is currently set for the active element.
+     */
+    function hasActiveElementFlag(flag) {
+        return (_selectedIndex & flag) === flag;
+    }
+    /**
+     * Sets the active directive host element and resets the directive id value
+     * (when the provided elementIndex value has changed).
+     *
+     * @param elementIndex the element index value for the host element where
+     *                     the directive/component instance lives
+     */
+    function setActiveHostElement(elementIndex) {
+        if (elementIndex === void 0) { elementIndex = null; }
+        if (getSelectedIndex() !== elementIndex) {
+            if (hasActiveElementFlag(1 /* RunExitFn */)) {
+                executeElementExitFn();
+            }
+            setSelectedIndex(elementIndex === null ? -1 : elementIndex);
+        }
+    }
+    var _elementExitFn = null;
+    function executeElementExitFn() {
+        _elementExitFn();
     }
     /** Used to set the parent property when nodes are created and track query results. */
     var previousOrParentTNode;
@@ -52585,7 +52672,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         isParent = false;
         previousOrParentTNode = null;
         setCurrentStyleSanitizer(null);
-        resetAllStylingState();
+    }
+    /* tslint:disable */
+    var _selectedIndex = -1 << 2 /* Size */;
+    /**
+     * Gets the most recent index passed to {@link select}
+     *
+     * Used with {@link property} instruction (and more in the future) to identify the index in the
+     * current `LView` to act on.
+     */
+    function getSelectedIndex() {
+        return _selectedIndex >> 2 /* Size */;
+    }
+    /**
+     * Sets the most recent index passed to {@link select}
+     *
+     * Used with {@link property} instruction (and more in the future) to identify the index in the
+     * current `LView` to act on.
+     *
+     * (Note that if an "exit function" was set earlier (via `setElementExitFn()`) then that will be
+     * run if and when the provided `index` value is different from the current selected index value.)
+     */
+    function setSelectedIndex(index) {
+        _selectedIndex = index << 2 /* Size */;
     }
     var _currentSanitizer;
     function setCurrentStyleSanitizer(sanitizer) {
@@ -52593,75 +52702,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function getCurrentStyleSanitizer() {
         return _currentSanitizer;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /** A special value which designates that a value has not changed. */
-    var NO_CHANGE = {};
-
-    function getConfig(context) {
-        return context[1 /* ConfigPosition */];
-    }
-    function getProp(context, index) {
-        return context[index + 2 /* PropOffset */];
-    }
-    function getPropConfig(context, index) {
-        return context[index + 0 /* ConfigAndGuardOffset */] &
-            1 /* Mask */;
-    }
-    function isSanitizationRequired(context, index) {
-        return (getPropConfig(context, index) & 1 /* SanitizationRequired */) > 0;
-    }
-    function getGuardMask(context, index) {
-        var configGuardValue = context[index + 0 /* ConfigAndGuardOffset */];
-        return configGuardValue >> 1 /* TotalBits */;
-    }
-    function getValuesCount(context, index) {
-        return context[index + 1 /* ValuesCountOffset */];
-    }
-    function getBindingValue(context, index, offset) {
-        return context[index + 3 /* BindingsStartOffset */ + offset];
-    }
-    function getDefaultValue(context, index) {
-        var valuesCount = getValuesCount(context, index);
-        return context[index + 3 /* BindingsStartOffset */ + valuesCount - 1];
-    }
-    function isContextLocked(context) {
-        return (getConfig(context) & 1 /* Locked */) > 0;
-    }
-    function getPropValuesStartPosition(context) {
-        return 6 /* MapBindingsBindingsStartPosition */ +
-            context[4 /* MapBindingsValuesCountPosition */];
-    }
-    /**
-     * Determines whether the provided styling value is truthy or falsy.
-     */
-    function isStylingValueDefined(value) {
-        // the reason why null is compared against is because
-        // a CSS class value that is set to `false` must be
-        // respected (otherwise it would be treated as falsy).
-        // Empty string values are because developers usually
-        // set a value to an empty string to remove it.
-        return value != null && value !== '';
-    }
-    function isStylingContext(value) {
-        // the StylingMapArray is in the format of [initial, prop, string, prop, string]
-        // and this is the defining value to distinguish between arrays
-        return Array.isArray(value) &&
-            value.length >= 6 /* MapBindingsBindingsStartPosition */ &&
-            typeof value[1] !== 'string';
-    }
-    function getMapProp(map, index) {
-        return map[index + 0 /* PropOffset */];
-    }
-    function getMapValue(map, index) {
-        return map[index + 1 /* ValueOffset */];
     }
 
     /**
@@ -53564,7 +53604,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var SafeValueImpl = /** @class */ (function () {
         function SafeValueImpl(changingThisBreaksApplicationSecurity) {
             this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
-            // empty
         }
         SafeValueImpl.prototype.toString = function () {
             return "SafeValue must use [property]=binding: " + this.changingThisBreaksApplicationSecurity +
@@ -53612,6 +53651,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
         return SafeResourceUrlImpl;
     }(SafeValueImpl));
+    function unwrapSafeValue(value) {
+        return value instanceof SafeValueImpl ?
+            value.changingThisBreaksApplicationSecurity :
+            value;
+    }
 
     /**
      * @license
@@ -54396,6 +54440,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
      * Runs through the provided styling context and applies each value to
      * the provided element (via the renderer) if one or more values are present.
      *
@@ -54419,50 +54470,61 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * algorithm works for map-based styling bindings.
      *
      * Note that this function is not designed to be called in isolation (use
-     * `applyClasses` and `applyStyles` to actually apply styling values).
+     * the `flushStyling` function so that it can call this function for both
+     * the styles and classes contexts).
      */
-    function applyStyling(context, renderer, element, bindingData, bitMaskValue, applyStylingFn, sanitizer) {
+    function applyStylingViaContext(context, renderer, element, bindingData, bitMaskValue, applyStylingFn, sanitizer, hostBindingsMode) {
         var bitMask = normalizeBitMaskValue(bitMaskValue);
-        var stylingMapsSyncFn = getStylingMapsSyncFn();
-        var mapsGuardMask = getGuardMask(context, 3 /* MapBindingsPosition */);
-        var applyAllValues = (bitMask & mapsGuardMask) > 0;
+        var stylingMapsSyncFn = null;
+        var applyAllValues = false;
+        if (hasConfig(context, 2 /* HasMapBindings */)) {
+            stylingMapsSyncFn = getStylingMapsSyncFn();
+            var mapsGuardMask = getGuardMask(context, 3 /* ValuesStartPosition */, hostBindingsMode);
+            applyAllValues = (bitMask & mapsGuardMask) !== 0;
+        }
+        var valuesCount = getValuesCount(context);
+        var totalBindingsToVisit = 1;
         var mapsMode = applyAllValues ? 1 /* ApplyAllValues */ : 0 /* TraverseValues */;
+        if (hostBindingsMode) {
+            mapsMode |= 8 /* RecurseInnerMaps */;
+            totalBindingsToVisit = valuesCount - 1;
+        }
         var i = getPropValuesStartPosition(context);
         while (i < context.length) {
-            var valuesCount = getValuesCount(context, i);
-            var guardMask = getGuardMask(context, i);
+            var guardMask = getGuardMask(context, i, hostBindingsMode);
             if (bitMask & guardMask) {
                 var valueApplied = false;
                 var prop = getProp(context, i);
-                var valuesCountUpToDefault = valuesCount - 1;
-                var defaultValue = getBindingValue(context, i, valuesCountUpToDefault);
-                // case 1: apply prop-based values
-                // try to apply the binding values and see if a non-null
-                // value gets set for the styling binding
-                for (var j = 0; j < valuesCountUpToDefault; j++) {
+                var defaultValue = getDefaultValue(context, i);
+                // Part 1: Visit the `[styling.prop]` value
+                for (var j = 0; j < totalBindingsToVisit; j++) {
                     var bindingIndex = getBindingValue(context, i, j);
-                    var value = bindingData[bindingIndex];
-                    if (isStylingValueDefined(value)) {
-                        var finalValue = sanitizer && isSanitizationRequired(context, i) ?
-                            sanitizer(prop, value, 2 /* SanitizeOnly */) :
-                            value;
-                        applyStylingFn(renderer, element, prop, finalValue, bindingIndex);
-                        valueApplied = true;
-                        break;
+                    if (!valueApplied && bindingIndex !== 0) {
+                        var value = getValue(bindingData, bindingIndex);
+                        if (isStylingValueDefined(value)) {
+                            var checkValueOnly = hostBindingsMode && j === 0;
+                            if (!checkValueOnly) {
+                                var finalValue = sanitizer && isSanitizationRequired(context, i) ?
+                                    sanitizer(prop, value, 2 /* SanitizeOnly */) :
+                                    unwrapSafeValue(value);
+                                applyStylingFn(renderer, element, prop, finalValue, bindingIndex);
+                            }
+                            valueApplied = true;
+                        }
+                    }
+                    // Part 2: Visit the `[style]` or `[class]` map-based value
+                    if (stylingMapsSyncFn) {
+                        // determine whether or not to apply the target property or to skip it
+                        var mode = mapsMode | (valueApplied ? 4 /* SkipTargetProp */ :
+                            2 /* ApplyTargetProp */);
+                        if (hostBindingsMode && j === 0) {
+                            mode |= 16 /* CheckValuesOnly */;
+                        }
+                        var valueAppliedWithinMap = stylingMapsSyncFn(context, renderer, element, bindingData, j, applyStylingFn, sanitizer, mode, prop, defaultValue);
+                        valueApplied = valueApplied || valueAppliedWithinMap;
                     }
                 }
-                // case 2: apply map-based values
-                // traverse through each map-based styling binding and update all values up to
-                // the provided `prop` value. If the property was not applied in the loop above
-                // then it will be attempted to be applied in the maps sync code below.
-                if (stylingMapsSyncFn) {
-                    // determine whether or not to apply the target property or to skip it
-                    var mode = mapsMode | (valueApplied ? 4 /* SkipTargetProp */ :
-                        2 /* ApplyTargetProp */);
-                    var valueAppliedWithinMap = stylingMapsSyncFn(context, renderer, element, bindingData, applyStylingFn, sanitizer, mode, prop, defaultValue);
-                    valueApplied = valueApplied || valueAppliedWithinMap;
-                }
-                // case 3: apply the default value
+                // Part 3: apply the default value (e.g. `<div style="width:200">` => `200px` gets applied)
                 // if the value has not yet been applied then a truthy value does not exist in the
                 // prop-based or map-based bindings code. If and when this happens, just apply the
                 // default value (even if the default value is `null`).
@@ -54470,13 +54532,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     applyStylingFn(renderer, element, prop, defaultValue);
                 }
             }
-            i += 3 /* BindingsStartOffset */ + valuesCount;
+            i += 4 /* BindingsStartOffset */ + valuesCount;
         }
         // the map-based styling entries may have not applied all their
         // values. For this reason, one more call to the sync function
         // needs to be issued at the end.
         if (stylingMapsSyncFn) {
-            stylingMapsSyncFn(context, renderer, element, bindingData, applyStylingFn, sanitizer, mapsMode);
+            if (hostBindingsMode) {
+                mapsMode |= 16 /* CheckValuesOnly */;
+            }
+            stylingMapsSyncFn(context, renderer, element, bindingData, 0, applyStylingFn, sanitizer, mapsMode);
         }
     }
     function normalizeBitMaskValue(value) {
@@ -54507,6 +54572,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function selectIndexInternal(lView, index, checkNoChangesMode) {
         ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
         ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
+        if (hasActiveElementFlag(1 /* RunExitFn */)) {
+            executeElementExitFn();
+        }
         // Flush the initial hooks for elements in the view that have been added up to this point.
         // PERF WARNING: do NOT extract this to a separate function without running benchmarks
         if (!checkNoChangesMode) {
@@ -54524,6 +54592,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
+        // We must set the selected index *after* running the hooks, because hooks may have side-effects
+        // that cause other template functions to run, thus updating the selected index, which is global
+        // state. If we run `setSelectedIndex` *before* we run the hooks, in some cases the selected index
+        // will be altered by the time we leave the `ɵɵadvance` instruction.
+        setSelectedIndex(index);
     }
 
     /**
@@ -54562,6 +54635,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
      * --------
      *
      * This file contains the algorithm logic for applying map-based bindings
@@ -54569,6 +54649,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * --------
      */
+    /**
+     * Enables support for map-based styling bindings (e.g. `[style]` and `[class]` bindings).
+     */
+    function activateStylingMapFeature() {
+        setStylingMapsSyncFn(syncStylingMap);
+    }
     /**
      * Used to apply styling values presently within any map-based bindings on an element.
      *
@@ -54599,7 +54685,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * value is marked as dirty.
      *
      * Styling values are applied once CD exits the element (which happens when
-     * the `select(n)` instruction is called or the template function exits). When
+     * the `advance(n)` instruction is called or the template function exits). When
      * this occurs, all prop-based bindings are applied. If a map-based binding is
      * present then a special flushing function (called a sync function) is made
      * available and it will be called each time a styling property is flushed.
@@ -54649,11 +54735,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * time (a similar algorithm is that of the array merge algorithm
      * in merge sort).
      */
-    var syncStylingMap = function (context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, defaultValue) {
+    var syncStylingMap = function (context, renderer, element, data, sourceIndex, applyStylingFn, sanitizer, mode, targetProp, defaultValue) {
         var targetPropValueWasApplied = false;
         // once the map-based styling code is activate it is never deactivated. For this reason a
         // check to see if the current styling context has any map based bindings is required.
-        var totalMaps = getValuesCount(context, 3 /* MapBindingsPosition */);
+        var totalMaps = getValuesCount(context);
         if (totalMaps) {
             var runTheSyncAlgorithm = true;
             var loopUntilEnd = !targetProp;
@@ -54661,12 +54747,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // hasn't been flagged to apply values (it only traverses values) then
             // there is no point in iterating over the array because nothing will
             // be applied to the element.
-            if (loopUntilEnd && (mode & ~1 /* ApplyAllValues */)) {
+            if (loopUntilEnd && (mode & 1 /* ApplyAllValues */) === 0) {
                 runTheSyncAlgorithm = false;
                 targetPropValueWasApplied = true;
             }
             if (runTheSyncAlgorithm) {
-                targetPropValueWasApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp || null, 0, defaultValue || null);
+                targetPropValueWasApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp || null, sourceIndex, defaultValue || null);
             }
             if (loopUntilEnd) {
                 resetSyncCursors();
@@ -54684,64 +54770,81 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * processed. To learn more about how the algorithm works, see `syncStylingMap`.
      */
     function innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex, defaultValue) {
+        var totalMaps = getValuesCount(context) - 1; // maps have no default value
+        var mapsLimit = totalMaps - 1;
+        var recurseInnerMaps = currentMapIndex < mapsLimit && (mode & 8 /* RecurseInnerMaps */) !== 0;
+        var checkValuesOnly = (mode & 16 /* CheckValuesOnly */) !== 0;
+        if (checkValuesOnly) {
+            // inner modes do not check values ever (that can only happen
+            // when sourceIndex === 0)
+            mode &= ~16 /* CheckValuesOnly */;
+        }
         var targetPropValueWasApplied = false;
-        var totalMaps = getValuesCount(context, 3 /* MapBindingsPosition */);
-        if (currentMapIndex < totalMaps) {
-            var bindingIndex = getBindingValue(context, 3 /* MapBindingsPosition */, currentMapIndex);
-            var stylingMapArr = data[bindingIndex];
+        if (currentMapIndex <= mapsLimit) {
             var cursor = getCurrentSyncCursor(currentMapIndex);
-            while (cursor < stylingMapArr.length) {
-                var prop = getMapProp(stylingMapArr, cursor);
-                var iteratedTooFar = targetProp && prop > targetProp;
-                var isTargetPropMatched = !iteratedTooFar && prop === targetProp;
-                var value = getMapValue(stylingMapArr, cursor);
-                var valueIsDefined = isStylingValueDefined(value);
-                // the recursive code is designed to keep applying until
-                // it reaches or goes past the target prop. If and when
-                // this happens then it will stop processing values, but
-                // all other map values must also catch up to the same
-                // point. This is why a recursive call is still issued
-                // even if the code has iterated too far.
-                var innerMode = iteratedTooFar ? mode : resolveInnerMapMode(mode, valueIsDefined, isTargetPropMatched);
-                var innerProp = iteratedTooFar ? targetProp : prop;
-                var valueApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, innerMode, innerProp, currentMapIndex + 1, defaultValue);
-                if (iteratedTooFar) {
-                    if (!targetPropValueWasApplied) {
-                        targetPropValueWasApplied = valueApplied;
+            var bindingIndex = getBindingValue(context, 3 /* ValuesStartPosition */, currentMapIndex);
+            var stylingMapArr = getValue(data, bindingIndex);
+            if (stylingMapArr) {
+                while (cursor < stylingMapArr.length) {
+                    var prop = getMapProp(stylingMapArr, cursor);
+                    var iteratedTooFar = targetProp && prop > targetProp;
+                    var isTargetPropMatched = !iteratedTooFar && prop === targetProp;
+                    var value = getMapValue(stylingMapArr, cursor);
+                    var valueIsDefined = isStylingValueDefined(value);
+                    // the recursive code is designed to keep applying until
+                    // it reaches or goes past the target prop. If and when
+                    // this happens then it will stop processing values, but
+                    // all other map values must also catch up to the same
+                    // point. This is why a recursive call is still issued
+                    // even if the code has iterated too far.
+                    var innerMode = iteratedTooFar ? mode : resolveInnerMapMode(mode, valueIsDefined, isTargetPropMatched);
+                    var innerProp = iteratedTooFar ? targetProp : prop;
+                    var valueApplied = recurseInnerMaps ?
+                        innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, innerMode, innerProp, currentMapIndex + 1, defaultValue) :
+                        false;
+                    if (iteratedTooFar) {
+                        if (!targetPropValueWasApplied) {
+                            targetPropValueWasApplied = valueApplied;
+                        }
+                        break;
                     }
-                    break;
+                    if (!valueApplied && isValueAllowedToBeApplied(mode, isTargetPropMatched)) {
+                        valueApplied = true;
+                        if (!checkValuesOnly) {
+                            var useDefault = isTargetPropMatched && !valueIsDefined;
+                            var bindingIndexToApply = isTargetPropMatched ? bindingIndex : null;
+                            var finalValue = void 0;
+                            if (useDefault) {
+                                finalValue = defaultValue;
+                            }
+                            else {
+                                finalValue = sanitizer ?
+                                    sanitizer(prop, value, 3 /* ValidateAndSanitize */) :
+                                    (value ? unwrapSafeValue(value) : null);
+                            }
+                            applyStylingFn(renderer, element, prop, finalValue, bindingIndexToApply);
+                        }
+                    }
+                    targetPropValueWasApplied = valueApplied && isTargetPropMatched;
+                    cursor += 2 /* TupleSize */;
                 }
-                if (!valueApplied && isValueAllowedToBeApplied(mode, isTargetPropMatched)) {
-                    var useDefault = isTargetPropMatched && !valueIsDefined;
-                    var valueToApply = useDefault ? defaultValue : value;
-                    var bindingIndexToApply = useDefault ? bindingIndex : null;
-                    var finalValue = sanitizer ?
-                        sanitizer(prop, valueToApply, 3 /* ValidateAndSanitize */) :
-                        valueToApply;
-                    applyStylingFn(renderer, element, prop, finalValue, bindingIndexToApply);
-                    valueApplied = true;
+                setCurrentSyncCursor(currentMapIndex, cursor);
+                // this is a fallback case in the event that the styling map is `null` for this
+                // binding but there are other map-based bindings that need to be evaluated
+                // afterwards. If the `prop` value is falsy then the intention is to cycle
+                // through all of the properties in the remaining maps as well. If the current
+                // styling map is too short then there are no values to iterate over. In either
+                // case the follow-up maps need to be iterated over.
+                if (recurseInnerMaps &&
+                    (stylingMapArr.length === 1 /* ValuesStartPosition */ || !targetProp)) {
+                    targetPropValueWasApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex + 1, defaultValue);
                 }
-                targetPropValueWasApplied = valueApplied && isTargetPropMatched;
-                cursor += 2 /* TupleSize */;
             }
-            setCurrentSyncCursor(currentMapIndex, cursor);
-            // this is a fallback case in the event that the styling map is `null` for this
-            // binding but there are other map-based bindings that need to be evaluated
-            // afterwards. If the `prop` value is falsy then the intention is to cycle
-            // through all of the properties in the remaining maps as well. If the current
-            // styling map is too short then there are no values to iterate over. In either
-            // case the follow-up maps need to be iterated over.
-            if (stylingMapArr.length === 1 /* ValuesStartPosition */ || !targetProp) {
-                return innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex + 1, defaultValue);
+            else if (recurseInnerMaps) {
+                targetPropValueWasApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex + 1, defaultValue);
             }
         }
         return targetPropValueWasApplied;
-    }
-    /**
-     * Enables support for map-based styling bindings (e.g. `[style]` and `[class]` bindings).
-     */
-    function activateStylingMapFeature() {
-        setStylingMapsSyncFn(syncStylingMap);
     }
     /**
      * Used to determine the mode for the inner recursive call.
@@ -54788,7 +54891,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *  2. Otherwise if the current prop is permitted then allow.
      */
     function isValueAllowedToBeApplied(mode, isTargetPropMatched) {
-        var doApplyValue = (mode & 1 /* ApplyAllValues */) > 0;
+        var doApplyValue = (mode & 1 /* ApplyAllValues */) !== 0;
         if (!doApplyValue) {
             if (mode & 2 /* ApplyTargetProp */) {
                 doApplyValue = isTargetPropMatched;
@@ -54828,20 +54931,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function setCurrentSyncCursor(mapIndex, indexValue) {
         MAP_CURSORS[mapIndex] = indexValue;
     }
-    /**
-     * Converts the provided styling map array into a key value map.
-     */
-    function stylingMapToStringMap(map) {
-        var stringMap = {};
-        if (map) {
-            for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
-                var prop = getMapProp(map, i);
-                var value = getMapValue(map, i);
-                stringMap[prop] = value;
-            }
-        }
-        return stringMap;
-    }
 
     /**
      * A human-readable debug summary of the styling data present within `TStylingContext`.
@@ -54853,8 +54942,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function TStylingContextDebug(context) {
             this.context = context;
         }
-        Object.defineProperty(TStylingContextDebug.prototype, "isLocked", {
-            get: function () { return isContextLocked(this.context); },
+        Object.defineProperty(TStylingContextDebug.prototype, "isTemplateLocked", {
+            get: function () { return isContextLocked(this.context, true); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TStylingContextDebug.prototype, "isHostBindingsLocked", {
+            get: function () { return isContextLocked(this.context, false); },
             enumerable: true,
             configurable: true
         });
@@ -54866,27 +54960,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             get: function () {
                 var context = this.context;
+                var totalColumns = getValuesCount(context);
                 var entries = {};
-                var start = 3 /* MapBindingsPosition */;
+                var start = getPropValuesStartPosition(context);
                 var i = start;
                 while (i < context.length) {
-                    var valuesCount = getValuesCount(context, i);
-                    // the context may contain placeholder values which are populated ahead of time,
-                    // but contain no actual binding values. In this situation there is no point in
-                    // classifying this as an "entry" since no real data is stored here yet.
-                    if (valuesCount) {
-                        var prop = getProp(context, i);
-                        var guardMask = getGuardMask(context, i);
-                        var defaultValue = getDefaultValue(context, i);
-                        var sanitizationRequired = isSanitizationRequired(context, i);
-                        var bindingsStartPosition = i + 3 /* BindingsStartOffset */;
-                        var sources = [];
-                        for (var j = 0; j < valuesCount; j++) {
-                            sources.push(context[bindingsStartPosition + j]);
+                    var prop = getProp(context, i);
+                    var templateBitMask = getGuardMask(context, i, false);
+                    var hostBindingsBitMask = getGuardMask(context, i, true);
+                    var defaultValue = getDefaultValue(context, i);
+                    var sanitizationRequired = isSanitizationRequired(context, i);
+                    var bindingsStartPosition = i + 4 /* BindingsStartOffset */;
+                    var sources = [];
+                    for (var j = 0; j < totalColumns; j++) {
+                        var bindingIndex = context[bindingsStartPosition + j];
+                        if (bindingIndex !== 0) {
+                            sources.push(bindingIndex);
                         }
-                        entries[prop] = { prop: prop, guardMask: guardMask, sanitizationRequired: sanitizationRequired, valuesCount: valuesCount, defaultValue: defaultValue, sources: sources };
                     }
-                    i += 3 /* BindingsStartOffset */ + valuesCount;
+                    entries[prop] = {
+                        prop: prop,
+                        templateBitMask: templateBitMask,
+                        hostBindingsBitMask: hostBindingsBitMask,
+                        sanitizationRequired: sanitizationRequired,
+                        valuesCount: sources.length, defaultValue: defaultValue, sources: sources,
+                    };
+                    i += 4 /* BindingsStartOffset */ + totalColumns;
                 }
                 return entries;
             },
@@ -54929,6 +55028,30 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(NodeStylingDebug.prototype, "config", {
+            get: function () {
+                var hasMapBindings = hasConfig(this.context, 2 /* HasMapBindings */);
+                var hasPropBindings = hasConfig(this.context, 1 /* HasPropBindings */);
+                var hasCollisions = hasConfig(this.context, 4 /* HasCollisions */);
+                var hasTemplateBindings = hasConfig(this.context, 16 /* HasTemplateBindings */);
+                var hasHostBindings = hasConfig(this.context, 32 /* HasHostBindings */);
+                var templateBindingsLocked = hasConfig(this.context, 64 /* TemplateBindingsLocked */);
+                var hostBindingsLocked = hasConfig(this.context, 128 /* HostBindingsLocked */);
+                var allowDirectStyling$1 = allowDirectStyling(this.context, false) || allowDirectStyling(this.context, true);
+                return {
+                    hasMapBindings: hasMapBindings,
+                    hasPropBindings: hasPropBindings,
+                    hasCollisions: hasCollisions,
+                    hasTemplateBindings: hasTemplateBindings,
+                    hasHostBindings: hasHostBindings,
+                    templateBindingsLocked: templateBindingsLocked,
+                    hostBindingsLocked: hostBindingsLocked,
+                    allowDirectStyling: allowDirectStyling$1,
+                };
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(NodeStylingDebug.prototype, "values", {
             /**
              * Returns a key/value map of all the styles/classes that were last applied to the element.
@@ -54946,13 +55069,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
             var mockElement = {};
-            var hasMaps = getValuesCount(this.context, 3 /* MapBindingsPosition */) > 0;
+            var hasMaps = hasConfig(this.context, 2 /* HasMapBindings */);
             if (hasMaps) {
                 activateStylingMapFeature();
             }
-            var mapFn = function (renderer, element, prop, value, bindingIndex) { fn(prop, value, bindingIndex || null); };
+            var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
-            applyStyling(this.context, null, mockElement, this._data, true, mapFn, sanitizer);
+            // run the template bindings
+            applyStylingViaContext(this.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
+            // and also the host bindings
+            applyStylingViaContext(this.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
         };
         return NodeStylingDebug;
     }());
@@ -55681,6 +55807,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var _CLEAN_PROMISE = (ɵ0$4)();
     /** Sets the host bindings for the current view. */
     function setHostBindings(tView, viewData) {
+        var selectedIndex = getSelectedIndex();
         try {
             if (tView.expandoInstructions !== null) {
                 var bindingRootIndex = viewData[BINDING_INDEX] = tView.expandoStartIndex;
@@ -55693,6 +55820,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             // Negative numbers mean that we are starting new EXPANDO block and need to update
                             // the current element and directive index.
                             currentElementIndex = -instruction;
+                            setActiveHostElement(currentElementIndex);
                             // Injector block and providers are taken into account.
                             var providerCount = tView.expandoInstructions[++i];
                             bindingRootIndex += INJECTOR_BLOOM_PARENT_SIZE + providerCount;
@@ -55718,6 +55846,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         finally {
+            setActiveHostElement(selectedIndex);
         }
     }
     /** Refreshes all content queries declared by directives in a given view */
@@ -55999,7 +56128,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
+        var prevSelectedIndex = getSelectedIndex();
         try {
+            setActiveHostElement(null);
             if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
@@ -56008,6 +56139,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             templateFn(rf, context);
         }
         finally {
+            if (hasActiveElementFlag(1 /* RunExitFn */)) {
+                executeElementExitFn();
+            }
+            setSelectedIndex(prevSelectedIndex);
         }
     }
     /**
@@ -60134,8 +60269,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var rootTNode = getPreviousOrParentTNode();
         if (tView.firstTemplatePass && componentDef.hostBindings) {
             var elementIndex = rootTNode.index - HEADER_OFFSET;
+            setActiveHostElement(elementIndex);
             var expando = tView.expandoInstructions;
             invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
+            setActiveHostElement(null);
         }
         return component;
     }
@@ -60481,7 +60618,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+67.sha-8a7129e.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+68.sha-3b37469.with-local-changes');
 
     /**
      * @license
@@ -67492,7 +67629,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -71104,7 +71241,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+67.sha-8a7129e.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+68.sha-3b37469.with-local-changes');
 
     /**
      * @license
