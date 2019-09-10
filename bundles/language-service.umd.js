@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+52.sha-a1beba4.with-local-changes
+ * @license Angular v9.0.0-next.5+55.sha-6052b12.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+55.sha-6052b12.with-local-changes');
 
     /**
      * @license
@@ -34156,7 +34156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+55.sha-6052b12.with-local-changes');
 
     /**
      * @license
@@ -56267,7 +56267,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var NG_TEMPLATE_SELECTOR = 'ng-template';
     function isCssClassMatching(nodeClassAttrVal, cssClassToMatch) {
         var nodeClassesLen = nodeClassAttrVal.length;
-        var matchIndex = nodeClassAttrVal.indexOf(cssClassToMatch);
+        // we lowercase the class attribute value to be able to match
+        // selectors without case-sensitivity
+        // (selectors are already in lowercase when generated)
+        var matchIndex = nodeClassAttrVal.toLowerCase().indexOf(cssClassToMatch);
         var matchEndIdx = matchIndex + cssClassToMatch.length;
         if (matchIndex === -1 // no match
             || (matchIndex > 0 && nodeClassAttrVal[matchIndex - 1] !== ' ') // no space before
@@ -56367,7 +56370,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }
                     else {
                         ngDevMode && assertNotEqual(nodeAttrs[attrIndexInNode], 0 /* NamespaceURI */, 'We do not match directives on namespaced attributes');
-                        nodeAttrValue = nodeAttrs[attrIndexInNode + 1];
+                        // we lowercase the attribute value to be able to match
+                        // selectors without case-sensitivity
+                        // (selectors are already in lowercase when generated)
+                        nodeAttrValue = nodeAttrs[attrIndexInNode + 1].toLowerCase();
                     }
                     var compareAgainstClassName = mode & 8 /* CLASS */ ? nodeAttrValue : null;
                     if (compareAgainstClassName &&
@@ -68469,7 +68475,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+55.sha-6052b12.with-local-changes');
 
     /**
      * @license
@@ -81287,10 +81293,17 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return ReflectorModuleModuleResolutionHost;
     }());
     var ReflectorHost = /** @class */ (function () {
-        function ReflectorHost(getProgram, serviceHost) {
-            this.serviceHost = serviceHost;
+        function ReflectorHost(getProgram, tsLSHost) {
+            this.tsLSHost = tsLSHost;
             this.metadataReaderCache = createMetadataReaderCache();
-            this.hostAdapter = new ReflectorModuleModuleResolutionHost(serviceHost, getProgram);
+            // tsLSHost.getCurrentDirectory() returns the directory where tsconfig.json
+            // is located. This is not the same as process.cwd() because the language
+            // service host sets the "project root path" as its current directory.
+            var currentDir = tsLSHost.getCurrentDirectory();
+            this.fakeContainingPath = currentDir ? path.join(currentDir, 'fakeContainingFile.ts') : '';
+            this.hostAdapter = new ReflectorModuleModuleResolutionHost(tsLSHost, getProgram);
+            this.moduleResolutionCache = ts.createModuleResolutionCache(currentDir, function (s) { return s; }, // getCanonicalFileName
+            tsLSHost.getCompilationSettings());
         }
         ReflectorHost.prototype.getMetadataFor = function (modulePath) {
             return readMetadata(modulePath, this.hostAdapter, this.metadataReaderCache);
@@ -81300,21 +81313,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (moduleName.startsWith('.')) {
                     throw new Error('Resolution of relative paths requires a containing file.');
                 }
-                // serviceHost.getCurrentDirectory() returns the directory where tsconfig.json
-                // is located. This is not the same as process.cwd() because the language
-                // service host sets the "project root path" as its current directory.
-                var currentDirectory = this.serviceHost.getCurrentDirectory();
-                if (!currentDirectory) {
+                if (!this.fakeContainingPath) {
                     // If current directory is empty then the file must belong to an inferred
                     // project (no tsconfig.json), in which case it's not possible to resolve
                     // the module without the caller explicitly providing a containing file.
                     throw new Error("Could not resolve '" + moduleName + "' without a containing file.");
                 }
-                // Any containing file gives the same result for absolute imports
-                containingFile = path.join(currentDirectory, 'index.ts');
+                containingFile = this.fakeContainingPath;
             }
-            var compilerOptions = this.serviceHost.getCompilationSettings();
-            var resolved = ts.resolveModuleName(moduleName, containingFile, compilerOptions, this.hostAdapter)
+            var compilerOptions = this.tsLSHost.getCompilationSettings();
+            var resolved = ts.resolveModuleName(moduleName, containingFile, compilerOptions, this.hostAdapter, this.moduleResolutionCache)
                 .resolvedModule;
             return resolved ? resolved.resolvedFileName : null;
         };
@@ -82028,7 +82036,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+55.sha-6052b12.with-local-changes');
 
     /**
      * @license

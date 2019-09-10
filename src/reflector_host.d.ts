@@ -9,10 +9,12 @@
 import { StaticSymbolResolverHost } from '@angular/compiler';
 import * as ts from 'typescript';
 export declare class ReflectorHost implements StaticSymbolResolverHost {
-    private readonly serviceHost;
-    private hostAdapter;
-    private metadataReaderCache;
-    constructor(getProgram: () => ts.Program, serviceHost: ts.LanguageServiceHost);
+    private readonly tsLSHost;
+    private readonly hostAdapter;
+    private readonly metadataReaderCache;
+    private readonly moduleResolutionCache;
+    private readonly fakeContainingPath;
+    constructor(getProgram: () => ts.Program, tsLSHost: ts.LanguageServiceHost);
     getMetadataFor(modulePath: string): {
         [key: string]: any;
     }[] | undefined;
