@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.5+50.sha-2230dfa.with-local-changes
+ * @license Angular v9.0.0-next.5+52.sha-a1beba4.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3499,6 +3499,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Identifiers.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
         Identifiers.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
         Identifiers.select = { name: 'ɵɵselect', moduleName: CORE$1 };
+        Identifiers.advance = { name: 'ɵɵadvance', moduleName: CORE$1 };
         Identifiers.updateSyntheticHostBinding = { name: 'ɵɵupdateSyntheticHostBinding', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.attribute = { name: 'ɵɵattribute', moduleName: CORE$1 };
@@ -16258,12 +16259,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              * all local refs and context variables are available for matching.
              */
             this._updateCodeFns = [];
-            /**
-             * Memorizes the last node index for which a select instruction has been generated.
-             * We're initializing this to -1 to ensure the `select(0)` instruction is generated before any
-             * relevant update instructions.
-             */
-            this._lastNodeIndexWithFlush = -1;
+            /** Index of the currently-selected node. */
+            this._currentIndex = 0;
             /** Temporary variable declarations generated from visiting pipes, literals, etc. */
             this._tempVariables = [];
             /**
@@ -16539,8 +16536,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 bindings.forEach(function (binding) {
                     chainBindings_1.push({ sourceSpan: span, value: function () { return _this.convertPropertyBinding(binding); } });
                 });
-                this.updateInstructionChain(index, Identifiers$1.i18nExp, chainBindings_1);
-                this.updateInstruction(index, span, Identifiers$1.i18nApply, [literal(index)]);
+                this.updateInstructionChain(Identifiers$1.i18nExp, chainBindings_1);
+                this.updateInstruction(span, Identifiers$1.i18nApply, [literal(index)]);
             }
             if (!selfClosing) {
                 this.creationInstruction(span, Identifiers$1.i18nEnd);
@@ -16567,7 +16564,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          */
         TemplateDefinitionBuilder.prototype.interpolatedUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
             var _this = this;
-            this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () { return __spread([literal(attrName)], _this.getUpdateInstructionArguments(value), params); });
+            this.updateInstructionWithAdvance(elementIndex, input.sourceSpan, instruction, function () { return __spread([literal(attrName)], _this.getUpdateInstructionArguments(value), params); });
         };
         TemplateDefinitionBuilder.prototype.visitContent = function (ngContent) {
             var slot = this.allocateDataSlot();
@@ -16736,14 +16733,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         }
                     });
                     if (bindings_1.length) {
-                        this.updateInstructionChain(elementIndex, Identifiers$1.i18nExp, bindings_1);
+                        this.updateInstructionChain(Identifiers$1.i18nExp, bindings_1);
                     }
                     if (i18nAttrArgs_1.length) {
                         var index = literal(this.allocateDataSlot());
                         var args = this.constantPool.getConstLiteral(literalArr(i18nAttrArgs_1), true);
                         this.creationInstruction(element.sourceSpan, Identifiers$1.i18nAttributes, [index, args]);
                         if (hasBindings_1) {
-                            this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nApply, [index]);
+                            this.updateInstruction(element.sourceSpan, Identifiers$1.i18nApply, [index]);
                         }
                     }
                 }
@@ -16861,7 +16858,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         }
                         else {
                             // class prop
-                            _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.classProp, function () {
+                            _this.updateInstructionWithAdvance(elementIndex, input.sourceSpan, Identifiers$1.classProp, function () {
                                 return __spread([
                                     literal(elementIndex), literal(attrName_1), _this.convertPropertyBinding(value_2)
                                 ], params_2);
@@ -16871,10 +16868,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             });
             if (propertyBindings.length > 0) {
-                this.updateInstructionChain(elementIndex, Identifiers$1.property, propertyBindings);
+                this.updateInstructionChainWithAdvance(elementIndex, Identifiers$1.property, propertyBindings);
             }
             if (attributeBindings.length > 0) {
-                this.updateInstructionChain(elementIndex, Identifiers$1.attribute, attributeBindings);
+                this.updateInstructionChainWithAdvance(elementIndex, Identifiers$1.attribute, attributeBindings);
             }
             // Traverse element child nodes
             visitAll(this, element.children);
@@ -16969,7 +16966,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var value = text.value.visit(this._valueConverter);
             this.allocateBindingSlots(value);
             if (value instanceof Interpolation) {
-                this.updateInstruction(nodeIndex, text.sourceSpan, getTextInterpolationExpression(value), function () { return _this.getUpdateInstructionArguments(value); });
+                this.updateInstructionWithAdvance(nodeIndex, text.sourceSpan, getTextInterpolationExpression(value), function () { return _this.getUpdateInstructionArguments(value); });
             }
             else {
                 error('Text nodes should be interpolated and never bound directly.');
@@ -17051,7 +17048,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             });
             if (propertyBindings.length > 0) {
-                this.updateInstructionChain(templateIndex, Identifiers$1.property, propertyBindings);
+                this.updateInstructionChainWithAdvance(templateIndex, Identifiers$1.property, propertyBindings);
             }
         };
         // Bindings must only be resolved after all local refs have been visited, so all
@@ -17074,7 +17071,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     });
                 }
                 else {
-                    this.updateInstruction(elementIndex, instruction.sourceSpan, instruction.reference, function () {
+                    this.updateInstructionWithAdvance(elementIndex, instruction.sourceSpan, instruction.reference, function () {
                         return instruction
                             .params(function (value) {
                             return (instruction.supportsInterpolation && value instanceof Interpolation) ?
@@ -17088,13 +17085,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         TemplateDefinitionBuilder.prototype.creationInstruction = function (span, reference, paramsOrFn, prepend) {
             this.instructionFn(this._creationCodeFns, span, reference, paramsOrFn || [], prepend);
         };
-        TemplateDefinitionBuilder.prototype.updateInstruction = function (nodeIndex, span, reference, paramsOrFn) {
-            this.addSelectInstructionIfNecessary(nodeIndex, span);
+        TemplateDefinitionBuilder.prototype.updateInstructionWithAdvance = function (nodeIndex, span, reference, paramsOrFn) {
+            this.addAdvanceInstructionIfNecessary(nodeIndex, span);
+            this.updateInstruction(span, reference, paramsOrFn);
+        };
+        TemplateDefinitionBuilder.prototype.updateInstruction = function (span, reference, paramsOrFn) {
             this.instructionFn(this._updateCodeFns, span, reference, paramsOrFn || []);
         };
-        TemplateDefinitionBuilder.prototype.updateInstructionChain = function (nodeIndex, reference, bindings) {
+        TemplateDefinitionBuilder.prototype.updateInstructionChain = function (reference, bindings) {
             var span = bindings.length ? bindings[0].sourceSpan : null;
-            this.addSelectInstructionIfNecessary(nodeIndex, span);
             this._updateCodeFns.push(function () {
                 var calls = bindings.map(function (property) {
                     var fnParams = __spread([property.value()], (property.params || []));
@@ -17106,12 +17105,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return chainedInstruction(reference, calls, span).toStmt();
             });
         };
-        TemplateDefinitionBuilder.prototype.addSelectInstructionIfNecessary = function (nodeIndex, span) {
-            if (this._lastNodeIndexWithFlush < nodeIndex) {
-                if (nodeIndex > 0) {
-                    this.instructionFn(this._updateCodeFns, span, Identifiers$1.select, [literal(nodeIndex)]);
+        TemplateDefinitionBuilder.prototype.updateInstructionChainWithAdvance = function (nodeIndex, reference, bindings) {
+            this.addAdvanceInstructionIfNecessary(nodeIndex, bindings.length ? bindings[0].sourceSpan : null);
+            this.updateInstructionChain(reference, bindings);
+        };
+        TemplateDefinitionBuilder.prototype.addAdvanceInstructionIfNecessary = function (nodeIndex, span) {
+            if (nodeIndex !== this._currentIndex) {
+                var delta = nodeIndex - this._currentIndex;
+                if (delta < 1) {
+                    throw new Error('advance instruction can only go forwards');
                 }
-                this._lastNodeIndexWithFlush = nodeIndex;
+                this.instructionFn(this._updateCodeFns, span, Identifiers$1.advance, [literal(delta)]);
+                this._currentIndex = nodeIndex;
             }
         };
         TemplateDefinitionBuilder.prototype.allocatePureFunctionSlots = function (numSlots) {
@@ -18843,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.5+50.sha-2230dfa.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
 
     /**
      * @license
@@ -34151,7 +34156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.5+50.sha-2230dfa.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
 
     /**
      * @license
@@ -57123,6 +57128,75 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Advances to an element for later binding instructions.
+     *
+     * Used in conjunction with instructions like {@link property} to act on elements with specified
+     * indices, for example those created with {@link element} or {@link elementStart}.
+     *
+     * ```ts
+     * (rf: RenderFlags, ctx: any) => {
+      *   if (rf & 1) {
+      *     text(0, 'Hello');
+      *     text(1, 'Goodbye')
+      *     element(2, 'div');
+      *   }
+      *   if (rf & 2) {
+      *     advance(2); // Advance twice to the <div>.
+      *     property('title', 'test');
+      *   }
+      *  }
+      * ```
+      * @param delta Number of elements to advance forwards by.
+      *
+      * @codeGenApi
+      */
+    function ɵɵadvance(delta) {
+        ngDevMode && assertGreaterThan(delta, 0, 'Can only advance forward');
+        selectIndexInternal(getLView(), getSelectedIndex() + delta, getCheckNoChangesMode());
+    }
+    /**
+     * Selects an element for later binding instructions.
+     * @deprecated No longer being generated, but still used in unit tests.
+     * @codeGenApi
+     */
+    function ɵɵselect(index) {
+        selectIndexInternal(getLView(), index, getCheckNoChangesMode());
+    }
+    function selectIndexInternal(lView, index, checkNoChangesMode) {
+        ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
+        ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
+        // Flush the initial hooks for elements in the view that have been added up to this point.
+        // PERF WARNING: do NOT extract this to a separate function without running benchmarks
+        if (!checkNoChangesMode) {
+            var hooksInitPhaseCompleted = (lView[FLAGS] & 3 /* InitPhaseStateMask */) === 3 /* InitPhaseCompleted */;
+            if (hooksInitPhaseCompleted) {
+                var preOrderCheckHooks = lView[TVIEW].preOrderCheckHooks;
+                if (preOrderCheckHooks !== null) {
+                    executeCheckHooks(lView, preOrderCheckHooks, index);
+                }
+            }
+            else {
+                var preOrderHooks = lView[TVIEW].preOrderHooks;
+                if (preOrderHooks !== null) {
+                    executeInitAndCheckHooks(lView, preOrderHooks, 0 /* OnInitHooksToBeRun */, index);
+                }
+            }
+        }
+        // We must set the selected index *after* running the hooks, because hooks may have side-effects
+        // that cause other template functions to run, thus updating the selected index, which is global
+        // state. If we run `setSelectedIndex` *before* we run the hooks, in some cases the selected index
+        // will be altered by the time we leave the `ɵɵadvance` instruction.
+        setSelectedIndex(index);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Marks that the next string is for element.
      *
      * See `I18nMutateOpCodes` documentation.
@@ -58387,64 +58461,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }());
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Selects an element for later binding instructions.
-     *
-     * Used in conjunction with instructions like {@link property} to act on elements with specified
-     * indices, for example those created with {@link element} or {@link elementStart}.
-     *
-     * ```ts
-     * (rf: RenderFlags, ctx: any) => {
-     *   if (rf & 1) {
-     *     element(0, 'div');
-     *   }
-     *   if (rf & 2) {
-     *     select(0); // Select the <div/> created above.
-     *     property('title', 'test');
-     *   }
-     *  }
-     * ```
-     * @param index the index of the item to act on with the following instructions
-     *
-     * @codeGenApi
-     */
-    function ɵɵselect(index) {
-        selectInternal(getLView(), index, getCheckNoChangesMode());
-    }
-    function selectInternal(lView, index, checkNoChangesMode) {
-        ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
-        ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
-        // Flush the initial hooks for elements in the view that have been added up to this point.
-        // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-        if (!checkNoChangesMode) {
-            var hooksInitPhaseCompleted = (lView[FLAGS] & 3 /* InitPhaseStateMask */) === 3 /* InitPhaseCompleted */;
-            if (hooksInitPhaseCompleted) {
-                var preOrderCheckHooks = lView[TVIEW].preOrderCheckHooks;
-                if (preOrderCheckHooks !== null) {
-                    executeCheckHooks(lView, preOrderCheckHooks, index);
-                }
-            }
-            else {
-                var preOrderHooks = lView[TVIEW].preOrderHooks;
-                if (preOrderHooks !== null) {
-                    executeInitAndCheckHooks(lView, preOrderHooks, 0 /* OnInitHooksToBeRun */, index);
-                }
-            }
-        }
-        // We must set the selected index *after* running the hooks, because hooks may have side-effects
-        // that cause other template functions to run, thus updating the selected index, which is global
-        // state. If we run `setSelectedIndex` *before* we run the hooks, in some cases the selected index
-        // will be altered by the time we leave the `ɵɵselect` instruction.
-        setSelectedIndex(index);
-    }
-
-    /**
      * A permanent marker promise which signifies that the current CD tree is
      * clean.
      */
@@ -58792,6 +58808,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var rendererFactory = hostView[RENDERER_FACTORY];
         var normalExecutionPath = !getCheckNoChangesMode();
         var creationModeIsActive = isCreationMode(hostView);
+        var previousOrParentTNode = getPreviousOrParentTNode();
+        var isParent = getIsParent();
         try {
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.begin) {
                 rendererFactory.begin();
@@ -58806,6 +58824,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.end) {
                 rendererFactory.end();
             }
+            setPreviousOrParentTNode(previousOrParentTNode, isParent);
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
@@ -58814,9 +58833,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         try {
             setActiveHostElement(null);
             if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
-                // When we're updating, have an inherent ɵɵselect(0) so we don't have to generate that
-                // instruction for most update blocks
-                selectInternal(lView, 0, getCheckNoChangesMode());
+                // When we're updating, inherently select 0 so we don't
+                // have to generate that instruction for most update blocks.
+                selectIndexInternal(lView, 0, getCheckNoChangesMode());
             }
             templateFn(rf, context);
         }
@@ -59783,6 +59802,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function detectChangesInternal(view, context) {
         var rendererFactory = view[RENDERER_FACTORY];
+        var previousOrParentTNode = getPreviousOrParentTNode();
+        var isParent = getIsParent();
         if (rendererFactory.begin)
             rendererFactory.begin();
         try {
@@ -59796,6 +59817,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         finally {
             if (rendererFactory.end)
                 rendererFactory.end();
+            setPreviousOrParentTNode(previousOrParentTNode, isParent);
         }
     }
     /**
@@ -68172,7 +68194,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *        ɵɵtext(0);
      *      }
      *      if (fs & RenderFlags.Update) {
-     *        ɵɵselect(0);
      *        ɵɵtextInterpolate(ctx.greeter.greet());
      *      }
      *    },
@@ -68448,7 +68469,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.5+50.sha-2230dfa.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
 
     /**
      * @license
@@ -75793,6 +75814,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵstylingApply': ɵɵstylingApply,
         'ɵɵclassProp': ɵɵclassProp,
         'ɵɵselect': ɵɵselect,
+        'ɵɵadvance': ɵɵadvance,
         'ɵɵtemplate': ɵɵtemplate,
         'ɵɵtext': ɵɵtext,
         'ɵɵtextInterpolate': ɵɵtextInterpolate,
@@ -82006,7 +82028,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.5+50.sha-2230dfa.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.5+52.sha-a1beba4.with-local-changes');
 
     /**
      * @license
