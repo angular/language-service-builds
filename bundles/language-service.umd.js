@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+4.sha-53dbff6.with-local-changes
+ * @license Angular v9.0.0-next.6+6.sha-f5982fd.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+4.sha-53dbff6.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+6.sha-f5982fd.with-local-changes');
 
     /**
      * @license
@@ -34156,7 +34156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+4.sha-53dbff6.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+6.sha-f5982fd.with-local-changes');
 
     /**
      * @license
@@ -68476,7 +68476,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+4.sha-53dbff6.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+6.sha-f5982fd.with-local-changes');
 
     /**
      * @license
@@ -78441,8 +78441,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -81605,6 +81604,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             // Invalidate file that have changed in the static symbol resolver
             var seen = new Set();
+            var hasChanges = false;
             try {
                 for (var _b = __values(program.getSourceFiles()), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var sourceFile = _c.value;
@@ -81613,6 +81613,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var version = this.tsLsHost.getScriptVersion(fileName);
                     var lastVersion = this.fileVersions.get(fileName);
                     if (version !== lastVersion) {
+                        hasChanges = true;
                         this.fileVersions.set(fileName, version);
                         this.staticSymbolResolver.invalidateFile(fileName);
                     }
@@ -81632,7 +81633,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 _this.staticSymbolResolver.invalidateFile(f);
             });
             this.lastProgram = program;
-            return false;
+            return missing.length === 0 && !hasChanges;
         };
         /**
          * Return the TemplateSource if `node` is a template node.
@@ -82037,7 +82038,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+4.sha-53dbff6.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+6.sha-f5982fd.with-local-changes');
 
     /**
      * @license
