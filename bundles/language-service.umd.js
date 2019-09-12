@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+39.sha-3c7da76.with-local-changes
+ * @license Angular v9.0.0-next.6+40.sha-e82f56b.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+39.sha-3c7da76.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+40.sha-e82f56b.with-local-changes');
 
     /**
      * @license
@@ -34173,7 +34173,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+39.sha-3c7da76.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+40.sha-e82f56b.with-local-changes');
 
     /**
      * @license
@@ -68596,7 +68596,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+39.sha-3c7da76.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+40.sha-e82f56b.with-local-changes');
 
     /**
      * @license
@@ -81999,6 +81999,42 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 };
             }
         };
+        /**
+         * Log the specified `msg` to file at INFO level. If logging is not enabled
+         * this method is a no-op.
+         * @param msg Log message
+         */
+        TypeScriptServiceHost.prototype.log = function (msg) {
+            if (this.tsLsHost.log) {
+                this.tsLsHost.log(msg);
+            }
+        };
+        /**
+         * Log the specified `msg` to file at ERROR level. If logging is not enabled
+         * this method is a no-op.
+         * @param msg error message
+         */
+        TypeScriptServiceHost.prototype.error = function (msg) {
+            if (this.tsLsHost.error) {
+                this.tsLsHost.error(msg);
+            }
+        };
+        /**
+         * Log debugging info to file at INFO level, only if verbose setting is turned
+         * on. Otherwise, this method is a no-op.
+         * @param msg debugging message
+         */
+        TypeScriptServiceHost.prototype.debug = function (msg) {
+            var project = this.tsLsHost;
+            if (!project.projectService) {
+                // tsLsHost is not a Project
+                return;
+            }
+            var logger = project.projectService.logger;
+            if (logger.hasLevel(tss.server.LogLevel.verbose)) {
+                logger.info(msg);
+            }
+        };
         return TypeScriptServiceHost;
     }());
     function findSuitableDefaultModule(modules) {
@@ -82182,7 +82218,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+39.sha-3c7da76.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+40.sha-e82f56b.with-local-changes');
 
     /**
      * @license

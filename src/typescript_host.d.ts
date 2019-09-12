@@ -130,4 +130,22 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * @param template template to be parsed
      */
     getTemplateAst(template: TemplateSource): AstResult | Diagnostic;
+    /**
+     * Log the specified `msg` to file at INFO level. If logging is not enabled
+     * this method is a no-op.
+     * @param msg Log message
+     */
+    log(msg: string): void;
+    /**
+     * Log the specified `msg` to file at ERROR level. If logging is not enabled
+     * this method is a no-op.
+     * @param msg error message
+     */
+    error(msg: string): void;
+    /**
+     * Log debugging info to file at INFO level, only if verbose setting is turned
+     * on. Otherwise, this method is a no-op.
+     * @param msg debugging message
+     */
+    debug(msg: string): void;
 }
