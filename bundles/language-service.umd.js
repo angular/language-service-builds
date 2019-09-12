@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+14.sha-a85eccd.with-local-changes
+ * @license Angular v9.0.0-next.6+15.sha-5f095a5.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18863,7 +18863,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+14.sha-a85eccd.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+15.sha-5f095a5.with-local-changes');
 
     /**
      * @license
@@ -34171,7 +34171,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+14.sha-a85eccd.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+15.sha-5f095a5.with-local-changes');
 
     /**
      * @license
@@ -51918,72 +51918,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function ngDevModeResetPerfCounters() {
-        var locationString = typeof location !== 'undefined' ? location.toString() : '';
-        var newCounters = {
-            namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
-            firstTemplatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererAppendChild: 0,
-            rendererInsertBefore: 0,
-            rendererCreateComment: 0,
-            styleMap: 0,
-            styleMapCacheMiss: 0,
-            classMap: 0,
-            classMapCacheMiss: 0,
-            styleProp: 0,
-            stylePropCacheMiss: 0,
-            classProp: 0,
-            classPropCacheMiss: 0,
-            flushStyling: 0,
-            classesApplied: 0,
-            stylesApplied: 0,
-            stylingWritePersistedState: 0,
-            stylingReadPersistedState: 0,
-        };
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-        var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
-        _global$1['ngDevMode'] = allowNgDevModeTrue && newCounters;
-        return newCounters;
-    }
-    /**
-     * This checks to see if the `ngDevMode` has been set. If yes,
-     * then we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     *
-     * NOTE: changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
-     */
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        ngDevModeResetPerfCounters();
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * The strategy that the default change detector uses to detect changes.
      * When set, takes effect the next time change detection is triggered.
@@ -52105,6 +52039,93 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
 
     /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function ngDevModeResetPerfCounters() {
+        var locationString = typeof location !== 'undefined' ? location.toString() : '';
+        var newCounters = {
+            namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererAppendChild: 0,
+            rendererInsertBefore: 0,
+            rendererCreateComment: 0,
+            styleMap: 0,
+            styleMapCacheMiss: 0,
+            classMap: 0,
+            classMapCacheMiss: 0,
+            styleProp: 0,
+            stylePropCacheMiss: 0,
+            classProp: 0,
+            classPropCacheMiss: 0,
+            flushStyling: 0,
+            classesApplied: 0,
+            stylesApplied: 0,
+            stylingWritePersistedState: 0,
+            stylingReadPersistedState: 0,
+        };
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+        var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
+        _global$1['ngDevMode'] = allowNgDevModeTrue && newCounters;
+        return newCounters;
+    }
+    /**
+     * This function checks to see if the `ngDevMode` has been set. If yes,
+     * then we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     *
+     * `ɵɵdefineComponent` is guaranteed to have been called before any component template functions
+     * (and thus Ivy instructions), so a single initialization there is sufficient to ensure ngDevMode
+     * is defined for the entire instruction set.
+     *
+     * When using checking `ngDevMode` on toplevel, always init it before referencing it
+     * (e.g. `((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode())`), otherwise you can
+     *  get a `ReferenceError` like in https://github.com/angular/angular/issues/31595.
+     *
+     * Details on possible values for `ngDevMode` can be found on its docstring.
+     *
+     * NOTE:
+     * - changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
+     */
+    function initNgDevMode() {
+        // The below checks are to ensure that calling `initNgDevMode` multiple times does not
+        // reset the counters.
+        // If the `ngDevMode` is not an object, then it means we have not created the perf counters
+        // yet.
+        if (typeof ngDevMode === 'undefined' || ngDevMode) {
+            if (typeof ngDevMode !== 'object') {
+                ngDevModeResetPerfCounters();
+            }
+            return !!ngDevMode;
+        }
+        return false;
+    }
+
+    /**
     * @license
     * Copyright Google Inc. All Rights Reserved.
     *
@@ -52120,7 +52141,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var EMPTY_OBJ = {};
     var EMPTY_ARRAY$3 = [];
     // freezing the values prevents any code from accidentally inserting new values in
-    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
+    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
         // These property accesses can be ignored because ngDevMode will be set to false
         // when optimizing code and the whole if statement will be dropped.
         // tslint:disable-next-line:no-toplevel-property-access
@@ -54961,6 +54982,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var NG_DEV_MODE = ((typeof ngDevMode === 'undefined' || !!ngDevMode) && initNgDevMode());
     /*
      * This file contains conditionally attached classes which provide human readable (debug) level
      * information for `LView`, `LContainer` and other internal data structures. These data structures
@@ -54989,7 +55011,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * }
      * ```
      */
-    var LViewArray = ngDevMode && createNamedArrayType('LView');
+    var LViewArray = NG_DEV_MODE && createNamedArrayType('LView') || null;
     var LVIEW_EMPTY; // can't initialize here or it will not be tree shaken, because `LView`
     // constructor could have side-effects.
     /**
@@ -55195,7 +55217,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             tNode = tNode.next;
         }
     }
-    var TViewData = ngDevMode && createNamedArrayType('TViewData');
+    var TViewData = NG_DEV_MODE && createNamedArrayType('TViewData') || null;
     var TVIEWDATA_EMPTY; // can't initialize here or it will not be tree shaken, because `LView`
     // constructor could have side-effects.
     /**
@@ -55208,14 +55230,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             TVIEWDATA_EMPTY = new TViewData();
         return TVIEWDATA_EMPTY.concat(list);
     }
-    var LViewBlueprint = ngDevMode && createNamedArrayType('LViewBlueprint');
-    var MatchesArray = ngDevMode && createNamedArrayType('MatchesArray');
-    var TViewComponents = ngDevMode && createNamedArrayType('TViewComponents');
-    var TNodeLocalNames = ngDevMode && createNamedArrayType('TNodeLocalNames');
-    var TNodeInitialInputs = ngDevMode && createNamedArrayType('TNodeInitialInputs');
-    var TNodeInitialData = ngDevMode && createNamedArrayType('TNodeInitialData');
-    var LCleanup = ngDevMode && createNamedArrayType('LCleanup');
-    var TCleanup = ngDevMode && createNamedArrayType('TCleanup');
+    var LViewBlueprint = NG_DEV_MODE && createNamedArrayType('LViewBlueprint') || null;
+    var MatchesArray = NG_DEV_MODE && createNamedArrayType('MatchesArray') || null;
+    var TViewComponents = NG_DEV_MODE && createNamedArrayType('TViewComponents') || null;
+    var TNodeLocalNames = NG_DEV_MODE && createNamedArrayType('TNodeLocalNames') || null;
+    var TNodeInitialInputs = NG_DEV_MODE && createNamedArrayType('TNodeInitialInputs') || null;
+    var TNodeInitialData = NG_DEV_MODE && createNamedArrayType('TNodeInitialData') || null;
+    var LCleanup = NG_DEV_MODE && createNamedArrayType('LCleanup') || null;
+    var TCleanup = NG_DEV_MODE && createNamedArrayType('TCleanup') || null;
     function attachLViewDebug(lView) {
         attachDebugObject(lView, new LViewDebug(lView));
     }
@@ -56292,7 +56314,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     //// ViewContainer & View
     //////////////////////////
     // Not sure why I need to do `any` here but TS complains later.
-    var LContainerArray = ngDevMode && createNamedArrayType('LContainer');
+    var LContainerArray = ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) &&
+        createNamedArrayType('LContainer');
     /**
      * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes
      * them by executing an associated template function.
@@ -60478,7 +60501,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+14.sha-a85eccd.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+15.sha-5f095a5.with-local-changes');
 
     /**
      * @license
@@ -71103,7 +71126,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+14.sha-a85eccd.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+15.sha-5f095a5.with-local-changes');
 
     /**
      * @license
