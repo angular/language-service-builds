@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+33.sha-88c28ce.with-local-changes
+ * @license Angular v9.0.0-next.6+34.sha-adeee0f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+33.sha-88c28ce.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+34.sha-adeee0f.with-local-changes');
 
     /**
      * @license
@@ -32495,6 +32495,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             finally { if (e_2) throw e_2.error; }
         }
     }
+    /**
+     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
+     * type T.
+     *
+     * @param startNode node to start searching for nested property assignment from
+     * @param propName property assignment name
+     * @param predicate function to verify that a node is of type T.
+     * @return node property assignment value of type T, or undefined if none is found
+     */
+    function findPropertyValueOfType(startNode, propName, predicate) {
+        if (ts.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
+            var initializer = startNode.initializer;
+            if (predicate(initializer))
+                return initializer;
+        }
+        return startNode.forEachChild(function (c) { return findPropertyValueOfType(c, propName, predicate); });
+    }
 
     /**
      * @license
@@ -34156,7 +34173,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+33.sha-88c28ce.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+34.sha-adeee0f.with-local-changes');
 
     /**
      * @license
@@ -50757,7 +50774,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return type + " '" + name + "' is not included in a module and will not be " +
             'available inside a template. Consider adding it to a NgModule declaration.';
     }
-    function getDeclarationDiagnostics(declarations, modules) {
+    /**
+     * Logs an error for an impossible state with a certain message.
+     */
+    function logImpossibleState(message) {
+        console.error("Impossible state: " + message);
+    }
+    /**
+     * Performs a variety diagnostics on directive declarations.
+     *
+     * @param declarations Angular directive declarations
+     * @param modules NgModules in the project
+     * @param host TypeScript service host used to perform TypeScript queries
+     * @return diagnosed errors, if any
+     */
+    function getDeclarationDiagnostics(declarations, modules, host) {
         var e_1, _a, e_2, _b, e_3, _c, e_4, _d;
         var directives = new Set();
         try {
@@ -50790,6 +50821,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
                 var declaration = declarations_1_1.value;
                 var errors = declaration.errors, metadata = declaration.metadata, type = declaration.type, declarationSpan = declaration.declarationSpan;
+                var sf = host.getSourceFile(type.filePath);
+                if (!sf) {
+                    logImpossibleState("directive " + type.name + " exists but has no source file");
+                    return [];
+                }
+                // TypeScript identifier of the directive declaration annotation (e.g. "Component" or
+                // "Directive") on a directive class.
+                var directiveIdentifier = findTightestNode(sf, declarationSpan.start);
+                if (!directiveIdentifier) {
+                    logImpossibleState("directive " + type.name + " exists but has no identifier");
+                    return [];
+                }
                 try {
                     for (var errors_1 = (e_4 = void 0, __values(errors)), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
                         var error_1 = errors_1_1.value;
@@ -50826,12 +50869,25 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             span: declarationSpan,
                         });
                     }
-                    else if (template && templateUrl) {
-                        results.push({
-                            kind: DiagnosticKind$1.Error,
-                            message: "Component '" + type.name + "' must not have both template and templateUrl",
-                            span: declarationSpan,
-                        });
+                    else if (templateUrl) {
+                        if (template) {
+                            results.push({
+                                kind: DiagnosticKind$1.Error,
+                                message: "Component '" + type.name + "' must not have both template and templateUrl",
+                                span: declarationSpan,
+                            });
+                        }
+                        // Find templateUrl value from the directive call expression, which is the parent of the
+                        // directive identifier.
+                        //
+                        // TODO: We should create an enum of the various properties a directive can have to use
+                        // instead of string literals. We can then perform a mass migration of all literal usages.
+                        var templateUrlNode = findPropertyValueOfType(directiveIdentifier.parent, 'templateUrl', ts.isStringLiteralLike);
+                        if (!templateUrlNode) {
+                            logImpossibleState("templateUrl " + templateUrl + " exists but its TypeScript node doesn't");
+                            return [];
+                        }
+                        results.push.apply(results, __spread(validateUrls([templateUrlNode], host.tsLsHost)));
                     }
                 }
                 else if (!directives.has(declaration.type)) {
@@ -50851,6 +50907,47 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             finally { if (e_3) throw e_3.error; }
         }
         return results;
+    }
+    /**
+     * Checks that URLs on a directive point to a valid file.
+     * Note that this diagnostic check may require a filesystem hit, and thus may be slower than other
+     * checks.
+     *
+     * @param urls urls to check for validity
+     * @param tsLsHost TS LS host used for querying filesystem information
+     * @return diagnosed url errors, if any
+     */
+    function validateUrls(urls, tsLsHost) {
+        var e_5, _a;
+        if (!tsLsHost.fileExists) {
+            return [];
+        }
+        var allErrors = [];
+        try {
+            // TODO(ayazhafiz): most of this logic can be unified with the logic in
+            // definitions.ts#getUrlFromProperty. Create a utility function to be used by both.
+            for (var urls_1 = __values(urls), urls_1_1 = urls_1.next(); !urls_1_1.done; urls_1_1 = urls_1.next()) {
+                var urlNode = urls_1_1.value;
+                var curPath = urlNode.getSourceFile().fileName;
+                var url = path.join(path.dirname(curPath), urlNode.text);
+                if (tsLsHost.fileExists(url))
+                    continue;
+                allErrors.push({
+                    kind: DiagnosticKind$1.Error,
+                    message: "URL does not point to a valid file",
+                    // Exclude opening and closing quotes in the url span.
+                    span: { start: urlNode.getStart() + 1, end: urlNode.end - 1 },
+                });
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (urls_1_1 && !urls_1_1.done && (_a = urls_1.return)) _a.call(urls_1);
+            }
+            finally { if (e_5) throw e_5.error; }
+        }
+        return allErrors;
     }
     /**
      * Return a recursive data structure that chains diagnostic messages.
@@ -50885,7 +50982,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param elements
      */
     function uniqueBySpan(elements) {
-        var e_5, _a;
+        var e_6, _a;
         var result = [];
         var map = new Map();
         try {
@@ -50903,12 +51000,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
         finally {
             try {
                 if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_6) throw e_6.error; }
         }
         return result;
     }
@@ -51009,7 +51106,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             var declarations = this.host.getDeclarations(fileName);
             if (declarations && declarations.length) {
-                results.push.apply(results, __spread(getDeclarationDiagnostics(declarations, analyzedModules)));
+                results.push.apply(results, __spread(getDeclarationDiagnostics(declarations, analyzedModules, this.host)));
             }
             var sourceFile = fileName.endsWith('.ts') ? this.host.getSourceFile(fileName) : undefined;
             return uniqueBySpan(results).map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
@@ -68510,7 +68607,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+33.sha-88c28ce.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+34.sha-adeee0f.with-local-changes');
 
     /**
      * @license
@@ -82096,7 +82193,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+33.sha-88c28ce.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+34.sha-adeee0f.with-local-changes');
 
     /**
      * @license
