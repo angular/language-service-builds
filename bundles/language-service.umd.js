@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+19.sha-5cf5972.with-local-changes
+ * @license Angular v9.0.0-next.6+27.sha-527ce3b.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+19.sha-5cf5972.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+27.sha-527ce3b.with-local-changes');
 
     /**
      * @license
@@ -34156,7 +34156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+19.sha-5cf5972.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+27.sha-527ce3b.with-local-changes');
 
     /**
      * @license
@@ -53941,12 +53941,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return null;
     }
-    /**
-     * A helper function that returns `true` if a given `TNode` has any matching directives.
-     */
-    function hasDirectives(tNode) {
-        return tNode.directiveEnd > tNode.directiveStart;
-    }
     function getTNode(index, view) {
         ngDevMode && assertGreaterThan(index, -1, 'wrong index for TNode');
         ngDevMode && assertLessThan(index, view[TVIEW].data.length, 'wrong index for TNode');
@@ -65483,7 +65477,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function ɵɵlistener(eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
-        listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver);
+        var lView = getLView();
+        var tNode = getPreviousOrParentTNode();
+        listenerInternal(lView, lView[RENDERER], tNode, eventName, listenerFn, useCapture, eventTargetResolver);
     }
     /**
     * Registers a synthetic host listener (e.g. `(@foo.start)`) on a component.
@@ -65508,7 +65504,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     */
     function ɵɵcomponentHostSyntheticListener(eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
-        listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver, loadComponentRenderer);
+        var lView = getLView();
+        var tNode = getPreviousOrParentTNode();
+        var renderer = loadComponentRenderer(tNode, lView);
+        listenerInternal(lView, renderer, tNode, eventName, listenerFn, useCapture, eventTargetResolver);
     }
     /**
      * A utility function that checks if a given element has already an event handler registered for an
@@ -65541,11 +65540,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return null;
     }
-    function listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver, loadRendererFn) {
+    function listenerInternal(lView, renderer, tNode, eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
-        var lView = getLView();
-        var tNode = getPreviousOrParentTNode();
         var tView = lView[TVIEW];
+        var isTNodeDirectiveHost = isDirectiveHost(tNode);
         var firstTemplatePass = tView.firstTemplatePass;
         var tCleanup = firstTemplatePass && (tView.cleanup || (tView.cleanup = []));
         ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */, 4 /* ElementContainer */);
@@ -65555,7 +65553,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var native = getNativeByTNode(tNode, lView);
             var resolved = eventTargetResolver ? eventTargetResolver(native) : EMPTY_OBJ;
             var target = resolved.target || native;
-            var renderer = loadRendererFn ? loadRendererFn(tNode, lView) : lView[RENDERER];
             var lCleanup = getCleanup(lView);
             var lCleanupIndex = lCleanup.length;
             var idxOrTargetGetter = eventTargetResolver ?
@@ -65581,7 +65578,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // Also, we don't have to search for existing listeners is there are no directives
                 // matching on a given node as we can't register multiple event handlers for the same event in
                 // a template (this would mean having duplicate attributes).
-                if (!eventTargetResolver && hasDirectives(tNode)) {
+                if (!eventTargetResolver && isTNodeDirectiveHost) {
                     existingListener = findExistingListener(lView, eventName, tNode.index);
                 }
                 if (existingListener !== null) {
@@ -65614,30 +65611,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         // subscribe to directive outputs
-        if (tNode.outputs === undefined) {
-            // if we create TNode here, inputs must be undefined so we know they still need to be
-            // checked
-            tNode.outputs = generatePropertyAliases(tView, tNode, 1 /* Output */);
-        }
-        var outputs = tNode.outputs;
-        var props;
-        if (processOutputs && outputs && (props = outputs[eventName])) {
-            var propsLength = props.length;
-            if (propsLength) {
-                var lCleanup = getCleanup(lView);
-                for (var i = 0; i < propsLength; i += 3) {
-                    var index = props[i];
-                    ngDevMode && assertDataInRange(lView, index);
-                    var minifiedName = props[i + 2];
-                    var directiveInstance = lView[index];
-                    var output = directiveInstance[minifiedName];
-                    if (ngDevMode && !isObservable(output)) {
-                        throw new Error("@Output " + minifiedName + " not initialized in '" + directiveInstance.constructor.name + "'.");
+        if (isTNodeDirectiveHost && processOutputs) {
+            var outputs = tNode.outputs;
+            if (outputs === undefined) {
+                // if we create TNode here, inputs must be undefined so we know they still need to be
+                // checked
+                outputs = tNode.outputs = generatePropertyAliases(tView, tNode, 1 /* Output */);
+            }
+            var props = void 0;
+            if (outputs !== null && (props = outputs[eventName])) {
+                var propsLength = props.length;
+                if (propsLength) {
+                    var lCleanup = getCleanup(lView);
+                    for (var i = 0; i < propsLength; i += 3) {
+                        var index = props[i];
+                        ngDevMode && assertDataInRange(lView, index);
+                        var minifiedName = props[i + 2];
+                        var directiveInstance = lView[index];
+                        var output = directiveInstance[minifiedName];
+                        if (ngDevMode && !isObservable(output)) {
+                            throw new Error("@Output " + minifiedName + " not initialized in '" + directiveInstance.constructor.name + "'.");
+                        }
+                        var subscription = output.subscribe(listenerFn);
+                        var idx = lCleanup.length;
+                        lCleanup.push(listenerFn, subscription);
+                        tCleanup && tCleanup.push(eventName, tNode.index, idx, -(idx + 1));
                     }
-                    var subscription = output.subscribe(listenerFn);
-                    var idx = lCleanup.length;
-                    lCleanup.push(listenerFn, subscription);
-                    tCleanup && tCleanup.push(eventName, tNode.index, idx, -(idx + 1));
                 }
             }
         }
@@ -68511,7 +68510,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+19.sha-5cf5972.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+27.sha-527ce3b.with-local-changes');
 
     /**
      * @license
@@ -78479,8 +78478,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -81441,38 +81439,55 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }, this.staticSymbolCache);
             this.reflectorHost = new ReflectorHost(function () { return _this.program; }, tsLsHost);
             this.staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this.staticSymbolCache, this.summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
-            this.resolver = this.createMetadataResolver();
         }
-        /**
-         * Creates a new metadata resolver. This is needed whenever the program
-         * changes.
-         */
-        TypeScriptServiceHost.prototype.createMetadataResolver = function () {
-            var _this = this;
-            // StaticReflector keeps its own private caches that are not clearable.
-            // We have no choice but to create a new instance to invalidate the caches.
-            // TODO: Revisit this when language service gets rewritten for Ivy.
-            var staticReflector = new StaticReflector(this.summaryResolver, this.staticSymbolResolver, [], // knownMetadataClasses
-            [], // knownMetadataFunctions
-            function (e, filePath) { return _this.collectError(e, filePath); });
-            // Because static reflector above is changed, we need to create a new
-            // resolver.
-            var moduleResolver = new NgModuleResolver(staticReflector);
-            var directiveResolver = new DirectiveResolver(staticReflector);
-            var pipeResolver = new PipeResolver(staticReflector);
-            var elementSchemaRegistry = new DomElementSchemaRegistry();
-            var resourceLoader = new DummyResourceLoader();
-            var urlResolver = createOfflineCompileUrlResolver();
-            var htmlParser = new DummyHtmlParser();
-            // This tracks the CompileConfig in codegen.ts. Currently these options
-            // are hard-coded.
-            var config = new CompilerConfig({
-                defaultEncapsulation: ViewEncapsulation$1.Emulated,
-                useJit: false,
-            });
-            var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-            return new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, staticReflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
-        };
+        Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
+            /**
+             * Return the singleton instance of the MetadataResolver.
+             */
+            get: function () {
+                var _this = this;
+                if (this._resolver) {
+                    return this._resolver;
+                }
+                // StaticReflector keeps its own private caches that are not clearable.
+                // We have no choice but to create a new instance to invalidate the caches.
+                // TODO: Revisit this when language service gets rewritten for Ivy.
+                var staticReflector = new StaticReflector(this.summaryResolver, this.staticSymbolResolver, [], // knownMetadataClasses
+                [], // knownMetadataFunctions
+                function (e, filePath) { return _this.collectError(e, filePath); });
+                // Because static reflector above is changed, we need to create a new
+                // resolver.
+                var moduleResolver = new NgModuleResolver(staticReflector);
+                var directiveResolver = new DirectiveResolver(staticReflector);
+                var pipeResolver = new PipeResolver(staticReflector);
+                var elementSchemaRegistry = new DomElementSchemaRegistry();
+                var resourceLoader = new DummyResourceLoader();
+                var urlResolver = createOfflineCompileUrlResolver();
+                var htmlParser = new DummyHtmlParser();
+                // This tracks the CompileConfig in codegen.ts. Currently these options
+                // are hard-coded.
+                var config = new CompilerConfig({
+                    defaultEncapsulation: ViewEncapsulation$1.Emulated,
+                    useJit: false,
+                });
+                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
+                this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, staticReflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                return this._resolver;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
+            /**
+             * Return the singleton instance of the StaticReflector hosted in the
+             * MetadataResolver.
+             */
+            get: function () {
+                return this.resolver.getReflector();
+            },
+            enumerable: true,
+            configurable: true
+        });
         TypeScriptServiceHost.prototype.getTemplateReferences = function () { return __spread(this.templateReferences); };
         /**
          * Checks whether the program has changed and returns all analyzed modules.
@@ -81490,7 +81505,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.templateReferences = [];
             this.fileToComponent.clear();
             this.collectedErrors.clear();
-            this.resolver = this.createMetadataResolver();
+            // TODO: This is only temporary. When https://github.com/angular/angular/pull/32543
+            // is merged this is no longer necessary.
+            this._resolver = undefined; // Invalidate the resolver
             var analyzeHost = { isSourceFile: function (filePath) { return true; } };
             var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
             this.analyzedModules =
@@ -81621,11 +81638,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
                 return program;
             },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
-            get: function () { return this.resolver.getReflector(); },
             enumerable: true,
             configurable: true
         });
@@ -82077,7 +82089,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+19.sha-5cf5972.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+27.sha-527ce3b.with-local-changes');
 
     /**
      * @license
