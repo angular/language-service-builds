@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/typescript_host" />
-import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
+import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader, StaticReflector } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult } from './common';
 import { Declaration, Diagnostic, LanguageService, LanguageServiceHost, TemplateSource } from './types';
@@ -43,6 +43,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly summaryResolver;
     private readonly reflectorHost;
     private readonly staticSymbolResolver;
+    private resolver;
     private readonly staticSymbolCache;
     private readonly fileToComponent;
     private readonly collectedErrors;
@@ -51,16 +52,11 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private templateReferences;
     private analyzedModules;
     constructor(tsLsHost: ts.LanguageServiceHost, tsLS: ts.LanguageService);
-    private _resolver;
     /**
-     * Return the singleton instance of the MetadataResolver.
+     * Creates a new metadata resolver. This is needed whenever the program
+     * changes.
      */
-    private readonly resolver;
-    /**
-     * Return the singleton instance of the StaticReflector hosted in the
-     * MetadataResolver.
-     */
-    private readonly reflector;
+    private createMetadataResolver;
     getTemplateReferences(): string[];
     /**
      * Checks whether the program has changed and returns all analyzed modules.
@@ -85,6 +81,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     getDeclarations(fileName: string): Declaration[];
     getSourceFile(fileName: string): ts.SourceFile | undefined;
     readonly program: ts.Program;
+    readonly reflector: StaticReflector;
     /**
      * Checks whether the program has changed, and invalidate caches if it has.
      * Returns true if modules are up-to-date, false otherwise.
