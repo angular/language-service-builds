@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+18.sha-0a0489d.with-local-changes
+ * @license Angular v9.0.0-next.6+22.sha-eab959a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18863,7 +18863,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+18.sha-0a0489d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+22.sha-eab959a.with-local-changes');
 
     /**
      * @license
@@ -34171,7 +34171,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+18.sha-0a0489d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+22.sha-eab959a.with-local-changes');
 
     /**
      * @license
@@ -60501,7 +60501,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+18.sha-0a0489d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+22.sha-eab959a.with-local-changes');
 
     /**
      * @license
@@ -64271,7 +64271,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -67512,7 +67512,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -70490,38 +70490,55 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }, this.staticSymbolCache);
             this.reflectorHost = new ReflectorHost(function () { return _this.program; }, tsLsHost);
             this.staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this.staticSymbolCache, this.summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
-            this.resolver = this.createMetadataResolver();
         }
-        /**
-         * Creates a new metadata resolver. This is needed whenever the program
-         * changes.
-         */
-        TypeScriptServiceHost.prototype.createMetadataResolver = function () {
-            var _this = this;
-            // StaticReflector keeps its own private caches that are not clearable.
-            // We have no choice but to create a new instance to invalidate the caches.
-            // TODO: Revisit this when language service gets rewritten for Ivy.
-            var staticReflector = new StaticReflector(this.summaryResolver, this.staticSymbolResolver, [], // knownMetadataClasses
-            [], // knownMetadataFunctions
-            function (e, filePath) { return _this.collectError(e, filePath); });
-            // Because static reflector above is changed, we need to create a new
-            // resolver.
-            var moduleResolver = new NgModuleResolver(staticReflector);
-            var directiveResolver = new DirectiveResolver(staticReflector);
-            var pipeResolver = new PipeResolver(staticReflector);
-            var elementSchemaRegistry = new DomElementSchemaRegistry();
-            var resourceLoader = new DummyResourceLoader();
-            var urlResolver = createOfflineCompileUrlResolver();
-            var htmlParser = new DummyHtmlParser();
-            // This tracks the CompileConfig in codegen.ts. Currently these options
-            // are hard-coded.
-            var config = new CompilerConfig({
-                defaultEncapsulation: ViewEncapsulation$1.Emulated,
-                useJit: false,
-            });
-            var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-            return new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, staticReflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
-        };
+        Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
+            /**
+             * Return the singleton instance of the MetadataResolver.
+             */
+            get: function () {
+                var _this = this;
+                if (this._resolver) {
+                    return this._resolver;
+                }
+                // StaticReflector keeps its own private caches that are not clearable.
+                // We have no choice but to create a new instance to invalidate the caches.
+                // TODO: Revisit this when language service gets rewritten for Ivy.
+                var staticReflector = new StaticReflector(this.summaryResolver, this.staticSymbolResolver, [], // knownMetadataClasses
+                [], // knownMetadataFunctions
+                function (e, filePath) { return _this.collectError(e, filePath); });
+                // Because static reflector above is changed, we need to create a new
+                // resolver.
+                var moduleResolver = new NgModuleResolver(staticReflector);
+                var directiveResolver = new DirectiveResolver(staticReflector);
+                var pipeResolver = new PipeResolver(staticReflector);
+                var elementSchemaRegistry = new DomElementSchemaRegistry();
+                var resourceLoader = new DummyResourceLoader();
+                var urlResolver = createOfflineCompileUrlResolver();
+                var htmlParser = new DummyHtmlParser();
+                // This tracks the CompileConfig in codegen.ts. Currently these options
+                // are hard-coded.
+                var config = new CompilerConfig({
+                    defaultEncapsulation: ViewEncapsulation$1.Emulated,
+                    useJit: false,
+                });
+                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
+                this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, staticReflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                return this._resolver;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
+            /**
+             * Return the singleton instance of the StaticReflector hosted in the
+             * MetadataResolver.
+             */
+            get: function () {
+                return this.resolver.getReflector();
+            },
+            enumerable: true,
+            configurable: true
+        });
         TypeScriptServiceHost.prototype.getTemplateReferences = function () { return __spread(this.templateReferences); };
         /**
          * Checks whether the program has changed and returns all analyzed modules.
@@ -70539,7 +70556,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.templateReferences = [];
             this.fileToComponent.clear();
             this.collectedErrors.clear();
-            this.resolver = this.createMetadataResolver();
+            // TODO: This is only temporary. When https://github.com/angular/angular/pull/32543
+            // is merged this is no longer necessary.
+            this._resolver = undefined; // Invalidate the resolver
             var analyzeHost = { isSourceFile: function (filePath) { return true; } };
             var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
             this.analyzedModules =
@@ -70670,11 +70689,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
                 return program;
             },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
-            get: function () { return this.resolver.getReflector(); },
             enumerable: true,
             configurable: true
         });
@@ -71126,7 +71140,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+18.sha-0a0489d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+22.sha-eab959a.with-local-changes');
 
     /**
      * @license
