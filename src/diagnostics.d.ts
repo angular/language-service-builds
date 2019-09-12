@@ -10,12 +10,21 @@ import { NgAnalyzedModules } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult } from './common';
 import * as ng from './types';
+import { TypeScriptServiceHost } from './typescript_host';
 /**
  * Return diagnostic information for the parsed AST of the template.
  * @param ast contains HTML and template AST
  */
 export declare function getTemplateDiagnostics(ast: AstResult): ng.Diagnostic[];
-export declare function getDeclarationDiagnostics(declarations: ng.Declaration[], modules: NgAnalyzedModules): ng.Diagnostic[];
+/**
+ * Performs a variety diagnostics on directive declarations.
+ *
+ * @param declarations Angular directive declarations
+ * @param modules NgModules in the project
+ * @param host TypeScript service host used to perform TypeScript queries
+ * @return diagnosed errors, if any
+ */
+export declare function getDeclarationDiagnostics(declarations: ng.Declaration[], modules: NgAnalyzedModules, host: Readonly<TypeScriptServiceHost>): ng.Diagnostic[];
 /**
  * Convert ng.Diagnostic to ts.Diagnostic.
  * @param d diagnostic
