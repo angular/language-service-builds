@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.6+3.sha-38fe473.with-local-changes
+ * @license Angular v8.2.6+4.sha-1c5b157.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.6+3.sha-38fe473.with-local-changes');
+    var VERSION$1 = new Version('8.2.6+4.sha-1c5b157.with-local-changes');
 
     /**
      * @license
@@ -38627,7 +38627,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.6+3.sha-38fe473.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.6+4.sha-1c5b157.with-local-changes');
 
     /**
      * @license
@@ -48556,23 +48556,36 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return ReflectorModuleModuleResolutionHost;
     }());
     var ReflectorHost = /** @class */ (function () {
-        function ReflectorHost(getProgram, serviceHost, options) {
-            this.options = options;
+        function ReflectorHost(getProgram, tsLSHost, _) {
+            this.tsLSHost = tsLSHost;
             this.metadataReaderCache = createMetadataReaderCache();
-            this.hostAdapter = new ReflectorModuleModuleResolutionHost(serviceHost, getProgram);
+            // tsLSHost.getCurrentDirectory() returns the directory where tsconfig.json
+            // is located. This is not the same as process.cwd() because the language
+            // service host sets the "project root path" as its current directory.
+            var currentDir = tsLSHost.getCurrentDirectory();
+            this.fakeContainingPath = currentDir ? path.join(currentDir, 'fakeContainingFile.ts') : '';
+            this.hostAdapter = new ReflectorModuleModuleResolutionHost(tsLSHost, getProgram);
+            this.moduleResolutionCache = ts.createModuleResolutionCache(currentDir, function (s) { return s; }, // getCanonicalFileName
+            tsLSHost.getCompilationSettings());
         }
         ReflectorHost.prototype.getMetadataFor = function (modulePath) {
             return readMetadata(modulePath, this.hostAdapter, this.metadataReaderCache);
         };
         ReflectorHost.prototype.moduleNameToFileName = function (moduleName, containingFile) {
             if (!containingFile) {
-                if (moduleName.indexOf('.') === 0) {
+                if (moduleName.startsWith('.')) {
                     throw new Error('Resolution of relative paths requires a containing file.');
                 }
-                // Any containing file gives the same result for absolute imports
-                containingFile = path.join(this.options.basePath, 'index.ts').replace(/\\/g, '/');
+                if (!this.fakeContainingPath) {
+                    // If current directory is empty then the file must belong to an inferred
+                    // project (no tsconfig.json), in which case it's not possible to resolve
+                    // the module without the caller explicitly providing a containing file.
+                    throw new Error("Could not resolve '" + moduleName + "' without a containing file.");
+                }
+                containingFile = this.fakeContainingPath;
             }
-            var resolved = ts.resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
+            var compilerOptions = this.tsLSHost.getCompilationSettings();
+            var resolved = ts.resolveModuleName(moduleName, containingFile, compilerOptions, this.hostAdapter, this.moduleResolutionCache)
                 .resolvedModule;
             return resolved ? resolved.resolvedFileName : null;
         };
@@ -49485,7 +49498,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.6+3.sha-38fe473.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.6+4.sha-1c5b157.with-local-changes');
 
     /**
      * @license
