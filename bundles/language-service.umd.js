@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+48.sha-5328bb2.with-local-changes
+ * @license Angular v9.0.0-next.6+49.sha-bfb3995.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18867,7 +18867,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+48.sha-5328bb2.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+49.sha-bfb3995.with-local-changes');
 
     /**
      * @license
@@ -34192,7 +34192,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+48.sha-5328bb2.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+49.sha-bfb3995.with-local-changes');
 
     /**
      * @license
@@ -53006,7 +53006,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function readPatchedData(target) {
         ngDevMode && assertDefined(target, 'Target expected');
-        return target[MONKEY_PATCH_KEY_NAME];
+        return target[MONKEY_PATCH_KEY_NAME] || null;
     }
     function readPatchedLView(target) {
         var value = readPatchedData(target);
@@ -59995,7 +59995,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @publicApi
      */
     function getComponent(element) {
-        var context = loadLContextFromNode(element);
+        if (!(element instanceof Node))
+            throw new Error('Expecting instance of DOM Node');
+        var context = loadLContext(element, false);
+        if (context === null)
+            return null;
         if (context.component === undefined) {
             context.component = getComponentAtNodeIndex(context.nodeIndex, context.lView);
         }
@@ -60022,7 +60026,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @publicApi
      */
     function getContext(element) {
-        var context = loadLContextFromNode(element);
+        if (!(element instanceof Node))
+            throw new Error('Expecting instance of DOM Node');
+        var context = loadLContext(element, false);
+        if (context === null)
+            return null;
         return context.lView[CONTEXT];
     }
     /**
@@ -60046,7 +60054,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @publicApi
      */
     function getViewComponent(element) {
-        var context = loadLContext(element);
+        var context = loadLContext(element, false);
+        if (context === null)
+            return null;
         var lView = context.lView;
         var parent;
         ngDevMode && assertLView(lView);
@@ -60064,7 +60074,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @publicApi
      */
     function getInjector(target) {
-        var context = loadLContext(target);
+        var context = loadLContext(target, false);
+        if (context === null)
+            return Injector.NULL;
         var tNode = context.lView[TVIEW].data[context.nodeIndex];
         return new NodeInjector(tNode, context.lView);
     }
@@ -60076,7 +60088,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function getInjectionTokens(element) {
         var context = loadLContext(element, false);
-        if (!context)
+        if (context === null)
             return [];
         var lView = context.lView;
         var tView = lView[TVIEW];
@@ -60116,16 +60128,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @publicApi
      */
     function getLocalRefs(target) {
-        var context = loadLContext(target);
+        var context = loadLContext(target, false);
+        if (context === null)
+            return {};
         if (context.localRefs === undefined) {
             context.localRefs = discoverLocalRefs(context.lView, context.nodeIndex);
         }
         return context.localRefs || {};
-    }
-    function loadLContextFromNode(node) {
-        if (!(node instanceof Node))
-            throw new Error('Expecting instance of DOM Node');
-        return loadLContext(node);
     }
     function isBrowserEvents(listener) {
         // Browser events are those which don't have `useCapture` as boolean.
@@ -60153,7 +60162,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @publicApi
      */
     function getListeners(element) {
-        var lContext = loadLContextFromNode(element);
+        if (!(element instanceof Node))
+            throw new Error('Expecting instance of DOM Node');
+        var lContext = loadLContext(element, false);
+        if (lContext === null)
+            return [];
         var lView = lContext.lView;
         var tView = lView[TVIEW];
         var lCleanup = lView[CLEANUP];
@@ -60613,7 +60626,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+48.sha-5328bb2.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+49.sha-bfb3995.with-local-changes');
 
     /**
      * @license
@@ -64383,7 +64396,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -71311,7 +71324,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+48.sha-5328bb2.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+49.sha-bfb3995.with-local-changes');
 
     /**
      * @license
