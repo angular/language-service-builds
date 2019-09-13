@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+46.sha-e1065ee.with-local-changes
+ * @license Angular v9.0.0-next.6+47.sha-0477bfc.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18863,7 +18863,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+46.sha-e1065ee.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+47.sha-0477bfc.with-local-changes');
 
     /**
      * @license
@@ -34188,7 +34188,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+46.sha-e1065ee.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+47.sha-0477bfc.with-local-changes');
 
     /**
      * @license
@@ -57998,7 +57998,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // Select the next injector based on the Self flag - if self is set, the next injector is
                 // the NullInjector, otherwise it's the parent.
                 var nextInjector = !(flags & InjectFlags.Self) ? this.parent : getNullInjector();
-                return nextInjector.get(token, flags & InjectFlags.Optional ? null : notFoundValue);
+                // Set the notFoundValue based on the Optional flag - if optional is set and notFoundValue
+                // is undefined, the value is null, otherwise it's the notFoundValue.
+                notFoundValue = (flags & InjectFlags.Optional) && notFoundValue === THROW_IF_NOT_FOUND ?
+                    null :
+                    notFoundValue;
+                return nextInjector.get(token, notFoundValue);
             }
             catch (e) {
                 if (e.name === 'NullInjectorError') {
@@ -58567,6 +58572,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         else if (!(flags & InjectFlags.Self)) {
             value = parent.get(token, notFoundValue, InjectFlags.Default);
+        }
+        else if (!(flags & InjectFlags.Optional)) {
+            value = Injector.NULL.get(token, notFoundValue);
+        }
+        else {
+            value = Injector.NULL.get(token, typeof notFoundValue !== 'undefined' ? notFoundValue : null);
         }
         return value;
     }
@@ -60598,7 +60609,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+46.sha-e1065ee.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+47.sha-0477bfc.with-local-changes');
 
     /**
      * @license
@@ -71296,7 +71307,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+46.sha-e1065ee.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+47.sha-0477bfc.with-local-changes');
 
     /**
      * @license
