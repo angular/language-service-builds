@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+53.sha-3a90a7c.with-local-changes
+ * @license Angular v9.0.0-next.6+54.sha-f6d6667.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18867,7 +18867,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+53.sha-3a90a7c.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+54.sha-f6d6667.with-local-changes');
 
     /**
      * @license
@@ -28606,7 +28606,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         this.reportError('The template context does not have an implicit value', spanOf$1(ast.sourceSpan));
                     }
                     else {
-                        this.reportError("The template context does not defined a member called '" + ast.value + "'", spanOf$1(ast.sourceSpan));
+                        this.reportError("The template context does not define a member called '" + ast.value + "'", spanOf$1(ast.sourceSpan));
                     }
                 }
             }
@@ -34192,7 +34192,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+53.sha-3a90a7c.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+54.sha-f6d6667.with-local-changes');
 
     /**
      * @license
@@ -60626,7 +60626,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+53.sha-3a90a7c.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+54.sha-f6d6667.with-local-changes');
 
     /**
      * @license
@@ -67637,7 +67637,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -71324,7 +71324,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+53.sha-3a90a7c.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+54.sha-f6d6667.with-local-changes');
 
     /**
      * @license
