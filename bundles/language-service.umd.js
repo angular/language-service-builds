@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+77.sha-4726ac2.with-local-changes
+ * @license Angular v9.0.0-next.6+80.sha-df1c456.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18827,7 +18827,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+80.sha-df1c456.with-local-changes');
 
     /**
      * @license
@@ -34152,7 +34152,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+80.sha-df1c456.with-local-changes');
 
     /**
      * @license
@@ -57323,47 +57323,73 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Assigns a style value to a style property for the given element.
      */
     var setStyle = function (renderer, native, prop, value) {
-        // the reason why this may be `null` is either because
-        // it's a container element or it's a part of a test
-        // environment that doesn't have styling. In either
-        // case it's safe not to apply styling to the element.
-        var nativeStyle = native.style;
-        if (value) {
-            // opacity, z-index and flexbox all have number values
-            // and these need to be converted into strings so that
-            // they can be assigned properly.
-            value = value.toString();
-            ngDevMode && ngDevMode.rendererSetStyle++;
-            renderer && isProceduralRenderer(renderer) ?
-                renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase) :
-                (nativeStyle && nativeStyle.setProperty(prop, value));
-        }
-        else {
-            ngDevMode && ngDevMode.rendererRemoveStyle++;
-            renderer && isProceduralRenderer(renderer) ?
-                renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase) :
-                (nativeStyle && nativeStyle.removeProperty(prop));
+        if (renderer !== null) {
+            if (value) {
+                // opacity, z-index and flexbox all have number values
+                // and these need to be converted into strings so that
+                // they can be assigned properly.
+                value = value.toString();
+                ngDevMode && ngDevMode.rendererSetStyle++;
+                if (isProceduralRenderer(renderer)) {
+                    renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase);
+                }
+                else {
+                    // The reason why native style may be `null` is either because
+                    // it's a container element or it's a part of a test
+                    // environment that doesn't have styling. In either
+                    // case it's safe not to apply styling to the element.
+                    var nativeStyle = native.style;
+                    if (nativeStyle != null) {
+                        nativeStyle.setProperty(prop, value);
+                    }
+                }
+            }
+            else {
+                ngDevMode && ngDevMode.rendererRemoveStyle++;
+                if (isProceduralRenderer(renderer)) {
+                    renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase);
+                }
+                else {
+                    var nativeStyle = native.style;
+                    if (nativeStyle != null) {
+                        nativeStyle.removeProperty(prop);
+                    }
+                }
+            }
         }
     };
     /**
      * Adds/removes the provided className value to the provided element.
      */
     var setClass = function (renderer, native, className, value) {
-        if (className !== '') {
-            // the reason why this may be `null` is either because
-            // it's a container element or it's a part of a test
-            // environment that doesn't have styling. In either
-            // case it's safe not to apply styling to the element.
-            var classList = native.classList;
+        if (renderer !== null && className !== '') {
             if (value) {
                 ngDevMode && ngDevMode.rendererAddClass++;
-                renderer && isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
-                    (classList && classList.add(className));
+                if (isProceduralRenderer(renderer)) {
+                    renderer.addClass(native, className);
+                }
+                else {
+                    // the reason why classList may be `null` is either because
+                    // it's a container element or it's a part of a test
+                    // environment that doesn't have styling. In either
+                    // case it's safe not to apply styling to the element.
+                    var classList = native.classList;
+                    if (classList != null) {
+                        classList.add(className);
+                    }
+                }
             }
             else {
                 ngDevMode && ngDevMode.rendererRemoveClass++;
-                renderer && isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
-                    (classList && classList.remove(className));
+                if (isProceduralRenderer(renderer)) {
+                    renderer.removeClass(native, className);
+                }
+                else {
+                    var classList = native.classList;
+                    if (classList != null) {
+                        classList.remove(className);
+                    }
+                }
             }
         }
     };
@@ -68892,7 +68918,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+80.sha-df1c456.with-local-changes');
 
     /**
      * @license
@@ -78870,7 +78896,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -82540,7 +82567,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+80.sha-df1c456.with-local-changes');
 
     /**
      * @license
