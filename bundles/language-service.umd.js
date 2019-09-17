@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+72.sha-a0d04c6.with-local-changes
+ * @license Angular v9.0.0-next.6+74.sha-4c168ed.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18842,7 +18842,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+74.sha-4c168ed.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34167,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+74.sha-4c168ed.with-local-changes');
 
     /**
      * @license
@@ -50855,7 +50855,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             span: declarationSpan,
                         });
                     }
-                    var _j = metadata.template, template = _j.template, templateUrl = _j.templateUrl;
+                    var _j = metadata.template, template = _j.template, templateUrl = _j.templateUrl, styleUrls = _j.styleUrls;
                     if (template === null && !templateUrl) {
                         results.push({
                             kind: DiagnosticKind$1.Error,
@@ -50876,12 +50876,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         //
                         // TODO: We should create an enum of the various properties a directive can have to use
                         // instead of string literals. We can then perform a mass migration of all literal usages.
-                        var templateUrlNode = findPropertyValueOfType(directiveIdentifier.parent, 'templateUrl', ts.isStringLiteralLike);
+                        var templateUrlNode = findPropertyValueOfType(directiveIdentifier.parent, 'templateUrl', ts.isLiteralExpression);
                         if (!templateUrlNode) {
                             logImpossibleState("templateUrl " + templateUrl + " exists but its TypeScript node doesn't");
                             return [];
                         }
                         results.push.apply(results, __spread(validateUrls([templateUrlNode], host.tsLsHost)));
+                    }
+                    if (styleUrls.length > 0) {
+                        // Find styleUrls value from the directive call expression, which is the parent of the
+                        // directive identifier.
+                        var styleUrlsNode = findPropertyValueOfType(directiveIdentifier.parent, 'styleUrls', ts.isArrayLiteralExpression);
+                        if (!styleUrlsNode) {
+                            logImpossibleState("styleUrls property exists but its TypeScript node doesn't'");
+                            return [];
+                        }
+                        results.push.apply(results, __spread(validateUrls(styleUrlsNode.elements, host.tsLsHost)));
                     }
                 }
                 else if (!directives.has(declaration.type)) {
@@ -50912,34 +50922,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @return diagnosed url errors, if any
      */
     function validateUrls(urls, tsLsHost) {
-        var e_5, _a;
         if (!tsLsHost.fileExists) {
             return [];
         }
         var allErrors = [];
-        try {
-            // TODO(ayazhafiz): most of this logic can be unified with the logic in
-            // definitions.ts#getUrlFromProperty. Create a utility function to be used by both.
-            for (var urls_1 = __values(urls), urls_1_1 = urls_1.next(); !urls_1_1.done; urls_1_1 = urls_1.next()) {
-                var urlNode = urls_1_1.value;
-                var curPath = urlNode.getSourceFile().fileName;
-                var url = path.join(path.dirname(curPath), urlNode.text);
-                if (tsLsHost.fileExists(url))
-                    continue;
-                allErrors.push({
-                    kind: DiagnosticKind$1.Error,
-                    message: "URL does not point to a valid file",
-                    // Exclude opening and closing quotes in the url span.
-                    span: { start: urlNode.getStart() + 1, end: urlNode.end - 1 },
-                });
+        // TODO(ayazhafiz): most of this logic can be unified with the logic in
+        // definitions.ts#getUrlFromProperty. Create a utility function to be used by both.
+        for (var i = 0; i < urls.length; ++i) {
+            var urlNode = urls[i];
+            if (!ts.isStringLiteralLike(urlNode)) {
+                // If a non-string value is assigned to a URL node (like `templateUrl`), a type error will be
+                // picked up by the TS Language Server.
+                continue;
             }
-        }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
-        finally {
-            try {
-                if (urls_1_1 && !urls_1_1.done && (_a = urls_1.return)) _a.call(urls_1);
-            }
-            finally { if (e_5) throw e_5.error; }
+            var curPath = urlNode.getSourceFile().fileName;
+            var url = path.join(path.dirname(curPath), urlNode.text);
+            if (tsLsHost.fileExists(url))
+                continue;
+            allErrors.push({
+                kind: DiagnosticKind$1.Error,
+                message: "URL does not point to a valid file",
+                // Exclude opening and closing quotes in the url span.
+                span: { start: urlNode.getStart() + 1, end: urlNode.end - 1 },
+            });
         }
         return allErrors;
     }
@@ -50976,7 +50981,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param elements
      */
     function uniqueBySpan(elements) {
-        var e_6, _a;
+        var e_5, _a;
         var result = [];
         var map = new Map();
         try {
@@ -50994,12 +50999,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         return result;
     }
@@ -60782,7 +60787,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+74.sha-4c168ed.with-local-changes');
 
     /**
      * @license
@@ -67793,7 +67798,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -71480,7 +71485,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+74.sha-4c168ed.with-local-changes');
 
     /**
      * @license
