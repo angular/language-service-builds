@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+71.sha-b741a1c.with-local-changes
+ * @license Angular v9.0.0-next.6+72.sha-a0d04c6.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18827,7 +18827,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
 
     /**
      * @license
@@ -34152,7 +34152,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
 
     /**
      * @license
@@ -54094,6 +54094,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return isLContainer(parent) ? parent[PARENT] : parent;
     }
     /**
+     * Retrieve the root view from any component or `LView` by walking the parent `LView` until
+     * reaching the root `LView`.
+     *
+     * @param componentOrLView any component or `LView`
+     */
+    function getRootView(componentOrLView) {
+        ngDevMode && assertDefined(componentOrLView, 'component');
+        var lView = isLView(componentOrLView) ? componentOrLView : readPatchedLView(componentOrLView);
+        while (lView && !(lView[FLAGS] & 512 /* IsRoot */)) {
+            lView = getLViewParent(lView);
+        }
+        ngDevMode && assertLView(lView);
+        return lView;
+    }
+    /**
      * Given an `LView`, find the closest declaration view which is not an embedded view.
      *
      * This method searches for the `LView` associated with the component which declared the `LView`.
@@ -54113,6 +54128,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         ngDevMode && assertLView(lView);
         return lView;
+    }
+    /**
+     * Returns the `RootContext` instance that is associated with
+     * the application where the target is situated. It does this by walking the parent views until it
+     * gets to the root view, then getting the context off of that.
+     *
+     * @param viewOrComponent the `LView` or component to get the root context for.
+     */
+    function getRootContext(viewOrComponent) {
+        var rootView = getRootView(viewOrComponent);
+        ngDevMode &&
+            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
+        return rootView[CONTEXT];
     }
 
     /**
@@ -55941,6 +55969,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             directives: undefined,
             localRefs: undefined,
         };
+    }
+    /**
+     * Takes a component instance and returns the view for that component.
+     *
+     * @param componentInstance
+     * @returns The component's view
+     */
+    function getComponentViewByInstance(componentInstance) {
+        var lView = readPatchedData(componentInstance);
+        var view;
+        if (Array.isArray(lView)) {
+            var nodeIndex = findViaComponent(lView, componentInstance);
+            view = getComponentViewByIndex(nodeIndex, lView);
+            var context = createLContext(lView, nodeIndex, view[HOST]);
+            context.component = componentInstance;
+            attachPatchData(componentInstance, context);
+            attachPatchData(context.native, context);
+        }
+        else {
+            var context = lView;
+            view = getComponentViewByIndex(context.nodeIndex, context.lView);
+        }
+        return view;
     }
     /**
      * Assigns the given data to the given target (which could be a component,
@@ -59988,6 +60039,40 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             lView = parent_1;
         }
         return null;
+    }
+    /**
+     * Used to schedule change detection on the whole application.
+     *
+     * Unlike `tick`, `scheduleTick` coalesces multiple calls into one change detection run.
+     * It is usually called indirectly by calling `markDirty` when the view needs to be
+     * re-rendered.
+     *
+     * Typically `scheduleTick` uses `requestAnimationFrame` to coalesce multiple
+     * `scheduleTick` requests. The scheduling function can be overridden in
+     * `renderComponent`'s `scheduler` option.
+     */
+    function scheduleTick(rootContext, flags) {
+        var nothingScheduled = rootContext.flags === 0 /* Empty */;
+        rootContext.flags |= flags;
+        if (nothingScheduled && rootContext.clean == _CLEAN_PROMISE) {
+            var res_1;
+            rootContext.clean = new Promise(function (r) { return res_1 = r; });
+            rootContext.scheduler(function () {
+                if (rootContext.flags & 1 /* DetectChanges */) {
+                    rootContext.flags &= ~1 /* DetectChanges */;
+                    tickRootContext(rootContext);
+                }
+                if (rootContext.flags & 2 /* FlushPlayers */) {
+                    rootContext.flags &= ~2 /* FlushPlayers */;
+                    var playerHandler = rootContext.playerHandler;
+                    if (playerHandler) {
+                        playerHandler.flushPlayers();
+                    }
+                }
+                rootContext.clean = _CLEAN_PROMISE;
+                res_1(null);
+            });
+        }
     }
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
@@ -64502,6 +64587,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Mark the component as dirty (needing change detection).
+     *
+     * Marking a component dirty will schedule a change detection on this
+     * component at some point in the future. Marking an already dirty
+     * component as dirty is a noop. Only one outstanding change detection
+     * can be scheduled per component tree. (Two components bootstrapped with
+     * separate `renderComponent` will have separate schedulers)
+     *
+     * When the root component is bootstrapped with `renderComponent`, a scheduler
+     * can be provided.
+     *
+     * @param component Component to mark as dirty.
+     *
+     * @publicApi
+     */
+    function markDirty(component) {
+        ngDevMode && assertDefined(component, 'component');
+        var rootView = markViewDirty(getComponentViewByInstance(component));
+        ngDevMode && assertDefined(rootView[CONTEXT], 'rootContext should be defined');
+        scheduleTick(rootView[CONTEXT], 1 /* DetectChanges */);
+    }
 
     /**
      * @license
@@ -67628,6 +67735,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return lView[FLAGS] & 512 /* IsRoot */ ? null : lView[CONTEXT];
     }
     /**
+     * Retrieve all root components.
+     *
+     * Root components are those which have been bootstrapped by Angular.
+     *
+     * @param target A DOM element, component or directive instance.
+     *
+     * @publicApi
+     */
+    function getRootComponents(target) {
+        return __spread(getRootContext(target).components);
+    }
+    /**
      * Retrieves an `Injector` associated with the element, component or directive.
      *
      * @param target A DOM element, component or directive instance.
@@ -67670,6 +67789,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return providerTokens;
     }
+    /**
+     * Retrieves directives associated with a given DOM host element.
+     *
+     * @param target A DOM element, component or directive instance.
+     *
+     * @publicApi
+     */
+    function getDirectives(target) {
+        var context = loadLContext(target);
+        if (context.directives === undefined) {
+            context.directives = getDirectivesAtNodeIndex(context.nodeIndex, context.lView, false);
+        }
+        return context.directives || [];
+    }
     function loadLContext(target, throwOnNotFound) {
         if (throwOnNotFound === void 0) { throwOnNotFound = true; }
         var context = getLContext(target);
@@ -67696,6 +67829,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             context.localRefs = discoverLocalRefs(context.lView, context.nodeIndex);
         }
         return context.localRefs || {};
+    }
+    /**
+     * Retrieve the host element of the component.
+     *
+     * Use this function to retrieve the host element of the component. The host
+     * element is the element which the component is associated with.
+     *
+     * @param directive Component or Directive for which the host element should be retrieved.
+     *
+     * @publicApi
+     */
+    function getHostElement(directive) {
+        return getLContext(directive).native;
     }
     function isBrowserEvents(listener) {
         // Browser events are those which don't have `useCapture` as boolean.
@@ -67786,6 +67932,58 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This file introduces series of globally accessible debug tools
+     * to allow for the Angular debugging story to function.
+     *
+     * To see this in action run the following command:
+     *
+     *   bazel run --define=compile=aot
+     *   //packages/core/test/bundling/todo:devserver
+     *
+     *  Then load `localhost:5432` and start using the console tools.
+     */
+    /**
+     * This value reflects the property on the window where the dev
+     * tools are patched (window.ng).
+     * */
+    var GLOBAL_PUBLISH_EXPANDO_KEY = 'ng';
+    var _published = false;
+    /**
+     * Publishes a collection of default debug tools onto`window.ng`.
+     *
+     * These functions are available globally when Angular is in development
+     * mode and are automatically stripped away from prod mode is on.
+     */
+    function publishDefaultGlobalUtils() {
+        if (!_published) {
+            _published = true;
+            publishGlobalUtil('getComponent', getComponent);
+            publishGlobalUtil('getContext', getContext$1);
+            publishGlobalUtil('getListeners', getListeners);
+            publishGlobalUtil('getViewComponent', getViewComponent);
+            publishGlobalUtil('getHostElement', getHostElement);
+            publishGlobalUtil('getInjector', getInjector);
+            publishGlobalUtil('getRootComponents', getRootComponents);
+            publishGlobalUtil('getDirectives', getDirectives);
+            publishGlobalUtil('markDirty', markDirty);
+        }
+    }
+    /**
+     * Publishes the given function to `window.ng` so that it can be
+     * used from the browser console when an application is not in production.
+     */
+    function publishGlobalUtil(name, fn) {
+        var w = _global$1;
+        ngDevMode && assertDefined(fn, 'function not defined');
+        if (w) {
+            var container = w[GLOBAL_PUBLISH_EXPANDO_KEY];
+            if (!container) {
+                container = w[GLOBAL_PUBLISH_EXPANDO_KEY] = {};
+            }
+            container[name] = fn;
+        }
+    }
 
     /**
      * @license
@@ -68656,7 +68854,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
 
     /**
      * @license
@@ -77997,6 +78195,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return resolveComponentResources(function (url) { return Promise.resolve(resourceLoader.get(url)); })
             .then(function () { return moduleFactory; });
     }
+    function publishDefaultGlobalUtils__POST_R3__() {
+        ngDevMode && publishDefaultGlobalUtils();
+    }
+    var publishDefaultGlobalUtils$1 = publishDefaultGlobalUtils__POST_R3__;
     var isBoundToModule = isBoundToModule__POST_R3__;
     function isBoundToModule__POST_R3__(cf) {
         return cf.isBoundToModule;
@@ -78013,6 +78215,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             !_platform.injector.get(ALLOW_MULTIPLE_PLATFORMS, false)) {
             throw new Error('There can be only one platform. Destroy the previous one to create a new one.');
         }
+        publishDefaultGlobalUtils$1();
         _platform = injector.get(PlatformRef);
         var inits = injector.get(PLATFORM_INITIALIZER, null);
         if (inits)
@@ -82300,7 +82503,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+72.sha-a0d04c6.with-local-changes');
 
     /**
      * @license
