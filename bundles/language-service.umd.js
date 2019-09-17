@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+66.sha-e5a3de5.with-local-changes
+ * @license Angular v9.0.0-next.6+71.sha-b741a1c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15990,6 +15990,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return { id: id, meaning: meaning, description: description };
     }
+    /**
+     * Serialize the given `meta` into a string that can be used in a `$localize` tagged string metadata
+     * block. The format is the same as that parsed by `parseI18nMeta()`.
+     *
+     * @param meta The metadata to serialize
+     */
+    function serializeI18nMeta(meta) {
+        var metaBlock = meta.description || '';
+        if (meta.meaning) {
+            metaBlock = meta.meaning + "|" + metaBlock;
+        }
+        if (meta.id) {
+            metaBlock = metaBlock + "@@" + meta.id;
+        }
+        return metaBlock;
+    }
     // Converts i18n meta information for a message (id, description, meaning)
     // to a JsDoc statement formatted as expected by the Closure compiler.
     function i18nMetaToDocStmt(meta) {
@@ -16059,13 +16075,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
 
     function createLocalizeStatements(variable, message, params) {
         var statements = [];
-        // TODO: re-enable these comments when we have a plan on how to make them work so that Closure
-        // compiler doesn't complain about the JSDOC comments.
-        // const jsdocComment = i18nMetaToDocStmt(metaFromI18nMessage(message));
-        // if (jsdocComment !== null) {
-        //   statements.push(jsdocComment);
-        // }
+        var metaBlock = serializeI18nMeta(metaFromI18nMessage(message));
         var _a = serializeI18nMessageForLocalize(message), messageParts = _a.messageParts, placeHolders = _a.placeHolders;
+        // Update first message part with metadata
+        messageParts[0] = ":" + metaBlock + ":" + messageParts[0];
         statements.push(new ExpressionStatement(variable.set(localizedString(messageParts, placeHolders, placeHolders.map(function (ph) { return params[ph]; })))));
         return statements;
     }
@@ -18829,7 +18842,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+66.sha-e5a3de5.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
 
     /**
      * @license
@@ -34154,7 +34167,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+66.sha-e5a3de5.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
 
     /**
      * @license
@@ -60769,7 +60782,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+66.sha-e5a3de5.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
 
     /**
      * @license
@@ -71467,7 +71480,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+66.sha-e5a3de5.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+71.sha-b741a1c.with-local-changes');
 
     /**
      * @license
