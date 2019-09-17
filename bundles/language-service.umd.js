@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.6+75.sha-f1b1de9.with-local-changes
+ * @license Angular v9.0.0-next.6+77.sha-4726ac2.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18842,7 +18842,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.6+75.sha-f1b1de9.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34167,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.6+75.sha-f1b1de9.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
 
     /**
      * @license
@@ -55682,21 +55682,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var debugNodes = [];
             var tNodeCursor = tNode;
             while (tNodeCursor) {
-                var rawValue = lView[tNode.index];
-                var native = unwrapRNode(rawValue);
-                var componentLViewDebug = toDebug(readLViewValue(rawValue));
-                var styles = isStylingContext(tNode.styles) ?
-                    new NodeStylingDebug(tNode.styles, lView) :
-                    null;
-                var classes = isStylingContext(tNode.classes) ?
-                    new NodeStylingDebug(tNode.classes, lView, true) :
-                    null;
-                debugNodes.push({
-                    html: toHtml(native),
-                    native: native, styles: styles, classes: classes,
-                    nodes: toDebugNodes(tNode.child, lView),
-                    component: componentLViewDebug,
-                });
+                debugNodes.push(buildDebugNode(tNodeCursor, lView));
                 tNodeCursor = tNodeCursor.next;
             }
             return debugNodes;
@@ -55704,6 +55690,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else {
             return null;
         }
+    }
+    function buildDebugNode(tNode, lView) {
+        var rawValue = lView[tNode.index];
+        var native = unwrapRNode(rawValue);
+        var componentLViewDebug = toDebug(readLViewValue(rawValue));
+        var styles = isStylingContext(tNode.styles) ?
+            new NodeStylingDebug(tNode.styles, lView) :
+            null;
+        var classes = isStylingContext(tNode.classes) ?
+            new NodeStylingDebug(tNode.classes, lView, true) :
+            null;
+        return {
+            html: toHtml(native),
+            native: native, styles: styles, classes: classes,
+            nodes: toDebugNodes(tNode.child, lView),
+            component: componentLViewDebug,
+        };
     }
     var LContainerDebug = /** @class */ (function () {
         function LContainerDebug(_raw_lContainer) {
@@ -60787,7 +60790,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.6+75.sha-f1b1de9.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
 
     /**
      * @license
@@ -71485,7 +71488,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.6+75.sha-f1b1de9.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.6+77.sha-4726ac2.with-local-changes');
 
     /**
      * @license
