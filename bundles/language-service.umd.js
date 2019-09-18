@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.7+5.sha-708ae4c.with-local-changes
+ * @license Angular v9.0.0-next.7+10.sha-0450f39.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18842,7 +18842,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.7+5.sha-708ae4c.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.7+10.sha-0450f39.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34167,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.7+5.sha-708ae4c.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.7+10.sha-0450f39.with-local-changes');
 
     /**
      * @license
@@ -52741,119 +52741,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /** A special value which designates that a value has not changed. */
-    var NO_CHANGE = {};
-
-    function getConfig(context) {
-        return context[0 /* ConfigPosition */];
-    }
-    function hasConfig(context, flag) {
-        return (getConfig(context) & flag) !== 0;
-    }
-    /**
-     * Determines whether or not to apply styles/classes directly or via context resolution.
-     *
-     * There are three cases that are matched here:
-     * 1. context is locked for template or host bindings (depending on `hostBindingsMode`)
-     * 2. There are no collisions (i.e. properties with more than one binding)
-     * 3. There are only "prop" or "map" bindings present, but not both
-     */
-    function allowDirectStyling(context, hostBindingsMode) {
-        var config = getConfig(context);
-        return ((config & getLockedConfig(hostBindingsMode)) !== 0) &&
-            ((config & 4 /* HasCollisions */) === 0) &&
-            ((config & 3 /* HasPropAndMapBindings */) !== 3 /* HasPropAndMapBindings */);
-    }
-    function getProp(context, index) {
-        return context[index + 3 /* PropOffset */];
-    }
-    function getPropConfig(context, index) {
-        return context[index + 0 /* ConfigOffset */] &
-            1 /* Mask */;
-    }
-    function isSanitizationRequired(context, index) {
-        return (getPropConfig(context, index) & 1 /* SanitizationRequired */) !==
-            0;
-    }
-    function getGuardMask(context, index, isHostBinding) {
-        var position = index + (isHostBinding ? 2 /* HostBindingsBitGuardOffset */ :
-            1 /* TemplateBitGuardOffset */);
-        return context[position];
-    }
-    function getValuesCount(context) {
-        return getTotalSources(context) + 1;
-    }
-    function getTotalSources(context) {
-        return context[1 /* TotalSourcesPosition */];
-    }
-    function getBindingValue(context, index, offset) {
-        return context[index + 4 /* BindingsStartOffset */ + offset];
-    }
-    function getDefaultValue(context, index) {
-        return context[index + 4 /* BindingsStartOffset */ + getTotalSources(context)];
-    }
-    function getValue(data, bindingIndex) {
-        return bindingIndex > 0 ? data[bindingIndex] : null;
-    }
-    function isContextLocked(context, hostBindingsMode) {
-        return hasConfig(context, getLockedConfig(hostBindingsMode));
-    }
-    function getLockedConfig(hostBindingsMode) {
-        return hostBindingsMode ? 128 /* HostBindingsLocked */ :
-            64 /* TemplateBindingsLocked */;
-    }
-    function getPropValuesStartPosition(context) {
-        var startPosition = 3 /* ValuesStartPosition */;
-        if (hasConfig(context, 2 /* HasMapBindings */)) {
-            startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
-        }
-        return startPosition;
-    }
-    /**
-     * Determines whether the provided styling value is truthy or falsy.
-     */
-    function isStylingValueDefined(value) {
-        // the reason why null is compared against is because
-        // a CSS class value that is set to `false` must be
-        // respected (otherwise it would be treated as falsy).
-        // Empty string values are because developers usually
-        // set a value to an empty string to remove it.
-        return value != null && value !== '';
-    }
-    function isStylingContext(value) {
-        // the StylingMapArray is in the format of [initial, prop, string, prop, string]
-        // and this is the defining value to distinguish between arrays
-        return Array.isArray(value) && value.length >= 3 /* ValuesStartPosition */ &&
-            typeof value[1] !== 'string';
-    }
-    function getMapProp(map, index) {
-        return map[index + 0 /* PropOffset */];
-    }
-    function getMapValue(map, index) {
-        return map[index + 1 /* ValueOffset */];
-    }
-    /**
-     * Converts the provided styling map array into a key value map.
-     */
-    function stylingMapToStringMap(map) {
-        var stringMap = {};
-        if (map) {
-            for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
-                var prop = getMapProp(map, i);
-                var value = getMapValue(map, i);
-                stringMap[prop] = value;
-            }
-        }
-        return stringMap;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // TODO: cleanup once the code is merged in angular/angular
     var RendererStyleFlags3;
     (function (RendererStyleFlags3) {
@@ -52972,6 +52859,119 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else {
             return value;
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
+
+    function getConfig(context) {
+        return context[0 /* ConfigPosition */];
+    }
+    function hasConfig(context, flag) {
+        return (getConfig(context) & flag) !== 0;
+    }
+    /**
+     * Determines whether or not to apply styles/classes directly or via context resolution.
+     *
+     * There are three cases that are matched here:
+     * 1. context is locked for template or host bindings (depending on `hostBindingsMode`)
+     * 2. There are no collisions (i.e. properties with more than one binding)
+     * 3. There are only "prop" or "map" bindings present, but not both
+     */
+    function allowDirectStyling(context, hostBindingsMode) {
+        var config = getConfig(context);
+        return ((config & getLockedConfig(hostBindingsMode)) !== 0) &&
+            ((config & 4 /* HasCollisions */) === 0) &&
+            ((config & 3 /* HasPropAndMapBindings */) !== 3 /* HasPropAndMapBindings */);
+    }
+    function getProp(context, index) {
+        return context[index + 3 /* PropOffset */];
+    }
+    function getPropConfig(context, index) {
+        return context[index + 0 /* ConfigOffset */] &
+            1 /* Mask */;
+    }
+    function isSanitizationRequired(context, index) {
+        return (getPropConfig(context, index) & 1 /* SanitizationRequired */) !==
+            0;
+    }
+    function getGuardMask(context, index, isHostBinding) {
+        var position = index + (isHostBinding ? 2 /* HostBindingsBitGuardOffset */ :
+            1 /* TemplateBitGuardOffset */);
+        return context[position];
+    }
+    function getValuesCount(context) {
+        return getTotalSources(context) + 1;
+    }
+    function getTotalSources(context) {
+        return context[1 /* TotalSourcesPosition */];
+    }
+    function getBindingValue(context, index, offset) {
+        return context[index + 4 /* BindingsStartOffset */ + offset];
+    }
+    function getDefaultValue(context, index) {
+        return context[index + 4 /* BindingsStartOffset */ + getTotalSources(context)];
+    }
+    function getValue(data, bindingIndex) {
+        return bindingIndex > 0 ? data[bindingIndex] : null;
+    }
+    function isContextLocked(context, hostBindingsMode) {
+        return hasConfig(context, getLockedConfig(hostBindingsMode));
+    }
+    function getLockedConfig(hostBindingsMode) {
+        return hostBindingsMode ? 128 /* HostBindingsLocked */ :
+            64 /* TemplateBindingsLocked */;
+    }
+    function getPropValuesStartPosition(context) {
+        var startPosition = 3 /* ValuesStartPosition */;
+        if (hasConfig(context, 2 /* HasMapBindings */)) {
+            startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
+        }
+        return startPosition;
+    }
+    /**
+     * Determines whether the provided styling value is truthy or falsy.
+     */
+    function isStylingValueDefined(value) {
+        // the reason why null is compared against is because
+        // a CSS class value that is set to `false` must be
+        // respected (otherwise it would be treated as falsy).
+        // Empty string values are because developers usually
+        // set a value to an empty string to remove it.
+        return value != null && value !== '';
+    }
+    function isStylingContext(value) {
+        // the StylingMapArray is in the format of [initial, prop, string, prop, string]
+        // and this is the defining value to distinguish between arrays
+        return Array.isArray(value) && value.length >= 3 /* ValuesStartPosition */ &&
+            typeof value[1] !== 'string';
+    }
+    function getMapProp(map, index) {
+        return map[index + 0 /* PropOffset */];
+    }
+    function getMapValue(map, index) {
+        return map[index + 1 /* ValueOffset */];
+    }
+    /**
+     * Converts the provided styling map array into a key value map.
+     */
+    function stylingMapToStringMap(map) {
+        var stringMap = {};
+        if (map) {
+            for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
+                var prop = getMapProp(map, i);
+                var value = getMapValue(map, i);
+                stringMap[prop] = value;
+            }
+        }
+        return stringMap;
     }
 
     /**
@@ -54609,7 +54609,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * map-based bindings up to sync with the application of prop-based
      * bindings.
      *
-     * Visit `styling_next/map_based_bindings.ts` to learn more about how the
+     * Visit `styling/map_based_bindings.ts` to learn more about how the
      * algorithm works for map-based styling bindings.
      *
      * Note that this function is not designed to be called in isolation (use
@@ -60790,7 +60790,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.7+5.sha-708ae4c.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.7+10.sha-0450f39.with-local-changes');
 
     /**
      * @license
@@ -71495,7 +71495,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.7+5.sha-708ae4c.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.7+10.sha-0450f39.with-local-changes');
 
     /**
      * @license
