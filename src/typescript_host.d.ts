@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/typescript_host" />
-import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
+import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader, StaticSymbol } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult } from './common';
 import { Declaration, Diagnostic, LanguageService, LanguageServiceHost, TemplateSource } from './types';
@@ -118,6 +118,11 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * @param position Position of the template in the TS file, otherwise ignored.
      */
     getTemplateAstAtPosition(fileName: string, position: number): AstResult | undefined;
+    /**
+     * Gets a StaticSymbol from a file and symbol name.
+     * @return Angular StaticSymbol matching the file and name, if any
+     */
+    getStaticSymbol(file: string, name: string): StaticSymbol | undefined;
     /**
      * Find the NgModule which the directive associated with the `classSymbol`
      * belongs to, then return its schema and transitive directives and pipes.
