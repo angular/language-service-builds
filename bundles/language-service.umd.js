@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.7+18.sha-32f4544.with-local-changes
+ * @license Angular v9.0.0-next.7+19.sha-86fd571.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18842,7 +18842,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.7+18.sha-32f4544.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.7+19.sha-86fd571.with-local-changes');
 
     /**
      * @license
@@ -34167,7 +34167,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.7+18.sha-32f4544.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.7+19.sha-86fd571.with-local-changes');
 
     /**
      * @license
@@ -54659,6 +54659,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         // determine whether or not to apply the target property or to skip it
                         var mode = mapsMode | (valueApplied ? 4 /* SkipTargetProp */ :
                             2 /* ApplyTargetProp */);
+                        // the first column in the context (when `j == 0`) is special-cased for
+                        // template bindings. If and when host bindings are being processed then
+                        // the first column will still be iterated over, but the values will only
+                        // be checked against (not applied). If and when this happens we need to
+                        // notify the map-based syncing code to know not to apply the values it
+                        // comes across in the very first map-based binding (which is also located
+                        // in column zero).
                         if (hostBindingsMode && j === 0) {
                             mode |= 16 /* CheckValuesOnly */;
                         }
@@ -54996,18 +55003,27 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * - value is being applied:
      *   if the value is being applied from this current styling
-     *   map then there is no need to apply it in a deeper map.
+     *   map then there is no need to apply it in a deeper map
+     *   (i.e. the `SkipTargetProp` flag is set)
      *
      * - value is being not applied:
      *   apply the value if it is found in a deeper map.
+     *   (i.e. the `SkipTargetProp` flag is unset)
      *
      * When these reasons are encountered the flags will for the
      * inner map mode will be configured.
      */
-    function resolveInnerMapMode(currentMode, valueIsDefined, isExactMatch) {
+    function resolveInnerMapMode(currentMode, valueIsDefined, isTargetPropMatched) {
         var innerMode = currentMode;
-        if (!valueIsDefined && !(currentMode & 4 /* SkipTargetProp */) &&
-            (isExactMatch || (currentMode & 1 /* ApplyAllValues */))) {
+        // the statements below figures out whether or not an inner styling map
+        // is allowed to apply its value or not. The main thing to keep note
+        // of is that if the target prop isn't matched then its expected that
+        // all values before it are allowed to be applied so long as "apply all values"
+        // is set to true.
+        var applyAllValues = currentMode & 1 /* ApplyAllValues */;
+        var applyTargetProp = currentMode & 2 /* ApplyTargetProp */;
+        var allowInnerApply = !valueIsDefined && (isTargetPropMatched ? applyTargetProp : applyAllValues);
+        if (allowInnerApply) {
             // case 1: set the mode to apply the targeted prop value if it
             // ends up being encountered in another map value
             innerMode |= 2 /* ApplyTargetProp */;
@@ -60903,7 +60919,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.7+18.sha-32f4544.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.7+19.sha-86fd571.with-local-changes');
 
     /**
      * @license
@@ -71608,7 +71624,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.7+18.sha-32f4544.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.7+19.sha-86fd571.with-local-changes');
 
     /**
      * @license
