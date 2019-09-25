@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.7+22.sha-3a96631.with-local-changes
+ * @license Angular v9.0.0-next.7+24.sha-948714c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18827,7 +18827,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.7+22.sha-3a96631.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.7+24.sha-948714c.with-local-changes');
 
     /**
      * @license
@@ -34152,7 +34152,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.7+22.sha-3a96631.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.7+24.sha-948714c.with-local-changes');
 
     /**
      * @license
@@ -57838,8 +57838,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Instantiates and attaches an instance of `TStylingContextDebug` to the provided context
      */
-    function attachStylingDebugObject(context, isClassBased) {
-        var debug = new TStylingContextDebug(context, isClassBased);
+    function attachStylingDebugObject(context) {
+        var debug = new TStylingContextDebug(context);
         attachDebugObject(context, debug);
         return debug;
     }
@@ -57850,12 +57850,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * application has `ngDevMode` activated.
      */
     var TStylingContextDebug = /** @class */ (function () {
-        function TStylingContextDebug(context, _isClassBased) {
+        function TStylingContextDebug(context) {
             this.context = context;
-            this._isClassBased = _isClassBased;
         }
-        Object.defineProperty(TStylingContextDebug.prototype, "config", {
-            get: function () { return buildConfig(this.context); },
+        Object.defineProperty(TStylingContextDebug.prototype, "isTemplateLocked", {
+            get: function () { return isContextLocked(this.context, true); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TStylingContextDebug.prototype, "isHostBindingsLocked", {
+            get: function () { return isContextLocked(this.context, false); },
             enumerable: true,
             configurable: true
         });
@@ -57863,7 +57867,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             /**
              * Returns a detailed summary of each styling entry in the context.
              *
-             * See `DebugStylingContextEntry`.
+             * See `TStylingTupleSummary`.
              */
             get: function () {
                 var context = this.context;
@@ -57899,118 +57903,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             enumerable: true,
             configurable: true
         });
-        /**
-         * Prints a detailed summary of each styling source grouped together with each binding index in
-         * the context.
-         */
-        TStylingContextDebug.prototype.printSources = function () {
-            var output = '\n';
-            var context = this.context;
-            var prefix = this._isClassBased ? 'class' : 'style';
-            var bindingsBySource = [];
-            var totalColumns = getValuesCount(context);
-            var itemsPerRow = 4 /* BindingsStartOffset */ + totalColumns;
-            for (var i = 0; i < totalColumns; i++) {
-                var isDefaultColumn = i === totalColumns - 1;
-                var hostBindingsMode = i !== TEMPLATE_DIRECTIVE_INDEX;
-                var type = getTypeFromColumn(i, totalColumns);
-                var entries = [];
-                var j = 3 /* ValuesStartPosition */;
-                while (j < context.length) {
-                    var value = getBindingValue(context, j, i);
-                    if (isDefaultColumn || value > 0) {
-                        var bitMask = getGuardMask(context, j, hostBindingsMode);
-                        var bindingIndex = isDefaultColumn ? -1 : value;
-                        var prop = getProp(context, j);
-                        var isMapBased = prop === MAP_BASED_ENTRY_PROP_NAME;
-                        var binding = "" + prefix + (isMapBased ? '' : '.' + prop);
-                        entries.push({ binding: binding, value: value, bindingIndex: bindingIndex, bitMask: bitMask });
-                    }
-                    j += itemsPerRow;
-                }
-                bindingsBySource.push({ type: type, entries: entries.sort(function (a, b) { return a.bindingIndex - b.bindingIndex; }) });
-            }
-            bindingsBySource.forEach(function (entry) {
-                output += "[" + entry.type.toUpperCase() + "]\n";
-                output += repeat('-', entry.type.length + 2) + '\n';
-                var tab = '  ';
-                entry.entries.forEach(function (entry) {
-                    var isDefault = typeof entry.value !== 'number';
-                    var value = entry.value;
-                    if (!isDefault || value !== null) {
-                        output += tab + "[" + entry.binding + "] = `" + value + "`";
-                        output += '\n';
-                    }
-                });
-                output += '\n';
-            });
-            /* tslint:disable */
-            console.log(output);
-        };
-        /**
-         * Prints a detailed table of the entire styling context.
-         */
-        TStylingContextDebug.prototype.printTable = function () {
-            // IE (not Edge) is the only browser that doesn't support this feature. Because
-            // these debugging tools are not apart of the core of Angular (they are just
-            // extra tools) we can skip-out on older browsers.
-            if (!console.table) {
-                throw new Error('This feature is not supported in your browser');
-            }
-            var context = this.context;
-            var table = [];
-            var totalColumns = getValuesCount(context);
-            var itemsPerRow = 4 /* BindingsStartOffset */ + totalColumns;
-            var totalProps = Math.floor(context.length / itemsPerRow);
-            var i = 3 /* ValuesStartPosition */;
-            while (i < context.length) {
-                var prop = getProp(context, i);
-                var isMapBased = prop === MAP_BASED_ENTRY_PROP_NAME;
-                var entry = {
-                    prop: prop,
-                    'tpl mask': generateBitString(getGuardMask(context, i, false), isMapBased, totalProps),
-                    'host mask': generateBitString(getGuardMask(context, i, true), isMapBased, totalProps),
-                };
-                for (var j = 0; j < totalColumns; j++) {
-                    var key = getTypeFromColumn(j, totalColumns);
-                    var value = getBindingValue(context, i, j);
-                    entry[key] = value;
-                }
-                i += itemsPerRow;
-                table.push(entry);
-            }
-            /* tslint:disable */
-            console.table(table);
-        };
         return TStylingContextDebug;
     }());
-    function generateBitString(value, isMapBased, totalProps) {
-        if (isMapBased || value > 1) {
-            return "0b" + leftPad(value.toString(2), totalProps, '0');
-        }
-        return null;
-    }
-    function leftPad(value, max, pad) {
-        return repeat(pad, max - value.length) + value;
-    }
-    function getTypeFromColumn(index, totalColumns) {
-        if (index === TEMPLATE_DIRECTIVE_INDEX) {
-            return 'template';
-        }
-        else if (index === totalColumns - 1) {
-            return 'defaults';
-        }
-        else {
-            return "dir #" + index;
-        }
-    }
-    function repeat(c, times) {
-        var s = '';
-        for (var i = 0; i < times; i++) {
-            s += c;
-        }
-        return s;
-    }
     /**
      * A human-readable debug summary of the styling data present for a `DebugNode` instance.
      *
@@ -58019,18 +57913,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var NodeStylingDebug = /** @class */ (function () {
         function NodeStylingDebug(context, _data, _isClassBased) {
+            this.context = context;
             this._data = _data;
             this._isClassBased = _isClassBased;
             this._sanitizer = null;
-            this._debugContext = isStylingContext(context) ?
-                new TStylingContextDebug(context, _isClassBased) :
-                context;
         }
-        Object.defineProperty(NodeStylingDebug.prototype, "context", {
-            get: function () { return this._debugContext; },
-            enumerable: true,
-            configurable: true
-        });
         /**
          * Overrides the sanitizer used to process styles.
          */
@@ -58053,7 +57940,26 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             configurable: true
         });
         Object.defineProperty(NodeStylingDebug.prototype, "config", {
-            get: function () { return buildConfig(this.context.context); },
+            get: function () {
+                var hasMapBindings = hasConfig(this.context, 2 /* HasMapBindings */);
+                var hasPropBindings = hasConfig(this.context, 1 /* HasPropBindings */);
+                var hasCollisions = hasConfig(this.context, 4 /* HasCollisions */);
+                var hasTemplateBindings = hasConfig(this.context, 16 /* HasTemplateBindings */);
+                var hasHostBindings = hasConfig(this.context, 32 /* HasHostBindings */);
+                var templateBindingsLocked = hasConfig(this.context, 64 /* TemplateBindingsLocked */);
+                var hostBindingsLocked = hasConfig(this.context, 128 /* HostBindingsLocked */);
+                var allowDirectStyling$1 = allowDirectStyling(this.context, false) || allowDirectStyling(this.context, true);
+                return {
+                    hasMapBindings: hasMapBindings,
+                    hasPropBindings: hasPropBindings,
+                    hasCollisions: hasCollisions,
+                    hasTemplateBindings: hasTemplateBindings,
+                    hasHostBindings: hasHostBindings,
+                    templateBindingsLocked: templateBindingsLocked,
+                    hostBindingsLocked: hostBindingsLocked,
+                    allowDirectStyling: allowDirectStyling$1,
+                };
+            },
             enumerable: true,
             configurable: true
         });
@@ -58074,39 +57980,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
             var mockElement = {};
-            var hasMaps = hasConfig(this.context.context, 2 /* HasMapBindings */);
+            var hasMaps = hasConfig(this.context, 2 /* HasMapBindings */);
             if (hasMaps) {
                 activateStylingMapFeature();
             }
             var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
             // run the template bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
+            applyStylingViaContext(this.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
             // and also the host bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
+            applyStylingViaContext(this.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
         };
         return NodeStylingDebug;
     }());
-    function buildConfig(context) {
-        var hasMapBindings = hasConfig(context, 2 /* HasMapBindings */);
-        var hasPropBindings = hasConfig(context, 1 /* HasPropBindings */);
-        var hasCollisions = hasConfig(context, 4 /* HasCollisions */);
-        var hasTemplateBindings = hasConfig(context, 16 /* HasTemplateBindings */);
-        var hasHostBindings = hasConfig(context, 32 /* HasHostBindings */);
-        var templateBindingsLocked = hasConfig(context, 64 /* TemplateBindingsLocked */);
-        var hostBindingsLocked = hasConfig(context, 128 /* HostBindingsLocked */);
-        var allowDirectStyling$1 = allowDirectStyling(context, false) || allowDirectStyling(context, true);
-        return {
-            hasMapBindings: hasMapBindings,
-            hasPropBindings: hasPropBindings,
-            hasCollisions: hasCollisions,
-            hasTemplateBindings: hasTemplateBindings,
-            hasHostBindings: hasHostBindings,
-            templateBindingsLocked: templateBindingsLocked,
-            hostBindingsLocked: hostBindingsLocked,
-            allowDirectStyling: allowDirectStyling$1,
-        };
-    }
 
     /**
      * @license
@@ -58581,7 +58467,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var native = unwrapRNode(rawValue);
         var componentLViewDebug = toDebug(readLViewValue(rawValue));
         var styles = isStylingContext(tNode.styles) ?
-            new NodeStylingDebug(tNode.styles, lView, false) :
+            new NodeStylingDebug(tNode.styles, lView) :
             null;
         var classes = isStylingContext(tNode.classes) ?
             new NodeStylingDebug(tNode.classes, lView, true) :
@@ -65388,7 +65274,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (!isStylingContext(context)) {
             context = allocTStylingContext(context);
             if (ngDevMode) {
-                attachStylingDebugObject(context, isClassBased);
+                attachStylingDebugObject(context);
             }
             if (isClassBased) {
                 tNode.classes = context;
@@ -69042,7 +68928,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.7+22.sha-3a96631.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.7+24.sha-948714c.with-local-changes');
 
     /**
      * @license
@@ -82698,7 +82584,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.7+22.sha-3a96631.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.7+24.sha-948714c.with-local-changes');
 
     /**
      * @license
