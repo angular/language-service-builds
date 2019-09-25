@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.8+4.sha-c134646.with-local-changes
+ * @license Angular v9.0.0-next.8+5.sha-0ea4875.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18827,7 +18827,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.8+4.sha-c134646.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.8+5.sha-0ea4875.with-local-changes');
 
     /**
      * @license
@@ -34152,7 +34152,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.8+4.sha-c134646.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.8+5.sha-0ea4875.with-local-changes');
 
     /**
      * @license
@@ -68928,7 +68928,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.8+4.sha-c134646.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.8+5.sha-0ea4875.with-local-changes');
 
     /**
      * @license
@@ -82584,7 +82584,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.8+4.sha-c134646.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.8+5.sha-0ea4875.with-local-changes');
 
     /**
      * @license
