@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.8+25.sha-747f0cf.with-local-changes
+ * @license Angular v9.0.0-next.8+28.sha-53b32f1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18849,7 +18849,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.8+25.sha-747f0cf.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.8+28.sha-53b32f1.with-local-changes');
 
     /**
      * @license
@@ -34174,7 +34174,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.8+25.sha-747f0cf.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.8+28.sha-53b32f1.with-local-changes');
 
     /**
      * @license
@@ -52966,20 +52966,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getMapValue(map, index) {
         return map[index + 1 /* ValueOffset */];
     }
-    /**
-     * Converts the provided styling map array into a key value map.
-     */
-    function stylingMapToStringMap(map) {
-        var stringMap = {};
-        if (map) {
-            for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
-                var prop = getMapProp(map, i);
-                var value = getMapValue(map, i);
-                stringMap[prop] = value;
-            }
-        }
-        return stringMap;
-    }
 
     /**
      * @license
@@ -60813,7 +60799,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.8+25.sha-747f0cf.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.8+28.sha-53b32f1.with-local-changes');
 
     /**
      * @license
@@ -67824,7 +67810,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -67955,6 +67941,28 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
+     * provided handler.
+     *
+     * The reason why this function exists is because IE doesn't support
+     * the `Proxy` class. For this reason an error must be thrown.
+     */
+    function createProxy(handler) {
+        var g = _global$1;
+        if (!g.Proxy) {
+            throw new Error('Proxy is not supported in this browser');
+        }
+        return new g.Proxy({}, handler);
+    }
 
     /**
      * @license
@@ -68282,14 +68290,42 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "styles", {
             get: function () {
-                return _getStylingDebugInfo(this.nativeElement, false);
+                if (this.nativeElement && this.nativeElement.style) {
+                    return this.nativeElement.style;
+                }
+                return {};
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "classes", {
             get: function () {
-                return _getStylingDebugInfo(this.nativeElement, true);
+                if (!this._classesProxy) {
+                    var element_1 = this.nativeElement;
+                    // we use a proxy here because VE code expects `.classes` to keep
+                    // track of which classes have been added and removed. Because we
+                    // do not make use of a debug renderer anymore, the return value
+                    // must always be `false` in the event that a class does not exist
+                    // on the element (even if it wasn't added and removed beforehand).
+                    this._classesProxy = createProxy({
+                        get: function (target, prop) {
+                            return element_1 ? element_1.classList.contains(prop) : false;
+                        },
+                        set: function (target, prop, value) {
+                            return element_1 ? element_1.classList.toggle(prop, !!value) : false;
+                        },
+                        ownKeys: function () { return element_1 ? Array.from(element_1.classList).sort() : []; },
+                        getOwnPropertyDescriptor: function (k) {
+                            // we use a special property descriptor here so that enumeration operations
+                            // such as `Object.keys` will work on this proxy.
+                            return {
+                                enumerable: true,
+                                configurable: true,
+                            };
+                        },
+                    });
+                }
+                return this._classesProxy;
             },
             enumerable: true,
             configurable: true
@@ -68361,25 +68397,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return DebugElement__POST_R3__;
     }(DebugNode__POST_R3__));
-    function _getStylingDebugInfo(element, isClassBased) {
-        var context = loadLContext(element, false);
-        if (!context) {
-            return {};
-        }
-        var lView = context.lView;
-        var tData = lView[TVIEW].data;
-        var tNode = tData[context.nodeIndex];
-        if (isClassBased) {
-            return isStylingContext(tNode.classes) ?
-                new NodeStylingDebug(tNode.classes, lView, true).values :
-                stylingMapToStringMap(tNode.classes);
-        }
-        else {
-            return isStylingContext(tNode.styles) ?
-                new NodeStylingDebug(tNode.styles, lView, false).values :
-                stylingMapToStringMap(tNode.styles);
-        }
-    }
     function _queryAllR3(parentElement, predicate, matches, elementsOnly) {
         var context = loadLContext(parentElement.nativeNode);
         var parentTNode = context.lView[TVIEW].data[context.nodeIndex];
@@ -71518,7 +71535,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.8+25.sha-747f0cf.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.8+28.sha-53b32f1.with-local-changes');
 
     /**
      * @license
