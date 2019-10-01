@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.8+29.sha-475e36a.with-local-changes
+ * @license Angular v9.0.0-next.8+31.sha-ffc34b3.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18834,7 +18834,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.8+29.sha-475e36a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.8+31.sha-ffc34b3.with-local-changes');
 
     /**
      * @license
@@ -34159,7 +34159,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.8+29.sha-475e36a.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.8+31.sha-ffc34b3.with-local-changes');
 
     /**
      * @license
@@ -68921,7 +68921,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.8+29.sha-475e36a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.8+31.sha-ffc34b3.with-local-changes');
 
     /**
      * @license
@@ -72295,13 +72295,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @codeGenApi
      */
     function ɵɵi18nStart(index, message, subTemplateIndex) {
-        var tView = getLView()[TVIEW];
+        var lView = getLView();
+        var tView = lView[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nIndexStack[++i18nIndexStackPointer] = index;
         // We need to delay projections until `i18nEnd`
         setDelayProjection(true);
         if (tView.firstTemplatePass && tView.data[index + HEADER_OFFSET] === null) {
-            i18nStartFirstPass(tView, index, message, subTemplateIndex);
+            i18nStartFirstPass(lView, tView, index, message, subTemplateIndex);
         }
     }
     // Count for the number of vars that will be allocated for each i18n block.
@@ -72311,14 +72312,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * See `i18nStart` above.
      */
-    function i18nStartFirstPass(tView, index, message, subTemplateIndex) {
-        var viewData = getLView();
+    function i18nStartFirstPass(lView, tView, index, message, subTemplateIndex) {
         var startIndex = tView.blueprint.length - HEADER_OFFSET;
         i18nVarsCount = 0;
         var previousOrParentTNode = getPreviousOrParentTNode();
-        var parentTNode = getIsParent() ? getPreviousOrParentTNode() :
-            previousOrParentTNode && previousOrParentTNode.parent;
-        var parentIndex = parentTNode && parentTNode !== viewData[T_HOST] ? parentTNode.index - HEADER_OFFSET : index;
+        var parentTNode = getIsParent() ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
+        var parentIndex = parentTNode && parentTNode !== lView[T_HOST] ? parentTNode.index - HEADER_OFFSET : index;
         var parentIndexPointer = 0;
         parentIndexStack[parentIndexPointer] = parentIndex;
         var createOpCodes = [];
@@ -72391,10 +72390,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         if (i18nVarsCount > 0) {
-            allocExpando(viewData, i18nVarsCount);
+            allocExpando(lView, i18nVarsCount);
         }
         ngDevMode &&
-            attachI18nOpCodesDebug(createOpCodes, updateOpCodes, icuExpressions.length ? icuExpressions : null, viewData);
+            attachI18nOpCodesDebug(createOpCodes, updateOpCodes, icuExpressions.length ? icuExpressions : null, lView);
         // NOTE: local var needed to properly assert the type of `TI18n`.
         var tI18n = {
             vars: i18nVarsCount,
@@ -72558,29 +72557,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @codeGenApi
      */
     function ɵɵi18nEnd() {
-        var tView = getLView()[TVIEW];
+        var lView = getLView();
+        var tView = lView[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
-        i18nEndFirstPass(tView);
+        i18nEndFirstPass(lView, tView);
         // Stop delaying projections
         setDelayProjection(false);
     }
     /**
      * See `i18nEnd` above.
      */
-    function i18nEndFirstPass(tView) {
-        var viewData = getLView();
-        ngDevMode && assertEqual(viewData[BINDING_INDEX], viewData[TVIEW].bindingStartIndex, 'i18nEnd should be called before any binding');
+    function i18nEndFirstPass(lView, tView) {
+        ngDevMode && assertEqual(lView[BINDING_INDEX], tView.bindingStartIndex, 'i18nEnd should be called before any binding');
         var rootIndex = i18nIndexStack[i18nIndexStackPointer--];
         var tI18n = tView.data[rootIndex + HEADER_OFFSET];
         ngDevMode && assertDefined(tI18n, "You should call i18nStart before i18nEnd");
         // Find the last node that was added before `i18nEnd`
         var lastCreatedNode = getPreviousOrParentTNode();
         // Read the instructions to insert/move/remove DOM elements
-        var visitedNodes = readCreateOpCodes(rootIndex, tI18n.create, tI18n.icus, viewData);
+        var visitedNodes = readCreateOpCodes(rootIndex, tI18n.create, lView);
         // Remove deleted nodes
         for (var i = rootIndex + 1; i <= lastCreatedNode.index - HEADER_OFFSET; i++) {
             if (visitedNodes.indexOf(i) === -1) {
-                removeNode(i, viewData, /* markAsDetached */ true);
+                removeNode(i, lView, /* markAsDetached */ true);
             }
         }
     }
@@ -72599,8 +72598,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return tNode;
     }
-    function readCreateOpCodes(index, createOpCodes, icus, viewData) {
-        var renderer = getLView()[RENDERER];
+    function readCreateOpCodes(index, createOpCodes, lView) {
+        var renderer = lView[RENDERER];
         var currentTNode = null;
         var previousTNode = null;
         var visitedNodes = [];
@@ -72612,7 +72611,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 ngDevMode && ngDevMode.rendererCreateTextNode++;
                 previousTNode = currentTNode;
                 currentTNode =
-                    createDynamicNodeAtIndex(viewData, textNodeIndex, 3 /* Element */, textRNode, null);
+                    createDynamicNodeAtIndex(lView, textNodeIndex, 3 /* Element */, textRNode, null);
                 visitedNodes.push(textNodeIndex);
                 setIsNotParent();
             }
@@ -72624,27 +72623,27 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         if (destinationNodeIndex === index) {
                             // If the destination node is `i18nStart`, we don't have a
                             // top-level node and we should use the host node instead
-                            destinationTNode = viewData[T_HOST];
+                            destinationTNode = lView[T_HOST];
                         }
                         else {
-                            destinationTNode = getTNode(destinationNodeIndex, viewData);
+                            destinationTNode = getTNode(destinationNodeIndex, lView);
                         }
                         ngDevMode &&
                             assertDefined(currentTNode, "You need to create or select a node before you can insert it into the DOM");
-                        previousTNode = appendI18nNode(currentTNode, destinationTNode, previousTNode, viewData);
+                        previousTNode = appendI18nNode(currentTNode, destinationTNode, previousTNode, lView);
                         break;
                     case 0 /* Select */:
                         var nodeIndex = opCode >>> 3 /* SHIFT_REF */;
                         visitedNodes.push(nodeIndex);
                         previousTNode = currentTNode;
-                        currentTNode = getTNode(nodeIndex, viewData);
+                        currentTNode = getTNode(nodeIndex, lView);
                         if (currentTNode) {
                             setPreviousOrParentTNode(currentTNode, currentTNode.type === 3 /* Element */);
                         }
                         break;
                     case 5 /* ElementEnd */:
                         var elementIndex = opCode >>> 3 /* SHIFT_REF */;
-                        previousTNode = currentTNode = getTNode(elementIndex, viewData);
+                        previousTNode = currentTNode = getTNode(elementIndex, lView);
                         setPreviousOrParentTNode(currentTNode, false);
                         break;
                     case 4 /* Attr */:
@@ -72653,7 +72652,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         var attrValue = createOpCodes[++i];
                         // This code is used for ICU expressions only, since we don't support
                         // directives/components in ICUs, we don't need to worry about inputs here
-                        elementAttributeInternal(elementNodeIndex, attrName, attrValue, viewData);
+                        elementAttributeInternal(elementNodeIndex, attrName, attrValue, lView);
                         break;
                     default:
                         throw new Error("Unable to determine the type of mutate operation for \"" + opCode + "\"");
@@ -72668,9 +72667,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         var commentRNode = renderer.createComment(commentValue);
                         ngDevMode && ngDevMode.rendererCreateComment++;
                         previousTNode = currentTNode;
-                        currentTNode = createDynamicNodeAtIndex(viewData, commentNodeIndex, 5 /* IcuContainer */, commentRNode, null);
+                        currentTNode = createDynamicNodeAtIndex(lView, commentNodeIndex, 5 /* IcuContainer */, commentRNode, null);
                         visitedNodes.push(commentNodeIndex);
-                        attachPatchData(commentRNode, viewData);
+                        attachPatchData(commentRNode, lView);
                         currentTNode.activeCaseIndex = null;
                         // We will add the case nodes later, during the update phase
                         setIsNotParent();
@@ -72682,7 +72681,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         var elementRNode = renderer.createElement(tagNameValue);
                         ngDevMode && ngDevMode.rendererCreateElement++;
                         previousTNode = currentTNode;
-                        currentTNode = createDynamicNodeAtIndex(viewData, elementNodeIndex, 3 /* Element */, elementRNode, tagNameValue);
+                        currentTNode = createDynamicNodeAtIndex(lView, elementNodeIndex, 3 /* Element */, elementRNode, tagNameValue);
                         visitedNodes.push(elementNodeIndex);
                         break;
                     default:
@@ -72762,7 +72761,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                                     var caseIndex = getCaseIndex(tIcu, value);
                                     icuTNode.activeCaseIndex = caseIndex !== -1 ? caseIndex : null;
                                     // Add the nodes for the new case
-                                    readCreateOpCodes(-1, tIcu.create[caseIndex], icus, viewData);
+                                    readCreateOpCodes(-1, tIcu.create[caseIndex], viewData);
                                     caseCreated = true;
                                     break;
                                 case 3 /* IcuUpdate */:
@@ -72837,14 +72836,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @codeGenApi
      */
     function ɵɵi18nAttributes(index, values) {
-        var tView = getLView()[TVIEW];
+        var lView = getLView();
+        var tView = lView[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
-        i18nAttributesFirstPass(tView, index, values);
+        i18nAttributesFirstPass(lView, tView, index, values);
     }
     /**
      * See `i18nAttributes` above.
      */
-    function i18nAttributesFirstPass(tView, index, values) {
+    function i18nAttributesFirstPass(lView, tView, index, values) {
         var previousElement = getPreviousOrParentTNode();
         var previousElementIndex = previousElement.index - HEADER_OFFSET;
         var updateOpCodes = [];
@@ -72868,7 +72868,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         }
                     }
                     else {
-                        var lView = getLView();
                         elementAttributeInternal(previousElementIndex, attrName, value, lView);
                         // Check if that attribute is a directive input
                         var tNode = getTNode(previousElementIndex, lView);
@@ -78899,7 +78898,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -82607,7 +82607,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.8+29.sha-475e36a.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.8+31.sha-ffc34b3.with-local-changes');
 
     /**
      * @license
