@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.8+36.sha-088435c.with-local-changes
+ * @license Angular v9.0.0-next.8+37.sha-72f3747.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18834,7 +18834,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.8+36.sha-088435c.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.8+37.sha-72f3747.with-local-changes');
 
     /**
      * @license
@@ -34159,7 +34159,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.8+36.sha-088435c.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.8+37.sha-72f3747.with-local-changes');
 
     /**
      * @license
@@ -59044,14 +59044,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
             setHostBindings(tView, lView);
-            var viewQuery = tView.viewQuery;
-            if (viewQuery !== null) {
-                executeViewQueryFn(2 /* Update */, viewQuery, context);
-            }
             // Refresh child component views.
             var components = tView.components;
             if (components !== null) {
                 refreshChildComponents(lView, components);
+            }
+            // View queries must execute after refreshing child components because a template in this view
+            // could be inserted in a child component. If the view query executes before child component
+            // refresh, the template might not yet be inserted.
+            var viewQuery = tView.viewQuery;
+            if (viewQuery !== null) {
+                executeViewQueryFn(2 /* Update */, viewQuery, context);
             }
             // execute view hooks (AfterViewInit, AfterViewChecked)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
@@ -68921,7 +68924,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.8+36.sha-088435c.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.8+37.sha-72f3747.with-local-changes');
 
     /**
      * @license
@@ -82612,7 +82615,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.8+36.sha-088435c.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.8+37.sha-72f3747.with-local-changes');
 
     /**
      * @license
