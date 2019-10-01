@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.8+37.sha-72f3747.with-local-changes
+ * @license Angular v9.0.0-next.8+40.sha-01e4d44.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18834,7 +18834,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.8+37.sha-72f3747.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.8+40.sha-01e4d44.with-local-changes');
 
     /**
      * @license
@@ -34159,7 +34159,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.8+37.sha-72f3747.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.8+40.sha-01e4d44.with-local-changes');
 
     /**
      * @license
@@ -68924,7 +68924,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.8+37.sha-72f3747.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.8+40.sha-01e4d44.with-local-changes');
 
     /**
      * @license
@@ -73797,7 +73797,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     };
 
     function hostReportError(err) {
-        setTimeout(() => { throw err; });
+        setTimeout(() => { throw err; }, 0);
     }
 
     const empty$1 = {
@@ -73814,63 +73814,65 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         complete() { }
     };
 
-    const isArray = Array.isArray || ((x) => x && typeof x.length === 'number');
+    const isArray = (() => Array.isArray || ((x) => x && typeof x.length === 'number'))();
 
     function isObject(x) {
         return x !== null && typeof x === 'object';
     }
 
-    function UnsubscriptionErrorImpl(errors) {
-        Error.call(this);
-        this.message = errors ?
-            `${errors.length} errors occurred during unsubscription:
+    const UnsubscriptionErrorImpl = (() => {
+        function UnsubscriptionErrorImpl(errors) {
+            Error.call(this);
+            this.message = errors ?
+                `${errors.length} errors occurred during unsubscription:
 ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
-        this.name = 'UnsubscriptionError';
-        this.errors = errors;
-        return this;
-    }
-    UnsubscriptionErrorImpl.prototype = Object.create(Error.prototype);
+            this.name = 'UnsubscriptionError';
+            this.errors = errors;
+            return this;
+        }
+        UnsubscriptionErrorImpl.prototype = Object.create(Error.prototype);
+        return UnsubscriptionErrorImpl;
+    })();
     const UnsubscriptionError = UnsubscriptionErrorImpl;
 
     class Subscription {
         constructor(unsubscribe) {
             this.closed = false;
-            this._parent = null;
-            this._parents = null;
+            this._parentOrParents = null;
             this._subscriptions = null;
             if (unsubscribe) {
                 this._unsubscribe = unsubscribe;
             }
         }
         unsubscribe() {
-            let hasErrors = false;
             let errors;
             if (this.closed) {
                 return;
             }
-            let { _parent, _parents, _unsubscribe, _subscriptions } = this;
+            let { _parentOrParents, _unsubscribe, _subscriptions } = this;
             this.closed = true;
-            this._parent = null;
-            this._parents = null;
+            this._parentOrParents = null;
             this._subscriptions = null;
-            let index = -1;
-            let len = _parents ? _parents.length : 0;
-            while (_parent) {
-                _parent.remove(this);
-                _parent = ++index < len && _parents[index] || null;
+            if (_parentOrParents instanceof Subscription) {
+                _parentOrParents.remove(this);
+            }
+            else if (_parentOrParents !== null) {
+                for (let index = 0; index < _parentOrParents.length; ++index) {
+                    const parent = _parentOrParents[index];
+                    parent.remove(this);
+                }
             }
             if (isFunction(_unsubscribe)) {
                 try {
                     _unsubscribe.call(this);
                 }
                 catch (e) {
-                    hasErrors = true;
                     errors = e instanceof UnsubscriptionError ? flattenUnsubscriptionErrors(e.errors) : [e];
                 }
             }
             if (isArray(_subscriptions)) {
-                index = -1;
-                len = _subscriptions.length;
+                let index = -1;
+                let len = _subscriptions.length;
                 while (++index < len) {
                     const sub = _subscriptions[index];
                     if (isObject(sub)) {
@@ -73878,7 +73880,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                             sub.unsubscribe();
                         }
                         catch (e) {
-                            hasErrors = true;
                             errors = errors || [];
                             if (e instanceof UnsubscriptionError) {
                                 errors = errors.concat(flattenUnsubscriptionErrors(e.errors));
@@ -73890,12 +73891,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                 }
             }
-            if (hasErrors) {
+            if (errors) {
                 throw new UnsubscriptionError(errors);
             }
         }
         add(teardown) {
             let subscription = teardown;
+            if (!teardown) {
+                return Subscription.EMPTY;
+            }
             switch (typeof teardown) {
                 case 'function':
                     subscription = new Subscription(teardown);
@@ -73914,20 +73918,31 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     break;
                 default: {
-                    if (!teardown) {
-                        return Subscription.EMPTY;
-                    }
                     throw new Error('unrecognized teardown ' + teardown + ' added to Subscription.');
                 }
             }
-            if (subscription._addParent(this)) {
-                const subscriptions = this._subscriptions;
-                if (subscriptions) {
-                    subscriptions.push(subscription);
+            let { _parentOrParents } = subscription;
+            if (_parentOrParents === null) {
+                subscription._parentOrParents = this;
+            }
+            else if (_parentOrParents instanceof Subscription) {
+                if (_parentOrParents === this) {
+                    return subscription;
                 }
-                else {
-                    this._subscriptions = [subscription];
-                }
+                subscription._parentOrParents = [_parentOrParents, this];
+            }
+            else if (_parentOrParents.indexOf(this) === -1) {
+                _parentOrParents.push(this);
+            }
+            else {
+                return subscription;
+            }
+            const subscriptions = this._subscriptions;
+            if (subscriptions === null) {
+                this._subscriptions = [subscription];
+            }
+            else {
+                subscriptions.push(subscription);
             }
             return subscription;
         }
@@ -73940,25 +73955,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
         }
-        _addParent(parent) {
-            let { _parent, _parents } = this;
-            if (_parent === parent) {
-                return false;
-            }
-            else if (!_parent) {
-                this._parent = parent;
-                return true;
-            }
-            else if (!_parents) {
-                this._parents = [parent];
-                return true;
-            }
-            else if (_parents.indexOf(parent) === -1) {
-                _parents.push(parent);
-                return true;
-            }
-            return false;
-        }
     }
     Subscription.EMPTY = (function (empty) {
         empty.closed = true;
@@ -73968,9 +73964,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return errors.reduce((errs, err) => errs.concat((err instanceof UnsubscriptionError) ? err.errors : err), []);
     }
 
-    const rxSubscriber = typeof Symbol === 'function'
+    const rxSubscriber = (() => typeof Symbol === 'function'
         ? Symbol('rxSubscriber')
-        : '@@rxSubscriber_' + Math.random();
+        : '@@rxSubscriber_' + Math.random())();
 
     class Subscriber extends Subscription {
         constructor(destinationOrNext, error, complete) {
@@ -74048,14 +74044,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.unsubscribe();
         }
         _unsubscribeAndRecycle() {
-            const { _parent, _parents } = this;
-            this._parent = null;
-            this._parents = null;
+            const { _parentOrParents } = this;
+            this._parentOrParents = null;
             this.unsubscribe();
             this.closed = false;
             this.isStopped = false;
-            this._parent = _parent;
-            this._parents = _parents;
+            this._parentOrParents = _parentOrParents;
             return this;
         }
     }
@@ -74221,7 +74215,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return new Subscriber(nextOrObserver, error, complete);
     }
 
-    const observable = typeof Symbol === 'function' && Symbol.observable || '@@observable';
+    const observable = (() => typeof Symbol === 'function' && Symbol.observable || '@@observable')();
 
     function noop() { }
 
@@ -74339,13 +74333,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return promiseCtor;
     }
 
-    function ObjectUnsubscribedErrorImpl() {
-        Error.call(this);
-        this.message = 'object unsubscribed';
-        this.name = 'ObjectUnsubscribedError';
-        return this;
-    }
-    ObjectUnsubscribedErrorImpl.prototype = Object.create(Error.prototype);
+    const ObjectUnsubscribedErrorImpl = (() => {
+        function ObjectUnsubscribedErrorImpl() {
+            Error.call(this);
+            this.message = 'object unsubscribed';
+            this.name = 'ObjectUnsubscribedError';
+            return this;
+        }
+        ObjectUnsubscribedErrorImpl.prototype = Object.create(Error.prototype);
+        return ObjectUnsubscribedErrorImpl;
+    })();
     const ObjectUnsubscribedError = ObjectUnsubscribedErrorImpl;
 
     class SubjectSubscription extends Subscription {
@@ -74591,9 +74588,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     this._connection = null;
                     connection = Subscription.EMPTY;
                 }
-                else {
-                    this._connection = connection;
-                }
             }
             return connection;
         }
@@ -74601,18 +74595,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return refCount()(this);
         }
     }
-    const connectableProto = ConnectableObservable.prototype;
-    const connectableObservableDescriptor = {
-        operator: { value: null },
-        _refCount: { value: 0, writable: true },
-        _subject: { value: null, writable: true },
-        _connection: { value: null, writable: true },
-        _subscribe: { value: connectableProto._subscribe },
-        _isComplete: { value: connectableProto._isComplete, writable: true },
-        getSubject: { value: connectableProto.getSubject },
-        connect: { value: connectableProto.connect },
-        refCount: { value: connectableProto.refCount }
-    };
+    const connectableObservableDescriptor = (() => {
+        const connectableProto = ConnectableObservable.prototype;
+        return {
+            operator: { value: null },
+            _refCount: { value: 0, writable: true },
+            _subject: { value: null, writable: true },
+            _connection: { value: null, writable: true },
+            _subscribe: { value: connectableProto._subscribe },
+            _isComplete: { value: connectableProto._isComplete, writable: true },
+            getSubject: { value: connectableProto.getSubject },
+            connect: { value: connectableProto.connect },
+            refCount: { value: connectableProto.refCount }
+        };
+    })();
     class ConnectableSubscriber extends SubjectSubscriber {
         constructor(destination, connectable) {
             super(destination);
@@ -74827,31 +74823,33 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         for (let i = 0, len = array.length; i < len && !subscriber.closed; i++) {
             subscriber.next(array[i]);
         }
-        if (!subscriber.closed) {
-            subscriber.complete();
-        }
+        subscriber.complete();
     };
+
+    function scheduleArray(input, scheduler) {
+        return new Observable(subscriber => {
+            const sub = new Subscription();
+            let i = 0;
+            sub.add(scheduler.schedule(function () {
+                if (i === input.length) {
+                    subscriber.complete();
+                    return;
+                }
+                subscriber.next(input[i++]);
+                if (!subscriber.closed) {
+                    sub.add(this.schedule());
+                }
+            }));
+            return sub;
+        });
+    }
 
     function fromArray(input, scheduler) {
         if (!scheduler) {
             return new Observable(subscribeToArray(input));
         }
         else {
-            return new Observable(subscriber => {
-                const sub = new Subscription();
-                let i = 0;
-                sub.add(scheduler.schedule(function () {
-                    if (i === input.length) {
-                        subscriber.complete();
-                        return;
-                    }
-                    subscriber.next(input[i++]);
-                    if (!subscriber.closed) {
-                        sub.add(this.schedule());
-                    }
-                }));
-                return sub;
-            });
+            return scheduleArray(input, scheduler);
         }
     }
 
@@ -75119,19 +75117,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     }
 
     const subscribeTo = (result) => {
-        if (result instanceof Observable) {
-            return (subscriber) => {
-                if (result._isScalar) {
-                    subscriber.next(result.value);
-                    subscriber.complete();
-                    return undefined;
-                }
-                else {
-                    return result.subscribe(subscriber);
-                }
-            };
-        }
-        else if (!!result && typeof result[observable] === 'function') {
+        if (!!result && typeof result[observable] === 'function') {
             return subscribeToObservable(result);
         }
         else if (isArrayLike(result)) {
@@ -75153,9 +75139,84 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
 
     function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination = new InnerSubscriber(outerSubscriber, outerValue, outerIndex)) {
         if (destination.closed) {
-            return;
+            return undefined;
+        }
+        if (result instanceof Observable) {
+            return result.subscribe(destination);
         }
         return subscribeTo(result)(destination);
+    }
+
+    function scheduleObservable(input, scheduler) {
+        return new Observable(subscriber => {
+            const sub = new Subscription();
+            sub.add(scheduler.schedule(() => {
+                const observable$1 = input[observable]();
+                sub.add(observable$1.subscribe({
+                    next(value) { sub.add(scheduler.schedule(() => subscriber.next(value))); },
+                    error(err) { sub.add(scheduler.schedule(() => subscriber.error(err))); },
+                    complete() { sub.add(scheduler.schedule(() => subscriber.complete())); },
+                }));
+            }));
+            return sub;
+        });
+    }
+
+    function schedulePromise(input, scheduler) {
+        return new Observable(subscriber => {
+            const sub = new Subscription();
+            sub.add(scheduler.schedule(() => input.then(value => {
+                sub.add(scheduler.schedule(() => {
+                    subscriber.next(value);
+                    sub.add(scheduler.schedule(() => subscriber.complete()));
+                }));
+            }, err => {
+                sub.add(scheduler.schedule(() => subscriber.error(err)));
+            })));
+            return sub;
+        });
+    }
+
+    function scheduleIterable(input, scheduler) {
+        if (!input) {
+            throw new Error('Iterable cannot be null');
+        }
+        return new Observable(subscriber => {
+            const sub = new Subscription();
+            let iterator$1;
+            sub.add(() => {
+                if (iterator$1 && typeof iterator$1.return === 'function') {
+                    iterator$1.return();
+                }
+            });
+            sub.add(scheduler.schedule(() => {
+                iterator$1 = input[iterator]();
+                sub.add(scheduler.schedule(function () {
+                    if (subscriber.closed) {
+                        return;
+                    }
+                    let value;
+                    let done;
+                    try {
+                        const result = iterator$1.next();
+                        value = result.value;
+                        done = result.done;
+                    }
+                    catch (err) {
+                        subscriber.error(err);
+                        return;
+                    }
+                    if (done) {
+                        subscriber.complete();
+                    }
+                    else {
+                        subscriber.next(value);
+                        this.schedule();
+                    }
+                }));
+            }));
+            return sub;
+        });
     }
 
     function isInteropObservable(input) {
@@ -75166,91 +75227,22 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return input && typeof input[iterator] === 'function';
     }
 
-    function fromPromise(input, scheduler) {
-        if (!scheduler) {
-            return new Observable(subscribeToPromise(input));
+    function scheduled(input, scheduler) {
+        if (input != null) {
+            if (isInteropObservable(input)) {
+                return scheduleObservable(input, scheduler);
+            }
+            else if (isPromise$2(input)) {
+                return schedulePromise(input, scheduler);
+            }
+            else if (isArrayLike(input)) {
+                return scheduleArray(input, scheduler);
+            }
+            else if (isIterable(input) || typeof input === 'string') {
+                return scheduleIterable(input, scheduler);
+            }
         }
-        else {
-            return new Observable(subscriber => {
-                const sub = new Subscription();
-                sub.add(scheduler.schedule(() => input.then(value => {
-                    sub.add(scheduler.schedule(() => {
-                        subscriber.next(value);
-                        sub.add(scheduler.schedule(() => subscriber.complete()));
-                    }));
-                }, err => {
-                    sub.add(scheduler.schedule(() => subscriber.error(err)));
-                })));
-                return sub;
-            });
-        }
-    }
-
-    function fromIterable(input, scheduler) {
-        if (!input) {
-            throw new Error('Iterable cannot be null');
-        }
-        if (!scheduler) {
-            return new Observable(subscribeToIterable(input));
-        }
-        else {
-            return new Observable(subscriber => {
-                const sub = new Subscription();
-                let iterator$1;
-                sub.add(() => {
-                    if (iterator$1 && typeof iterator$1.return === 'function') {
-                        iterator$1.return();
-                    }
-                });
-                sub.add(scheduler.schedule(() => {
-                    iterator$1 = input[iterator]();
-                    sub.add(scheduler.schedule(function () {
-                        if (subscriber.closed) {
-                            return;
-                        }
-                        let value;
-                        let done;
-                        try {
-                            const result = iterator$1.next();
-                            value = result.value;
-                            done = result.done;
-                        }
-                        catch (err) {
-                            subscriber.error(err);
-                            return;
-                        }
-                        if (done) {
-                            subscriber.complete();
-                        }
-                        else {
-                            subscriber.next(value);
-                            this.schedule();
-                        }
-                    }));
-                }));
-                return sub;
-            });
-        }
-    }
-
-    function fromObservable(input, scheduler) {
-        if (!scheduler) {
-            return new Observable(subscribeToObservable(input));
-        }
-        else {
-            return new Observable(subscriber => {
-                const sub = new Subscription();
-                sub.add(scheduler.schedule(() => {
-                    const observable$1 = input[observable]();
-                    sub.add(observable$1.subscribe({
-                        next(value) { sub.add(scheduler.schedule(() => subscriber.next(value))); },
-                        error(err) { sub.add(scheduler.schedule(() => subscriber.error(err))); },
-                        complete() { sub.add(scheduler.schedule(() => subscriber.complete())); },
-                    }));
-                }));
-                return sub;
-            });
-        }
+        throw new TypeError((input !== null && typeof input || input) + ' is not observable');
     }
 
     function from(input, scheduler) {
@@ -75260,21 +75252,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             return new Observable(subscribeTo(input));
         }
-        if (input != null) {
-            if (isInteropObservable(input)) {
-                return fromObservable(input, scheduler);
-            }
-            else if (isPromise$2(input)) {
-                return fromPromise(input, scheduler);
-            }
-            else if (isArrayLike(input)) {
-                return fromArray(input, scheduler);
-            }
-            else if (isIterable(input) || typeof input === 'string') {
-                return fromIterable(input, scheduler);
-            }
+        else {
+            return scheduled(input, scheduler);
         }
-        throw new TypeError((input !== null && typeof input || input) + ' is not observable');
     }
 
     function mergeMap(project, resultSelector, concurrent = Number.POSITIVE_INFINITY) {
@@ -82615,7 +82595,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.8+37.sha-72f3747.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.8+40.sha-01e4d44.with-local-changes');
 
     /**
      * @license
