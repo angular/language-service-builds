@@ -68,8 +68,12 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * and templateReferences.
      * In addition to returning information about NgModules, this method plays the
      * same role as 'synchronizeHostData' in tsserver.
+     * @param ensureSynchronized whether or not the Language Service should make sure analyzedModules
+     *   are synced to the last update of the project. If false, returns the set of analyzedModules
+     *   that is already cached. This is useful if the project must not be reanalyzed, even if its
+     *   file watchers (which are disjoint from the TypeScriptServiceHost) detect an update.
      */
-    getAnalyzedModules(): NgAnalyzedModules;
+    getAnalyzedModules(ensureSynchronized?: boolean): NgAnalyzedModules;
     /**
      * Find all templates in the specified `file`.
      * @param fileName TS or HTML file

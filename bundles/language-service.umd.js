@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.8+32.sha-9e7aa60.with-local-changes
+ * @license Angular v9.0.0-next.8+34.sha-98feee7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18834,7 +18834,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.8+32.sha-9e7aa60.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.8+34.sha-98feee7.with-local-changes');
 
     /**
      * @license
@@ -34159,7 +34159,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.8+32.sha-9e7aa60.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.8+34.sha-98feee7.with-local-changes');
 
     /**
      * @license
@@ -68921,7 +68921,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.8+32.sha-9e7aa60.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.8+34.sha-98feee7.with-local-changes');
 
     /**
      * @license
@@ -78898,8 +78898,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -81970,10 +81969,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * and templateReferences.
          * In addition to returning information about NgModules, this method plays the
          * same role as 'synchronizeHostData' in tsserver.
+         * @param ensureSynchronized whether or not the Language Service should make sure analyzedModules
+         *   are synced to the last update of the project. If false, returns the set of analyzedModules
+         *   that is already cached. This is useful if the project must not be reanalyzed, even if its
+         *   file watchers (which are disjoint from the TypeScriptServiceHost) detect an update.
          */
-        TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
+        TypeScriptServiceHost.prototype.getAnalyzedModules = function (ensureSynchronized) {
             var e_1, _a, e_2, _b;
-            if (this.upToDate()) {
+            if (ensureSynchronized === void 0) { ensureSynchronized = true; }
+            if (!ensureSynchronized || this.upToDate()) {
                 return this.analyzedModules;
             }
             // Invalidate caches
@@ -82607,7 +82611,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.8+32.sha-9e7aa60.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.8+34.sha-98feee7.with-local-changes');
 
     /**
      * @license
