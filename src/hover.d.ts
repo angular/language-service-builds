@@ -8,6 +8,7 @@
 /// <amd-module name="@angular/language-service/src/hover" />
 import * as ts from 'typescript';
 import { AstResult } from './common';
+import { TypeScriptServiceHost } from './typescript_host';
 /**
  * Traverse the template AST and look for the symbol located at `position`, then
  * return the corresponding quick info.
@@ -15,3 +16,10 @@ import { AstResult } from './common';
  * @param position location of the symbol
  */
 export declare function getHover(info: AstResult, position: number): ts.QuickInfo | undefined;
+/**
+ * Get quick info for Angular semantic entities in TypeScript files, like Directives.
+ * @param sf TypeScript source file an Angular symbol is in
+ * @param position location of the symbol in the source file
+ * @param host Language Service host to query
+ */
+export declare function getTsHover(sf: ts.SourceFile, position: number, host: Readonly<TypeScriptServiceHost>): ts.QuickInfo | undefined;

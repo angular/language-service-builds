@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.9+5.sha-3c7ac5f.with-local-changes
+ * @license Angular v9.0.0-next.9+8.sha-e7729b6.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18850,7 +18850,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.9+5.sha-3c7ac5f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.9+8.sha-e7729b6.with-local-changes');
 
     /**
      * @license
@@ -34175,7 +34175,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.9+5.sha-3c7ac5f.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.9+8.sha-e7729b6.with-local-changes');
 
     /**
      * @license
@@ -51067,6 +51067,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     // Reverse mappings of enum would generate strings
     var SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
     var SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
+    var SYMBOL_CLASS = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.className];
+    var SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
     /**
      * Traverse the template AST and look for the symbol located at `position`, then
      * return the corresponding quick info.
@@ -51101,6 +51103,65 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             ], containerDisplayParts, [
                 { text: symbol.name, kind: symbol.kind },
             ]),
+        };
+    }
+    /**
+     * Get quick info for Angular semantic entities in TypeScript files, like Directives.
+     * @param sf TypeScript source file an Angular symbol is in
+     * @param position location of the symbol in the source file
+     * @param host Language Service host to query
+     */
+    function getTsHover(sf, position, host) {
+        var node = findTightestNode(sf, position);
+        if (!node)
+            return;
+        switch (node.kind) {
+            case ts.SyntaxKind.Identifier:
+                return getDirectiveModule(node, host);
+            default:
+                break;
+        }
+        return undefined;
+    }
+    /**
+     * Attempts to get quick info for the NgModule a Directive is declared in.
+     * @param directive identifier on a potential Directive class declaration
+     * @param host Language Service host to query
+     */
+    function getDirectiveModule(directive, host) {
+        if (!ts.isClassDeclaration(directive.parent))
+            return;
+        var directiveName = directive.text;
+        var directiveSymbol = host.getStaticSymbol(directive.getSourceFile().fileName, directiveName);
+        if (!directiveSymbol)
+            return;
+        var analyzedModules = host.getAnalyzedModules(false);
+        var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(directiveSymbol);
+        if (!ngModule)
+            return;
+        var moduleName = ngModule.type.reference.name;
+        return {
+            kind: ts.ScriptElementKind.classElement,
+            kindModifiers: ts.ScriptElementKindModifier.none,
+            textSpan: {
+                start: directive.getStart(),
+                length: directive.end - directive.getStart(),
+            },
+            // This generates a string like '(directive) NgModule.Directive: class'
+            // 'kind' in displayParts does not really matter because it's dropped when
+            // displayParts get converted to string.
+            displayParts: [
+                { text: '(', kind: SYMBOL_PUNC },
+                { text: 'directive', kind: SYMBOL_TEXT },
+                { text: ')', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                { text: moduleName, kind: SYMBOL_CLASS },
+                { text: '.', kind: SYMBOL_PUNC },
+                { text: directiveName, kind: SYMBOL_CLASS },
+                { text: ':', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                { text: ts.ScriptElementKind.classElement, kind: SYMBOL_TEXT },
+            ],
         };
     }
 
@@ -51195,6 +51256,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return getHover(templateInfo, position);
+            }
+            // Attempt to get Angular-specific hover information in a TypeScript file, the NgModule a
+            // directive belongs to.
+            if (fileName.endsWith('.ts')) {
+                var sf = this.host.getSourceFile(fileName);
+                if (sf) {
+                    return getTsHover(sf, position, this.host);
+                }
             }
         };
         return LanguageServiceImpl;
@@ -68993,7 +69062,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.9+5.sha-3c7ac5f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.9+8.sha-e7729b6.with-local-changes');
 
     /**
      * @license
@@ -74394,7 +74463,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -82650,7 +82719,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.9+5.sha-3c7ac5f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.9+8.sha-e7729b6.with-local-changes');
 
     /**
      * @license
