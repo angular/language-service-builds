@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.9.with-local-changes
+ * @license Angular v9.0.0-next.9+1.sha-4e35e34.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2992,6 +2992,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             moduleName: CORE,
         };
         Identifiers.inject = { name: 'ɵɵinject', moduleName: CORE };
+        Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE };
         Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
         Identifiers.Injector = { name: 'Injector', moduleName: CORE };
         Identifiers.ɵɵdefineInjectable = { name: 'ɵɵdefineInjectable', moduleName: CORE };
@@ -5442,8 +5443,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             type: meta.type,
             deps: meta.deps,
             typeArgumentCount: meta.typeArgumentCount,
-            // TODO(crisbeto): this should be refactored once we start using it for injectables.
-            injectFn: Identifiers$1.directiveInject,
+            injectFn: meta.injectFn,
         }, meta.isPipe);
     }
     function injectDependencies(deps, injectFn, isPipe) {
@@ -5551,7 +5551,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             name: meta.name,
             type: meta.type,
             typeArgumentCount: meta.typeArgumentCount,
-            deps: meta.ctorDeps,
+            deps: [],
             injectFn: Identifiers.inject,
         };
         if (meta.useClass !== undefined) {
@@ -5574,11 +5574,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 result = compileFactoryFunction(factoryMeta);
             }
             else {
-                result = compileFactoryFunction(__assign({}, factoryMeta, { delegate: meta.useClass, delegateType: R3FactoryDelegateType.Factory }));
+                result = delegateToFactory(meta.useClass);
             }
         }
         else if (meta.useFactory !== undefined) {
-            result = compileFactoryFunction(__assign({}, factoryMeta, { delegate: meta.useFactory, delegateDeps: meta.userDeps || [], delegateType: R3FactoryDelegateType.Function }));
+            if (meta.userDeps !== undefined) {
+                result = compileFactoryFunction(__assign({}, factoryMeta, { delegate: meta.useFactory, delegateDeps: meta.userDeps || [], delegateType: R3FactoryDelegateType.Function }));
+            }
+            else {
+                result = {
+                    statements: [],
+                    factory: fn([], [new ReturnStatement(meta.useFactory.callFn([]))])
+                };
+            }
         }
         else if (meta.useValue !== undefined) {
             // Note: it's safe to use `meta.useValue` instead of the `USE_VALUE in meta` check used for
@@ -5591,7 +5599,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             result = compileFactoryFunction(__assign({}, factoryMeta, { expression: importExpr(Identifiers.inject).callFn([meta.useExisting]) }));
         }
         else {
-            result = compileFactoryFunction(factoryMeta);
+            result = delegateToFactory(meta.type);
         }
         var token = meta.type;
         var providedIn = meta.providedIn;
@@ -5601,6 +5609,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             expression: expression,
             type: type,
             statements: result.statements,
+        };
+    }
+    function delegateToFactory(type) {
+        return {
+            statements: [],
+            // () => meta.type.ngFactoryDef(t)
+            factory: fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ngFactoryDef', [variable('t')]))])
         };
     }
 
@@ -6892,7 +6907,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             pure: pipe.pure,
         };
         var res = compilePipeFromMetadata(metadata);
-        var factoryRes = compileFactoryFromMetadata(__assign({}, metadata, { isPipe: true }));
+        var factoryRes = compileFactoryFromMetadata(__assign({}, metadata, { injectFn: Identifiers$1.directiveInject, isPipe: true }));
         var definitionField = outputCtx.constantPool.propertyNameOf(3 /* Pipe */);
         var ngFactoryDefStatement = new ClassStmt(
         /* name */ name, 
@@ -18075,7 +18090,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var definitionField = outputCtx.constantPool.propertyNameOf(1 /* Directive */);
         var meta = directiveMetadataFromGlobalMetadata(directive, outputCtx, reflector);
         var res = compileDirectiveFromMetadata(meta, outputCtx.constantPool, bindingParser);
-        var factoryRes = compileFactoryFromMetadata(meta);
+        var factoryRes = compileFactoryFromMetadata(__assign({}, meta, { injectFn: Identifiers$1.directiveInject }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ngFactoryDef', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var directiveDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
@@ -18096,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // Compute the R3ComponentMetadata from the CompileDirectiveMetadata
         var meta = __assign({}, directiveMetadataFromGlobalMetadata(component, outputCtx, reflector), { selector: component.selector, template: { nodes: render3Ast.nodes }, directives: [], pipes: typeMapToExpressionMap(pipeTypeByName, outputCtx), viewQueries: queriesFromGlobalMetadata(component.viewQueries, outputCtx), wrapDirectivesAndPipesInClosure: false, styles: (summary.template && summary.template.styles) || EMPTY_ARRAY, encapsulation: (summary.template && summary.template.encapsulation) || ViewEncapsulation.Emulated, interpolation: DEFAULT_INTERPOLATION_CONFIG, animations: null, viewProviders: component.viewProviders.length > 0 ? new WrappedNodeExpr(component.viewProviders) : null, relativeContextFilePath: '', i18nUseExternalIds: true });
         var res = compileComponentFromMetadata(meta, outputCtx.constantPool, bindingParser);
-        var factoryRes = compileFactoryFromMetadata(meta);
+        var factoryRes = compileFactoryFromMetadata(__assign({}, meta, { injectFn: Identifiers$1.directiveInject }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ngFactoryDef', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var componentDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
@@ -18617,7 +18632,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 useFactory: wrapExpression(facade, USE_FACTORY),
                 useValue: wrapExpression(facade, USE_VALUE),
                 useExisting: wrapExpression(facade, USE_EXISTING),
-                ctorDeps: convertR3DependencyMetadataArray(facade.ctorDeps),
                 userDeps: convertR3DependencyMetadataArray(facade.userDeps) || undefined,
             }), expression = _a.expression, statements = _a.statements;
             return this.jitExpression(expression, angularCoreEnv, sourceMapUrl, statements);
@@ -18675,13 +18689,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var jitExpressionSourceMap = "ng:///" + facade.name + ".js";
             return this.jitExpression(res.expression, angularCoreEnv, jitExpressionSourceMap, constantPool.statements);
         };
-        CompilerFacadeImpl.prototype.compileFactory = function (angularCoreEnv, sourceMapUrl, meta, isPipe) {
-            if (isPipe === void 0) { isPipe = false; }
+        CompilerFacadeImpl.prototype.compileFactory = function (angularCoreEnv, sourceMapUrl, meta) {
             var factoryRes = compileFactoryFromMetadata({
                 name: meta.name,
                 type: new WrappedNodeExpr(meta.type),
                 typeArgumentCount: meta.typeArgumentCount,
-                deps: convertR3DependencyMetadataArray(meta.deps), isPipe: isPipe
+                deps: convertR3DependencyMetadataArray(meta.deps),
+                injectFn: meta.injectFn === 'directiveInject' ? Identifiers.directiveInject :
+                    Identifiers.inject,
+                isPipe: meta.isPipe
             });
             return this.jitExpression(factoryRes.factory, angularCoreEnv, sourceMapUrl, factoryRes.statements);
         };
@@ -18849,7 +18865,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.9.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.9+1.sha-4e35e34.with-local-changes');
 
     /**
      * @license
@@ -34174,7 +34190,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.9.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.9+1.sha-4e35e34.with-local-changes');
 
     /**
      * @license
@@ -35887,6 +35903,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         ['ɵɵdefineNgModule', 'ɵɵdefineNgModule'],
         ['ɵɵsetNgModuleScope', 'ɵɵsetNgModuleScope'],
         ['ɵɵinject', 'ɵɵinject'],
+        ['ɵɵFactoryDef', 'ɵɵFactoryDef'],
         ['ɵsetClassMetadata', 'setClassMetadata'],
         ['ɵɵInjectableDef', 'ɵɵInjectableDef'],
         ['ɵɵInjectorDef', 'ɵɵInjectorDef'],
@@ -37374,21 +37391,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             var ivyClass = this.ivyClasses.get(original);
             var res = [];
+            var _loop_2 = function (match) {
+                if (match.analyzed === null || match.analyzed.analysis === undefined) {
+                    return "continue";
+                }
+                var compileSpan = this_1.perf.start('compileClass', original);
+                var compileMatchRes = match.handler.compile(node, match.analyzed.analysis, constantPool);
+                this_1.perf.stop(compileSpan);
+                if (Array.isArray(compileMatchRes)) {
+                    compileMatchRes.forEach(function (result) {
+                        if (!res.some(function (r) { return r.name === result.name; })) {
+                            res.push(result);
+                        }
+                    });
+                }
+                else if (!res.some(function (result) { return result.name === compileMatchRes.name; })) {
+                    res.push(compileMatchRes);
+                }
+            };
+            var this_1 = this;
             try {
                 for (var _b = __values(ivyClass.matchedHandlers), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var match = _c.value;
-                    if (match.analyzed === null || match.analyzed.analysis === undefined) {
-                        continue;
-                    }
-                    var compileSpan = this.perf.start('compileClass', original);
-                    var compileMatchRes = match.handler.compile(node, match.analyzed.analysis, constantPool);
-                    this.perf.stop(compileSpan);
-                    if (!Array.isArray(compileMatchRes)) {
-                        res.push(compileMatchRes);
-                    }
-                    else {
-                        res.push.apply(res, __spread(compileMatchRes));
-                    }
+                    _loop_2(match);
                 }
             }
             catch (e_7_1) { e_7 = { error: e_7_1 }; }
@@ -39261,7 +39286,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         DirectiveDecoratorHandler.prototype.compile = function (node, analysis, pool) {
             var meta = analysis.meta;
             var res = compileDirectiveFromMetadata(meta, pool, makeBindingParser());
-            var factoryRes = compileNgFactoryDefField(meta);
+            var factoryRes = compileNgFactoryDefField(__assign({}, meta, { injectFn: Identifiers.directiveInject }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -40655,7 +40680,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         ComponentDecoratorHandler.prototype.compile = function (node, analysis, pool) {
             var meta = analysis.meta;
             var res = compileComponentFromMetadata(meta, pool, makeBindingParser());
-            var factoryRes = compileNgFactoryDefField(meta);
+            var factoryRes = compileNgFactoryDefField(__assign({}, meta, { injectFn: Identifiers.directiveInject }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -40900,34 +40925,55 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         };
         InjectableDecoratorHandler.prototype.analyze = function (node, decorator) {
+            var meta = extractInjectableMetadata(node, decorator, this.reflector);
+            var decorators = this.reflector.getDecoratorsOfDeclaration(node);
             return {
                 analysis: {
-                    meta: extractInjectableMetadata(node, decorator, this.reflector, this.defaultImportRecorder, this.isCore, this.strictCtorDeps),
+                    meta: meta,
+                    ctorDeps: extractInjectableCtorDeps(node, meta, decorator, this.reflector, this.defaultImportRecorder, this.isCore, this.strictCtorDeps),
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore),
+                    // Avoid generating multiple factories if a class has
+                    // more Angular decorators, apart from Injectable.
+                    needsFactory: !decorators ||
+                        decorators.every(function (current) { return !isAngularCore(current) || current.name === 'Injectable'; })
                 },
             };
         };
         InjectableDecoratorHandler.prototype.compile = function (node, analysis) {
             var res = compileInjectable(analysis.meta);
             var statements = res.statements;
-            if (analysis.metadataStmt !== null) {
-                statements.push(analysis.metadataStmt);
+            var results = [];
+            if (analysis.needsFactory) {
+                var meta = analysis.meta;
+                var factoryRes = compileNgFactoryDefField({
+                    name: meta.name,
+                    type: meta.type,
+                    typeArgumentCount: meta.typeArgumentCount,
+                    deps: analysis.ctorDeps,
+                    injectFn: Identifiers.inject
+                });
+                if (analysis.metadataStmt !== null) {
+                    factoryRes.statements.push(analysis.metadataStmt);
+                }
+                results.push(factoryRes);
             }
-            return {
+            results.push({
                 name: 'ngInjectableDef',
                 initializer: res.expression, statements: statements,
                 type: res.type,
-            };
+            });
+            return results;
         };
         return InjectableDecoratorHandler;
     }());
     /**
-     * Read metadata from the `@Injectable` decorator and produce the `IvyInjectableMetadata`, the input
+     * Read metadata from the `@Injectable` decorator and produce the `IvyInjectableMetadata`, the
+     * input
      * metadata needed to run `compileIvyInjectable`.
      *
      * A `null` return value indicates this is @Injectable has invalid data.
      */
-    function extractInjectableMetadata(clazz, decorator, reflector, defaultImportRecorder, isCore, strictCtorDeps) {
+    function extractInjectableMetadata(clazz, decorator, reflector) {
         var name = clazz.name.text;
         var type = new WrappedNodeExpr(clazz.name);
         var typeArgumentCount = reflector.getGenericArityOfClass(clazz) || 0;
@@ -40935,54 +40981,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, decorator.node, '@Injectable must be called');
         }
         if (decorator.args.length === 0) {
-            // Ideally, using @Injectable() would have the same effect as using @Injectable({...}), and be
-            // subject to the same validation. However, existing Angular code abuses @Injectable, applying
-            // it to things like abstract classes with constructors that were never meant for use with
-            // Angular's DI.
-            //
-            // To deal with this, @Injectable() without an argument is more lenient, and if the constructor
-            // signature does not work for DI then an ngInjectableDef that throws.
-            var ctorDeps = null;
-            if (strictCtorDeps) {
-                ctorDeps = getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
-            }
-            else {
-                var possibleCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
-                if (possibleCtorDeps !== null) {
-                    if (possibleCtorDeps.deps !== null) {
-                        // This use of @Injectable has valid constructor dependencies.
-                        ctorDeps = possibleCtorDeps.deps;
-                    }
-                    else {
-                        // This use of @Injectable is technically invalid. Generate a factory function which
-                        // throws
-                        // an error.
-                        // TODO(alxhub): log warnings for the bad use of @Injectable.
-                        ctorDeps = 'invalid';
-                    }
-                }
-            }
             return {
                 name: name,
                 type: type,
                 typeArgumentCount: typeArgumentCount,
-                providedIn: new LiteralExpr(null), ctorDeps: ctorDeps,
+                providedIn: new LiteralExpr(null),
             };
         }
         else if (decorator.args.length === 1) {
-            var rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
-            var ctorDeps = null;
-            // rawCtorDeps will be null if the class has no constructor.
-            if (rawCtorDeps !== null) {
-                if (rawCtorDeps.deps !== null) {
-                    // A constructor existed and had valid dependencies.
-                    ctorDeps = rawCtorDeps.deps;
-                }
-                else {
-                    // A constructor existed but had invalid dependencies.
-                    ctorDeps = 'invalid';
-                }
-            }
             var metaNode = decorator.args[0];
             // Firstly make sure the decorator argument is an inline literal - if not, it's illegal to
             // transport references from one location to another. This is the problem that lowering
@@ -41009,9 +41015,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     name: name,
                     type: type,
                     typeArgumentCount: typeArgumentCount,
-                    ctorDeps: ctorDeps,
                     providedIn: providedIn,
-                    useValue: new WrappedNodeExpr(meta.get('useValue')),
+                    useValue: new WrappedNodeExpr(unwrapForwardRef(meta.get('useValue'), reflector)),
                 };
             }
             else if (meta.has('useExisting')) {
@@ -41019,9 +41024,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     name: name,
                     type: type,
                     typeArgumentCount: typeArgumentCount,
-                    ctorDeps: ctorDeps,
                     providedIn: providedIn,
-                    useExisting: new WrappedNodeExpr(meta.get('useExisting')),
+                    useExisting: new WrappedNodeExpr(unwrapForwardRef(meta.get('useExisting'), reflector)),
                 };
             }
             else if (meta.has('useClass')) {
@@ -41029,9 +41033,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     name: name,
                     type: type,
                     typeArgumentCount: typeArgumentCount,
-                    ctorDeps: ctorDeps,
                     providedIn: providedIn,
-                    useClass: new WrappedNodeExpr(meta.get('useClass')), userDeps: userDeps,
+                    useClass: new WrappedNodeExpr(unwrapForwardRef(meta.get('useClass'), reflector)),
+                    userDeps: userDeps,
                 };
             }
             else if (meta.has('useFactory')) {
@@ -41042,20 +41046,72 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     type: type,
                     typeArgumentCount: typeArgumentCount,
                     providedIn: providedIn,
-                    useFactory: factory, ctorDeps: ctorDeps, userDeps: userDeps,
+                    useFactory: factory, userDeps: userDeps,
                 };
             }
             else {
-                if (strictCtorDeps) {
-                    // Since use* was not provided, validate the deps according to strictCtorDeps.
-                    validateConstructorDependencies(clazz, rawCtorDeps);
-                }
-                return { name: name, type: type, typeArgumentCount: typeArgumentCount, providedIn: providedIn, ctorDeps: ctorDeps };
+                return { name: name, type: type, typeArgumentCount: typeArgumentCount, providedIn: providedIn };
             }
         }
         else {
             throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, decorator.args[2], 'Too many arguments to @Injectable');
         }
+    }
+    function extractInjectableCtorDeps(clazz, meta, decorator, reflector, defaultImportRecorder, isCore, strictCtorDeps) {
+        if (decorator.args === null) {
+            throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, decorator.node, '@Injectable must be called');
+        }
+        var ctorDeps = null;
+        if (decorator.args.length === 0) {
+            // Ideally, using @Injectable() would have the same effect as using @Injectable({...}), and be
+            // subject to the same validation. However, existing Angular code abuses @Injectable, applying
+            // it to things like abstract classes with constructors that were never meant for use with
+            // Angular's DI.
+            //
+            // To deal with this, @Injectable() without an argument is more lenient, and if the
+            // constructor
+            // signature does not work for DI then an ngInjectableDef that throws.
+            if (strictCtorDeps) {
+                ctorDeps = getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+            }
+            else {
+                var possibleCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+                if (possibleCtorDeps !== null) {
+                    if (possibleCtorDeps.deps !== null) {
+                        // This use of @Injectable has valid constructor dependencies.
+                        ctorDeps = possibleCtorDeps.deps;
+                    }
+                    else {
+                        // This use of @Injectable is technically invalid. Generate a factory function which
+                        // throws
+                        // an error.
+                        // TODO(alxhub): log warnings for the bad use of @Injectable.
+                        ctorDeps = 'invalid';
+                    }
+                }
+            }
+            return ctorDeps;
+        }
+        else if (decorator.args.length === 1) {
+            var rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+            // rawCtorDeps will be null if the class has no constructor.
+            if (rawCtorDeps !== null) {
+                if (rawCtorDeps.deps !== null) {
+                    // A constructor existed and had valid dependencies.
+                    ctorDeps = rawCtorDeps.deps;
+                }
+                else {
+                    // A constructor existed but had invalid dependencies.
+                    ctorDeps = 'invalid';
+                }
+            }
+            if (strictCtorDeps && !meta.useValue && !meta.useExisting && !meta.useClass &&
+                !meta.useFactory) {
+                // Since use* was not provided, validate the deps according to strictCtorDeps.
+                validateConstructorDependencies(clazz, rawCtorDeps);
+            }
+        }
+        return ctorDeps;
     }
     function getDep(dep, reflector) {
         var meta = {
@@ -41644,7 +41700,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         PipeDecoratorHandler.prototype.compile = function (node, analysis) {
             var meta = analysis.meta;
             var res = compilePipeFromMetadata(meta);
-            var factoryRes = compileNgFactoryDefField(__assign({}, meta, { isPipe: true }));
+            var factoryRes = compileNgFactoryDefField(__assign({}, meta, { injectFn: Identifiers.directiveInject, isPipe: true }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -51616,6 +51672,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
+    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
+    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
+    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
+    var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
+    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
+    var NG_FACTORY_DEF = getClosureSafeProperty({ ngFactoryDef: getClosureSafeProperty });
+    /**
+     * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
+     * the key and the directive's unique ID as the value. This allows us to map directives to their
+     * bloom filter bit for DI.
+     */
+    // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
+    var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Creates a token that can be used in a DI Provider.
      *
@@ -52243,28 +52321,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
-    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
-    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
-    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
-    var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
-    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
-    var NG_FACTORY_DEF = getClosureSafeProperty({ ngFactoryDef: getClosureSafeProperty });
-    /**
-     * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
-     * the key and the directive's unique ID as the value. This allows us to map directives to their
-     * bloom filter bit for DI.
-     */
-    // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
-    var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * The following getter methods retrieve the definition form the type. Currently the retrieval
      * honors inheritance, but in the future we may change the rule to require that definitions are
@@ -52274,11 +52330,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return type[NG_COMPONENT_DEF] || null;
     }
     function getFactoryDef(type, throwNotFound) {
-        var factoryFn = type[NG_FACTORY_DEF] || null;
-        if (!factoryFn && throwNotFound === true && ngDevMode) {
+        var hasFactoryDef = type.hasOwnProperty(NG_FACTORY_DEF);
+        if (!hasFactoryDef && throwNotFound === true && ngDevMode) {
             throw new Error("Type " + stringify$1(type) + " does not have 'ngFactoryDef' property.");
         }
-        return factoryFn;
+        return hasFactoryDef ? type[NG_FACTORY_DEF] : null;
     }
     function getNgModuleDef(type, throwNotFound) {
         var ngModuleDef = type[NG_MODULE_DEF] || null;
@@ -60802,7 +60858,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.9.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.9+1.sha-4e35e34.with-local-changes');
 
     /**
      * @license
@@ -67793,7 +67849,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -71523,7 +71579,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.9.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.9+1.sha-4e35e34.with-local-changes');
 
     /**
      * @license
