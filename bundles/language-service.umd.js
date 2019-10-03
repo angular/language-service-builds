@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.9+30.sha-900d005.with-local-changes
+ * @license Angular v9.0.0-next.9+31.sha-adb562b.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18913,7 +18913,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.9+30.sha-900d005.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.9+31.sha-adb562b.with-local-changes');
 
     /**
      * @license
@@ -24212,7 +24212,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.metadataCache = new Map();
             // Note: this will only contain StaticSymbols without members!
             this.resolvedSymbols = new Map();
-            this.resolvedFilePaths = new Set();
             // Note: this will only contain StaticSymbols without members!
             this.importAs = new Map();
             this.symbolResourcePaths = new Map();
@@ -24311,33 +24310,35 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.knownFileNameToModuleNames.set(fileName, moduleName);
         };
         /**
-         * Invalidate all information derived from the given file.
+         * Invalidate all information derived from the given file and return the
+         * static symbols contained in the file.
          *
          * @param fileName the file to invalidate
          */
         StaticSymbolResolver.prototype.invalidateFile = function (fileName) {
             var e_1, _a;
             this.metadataCache.delete(fileName);
-            this.resolvedFilePaths.delete(fileName);
             var symbols = this.symbolFromFile.get(fileName);
-            if (symbols) {
-                this.symbolFromFile.delete(fileName);
-                try {
-                    for (var symbols_1 = __values(symbols), symbols_1_1 = symbols_1.next(); !symbols_1_1.done; symbols_1_1 = symbols_1.next()) {
-                        var symbol = symbols_1_1.value;
-                        this.resolvedSymbols.delete(symbol);
-                        this.importAs.delete(symbol);
-                        this.symbolResourcePaths.delete(symbol);
-                    }
-                }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                finally {
-                    try {
-                        if (symbols_1_1 && !symbols_1_1.done && (_a = symbols_1.return)) _a.call(symbols_1);
-                    }
-                    finally { if (e_1) throw e_1.error; }
+            if (!symbols) {
+                return [];
+            }
+            this.symbolFromFile.delete(fileName);
+            try {
+                for (var symbols_1 = __values(symbols), symbols_1_1 = symbols_1.next(); !symbols_1_1.done; symbols_1_1 = symbols_1.next()) {
+                    var symbol = symbols_1_1.value;
+                    this.resolvedSymbols.delete(symbol);
+                    this.importAs.delete(symbol);
+                    this.symbolResourcePaths.delete(symbol);
                 }
             }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (symbols_1_1 && !symbols_1_1.done && (_a = symbols_1.return)) _a.call(symbols_1);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            return symbols;
         };
         /** @internal */
         StaticSymbolResolver.prototype.ignoreErrorsFor = function (cb) {
@@ -24419,10 +24420,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         StaticSymbolResolver.prototype._createSymbolsOf = function (filePath) {
             var e_2, _a, e_3, _b;
             var _this = this;
-            if (this.resolvedFilePaths.has(filePath)) {
+            if (this.symbolFromFile.has(filePath)) {
                 return;
             }
-            this.resolvedFilePaths.add(filePath);
             var resolvedSymbols = [];
             var metadata = this.getModuleMetadata(filePath);
             if (metadata['importAs']) {
@@ -26061,6 +26061,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var staticSymbol = this.findSymbolDeclaration(typeOrFunc);
             return this.symbolResolver.getResourcePath(staticSymbol);
         };
+        /**
+         * Invalidate the specified `symbols` on program change.
+         * @param symbols
+         */
+        StaticReflector.prototype.invalidateSymbols = function (symbols) {
+            var e_1, _a;
+            try {
+                for (var symbols_1 = __values(symbols), symbols_1_1 = symbols_1.next(); !symbols_1_1.done; symbols_1_1 = symbols_1.next()) {
+                    var symbol = symbols_1_1.value;
+                    this.annotationCache.delete(symbol);
+                    this.shallowAnnotationCache.delete(symbol);
+                    this.propertyCache.delete(symbol);
+                    this.parameterCache.delete(symbol);
+                    this.methodCache.delete(symbol);
+                    this.staticCache.delete(symbol);
+                    this.conversionMap.delete(symbol);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (symbols_1_1 && !symbols_1_1.done && (_a = symbols_1.return)) _a.call(symbols_1);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        };
         StaticReflector.prototype.resolveExternalReference = function (ref, containingFile) {
             var key = undefined;
             if (!containingFile) {
@@ -26278,7 +26304,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         };
         StaticReflector.prototype.guards = function (type) {
-            var e_1, _a;
+            var e_2, _a;
             if (!(type instanceof StaticSymbol)) {
                 this.reportError(new Error("guards received " + JSON.stringify(type) + " which is not a StaticSymbol"), type);
                 return {};
@@ -26302,12 +26328,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }
                 }
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
                     if (staticMembers_1_1 && !staticMembers_1_1.done && (_a = staticMembers_1.return)) _a.call(staticMembers_1);
                 }
-                finally { if (e_1) throw e_1.error; }
+                finally { if (e_2) throw e_2.error; }
             }
             return result;
         };
@@ -26478,7 +26504,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }, context);
                 }
                 function simplify(expression) {
-                    var e_2, _a, e_3, _b;
+                    var e_3, _a, e_4, _b;
                     if (isPrimitive(expression)) {
                         return expression;
                     }
@@ -26494,17 +26520,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                                     var spreadArray = simplifyEagerly(item.expression);
                                     if (Array.isArray(spreadArray)) {
                                         try {
-                                            for (var spreadArray_1 = (e_3 = void 0, __values(spreadArray)), spreadArray_1_1 = spreadArray_1.next(); !spreadArray_1_1.done; spreadArray_1_1 = spreadArray_1.next()) {
+                                            for (var spreadArray_1 = (e_4 = void 0, __values(spreadArray)), spreadArray_1_1 = spreadArray_1.next(); !spreadArray_1_1.done; spreadArray_1_1 = spreadArray_1.next()) {
                                                 var spreadItem = spreadArray_1_1.value;
                                                 result_2.push(spreadItem);
                                             }
                                         }
-                                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
                                         finally {
                                             try {
                                                 if (spreadArray_1_1 && !spreadArray_1_1.done && (_b = spreadArray_1.return)) _b.call(spreadArray_1);
                                             }
-                                            finally { if (e_3) throw e_3.error; }
+                                            finally { if (e_4) throw e_4.error; }
                                         }
                                         continue;
                                     }
@@ -26516,12 +26542,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                                 result_2.push(value_2);
                             }
                         }
-                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
                         finally {
                             try {
                                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                             }
-                            finally { if (e_2) throw e_2.error; }
+                            finally { if (e_3) throw e_3.error; }
                         }
                         return result_2;
                     }
@@ -34190,7 +34216,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.9+30.sha-900d005.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.9+31.sha-adb562b.with-local-changes');
 
     /**
      * @license
@@ -69087,7 +69113,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.9+30.sha-900d005.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.9+31.sha-adb562b.with-local-changes');
 
     /**
      * @license
@@ -82110,9 +82136,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.templateReferences = [];
             this.fileToComponent.clear();
             this.collectedErrors.clear();
-            // TODO: This is only temporary. When https://github.com/angular/angular/pull/32543
-            // is merged this is no longer necessary.
-            this._resolver = undefined; // Invalidate the resolver
+            this.resolver.clearCache();
             var analyzeHost = { isSourceFile: function (filePath) { return true; } };
             var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
             this.analyzedModules =
@@ -82254,42 +82278,43 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         TypeScriptServiceHost.prototype.upToDate = function () {
             var e_3, _a;
             var _this = this;
-            var program = this.program;
-            if (this.lastProgram === program) {
+            var _b = this, lastProgram = _b.lastProgram, program = _b.program;
+            if (lastProgram === program) {
                 return true;
             }
+            this.lastProgram = program;
             // Invalidate file that have changed in the static symbol resolver
             var seen = new Set();
-            var hasChanges = false;
             try {
-                for (var _b = __values(program.getSourceFiles()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var sourceFile = _c.value;
+                for (var _c = __values(program.getSourceFiles()), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var sourceFile = _d.value;
                     var fileName = sourceFile.fileName;
                     seen.add(fileName);
                     var version = this.tsLsHost.getScriptVersion(fileName);
                     var lastVersion = this.fileVersions.get(fileName);
-                    if (version !== lastVersion) {
-                        hasChanges = true;
-                        this.fileVersions.set(fileName, version);
-                        this.staticSymbolResolver.invalidateFile(fileName);
+                    this.fileVersions.set(fileName, version);
+                    // Should not invalidate file on the first encounter or if file hasn't changed
+                    if (lastVersion !== undefined && version !== lastVersion) {
+                        var symbols = this.staticSymbolResolver.invalidateFile(fileName);
+                        this.reflector.invalidateSymbols(symbols);
                     }
                 }
             }
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
                 finally { if (e_3) throw e_3.error; }
             }
-            // Remove file versions that are no longer in the file and invalidate them.
+            // Remove file versions that are no longer in the program and invalidate them.
             var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen.has(f); });
             missing.forEach(function (f) {
                 _this.fileVersions.delete(f);
-                _this.staticSymbolResolver.invalidateFile(f);
+                var symbols = _this.staticSymbolResolver.invalidateFile(f);
+                _this.reflector.invalidateSymbols(symbols);
             });
-            this.lastProgram = program;
-            return missing.length === 0 && !hasChanges;
+            return false;
         };
         /**
          * Return the TemplateSource if `node` is a template node.
@@ -82737,7 +82762,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.9+30.sha-900d005.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.9+31.sha-adb562b.with-local-changes');
 
     /**
      * @license
