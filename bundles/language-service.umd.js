@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.9+18.sha-6f5f481.with-local-changes
+ * @license Angular v9.0.0-next.9+19.sha-5332b04.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18882,7 +18882,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.9+18.sha-6f5f481.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.9+19.sha-5332b04.with-local-changes');
 
     /**
      * @license
@@ -34207,7 +34207,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.9+18.sha-6f5f481.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.9+19.sha-5332b04.with-local-changes');
 
     /**
      * @license
@@ -35824,7 +35824,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost) {
         if (compilerHost.resolveModuleNames) {
-            return compilerHost.resolveModuleNames([moduleName], containingFile)[0];
+            // FIXME: Additional parameters are required in TS3.6, but ignored in 3.5.
+            // Remove the any cast once fully on TS3.6.
+            return compilerHost
+                .resolveModuleNames([moduleName], containingFile, undefined, undefined, compilerOptions)[0];
         }
         else {
             return ts.resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost)
@@ -44377,9 +44380,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.delegate = delegate;
             this.shimGenerators = shimGenerators;
             if (delegate.resolveModuleNames !== undefined) {
+                // FIXME: TypeScript 3.6 adds an "options" argument that the code below passes on, but which
+                // still makes the method incompatible with TS3.5. Remove the "as any" cast once fully on 3.6.
                 this.resolveModuleNames =
-                    function (moduleNames, containingFile, reusedNames, redirectedReference) {
-                        return delegate.resolveModuleNames(moduleNames, containingFile, reusedNames, redirectedReference);
+                    function (moduleNames, containingFile, reusedNames, redirectedReference, options) {
+                        return delegate
+                            .resolveModuleNames(moduleNames, containingFile, reusedNames, redirectedReference, options);
                     };
             }
             if (delegate.resolveTypeReferenceDirectives) {
@@ -61710,6 +61716,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 ViewContainerRef_.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModuleRef) {
                     var contextInjector = injector || this.parentInjector;
                     if (!ngModuleRef && componentFactory.ngModule == null && contextInjector) {
+                        // FIXME: ngModuleRef is optional, so its type allows "undefined", whereas the code
+                        // below is passing null for the default/absent value.
                         ngModuleRef = contextInjector.get(NgModuleRef, null);
                     }
                     var componentRef = componentFactory.create(contextInjector, projectableNodes, undefined, ngModuleRef);
@@ -68839,6 +68847,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var DirectiveDefFlags;
+    (function (DirectiveDefFlags) {
+        DirectiveDefFlags[DirectiveDefFlags["ContentQuery"] = 2] = "ContentQuery";
+    })(DirectiveDefFlags || (DirectiveDefFlags = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Represents a component created by a `ComponentFactory`.
      * Provides access to the component instance and related objects,
@@ -69083,7 +69103,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.9+18.sha-6f5f481.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.9+19.sha-5332b04.with-local-changes');
 
     /**
      * @license
@@ -75762,14 +75782,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return QueryList;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -82741,7 +82753,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.9+18.sha-6f5f481.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.9+19.sha-5332b04.with-local-changes');
 
     /**
      * @license
