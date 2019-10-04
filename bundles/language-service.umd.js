@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.9+41.sha-53d13c3.with-local-changes
+ * @license Angular v9.0.0-next.9+44.sha-6004703.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18928,7 +18928,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.9+41.sha-53d13c3.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.9+44.sha-6004703.with-local-changes');
 
     /**
      * @license
@@ -34231,7 +34231,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.9+41.sha-53d13c3.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.9+44.sha-6004703.with-local-changes');
 
     /**
      * @license
@@ -53408,7 +53408,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             insertBloom(tView.data, tNode); // foundation for node bloom
             insertBloom(hostView, null); // foundation for cumulative bloom
             insertBloom(tView.blueprint, null);
-            ngDevMode && assertEqual(tNode.flags === 0 || tNode.flags === 2 /* isComponentHost */, true, 'expected tNode.flags to not be initialized');
         }
         var parentLoc = getParentInjectorLocation(tNode, hostView);
         var parentIndex = getParentInjectorIndex(parentLoc);
@@ -55596,11 +55595,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     flags.push('TNodeFlags.hasContentQuery');
                 if (this.flags & 32 /* hasStyleInput */)
                     flags.push('TNodeFlags.hasStyleInput');
+                if (this.flags & 64 /* hasInitialStyling */)
+                    flags.push('TNodeFlags.hasInitialStyling');
                 if (this.flags & 2 /* isComponentHost */)
                     flags.push('TNodeFlags.isComponentHost');
                 if (this.flags & 1 /* isDirectiveHost */)
                     flags.push('TNodeFlags.isDirectiveHost');
-                if (this.flags & 64 /* isDetached */)
+                if (this.flags & 128 /* isDetached */)
                     flags.push('TNodeFlags.isDetached');
                 if (this.flags & 4 /* isProjected */)
                     flags.push('TNodeFlags.isProjected');
@@ -56722,7 +56723,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     */
     function markAsComponentHost(tView, hostTNode) {
         ngDevMode && assertFirstTemplatePass(tView);
-        hostTNode.flags = 2 /* isComponentHost */;
+        hostTNode.flags |= 2 /* isComponentHost */;
         (tView.components || (tView.components = ngDevMode ? new TViewComponents() : [])).push(hostTNode.index);
     }
     /**
@@ -56731,11 +56732,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param index the initial index
      */
     function initNodeFlags(tNode, index, numberOfDirectives) {
-        var flags = tNode.flags;
-        ngDevMode && assertEqual(flags === 0 || flags === 2 /* isComponentHost */, true, 'expected node flags to not be initialized');
         ngDevMode && assertNotEqual(numberOfDirectives, tNode.directiveEnd - tNode.directiveStart, 'Reached the max number of directives');
+        tNode.flags |= 1 /* isDirectiveHost */;
         // When the first directive is created on a node, save the index
-        tNode.flags = (flags & 2 /* isComponentHost */) | 1 /* isDirectiveHost */;
         tNode.directiveStart = index;
         tNode.directiveEnd = index + numberOfDirectives;
         tNode.providerIndexes = index;
@@ -57297,7 +57296,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     tNode.flags |= 4 /* isProjected */;
                 }
             }
-            if ((tNode.flags & 64 /* isDetached */) !== 64 /* isDetached */) {
+            if ((tNode.flags & 128 /* isDetached */) !== 128 /* isDetached */) {
                 if (tNodeType === 4 /* ElementContainer */ || tNodeType === 5 /* IcuContainer */) {
                     applyNodes(renderer, action, tNode.child, lView, renderParent, beforeNode, false);
                     applyToElementOrContainer(action, renderer, renderParent, rawSlotValue, beforeNode);
@@ -60976,7 +60975,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.9+41.sha-53d13c3.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.9+44.sha-6004703.with-local-changes');
 
     /**
      * @license
@@ -71688,7 +71687,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.9+41.sha-53d13c3.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.9+44.sha-6004703.with-local-changes');
 
     /**
      * @license
