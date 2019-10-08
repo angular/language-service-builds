@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.9+73.sha-ed71141.with-local-changes
+ * @license Angular v9.0.0-next.9+75.sha-9f0c549.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18913,7 +18913,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.9+73.sha-ed71141.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.9+75.sha-9f0c549.with-local-changes');
 
     /**
      * @license
@@ -34216,7 +34216,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.9+73.sha-ed71141.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.9+75.sha-9f0c549.with-local-changes');
 
     /**
      * @license
@@ -53644,9 +53644,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return marker === 3 /* Bindings */ || marker === 4 /* Template */ ||
             marker === 6 /* I18n */;
     }
-    var ANIMATION_PROP_PREFIX = '@';
     function isAnimationProp(name) {
-        return name[0] === ANIMATION_PROP_PREFIX;
+        // Perf note: accessing charCodeAt to check for the first character of a string is faster as
+        // compared to accessing a character at index 0 (ex. name[0]). The main reason for this is that
+        // charCodeAt doesn't allocate memory to return a substring.
+        return name.charCodeAt(0) === 64; // @
     }
 
     /**
@@ -59708,8 +59710,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // The property is considered valid if the element matches the schema, it exists on the element
         // or it is synthetic, and we are in a browser context (web worker nodes should be skipped).
         return matchingSchemas(hostView, tNode.tagName) || propName in element ||
-            propName[0] === ANIMATION_PROP_PREFIX || typeof Node !== 'function' ||
-            !(element instanceof Node);
+            isAnimationProp(propName) || typeof Node !== 'function' || !(element instanceof Node);
     }
     function matchingSchemas(hostView, tagName) {
         var schemas = hostView[TVIEW].schemas;
@@ -69117,7 +69118,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.9+73.sha-ed71141.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.9+75.sha-9f0c549.with-local-changes');
 
     /**
      * @license
@@ -82664,7 +82665,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.9+73.sha-ed71141.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.9+75.sha-9f0c549.with-local-changes');
 
     /**
      * @license
