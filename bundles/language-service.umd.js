@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.9+76.sha-b2b917d.with-local-changes
+ * @license Angular v9.0.0-next.9+81.sha-305f368.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16303,9 +16303,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return params;
     }
     var TemplateDefinitionBuilder = /** @class */ (function () {
-        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds) {
+        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds, _constants) {
             var _this = this;
             if (level === void 0) { level = 0; }
+            if (_constants === void 0) { _constants = []; }
             this.constantPool = constantPool;
             this.level = level;
             this.contextName = contextName;
@@ -16317,8 +16318,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.pipeTypeByName = pipeTypeByName;
             this.pipes = pipes;
             this._namespace = _namespace;
-            this.relativeContextFilePath = relativeContextFilePath;
             this.i18nUseExternalIds = i18nUseExternalIds;
+            this._constants = _constants;
             this._dataIndex = 0;
             this._bindingContext = 0;
             this._prefixCode = [];
@@ -16754,7 +16755,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             });
             // add attributes for directive and projection matching purposes
             attributes.push.apply(attributes, __spread(this.prepareNonRenderAttrs(allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs, ngProjectAsAttr)));
-            parameters.push(this.toAttrsParam(attributes));
+            parameters.push(this.addConstants(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             parameters.push(this.prepareRefsParameter(element.references));
             var wasInNamespace = this._namespace;
@@ -16983,14 +16984,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var attrsExprs = [];
             template.attributes.forEach(function (a) { attrsExprs.push(asLiteral(a.name), asLiteral(a.value)); });
             attrsExprs.push.apply(attrsExprs, __spread(this.prepareNonRenderAttrs(template.inputs, template.outputs, undefined, template.templateAttrs)));
-            parameters.push(this.toAttrsParam(attrsExprs));
+            parameters.push(this.addConstants(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
                 parameters.push(this.prepareRefsParameter(template.references));
                 parameters.push(importExpr(Identifiers$1.templateRefExtractor));
             }
             // Create the template function
-            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix, this.i18nUseExternalIds);
+            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix, this.i18nUseExternalIds, this._constants);
             // Nested templates must not be visited until after their parent templates have completed
             // processing, so they are queued here until after the initial pass. Otherwise, we wouldn't
             // be able to support bindings in nested templates to local refs that occur after the
@@ -17095,6 +17096,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         TemplateDefinitionBuilder.prototype.allocateDataSlot = function () { return this._dataIndex++; };
         TemplateDefinitionBuilder.prototype.getConstCount = function () { return this._dataIndex; };
         TemplateDefinitionBuilder.prototype.getVarCount = function () { return this._pureFunctionSlots; };
+        TemplateDefinitionBuilder.prototype.getConsts = function () { return this._constants; };
         TemplateDefinitionBuilder.prototype.getNgContentSelectors = function () {
             return this._ngContentReservedSlots.length ?
                 this.constantPool.getConstLiteral(asLiteral(this._ngContentReservedSlots), true) :
@@ -17318,10 +17320,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             return attrExprs;
         };
-        TemplateDefinitionBuilder.prototype.toAttrsParam = function (attrsExprs) {
-            return attrsExprs.length > 0 ?
-                this.constantPool.getConstLiteral(literalArr(attrsExprs), true) :
-                TYPED_NULL_EXPR;
+        TemplateDefinitionBuilder.prototype.addConstants = function (constExprs) {
+            if (constExprs.length > 0) {
+                var literal$1 = literalArr(constExprs);
+                // Try to reuse a literal that's already in the array, if possible.
+                for (var i = 0; i < this._constants.length; i++) {
+                    if (this._constants[i].isEquivalent(literal$1)) {
+                        return literal(i);
+                    }
+                }
+                return literal(this._constants.push(literal$1) - 1);
+            }
+            return TYPED_NULL_EXPR;
         };
         TemplateDefinitionBuilder.prototype.prepareRefsParameter = function (references) {
             var _this = this;
@@ -18070,10 +18080,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (ngContentSelectors) {
             definitionMap.set('ngContentSelectors', ngContentSelectors);
         }
-        // e.g. `consts: 2`
-        definitionMap.set('consts', literal(templateBuilder.getConstCount()));
+        // e.g. `decls: 2`
+        definitionMap.set('decls', literal(templateBuilder.getConstCount()));
         // e.g. `vars: 2`
         definitionMap.set('vars', literal(templateBuilder.getVarCount()));
+        // e.g. `consts: [['one', 'two'], ['three', 'four']]
+        var consts = templateBuilder.getConsts();
+        if (consts.length > 0) {
+            definitionMap.set('consts', literalArr(consts));
+        }
         definitionMap.set('template', templateFunctionExpression);
         // e.g. `directives: [MyDirective]`
         if (directivesUsed.size) {
@@ -18913,7 +18928,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.9+76.sha-b2b917d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.9+81.sha-305f368.with-local-changes');
 
     /**
      * @license
@@ -34216,7 +34231,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.9+76.sha-b2b917d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.9+81.sha-305f368.with-local-changes');
 
     /**
      * @license
@@ -52512,10 +52527,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var def = {
             type: type,
             providersResolver: null,
-            consts: componentDefinition.consts,
+            decls: componentDefinition.decls,
             vars: componentDefinition.vars,
             factory: null,
             template: componentDefinition.template || null,
+            consts: componentDefinition.consts || null,
             ngContentSelectors: componentDefinition.ngContentSelectors,
             hostBindings: componentDefinition.hostBindings || null,
             contentQueries: componentDefinition.contentQueries || null,
@@ -58233,7 +58249,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         directiveRegistry, //
         pipeRegistry, //
         firstChild, //
-        schemas) {
+        schemas, //
+        consts) {
             this.id = id;
             this.blueprint = blueprint;
             this.template = template;
@@ -58261,6 +58278,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.pipeRegistry = pipeRegistry;
             this.firstChild = firstChild;
             this.schemas = schemas;
+            this.consts = consts;
         }
         Object.defineProperty(TView.prototype, "template_", {
             get: function () {
@@ -59340,22 +59358,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @returns TView
      */
     function getOrCreateTView(def) {
-        return def.tView || (def.tView = createTView(-1, def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery, def.schemas));
+        return def.tView || (def.tView = createTView(-1, def.template, def.decls, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery, def.schemas, def.consts));
     }
     /**
      * Creates a TView instance
      *
      * @param viewIndex The viewBlockId for inline views, or -1 if it's a component/dynamic
      * @param templateFn Template function
-     * @param consts The number of nodes, local refs, and pipes in this template
+     * @param decls The number of nodes, local refs, and pipes in this template
      * @param directives Registry of directives for this view
      * @param pipes Registry of pipes for this view
      * @param viewQuery View queries for this view
      * @param schemas Schemas for this view
+     * @param consts Constants for this view
      */
-    function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery, schemas) {
+    function createTView(viewIndex, templateFn, decls, vars, directives, pipes, viewQuery, schemas, consts) {
         ngDevMode && ngDevMode.tView++;
-        var bindingStartIndex = HEADER_OFFSET + consts;
+        var bindingStartIndex = HEADER_OFFSET + decls;
         // This length does not yet contain host bindings from child directives because at this point,
         // we don't know which directives are active on this template. As soon as a directive is matched
         // that has a host binding, we will update the blueprint with that def's hostVars count.
@@ -59390,7 +59409,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 directives, // directiveRegistry: DirectiveDefList|null,
             typeof pipes === 'function' ? pipes() : pipes, // pipeRegistry: PipeDefList|null,
             null, // firstChild: TNode|null,
-            schemas) :
+            schemas, // schemas: SchemaMetadata[]|null,
+            consts) : // consts: TAttributes[]
             {
                 id: viewIndex,
                 blueprint: blueprint,
@@ -59419,6 +59439,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
                 firstChild: null,
                 schemas: schemas,
+                consts: consts,
             };
     }
     function createViewBlueprint(bindingStartIndex, initialViewLength) {
@@ -64876,26 +64897,27 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @param index The index of the container in the data array
      * @param templateFn Inline template
-     * @param consts The number of nodes, local refs, and pipes for this template
+     * @param decls The number of nodes, local refs, and pipes for this template
      * @param vars The number of bindings for this template
      * @param tagName The name of the container element, if applicable
-     * @param attrs The attrs attached to the container, if applicable
+     * @param constsIndex Index of template in the `consts` array.
      * @param localRefs A set of local reference bindings on the element.
      * @param localRefExtractor A function which extracts local-refs values from the template.
      *        Defaults to the current element associated with the local-ref.
      *
      * @codeGenApi
      */
-    function ɵɵtemplate(index, templateFn, consts, vars, tagName, attrs, localRefs, localRefExtractor) {
+    function ɵɵtemplate(index, templateFn, decls, vars, tagName, constsIndex, localRefs, localRefExtractor) {
         var lView = getLView();
         var tView = lView[TVIEW];
+        var tViewConsts = tView.consts;
         // TODO: consider a separate node type for templates
-        var tContainerNode = containerInternal(lView, index, tagName || null, attrs || null);
+        var tContainerNode = containerInternal(lView, index, tagName || null, tViewConsts === null || constsIndex == null ? null : tViewConsts[constsIndex]);
         if (tView.firstTemplatePass) {
             ngDevMode && ngDevMode.firstTemplatePass++;
             resolveDirectives(tView, lView, tContainerNode, localRefs || null);
             registerPostOrderHooks(tView, tContainerNode);
-            var embeddedTView = tContainerNode.tViews = createTView(-1, templateFn, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null, tView.schemas);
+            var embeddedTView = tContainerNode.tViews = createTView(-1, templateFn, decls, vars, tView.directiveRegistry, tView.pipeRegistry, null, tView.schemas, tViewConsts);
             var embeddedTViewNode = createTNode(tView, null, 2 /* View */, -1, null, null);
             embeddedTViewNode.injectorIndex = tContainerNode.injectorIndex;
             embeddedTView.node = embeddedTViewNode;
@@ -65513,8 +65535,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @param index Index of the element in the LView array
      * @param name Name of the DOM Node
-     * @param attrs Statically bound set of attributes, classes, and styles to be written into the DOM
-     *              element on creation. Use [AttributeMarker] to denote the meaning of this array.
+     * @param constsIndex Index of the element in the `consts` array.
      * @param localRefs A set of local reference bindings on the element.
      *
      * Attributes and localRefs are passed as an array of strings where elements with an even index
@@ -65523,19 +65544,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @codeGenApi
      */
-    function ɵɵelementStart(index, name, attrs, localRefs) {
+    function ɵɵelementStart(index, name, constsIndex, localRefs) {
         var lView = getLView();
         var tView = lView[TVIEW];
-        ngDevMode && assertEqual(lView[BINDING_INDEX], tView.bindingStartIndex, 'elements should be created before any bindings ');
+        var tViewConsts = tView.consts;
+        var consts = tViewConsts === null || constsIndex == null ? null : tViewConsts[constsIndex];
+        ngDevMode && assertEqual(lView[BINDING_INDEX], tView.bindingStartIndex, 'elements should be created before any bindings');
         ngDevMode && ngDevMode.rendererCreateElement++;
         ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
         var renderer = lView[RENDERER];
         var native = lView[index + HEADER_OFFSET] = elementCreate(name, renderer, getNamespace());
-        var tNode = getOrCreateTNode(tView, lView[T_HOST], index, 3 /* Element */, name, attrs || null);
-        if (attrs != null) {
-            var lastAttrIndex = setUpAttributes(renderer, native, attrs);
+        var tNode = getOrCreateTNode(tView, lView[T_HOST], index, 3 /* Element */, name, consts);
+        if (consts != null) {
+            var lastAttrIndex = setUpAttributes(renderer, native, consts);
             if (tView.firstTemplatePass) {
-                registerInitialStylingOnTNode(tNode, attrs, lastAttrIndex);
+                registerInitialStylingOnTNode(tNode, consts, lastAttrIndex);
             }
         }
         if ((tNode.flags & 64 /* hasInitialStyling */) === 64 /* hasInitialStyling */) {
@@ -65607,14 +65630,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @param index Index of the element in the data array
      * @param name Name of the DOM Node
-     * @param attrs Statically bound set of attributes, classes, and styles to be written into the DOM
-     *              element on creation. Use [AttributeMarker] to denote the meaning of this array.
+     * @param constsIndex Index of the element in the `consts` array.
      * @param localRefs A set of local reference bindings on the element.
      *
      * @codeGenApi
      */
-    function ɵɵelement(index, name, attrs, localRefs) {
-        ɵɵelementStart(index, name, attrs, localRefs);
+    function ɵɵelement(index, name, constsIndex, localRefs) {
+        ɵɵelementStart(index, name, constsIndex, localRefs);
         ɵɵelementEnd();
     }
     /**
@@ -65707,7 +65729,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * The instruction must later be followed by `elementContainerEnd()` call.
      *
      * @param index Index of the element in the LView array
-     * @param attrs Set of attributes to be used when matching directives.
+     * @param constsIndex Index of the container in the `consts` array.
      * @param localRefs A set of local reference bindings on the element.
      *
      * Even if this instruction accepts a set of attributes no actual attribute values are propagated to
@@ -65716,21 +65738,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @codeGenApi
      */
-    function ɵɵelementContainerStart(index, attrs, localRefs) {
+    function ɵɵelementContainerStart(index, constsIndex, localRefs) {
         var lView = getLView();
         var tView = lView[TVIEW];
         var renderer = lView[RENDERER];
         var tagName = 'ng-container';
+        var tViewConsts = tView.consts;
+        var consts = tViewConsts === null || constsIndex == null ? null : tViewConsts[constsIndex];
         ngDevMode && assertEqual(lView[BINDING_INDEX], tView.bindingStartIndex, 'element containers should be created before any bindings');
         ngDevMode && ngDevMode.rendererCreateComment++;
         ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
         var native = lView[index + HEADER_OFFSET] = renderer.createComment(ngDevMode ? tagName : '');
         ngDevMode && assertDataInRange(lView, index - 1);
-        var tNode = getOrCreateTNode(tView, lView[T_HOST], index, 4 /* ElementContainer */, tagName, attrs || null);
-        if (attrs && tView.firstTemplatePass) {
+        var tNode = getOrCreateTNode(tView, lView[T_HOST], index, 4 /* ElementContainer */, tagName, consts);
+        if (consts && tView.firstTemplatePass) {
             // While ng-container doesn't necessarily support styling, we use the style context to identify
             // and execute directives on the ng-container.
-            registerInitialStylingOnTNode(tNode, attrs, 0);
+            registerInitialStylingOnTNode(tNode, consts, 0);
         }
         appendChild(native, tNode, lView);
         attachPatchData(native, lView);
@@ -65779,13 +65803,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * and {@link elementContainerEnd}
      *
      * @param index Index of the element in the LView array
-     * @param attrs Set of attributes to be used when matching directives.
+     * @param constsIndex Index of the container in the `consts` array.
      * @param localRefs A set of local reference bindings on the element.
      *
      * @codeGenApi
      */
-    function ɵɵelementContainer(index, attrs, localRefs) {
-        ɵɵelementContainerStart(index, attrs, localRefs);
+    function ɵɵelementContainer(index, constsIndex, localRefs) {
+        ɵɵelementContainerStart(index, constsIndex, localRefs);
         ɵɵelementContainerEnd();
     }
 
@@ -65804,7 +65828,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @codeGenApi
      */
-    function ɵɵembeddedViewStart(viewBlockId, consts, vars) {
+    function ɵɵembeddedViewStart(viewBlockId, decls, vars) {
         var lView = getLView();
         var previousOrParentTNode = getPreviousOrParentTNode();
         // The previous node can be a view node if we are processing an inline for loop
@@ -65820,7 +65844,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         else {
             // When we create a new LView, we always reset the state of the instructions.
-            viewToRender = createLView(lView, getOrCreateEmbeddedTView(viewBlockId, consts, vars, containerTNode), null, 16 /* CheckAlways */, null, null);
+            viewToRender = createLView(lView, getOrCreateEmbeddedTView(viewBlockId, decls, vars, containerTNode), null, 16 /* CheckAlways */, null, null);
             var tParentNode = getIsParent() ? previousOrParentTNode :
                 previousOrParentTNode && previousOrParentTNode.parent;
             assignTViewNodeToLView(viewToRender[TVIEW], tParentNode, viewBlockId, viewToRender);
@@ -65844,19 +65868,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * it with the same index (since it's in the same template).
      *
      * @param viewIndex The index of the TView in TNode.tViews
-     * @param consts The number of nodes, local refs, and pipes in this template
+     * @param decls The number of nodes, local refs, and pipes in this template
      * @param vars The number of bindings and pure function bindings in this template
      * @param container The parent container in which to look for the view's static data
      * @returns TView
      */
-    function getOrCreateEmbeddedTView(viewIndex, consts, vars, parent) {
+    function getOrCreateEmbeddedTView(viewIndex, decls, vars, parent) {
         var tView = getLView()[TVIEW];
         ngDevMode && assertNodeType(parent, 0 /* Container */);
         var containerTViews = parent.tViews;
         ngDevMode && assertDefined(containerTViews, 'TView expected');
         ngDevMode && assertEqual(Array.isArray(containerTViews), true, 'TViews should be in an array');
         if (viewIndex >= containerTViews.length || containerTViews[viewIndex] == null) {
-            containerTViews[viewIndex] = createTView(viewIndex, null, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null, null);
+            containerTViews[viewIndex] = createTView(viewIndex, null, decls, vars, tView.directiveRegistry, tView.pipeRegistry, null, null, tView.consts);
         }
         return containerTViews[viewIndex];
     }
@@ -68833,7 +68857,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *     type: ComponentWithProviders,
      *     selectors: [['component-with-providers']],
      *    factory: () => new ComponentWithProviders(directiveInject(GreeterDE as any)),
-     *    consts: 1,
+     *    decls: 1,
      *    vars: 1,
      *    template: function(fs: RenderFlags, ctx: ComponentWithProviders) {
      *      if (fs & RenderFlags.Create) {
@@ -69118,7 +69142,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.9+76.sha-b2b917d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.9+81.sha-305f368.with-local-changes');
 
     /**
      * @license
@@ -71866,7 +71890,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     hostRNode.setAttribute('ng-version', VERSION$3.full);
             }
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootTView = createTView(-1, null, 1, 0, null, null, null, null);
+            var rootTView = createTView(-1, null, 1, 0, null, null, null, null, null);
             var rootLView = createLView(null, rootTView, rootContext, rootFlags, null, null, rendererFactory, renderer, sanitizer, rootViewInjector);
             // rootView is the parent when bootstrapping
             var oldLView = selectView(rootLView, null);
@@ -73423,7 +73447,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Bindings for pure functions are stored after regular bindings.
      *
-     * |------consts------|---------vars---------|                 |----- hostVars (dir1) ------|
+     * |-------decls------|---------vars---------|                 |----- hostVars (dir1) ------|
      * ------------------------------------------------------------------------------------------
      * | nodes/refs/pipes | bindings | fn slots  | injector | dir1 | host bindings | host slots |
      * ------------------------------------------------------------------------------------------
@@ -78951,8 +78975,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -82665,7 +82688,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.9+76.sha-b2b917d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.9+81.sha-305f368.with-local-changes');
 
     /**
      * @license
