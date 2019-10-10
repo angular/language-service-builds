@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+27.sha-1ae77da.with-local-changes
+ * @license Angular v9.0.0-next.10+28.sha-6ab5f36.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18928,7 +18928,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+27.sha-1ae77da.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+28.sha-6ab5f36.with-local-changes');
 
     /**
      * @license
@@ -21905,7 +21905,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         return;
                     }
                     else {
-                        var providersInfo = providers.reduce(function (soFar, seenProvider, seenProviderIdx) {
+                        var providersInfo = providers
+                            .reduce(function (soFar, seenProvider, seenProviderIdx) {
                             if (seenProviderIdx < providerIdx) {
                                 soFar.push("" + stringifyType(seenProvider));
                             }
@@ -34231,7 +34232,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+27.sha-1ae77da.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+28.sha-6ab5f36.with-local-changes');
 
     /**
      * @license
@@ -53638,8 +53639,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
                 else {
                     isProc ?
-                        renderer
-                            .setAttribute(native, attrName, attrVal) :
+                        renderer.setAttribute(native, attrName, attrVal) :
                         native.setAttribute(attrName, attrVal);
                 }
                 i++;
@@ -55122,8 +55122,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return SafeResourceUrlImpl;
     }(SafeValueImpl));
     function unwrapSafeValue(value) {
-        return value instanceof SafeValueImpl ?
-            value.changingThisBreaksApplicationSecurity :
+        return value instanceof SafeValueImpl ? value.changingThisBreaksApplicationSecurity :
             value;
     }
     function allowSanitizationBypassAndThrow(value, type) {
@@ -55137,8 +55136,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return actualType === type;
     }
     function getSanitizationBypassType(value) {
-        return value instanceof SafeValueImpl && value.getTypeName() ||
-            null;
+        return value instanceof SafeValueImpl && value.getTypeName() || null;
     }
 
     /**
@@ -69256,7 +69254,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+27.sha-1ae77da.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+28.sha-6ab5f36.with-local-changes');
 
     /**
      * @license
@@ -82803,7 +82801,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+27.sha-1ae77da.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+28.sha-6ab5f36.with-local-changes');
 
     /**
      * @license
