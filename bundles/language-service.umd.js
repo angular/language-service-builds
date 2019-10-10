@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+19.sha-5ede5b7.with-local-changes
+ * @license Angular v9.0.0-next.10+25.sha-df78d7c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4217,7 +4217,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.description = description;
             this.customId = customId;
             this.id = this.customId;
-            /** The id to use if there is no custom id and if `i18nLegacyMessageIdFormat` is true */
+            /** The id to use if there is no custom id and if `i18nLegacyMessageIdFormat` is not empty */
             this.legacyId = '';
             if (nodes.length) {
                 this.sources = [{
@@ -18943,7 +18943,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+25.sha-df78d7c.with-local-changes');
 
     /**
      * @license
@@ -34246,7 +34246,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+25.sha-df78d7c.with-local-changes');
 
     /**
      * @license
@@ -47668,13 +47668,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             var handlers = [
                 new BaseDefDecoratorHandler(this.reflector, evaluator, this.isCore),
-                new ComponentDecoratorHandler(this.reflector, evaluator, metaRegistry, this.metaReader, scopeReader, scopeRegistry, this.isCore, this.resourceManager, this.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.i18nLegacyMessageIdFormat || '', this.moduleResolver, this.cycleAnalyzer, this.refEmitter, this.defaultImportTracker, this.incrementalState),
+                new ComponentDecoratorHandler(this.reflector, evaluator, metaRegistry, this.metaReader, scopeReader, scopeRegistry, this.isCore, this.resourceManager, this.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.getI18nLegacyMessageFormat(), this.moduleResolver, this.cycleAnalyzer, this.refEmitter, this.defaultImportTracker, this.incrementalState),
                 new DirectiveDecoratorHandler(this.reflector, evaluator, metaRegistry, this.defaultImportTracker, this.isCore),
                 new InjectableDecoratorHandler(this.reflector, this.defaultImportTracker, this.isCore, this.options.strictInjectionParameters || false),
                 new NgModuleDecoratorHandler(this.reflector, evaluator, this.metaReader, metaRegistry, scopeRegistry, referencesRegistry, this.isCore, this.routeAnalyzer, this.refEmitter, this.defaultImportTracker, this.options.i18nInLocale),
                 new PipeDecoratorHandler(this.reflector, evaluator, metaRegistry, this.defaultImportTracker, this.isCore),
             ];
             return new IvyCompilation(handlers, this.reflector, this.importRewriter, this.incrementalState, this.perfRecorder, this.sourceToFactorySymbols, scopeRegistry);
+        };
+        NgtscProgram.prototype.getI18nLegacyMessageFormat = function () {
+            return this.options.enableI18nLegacyMessageIdFormat !== false && this.options.i18nInFormat ||
+                '';
         };
         Object.defineProperty(NgtscProgram.prototype, "reflector", {
             get: function () {
@@ -53121,9 +53125,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getValue(data, bindingIndex) {
         return bindingIndex > 0 ? data[bindingIndex] : null;
     }
-    function isContextLocked(context, hostBindingsMode) {
-        return hasConfig(context, getLockedConfig(hostBindingsMode));
-    }
     function getLockedConfig(hostBindingsMode) {
         return hostBindingsMode ? 256 /* HostBindingsLocked */ :
             128 /* TemplateBindingsLocked */;
@@ -55285,13 +55286,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function TStylingContextDebug(context) {
             this.context = context;
         }
-        Object.defineProperty(TStylingContextDebug.prototype, "isTemplateLocked", {
-            get: function () { return isContextLocked(this.context, true); },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TStylingContextDebug.prototype, "isHostBindingsLocked", {
-            get: function () { return isContextLocked(this.context, false); },
+        Object.defineProperty(TStylingContextDebug.prototype, "config", {
+            get: function () { return buildConfig(this.context); },
             enumerable: true,
             configurable: true
         });
@@ -55345,11 +55341,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var NodeStylingDebug = /** @class */ (function () {
         function NodeStylingDebug(context, _data, _isClassBased) {
-            this.context = context;
             this._data = _data;
             this._isClassBased = _isClassBased;
             this._sanitizer = null;
+            this._debugContext = isStylingContext(context) ?
+                new TStylingContextDebug(context) :
+                context;
         }
+        Object.defineProperty(NodeStylingDebug.prototype, "context", {
+            get: function () { return this._debugContext; },
+            enumerable: true,
+            configurable: true
+        });
         /**
          * Overrides the sanitizer used to process styles.
          */
@@ -55372,26 +55375,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             configurable: true
         });
         Object.defineProperty(NodeStylingDebug.prototype, "config", {
-            get: function () {
-                var hasMapBindings = hasConfig(this.context, 4 /* HasMapBindings */);
-                var hasPropBindings = hasConfig(this.context, 2 /* HasPropBindings */);
-                var hasCollisions = hasConfig(this.context, 8 /* HasCollisions */);
-                var hasTemplateBindings = hasConfig(this.context, 32 /* HasTemplateBindings */);
-                var hasHostBindings = hasConfig(this.context, 64 /* HasHostBindings */);
-                var templateBindingsLocked = hasConfig(this.context, 128 /* TemplateBindingsLocked */);
-                var hostBindingsLocked = hasConfig(this.context, 256 /* HostBindingsLocked */);
-                var allowDirectStyling$1 = allowDirectStyling(this.context, false) || allowDirectStyling(this.context, true);
-                return {
-                    hasMapBindings: hasMapBindings,
-                    hasPropBindings: hasPropBindings,
-                    hasCollisions: hasCollisions,
-                    hasTemplateBindings: hasTemplateBindings,
-                    hasHostBindings: hasHostBindings,
-                    templateBindingsLocked: templateBindingsLocked,
-                    hostBindingsLocked: hostBindingsLocked,
-                    allowDirectStyling: allowDirectStyling$1,
-                };
-            },
+            get: function () { return buildConfig(this.context.context); },
             enumerable: true,
             configurable: true
         });
@@ -55412,19 +55396,39 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
             var mockElement = {};
-            var hasMaps = hasConfig(this.context, 4 /* HasMapBindings */);
+            var hasMaps = hasConfig(this.context.context, 4 /* HasMapBindings */);
             if (hasMaps) {
                 activateStylingMapFeature();
             }
             var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
             // run the template bindings
-            applyStylingViaContext(this.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
+            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
             // and also the host bindings
-            applyStylingViaContext(this.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
+            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
         };
         return NodeStylingDebug;
     }());
+    function buildConfig(context) {
+        var hasMapBindings = hasConfig(context, 4 /* HasMapBindings */);
+        var hasPropBindings = hasConfig(context, 2 /* HasPropBindings */);
+        var hasCollisions = hasConfig(context, 8 /* HasCollisions */);
+        var hasTemplateBindings = hasConfig(context, 32 /* HasTemplateBindings */);
+        var hasHostBindings = hasConfig(context, 64 /* HasHostBindings */);
+        var templateBindingsLocked = hasConfig(context, 128 /* TemplateBindingsLocked */);
+        var hostBindingsLocked = hasConfig(context, 256 /* HostBindingsLocked */);
+        var allowDirectStyling$1 = allowDirectStyling(context, false) || allowDirectStyling(context, true);
+        return {
+            hasMapBindings: hasMapBindings,
+            hasPropBindings: hasPropBindings,
+            hasCollisions: hasCollisions,
+            hasTemplateBindings: hasTemplateBindings,
+            hasHostBindings: hasHostBindings,
+            templateBindingsLocked: templateBindingsLocked,
+            hostBindingsLocked: hostBindingsLocked,
+            allowDirectStyling: allowDirectStyling$1,
+        };
+    }
 
     /**
      * @license
@@ -61001,7 +61005,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+25.sha-df78d7c.with-local-changes');
 
     /**
      * @license
@@ -71607,7 +71611,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+25.sha-df78d7c.with-local-changes');
 
     /**
      * @license
