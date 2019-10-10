@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+2.sha-a3ef3e1.with-local-changes
+ * @license Angular v9.0.0-next.10+17.sha-b2decf0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18928,7 +18928,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+2.sha-a3ef3e1.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
 
     /**
      * @license
@@ -34231,7 +34231,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+2.sha-a3ef3e1.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
 
     /**
      * @license
@@ -53091,9 +53091,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return NodeInjectorFactory;
     }());
     function isFactory(obj) {
-        // See: https://jsperf.com/instanceof-vs-getprototypeof
-        return obj !== null && typeof obj == 'object' &&
-            Object.getPrototypeOf(obj) == NodeInjectorFactory.prototype;
+        return obj instanceof NodeInjectorFactory;
     }
 
     /**
@@ -53829,10 +53827,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * tNode for styles and for classes. This function allocates a new instance of a
      * `TStylingContext` with the initial values (see `interfaces.ts` for more info).
      */
-    function allocTStylingContext(initialStyling) {
+    function allocTStylingContext(initialStyling, hasDirectives) {
         initialStyling = initialStyling || allocStylingMapArray();
+        var config = 0 /* Initial */;
+        if (hasDirectives) {
+            config |= 1 /* HasDirectives */;
+        }
+        if (initialStyling.length > 1 /* ValuesStartPosition */) {
+            config |= 16 /* HasInitialStyling */;
+        }
         return [
-            0 /* Initial */,
+            config,
             DEFAULT_TOTAL_SOURCES,
             initialStyling,
         ];
@@ -53850,15 +53855,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Determines whether or not to apply styles/classes directly or via context resolution.
      *
      * There are three cases that are matched here:
-     * 1. context is locked for template or host bindings (depending on `hostBindingsMode`)
-     * 2. There are no collisions (i.e. properties with more than one binding)
-     * 3. There are only "prop" or "map" bindings present, but not both
+     * 1. there are no directives present AND ngDevMode is falsy
+     * 2. context is locked for template or host bindings (depending on `hostBindingsMode`)
+     * 3. There are no collisions (i.e. properties with more than one binding) across multiple
+     *    sources (i.e. template + directive, directive + directive, directive + component)
      */
     function allowDirectStyling(context, hostBindingsMode) {
+        var allow = false;
         var config = getConfig(context);
-        return ((config & getLockedConfig(hostBindingsMode)) !== 0) &&
-            ((config & 4 /* HasCollisions */) === 0) &&
-            ((config & 3 /* HasPropAndMapBindings */) !== 3 /* HasPropAndMapBindings */);
+        var contextIsLocked = (config & getLockedConfig(hostBindingsMode)) !== 0;
+        var hasNoDirectives = (config & 1 /* HasDirectives */) === 0;
+        // if no directives are present then we do not need populate a context at all. This
+        // is because duplicate prop bindings cannot be registered through the template. If
+        // and when this happens we can safely apply the value directly without context
+        // resolution...
+        if (hasNoDirectives) {
+            // `ngDevMode` is required to be checked here because tests/debugging rely on the context being
+            // populated. If things are in production mode then there is no need to build a context
+            // therefore the direct apply can be allowed (even on the first update).
+            allow = ngDevMode ? contextIsLocked : true;
+        }
+        else if (contextIsLocked) {
+            var hasNoCollisions = (config & 8 /* HasCollisions */) === 0;
+            var hasOnlyMapsOrOnlyProps = (config & 6 /* HasPropAndMapBindings */) !== 6 /* HasPropAndMapBindings */;
+            allow = hasNoCollisions && hasOnlyMapsOrOnlyProps;
+        }
+        return allow;
     }
     function patchConfig(context, flag) {
         context[0 /* ConfigPosition */] |= flag;
@@ -53913,12 +53935,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return hasConfig(context, getLockedConfig(hostBindingsMode));
     }
     function getLockedConfig(hostBindingsMode) {
-        return hostBindingsMode ? 128 /* HostBindingsLocked */ :
-            64 /* TemplateBindingsLocked */;
+        return hostBindingsMode ? 256 /* HostBindingsLocked */ :
+            128 /* TemplateBindingsLocked */;
     }
     function getPropValuesStartPosition(context) {
         var startPosition = 3 /* ValuesStartPosition */;
-        if (hasConfig(context, 2 /* HasMapBindings */)) {
+        if (hasConfig(context, 4 /* HasMapBindings */)) {
             startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
         }
         return startPosition;
@@ -56848,6 +56870,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         classesIndex: -1,
         stylesBitMask: -1,
         stylesIndex: -1,
+        lastDirectClassMap: null,
+        lastDirectStyleMap: null,
     };
     var BIT_MASK_START_VALUE = 0;
     // the `0` start value is reserved for [map]-based entries
@@ -56876,6 +56900,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             _state.classesIndex = INDEX_START_VALUE;
             _state.stylesBitMask = BIT_MASK_START_VALUE;
             _state.stylesIndex = INDEX_START_VALUE;
+            _state.lastDirectClassMap = null;
+            _state.lastDirectStyleMap = null;
         }
         else if (_state.directiveIndex !== directiveIndex) {
             _state.directiveIndex = directiveIndex;
@@ -57001,13 +57027,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // are run in the update phase, and, as a result, are no more
             // styling instructions that are run in the creation phase).
             registerBinding(context, counterIndex, sourceIndex, prop, bindingIndex, sanitizationRequired);
-            patchConfig(context, hostBindingsMode ? 32 /* HasHostBindings */ : 16 /* HasTemplateBindings */);
-            patchConfig(context, prop ? 1 /* HasPropBindings */ : 2 /* HasMapBindings */);
+            patchConfig(context, hostBindingsMode ? 64 /* HasHostBindings */ : 32 /* HasTemplateBindings */);
         }
         var changed = forceUpdate || hasValueChanged(data[bindingIndex], value);
         if (changed) {
             setValue(data, bindingIndex, value);
-            var doSetValuesAsStale = (getConfig(context) & 32 /* HasHostBindings */) &&
+            var doSetValuesAsStale = (getConfig(context) & 64 /* HasHostBindings */) &&
                 !hostBindingsMode && (prop ? !value : true);
             if (doSetValuesAsStale) {
                 renderHostBindingsAsStale(context, data, prop);
@@ -57028,7 +57053,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function renderHostBindingsAsStale(context, data, prop) {
         var valuesCount = getValuesCount(context);
-        if (prop !== null && hasConfig(context, 1 /* HasPropBindings */)) {
+        if (prop !== null && hasConfig(context, 2 /* HasPropBindings */)) {
             var itemsPerRow = 4 /* BindingsStartOffset */ + valuesCount;
             var i = 3 /* ValuesStartPosition */;
             var found = false;
@@ -57051,7 +57076,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
-        if (hasConfig(context, 2 /* HasMapBindings */)) {
+        if (hasConfig(context, 4 /* HasMapBindings */)) {
             var bindingsStart = 3 /* ValuesStartPosition */ + 4 /* BindingsStartOffset */;
             var valuesStart = bindingsStart + 1; // the first column is template bindings
             var valuesEnd = bindingsStart + valuesCount - 1;
@@ -57115,7 +57140,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     allocateNewContextEntry(context, i, prop, sanitizationRequired);
                 }
                 else if (isBindingIndexValue) {
-                    patchConfig(context, 4 /* HasCollisions */);
+                    patchConfig(context, 8 /* HasCollisions */);
                 }
                 addBindingIntoContext(context, i, bindingValue, countId, sourceIndex);
                 found = true;
@@ -57306,7 +57331,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         if (hasInitialStyling) {
-            patchConfig(context, 8 /* HasInitialStyling */);
+            patchConfig(context, 16 /* HasInitialStyling */);
         }
     }
     /**
@@ -57340,7 +57365,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var bitMask = normalizeBitMaskValue(bitMaskValue);
         var stylingMapsSyncFn = null;
         var applyAllValues = false;
-        if (hasConfig(context, 2 /* HasMapBindings */)) {
+        if (hasConfig(context, 4 /* HasMapBindings */)) {
             stylingMapsSyncFn = getStylingMapsSyncFn();
             var mapsGuardMask = getGuardMask(context, 3 /* ValuesStartPosition */, hostBindingsMode);
             applyAllValues = (bitMask & mapsGuardMask) !== 0;
@@ -57421,17 +57446,45 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * automatically. This function is intended to be used for performance reasons in the
      * event that there is no need to apply styling via context resolution.
      *
-     * See `allowDirectStylingApply`.
+     * This function has three different cases that can occur (for each item in the map):
+     *
+     * - Case 1: Attempt to apply the current value in the map to the element (if it's `non null`).
+     *
+     * - Case 2: If a map value fails to be applied then the algorithm will find a matching entry in
+     *           the initial values present in the context and attempt to apply that.
+     *
+     * - Default Case: If the initial value cannot be applied then a default value of `null` will be
+     *                 applied (which will remove the style/class value from the element).
+     *
+     * See `allowDirectStylingApply` to learn the logic used to determine whether any style/class
+     * bindings can be directly applied.
      *
      * @returns whether or not the styling map was applied to the element.
      */
-    function applyStylingMapDirectly(renderer, context, element, data, bindingIndex, map, applyFn, sanitizer, forceUpdate) {
+    function applyStylingMapDirectly(renderer, context, element, data, bindingIndex, map, isClassBased, applyFn, sanitizer, forceUpdate) {
         if (forceUpdate || hasValueChanged(data[bindingIndex], map)) {
             setValue(data, bindingIndex, map);
+            var initialStyles = hasConfig(context, 16 /* HasInitialStyling */) ? getStylingMapArray(context) : null;
             for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
                 var prop = getMapProp(map, i);
                 var value = getMapValue(map, i);
-                applyStylingValue(renderer, context, element, prop, value, applyFn, bindingIndex, sanitizer);
+                // case 1: apply the map value (if it exists)
+                var applied = applyStylingValue(renderer, element, prop, value, applyFn, bindingIndex, sanitizer);
+                // case 2: apply the initial value (if it exists)
+                if (!applied && initialStyles) {
+                    applied = findAndApplyMapValue(renderer, element, applyFn, initialStyles, prop, bindingIndex, sanitizer);
+                }
+                // default case: apply `null` to remove the value
+                if (!applied) {
+                    applyFn(renderer, element, prop, null, bindingIndex);
+                }
+            }
+            var state = getStylingState(element, TEMPLATE_DIRECTIVE_INDEX);
+            if (isClassBased) {
+                state.lastDirectClassMap = map;
+            }
+            else {
+                state.lastDirectStyleMap = map;
             }
             return true;
         }
@@ -57444,40 +57497,81 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * automatically. This function is intended to be used for performance reasons in the
      * event that there is no need to apply styling via context resolution.
      *
-     * See `allowDirectStylingApply`.
+     * This function has four different cases that can occur:
+     *
+     * - Case 1: Apply the provided prop/value (style or class) entry to the element
+     *           (if it is `non null`).
+     *
+     * - Case 2: If value does not get applied (because its `null` or `undefined`) then the algorithm
+     *           will check to see if a styling map value was applied to the element as well just
+     *           before this (via `styleMap` or `classMap`). If and when a map is present then the
+      *          algorithm will find the matching property in the map and apply its value.
+      *
+     * - Case 3: If a map value fails to be applied then the algorithm will check to see if there
+     *           are any initial values present and attempt to apply a matching value based on
+     *           the target prop.
+     *
+     * - Default Case: If a matching initial value cannot be applied then a default value
+     *                 of `null` will be applied (which will remove the style/class value
+     *                 from the element).
+     *
+     * See `allowDirectStylingApply` to learn the logic used to determine whether any style/class
+     * bindings can be directly applied.
      *
      * @returns whether or not the prop/value styling was applied to the element.
      */
-    function applyStylingValueDirectly(renderer, context, element, data, bindingIndex, prop, value, applyFn, sanitizer) {
+    function applyStylingValueDirectly(renderer, context, element, data, bindingIndex, prop, value, isClassBased, applyFn, sanitizer) {
+        var applied = false;
         if (hasValueChanged(data[bindingIndex], value)) {
             setValue(data, bindingIndex, value);
-            applyStylingValue(renderer, context, element, prop, value, applyFn, bindingIndex, sanitizer);
-            return true;
+            // case 1: apply the provided value (if it exists)
+            applied = applyStylingValue(renderer, element, prop, value, applyFn, bindingIndex, sanitizer);
+            // case 2: find the matching property in a styling map and apply the detected value
+            if (!applied && hasConfig(context, 4 /* HasMapBindings */)) {
+                var state = getStylingState(element, TEMPLATE_DIRECTIVE_INDEX);
+                var map = isClassBased ? state.lastDirectClassMap : state.lastDirectStyleMap;
+                applied = map ?
+                    findAndApplyMapValue(renderer, element, applyFn, map, prop, bindingIndex, sanitizer) :
+                    false;
+            }
+            // case 3: apply the initial value (if it exists)
+            if (!applied && hasConfig(context, 16 /* HasInitialStyling */)) {
+                var map = getStylingMapArray(context);
+                applied =
+                    map ? findAndApplyMapValue(renderer, element, applyFn, map, prop, bindingIndex) : false;
+            }
+            // default case: apply `null` to remove the value
+            if (!applied) {
+                applyFn(renderer, element, prop, null, bindingIndex);
+            }
         }
-        return false;
+        return applied;
     }
-    function applyStylingValue(renderer, context, element, prop, value, applyFn, bindingIndex, sanitizer) {
+    function applyStylingValue(renderer, element, prop, value, applyFn, bindingIndex, sanitizer) {
         var valueToApply = unwrapSafeValue(value);
         if (isStylingValueDefined(valueToApply)) {
             valueToApply =
                 sanitizer ? sanitizer(prop, value, 2 /* SanitizeOnly */) : valueToApply;
+            applyFn(renderer, element, prop, valueToApply, bindingIndex);
+            return true;
         }
-        else if (hasConfig(context, 8 /* HasInitialStyling */)) {
-            var initialStyles = getStylingMapArray(context);
-            if (initialStyles) {
-                valueToApply = findInitialStylingValue(initialStyles, prop);
-            }
-        }
-        applyFn(renderer, element, prop, valueToApply, bindingIndex);
+        return false;
     }
-    function findInitialStylingValue(map, prop) {
+    function findAndApplyMapValue(renderer, element, applyFn, map, prop, bindingIndex, sanitizer) {
         for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
             var p = getMapProp(map, i);
-            if (p >= prop) {
-                return p === prop ? getMapValue(map, i) : null;
+            if (p === prop) {
+                var valueToApply = getMapValue(map, i);
+                valueToApply =
+                    sanitizer ? sanitizer(prop, valueToApply, 2 /* SanitizeOnly */) : valueToApply;
+                applyFn(renderer, element, prop, valueToApply, bindingIndex);
+                return true;
+            }
+            if (p > prop) {
+                break;
             }
         }
-        return null;
+        return false;
     }
     function normalizeBitMaskValue(value) {
         // if pass => apply all values (-1 implies that all bits are flipped to true)
@@ -58116,13 +58210,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         });
         Object.defineProperty(NodeStylingDebug.prototype, "config", {
             get: function () {
-                var hasMapBindings = hasConfig(this.context, 2 /* HasMapBindings */);
-                var hasPropBindings = hasConfig(this.context, 1 /* HasPropBindings */);
-                var hasCollisions = hasConfig(this.context, 4 /* HasCollisions */);
-                var hasTemplateBindings = hasConfig(this.context, 16 /* HasTemplateBindings */);
-                var hasHostBindings = hasConfig(this.context, 32 /* HasHostBindings */);
-                var templateBindingsLocked = hasConfig(this.context, 64 /* TemplateBindingsLocked */);
-                var hostBindingsLocked = hasConfig(this.context, 128 /* HostBindingsLocked */);
+                var hasMapBindings = hasConfig(this.context, 4 /* HasMapBindings */);
+                var hasPropBindings = hasConfig(this.context, 2 /* HasPropBindings */);
+                var hasCollisions = hasConfig(this.context, 8 /* HasCollisions */);
+                var hasTemplateBindings = hasConfig(this.context, 32 /* HasTemplateBindings */);
+                var hasHostBindings = hasConfig(this.context, 64 /* HasHostBindings */);
+                var templateBindingsLocked = hasConfig(this.context, 128 /* TemplateBindingsLocked */);
+                var hostBindingsLocked = hasConfig(this.context, 256 /* HostBindingsLocked */);
                 var allowDirectStyling$1 = allowDirectStyling(this.context, false) || allowDirectStyling(this.context, true);
                 return {
                     hasMapBindings: hasMapBindings,
@@ -58155,7 +58249,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
             var mockElement = {};
-            var hasMaps = hasConfig(this.context, 2 /* HasMapBindings */);
+            var hasMaps = hasConfig(this.context, 4 /* HasMapBindings */);
             if (hasMaps) {
                 activateStylingMapFeature();
             }
@@ -65193,11 +65287,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var hostBindingsMode = isHostStyling();
         var context = isClassBased ? getClassesContext(tNode) : getStylesContext(tNode);
         var sanitizer = isClassBased ? null : getCurrentStyleSanitizer();
+        // we check for this in the instruction code so that the context can be notified
+        // about prop or map bindings so that the direct apply check can decide earlier
+        // if it allows for context resolution to be bypassed.
+        if (!isContextLocked(context, hostBindingsMode)) {
+            patchConfig(context, 2 /* HasPropBindings */);
+        }
         // Direct Apply Case: bypass context resolution and apply the
         // style/class value directly to the element
         if (allowDirectStyling(context, hostBindingsMode)) {
             var renderer = getRenderer(tNode, lView);
-            updated = applyStylingValueDirectly(renderer, context, native, lView, bindingIndex, prop, value, isClassBased ? setClass : setStyle, sanitizer);
+            updated = applyStylingValueDirectly(renderer, context, native, lView, bindingIndex, prop, value, isClassBased, isClassBased ? setClass : setStyle, sanitizer);
         }
         else {
             // Context Resolution (or first update) Case: save the value
@@ -65324,13 +65424,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var oldValue = lView[bindingIndex];
         var hostBindingsMode = isHostStyling();
         var sanitizer = getCurrentStyleSanitizer();
+        // we check for this in the instruction code so that the context can be notified
+        // about prop or map bindings so that the direct apply check can decide earlier
+        // if it allows for context resolution to be bypassed.
+        if (!isContextLocked(context, hostBindingsMode)) {
+            patchConfig(context, 4 /* HasMapBindings */);
+        }
         var valueHasChanged = hasValueChanged(oldValue, value);
         var stylingMapArr = value === NO_CHANGE ? NO_CHANGE : normalizeIntoStylingMap(oldValue, value, !isClassBased);
         // Direct Apply Case: bypass context resolution and apply the
         // style/class map values directly to the element
         if (allowDirectStyling(context, hostBindingsMode)) {
             var renderer = getRenderer(tNode, lView);
-            updated = applyStylingMapDirectly(renderer, context, native, lView, bindingIndex, stylingMapArr, isClassBased ? setClass : setStyle, sanitizer, valueHasChanged);
+            updated = applyStylingMapDirectly(renderer, context, native, lView, bindingIndex, stylingMapArr, isClassBased, isClassBased ? setClass : setStyle, sanitizer, valueHasChanged);
         }
         else {
             updated = valueHasChanged;
@@ -65482,7 +65588,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getContext(tNode, isClassBased) {
         var context = isClassBased ? tNode.classes : tNode.styles;
         if (!isStylingContext(context)) {
-            context = allocTStylingContext(context);
+            var hasDirectives = isDirectiveHost(tNode);
+            context = allocTStylingContext(context, hasDirectives);
             if (ngDevMode) {
                 attachStylingDebugObject(context);
             }
@@ -69142,7 +69249,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+2.sha-a3ef3e1.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
 
     /**
      * @license
@@ -78975,8 +79082,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -82689,7 +82795,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+2.sha-a3ef3e1.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
 
     /**
      * @license
