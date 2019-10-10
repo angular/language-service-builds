@@ -1,10 +1,10 @@
 {
   "name": "@angular/language-service",
-  "version": "9.0.0-next.10+21.sha-728cd84.with-local-changes",
+  "version": "9.0.0-next.10+20.sha-f640a4a.with-local-changes",
   "description": "Angular - language services",
   "main": "./bundles/language-service.umd.js",
   "module": "./fesm5/language-service.js",
-  "typings": "./index.d.ts",
+  "typings": "./language-service.d.ts",
   "author": "angular",
   "license": "MIT",
   "repository": {
