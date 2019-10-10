@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+20.sha-f640a4a.with-local-changes
+ * @license Angular v9.0.0-next.10+19.sha-5ede5b7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4217,7 +4217,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.description = description;
             this.customId = customId;
             this.id = this.customId;
-            /** The id to use if there is no custom id and if `i18nLegacyMessageIdFormat` is not empty */
+            /** The id to use if there is no custom id and if `i18nLegacyMessageIdFormat` is true */
             this.legacyId = '';
             if (nodes.length) {
                 this.sources = [{
@@ -18943,7 +18943,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+20.sha-f640a4a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
 
     /**
      * @license
@@ -34246,7 +34246,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+20.sha-f640a4a.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
 
     /**
      * @license
@@ -47668,17 +47668,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             var handlers = [
                 new BaseDefDecoratorHandler(this.reflector, evaluator, this.isCore),
-                new ComponentDecoratorHandler(this.reflector, evaluator, metaRegistry, this.metaReader, scopeReader, scopeRegistry, this.isCore, this.resourceManager, this.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.getI18nLegacyMessageFormat(), this.moduleResolver, this.cycleAnalyzer, this.refEmitter, this.defaultImportTracker, this.incrementalState),
+                new ComponentDecoratorHandler(this.reflector, evaluator, metaRegistry, this.metaReader, scopeReader, scopeRegistry, this.isCore, this.resourceManager, this.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.i18nLegacyMessageIdFormat || '', this.moduleResolver, this.cycleAnalyzer, this.refEmitter, this.defaultImportTracker, this.incrementalState),
                 new DirectiveDecoratorHandler(this.reflector, evaluator, metaRegistry, this.defaultImportTracker, this.isCore),
                 new InjectableDecoratorHandler(this.reflector, this.defaultImportTracker, this.isCore, this.options.strictInjectionParameters || false),
                 new NgModuleDecoratorHandler(this.reflector, evaluator, this.metaReader, metaRegistry, scopeRegistry, referencesRegistry, this.isCore, this.routeAnalyzer, this.refEmitter, this.defaultImportTracker, this.options.i18nInLocale),
                 new PipeDecoratorHandler(this.reflector, evaluator, metaRegistry, this.defaultImportTracker, this.isCore),
             ];
             return new IvyCompilation(handlers, this.reflector, this.importRewriter, this.incrementalState, this.perfRecorder, this.sourceToFactorySymbols, scopeRegistry);
-        };
-        NgtscProgram.prototype.getI18nLegacyMessageFormat = function () {
-            return this.options.enableI18nLegacyMessageIdFormat !== false && this.options.i18nInFormat ||
-                '';
         };
         Object.defineProperty(NgtscProgram.prototype, "reflector", {
             get: function () {
@@ -61005,7 +61001,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+20.sha-f640a4a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
 
     /**
      * @license
@@ -71611,7 +71607,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+20.sha-f640a4a.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+19.sha-5ede5b7.with-local-changes');
 
     /**
      * @license
