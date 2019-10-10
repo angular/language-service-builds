@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+17.sha-b2decf0.with-local-changes
+ * @license Angular v9.0.0-next.10+14.sha-3001716.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18943,7 +18943,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+14.sha-3001716.with-local-changes');
 
     /**
      * @license
@@ -34246,7 +34246,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+14.sha-3001716.with-local-changes');
 
     /**
      * @license
@@ -52722,7 +52722,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return NodeInjectorFactory;
     }());
     function isFactory(obj) {
-        return obj instanceof NodeInjectorFactory;
+        // See: https://jsperf.com/instanceof-vs-getprototypeof
+        return obj !== null && typeof obj == 'object' &&
+            Object.getPrototypeOf(obj) == NodeInjectorFactory.prototype;
     }
 
     /**
@@ -53063,32 +53065,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Determines whether or not to apply styles/classes directly or via context resolution.
      *
      * There are three cases that are matched here:
-     * 1. there are no directives present AND ngDevMode is falsy
-     * 2. context is locked for template or host bindings (depending on `hostBindingsMode`)
-     * 3. There are no collisions (i.e. properties with more than one binding) across multiple
-     *    sources (i.e. template + directive, directive + directive, directive + component)
+     * 1. context is locked for template or host bindings (depending on `hostBindingsMode`)
+     * 2. There are no collisions (i.e. properties with more than one binding)
+     * 3. There are only "prop" or "map" bindings present, but not both
      */
     function allowDirectStyling(context, hostBindingsMode) {
-        var allow = false;
         var config = getConfig(context);
-        var contextIsLocked = (config & getLockedConfig(hostBindingsMode)) !== 0;
-        var hasNoDirectives = (config & 1 /* HasDirectives */) === 0;
-        // if no directives are present then we do not need populate a context at all. This
-        // is because duplicate prop bindings cannot be registered through the template. If
-        // and when this happens we can safely apply the value directly without context
-        // resolution...
-        if (hasNoDirectives) {
-            // `ngDevMode` is required to be checked here because tests/debugging rely on the context being
-            // populated. If things are in production mode then there is no need to build a context
-            // therefore the direct apply can be allowed (even on the first update).
-            allow = ngDevMode ? contextIsLocked : true;
-        }
-        else if (contextIsLocked) {
-            var hasNoCollisions = (config & 8 /* HasCollisions */) === 0;
-            var hasOnlyMapsOrOnlyProps = (config & 6 /* HasPropAndMapBindings */) !== 6 /* HasPropAndMapBindings */;
-            allow = hasNoCollisions && hasOnlyMapsOrOnlyProps;
-        }
-        return allow;
+        return ((config & getLockedConfig(hostBindingsMode)) !== 0) &&
+            ((config & 4 /* HasCollisions */) === 0) &&
+            ((config & 3 /* HasPropAndMapBindings */) !== 3 /* HasPropAndMapBindings */);
     }
     function getProp(context, index) {
         return context[index + 3 /* PropOffset */];
@@ -53125,12 +53110,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return hasConfig(context, getLockedConfig(hostBindingsMode));
     }
     function getLockedConfig(hostBindingsMode) {
-        return hostBindingsMode ? 256 /* HostBindingsLocked */ :
-            128 /* TemplateBindingsLocked */;
+        return hostBindingsMode ? 128 /* HostBindingsLocked */ :
+            64 /* TemplateBindingsLocked */;
     }
     function getPropValuesStartPosition(context) {
         var startPosition = 3 /* ValuesStartPosition */;
-        if (hasConfig(context, 4 /* HasMapBindings */)) {
+        if (hasConfig(context, 2 /* HasMapBindings */)) {
             startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
         }
         return startPosition;
@@ -54804,7 +54789,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var bitMask = normalizeBitMaskValue(bitMaskValue);
         var stylingMapsSyncFn = null;
         var applyAllValues = false;
-        if (hasConfig(context, 4 /* HasMapBindings */)) {
+        if (hasConfig(context, 2 /* HasMapBindings */)) {
             stylingMapsSyncFn = getStylingMapsSyncFn();
             var mapsGuardMask = getGuardMask(context, 3 /* ValuesStartPosition */, hostBindingsMode);
             applyAllValues = (bitMask & mapsGuardMask) !== 0;
@@ -55373,13 +55358,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         });
         Object.defineProperty(NodeStylingDebug.prototype, "config", {
             get: function () {
-                var hasMapBindings = hasConfig(this.context, 4 /* HasMapBindings */);
-                var hasPropBindings = hasConfig(this.context, 2 /* HasPropBindings */);
-                var hasCollisions = hasConfig(this.context, 8 /* HasCollisions */);
-                var hasTemplateBindings = hasConfig(this.context, 32 /* HasTemplateBindings */);
-                var hasHostBindings = hasConfig(this.context, 64 /* HasHostBindings */);
-                var templateBindingsLocked = hasConfig(this.context, 128 /* TemplateBindingsLocked */);
-                var hostBindingsLocked = hasConfig(this.context, 256 /* HostBindingsLocked */);
+                var hasMapBindings = hasConfig(this.context, 2 /* HasMapBindings */);
+                var hasPropBindings = hasConfig(this.context, 1 /* HasPropBindings */);
+                var hasCollisions = hasConfig(this.context, 4 /* HasCollisions */);
+                var hasTemplateBindings = hasConfig(this.context, 16 /* HasTemplateBindings */);
+                var hasHostBindings = hasConfig(this.context, 32 /* HasHostBindings */);
+                var templateBindingsLocked = hasConfig(this.context, 64 /* TemplateBindingsLocked */);
+                var hostBindingsLocked = hasConfig(this.context, 128 /* HostBindingsLocked */);
                 var allowDirectStyling$1 = allowDirectStyling(this.context, false) || allowDirectStyling(this.context, true);
                 return {
                     hasMapBindings: hasMapBindings,
@@ -55412,7 +55397,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
             var mockElement = {};
-            var hasMaps = hasConfig(this.context, 4 /* HasMapBindings */);
+            var hasMaps = hasConfig(this.context, 2 /* HasMapBindings */);
             if (hasMaps) {
                 activateStylingMapFeature();
             }
@@ -61001,7 +60986,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+14.sha-3001716.with-local-changes');
 
     /**
      * @license
@@ -67878,7 +67863,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -71607,7 +71592,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+17.sha-b2decf0.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+14.sha-3001716.with-local-changes');
 
     /**
      * @license
