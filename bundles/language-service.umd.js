@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+41.sha-d4d0723.with-local-changes
+ * @license Angular v9.0.0-next.10+43.sha-c88305d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2862,7 +2862,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         ConstantPool.prototype.propertyNameOf = function (kind) {
             switch (kind) {
                 case 2 /* Component */:
-                    return 'ngComponentDef';
+                    return 'ɵcmp';
                 case 1 /* Directive */:
                     return 'ngDirectiveDef';
                 case 0 /* Injector */:
@@ -18943,7 +18943,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+41.sha-d4d0723.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+43.sha-c88305d.with-local-changes');
 
     /**
      * @license
@@ -34251,7 +34251,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+41.sha-d4d0723.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+43.sha-c88305d.with-local-changes');
 
     /**
      * @license
@@ -34896,7 +34896,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     // Pattern matching all Render3 property names.
     var R3_DEF_NAME_PATTERN = [
         'ngBaseDef',
-        'ngComponentDef',
+        'ɵcmp',
         'ngDirectiveDef',
         'ngInjectableDef',
         'ngInjectorDef',
@@ -39940,9 +39940,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          */
         DtsMetadataReader.prototype.getDirectiveMetadata = function (ref) {
             var clazz = ref.node;
-            var def = this.reflector.getMembersOfClass(clazz).find(function (field) {
-                return field.isStatic && (field.name === 'ngComponentDef' || field.name === 'ngDirectiveDef');
-            });
+            var def = this.reflector.getMembersOfClass(clazz).find(function (field) { return field.isStatic && (field.name === 'ɵcmp' || field.name === 'ngDirectiveDef'); });
             if (def === undefined) {
                 // No definition could be found.
                 return null;
@@ -39956,7 +39954,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (selector === null) {
                 return null;
             }
-            return __assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ngComponentDef', selector: selector, exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector), { baseClass: readBaseClass$1(clazz, this.checker, this.reflector) });
+            return __assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: selector, exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector), { baseClass: readBaseClass$1(clazz, this.checker, this.reflector) });
         };
         /**
          * Read pipe metadata from a referenced class in a .d.ts file.
@@ -40620,7 +40618,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // First it needs to be determined if actually importing the directives/pipes used in the
                 // template would create a cycle. Currently ngtsc refuses to generate cycles, so an option
                 // known as "remote scoping" is used if a cycle would be created. In remote scoping, the
-                // module file sets the directives/pipes on the ngComponentDef of the component, without
+                // module file sets the directives/pipes on the ɵcmp of the component, without
                 // requiring new imports (but also in a way that breaks tree shaking).
                 //
                 // Determining this is challenging, because the TemplateDefinitionBuilder is responsible for
@@ -40707,7 +40705,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         }
                         finally { if (e_8) throw e_8.error; }
                     }
-                    // Check whether the directive/pipe arrays in ngComponentDef need to be wrapped in closures.
+                    // Check whether the directive/pipe arrays in ɵcmp need to be wrapped in closures.
                     // This is required if any directive/pipe reference is to a declaration in the same file but
                     // declared after this component.
                     var wrapDirectivesAndPipesInClosure = usedDirectives.some(function (dir) { return isExpressionForwardReference(dir.expression, node.name, context); }) ||
@@ -40740,7 +40738,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             return [
                 factoryRes, {
-                    name: 'ngComponentDef',
+                    name: 'ɵcmp',
                     initializer: res.expression,
                     statements: [],
                     type: res.type,
@@ -43745,7 +43743,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              * Tracks whether a given component requires "remote scoping".
              *
              * Remote scoping is when the set of directives which apply to a given component is set in the
-             * NgModule's file instead of directly on the ngComponentDef (which is sometimes needed to get
+             * NgModule's file instead of directly on the component def (which is sometimes needed to get
              * around cyclic import issues). This is not used in calculation of `LocalModuleScope`s, but is
              * tracked here for convenience.
              */
@@ -51802,7 +51800,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
+    var NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
     var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
     var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
     var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
@@ -52457,7 +52455,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * explicit. This would require some sort of migration strategy.
      */
     function getComponentDef(type) {
-        return type[NG_COMPONENT_DEF] || null;
+        return type[NG_COMP_DEF] || null;
     }
     function getFactoryDef(type, throwNotFound) {
         var hasFactoryDef = type.hasOwnProperty(NG_FACTORY_DEF);
@@ -52584,7 +52582,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         tNode.hasOwnProperty('tView_') && assertEqual(tNode.tView_, lView[TVIEW], 'This TNode does not belong to this LView.');
     }
     function assertComponentType(actual, msg) {
-        if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ngComponentDef\' property.'; }
+        if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ɵcmp\' property.'; }
         if (!getComponentDef(actual)) {
             throwError(msg);
         }
@@ -54379,7 +54377,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         target[MONKEY_PATCH_KEY_NAME] = data;
     }
     function isComponentInstance(instance) {
-        return instance && instance.constructor && instance.constructor.ngComponentDef;
+        return instance && instance.constructor && instance.constructor.ɵcmp;
     }
     function isDirectiveInstance(instance) {
         return instance && instance.constructor && instance.constructor.ngDirectiveDef;
@@ -61011,7 +61009,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+41.sha-d4d0723.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+43.sha-c88305d.with-local-changes');
 
     /**
      * @license
@@ -71617,7 +71615,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+41.sha-d4d0723.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+43.sha-c88305d.with-local-changes');
 
     /**
      * @license
