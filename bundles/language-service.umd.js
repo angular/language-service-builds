@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+57.sha-68f06c8.with-local-changes
+ * @license Angular v9.0.0-next.10+58.sha-b04488d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -6078,11 +6078,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.start = start;
             this.end = end;
         }
+        ParseSpan.prototype.toAbsolute = function (absoluteOffset) {
+            return new AbsoluteSourceSpan(absoluteOffset + this.start, absoluteOffset + this.end);
+        };
         return ParseSpan;
     }());
     var AST = /** @class */ (function () {
-        function AST(span) {
+        function AST(span, 
+        /**
+         * Absolute location of the expression AST in a source code file.
+         */
+        sourceSpan) {
             this.span = span;
+            this.sourceSpan = sourceSpan;
         }
         AST.prototype.visit = function (visitor, context) {
             if (context === void 0) { context = null; }
@@ -6106,8 +6114,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var Quote = /** @class */ (function (_super) {
         __extends(Quote, _super);
-        function Quote(span, prefix, uninterpretedExpression, location) {
-            var _this = _super.call(this, span) || this;
+        function Quote(span, sourceSpan, prefix, uninterpretedExpression, location) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.prefix = prefix;
             _this.uninterpretedExpression = uninterpretedExpression;
             _this.location = location;
@@ -6147,8 +6155,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var Chain = /** @class */ (function (_super) {
         __extends(Chain, _super);
-        function Chain(span, expressions) {
-            var _this = _super.call(this, span) || this;
+        function Chain(span, sourceSpan, expressions) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.expressions = expressions;
             return _this;
         }
@@ -6160,8 +6168,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var Conditional = /** @class */ (function (_super) {
         __extends(Conditional, _super);
-        function Conditional(span, condition, trueExp, falseExp) {
-            var _this = _super.call(this, span) || this;
+        function Conditional(span, sourceSpan, condition, trueExp, falseExp) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.condition = condition;
             _this.trueExp = trueExp;
             _this.falseExp = falseExp;
@@ -6175,8 +6183,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var PropertyRead = /** @class */ (function (_super) {
         __extends(PropertyRead, _super);
-        function PropertyRead(span, receiver, name) {
-            var _this = _super.call(this, span) || this;
+        function PropertyRead(span, sourceSpan, receiver, name) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             return _this;
@@ -6189,8 +6197,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var PropertyWrite = /** @class */ (function (_super) {
         __extends(PropertyWrite, _super);
-        function PropertyWrite(span, receiver, name, value) {
-            var _this = _super.call(this, span) || this;
+        function PropertyWrite(span, sourceSpan, receiver, name, value) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             _this.value = value;
@@ -6204,8 +6212,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var SafePropertyRead = /** @class */ (function (_super) {
         __extends(SafePropertyRead, _super);
-        function SafePropertyRead(span, receiver, name) {
-            var _this = _super.call(this, span) || this;
+        function SafePropertyRead(span, sourceSpan, receiver, name) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             return _this;
@@ -6218,8 +6226,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var KeyedRead = /** @class */ (function (_super) {
         __extends(KeyedRead, _super);
-        function KeyedRead(span, obj, key) {
-            var _this = _super.call(this, span) || this;
+        function KeyedRead(span, sourceSpan, obj, key) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.obj = obj;
             _this.key = key;
             return _this;
@@ -6232,8 +6240,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var KeyedWrite = /** @class */ (function (_super) {
         __extends(KeyedWrite, _super);
-        function KeyedWrite(span, obj, key, value) {
-            var _this = _super.call(this, span) || this;
+        function KeyedWrite(span, sourceSpan, obj, key, value) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.obj = obj;
             _this.key = key;
             _this.value = value;
@@ -6247,8 +6255,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var BindingPipe = /** @class */ (function (_super) {
         __extends(BindingPipe, _super);
-        function BindingPipe(span, exp, name, args) {
-            var _this = _super.call(this, span) || this;
+        function BindingPipe(span, sourceSpan, exp, name, args) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.exp = exp;
             _this.name = name;
             _this.args = args;
@@ -6262,8 +6270,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var LiteralPrimitive = /** @class */ (function (_super) {
         __extends(LiteralPrimitive, _super);
-        function LiteralPrimitive(span, value) {
-            var _this = _super.call(this, span) || this;
+        function LiteralPrimitive(span, sourceSpan, value) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.value = value;
             return _this;
         }
@@ -6275,8 +6283,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var LiteralArray = /** @class */ (function (_super) {
         __extends(LiteralArray, _super);
-        function LiteralArray(span, expressions) {
-            var _this = _super.call(this, span) || this;
+        function LiteralArray(span, sourceSpan, expressions) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.expressions = expressions;
             return _this;
         }
@@ -6288,8 +6296,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var LiteralMap = /** @class */ (function (_super) {
         __extends(LiteralMap, _super);
-        function LiteralMap(span, keys, values) {
-            var _this = _super.call(this, span) || this;
+        function LiteralMap(span, sourceSpan, keys, values) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.keys = keys;
             _this.values = values;
             return _this;
@@ -6302,8 +6310,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var Interpolation = /** @class */ (function (_super) {
         __extends(Interpolation, _super);
-        function Interpolation(span, strings, expressions) {
-            var _this = _super.call(this, span) || this;
+        function Interpolation(span, sourceSpan, strings, expressions) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.strings = strings;
             _this.expressions = expressions;
             return _this;
@@ -6316,8 +6324,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var Binary = /** @class */ (function (_super) {
         __extends(Binary, _super);
-        function Binary(span, operation, left, right) {
-            var _this = _super.call(this, span) || this;
+        function Binary(span, sourceSpan, operation, left, right) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.operation = operation;
             _this.left = left;
             _this.right = right;
@@ -6331,8 +6339,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var PrefixNot = /** @class */ (function (_super) {
         __extends(PrefixNot, _super);
-        function PrefixNot(span, expression) {
-            var _this = _super.call(this, span) || this;
+        function PrefixNot(span, sourceSpan, expression) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.expression = expression;
             return _this;
         }
@@ -6344,8 +6352,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var NonNullAssert = /** @class */ (function (_super) {
         __extends(NonNullAssert, _super);
-        function NonNullAssert(span, expression) {
-            var _this = _super.call(this, span) || this;
+        function NonNullAssert(span, sourceSpan, expression) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.expression = expression;
             return _this;
         }
@@ -6357,8 +6365,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var MethodCall = /** @class */ (function (_super) {
         __extends(MethodCall, _super);
-        function MethodCall(span, receiver, name, args) {
-            var _this = _super.call(this, span) || this;
+        function MethodCall(span, sourceSpan, receiver, name, args) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             _this.args = args;
@@ -6372,8 +6380,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var SafeMethodCall = /** @class */ (function (_super) {
         __extends(SafeMethodCall, _super);
-        function SafeMethodCall(span, receiver, name, args) {
-            var _this = _super.call(this, span) || this;
+        function SafeMethodCall(span, sourceSpan, receiver, name, args) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             _this.args = args;
@@ -6387,8 +6395,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var FunctionCall = /** @class */ (function (_super) {
         __extends(FunctionCall, _super);
-        function FunctionCall(span, target, args) {
-            var _this = _super.call(this, span) || this;
+        function FunctionCall(span, sourceSpan, target, args) {
+            var _this = _super.call(this, span, sourceSpan) || this;
             _this.target = target;
             _this.args = args;
             return _this;
@@ -6413,12 +6421,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var ASTWithSource = /** @class */ (function (_super) {
         __extends(ASTWithSource, _super);
         function ASTWithSource(ast, source, location, absoluteOffset, errors) {
-            var _this = _super.call(this, new ParseSpan(0, source == null ? 0 : source.length)) || this;
+            var _this = _super.call(this, new ParseSpan(0, source === null ? 0 : source.length), new AbsoluteSourceSpan(absoluteOffset, source === null ? absoluteOffset : absoluteOffset + source.length)) || this;
             _this.ast = ast;
             _this.source = source;
             _this.location = location;
             _this.errors = errors;
-            _this.sourceSpan = new AbsoluteSourceSpan(absoluteOffset, absoluteOffset + _this.span.end);
             return _this;
         }
         ASTWithSource.prototype.visit = function (visitor, context) {
@@ -6432,7 +6439,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return ASTWithSource;
     }(AST));
     var TemplateBinding = /** @class */ (function () {
-        function TemplateBinding(span, key, keyIsVar, name, expression) {
+        function TemplateBinding(span, sourceSpan, key, keyIsVar, name, expression) {
             this.span = span;
             this.key = key;
             this.keyIsVar = keyIsVar;
@@ -6553,55 +6560,55 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         AstTransformer.prototype.visitImplicitReceiver = function (ast, context) { return ast; };
         AstTransformer.prototype.visitInterpolation = function (ast, context) {
-            return new Interpolation(ast.span, ast.strings, this.visitAll(ast.expressions));
+            return new Interpolation(ast.span, ast.sourceSpan, ast.strings, this.visitAll(ast.expressions));
         };
         AstTransformer.prototype.visitLiteralPrimitive = function (ast, context) {
-            return new LiteralPrimitive(ast.span, ast.value);
+            return new LiteralPrimitive(ast.span, ast.sourceSpan, ast.value);
         };
         AstTransformer.prototype.visitPropertyRead = function (ast, context) {
-            return new PropertyRead(ast.span, ast.receiver.visit(this), ast.name);
+            return new PropertyRead(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name);
         };
         AstTransformer.prototype.visitPropertyWrite = function (ast, context) {
-            return new PropertyWrite(ast.span, ast.receiver.visit(this), ast.name, ast.value.visit(this));
+            return new PropertyWrite(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name, ast.value.visit(this));
         };
         AstTransformer.prototype.visitSafePropertyRead = function (ast, context) {
-            return new SafePropertyRead(ast.span, ast.receiver.visit(this), ast.name);
+            return new SafePropertyRead(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name);
         };
         AstTransformer.prototype.visitMethodCall = function (ast, context) {
-            return new MethodCall(ast.span, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new MethodCall(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
         };
         AstTransformer.prototype.visitSafeMethodCall = function (ast, context) {
-            return new SafeMethodCall(ast.span, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
         };
         AstTransformer.prototype.visitFunctionCall = function (ast, context) {
-            return new FunctionCall(ast.span, ast.target.visit(this), this.visitAll(ast.args));
+            return new FunctionCall(ast.span, ast.sourceSpan, ast.target.visit(this), this.visitAll(ast.args));
         };
         AstTransformer.prototype.visitLiteralArray = function (ast, context) {
-            return new LiteralArray(ast.span, this.visitAll(ast.expressions));
+            return new LiteralArray(ast.span, ast.sourceSpan, this.visitAll(ast.expressions));
         };
         AstTransformer.prototype.visitLiteralMap = function (ast, context) {
-            return new LiteralMap(ast.span, ast.keys, this.visitAll(ast.values));
+            return new LiteralMap(ast.span, ast.sourceSpan, ast.keys, this.visitAll(ast.values));
         };
         AstTransformer.prototype.visitBinary = function (ast, context) {
-            return new Binary(ast.span, ast.operation, ast.left.visit(this), ast.right.visit(this));
+            return new Binary(ast.span, ast.sourceSpan, ast.operation, ast.left.visit(this), ast.right.visit(this));
         };
         AstTransformer.prototype.visitPrefixNot = function (ast, context) {
-            return new PrefixNot(ast.span, ast.expression.visit(this));
+            return new PrefixNot(ast.span, ast.sourceSpan, ast.expression.visit(this));
         };
         AstTransformer.prototype.visitNonNullAssert = function (ast, context) {
-            return new NonNullAssert(ast.span, ast.expression.visit(this));
+            return new NonNullAssert(ast.span, ast.sourceSpan, ast.expression.visit(this));
         };
         AstTransformer.prototype.visitConditional = function (ast, context) {
-            return new Conditional(ast.span, ast.condition.visit(this), ast.trueExp.visit(this), ast.falseExp.visit(this));
+            return new Conditional(ast.span, ast.sourceSpan, ast.condition.visit(this), ast.trueExp.visit(this), ast.falseExp.visit(this));
         };
         AstTransformer.prototype.visitPipe = function (ast, context) {
-            return new BindingPipe(ast.span, ast.exp.visit(this), ast.name, this.visitAll(ast.args));
+            return new BindingPipe(ast.span, ast.sourceSpan, ast.exp.visit(this), ast.name, this.visitAll(ast.args));
         };
         AstTransformer.prototype.visitKeyedRead = function (ast, context) {
-            return new KeyedRead(ast.span, ast.obj.visit(this), ast.key.visit(this));
+            return new KeyedRead(ast.span, ast.sourceSpan, ast.obj.visit(this), ast.key.visit(this));
         };
         AstTransformer.prototype.visitKeyedWrite = function (ast, context) {
-            return new KeyedWrite(ast.span, ast.obj.visit(this), ast.key.visit(this), ast.value.visit(this));
+            return new KeyedWrite(ast.span, ast.sourceSpan, ast.obj.visit(this), ast.key.visit(this), ast.value.visit(this));
         };
         AstTransformer.prototype.visitAll = function (asts) {
             var res = [];
@@ -6611,10 +6618,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return res;
         };
         AstTransformer.prototype.visitChain = function (ast, context) {
-            return new Chain(ast.span, this.visitAll(ast.expressions));
+            return new Chain(ast.span, ast.sourceSpan, this.visitAll(ast.expressions));
         };
         AstTransformer.prototype.visitQuote = function (ast, context) {
-            return new Quote(ast.span, ast.prefix, ast.uninterpretedExpression, ast.location);
+            return new Quote(ast.span, ast.sourceSpan, ast.prefix, ast.uninterpretedExpression, ast.location);
         };
         return AstTransformer;
     }());
@@ -6627,14 +6634,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         AstMemoryEfficientTransformer.prototype.visitInterpolation = function (ast, context) {
             var expressions = this.visitAll(ast.expressions);
             if (expressions !== ast.expressions)
-                return new Interpolation(ast.span, ast.strings, expressions);
+                return new Interpolation(ast.span, ast.sourceSpan, ast.strings, expressions);
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitLiteralPrimitive = function (ast, context) { return ast; };
         AstMemoryEfficientTransformer.prototype.visitPropertyRead = function (ast, context) {
             var receiver = ast.receiver.visit(this);
             if (receiver !== ast.receiver) {
-                return new PropertyRead(ast.span, receiver, ast.name);
+                return new PropertyRead(ast.span, ast.sourceSpan, receiver, ast.name);
             }
             return ast;
         };
@@ -6642,14 +6649,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var receiver = ast.receiver.visit(this);
             var value = ast.value.visit(this);
             if (receiver !== ast.receiver || value !== ast.value) {
-                return new PropertyWrite(ast.span, receiver, ast.name, value);
+                return new PropertyWrite(ast.span, ast.sourceSpan, receiver, ast.name, value);
             }
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitSafePropertyRead = function (ast, context) {
             var receiver = ast.receiver.visit(this);
             if (receiver !== ast.receiver) {
-                return new SafePropertyRead(ast.span, receiver, ast.name);
+                return new SafePropertyRead(ast.span, ast.sourceSpan, receiver, ast.name);
             }
             return ast;
         };
@@ -6657,7 +6664,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var receiver = ast.receiver.visit(this);
             var args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new MethodCall(ast.span, receiver, ast.name, args);
+                return new MethodCall(ast.span, ast.sourceSpan, receiver, ast.name, args);
             }
             return ast;
         };
@@ -6665,7 +6672,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var receiver = ast.receiver.visit(this);
             var args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new SafeMethodCall(ast.span, receiver, ast.name, args);
+                return new SafeMethodCall(ast.span, ast.sourceSpan, receiver, ast.name, args);
             }
             return ast;
         };
@@ -6673,21 +6680,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var target = ast.target && ast.target.visit(this);
             var args = this.visitAll(ast.args);
             if (target !== ast.target || args !== ast.args) {
-                return new FunctionCall(ast.span, target, args);
+                return new FunctionCall(ast.span, ast.sourceSpan, target, args);
             }
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitLiteralArray = function (ast, context) {
             var expressions = this.visitAll(ast.expressions);
             if (expressions !== ast.expressions) {
-                return new LiteralArray(ast.span, expressions);
+                return new LiteralArray(ast.span, ast.sourceSpan, expressions);
             }
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitLiteralMap = function (ast, context) {
             var values = this.visitAll(ast.values);
             if (values !== ast.values) {
-                return new LiteralMap(ast.span, ast.keys, values);
+                return new LiteralMap(ast.span, ast.sourceSpan, ast.keys, values);
             }
             return ast;
         };
@@ -6695,21 +6702,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var left = ast.left.visit(this);
             var right = ast.right.visit(this);
             if (left !== ast.left || right !== ast.right) {
-                return new Binary(ast.span, ast.operation, left, right);
+                return new Binary(ast.span, ast.sourceSpan, ast.operation, left, right);
             }
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitPrefixNot = function (ast, context) {
             var expression = ast.expression.visit(this);
             if (expression !== ast.expression) {
-                return new PrefixNot(ast.span, expression);
+                return new PrefixNot(ast.span, ast.sourceSpan, expression);
             }
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitNonNullAssert = function (ast, context) {
             var expression = ast.expression.visit(this);
             if (expression !== ast.expression) {
-                return new NonNullAssert(ast.span, expression);
+                return new NonNullAssert(ast.span, ast.sourceSpan, expression);
             }
             return ast;
         };
@@ -6718,7 +6725,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var trueExp = ast.trueExp.visit(this);
             var falseExp = ast.falseExp.visit(this);
             if (condition !== ast.condition || trueExp !== ast.trueExp || falseExp !== ast.falseExp) {
-                return new Conditional(ast.span, condition, trueExp, falseExp);
+                return new Conditional(ast.span, ast.sourceSpan, condition, trueExp, falseExp);
             }
             return ast;
         };
@@ -6726,7 +6733,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var exp = ast.exp.visit(this);
             var args = this.visitAll(ast.args);
             if (exp !== ast.exp || args !== ast.args) {
-                return new BindingPipe(ast.span, exp, ast.name, args);
+                return new BindingPipe(ast.span, ast.sourceSpan, exp, ast.name, args);
             }
             return ast;
         };
@@ -6734,7 +6741,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var obj = ast.obj.visit(this);
             var key = ast.key.visit(this);
             if (obj !== ast.obj || key !== ast.key) {
-                return new KeyedRead(ast.span, obj, key);
+                return new KeyedRead(ast.span, ast.sourceSpan, obj, key);
             }
             return ast;
         };
@@ -6743,7 +6750,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var key = ast.key.visit(this);
             var value = ast.value.visit(this);
             if (obj !== ast.obj || key !== ast.key || value !== ast.value) {
-                return new KeyedWrite(ast.span, obj, key, value);
+                return new KeyedWrite(ast.span, ast.sourceSpan, obj, key, value);
             }
             return ast;
         };
@@ -6761,7 +6768,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         AstMemoryEfficientTransformer.prototype.visitChain = function (ast, context) {
             var expressions = this.visitAll(ast.expressions);
             if (expressions !== ast.expressions) {
-                return new Chain(ast.span, expressions);
+                return new Chain(ast.span, ast.sourceSpan, expressions);
             }
             return ast;
         };
@@ -6941,7 +6948,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Parser.prototype._parseBindingAst = function (input, location, absoluteOffset, interpolationConfig) {
             // Quotes expressions use 3rd-party expression language. We don't want to use
             // our lexer or parser for that, so we check for that ahead of time.
-            var quote = this._parseQuote(input, location);
+            var quote = this._parseQuote(input, location, absoluteOffset);
             if (quote != null) {
                 return quote;
             }
@@ -6951,7 +6958,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, input.length - sourceToLex.length)
                 .parseChain();
         };
-        Parser.prototype._parseQuote = function (input, location) {
+        Parser.prototype._parseQuote = function (input, location, absoluteOffset) {
             if (input == null)
                 return null;
             var prefixSeparatorIndex = input.indexOf(':');
@@ -6961,7 +6968,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (!isIdentifier(prefix))
                 return null;
             var uninterpretedExpression = input.substring(prefixSeparatorIndex + 1);
-            return new Quote(new ParseSpan(0, input.length), prefix, uninterpretedExpression, location);
+            var span = new ParseSpan(0, input.length);
+            return new Quote(span, span.toAbsolute(absoluteOffset), prefix, uninterpretedExpression, location);
         };
         Parser.prototype.parseTemplateBindings = function (tplKey, tplValue, location, absoluteOffset) {
             var tokens = this._lexer.tokenize(tplValue);
@@ -6982,7 +6990,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     .parseChain();
                 expressions.push(ast);
             }
-            return new ASTWithSource(new Interpolation(new ParseSpan(0, input == null ? 0 : input.length), split.strings, expressions), input, location, absoluteOffset, this.errors);
+            var span = new ParseSpan(0, input == null ? 0 : input.length);
+            return new ASTWithSource(new Interpolation(span, span.toAbsolute(absoluteOffset), split.strings, expressions), input, location, absoluteOffset, this.errors);
         };
         Parser.prototype.splitInterpolation = function (input, location, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
@@ -7017,7 +7026,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return new SplitInterpolation(strings, expressions, offsets);
         };
         Parser.prototype.wrapLiteralPrimitive = function (input, location, absoluteOffset) {
-            return new ASTWithSource(new LiteralPrimitive(new ParseSpan(0, input == null ? 0 : input.length), input), input, location, absoluteOffset, this.errors);
+            var span = new ParseSpan(0, input == null ? 0 : input.length);
+            return new ASTWithSource(new LiteralPrimitive(span, span.toAbsolute(absoluteOffset), input), input, location, absoluteOffset, this.errors);
         };
         Parser.prototype._stripComments = function (input) {
             var i = this._commentStart(input);
@@ -7070,6 +7080,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.rparensExpected = 0;
             this.rbracketsExpected = 0;
             this.rbracesExpected = 0;
+            // Cache of expression start and input indeces to the absolute source span they map to, used to
+            // prevent creating superfluous source spans in `sourceSpan`.
+            // A serial of the expression start and input index is used for mapping because both are stateful
+            // and may change for subsequent expressions visited by the parser.
+            this.sourceSpanCache = new Map();
             this.index = 0;
         }
         _ParseAST.prototype.peek = function (offset) {
@@ -7090,6 +7105,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             configurable: true
         });
         _ParseAST.prototype.span = function (start) { return new ParseSpan(start, this.inputIndex); };
+        _ParseAST.prototype.sourceSpan = function (start) {
+            var serial = start + "@" + this.inputIndex;
+            if (!this.sourceSpanCache.has(serial)) {
+                this.sourceSpanCache.set(serial, this.span(start).toAbsolute(this.absoluteOffset));
+            }
+            return this.sourceSpanCache.get(serial);
+        };
         _ParseAST.prototype.advance = function () { this.index++; };
         _ParseAST.prototype.optionalCharacter = function (code) {
             if (this.next.isCharacter(code)) {
@@ -7157,10 +7179,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
             if (exprs.length == 0)
-                return new EmptyExpr(this.span(start));
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
             if (exprs.length == 1)
                 return exprs[0];
-            return new Chain(this.span(start), exprs);
+            return new Chain(this.span(start), this.sourceSpan(start), exprs);
         };
         _ParseAST.prototype.parsePipe = function () {
             var result = this.parseExpression();
@@ -7174,7 +7196,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     while (this.optionalCharacter($COLON)) {
                         args.push(this.parseExpression());
                     }
-                    result = new BindingPipe(this.span(result.span.start), result, name_1, args);
+                    var start = result.span.start;
+                    result = new BindingPipe(this.span(start), this.sourceSpan(start), result, name_1, args);
                 } while (this.optionalOperator('|'));
             }
             return result;
@@ -7190,12 +7213,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     var end = this.inputIndex;
                     var expression = this.input.substring(start, end);
                     this.error("Conditional expression " + expression + " requires all 3 expressions");
-                    no = new EmptyExpr(this.span(start));
+                    no = new EmptyExpr(this.span(start), this.sourceSpan(start));
                 }
                 else {
                     no = this.parsePipe();
                 }
-                return new Conditional(this.span(start), result, yes, no);
+                return new Conditional(this.span(start), this.sourceSpan(start), result, yes, no);
             }
             else {
                 return result;
@@ -7206,7 +7229,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var result = this.parseLogicalAnd();
             while (this.optionalOperator('||')) {
                 var right = this.parseLogicalAnd();
-                result = new Binary(this.span(result.span.start), '||', result, right);
+                var start = result.span.start;
+                result = new Binary(this.span(start), this.sourceSpan(start), '||', result, right);
             }
             return result;
         };
@@ -7215,7 +7239,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var result = this.parseEquality();
             while (this.optionalOperator('&&')) {
                 var right = this.parseEquality();
-                result = new Binary(this.span(result.span.start), '&&', result, right);
+                var start = result.span.start;
+                result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
             }
             return result;
         };
@@ -7231,7 +7256,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     case '!==':
                         this.advance();
                         var right = this.parseRelational();
-                        result = new Binary(this.span(result.span.start), operator, result, right);
+                        var start = result.span.start;
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
                 break;
@@ -7250,7 +7276,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     case '>=':
                         this.advance();
                         var right = this.parseAdditive();
-                        result = new Binary(this.span(result.span.start), operator, result, right);
+                        var start = result.span.start;
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
                 break;
@@ -7267,7 +7294,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     case '-':
                         this.advance();
                         var right = this.parseMultiplicative();
-                        result = new Binary(this.span(result.span.start), operator, result, right);
+                        var start = result.span.start;
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
                 break;
@@ -7285,7 +7313,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     case '/':
                         this.advance();
                         var right = this.parsePrefix();
-                        result = new Binary(this.span(result.span.start), operator, result, right);
+                        var start = result.span.start;
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
                 break;
@@ -7296,26 +7325,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (this.next.type == TokenType.Operator) {
                 var start = this.inputIndex;
                 var operator = this.next.strValue;
+                var literalSpan = new ParseSpan(start, start);
+                var literalSourceSpan = literalSpan.toAbsolute(this.absoluteOffset);
                 var result = void 0;
                 switch (operator) {
                     case '+':
                         this.advance();
                         result = this.parsePrefix();
-                        return new Binary(this.span(start), '-', result, new LiteralPrimitive(new ParseSpan(start, start), 0));
+                        return new Binary(this.span(start), this.sourceSpan(start), '-', result, new LiteralPrimitive(literalSpan, literalSourceSpan, 0));
                     case '-':
                         this.advance();
                         result = this.parsePrefix();
-                        return new Binary(this.span(start), operator, new LiteralPrimitive(new ParseSpan(start, start), 0), result);
+                        return new Binary(this.span(start), this.sourceSpan(start), operator, new LiteralPrimitive(literalSpan, literalSourceSpan, 0), result);
                     case '!':
                         this.advance();
                         result = this.parsePrefix();
-                        return new PrefixNot(this.span(start), result);
+                        return new PrefixNot(this.span(start), this.sourceSpan(start), result);
                 }
             }
             return this.parseCallChain();
         };
         _ParseAST.prototype.parseCallChain = function () {
             var result = this.parsePrimary();
+            var resultStart = result.span.start;
             while (true) {
                 if (this.optionalCharacter($PERIOD)) {
                     result = this.parseAccessMemberOrMethodCall(result, false);
@@ -7330,10 +7362,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     this.expectCharacter($RBRACKET);
                     if (this.optionalOperator('=')) {
                         var value = this.parseConditional();
-                        result = new KeyedWrite(this.span(result.span.start), result, key, value);
+                        result = new KeyedWrite(this.span(resultStart), this.sourceSpan(resultStart), result, key, value);
                     }
                     else {
-                        result = new KeyedRead(this.span(result.span.start), result, key);
+                        result = new KeyedRead(this.span(resultStart), this.sourceSpan(resultStart), result, key);
                     }
                 }
                 else if (this.optionalCharacter($LPAREN)) {
@@ -7341,10 +7373,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     var args = this.parseCallArguments();
                     this.rparensExpected--;
                     this.expectCharacter($RPAREN);
-                    result = new FunctionCall(this.span(result.span.start), result, args);
+                    result =
+                        new FunctionCall(this.span(resultStart), this.sourceSpan(resultStart), result, args);
                 }
                 else if (this.optionalOperator('!')) {
-                    result = new NonNullAssert(this.span(result.span.start), result);
+                    result = new NonNullAssert(this.span(resultStart), this.sourceSpan(resultStart), result);
                 }
                 else {
                     return result;
@@ -7362,54 +7395,54 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             else if (this.next.isKeywordNull()) {
                 this.advance();
-                return new LiteralPrimitive(this.span(start), null);
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), null);
             }
             else if (this.next.isKeywordUndefined()) {
                 this.advance();
-                return new LiteralPrimitive(this.span(start), void 0);
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), void 0);
             }
             else if (this.next.isKeywordTrue()) {
                 this.advance();
-                return new LiteralPrimitive(this.span(start), true);
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), true);
             }
             else if (this.next.isKeywordFalse()) {
                 this.advance();
-                return new LiteralPrimitive(this.span(start), false);
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), false);
             }
             else if (this.next.isKeywordThis()) {
                 this.advance();
-                return new ImplicitReceiver(this.span(start));
+                return new ImplicitReceiver(this.span(start), this.sourceSpan(start));
             }
             else if (this.optionalCharacter($LBRACKET)) {
                 this.rbracketsExpected++;
                 var elements = this.parseExpressionList($RBRACKET);
                 this.rbracketsExpected--;
                 this.expectCharacter($RBRACKET);
-                return new LiteralArray(this.span(start), elements);
+                return new LiteralArray(this.span(start), this.sourceSpan(start), elements);
             }
             else if (this.next.isCharacter($LBRACE)) {
                 return this.parseLiteralMap();
             }
             else if (this.next.isIdentifier()) {
-                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start)), false);
+                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), false);
             }
             else if (this.next.isNumber()) {
                 var value = this.next.toNumber();
                 this.advance();
-                return new LiteralPrimitive(this.span(start), value);
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), value);
             }
             else if (this.next.isString()) {
                 var literalValue = this.next.toString();
                 this.advance();
-                return new LiteralPrimitive(this.span(start), literalValue);
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), literalValue);
             }
             else if (this.index >= this.tokens.length) {
                 this.error("Unexpected end of expression: " + this.input);
-                return new EmptyExpr(this.span(start));
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
             }
             else {
                 this.error("Unexpected token " + this.next);
-                return new EmptyExpr(this.span(start));
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
             }
         };
         _ParseAST.prototype.parseExpressionList = function (terminator) {
@@ -7438,7 +7471,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 this.rbracesExpected--;
                 this.expectCharacter($RBRACE);
             }
-            return new LiteralMap(this.span(start), keys, values);
+            return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
         };
         _ParseAST.prototype.parseAccessMemberOrMethodCall = function (receiver, isSafe) {
             if (isSafe === void 0) { isSafe = false; }
@@ -7450,30 +7483,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 this.expectCharacter($RPAREN);
                 this.rparensExpected--;
                 var span = this.span(start);
-                return isSafe ? new SafeMethodCall(span, receiver, id, args) :
-                    new MethodCall(span, receiver, id, args);
+                var sourceSpan = this.sourceSpan(start);
+                return isSafe ? new SafeMethodCall(span, sourceSpan, receiver, id, args) :
+                    new MethodCall(span, sourceSpan, receiver, id, args);
             }
             else {
                 if (isSafe) {
                     if (this.optionalOperator('=')) {
                         this.error('The \'?.\' operator cannot be used in the assignment');
-                        return new EmptyExpr(this.span(start));
+                        return new EmptyExpr(this.span(start), this.sourceSpan(start));
                     }
                     else {
-                        return new SafePropertyRead(this.span(start), receiver, id);
+                        return new SafePropertyRead(this.span(start), this.sourceSpan(start), receiver, id);
                     }
                 }
                 else {
                     if (this.optionalOperator('=')) {
                         if (!this.parseAction) {
                             this.error('Bindings cannot contain assignments');
-                            return new EmptyExpr(this.span(start));
+                            return new EmptyExpr(this.span(start), this.sourceSpan(start));
                         }
                         var value = this.parseConditional();
-                        return new PropertyWrite(this.span(start), receiver, id, value);
+                        return new PropertyWrite(this.span(start), this.sourceSpan(start), receiver, id, value);
                     }
                     else {
-                        return new PropertyRead(this.span(start), receiver, id);
+                        var span = this.span(start);
+                        return new PropertyRead(this.span(start), this.sourceSpan(start), receiver, id);
                     }
                 }
             }
@@ -7547,12 +7582,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     expression =
                         new ASTWithSource(ast, source, this.location, this.absoluteOffset, this.errors);
                 }
-                bindings.push(new TemplateBinding(this.span(start), key, isVar, name_2, expression));
+                bindings.push(new TemplateBinding(this.span(start), this.sourceSpan(start), key, isVar, name_2, expression));
                 if (this.peekKeywordAs() && !isVar) {
                     var letStart = this.inputIndex;
                     this.advance(); // consume `as`
                     var letName = this.expectTemplateBindingKey(); // read local var name
-                    bindings.push(new TemplateBinding(this.span(letStart), letName, true, key, null));
+                    bindings.push(new TemplateBinding(this.span(letStart), this.sourceSpan(letStart), letName, true, key, null));
                 }
                 if (!this.optionalCharacter($SEMICOLON)) {
                     this.optionalCharacter($COMMA);
@@ -9813,17 +9848,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         _BuiltinAstConverter.prototype.visitPipe = function (ast, context) {
             var _this = this;
             var args = __spread([ast.exp], ast.args).map(function (ast) { return ast.visit(_this, context); });
-            return new BuiltinFunctionCall(ast.span, args, this._converterFactory.createPipeConverter(ast.name, args.length));
+            return new BuiltinFunctionCall(ast.span, ast.sourceSpan, args, this._converterFactory.createPipeConverter(ast.name, args.length));
         };
         _BuiltinAstConverter.prototype.visitLiteralArray = function (ast, context) {
             var _this = this;
             var args = ast.expressions.map(function (ast) { return ast.visit(_this, context); });
-            return new BuiltinFunctionCall(ast.span, args, this._converterFactory.createLiteralArrayConverter(ast.expressions.length));
+            return new BuiltinFunctionCall(ast.span, ast.sourceSpan, args, this._converterFactory.createLiteralArrayConverter(ast.expressions.length));
         };
         _BuiltinAstConverter.prototype.visitLiteralMap = function (ast, context) {
             var _this = this;
             var args = ast.values.map(function (ast) { return ast.visit(_this, context); });
-            return new BuiltinFunctionCall(ast.span, args, this._converterFactory.createLiteralMapConverter(ast.keys));
+            return new BuiltinFunctionCall(ast.span, ast.sourceSpan, args, this._converterFactory.createLiteralMapConverter(ast.keys));
         };
         return _BuiltinAstConverter;
     }(AstTransformer$1));
@@ -10128,10 +10163,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Convert the ast to an unguarded access to the receiver's member. The map will substitute
             // leftMostNode with its unguarded version in the call to `this.visit()`.
             if (leftMostSafe instanceof SafeMethodCall) {
-                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args));
+                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args));
             }
             else {
-                this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.receiver, leftMostSafe.name));
+                this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.receiver, leftMostSafe.name));
             }
             // Recursively convert the node now without the guarded member access.
             var access = this._visit(ast, _Mode.Expression);
@@ -10290,8 +10325,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     var BuiltinFunctionCall = /** @class */ (function (_super) {
         __extends(BuiltinFunctionCall, _super);
-        function BuiltinFunctionCall(span, args, converter) {
-            var _this = _super.call(this, span, null, args) || this;
+        function BuiltinFunctionCall(span, sourceSpan, args, converter) {
+            var _this = _super.call(this, span, sourceSpan, null, args) || this;
             _this.args = args;
             _this.converter = converter;
             return _this;
@@ -17403,14 +17438,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var slotPseudoLocal = "PIPE:" + slot;
             // Allocate one slot for the result plus one slot per pipe argument
             var pureFunctionSlot = this.allocatePureFunctionSlots(2 + pipe.args.length);
-            var target = new PropertyRead(pipe.span, new ImplicitReceiver(pipe.span), slotPseudoLocal);
+            var target = new PropertyRead(pipe.span, pipe.sourceSpan, new ImplicitReceiver(pipe.span, pipe.sourceSpan), slotPseudoLocal);
             var _a = pipeBindingCallInfo(pipe.args), identifier = _a.identifier, isVarLength = _a.isVarLength;
             this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(identifier));
             var args = __spread([pipe.exp], pipe.args);
-            var convertedArgs = isVarLength ? this.visitAll([new LiteralArray(pipe.span, args)]) : this.visitAll(args);
-            var pipeBindExpr = new FunctionCall(pipe.span, target, __spread([
-                new LiteralPrimitive(pipe.span, slot),
-                new LiteralPrimitive(pipe.span, pureFunctionSlot)
+            var convertedArgs = isVarLength ?
+                this.visitAll([new LiteralArray(pipe.span, pipe.sourceSpan, args)]) :
+                this.visitAll(args);
+            var pipeBindExpr = new FunctionCall(pipe.span, pipe.sourceSpan, target, __spread([
+                new LiteralPrimitive(pipe.span, pipe.sourceSpan, slot),
+                new LiteralPrimitive(pipe.span, pipe.sourceSpan, pureFunctionSlot)
             ], convertedArgs));
             this._pipeBindExprs.push(pipeBindExpr);
             return pipeBindExpr;
@@ -17424,7 +17461,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         ValueConverter.prototype.visitLiteralArray = function (array, context) {
             var _this = this;
-            return new BuiltinFunctionCall(array.span, this.visitAll(array.expressions), function (values) {
+            return new BuiltinFunctionCall(array.span, array.sourceSpan, this.visitAll(array.expressions), function (values) {
                 // If the literal has calculated (non-literal) elements transform it into
                 // calls to literal factories that compose the literal and will cache intermediate
                 // values. Otherwise, just return an literal array that contains the values.
@@ -17436,7 +17473,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         ValueConverter.prototype.visitLiteralMap = function (map, context) {
             var _this = this;
-            return new BuiltinFunctionCall(map.span, this.visitAll(map.values), function (values) {
+            return new BuiltinFunctionCall(map.span, map.sourceSpan, this.visitAll(map.values), function (values) {
                 // If the literal has calculated (non-literal) elements  transform it into
                 // calls to literal factories that compose the literal and will cache intermediate
                 // values. Otherwise, just return an literal array that contains the values.
@@ -18943,7 +18980,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+57.sha-68f06c8.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+58.sha-b04488d.with-local-changes');
 
     /**
      * @license
@@ -33561,8 +33598,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             valueRelativePosition_1 > binding.span.start + (binding.key.length - key_1.length)) ||
                         !binding.key) {
                         var span = new ParseSpan(0, this.attr.value.length);
+                        var offset = ast.sourceSpan.start.offset;
                         this.attributeValueCompletions(binding.expression ? binding.expression.ast :
-                            new PropertyRead(span, new ImplicitReceiver(span), ''), valueRelativePosition_1);
+                            new PropertyRead(span, span.toAbsolute(offset), new ImplicitReceiver(span, span.toAbsolute(offset)), ''), valueRelativePosition_1);
                     }
                     else {
                         keyCompletions();
@@ -34251,7 +34289,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+57.sha-68f06c8.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+58.sha-b04488d.with-local-changes');
 
     /**
      * @license
@@ -44785,6 +44823,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
 
     /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Translates a `ParseSpan` into an `AbsoluteSpan` by incorporating the location information that
      * the `ParseSourceSpan` represents.
      */
@@ -44983,7 +45028,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (match === null) {
             return null;
         }
-        return { start: +match[1], end: +match[2] };
+        return new ParseSpan(+match[1], +match[2]);
     }
 
     /**
@@ -61032,7 +61077,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+57.sha-68f06c8.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+58.sha-b04488d.with-local-changes');
 
     /**
      * @license
@@ -71638,7 +71683,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+57.sha-68f06c8.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+58.sha-b04488d.with-local-changes');
 
     /**
      * @license
