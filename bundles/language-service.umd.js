@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+73.sha-f433d66.with-local-changes
+ * @license Angular v9.0.0-next.10+75.sha-fc93daf.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2868,7 +2868,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 case 0 /* Injector */:
                     return 'ngInjectorDef';
                 case 3 /* Pipe */:
-                    return 'ngPipeDef';
+                    return 'ɵpipe';
             }
             error("Unknown definition kind " + kind);
             return '<unknown>';
@@ -18980,7 +18980,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+73.sha-f433d66.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+75.sha-fc93daf.with-local-changes');
 
     /**
      * @license
@@ -34304,7 +34304,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+73.sha-f433d66.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+75.sha-fc93daf.with-local-changes');
 
     /**
      * @license
@@ -34953,8 +34953,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         'ɵdir',
         'ngInjectableDef',
         'ngInjectorDef',
-        'ngModuleDef',
-        'ngPipeDef',
+        'ɵmod',
+        'ɵpipe',
         'ɵfac',
     ].join('|');
     // Pattern matching `Identifier.property` where property is a Render3 property.
@@ -39962,7 +39962,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var resolutionContext = clazz.getSourceFile().fileName;
             // This operation is explicitly not memoized, as it depends on `ref.ownedByModuleGuess`.
             // TODO(alxhub): investigate caching of .d.ts module metadata.
-            var ngModuleDef = this.reflector.getMembersOfClass(clazz).find(function (member) { return member.name === 'ngModuleDef' && member.isStatic; });
+            var ngModuleDef = this.reflector.getMembersOfClass(clazz).find(function (member) { return member.name === 'ɵmod' && member.isStatic; });
             if (ngModuleDef === undefined) {
                 return null;
             }
@@ -40008,7 +40008,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * Read pipe metadata from a referenced class in a .d.ts file.
          */
         DtsMetadataReader.prototype.getPipeMetadata = function (ref) {
-            var def = this.reflector.getMembersOfClass(ref.node).find(function (field) { return field.isStatic && field.name === 'ngPipeDef'; });
+            var def = this.reflector.getMembersOfClass(ref.node).find(function (field) { return field.isStatic && field.name === 'ɵpipe'; });
             if (def === undefined) {
                 // No definition could be found.
                 return null;
@@ -41452,8 +41452,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return {
                 analysis: {
                     id: id,
-                    ngModuleDef: ngModuleDef,
-                    ngInjectorDef: ngInjectorDef,
+                    ɵmod: ngModuleDef, ngInjectorDef: ngInjectorDef,
                     declarations: declarationRefs,
                     exports: exportRefs,
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore),
@@ -41514,7 +41513,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var e_4, _a;
             var _this = this;
             var ngInjectorDef = compileInjector(analysis.ngInjectorDef);
-            var ngModuleDef = compileNgModule(analysis.ngModuleDef);
+            var ngModuleDef = compileNgModule(analysis.ɵmod);
             var ngModuleStatements = ngModuleDef.additionalStatements;
             if (analysis.metadataStmt !== null) {
                 ngModuleStatements.push(analysis.metadataStmt);
@@ -41548,7 +41547,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             var res = [
                 {
-                    name: 'ngModuleDef',
+                    name: 'ɵmod',
                     initializer: ngModuleDef.expression,
                     statements: ngModuleStatements,
                     type: ngModuleDef.type,
@@ -41806,7 +41805,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             return [
                 factoryRes, {
-                    name: 'ngPipeDef',
+                    name: 'ɵpipe',
                     initializer: res.expression,
                     statements: [],
                     type: res.type,
@@ -51934,8 +51933,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
     var NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
-    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
-    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
+    var NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
+    var NG_MOD_DEF = getClosureSafeProperty({ ɵmod: getClosureSafeProperty });
     var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
     var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
     var NG_FACTORY_DEF = getClosureSafeProperty({ ɵfac: getClosureSafeProperty });
@@ -52597,9 +52596,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return hasFactoryDef ? type[NG_FACTORY_DEF] : null;
     }
     function getNgModuleDef(type, throwNotFound) {
-        var ngModuleDef = type[NG_MODULE_DEF] || null;
+        var ngModuleDef = type[NG_MOD_DEF] || null;
         if (!ngModuleDef && throwNotFound === true) {
-            throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
+            throw new Error("Type " + stringify$1(type) + " does not have '\u0275mod' property.");
         }
         return ngModuleDef;
     }
@@ -61141,7 +61140,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+73.sha-f433d66.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+75.sha-fc93daf.with-local-changes');
 
     /**
      * @license
@@ -64096,13 +64095,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
     }
     function registerNgModuleType(ngModuleType) {
-        if (ngModuleType.ngModuleDef.id !== null) {
-            var id = ngModuleType.ngModuleDef.id;
+        if (ngModuleType.ɵmod.id !== null) {
+            var id = ngModuleType.ɵmod.id;
             var existing = modules.get(id);
             assertSameOrNotExisting(id, existing, ngModuleType);
             modules.set(id, ngModuleType);
         }
-        var imports = ngModuleType.ngModuleDef.imports;
+        var imports = ngModuleType.ɵmod.imports;
         if (imports instanceof Function) {
             imports = imports();
         }
@@ -71747,7 +71746,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+73.sha-f433d66.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+75.sha-fc93daf.with-local-changes');
 
     /**
      * @license
