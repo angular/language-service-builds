@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+62.sha-39587ad.with-local-changes
+ * @license Angular v9.0.0-next.10+66.sha-cd7b199.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18980,7 +18980,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+62.sha-39587ad.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
 
     /**
      * @license
@@ -34300,7 +34300,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+62.sha-39587ad.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
 
     /**
      * @license
@@ -45244,7 +45244,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         var rawTypeArgs = node.typeParameters !== undefined ? generateGenericArgs(node.typeParameters) : undefined;
         var rawType = ts.createTypeReferenceNode(nodeTypeRef, rawTypeArgs);
-        var initParam = constructTypeCtorParameter(node, meta, rawType, config.checkQueries);
+        var initParam = constructTypeCtorParameter(node, meta, rawType);
         var typeParameters = typeParametersWithDefaultTypes(node.typeParameters);
         if (meta.body) {
             var fnType = ts.createFunctionTypeNode(
@@ -45284,12 +45284,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * An inline type constructor for NgFor looks like:
      *
-     * static ngTypeCtor<T>(init: Partial<Pick<NgForOf<T>, 'ngForOf'|'ngForTrackBy'|'ngForTemplate'>>):
+     * static ngTypeCtor<T>(init: Pick<NgForOf<T>, 'ngForOf'|'ngForTrackBy'|'ngForTemplate'>):
      *   NgForOf<T>;
      *
      * A typical constructor would be:
      *
-     * NgForOf.ngTypeCtor(init: {ngForOf: ['foo', 'bar']}); // Infers a type of NgForOf<string>.
+     * NgForOf.ngTypeCtor(init: {
+     *   ngForOf: ['foo', 'bar'],
+     *   ngForTrackBy: null as any,
+     *   ngForTemplate: null as any,
+     * }); // Infers a type of NgForOf<string>.
+     *
+     * Any inputs declared on the type for which no property binding is present are assigned a value of
+     * type `any`, to avoid producing any type errors for unset inputs.
      *
      * Inline type constructors are used when the type being created has bounded generic types which
      * make writing a declared type constructor (via `generateTypeCtorDeclarationFn`) difficult or
@@ -45300,13 +45307,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param meta additional metadata required to generate the type constructor.
      * @returns a `ts.MethodDeclaration` for the type constructor.
      */
-    function generateInlineTypeCtor(node, meta, config) {
+    function generateInlineTypeCtor(node, meta) {
         // Build rawType, a `ts.TypeNode` of the class with its generic parameters passed through from
         // the definition without any type bounds. For example, if the class is
         // `FooDirective<T extends Bar>`, its rawType would be `FooDirective<T>`.
         var rawTypeArgs = node.typeParameters !== undefined ? generateGenericArgs(node.typeParameters) : undefined;
         var rawType = ts.createTypeReferenceNode(node.name, rawTypeArgs);
-        var initParam = constructTypeCtorParameter(node, meta, rawType, config.checkQueries);
+        var initParam = constructTypeCtorParameter(node, meta, rawType);
         // If this constructor is being generated into a .ts file, then it needs a fake body. The body
         // is set to a return of `null!`. If the type constructor is being generated into a .d.ts file,
         // it needs no body.
@@ -45328,22 +45335,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* type */ rawType, 
         /* body */ body);
     }
-    function constructTypeCtorParameter(node, meta, rawType, includeQueries) {
+    function constructTypeCtorParameter(node, meta, rawType) {
         // initType is the type of 'init', the single argument to the type constructor method.
-        // If the Directive has any inputs, outputs, or queries, its initType will be:
+        // If the Directive has any inputs, its initType will be:
         //
-        // Partial<Pick<rawType, 'inputField'|'outputField'|'queryField'>>
+        // Pick<rawType, 'inputA'|'inputB'>
         //
         // Pick here is used to select only those fields from which the generic type parameters of the
-        // directive will be inferred. Partial is used because inputs are optional, so there may not be
-        // bindings for each field.
+        // directive will be inferred.
         //
-        // In the special case there are no inputs/outputs/etc, initType is set to {}.
+        // In the special case there are no inputs, initType is set to {}.
         var initType;
-        var keys = __spread(meta.fields.inputs, meta.fields.outputs);
-        if (includeQueries) {
-            keys.push.apply(keys, __spread(meta.fields.queries));
-        }
+        var keys = meta.fields.inputs;
         if (keys.length === 0) {
             // Special case - no inputs, outputs, or other fields which could influence the result type.
             initType = ts.createTypeLiteralNode([]);
@@ -45352,9 +45355,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Construct a union of all the field names.
             var keyTypeUnion = ts.createUnionTypeNode(keys.map(function (key) { return ts.createLiteralTypeNode(ts.createStringLiteral(key)); }));
             // Construct the Pick<rawType, keyTypeUnion>.
-            var pickType = ts.createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
-            // Construct the Partial<pickType>.
-            initType = ts.createTypeReferenceNode('Partial', [pickType]);
+            initType = ts.createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
         }
         // Create the 'init' parameter itself.
         return ts.createParameter(
@@ -45385,20 +45386,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *   ngForOf: T[];
      * }
      *
-     * declare function ctor<T>(o: Partial<Pick<NgFor<T>, 'ngForOf'>>): NgFor<T>;
+     * declare function ctor<T>(o: Pick<NgFor<T>, 'ngForOf'|'ngForTrackBy'|'ngForTemplate'>): NgFor<T>;
      * ```
      *
      * An invocation looks like:
      *
      * ```
-     * var _t1 = ctor({ngForOf: [1, 2]});
+     * var _t1 = ctor({ngForOf: [1, 2], ngForTrackBy: null as any, ngForTemplate: null as any});
      * ```
      *
      * This correctly infers the type `NgFor<number>` for `_t1`, since `T` is inferred from the
      * assignment of type `number[]` to `ngForOf`'s type `T[]`. However, if `any` is passed instead:
      *
      * ```
-     * var _t2 = ctor({ngForOf: [1, 2] as any});
+     * var _t2 = ctor({ngForOf: [1, 2] as any, ngForTrackBy: null as any, ngForTemplate: null as any});
      * ```
      *
      * then inference for `T` fails (it cannot be inferred from `T[] = any`). In this case, `T` takes
@@ -45408,7 +45409,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * default type will be used in the event that inference fails.
      *
      * ```
-     * declare function ctor<T = any>(o: Partial<Pick<NgFor<T>, 'ngForOf'>>): NgFor<T>;
+     * declare function ctor<T = any>(o: Pick<NgFor<T>, 'ngForOf'>): NgFor<T>;
      *
      * var _t3 = ctor({ngForOf: [1, 2] as any});
      * ```
@@ -46251,10 +46252,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         TcbDirectiveOp.prototype.execute = function () {
             var id = this.tcb.allocateId();
             // Process the directive and construct expressions for each of its bindings.
-            var bindings = tcbGetInputBindingExpressions(this.node, this.dir, this.tcb, this.scope);
+            var inputs = tcbGetDirectiveInputs(this.node, this.dir, this.tcb, this.scope);
             // Call the type constructor of the directive to infer a type, and assign the directive
             // instance.
-            var typeCtor = tcbCallTypeCtor(this.dir, this.tcb, bindings);
+            var typeCtor = tcbCallTypeCtor(this.dir, this.tcb, inputs);
             addParseSpanInfo(typeCtor, this.node.sourceSpan);
             this.scope.addStatement(tsCreateVariable(id, typeCtor));
             return id;
@@ -46360,10 +46361,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         continue;
                     }
                     var expr = tcbExpression(binding.value, this.tcb, this.scope, binding.valueSpan || binding.sourceSpan);
-                    // If checking the type of bindings is disabled, cast the resulting expression to 'any' before
-                    // the assignment.
                     if (!this.tcb.env.config.checkTypeOfInputBindings) {
+                        // If checking the type of bindings is disabled, cast the resulting expression to 'any'
+                        // before the assignment.
                         expr = tsCastToAny(expr);
+                    }
+                    else if (!this.tcb.env.config.strictNullInputBindings) {
+                        // If strict null checks are disabled, erase `null` and `undefined` from the type by
+                        // wrapping the expression in a non-null assertion.
+                        expr = ts.createNonNullExpression(expr);
                     }
                     if (this.tcb.env.config.checkTypeOfDomBindings && binding.type === 0 /* Property */) {
                         if (binding.name !== 'style' && binding.name !== 'class') {
@@ -46793,18 +46799,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Call the type constructor of a directive instance on a given template node, inferring a type for
      * the directive instance from any bound inputs.
      */
-    function tcbCallTypeCtor(dir, tcb, bindings) {
+    function tcbCallTypeCtor(dir, tcb, inputs) {
         var typeCtor = tcb.env.typeCtorFor(dir);
-        // Construct an array of `ts.PropertyAssignment`s for each input of the directive that has a
-        // matching binding.
-        var members = bindings.map(function (_a) {
-            var field = _a.field, expression = _a.expression, sourceSpan = _a.sourceSpan;
-            if (!tcb.env.config.checkTypeOfInputBindings) {
-                expression = tsCastToAny(expression);
+        // Construct an array of `ts.PropertyAssignment`s for each of the directive's inputs.
+        var members = inputs.map(function (input) {
+            if (input.type === 'binding') {
+                // For bound inputs, the property is assigned the binding expression.
+                var expr = input.expression;
+                if (!tcb.env.config.checkTypeOfInputBindings) {
+                    // If checking the type of bindings is disabled, cast the resulting expression to 'any'
+                    // before the assignment.
+                    expr = tsCastToAny(expr);
+                }
+                else if (!tcb.env.config.strictNullInputBindings) {
+                    // If strict null checks are disabled, erase `null` and `undefined` from the type by
+                    // wrapping the expression in a non-null assertion.
+                    expr = ts.createNonNullExpression(expr);
+                }
+                var assignment = ts.createPropertyAssignment(input.field, wrapForDiagnostics(expr));
+                addParseSpanInfo(assignment, input.sourceSpan);
+                return assignment;
             }
-            var assignment = ts.createPropertyAssignment(field, wrapForDiagnostics(expression));
-            addParseSpanInfo(assignment, sourceSpan);
-            return assignment;
+            else {
+                // A type constructor is required to be called with all input properties, so any unset
+                // inputs are simply assigned a value of type `any` to ignore them.
+                return ts.createPropertyAssignment(input.field, NULL_AS_ANY);
+            }
         });
         // Call the `ngTypeCtor` method on the directive class, with an object literal argument created
         // from the matched inputs.
@@ -46813,8 +46833,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* typeArguments */ undefined, 
         /* argumentsArray */ [ts.createObjectLiteral(members)]);
     }
-    function tcbGetInputBindingExpressions(el, dir, tcb, scope) {
-        var bindings = [];
+    function tcbGetDirectiveInputs(el, dir, tcb, scope) {
+        var e_10, _a;
+        var directiveInputs = [];
         // `dir.inputs` is an object map of field names on the directive class to property names.
         // This is backwards from what's needed to match bindings - a map of properties to field names
         // is desired. Invert `dir.inputs` into `propMatch` to create this map.
@@ -46824,27 +46845,56 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             Array.isArray(inputs[key]) ? propMatch.set(inputs[key][0], key) :
                 propMatch.set(inputs[key], key);
         });
+        // To determine which of directive's inputs are unset, we keep track of the set of field names
+        // that have not been seen yet. A field is removed from this set once a binding to it is found.
+        var unsetFields = new Set(propMatch.values());
         el.inputs.forEach(processAttribute);
+        el.attributes.forEach(processAttribute);
         if (el instanceof Template) {
             el.templateAttrs.forEach(processAttribute);
         }
-        return bindings;
+        try {
+            // Add unset directive inputs for each of the remaining unset fields.
+            for (var unsetFields_1 = __values(unsetFields), unsetFields_1_1 = unsetFields_1.next(); !unsetFields_1_1.done; unsetFields_1_1 = unsetFields_1.next()) {
+                var field = unsetFields_1_1.value;
+                directiveInputs.push({ type: 'unset', field: field });
+            }
+        }
+        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+        finally {
+            try {
+                if (unsetFields_1_1 && !unsetFields_1_1.done && (_a = unsetFields_1.return)) _a.call(unsetFields_1);
+            }
+            finally { if (e_10) throw e_10.error; }
+        }
+        return directiveInputs;
         /**
          * Add a binding expression to the map for each input/template attribute of the directive that has
          * a matching binding.
          */
         function processAttribute(attr) {
-            if (attr instanceof BoundAttribute && propMatch.has(attr.name)) {
-                // Produce an expression representing the value of the binding.
-                var expr = tcbExpression(attr.value, tcb, scope, attr.valueSpan || attr.sourceSpan);
-                // Call the callback.
-                bindings.push({
-                    property: attr.name,
-                    field: propMatch.get(attr.name),
-                    expression: expr,
-                    sourceSpan: attr.sourceSpan,
-                });
+            // Skip the attribute if the directive does not have an input for it.
+            if (!propMatch.has(attr.name)) {
+                return;
             }
+            var field = propMatch.get(attr.name);
+            // Remove the field from the set of unseen fields, now that it's been assigned to.
+            unsetFields.delete(field);
+            var expr;
+            if (attr instanceof BoundAttribute) {
+                // Produce an expression representing the value of the binding.
+                expr = tcbExpression(attr.value, tcb, scope, attr.valueSpan || attr.sourceSpan);
+            }
+            else {
+                // For regular attributes with a static string value, use the represented string literal.
+                expr = ts.createStringLiteral(attr.value);
+            }
+            directiveInputs.push({
+                type: 'binding',
+                field: field,
+                expression: expr,
+                sourceSpan: attr.sourceSpan,
+            });
         }
     }
     /**
@@ -47145,7 +47195,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             var ops = this.opMap.get(sf);
             // Push a `TypeCtorOp` into the operation queue for the source file.
-            ops.push(new TypeCtorOp(ref, ctorMeta, this.config));
+            ops.push(new TypeCtorOp(ref, ctorMeta));
         };
         /**
          * Transform a `ts.SourceFile` into a version that includes type checking code.
@@ -47299,10 +47349,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * A type constructor operation which produces type constructor code for a particular directive.
      */
     var TypeCtorOp = /** @class */ (function () {
-        function TypeCtorOp(ref, meta, config) {
+        function TypeCtorOp(ref, meta) {
             this.ref = ref;
             this.meta = meta;
-            this.config = config;
         }
         Object.defineProperty(TypeCtorOp.prototype, "splitPoint", {
             /**
@@ -47313,7 +47362,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             configurable: true
         });
         TypeCtorOp.prototype.execute = function (im, sf, refEmitter, printer) {
-            var tcb = generateInlineTypeCtor(this.ref.node, this.meta, this.config);
+            var tcb = generateInlineTypeCtor(this.ref.node, this.meta);
             return printer.printNode(ts.EmitHint.Unspecified, tcb, sf);
         };
         return TypeCtorOp;
@@ -47659,6 +47708,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     checkQueries: false,
                     checkTemplateBodies: true,
                     checkTypeOfInputBindings: true,
+                    strictNullInputBindings: true,
                     // Even in full template type-checking mode, DOM binding checks are not quite ready yet.
                     checkTypeOfDomBindings: false,
                     checkTypeOfPipes: true,
@@ -47671,6 +47721,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     checkQueries: false,
                     checkTemplateBodies: false,
                     checkTypeOfInputBindings: false,
+                    strictNullInputBindings: false,
                     checkTypeOfDomBindings: false,
                     checkTypeOfPipes: false,
                     strictSafeNavigationTypes: false,
@@ -61088,7 +61139,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+62.sha-39587ad.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
 
     /**
      * @license
@@ -71694,7 +71745,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+62.sha-39587ad.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
 
     /**
      * @license
