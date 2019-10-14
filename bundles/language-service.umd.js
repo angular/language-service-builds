@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+42.sha-64fd0d6.with-local-changes
+ * @license Angular v9.0.0-next.10+44.sha-d8249d1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18943,7 +18943,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+42.sha-64fd0d6.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
 
     /**
      * @license
@@ -34251,7 +34251,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+42.sha-64fd0d6.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
 
     /**
      * @license
@@ -45011,14 +45011,37 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         RegistryDomSchemaChecker.prototype.checkElement = function (id, element, schemas) {
             if (!REGISTRY.hasElement(element.name, schemas)) {
                 var mapping = this.resolver.getSourceMapping(id);
-                var diag = makeTemplateDiagnostic(mapping, element.sourceSpan, ts.DiagnosticCategory.Error, ErrorCode.SCHEMA_INVALID_ELEMENT, "'" + element.name + "' is not a valid HTML element.");
+                var errorMsg = "'" + element.name + "' is not a known element:\n";
+                errorMsg +=
+                    "1. If '" + element.name + "' is an Angular component, then verify that it is part of this module.\n";
+                if (element.name.indexOf('-') > -1) {
+                    errorMsg +=
+                        "2. If '" + element.name + "' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.";
+                }
+                else {
+                    errorMsg +=
+                        "2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.";
+                }
+                var diag = makeTemplateDiagnostic(mapping, element.sourceSpan, ts.DiagnosticCategory.Error, ErrorCode.SCHEMA_INVALID_ELEMENT, errorMsg);
                 this._diagnostics.push(diag);
             }
         };
         RegistryDomSchemaChecker.prototype.checkProperty = function (id, element, name, span, schemas) {
             if (!REGISTRY.hasProperty(element.name, name, schemas)) {
                 var mapping = this.resolver.getSourceMapping(id);
-                var diag = makeTemplateDiagnostic(mapping, span, ts.DiagnosticCategory.Error, ErrorCode.SCHEMA_INVALID_ATTRIBUTE, "'" + name + "' is not a valid property of <" + element.name + ">.");
+                var errorMsg = "Can't bind to '" + name + "' since it isn't a known property of '" + element.name + "'.";
+                if (element.name.startsWith('ng-')) {
+                    errorMsg +=
+                        "\n1. If '" + name + "' is an Angular directive, then add 'CommonModule' to the '@NgModule.imports' of this component." +
+                            "\n2. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.";
+                }
+                else if (element.name.indexOf('-') > -1) {
+                    errorMsg +=
+                        "\n1. If '" + element.name + "' is an Angular component and it has '" + name + "' input, then verify that it is part of this module." +
+                            ("\n2. If '" + element.name + "' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.") +
+                            "\n3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.";
+                }
+                var diag = makeTemplateDiagnostic(mapping, span, ts.DiagnosticCategory.Error, ErrorCode.SCHEMA_INVALID_ATTRIBUTE, errorMsg);
                 this._diagnostics.push(diag);
             }
         };
@@ -61009,7 +61032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+42.sha-64fd0d6.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
 
     /**
      * @license
@@ -64661,7 +64684,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -71615,7 +71638,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+42.sha-64fd0d6.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
 
     /**
      * @license
