@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+44.sha-d8249d1.with-local-changes
+ * @license Angular v9.0.0-next.10+46.sha-84ba1f0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2864,7 +2864,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 case 2 /* Component */:
                     return 'ɵcmp';
                 case 1 /* Directive */:
-                    return 'ngDirectiveDef';
+                    return 'ɵdir';
                 case 0 /* Injector */:
                     return 'ngInjectorDef';
                 case 3 /* Pipe */:
@@ -18943,7 +18943,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+46.sha-84ba1f0.with-local-changes');
 
     /**
      * @license
@@ -34251,7 +34251,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+46.sha-84ba1f0.with-local-changes');
 
     /**
      * @license
@@ -34897,7 +34897,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var R3_DEF_NAME_PATTERN = [
         'ngBaseDef',
         'ɵcmp',
-        'ngDirectiveDef',
+        'ɵdir',
         'ngInjectableDef',
         'ngInjectorDef',
         'ngModuleDef',
@@ -39345,7 +39345,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             return [
                 factoryRes, {
-                    name: 'ngDirectiveDef',
+                    name: 'ɵdir',
                     initializer: res.expression,
                     statements: [],
                     type: res.type,
@@ -39940,7 +39940,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          */
         DtsMetadataReader.prototype.getDirectiveMetadata = function (ref) {
             var clazz = ref.node;
-            var def = this.reflector.getMembersOfClass(clazz).find(function (field) { return field.isStatic && (field.name === 'ɵcmp' || field.name === 'ngDirectiveDef'); });
+            var def = this.reflector.getMembersOfClass(clazz).find(function (field) { return field.isStatic && (field.name === 'ɵcmp' || field.name === 'ɵdir'); });
             if (def === undefined) {
                 // No definition could be found.
                 return null;
@@ -51824,7 +51824,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     var NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
-    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
+    var NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
     var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
     var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
     var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
@@ -54403,7 +54403,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return instance && instance.constructor && instance.constructor.ɵcmp;
     }
     function isDirectiveInstance(instance) {
-        return instance && instance.constructor && instance.constructor.ngDirectiveDef;
+        return instance && instance.constructor && instance.constructor.ɵdir;
     }
     /**
      * Locates the element within the given LView and returns the matching index
@@ -61032,7 +61032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+46.sha-84ba1f0.with-local-changes');
 
     /**
      * @license
@@ -64684,7 +64684,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -71638,7 +71638,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+44.sha-d8249d1.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+46.sha-84ba1f0.with-local-changes');
 
     /**
      * @license
