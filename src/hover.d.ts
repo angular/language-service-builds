@@ -14,8 +14,9 @@ import { TypeScriptServiceHost } from './typescript_host';
  * return the corresponding quick info.
  * @param info template AST
  * @param position location of the symbol
+ * @param host Language Service host to query
  */
-export declare function getHover(info: AstResult, position: number): ts.QuickInfo | undefined;
+export declare function getHover(info: AstResult, position: number, host: Readonly<TypeScriptServiceHost>): ts.QuickInfo | undefined;
 /**
  * Get quick info for Angular semantic entities in TypeScript files, like Directives.
  * @param sf TypeScript source file an Angular symbol is in

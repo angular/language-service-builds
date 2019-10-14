@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+66.sha-cd7b199.with-local-changes
+ * @license Angular v9.0.0-next.10+73.sha-f433d66.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -5455,7 +5455,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
     }
     /**
-     * Constructs the `ngFactoryDef` from directive/component/pipe metadata.
+     * Constructs the factory def (`ɵfac`) from directive/component/pipe metadata.
      */
     function compileFactoryFromMetadata(meta) {
         return compileFactoryFunction({
@@ -5634,8 +5634,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function delegateToFactory(type) {
         return {
             statements: [],
-            // () => meta.type.ngFactoryDef(t)
-            factory: fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ngFactoryDef', [variable('t')]))])
+            // () => meta.type.ɵfac(t)
+            factory: fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ɵfac', [variable('t')]))])
         };
     }
 
@@ -9586,7 +9586,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* parent */ null, 
         /* fields */
         [new ClassField(
-            /* name */ 'ngFactoryDef', 
+            /* name */ 'ɵfac', 
             /* type */ INFERRED_TYPE, 
             /* modifiers */ [StmtModifier.Static], 
             /* initializer */ factoryRes.factory)], 
@@ -18206,7 +18206,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var meta = directiveMetadataFromGlobalMetadata(directive, outputCtx, reflector);
         var res = compileDirectiveFromMetadata(meta, outputCtx.constantPool, bindingParser);
         var factoryRes = compileFactoryFromMetadata(__assign({}, meta, { injectFn: Identifiers$1.directiveInject }));
-        var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ngFactoryDef', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
+        var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var directiveDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
         outputCtx.statements.push(ngFactoryDefStatement, directiveDefStatement);
@@ -18227,7 +18227,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var meta = __assign({}, directiveMetadataFromGlobalMetadata(component, outputCtx, reflector), { selector: component.selector, template: { nodes: render3Ast.nodes }, directives: [], pipes: typeMapToExpressionMap(pipeTypeByName, outputCtx), viewQueries: queriesFromGlobalMetadata(component.viewQueries, outputCtx), wrapDirectivesAndPipesInClosure: false, styles: (summary.template && summary.template.styles) || EMPTY_ARRAY, encapsulation: (summary.template && summary.template.encapsulation) || ViewEncapsulation.Emulated, interpolation: DEFAULT_INTERPOLATION_CONFIG, animations: null, viewProviders: component.viewProviders.length > 0 ? new WrappedNodeExpr(component.viewProviders) : null, relativeContextFilePath: '', i18nUseExternalIds: true });
         var res = compileComponentFromMetadata(meta, outputCtx.constantPool, bindingParser);
         var factoryRes = compileFactoryFromMetadata(__assign({}, meta, { injectFn: Identifiers$1.directiveInject }));
-        var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ngFactoryDef', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
+        var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var componentDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
         outputCtx.statements.push(ngFactoryDefStatement, componentDefStatement);
@@ -18980,7 +18980,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+73.sha-f433d66.with-local-changes');
 
     /**
      * @license
@@ -33768,6 +33768,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function locateSymbol(info, position) {
         var templatePosition = position - info.template.span.start;
         var path = findTemplateAstAt(info.templateAst, templatePosition);
+        var compileTypeSummary = undefined;
         if (path.tail) {
             var symbol_1 = undefined;
             var span_1 = undefined;
@@ -33797,7 +33798,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 visitElement: function (ast) {
                     var component = ast.directives.find(function (d) { return d.directive.isComponent; });
                     if (component) {
-                        symbol_1 = info.template.query.getTypeSymbol(component.directive.type.reference);
+                        compileTypeSummary = component.directive;
+                        symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.COMPONENT);
                         span_1 = spanOf$2(ast);
                     }
@@ -33805,7 +33807,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         // Find a directive that matches the element name
                         var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
                         if (directive) {
-                            symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                            compileTypeSummary = directive.directive;
+                            symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
                             symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.DIRECTIVE);
                             span_1 = spanOf$2(ast);
                         }
@@ -33839,7 +33842,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 },
                 visitText: function (ast) { },
                 visitDirective: function (ast) {
-                    symbol_1 = info.template.query.getTypeSymbol(ast.directive.type.reference);
+                    compileTypeSummary = ast.directive;
+                    symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
                     span_1 = spanOf$2(ast);
                 },
                 visitDirectiveProperty: function (ast) {
@@ -33850,7 +33854,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }, null);
             if (symbol_1 && span_1) {
-                return { symbol: symbol_1, span: offsetSpan$1(span_1, info.template.span.start) };
+                return { symbol: symbol_1, span: offsetSpan$1(span_1, info.template.span.start), compileTypeSummary: compileTypeSummary };
             }
         }
     }
@@ -34300,7 +34304,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+73.sha-f433d66.with-local-changes');
 
     /**
      * @license
@@ -34951,7 +34955,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         'ngInjectorDef',
         'ngModuleDef',
         'ngPipeDef',
-        'ngFactoryDef',
+        'ɵfac',
     ].join('|');
     // Pattern matching `Identifier.property` where property is a Render3 property.
     var R3_DEF_ACCESS_PATTERN = "[^\\s\\.()[\\]]+.(" + R3_DEF_NAME_PATTERN + ")";
@@ -38934,12 +38938,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function compileNgFactoryDefField(metadata) {
         var res = compileFactoryFromMetadata(metadata);
-        return {
-            name: 'ngFactoryDef',
-            initializer: res.factory,
-            statements: res.statements,
-            type: res.type
-        };
+        return { name: 'ɵfac', initializer: res.factory, statements: res.statements, type: res.type };
     }
 
     /**
@@ -51278,13 +51277,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * return the corresponding quick info.
      * @param info template AST
      * @param position location of the symbol
+     * @param host Language Service host to query
      */
-    function getHover(info, position) {
+    function getHover(info, position, host) {
         var symbolInfo = locateSymbol(info, position);
         if (!symbolInfo) {
             return;
         }
-        var symbol = symbolInfo.symbol, span = symbolInfo.span;
+        var symbol = symbolInfo.symbol, span = symbolInfo.span, compileTypeSummary = symbolInfo.compileTypeSummary;
+        var textSpan = { start: span.start, length: span.end - span.start };
+        if (compileTypeSummary && compileTypeSummary.summaryKind === CompileSummaryKind.Directive) {
+            return getDirectiveModule(compileTypeSummary.type.reference, textSpan, host);
+        }
         var containerDisplayParts = symbol.container ?
             [
                 { text: symbol.container.name, kind: symbol.container.kind },
@@ -51294,10 +51298,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return {
             kind: symbol.kind,
             kindModifiers: '',
-            textSpan: {
-                start: span.start,
-                length: span.end - span.start,
-            },
+            textSpan: textSpan,
             // this would generate a string like '(property) ClassX.propY'
             // 'kind' in displayParts does not really matter because it's dropped when
             // displayParts get converted to string.
@@ -51321,7 +51322,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return;
         switch (node.kind) {
             case ts.SyntaxKind.Identifier:
-                return getDirectiveModule(node, host);
+                var directiveId = node;
+                if (ts.isClassDeclaration(directiveId.parent)) {
+                    var directiveName = directiveId.text;
+                    var directiveSymbol = host.getStaticSymbol(node.getSourceFile().fileName, directiveName);
+                    if (!directiveSymbol)
+                        return;
+                    return getDirectiveModule(directiveSymbol, { start: directiveId.getStart(), length: directiveId.end - directiveId.getStart() }, host);
+                }
+                break;
             default:
                 break;
         }
@@ -51332,36 +51341,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param directive identifier on a potential Directive class declaration
      * @param host Language Service host to query
      */
-    function getDirectiveModule(directive, host) {
-        if (!ts.isClassDeclaration(directive.parent))
-            return;
-        var directiveName = directive.text;
-        var directiveSymbol = host.getStaticSymbol(directive.getSourceFile().fileName, directiveName);
-        if (!directiveSymbol)
-            return;
+    function getDirectiveModule(directive, textSpan, host) {
         var analyzedModules = host.getAnalyzedModules(false);
-        var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(directiveSymbol);
+        var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(directive);
         if (!ngModule)
             return;
+        var isComponent = host.getDeclarations(directive.filePath)
+            .find(function (decl) { return decl.type === directive && decl.metadata && decl.metadata.isComponent; });
         var moduleName = ngModule.type.reference.name;
         return {
             kind: ts.ScriptElementKind.classElement,
             kindModifiers: ts.ScriptElementKindModifier.none,
-            textSpan: {
-                start: directive.getStart(),
-                length: directive.end - directive.getStart(),
-            },
+            textSpan: textSpan,
             // This generates a string like '(directive) NgModule.Directive: class'
             // 'kind' in displayParts does not really matter because it's dropped when
             // displayParts get converted to string.
             displayParts: [
                 { text: '(', kind: SYMBOL_PUNC },
-                { text: 'directive', kind: SYMBOL_TEXT },
+                { text: isComponent ? 'component' : 'directive', kind: SYMBOL_TEXT },
                 { text: ')', kind: SYMBOL_PUNC },
                 { text: ' ', kind: SYMBOL_SPACE },
                 { text: moduleName, kind: SYMBOL_CLASS },
                 { text: '.', kind: SYMBOL_PUNC },
-                { text: directiveName, kind: SYMBOL_CLASS },
+                { text: directive.name, kind: SYMBOL_CLASS },
                 { text: ':', kind: SYMBOL_PUNC },
                 { text: ' ', kind: SYMBOL_SPACE },
                 { text: ts.ScriptElementKind.classElement, kind: SYMBOL_TEXT },
@@ -51459,7 +51461,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
-                return getHover(templateInfo, position);
+                return getHover(templateInfo, position, this.host);
             }
             // Attempt to get Angular-specific hover information in a TypeScript file, the NgModule a
             // directive belongs to.
@@ -51936,7 +51938,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
     var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
     var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
-    var NG_FACTORY_DEF = getClosureSafeProperty({ ngFactoryDef: getClosureSafeProperty });
+    var NG_FACTORY_DEF = getClosureSafeProperty({ ɵfac: getClosureSafeProperty });
     /**
      * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
      * the key and the directive's unique ID as the value. This allows us to map directives to their
@@ -52590,7 +52592,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getFactoryDef(type, throwNotFound) {
         var hasFactoryDef = type.hasOwnProperty(NG_FACTORY_DEF);
         if (!hasFactoryDef && throwNotFound === true && ngDevMode) {
-            throw new Error("Type " + stringify$1(type) + " does not have 'ngFactoryDef' property.");
+            throw new Error("Type " + stringify$1(type) + " does not have '\u0275fac' property.");
         }
         return hasFactoryDef ? type[NG_FACTORY_DEF] : null;
     }
@@ -61139,7 +61141,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+73.sha-f433d66.with-local-changes');
 
     /**
      * @license
@@ -71745,7 +71747,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+66.sha-cd7b199.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+73.sha-f433d66.with-local-changes');
 
     /**
      * @license
