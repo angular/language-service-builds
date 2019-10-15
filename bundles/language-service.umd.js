@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+84.sha-8b0cb2f.with-local-changes
+ * @license Angular v9.0.0-next.10+93.sha-ec6a9f2.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18965,7 +18965,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+84.sha-8b0cb2f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+93.sha-ec6a9f2.with-local-changes');
 
     /**
      * @license
@@ -33812,7 +33812,41 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }
                 },
                 visitElementProperty: function (ast) { attributeValueSymbol_1(ast.value); },
-                visitAttr: function (ast) { },
+                visitAttr: function (ast) {
+                    var e_1, _a;
+                    var element = path.head;
+                    if (!element || !(element instanceof ElementAst))
+                        return;
+                    // Create a mapping of all directives applied to the element from their selectors.
+                    var matcher = new SelectorMatcher();
+                    try {
+                        for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var dir = _c.value;
+                            if (!dir.directive.selector)
+                                continue;
+                            matcher.addSelectables(CssSelector.parse(dir.directive.selector), dir);
+                        }
+                    }
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                    }
+                    // See if this attribute matches the selector of any directive on the element.
+                    // TODO(ayazhafiz): Consider caching selector matches (at the expense of potentially
+                    // very high memory usage).
+                    var attributeSelector = "[" + ast.name + "=" + ast.value + "]";
+                    var parsedAttribute = CssSelector.parse(attributeSelector);
+                    if (!parsedAttribute.length)
+                        return;
+                    matcher.match(parsedAttribute[0], function (_, directive) {
+                        symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.DIRECTIVE);
+                        span_1 = spanOf$2(ast);
+                    });
+                },
                 visitBoundText: function (ast) {
                     var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                     if (inSpan(expressionPosition, ast.value.span)) {
@@ -33849,7 +33883,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return path.first(Attribute);
     }
     function findInputBinding(info, path, binding) {
-        var e_1, _a;
+        var e_2, _a;
         var element = path.first(ElementAst);
         if (element) {
             try {
@@ -33857,32 +33891,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     var directive = _c.value;
                     var invertedInput = invertMap(directive.directive.inputs);
                     var fieldName = invertedInput[binding.templateName];
-                    if (fieldName) {
-                        var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                        if (classSymbol) {
-                            return classSymbol.members().get(fieldName);
-                        }
-                    }
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-        }
-    }
-    function findOutputBinding(info, path, binding) {
-        var e_2, _a;
-        var element = path.first(ElementAst);
-        if (element) {
-            try {
-                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var directive = _c.value;
-                    var invertedOutputs = invertMap(directive.directive.outputs);
-                    var fieldName = invertedOutputs[binding.name];
                     if (fieldName) {
                         var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                         if (classSymbol) {
@@ -33900,8 +33908,34 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
     }
-    function invertMap(obj) {
+    function findOutputBinding(info, path, binding) {
         var e_3, _a;
+        var element = path.first(ElementAst);
+        if (element) {
+            try {
+                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var directive = _c.value;
+                    var invertedOutputs = invertMap(directive.directive.outputs);
+                    var fieldName = invertedOutputs[binding.name];
+                    if (fieldName) {
+                        var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                        if (classSymbol) {
+                            return classSymbol.members().get(fieldName);
+                        }
+                    }
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+        }
+    }
+    function invertMap(obj) {
+        var e_4, _a;
         var result = {};
         try {
             for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -33910,12 +33944,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 result[v] = name_1;
             }
         }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_3) throw e_3.error; }
+            finally { if (e_4) throw e_4.error; }
         }
         return result;
     }
@@ -34289,7 +34323,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+84.sha-8b0cb2f.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+93.sha-ec6a9f2.with-local-changes');
 
     /**
      * @license
@@ -53685,6 +53719,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function setCurrentStyleSanitizer(sanitizer) {
         _currentSanitizer = sanitizer;
     }
+    function resetCurrentStyleSanitizer() {
+        setCurrentStyleSanitizer(null);
+    }
     function getCurrentStyleSanitizer() {
         return _currentSanitizer;
     }
@@ -57686,7 +57723,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var valueToApply = unwrapSafeValue(value);
         if (isStylingValueDefined(valueToApply)) {
             valueToApply =
-                sanitizer ? sanitizer(prop, value, 2 /* SanitizeOnly */) : valueToApply;
+                sanitizer ? sanitizer(prop, value, 3 /* ValidateAndSanitize */) : valueToApply;
             applyFn(renderer, element, prop, valueToApply, bindingIndex);
             return true;
         }
@@ -57697,8 +57734,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var p = getMapProp(map, i);
             if (p === prop) {
                 var valueToApply = getMapValue(map, i);
-                valueToApply =
-                    sanitizer ? sanitizer(prop, valueToApply, 2 /* SanitizeOnly */) : valueToApply;
+                valueToApply = sanitizer ?
+                    sanitizer(prop, valueToApply, 3 /* ValidateAndSanitize */) :
+                    valueToApply;
                 applyFn(renderer, element, prop, valueToApply, bindingIndex);
                 return true;
             }
@@ -65440,8 +65478,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // Direct Apply Case: bypass context resolution and apply the
         // style/class value directly to the element
         if (allowDirectStyling(context, hostBindingsMode)) {
+            var sanitizerToUse = isClassBased ? null : sanitizer;
             var renderer = getRenderer(tNode, lView);
-            updated = applyStylingValueDirectly(renderer, context, native, lView, bindingIndex, prop, value, isClassBased, isClassBased ? setClass : setStyle, sanitizer);
+            updated = applyStylingValueDirectly(renderer, context, native, lView, bindingIndex, prop, value, isClassBased, isClassBased ? setClass : setStyle, sanitizerToUse);
+            if (sanitizerToUse) {
+                // it's important we remove the current style sanitizer once the
+                // element exits, otherwise it will be used by the next styling
+                // instructions for the next element.
+                setElementExitFn(resetCurrentStyleSanitizer);
+            }
         }
         else {
             // Context Resolution (or first update) Case: save the value
@@ -65579,8 +65624,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // Direct Apply Case: bypass context resolution and apply the
         // style/class map values directly to the element
         if (allowDirectStyling(context, hostBindingsMode)) {
+            var sanitizerToUse = isClassBased ? null : sanitizer;
             var renderer = getRenderer(tNode, lView);
-            updated = applyStylingMapDirectly(renderer, context, native, lView, bindingIndex, stylingMapArr, isClassBased, isClassBased ? setClass : setStyle, sanitizer, valueHasChanged);
+            updated = applyStylingMapDirectly(renderer, context, native, lView, bindingIndex, stylingMapArr, isClassBased, isClassBased ? setClass : setStyle, sanitizerToUse, valueHasChanged);
+            if (sanitizerToUse) {
+                // it's important we remove the current style sanitizer once the
+                // element exits, otherwise it will be used by the next styling
+                // instructions for the next element.
+                setElementExitFn(resetCurrentStyleSanitizer);
+            }
         }
         else {
             updated = valueHasChanged;
@@ -65668,7 +65720,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var classesContext = isStylingContext(tNode.classes) ? tNode.classes : null;
         var stylesContext = isStylingContext(tNode.styles) ? tNode.styles : null;
         flushStyling(renderer, lView, classesContext, stylesContext, native, directiveIndex, sanitizer);
-        setCurrentStyleSanitizer(null);
+        resetCurrentStyleSanitizer();
     }
     function getRenderer(tNode, lView) {
         return tNode.type === 3 /* Element */ ? lView[RENDERER] : null;
@@ -69393,7 +69445,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+84.sha-8b0cb2f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+93.sha-ec6a9f2.with-local-changes');
 
     /**
      * @license
@@ -82941,7 +82993,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+84.sha-8b0cb2f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+93.sha-ec6a9f2.with-local-changes');
 
     /**
      * @license
