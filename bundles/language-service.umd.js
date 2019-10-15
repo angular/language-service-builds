@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.10+77.sha-64aae3a.with-local-changes
+ * @license Angular v9.0.0-next.10+80.sha-72494c4.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18965,7 +18965,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.10+77.sha-64aae3a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.10+80.sha-72494c4.with-local-changes');
 
     /**
      * @license
@@ -34289,7 +34289,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.10+77.sha-64aae3a.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.10+80.sha-72494c4.with-local-changes');
 
     /**
      * @license
@@ -51814,7 +51814,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (typeof token === 'string') {
             return token;
         }
-        if (token instanceof Array) {
+        if (Array.isArray(token)) {
             return '[' + token.map(stringify$1).join(', ') + ']';
         }
         if (token == null) {
@@ -52181,7 +52181,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (source === void 0) { source = null; }
         text = text && text.charAt(0) === '\n' && text.charAt(1) == NO_NEW_LINE ? text.substr(2) : text;
         var context = stringify$1(obj);
-        if (obj instanceof Array) {
+        if (Array.isArray(obj)) {
             context = obj.map(stringify$1).join(' -> ');
         }
         else if (typeof obj === 'object') {
@@ -63688,7 +63688,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             else if (b && typeof b == 'object' && b.provide !== undefined) {
                 res.push(b);
             }
-            else if (b instanceof Array) {
+            else if (Array.isArray(b)) {
                 _normalizeProviders(b, res);
             }
             else {
@@ -69393,7 +69393,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.10+77.sha-64aae3a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.10+80.sha-72494c4.with-local-changes');
 
     /**
      * @license
@@ -82941,7 +82941,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.10+77.sha-64aae3a.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.10+80.sha-72494c4.with-local-changes');
 
     /**
      * @license
