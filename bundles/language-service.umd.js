@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+5.sha-4c63e6b.with-local-changes
+ * @license Angular v9.0.0-next.11+8.sha-3e14c2d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18981,7 +18981,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+5.sha-4c63e6b.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+8.sha-3e14c2d.with-local-changes');
 
     /**
      * @license
@@ -34339,7 +34339,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+5.sha-4c63e6b.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+8.sha-3e14c2d.with-local-changes');
 
     /**
      * @license
@@ -61175,7 +61175,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+5.sha-4c63e6b.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+8.sha-3e14c2d.with-local-changes');
 
     /**
      * @license
@@ -64827,7 +64827,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -66860,6 +66860,31 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function getNativeRequestAnimationFrame() {
+        var nativeRequestAnimationFrame = _global$1['requestAnimationFrame'];
+        var nativeCancelAnimationFrame = _global$1['cancelAnimationFrame'];
+        if (typeof Zone !== 'undefined' && nativeRequestAnimationFrame && nativeCancelAnimationFrame) {
+            // use unpatched version of requestAnimationFrame(native delegate) if possible
+            // to avoid another Change detection
+            var unpatchedRequestAnimationFrame = nativeRequestAnimationFrame[Zone.__symbol__('OriginalDelegate')];
+            if (unpatchedRequestAnimationFrame) {
+                nativeRequestAnimationFrame = unpatchedRequestAnimationFrame;
+            }
+            var unpatchedCancelAnimationFrame = nativeCancelAnimationFrame[Zone.__symbol__('OriginalDelegate')];
+            if (unpatchedCancelAnimationFrame) {
+                nativeCancelAnimationFrame = unpatchedCancelAnimationFrame;
+            }
+        }
+        return { nativeRequestAnimationFrame: nativeRequestAnimationFrame, nativeCancelAnimationFrame: nativeCancelAnimationFrame };
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * An injectable service for executing work inside or outside of the Angular zone.
      *
@@ -66936,9 +66961,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
     var NgZone = /** @class */ (function () {
         function NgZone(_a) {
-            var _b = _a.enableLongStackTrace, enableLongStackTrace = _b === void 0 ? false : _b;
-            this.hasPendingMicrotasks = false;
+            var _b = _a.enableLongStackTrace, enableLongStackTrace = _b === void 0 ? false : _b, _c = _a.shouldCoalesceEventChangeDetection, shouldCoalesceEventChangeDetection = _c === void 0 ? false : _c;
+            this.hasPendingZoneMicrotasks = false;
+            this.lastRequestAnimationFrameId = -1;
+            this.shouldCoalesceEventChangeDetection = true;
             this.hasPendingMacrotasks = false;
+            this.hasPendingMicrotasks = false;
             /**
              * Whether there are no outstanding microtasks or macrotasks.
              */
@@ -66979,6 +67007,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (enableLongStackTrace && Zone['longStackTraceZoneSpec']) {
                 self._inner = self._inner.fork(Zone['longStackTraceZoneSpec']);
             }
+            self.shouldCoalesceEventChangeDetection = shouldCoalesceEventChangeDetection;
             forkInnerZoneWithAngularBehavior(self);
         }
         NgZone.isInAngularZone = function () { return Zone.current.get('isAngularZone') === true; };
@@ -67056,6 +67085,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     }());
     function noop$2() { }
     var EMPTY_PAYLOAD = {};
+    var nativeRequestAnimationFrame = getNativeRequestAnimationFrame().nativeRequestAnimationFrame;
     function checkStable(zone) {
         if (zone._nesting == 0 && !zone.hasPendingMicrotasks && !zone.isStable) {
             try {
@@ -67075,16 +67105,33 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         }
     }
+    function delayChangeDetectionForEvents(zone) {
+        if (zone.lastRequestAnimationFrameId !== -1) {
+            return;
+        }
+        zone.lastRequestAnimationFrameId = nativeRequestAnimationFrame.call(_global$1, function () {
+            zone.lastRequestAnimationFrameId = -1;
+            updateMicroTaskStatus(zone);
+            checkStable(zone);
+        });
+        updateMicroTaskStatus(zone);
+    }
     function forkInnerZoneWithAngularBehavior(zone) {
+        var delayChangeDetectionForEventsDelegate = function () { delayChangeDetectionForEvents(zone); };
+        var maybeDelayChangeDetection = !!zone.shouldCoalesceEventChangeDetection &&
+            nativeRequestAnimationFrame && delayChangeDetectionForEventsDelegate;
         zone._inner = zone._inner.fork({
             name: 'angular',
-            properties: { 'isAngularZone': true },
+            properties: { 'isAngularZone': true, 'maybeDelayChangeDetection': maybeDelayChangeDetection },
             onInvokeTask: function (delegate, current, target, task, applyThis, applyArgs) {
                 try {
                     onEnter(zone);
                     return delegate.invokeTask(target, task, applyThis, applyArgs);
                 }
                 finally {
+                    if (maybeDelayChangeDetection && task.type === 'eventTask') {
+                        maybeDelayChangeDetection();
+                    }
                     onLeave(zone);
                 }
             },
@@ -67103,7 +67150,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     // We are only interested in hasTask events which originate from our zone
                     // (A child hasTask event is not interesting to us)
                     if (hasTaskState.change == 'microTask') {
-                        zone.hasPendingMicrotasks = hasTaskState.microTask;
+                        zone._hasPendingMicrotasks = hasTaskState.microTask;
+                        updateMicroTaskStatus(zone);
                         checkStable(zone);
                     }
                     else if (hasTaskState.change == 'macroTask') {
@@ -67117,6 +67165,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 return false;
             }
         });
+    }
+    function updateMicroTaskStatus(zone) {
+        if (zone._hasPendingMicrotasks ||
+            (zone.shouldCoalesceEventChangeDetection && zone.lastRequestAnimationFrameId !== -1)) {
+            zone.hasPendingMicrotasks = true;
+        }
+        else {
+            zone.hasPendingMicrotasks = false;
+        }
     }
     function onEnter(zone) {
         zone._nesting++;
@@ -67135,6 +67192,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
     var NoopNgZone = /** @class */ (function () {
         function NoopNgZone() {
+            this.hasPendingZoneMicrotasks = false;
+            this.lastRequestAnimationFrameId = -1;
             this.hasPendingMicrotasks = false;
             this.hasPendingMacrotasks = false;
             this.isStable = true;
@@ -67142,6 +67201,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.onMicrotaskEmpty = new EventEmitter();
             this.onStable = new EventEmitter();
             this.onError = new EventEmitter();
+            this.shouldCoalesceEventChangeDetection = false;
         }
         NoopNgZone.prototype.run = function (fn, applyThis, applyArgs) {
             return fn.apply(applyThis, applyArgs);
@@ -67531,7 +67591,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             // So we create a mini parent injector that just contains the new NgZone and
             // pass that as parent to the NgModuleFactory.
             var ngZoneOption = options ? options.ngZone : undefined;
-            var ngZone = getNgZone(ngZoneOption);
+            var ngZoneEventCoalescing = (options && options.ngZoneEventCoalescing) || false;
+            var ngZone = getNgZone(ngZoneOption, ngZoneEventCoalescing);
             var providers = [{ provide: NgZone, useValue: ngZone }];
             // Attention: Don't use ApplicationRef.run here,
             // as we want to be sure that all possible constructor calls are inside `ngZone.run`!
@@ -67626,14 +67687,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         ], PlatformRef);
         return PlatformRef;
     }());
-    function getNgZone(ngZoneOption) {
+    function getNgZone(ngZoneOption, ngZoneEventCoalescing) {
         var ngZone;
         if (ngZoneOption === 'noop') {
             ngZone = new NoopNgZone();
         }
         else {
-            ngZone = (ngZoneOption === 'zone.js' ? undefined : ngZoneOption) ||
-                new NgZone({ enableLongStackTrace: isDevMode() });
+            ngZone = (ngZoneOption === 'zone.js' ? undefined : ngZoneOption) || new NgZone({
+                enableLongStackTrace: isDevMode(),
+                shouldCoalesceEventChangeDetection: ngZoneEventCoalescing
+            });
         }
         return ngZone;
     }
@@ -71781,7 +71844,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+5.sha-4c63e6b.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+8.sha-3e14c2d.with-local-changes');
 
     /**
      * @license
