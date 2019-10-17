@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+39.sha-bb53b65.with-local-changes
+ * @license Angular v9.0.0-next.11+41.sha-1a8bd22.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18969,7 +18969,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+39.sha-bb53b65.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+41.sha-1a8bd22.with-local-changes');
 
     /**
      * @license
@@ -34327,7 +34327,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+39.sha-bb53b65.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+41.sha-1a8bd22.with-local-changes');
 
     /**
      * @license
@@ -41584,7 +41584,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             ];
             if (this.localeId) {
                 res.push({
-                    name: 'ngLocaleIdDef',
+                    name: 'ɵloc',
                     initializer: new LiteralExpr(this.localeId),
                     statements: [],
                     type: STRING_TYPE
@@ -51989,7 +51989,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
     var NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
     var NG_MOD_DEF = getClosureSafeProperty({ ɵmod: getClosureSafeProperty });
-    var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
+    var NG_LOC_ID_DEF = getClosureSafeProperty({ ɵloc: getClosureSafeProperty });
     var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
     var NG_FACTORY_DEF = getClosureSafeProperty({ ɵfac: getClosureSafeProperty });
     /**
@@ -53000,7 +53000,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return ngModuleDef;
     }
     function getNgLocaleIdDef(type) {
-        return type[NG_LOCALE_ID_DEF] || null;
+        return type[NG_LOC_ID_DEF] || null;
     }
 
     /**
@@ -69514,7 +69514,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+39.sha-bb53b65.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+41.sha-1a8bd22.with-local-changes');
 
     /**
      * @license
@@ -83062,7 +83062,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+39.sha-bb53b65.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+41.sha-1a8bd22.with-local-changes');
 
     /**
      * @license
