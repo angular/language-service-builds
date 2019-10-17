@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+38.sha-43487f6.with-local-changes
+ * @license Angular v9.0.0-next.11+40.sha-78214e7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18984,7 +18984,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+38.sha-43487f6.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+40.sha-78214e7.with-local-changes');
 
     /**
      * @license
@@ -34342,7 +34342,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+38.sha-43487f6.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+40.sha-78214e7.with-local-changes');
 
     /**
      * @license
@@ -52954,14 +52954,35 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var instructionState = {
+        previousOrParentTNode: null,
+        isParent: null,
+        lView: null,
+        // tslint:disable-next-line: no-toplevel-property-access
+        selectedIndex: -1 << 1 /* Size */,
+        contextLView: null,
+        checkNoChangesMode: false,
+        elementDepthCount: 0,
+        bindingsEnabled: true,
+        currentNamespace: null,
+        currentSanitizer: null,
+        currentDirectiveDef: null,
+        activeDirectiveId: 0,
+        bindingRootIndex: -1,
+        currentQueryIndex: 0,
+        elementExitFn: null,
+    };
+    function setCurrentDirectiveDef(def) {
+        instructionState.currentDirectiveDef = def;
+    }
     function getLView() {
-        return lView;
+        return instructionState.lView;
     }
     /**
      * Determines whether or not a flag is currently set for the active element.
      */
     function hasActiveElementFlag(flag) {
-        return (_selectedIndex & flag) === flag;
+        return (instructionState.selectedIndex & flag) === flag;
     }
     /**
      * Sets the active directive host element and resets the directive id value
@@ -52977,68 +52998,72 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 executeElementExitFn();
             }
             setSelectedIndex(elementIndex === null ? -1 : elementIndex);
+            instructionState.activeDirectiveId = 0;
         }
     }
-    var _elementExitFn = null;
     function executeElementExitFn() {
-        _elementExitFn();
+        instructionState.elementExitFn();
         // TODO (matsko|misko): remove this unassignment once the state management of
         //                      global variables are better managed.
-        _selectedIndex &= ~1 /* RunExitFn */;
+        instructionState.selectedIndex &= ~1 /* RunExitFn */;
     }
-    /** Used to set the parent property when nodes are created and track query results. */
-    var previousOrParentTNode;
+    /**
+     * Increments the current directive id value.
+     *
+     * For example we have an element that has two directives on it:
+     * <div dir-one dir-two></div>
+     *
+     * dirOne->hostBindings() (index = 1)
+     * // increment
+     * dirTwo->hostBindings() (index = 2)
+     *
+     * Depending on whether or not a previous directive had any inherited
+     * directives present, that value will be incremented in addition
+     * to the id jumping up by one.
+     *
+     * Note that this is only active when `hostBinding` functions are being processed.
+     *
+     * Note that directive id values are specific to an element (this means that
+     * the same id value could be present on another element with a completely
+     * different set of directives).
+     */
+    function incrementActiveDirectiveId() {
+        // Each directive gets a uniqueId value that is the same for both
+        // create and update calls when the hostBindings function is called. The
+        // directive uniqueId is not set anywhere--it is just incremented between
+        // each hostBindings call and is useful for helping instruction code
+        // uniquely determine which directive is currently active when executed.
+        instructionState.activeDirectiveId += 1;
+    }
     function getPreviousOrParentTNode() {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return previousOrParentTNode;
+        return instructionState.previousOrParentTNode;
     }
     function setPreviousOrParentTNode(tNode, _isParent) {
-        previousOrParentTNode = tNode;
-        isParent = _isParent;
+        instructionState.previousOrParentTNode = tNode;
+        instructionState.isParent = _isParent;
     }
     function setTNodeAndViewData(tNode, view) {
         ngDevMode && assertLViewOrUndefined(view);
-        previousOrParentTNode = tNode;
-        lView = view;
+        instructionState.previousOrParentTNode = tNode;
+        instructionState.lView = view;
     }
-    /**
-     * If `isParent` is:
-     *  - `true`: then `previousOrParentTNode` points to a parent node.
-     *  - `false`: then `previousOrParentTNode` points to previous node (sibling).
-     */
-    var isParent;
     function getIsParent() {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return isParent;
+        return instructionState.isParent;
     }
-    /**
-     * State of the current view being processed.
-     *
-     * An array of nodes (text, element, container, etc), pipes, their bindings, and
-     * any local variables that need to be stored between invocations.
-     */
-    var lView;
-    /**
-     * The last viewData retrieved by nextContext().
-     * Allows building nextContext() and reference() calls.
-     *
-     * e.g. const inner = x().$implicit; const outer = x().$implicit;
-     */
-    var contextLView = null;
-    /**
-     * In this mode, any changes in bindings will throw an ExpressionChangedAfterChecked error.
-     *
-     * Necessary to support ChangeDetectorRef.checkNoChanges().
-     */
-    var checkNoChangesMode = false;
     function getCheckNoChangesMode() {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return checkNoChangesMode;
+        return instructionState.checkNoChangesMode;
     }
     function setCheckNoChangesMode(mode) {
-        checkNoChangesMode = mode;
+        instructionState.checkNoChangesMode = mode;
     }
     function setBindingRoot(value) {
+        instructionState.bindingRootIndex = value;
+    }
+    function setCurrentQueryIndex(value) {
+        instructionState.currentQueryIndex = value;
     }
     /**
      * Swap the current lView with a new lView.
@@ -53057,22 +53082,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             executeElementExitFn();
         }
         ngDevMode && assertLViewOrUndefined(newView);
-        var oldView = lView;
-        previousOrParentTNode = hostTNode;
-        isParent = true;
-        lView = contextLView = newView;
+        var oldView = instructionState.lView;
+        instructionState.previousOrParentTNode = hostTNode;
+        instructionState.isParent = true;
+        instructionState.lView = instructionState.contextLView = newView;
         return oldView;
     }
     /**
      * Resets the application state.
      */
     function resetComponentState() {
-        isParent = false;
-        previousOrParentTNode = null;
+        instructionState.isParent = false;
+        instructionState.previousOrParentTNode = null;
+        instructionState.elementDepthCount = 0;
+        instructionState.bindingsEnabled = true;
         setCurrentStyleSanitizer(null);
     }
-    /* tslint:disable */
-    var _selectedIndex = -1 << 1 /* Size */;
     /**
      * Gets the most recent index passed to {@link select}
      *
@@ -53080,7 +53105,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * current `LView` to act on.
      */
     function getSelectedIndex() {
-        return _selectedIndex >> 1 /* Size */;
+        return instructionState.selectedIndex >> 1 /* Size */;
     }
     /**
      * Sets the most recent index passed to {@link select}
@@ -53092,14 +53117,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * run if and when the provided `index` value is different from the current selected index value.)
      */
     function setSelectedIndex(index) {
-        _selectedIndex = index << 1 /* Size */;
+        instructionState.selectedIndex = index << 1 /* Size */;
     }
-    var _currentSanitizer;
+    /**
+     * Sets the namespace used to create elements to `null`, which forces element creation to use
+     * `createElement` rather than `createElementNS`.
+     */
+    function namespaceHTMLInternal() {
+        instructionState.currentNamespace = null;
+    }
     function setCurrentStyleSanitizer(sanitizer) {
-        _currentSanitizer = sanitizer;
+        instructionState.currentSanitizer = sanitizer;
     }
     function getCurrentStyleSanitizer() {
-        return _currentSanitizer;
+        return instructionState.currentSanitizer;
     }
 
     /**
@@ -56462,6 +56493,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         try {
             if (tView.expandoInstructions !== null) {
                 var bindingRootIndex = viewData[BINDING_INDEX] = tView.expandoStartIndex;
+                setBindingRoot(bindingRootIndex);
                 var currentDirectiveIndex = -1;
                 var currentElementIndex = -1;
                 for (var i = 0; i < tView.expandoInstructions.length; i++) {
@@ -56483,10 +56515,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             // (to get to the next set of host bindings on this node).
                             bindingRootIndex += instruction;
                         }
+                        setBindingRoot(bindingRootIndex);
                     }
                     else {
                         // If it's not a number, it's a host binding function that needs to be executed.
                         if (instruction !== null) {
+                            // Each directive gets a uniqueId value that is the same for both
+                            // create and update calls when the hostBindings function is called. The
+                            // directive uniqueId is not set anywhere--it is just incremented between
+                            // each hostBindings call and is useful for helping instruction code
+                            // uniquely determine which directive is currently active when executed.
+                            // It is important that this be called first before the actual instructions
+                            // are run because this way the first directive ID value is not zero.
+                            incrementActiveDirectiveId();
                             viewData[BINDING_INDEX] = bindingRootIndex;
                             var hostCtx = unwrapRNode(viewData[currentDirectiveIndex]);
                             instruction(2 /* Update */, hostCtx, currentElementIndex);
@@ -56511,6 +56552,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     var directiveDef = tView.data[directiveDefIdx];
                     ngDevMode &&
                         assertDefined(directiveDef.contentQueries, 'contentQueries function should be defined');
+                    setCurrentQueryIndex(queryStartIdx);
                     directiveDef.contentQueries(2 /* Update */, lView[directiveDefIdx], directiveDefIdx);
                 }
             }
@@ -56782,6 +56824,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
+        namespaceHTMLInternal();
         var prevSelectedIndex = getSelectedIndex();
         try {
             setActiveHostElement(null);
@@ -57017,8 +57060,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function invokeHostBindingsInCreationMode(def, expando, directive, tNode, firstTemplatePass) {
         var previousExpandoLength = expando.length;
+        setCurrentDirectiveDef(def);
         var elementIndex = tNode.index - HEADER_OFFSET;
         def.hostBindings(1 /* Create */, directive, elementIndex);
+        setCurrentDirectiveDef(null);
         // `hostBindings` function may or may not contain `allocHostVars` call
         // (e.g. it may not if it only contains host listeners), so we need to check whether
         // `expandoInstructions` has changed and if not - we still push `hostBindings` to
@@ -57281,6 +57326,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function executeViewQueryFn(flags, viewQueryFn, component) {
         ngDevMode && assertDefined(viewQueryFn, 'View queries function to execute must be defined.');
+        setCurrentQueryIndex(0);
         viewQueryFn(flags, component);
     }
     var CLEAN_PROMISE = _CLEAN_PROMISE;
@@ -60951,6 +60997,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (tView.firstTemplatePass && componentDef.hostBindings) {
             var elementIndex = rootTNode.index - HEADER_OFFSET;
             setActiveHostElement(elementIndex);
+            incrementActiveDirectiveId();
             var expando = tView.expandoInstructions;
             invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
             setActiveHostElement(null);
@@ -61302,7 +61349,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+38.sha-43487f6.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+40.sha-78214e7.with-local-changes');
 
     /**
      * @license
@@ -64034,6 +64081,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
+            // Ensure that the namespace for the root node is correct,
+            // otherwise the browser might not render out the element properly.
+            namespaceHTMLInternal();
             var hostRNode = rootSelectorOrNode ?
                 locateHostElement(rendererFactory, rootSelectorOrNode) :
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef), null);
@@ -71908,7 +71958,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+38.sha-43487f6.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+40.sha-78214e7.with-local-changes');
 
     /**
      * @license
