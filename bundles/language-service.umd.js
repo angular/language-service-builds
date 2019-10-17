@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+45.sha-d5b5900.with-local-changes
+ * @license Angular v9.0.0-next.11+46.sha-7b64680.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18971,7 +18971,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+45.sha-d5b5900.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+46.sha-7b64680.with-local-changes');
 
     /**
      * @license
@@ -34329,7 +34329,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+45.sha-d5b5900.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+46.sha-7b64680.with-local-changes');
 
     /**
      * @license
@@ -57099,7 +57099,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var isMapBased = !prop;
         var state = getStylingState(element, directiveIndex);
         var countIndex = isMapBased ? STYLING_INDEX_FOR_MAP_BINDING : state.classesIndex++;
-        if (value !== NO_CHANGE) {
+        var hostBindingsMode = isHostStylingActive(state.sourceIndex);
+        // even if the initial value is a `NO_CHANGE` value (e.g. interpolation or [ngClass])
+        // then we still need to register the binding within the context so that the context
+        // is aware of the binding before it gets locked.
+        if (!isContextLocked(context, hostBindingsMode) || value !== NO_CHANGE) {
             var updated = updateBindingData(context, data, countIndex, state.sourceIndex, prop, bindingIndex, value, forceUpdate, false);
             if (updated || forceUpdate) {
                 // We flip the bit in the bitMask to reflect that the binding
@@ -57127,7 +57131,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var isMapBased = !prop;
         var state = getStylingState(element, directiveIndex);
         var countIndex = isMapBased ? STYLING_INDEX_FOR_MAP_BINDING : state.stylesIndex++;
-        if (value !== NO_CHANGE) {
+        var hostBindingsMode = isHostStylingActive(state.sourceIndex);
+        // even if the initial value is a `NO_CHANGE` value (e.g. interpolation or [ngStyle])
+        // then we still need to register the binding within the context so that the context
+        // is aware of the binding before it gets locked.
+        if (!isContextLocked(context, hostBindingsMode) || value !== NO_CHANGE) {
             var sanitizationRequired = isMapBased ?
                 true :
                 (sanitizer ? sanitizer(prop, null, 1 /* ValidateProperty */) : false);
@@ -69533,7 +69541,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+45.sha-d5b5900.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+46.sha-7b64680.with-local-changes');
 
     /**
      * @license
@@ -83081,7 +83089,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+45.sha-d5b5900.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+46.sha-7b64680.with-local-changes');
 
     /**
      * @license
