@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+47.sha-422eb14.with-local-changes
+ * @license Angular v9.0.0-next.11+48.sha-fd4fed1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13384,7 +13384,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         // Parse an inline template binding. ie `<tag *tplKey="<tplValue>">`
         BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps, targetVars) {
-            var bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan);
+            var bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteOffset);
             for (var i = 0; i < bindings.length; i++) {
                 var binding = bindings[i];
                 if (binding.keyIsVar) {
@@ -13399,11 +13399,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         };
-        BindingParser.prototype._parseTemplateBindings = function (tplKey, tplValue, sourceSpan) {
+        BindingParser.prototype._parseTemplateBindings = function (tplKey, tplValue, sourceSpan, absoluteOffset) {
             var _this = this;
             var sourceInfo = sourceSpan.start.toString();
             try {
-                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, sourceSpan.start.offset);
+                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, absoluteOffset);
                 this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
                 bindingsResult.templateBindings.forEach(function (binding) {
                     if (binding.expression) {
@@ -18971,7 +18971,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+47.sha-422eb14.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
 
     /**
      * @license
@@ -34329,7 +34329,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+47.sha-422eb14.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
 
     /**
      * @license
@@ -69541,7 +69541,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+47.sha-422eb14.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
 
     /**
      * @license
@@ -74834,7 +74834,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -83089,7 +83089,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+47.sha-422eb14.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
 
     /**
      * @license
