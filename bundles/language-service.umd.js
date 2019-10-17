@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+43.sha-9d54679.with-local-changes
+ * @license Angular v9.0.0-next.11+44.sha-f45c431.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18986,7 +18986,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+43.sha-9d54679.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+44.sha-f45c431.with-local-changes');
 
     /**
      * @license
@@ -34344,7 +34344,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+43.sha-9d54679.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+44.sha-f45c431.with-local-changes');
 
     /**
      * @license
@@ -53340,7 +53340,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return context[index + 4 /* BindingsStartOffset */ + getTotalSources(context)];
     }
     function getValue(data, bindingIndex) {
-        return bindingIndex > 0 ? data[bindingIndex] : null;
+        return bindingIndex !== 0 ? data[bindingIndex] : null;
     }
     function getLockedConfig(hostBindingsMode) {
         return hostBindingsMode ? 256 /* HostBindingsLocked */ :
@@ -61351,7 +61351,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+43.sha-9d54679.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+44.sha-f45c431.with-local-changes');
 
     /**
      * @license
@@ -71960,7 +71960,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+43.sha-9d54679.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+44.sha-f45c431.with-local-changes');
 
     /**
      * @license
