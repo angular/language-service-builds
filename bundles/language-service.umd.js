@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+48.sha-fd4fed1.with-local-changes
+ * @license Angular v9.0.0-next.11+53.sha-de44570.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18971,7 +18971,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+53.sha-de44570.with-local-changes');
 
     /**
      * @license
@@ -34329,7 +34329,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+53.sha-de44570.with-local-changes');
 
     /**
      * @license
@@ -35605,6 +35605,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
                 return this.getDeclarationOfSymbol(shorthandSymbol, originalId);
             }
+            else if (symbol.valueDeclaration !== undefined && ts.isExportSpecifier(symbol.valueDeclaration)) {
+                var localTarget = this.checker.getExportSpecifierLocalTargetSymbol(symbol.valueDeclaration);
+                if (localTarget === undefined) {
+                    return null;
+                }
+                return this.getDeclarationOfSymbol(localTarget, originalId);
+            }
             var importInfo = originalId && this.getImportOfIdentifier(originalId);
             var viaModule = importInfo !== null && importInfo.from !== null && !importInfo.from.startsWith('.') ?
                 importInfo.from :
@@ -36249,36 +36256,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Find the name, if any, by which a node is exported from a given file.
      */
-    function findExportedNameOfNode(target, file, checker) {
-        // First, get the exports of the file.
-        var symbol = checker.getSymbolAtLocation(file);
-        if (symbol === undefined) {
+    function findExportedNameOfNode(target, file, reflector) {
+        var exports = reflector.getExportsOfModule(file);
+        if (exports === null) {
             return null;
         }
-        var exports = checker.getExportsOfModule(symbol);
         // Look for the export which declares the node.
-        var found = exports.find(function (sym) { return symbolDeclaresNode(sym, target, checker); });
-        if (found === undefined) {
+        var keys = Array.from(exports.keys());
+        var name = keys.find(function (key) {
+            var decl = exports.get(key);
+            return decl !== undefined && decl.node === target;
+        });
+        if (name === undefined) {
             throw new Error("Failed to find exported name of node (" + target.getText() + ") in '" + file.fileName + "'.");
         }
-        return found.name;
-    }
-    /**
-     * Check whether a given `ts.Symbol` represents a declaration of a given node.
-     *
-     * This is not quite as trivial as just checking the declarations, as some nodes are
-     * `ts.ExportSpecifier`s and need to be unwrapped.
-     */
-    function symbolDeclaresNode(sym, node, checker) {
-        return sym.declarations.some(function (decl) {
-            if (ts.isExportSpecifier(decl)) {
-                var exportedSymbol = checker.getExportSpecifierLocalTargetSymbol(decl);
-                if (exportedSymbol !== undefined) {
-                    return symbolDeclaresNode(exportedSymbol, node, checker);
-                }
-            }
-            return decl === node;
-        });
+        return name;
     }
 
     /**
@@ -36546,8 +36538,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Instead, `LogicalProjectPath`s are used.
      */
     var LogicalProjectStrategy = /** @class */ (function () {
-        function LogicalProjectStrategy(checker, logicalFs) {
-            this.checker = checker;
+        function LogicalProjectStrategy(reflector, logicalFs) {
+            this.reflector = reflector;
             this.logicalFs = logicalFs;
         }
         LogicalProjectStrategy.prototype.emit = function (ref, context) {
@@ -36567,7 +36559,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (destPath === originPath) {
                 return null;
             }
-            var name = findExportedNameOfNode(ref.node, destSf, this.checker);
+            var name = findExportedNameOfNode(ref.node, destSf, this.reflector);
             if (name === null) {
                 // The target declaration isn't exported from the file it's declared in. This is an issue!
                 return null;
@@ -36583,13 +36575,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * A `ReferenceEmitStrategy` which uses a `FileToModuleHost` to generate absolute import references.
      */
     var FileToModuleStrategy = /** @class */ (function () {
-        function FileToModuleStrategy(checker, fileToModuleHost) {
-            this.checker = checker;
+        function FileToModuleStrategy(reflector, fileToModuleHost) {
+            this.reflector = reflector;
             this.fileToModuleHost = fileToModuleHost;
         }
         FileToModuleStrategy.prototype.emit = function (ref, context) {
             var destSf = getSourceFile(ref.node);
-            var name = findExportedNameOfNode(ref.node, destSf, this.checker);
+            var name = findExportedNameOfNode(ref.node, destSf, this.reflector);
             if (name === null) {
                 return null;
             }
@@ -47787,7 +47779,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     // Finally, check if the reference is being written into a file within the project's logical
                     // file system, and use a relative import if so. If this fails, ReferenceEmitter will throw
                     // an error.
-                    new LogicalProjectStrategy(checker, new LogicalFileSystem(this.rootDirs)),
+                    new LogicalProjectStrategy(this.reflector, new LogicalFileSystem(this.rootDirs)),
                 ]);
             }
             else {
@@ -47798,7 +47790,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     // Then use aliased references (this is a workaround to StrictDeps checks).
                     new AliasStrategy(),
                     // Then use fileNameToModuleName to emit imports.
-                    new FileToModuleStrategy(checker, this.fileToModuleHost),
+                    new FileToModuleStrategy(this.reflector, this.fileToModuleHost),
                 ]);
                 aliasGenerator = new AliasGenerator(this.fileToModuleHost);
             }
@@ -69541,7 +69533,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+53.sha-de44570.with-local-changes');
 
     /**
      * @license
@@ -74834,7 +74826,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -83089,7 +83081,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+48.sha-fd4fed1.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+53.sha-de44570.with-local-changes');
 
     /**
      * @license
