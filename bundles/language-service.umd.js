@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+74.sha-e0059c7.with-local-changes
+ * @license Angular v9.0.0-next.11+75.sha-0e08ad6.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18971,7 +18971,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+75.sha-0e08ad6.with-local-changes');
 
     /**
      * @license
@@ -34356,7 +34356,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+75.sha-0e08ad6.with-local-changes');
 
     /**
      * @license
@@ -35108,6 +35108,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * otherwise imported.
          */
         ErrorCode[ErrorCode["NGMODULE_INVALID_REEXPORT"] = 6004] = "NGMODULE_INVALID_REEXPORT";
+        /**
+         * Raised when a `ModuleWithProviders` with a missing
+         * generic type argument is passed into an `NgModule`.
+         */
+        ErrorCode[ErrorCode["NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC"] = 6005] = "NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC";
         /**
          * Raised when ngcc tries to inject a synthetic decorator over one that already exists.
          */
@@ -41633,7 +41638,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         NgModuleDecoratorHandler.prototype._extractModuleFromModuleWithProvidersFn = function (node) {
             var type = node.type || null;
             return type &&
-                (this._reflectModuleFromTypeParam(type) || this._reflectModuleFromLiteralType(type));
+                (this._reflectModuleFromTypeParam(type, node) || this._reflectModuleFromLiteralType(type));
         };
         /**
          * Retrieve an `NgModule` identifier (T) from the specified `type`, if it is of the form:
@@ -41641,7 +41646,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * @param type The type to reflect on.
          * @returns the identifier of the NgModule type if found, or null otherwise.
          */
-        NgModuleDecoratorHandler.prototype._reflectModuleFromTypeParam = function (type) {
+        NgModuleDecoratorHandler.prototype._reflectModuleFromTypeParam = function (type, node) {
             // Examine the type of the function to see if it's a ModuleWithProviders reference.
             if (!ts.isTypeReferenceNode(type)) {
                 return null;
@@ -41664,7 +41669,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             // If there's no type parameter specified, bail.
             if (type.typeArguments === undefined || type.typeArguments.length !== 1) {
-                return null;
+                var parent_1 = ts.isMethodDeclaration(node) && ts.isClassDeclaration(node.parent) ? node.parent : null;
+                var symbolName = (parent_1 && parent_1.name ? parent_1.name.getText() + '.' : '') +
+                    (node.name ? node.name.getText() : 'anonymous');
+                throw new FatalDiagnosticError(ErrorCode.NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC, type, symbolName + " returns a ModuleWithProviders type without a generic type argument. " +
+                    "Please add a generic type argument to the ModuleWithProviders type. If this " +
+                    "occurrence is in library code you don't control, please contact the library authors.");
             }
             var arg = type.typeArguments[0];
             return typeNodeToValueExpr(arg);
@@ -69968,7 +69978,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+75.sha-0e08ad6.with-local-changes');
 
     /**
      * @license
@@ -83525,7 +83535,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+75.sha-0e08ad6.with-local-changes');
 
     /**
      * @license
