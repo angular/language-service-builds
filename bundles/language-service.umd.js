@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+65.sha-6958d11.with-local-changes
+ * @license Angular v9.0.0-next.11+74.sha-e0059c7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18986,7 +18986,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+65.sha-6958d11.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
 
     /**
      * @license
@@ -32429,6 +32429,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var CompletionKind;
     (function (CompletionKind) {
+        CompletionKind["ANGULAR_ELEMENT"] = "angular element";
         CompletionKind["ATTRIBUTE"] = "attribute";
         CompletionKind["COMPONENT"] = "component";
         CompletionKind["ELEMENT"] = "element";
@@ -33274,6 +33275,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         head: true,
         link: true,
     };
+    var ANGULAR_ELEMENTS = ['ng-container', 'ng-content', 'ng-template'];
     function getTemplateCompletions(templateInfo, position) {
         var result = [];
         var htmlAst = templateInfo.htmlAst, template = templateInfo.template;
@@ -33466,8 +33468,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 sortText: name,
             };
         });
+        var angularElements = ANGULAR_ELEMENTS.map(function (name) {
+            return {
+                name: name,
+                // Need to cast to unknown because Angular's CompletionKind includes HTML
+                // entites.
+                kind: CompletionKind.ANGULAR_ELEMENT,
+                sortText: name,
+            };
+        });
         // Return components and html elements
-        return uniqueByName(htmlElements.concat(components));
+        return uniqueByName(__spread(htmlElements, components, angularElements));
     }
     /**
      * Filter the specified `entries` by unique name.
@@ -34360,7 +34371,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+65.sha-6958d11.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
 
     /**
      * @license
@@ -61769,7 +61780,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+65.sha-6958d11.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
 
     /**
      * @license
@@ -72387,7 +72398,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+65.sha-6958d11.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+74.sha-e0059c7.with-local-changes');
 
     /**
      * @license
