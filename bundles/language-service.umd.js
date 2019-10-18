@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.11+55.sha-9e7668f.with-local-changes
+ * @license Angular v9.0.0-next.11+56.sha-d222254.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18971,7 +18971,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.11+55.sha-9e7668f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.11+56.sha-d222254.with-local-changes');
 
     /**
      * @license
@@ -32458,7 +32458,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var diDep = _c.value;
                     if (diDep.token && diDep.token.identifier &&
-                        identifierName(diDep.token.identifier) == 'TemplateRef')
+                        identifierName(diDep.token.identifier) === 'TemplateRef')
                         return true;
                 }
             }
@@ -32544,7 +32544,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // Ignore the host properties of a directive
                 var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
                 // We never care about the diretive itself, just its inputs.
-                if (path[path.length - 1] == ast) {
+                if (path[path.length - 1] === ast) {
                     path.pop();
                 }
                 return result;
@@ -33174,7 +33174,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }
                 }
                 properties.forEach(function (property) {
-                    if (property == '') ;
+                    if (property === '') ;
                     else if (property.startsWith('*')) {
                         type[property.substring(1)] = EVENT;
                     }
@@ -33354,7 +33354,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var _a = getSelectors(info), selectors = _a.selectors, selectorMap = _a.map;
         if (selectors && selectors.length) {
             // All the attributes that are selectable should be shown.
-            var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element == elementName; });
+            var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element === elementName; });
             var selectorAndAttributeNames = applicableSelectors.map(function (selector) { return ({ selector: selector, attrs: selector.attrs.filter(function (a) { return !!a; }) }); });
             var attrs_1 = flatten$1(selectorAndAttributeNames.map(function (selectorAndAttr) {
                 var directive = selectorMap.get(selectorAndAttr.selector);
@@ -33542,7 +33542,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // Find the selector
                 var selectorInfo = getSelectors(this.info);
                 var selectors = selectorInfo.selectors;
-                var selector_1 = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 == 0 && attr == key_1; }); })[0];
+                var selector_1 = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 === 0 && attr === key_1; }); })[0];
                 var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null, 0);
                 // find the template binding that contains the position
                 if (!this.attr.valueSpan)
@@ -33554,7 +33554,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var keyCompletions = function () {
                     var keys = [];
                     if (selector_1) {
-                        var attrNames = selector_1.attrs.filter(function (_, i) { return i % 2 == 0; });
+                        var attrNames = selector_1.attrs.filter(function (_, i) { return i % 2 === 0; });
                         keys = attrNames.filter(function (name) { return name.startsWith(key_1) && name != key_1; })
                             .map(function (name) { return lowerName(name.substr(key_1.length)); });
                     }
@@ -33569,7 +33569,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         };
                     });
                 };
-                if (!binding || (binding.key == key_1 && !binding.expression)) {
+                if (!binding || (binding.key === key_1 && !binding.expression)) {
                     // We are in the root binding. We should return `let` and keys that are left in the
                     // selector.
                     keyCompletions();
@@ -33620,7 +33620,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         };
         ExpressionVisitor.prototype.attributeValueCompletions = function (value, position) {
-            var symbols = getExpressionCompletions(this.getExpressionScope(), value, position == null ? this.attributeValuePosition : position, this.info.template.query);
+            var symbols = getExpressionCompletions(this.getExpressionScope(), value, position === undefined ? this.attributeValuePosition : position, this.info.template.query);
             if (symbols) {
                 this.result = this.symbolsToCompletions(symbols);
             }
@@ -33681,7 +33681,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 if (!attr.name.match(templateAttr)) {
                     var _d = __read(splitNsName(attr.name), 2), _ = _d[0], attrNameNoNs = _d[1];
                     cssSelector.addAttribute(attrNameNoNs, attr.value);
-                    if (attr.name.toLowerCase() == 'class') {
+                    if (attr.name.toLowerCase() === 'class') {
                         var classes = attr.value.split(/s+/g);
                         classes.forEach(function (className) { return cssSelector.addClassName(className); });
                     }
@@ -34329,7 +34329,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.11+55.sha-9e7668f.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.11+56.sha-d222254.with-local-changes');
 
     /**
      * @license
@@ -69533,7 +69533,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.11+55.sha-9e7668f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.11+56.sha-d222254.with-local-changes');
 
     /**
      * @license
@@ -83082,7 +83082,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.11+55.sha-9e7668f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.11+56.sha-d222254.with-local-changes');
 
     /**
      * @license
