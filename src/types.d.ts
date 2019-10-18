@@ -219,6 +219,7 @@ export declare enum DirectiveKind {
  * ScriptElementKind for completion.
  */
 export declare enum CompletionKind {
+    ANGULAR_ELEMENT = "angular element",
     ATTRIBUTE = "attribute",
     COMPONENT = "component",
     ELEMENT = "element",
