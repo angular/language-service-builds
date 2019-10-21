@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+8.sha-1b4eaea.with-local-changes
+ * @license Angular v9.0.0-next.12+11.sha-d7dc6cb.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18986,7 +18986,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+8.sha-1b4eaea.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+11.sha-d7dc6cb.with-local-changes');
 
     /**
      * @license
@@ -34078,7 +34078,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         InvalidFileSystem.prototype.extname = function (path) { throw makeError(); };
         InvalidFileSystem.prototype.copyFile = function (from, to) { throw makeError(); };
         InvalidFileSystem.prototype.moveFile = function (from, to) { throw makeError(); };
-        InvalidFileSystem.prototype.mkdir = function (path) { throw makeError(); };
         InvalidFileSystem.prototype.ensureDir = function (path) { throw makeError(); };
         InvalidFileSystem.prototype.isCaseSensitive = function () { throw makeError(); };
         InvalidFileSystem.prototype.resolve = function () {
@@ -34298,7 +34297,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         NodeJSFileSystem.prototype.pwd = function () { return this.normalize(process.cwd()); };
         NodeJSFileSystem.prototype.copyFile = function (from, to) { fs$1.copyFileSync(from, to); };
         NodeJSFileSystem.prototype.moveFile = function (from, to) { fs$1.renameSync(from, to); };
-        NodeJSFileSystem.prototype.mkdir = function (path) { fs$1.mkdirSync(path); };
         NodeJSFileSystem.prototype.ensureDir = function (path) {
             var parents = [];
             while (!this.isRoot(path) && !this.exists(path)) {
@@ -34306,7 +34304,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 path = this.dirname(path);
             }
             while (parents.length) {
-                this.mkdir(parents.pop());
+                this.safeMkdir(parents.pop());
             }
         };
         NodeJSFileSystem.prototype.isCaseSensitive = function () {
@@ -34347,6 +34345,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Convert backslashes to forward slashes
             return path.replace(/\\/g, '/');
         };
+        NodeJSFileSystem.prototype.safeMkdir = function (path) {
+            try {
+                fs$1.mkdirSync(path);
+            }
+            catch (err) {
+                // Ignore the error, if the path already exists and points to a directory.
+                // Re-throw otherwise.
+                if (!this.exists(path) || !this.stat(path).isDirectory()) {
+                    throw err;
+                }
+            }
+        };
         return NodeJSFileSystem;
     }());
     /**
@@ -34371,7 +34381,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+8.sha-1b4eaea.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+11.sha-d7dc6cb.with-local-changes');
 
     /**
      * @license
@@ -61832,7 +61842,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+8.sha-1b4eaea.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+11.sha-d7dc6cb.with-local-changes');
 
     /**
      * @license
@@ -72450,7 +72460,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+8.sha-1b4eaea.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+11.sha-d7dc6cb.with-local-changes');
 
     /**
      * @license
