@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+6.sha-29bc3a7.with-local-changes
+ * @license Angular v9.0.0-next.12+7.sha-d4db746.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18986,7 +18986,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+6.sha-29bc3a7.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+7.sha-d4db746.with-local-changes');
 
     /**
      * @license
@@ -34371,7 +34371,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+6.sha-29bc3a7.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+7.sha-d4db746.with-local-changes');
 
     /**
      * @license
@@ -47915,16 +47915,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.rootDirs = getRootDirs(host, options);
             this.closureCompilerEnabled = !!options.annotateForClosureCompiler;
             this.resourceManager = new HostResourceLoader(host, options);
-            var shouldGenerateShims = options.allowEmptyCodegenFiles || false;
+            // TODO(alxhub): remove the fallback to allowEmptyCodegenFiles after verifying that the rest of
+            // our build tooling is no longer relying on it.
+            var allowEmptyCodegenFiles = options.allowEmptyCodegenFiles || false;
+            var shouldGenerateFactoryShims = options.generateNgFactoryShims !== undefined ?
+                options.generateNgFactoryShims :
+                allowEmptyCodegenFiles;
+            var shouldGenerateSummaryShims = options.generateNgSummaryShims !== undefined ?
+                options.generateNgSummaryShims :
+                allowEmptyCodegenFiles;
             var normalizedRootNames = rootNames.map(function (n) { return absoluteFrom(n); });
             if (host.fileNameToModuleName !== undefined) {
                 this.fileToModuleHost = host;
             }
             var rootFiles = __spread(rootNames);
             var generators = [];
-            if (shouldGenerateShims) {
+            var summaryGenerator = null;
+            if (shouldGenerateSummaryShims) {
                 // Summary generation.
-                var summaryGenerator = SummaryGenerator.forRootFiles(normalizedRootNames);
+                summaryGenerator = SummaryGenerator.forRootFiles(normalizedRootNames);
+                generators.push(summaryGenerator);
+            }
+            if (shouldGenerateFactoryShims) {
                 // Factory generation.
                 var factoryGenerator = FactoryGenerator.forRootFiles(normalizedRootNames);
                 var factoryFileMap = factoryGenerator.factoryFileMap;
@@ -47936,8 +47948,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     _this.factoryToSourceInfo.set(factoryPath, { sourceFilePath: sourceFilePath, moduleSymbolNames: moduleSymbolNames });
                 });
                 var factoryFileNames = Array.from(factoryFileMap.keys());
-                rootFiles.push.apply(rootFiles, __spread(factoryFileNames, summaryGenerator.getSummaryFileNames()));
-                generators.push(summaryGenerator, factoryGenerator);
+                rootFiles.push.apply(rootFiles, __spread(factoryFileNames));
+                generators.push(factoryGenerator);
+            }
+            // Done separately to preserve the order of factory files before summary files in rootFiles.
+            // TODO(alxhub): validate that this is necessary.
+            if (shouldGenerateSummaryShims) {
+                rootFiles.push.apply(rootFiles, __spread(summaryGenerator.getSummaryFileNames()));
             }
             this.typeCheckFilePath = typeCheckFilePath(this.rootDirs);
             generators.push(new TypeCheckShimGenerator(this.typeCheckFilePath));
@@ -61791,7 +61808,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+6.sha-29bc3a7.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+7.sha-d4db746.with-local-changes');
 
     /**
      * @license
@@ -72409,7 +72426,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+6.sha-29bc3a7.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+7.sha-d4db746.with-local-changes');
 
     /**
      * @license
