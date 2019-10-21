@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+7.sha-d4db746.with-local-changes
+ * @license Angular v9.0.0-next.12+9.sha-755a80c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18986,7 +18986,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+7.sha-d4db746.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+9.sha-755a80c.with-local-changes');
 
     /**
      * @license
@@ -34371,7 +34371,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+7.sha-d4db746.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+9.sha-755a80c.with-local-changes');
 
     /**
      * @license
@@ -38065,13 +38065,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var ngTemplateGuards = staticMembers.map(extractTemplateGuard)
             .filter(function (guard) { return guard !== null; });
         var hasNgTemplateContextGuard = staticMembers.some(function (member) { return member.kind === ClassMemberKind.Method && member.name === 'ngTemplateContextGuard'; });
-        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards };
+        var coercedInputs = new Set(staticMembers.map(extractCoercedInput)
+            .filter(function (inputName) { return inputName !== null; }));
+        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards, coercedInputs: coercedInputs };
     }
     function extractTemplateGuard(member) {
         if (!member.name.startsWith('ngTemplateGuard_')) {
             return null;
         }
-        var inputName = member.name.split('_', 2)[1];
+        var inputName = afterUnderscore(member.name);
         if (member.kind === ClassMemberKind.Property) {
             var type = null;
             if (member.type !== null && ts.isLiteralTypeNode(member.type) &&
@@ -38090,6 +38092,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else {
             return null;
         }
+    }
+    function extractCoercedInput(member) {
+        if (!member.name.startsWith('ngCoerceInput_')) {
+            return null;
+        }
+        return afterUnderscore(member.name);
     }
     /**
      * A `MetadataReader` that reads from an ordered set of child readers until it obtains the requested
@@ -38167,6 +38175,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return CompoundMetadataReader;
     }());
+    function afterUnderscore(str) {
+        var pos = str.indexOf('_');
+        if (pos === -1) {
+            throw new Error("Expected '" + str + "' to contain '_'");
+        }
+        return str.substr(pos + 1);
+    }
 
     /**
      * @license
@@ -47388,6 +47403,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             else {
                 // For regular attributes with a static string value, use the represented string literal.
                 expr = ts.createStringLiteral(attr.value);
+            }
+            // Wrap the expression if the directive has a coercion function provided.
+            if (dir.coercedInputs.has(attr.name)) {
+                var dirId = tcb.env.reference(dir.ref);
+                var coercionFn = ts.createPropertyAccess(dirId, "ngCoerceInput_" + attr.name);
+                expr = ts.createCall(
+                /* expression */ coercionFn, 
+                /* typeArguments */ undefined, 
+                /* argumentsArray */ [expr]);
             }
             directiveInputs.push({
                 type: 'binding',
@@ -61808,7 +61832,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+7.sha-d4db746.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+9.sha-755a80c.with-local-changes');
 
     /**
      * @license
@@ -72426,7 +72450,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+7.sha-d4db746.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+9.sha-755a80c.with-local-changes');
 
     /**
      * @license
