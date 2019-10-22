@@ -219,6 +219,7 @@ export declare enum DirectiveKind {
  * ScriptElementKind for completion.
  */
 export declare enum CompletionKind {
+    ANGULAR_ELEMENT = "angular element",
     ATTRIBUTE = "attribute",
     COMPONENT = "component",
     ELEMENT = "element",
@@ -250,7 +251,7 @@ export interface DiagnosticMessageChain {
     /**
      * The next message in the chain.
      */
-    next?: DiagnosticMessageChain;
+    next?: DiagnosticMessageChain[];
 }
 /**
  * An template diagnostic message to display.
