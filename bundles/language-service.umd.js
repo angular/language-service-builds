@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+46.sha-7f7dc7c.with-local-changes
+ * @license Angular v9.0.0-next.12+49.sha-1b8b04c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19057,7 +19057,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+49.sha-1b8b04c.with-local-changes');
 
     /**
      * @license
@@ -34452,7 +34452,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+49.sha-1b8b04c.with-local-changes');
 
     /**
      * @license
@@ -54169,7 +54169,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         ngDevMode && assertLessThan(index, view[TVIEW].data.length, 'wrong index for TNode');
         return view[TVIEW].data[index + HEADER_OFFSET];
     }
-    function getComponentViewByIndex(nodeIndex, hostView) {
+    function getComponentLViewByIndex(nodeIndex, hostView) {
         // Could be an LView or an LContainer. If LContainer, unwrap to find LView.
         ngDevMode && assertDataInRange(hostView, nodeIndex);
         var slotValue = hostView[nodeIndex];
@@ -55347,14 +55347,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (componentIndices) {
             for (var i = 0; i < componentIndices.length; i++) {
                 var elementComponentIndex = componentIndices[i];
-                var componentView = getComponentViewByIndex(elementComponentIndex, lView);
+                var componentView = getComponentLViewByIndex(elementComponentIndex, lView);
                 if (componentView[CONTEXT] === componentInstance) {
                     return elementComponentIndex;
                 }
             }
         }
         else {
-            var rootComponentView = getComponentViewByIndex(HEADER_OFFSET, lView);
+            var rootComponentView = getComponentLViewByIndex(HEADER_OFFSET, lView);
             var rootComponent = rootComponentView[CONTEXT];
             if (rootComponent === componentInstance) {
                 // we are dealing with the root element here therefore we know that the
@@ -57871,7 +57871,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function refreshComponent(hostLView, componentHostIdx) {
         ngDevMode && assertEqual(isCreationMode(hostLView), false, 'Should be run in update mode');
-        var componentView = getComponentViewByIndex(componentHostIdx, hostLView);
+        var componentView = getComponentLViewByIndex(componentHostIdx, hostLView);
         // Only attached components that are CheckAlways or OnPush and dirty should be refreshed
         if (viewAttachedToChangeDetector(componentView) &&
             componentView[FLAGS] & (16 /* CheckAlways */ | 64 /* Dirty */)) {
@@ -57881,7 +57881,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function renderComponent(hostLView, componentHostIdx) {
         ngDevMode && assertEqual(isCreationMode(hostLView), true, 'Should be run in creation mode');
-        var componentView = getComponentViewByIndex(componentHostIdx, hostLView);
+        var componentView = getComponentLViewByIndex(componentHostIdx, hostLView);
         syncViewWithBlueprint(componentView);
         renderView(componentView, componentView[TVIEW], componentView[CONTEXT]);
     }
@@ -58521,16 +58521,34 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     var ViewRef = /** @class */ (function () {
-        function ViewRef(_lView, _context, _componentIndex) {
-            this._context = _context;
-            this._componentIndex = _componentIndex;
+        function ViewRef(
+        /**
+         * This represents `LView` associated with the component when ViewRef is a ChangeDetectorRef.
+         *
+         * When ViewRef is created for a dynamic component, this also represents the `LView` for the
+         * component.
+         *
+         * For a "regular" ViewRef created for an embedded view, this is the `LView` for the embedded
+         * view.
+         *
+         * @internal
+         */
+        _lView, 
+        /**
+         * This represents the `LView` associated with the point where `ChangeDetectorRef` was
+         * requested.
+         *
+         * This may be different from `_lView` if the `_cdRefInjectingView` is an embedded view.
+         */
+        _cdRefInjectingView) {
+            this._lView = _lView;
+            this._cdRefInjectingView = _cdRefInjectingView;
             this._appRef = null;
             this._viewContainerRef = null;
             /**
              * @internal
              */
             this._tViewNode = null;
-            this._lView = _lView;
         }
         Object.defineProperty(ViewRef.prototype, "rootNodes", {
             get: function () {
@@ -58544,7 +58562,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             configurable: true
         });
         Object.defineProperty(ViewRef.prototype, "context", {
-            get: function () { return this._context ? this._context : this._lookUpContext(); },
+            get: function () { return this._lView[CONTEXT]; },
             enumerable: true,
             configurable: true
         });
@@ -58603,7 +58621,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * }
          * ```
          */
-        ViewRef.prototype.markForCheck = function () { markViewDirty(this._lView); };
+        ViewRef.prototype.markForCheck = function () { markViewDirty(this._cdRefInjectingView || this._lView); };
         /**
          * Detaches the view from the change detection tree.
          *
@@ -58760,16 +58778,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             this._appRef = appRef;
         };
-        ViewRef.prototype._lookUpContext = function () {
-            return this._context = getLViewParent(this._lView)[this._componentIndex];
-        };
         return ViewRef;
     }());
     /** @internal */
     var RootViewRef = /** @class */ (function (_super) {
         __extends(RootViewRef, _super);
         function RootViewRef(_view) {
-            var _this = _super.call(this, _view, null, -1) || this;
+            var _this = _super.call(this, _view) || this;
             _this._view = _view;
             return _this;
         }
@@ -62049,7 +62064,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+49.sha-1b8b04c.with-local-changes');
 
     /**
      * @license
@@ -69550,7 +69565,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (isComponentHost(tNode)) {
                 // If the element is the host of a component, then all nodes in its view have to be processed.
                 // Note: the component's content (tNode.child) will be processed from the insertion points.
-                var componentView = getComponentViewByIndex(tNode.index, lView);
+                var componentView = getComponentLViewByIndex(tNode.index, lView);
                 if (componentView && componentView[TVIEW].firstChild) {
                     _queryNodeChildrenR3(componentView[TVIEW].firstChild, componentView, predicate, matches, elementsOnly, rootNativeNode);
                 }
@@ -72668,7 +72683,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+49.sha-1b8b04c.with-local-changes');
 
     /**
      * @license
