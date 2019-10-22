@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+45.sha-5d86e4a.with-local-changes
+ * @license Angular v9.0.0-next.12+46.sha-7f7dc7c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -8167,6 +8167,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.interpolationConfig = interpolationConfig;
             this.keepI18nAttrs = keepI18nAttrs;
             this.i18nLegacyMessageIdFormat = i18nLegacyMessageIdFormat;
+            // whether visited nodes contain i18n information
+            this.hasI18nMeta = false;
             // i18n message generation factory
             this._createI18nMessage = createI18nMessageFactory(this.interpolationConfig);
         }
@@ -8181,6 +8183,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         I18nMetaVisitor.prototype.visitElement = function (element) {
             var e_1, _a, e_2, _b;
             if (hasI18nAttrs(element)) {
+                this.hasI18nMeta = true;
                 var attrs = [];
                 var attrsMeta = {};
                 try {
@@ -8245,6 +8248,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         I18nMetaVisitor.prototype.visitExpansion = function (expansion, currentMessage) {
             var message;
             var meta = expansion.i18n;
+            this.hasI18nMeta = true;
             if (meta instanceof IcuPlaceholder) {
                 // set ICU placeholder name (e.g. "ICU_1"),
                 // generated while processing root element contents,
@@ -17954,14 +17958,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // before we run whitespace removal process, because existing i18n
         // extraction process (ng xi18n) relies on a raw content to generate
         // message ids
-        rootNodes = visitAll$1(new I18nMetaVisitor(interpolationConfig, !preserveWhitespaces, i18nLegacyMessageIdFormat), rootNodes);
+        var i18nMetaVisitor = new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ !preserveWhitespaces, i18nLegacyMessageIdFormat);
+        rootNodes = visitAll$1(i18nMetaVisitor, rootNodes);
         if (!preserveWhitespaces) {
             rootNodes = visitAll$1(new WhitespaceVisitor(), rootNodes);
-            // run i18n meta visitor again in case we remove whitespaces, because
-            // that might affect generated i18n message content. During this pass
-            // i18n IDs generated at the first pass will be preserved, so we can mimic
-            // existing extraction process (ng xi18n)
-            rootNodes = visitAll$1(new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ false), rootNodes);
+            // run i18n meta visitor again in case whitespaces are removed (because that might affect
+            // generated i18n message content) and first pass indicated that i18n content is present in a
+            // template. During this pass i18n IDs generated at the first pass will be preserved, so we can
+            // mimic existing extraction process (ng xi18n)
+            if (i18nMetaVisitor.hasI18nMeta) {
+                rootNodes = visitAll$1(new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ false), rootNodes);
+            }
         }
         var _a = htmlAstToRender3Ast(rootNodes, bindingParser), nodes = _a.nodes, errors = _a.errors, styleUrls = _a.styleUrls, styles = _a.styles;
         if (errors && errors.length > 0) {
@@ -19050,7 +19057,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+45.sha-5d86e4a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
 
     /**
      * @license
@@ -34445,7 +34452,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+45.sha-5d86e4a.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
 
     /**
      * @license
@@ -62042,7 +62049,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+45.sha-5d86e4a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
 
     /**
      * @license
@@ -72661,7 +72668,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+45.sha-5d86e4a.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+46.sha-7f7dc7c.with-local-changes');
 
     /**
      * @license
