@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+35.sha-a86a179.with-local-changes
+ * @license Angular v9.0.0-next.12+37.sha-e030375.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18986,7 +18986,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+35.sha-a86a179.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+37.sha-e030375.with-local-changes');
 
     /**
      * @license
@@ -34381,7 +34381,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+35.sha-a86a179.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+37.sha-e030375.with-local-changes');
 
     /**
      * @license
@@ -35139,6 +35139,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          */
         ErrorCode[ErrorCode["NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC"] = 6005] = "NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC";
         /**
+         * Raised when an NgModule exports multiple directives/pipes of the same name and the compiler
+         * attempts to generate private re-exports within the NgModule file.
+         */
+        ErrorCode[ErrorCode["NGMODULE_REEXPORT_NAME_COLLISION"] = 6006] = "NGMODULE_REEXPORT_NAME_COLLISION";
+        /**
          * Raised when ngcc tries to inject a synthetic decorator over one that already exists.
          */
         ErrorCode[ErrorCode["NGCC_MIGRATION_DECORATOR_INJECTION_ERROR"] = 7001] = "NGCC_MIGRATION_DECORATOR_INJECTION_ERROR";
@@ -35186,15 +35191,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return FatalDiagnosticError;
     }());
-    function makeDiagnostic(code, node, messageText) {
+    function makeDiagnostic(code, node, messageText, relatedInfo) {
         node = ts.getOriginalNode(node);
-        return {
+        var diag = {
             category: ts.DiagnosticCategory.Error,
             code: Number('-99' + code.valueOf()),
             file: ts.getOriginalNode(node).getSourceFile(),
             start: node.getStart(undefined, false),
             length: node.getWidth(), messageText: messageText,
         };
+        if (relatedInfo !== undefined) {
+            diag.relatedInformation = relatedInfo.map(function (info) {
+                var infoNode = ts.getOriginalNode(info.node);
+                return {
+                    category: ts.DiagnosticCategory.Message,
+                    code: 0,
+                    file: infoNode.getSourceFile(),
+                    start: infoNode.getStart(),
+                    length: infoNode.getWidth(),
+                    messageText: info.messageText,
+                };
+            });
+        }
+        return diag;
     }
 
     /**
@@ -35654,20 +35673,26 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          */
         TypeScriptReflectionHost.prototype.getDeclarationOfSymbol = function (symbol, originalId) {
             // If the symbol points to a ShorthandPropertyAssignment, resolve it.
-            if (symbol.valueDeclaration !== undefined &&
-                ts.isShorthandPropertyAssignment(symbol.valueDeclaration)) {
-                var shorthandSymbol = this.checker.getShorthandAssignmentValueSymbol(symbol.valueDeclaration);
+            var valueDeclaration = undefined;
+            if (symbol.valueDeclaration !== undefined) {
+                valueDeclaration = symbol.valueDeclaration;
+            }
+            else if (symbol.declarations.length > 0) {
+                valueDeclaration = symbol.declarations[0];
+            }
+            if (valueDeclaration !== undefined && ts.isShorthandPropertyAssignment(valueDeclaration)) {
+                var shorthandSymbol = this.checker.getShorthandAssignmentValueSymbol(valueDeclaration);
                 if (shorthandSymbol === undefined) {
                     return null;
                 }
                 return this.getDeclarationOfSymbol(shorthandSymbol, originalId);
             }
-            else if (symbol.valueDeclaration !== undefined && ts.isExportSpecifier(symbol.valueDeclaration)) {
-                var localTarget = this.checker.getExportSpecifierLocalTargetSymbol(symbol.valueDeclaration);
-                if (localTarget === undefined) {
+            else if (valueDeclaration !== undefined && ts.isExportSpecifier(valueDeclaration)) {
+                var targetSymbol = this.checker.getExportSpecifierLocalTargetSymbol(valueDeclaration);
+                if (targetSymbol === undefined) {
                     return null;
                 }
-                return this.getDeclarationOfSymbol(localTarget, originalId);
+                return this.getDeclarationOfSymbol(targetSymbol, originalId);
             }
             var importInfo = originalId && this.getImportOfIdentifier(originalId);
             var viaModule = importInfo !== null && importInfo.from !== null && !importInfo.from.startsWith('.') ?
@@ -36030,24 +36055,122 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     // Escape anything that isn't alphanumeric, '/' or '_'.
     var CHARS_TO_ESCAPE = /[^a-zA-Z0-9/_]/g;
-    var AliasGenerator = /** @class */ (function () {
-        function AliasGenerator(fileToModuleHost) {
+    /**
+     * An `AliasingHost` which generates and consumes alias re-exports when module names for each file
+     * are determined by a `FileToModuleHost`.
+     *
+     * When using a `FileToModuleHost`, aliasing prevents issues with transitive dependencies. See the
+     * README.md for more details.
+     */
+    var FileToModuleAliasingHost = /** @class */ (function () {
+        function FileToModuleAliasingHost(fileToModuleHost) {
             this.fileToModuleHost = fileToModuleHost;
+            /**
+             * With a `FileToModuleHost`, aliases are chosen automatically without the need to look through
+             * the exports present in a .d.ts file, so we can avoid cluttering the .d.ts files.
+             */
+            this.aliasExportsInDts = false;
         }
-        AliasGenerator.prototype.aliasSymbolName = function (decl, context) {
+        FileToModuleAliasingHost.prototype.maybeAliasSymbolAs = function (ref, context, ngModuleName, isReExport) {
+            if (!isReExport) {
+                // Aliasing is used with a FileToModuleHost to prevent transitive dependencies. Thus, aliases
+                // only need to be created for directives/pipes which are not direct declarations of an
+                // NgModule which exports them.
+                return null;
+            }
+            return this.aliasName(ref.node, context);
+        };
+        /**
+         * Generates an `Expression` to import `decl` from `via`, assuming an export was added when `via`
+         * was compiled per `maybeAliasSymbolAs` above.
+         */
+        FileToModuleAliasingHost.prototype.getAliasIn = function (decl, via, isReExport) {
+            if (!isReExport) {
+                // Directly exported directives/pipes don't require an alias, per the logic in
+                // `maybeAliasSymbolAs`.
+                return null;
+            }
+            // viaModule is the module it'll actually be imported from.
+            var moduleName = this.fileToModuleHost.fileNameToModuleName(via.fileName, via.fileName);
+            return new ExternalExpr({ moduleName: moduleName, name: this.aliasName(decl, via) });
+        };
+        /**
+         * Generates an alias name based on the full module name of the file which declares the aliased
+         * directive/pipe.
+         */
+        FileToModuleAliasingHost.prototype.aliasName = function (decl, context) {
             // The declared module is used to get the name of the alias.
             var declModule = this.fileToModuleHost.fileNameToModuleName(decl.getSourceFile().fileName, context.fileName);
             var replaced = declModule.replace(CHARS_TO_ESCAPE, '_').replace(/\//g, '$');
             return 'ɵng$' + replaced + '$$' + decl.name.text;
         };
-        AliasGenerator.prototype.aliasTo = function (decl, via) {
-            var name = this.aliasSymbolName(decl, via);
-            // viaModule is the module it'll actually be imported from.
-            var moduleName = this.fileToModuleHost.fileNameToModuleName(via.fileName, via.fileName);
-            return new ExternalExpr({ moduleName: moduleName, name: name });
-        };
-        return AliasGenerator;
+        return FileToModuleAliasingHost;
     }());
+    /**
+     * An `AliasingHost` which exports directives from any file containing an NgModule in which they're
+     * declared/exported, under a private symbol name.
+     *
+     * These exports support cases where an NgModule is imported deeply from an absolute module path
+     * (that is, it's not part of an Angular Package Format entrypoint), and the compiler needs to
+     * import any matched directives/pipes from the same path (to the NgModule file). See README.md for
+     * more details.
+     */
+    var PrivateExportAliasingHost = /** @class */ (function () {
+        function PrivateExportAliasingHost(host) {
+            this.host = host;
+            /**
+             * Under private export aliasing, the `AbsoluteModuleStrategy` used for emitting references will
+             * will select aliased exports that it finds in the .d.ts file for an NgModule's file. Thus,
+             * emitting these exports in .d.ts is a requirement for the `PrivateExportAliasingHost` to
+             * function correctly.
+             */
+            this.aliasExportsInDts = true;
+        }
+        PrivateExportAliasingHost.prototype.maybeAliasSymbolAs = function (ref, context, ngModuleName) {
+            if (ref.hasOwningModuleGuess) {
+                // Skip nodes that already have an associated absolute module specifier, since they can be
+                // safely imported from that specifier.
+                return null;
+            }
+            // Look for a user-provided export of `decl` in `context`. If one exists, then an alias export
+            // is not needed.
+            // TODO(alxhub): maybe add a host method to check for the existence of an export without going
+            // through the entire list of exports.
+            var exports = this.host.getExportsOfModule(context);
+            if (exports === null) {
+                // Something went wrong, and no exports were available at all. Bail rather than risk creating
+                // re-exports when they're not needed.
+                throw new Error("Could not determine the exports of: " + context.fileName);
+            }
+            var found = false;
+            exports.forEach(function (value) {
+                if (value.node === ref.node) {
+                    found = true;
+                }
+            });
+            if (found) {
+                // The module exports the declared class directly, no alias is necessary.
+                return null;
+            }
+            return "\u0275ngExport\u0275" + ngModuleName + "\u0275" + ref.node.name.text;
+        };
+        /**
+         * A `PrivateExportAliasingHost` only generates re-exports and does not direct the compiler to
+         * directly consume the aliases it creates.
+         *
+         * Instead, they're consumed indirectly: `AbsoluteModuleStrategy` `ReferenceEmitterStrategy` will
+         * select these alias exports automatically when looking for an export of the directive/pipe from
+         * the same path as the NgModule was imported.
+         *
+         * Thus, `getAliasIn` always returns `null`.
+         */
+        PrivateExportAliasingHost.prototype.getAliasIn = function () { return null; };
+        return PrivateExportAliasingHost;
+    }());
+    /**
+     * A `ReferenceEmitStrategy` which will consume the alias attached to a particular `Reference` to a
+     * directive or pipe, if it exists.
+     */
     var AliasStrategy = /** @class */ (function () {
         function AliasStrategy() {
         }
@@ -36192,7 +36315,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * a dangling reference, as TS will elide the import because it was only used in the type position
      * originally.
      *
-     * To avoid this, the compiler must "touch" the imports with `ts.updateImportClause`, and should
+     * To avoid this, the compiler must "touch" the imports with `ts.getMutableClone`, and should
      * only do this for imports which are actually consumed. The `DefaultImportTracker` keeps track of
      * these imports as they're encountered and emitted, and implements a transform which can correctly
      * flag the imports as required.
@@ -43655,9 +43778,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /**
          * @param dtsMetaReader a `MetadataReader` which can read metadata from `.d.ts` files.
          */
-        function MetadataDtsModuleScopeResolver(dtsMetaReader, aliasGenerator) {
+        function MetadataDtsModuleScopeResolver(dtsMetaReader, aliasingHost) {
             this.dtsMetaReader = dtsMetaReader;
-            this.aliasGenerator = aliasGenerator;
+            this.aliasingHost = aliasingHost;
             /**
              * Cache which holds fully resolved scopes for NgModule classes from .d.ts files.
              */
@@ -43710,23 +43833,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     // Attempt to process the export as a directive.
                     var directive = this.dtsMetaReader.getDirectiveMetadata(exportRef);
                     if (directive !== null) {
-                        if (!declarations.has(exportRef.node)) {
-                            directives.push(this.maybeAlias(directive, sourceFile));
-                        }
-                        else {
-                            directives.push(directive);
-                        }
+                        var isReExport = !declarations.has(exportRef.node);
+                        directives.push(this.maybeAlias(directive, sourceFile, isReExport));
                         continue;
                     }
                     // Attempt to process the export as a pipe.
                     var pipe = this.dtsMetaReader.getPipeMetadata(exportRef);
                     if (pipe !== null) {
-                        if (!declarations.has(exportRef.node)) {
-                            pipes.push(this.maybeAlias(pipe, sourceFile));
-                        }
-                        else {
-                            pipes.push(pipe);
-                        }
+                        var isReExport = !declarations.has(exportRef.node);
+                        pipes.push(this.maybeAlias(pipe, sourceFile, isReExport));
                         continue;
                     }
                     // Attempt to process the export as a module.
@@ -43735,7 +43850,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         // It is a module. Add exported directives and pipes to the current scope. This might
                         // involve rewriting the `Reference`s to those types to have an alias expression if one is
                         // required.
-                        if (this.aliasGenerator === null) {
+                        if (this.aliasingHost === null) {
                             // Fast path when aliases aren't required.
                             directives.push.apply(directives, __spread(exportScope.exported.directives));
                             pipes.push.apply(pipes, __spread(exportScope.exported.pipes));
@@ -43752,7 +43867,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                                 // no import alias is needed as it would go to the same file anyway.
                                 for (var _j = (e_3 = void 0, __values(exportScope.exported.directives)), _k = _j.next(); !_k.done; _k = _j.next()) {
                                     var directive_1 = _k.value;
-                                    directives.push(this.maybeAlias(directive_1, sourceFile));
+                                    directives.push(this.maybeAlias(directive_1, sourceFile, /* isReExport */ true));
                                 }
                             }
                             catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -43765,7 +43880,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             try {
                                 for (var _l = (e_4 = void 0, __values(exportScope.exported.pipes)), _m = _l.next(); !_m.done; _m = _l.next()) {
                                     var pipe_1 = _m.value;
-                                    pipes.push(this.maybeAlias(pipe_1, sourceFile));
+                                    pipes.push(this.maybeAlias(pipe_1, sourceFile, /* isReExport */ true));
                                 }
                             }
                             catch (e_4_1) { e_4 = { error: e_4_1 }; }
@@ -43794,17 +43909,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 exported: { directives: directives, pipes: pipes },
             };
         };
-        MetadataDtsModuleScopeResolver.prototype.maybeAlias = function (dirOrPipe, maybeAliasFrom) {
-            if (this.aliasGenerator === null) {
-                return dirOrPipe;
-            }
+        MetadataDtsModuleScopeResolver.prototype.maybeAlias = function (dirOrPipe, maybeAliasFrom, isReExport) {
             var ref = dirOrPipe.ref;
-            if (ref.node.getSourceFile() !== maybeAliasFrom) {
-                return __assign(__assign({}, dirOrPipe), { ref: ref.cloneWithAlias(this.aliasGenerator.aliasTo(ref.node, maybeAliasFrom)) });
-            }
-            else {
+            if (this.aliasingHost === null || ref.node.getSourceFile() === maybeAliasFrom) {
                 return dirOrPipe;
             }
+            var alias = this.aliasingHost.getAliasIn(ref.node, maybeAliasFrom, isReExport);
+            if (alias === null) {
+                return dirOrPipe;
+            }
+            return __assign(__assign({}, dirOrPipe), { ref: ref.cloneWithAlias(alias) });
         };
         return MetadataDtsModuleScopeResolver;
     }());
@@ -43836,12 +43950,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * semantics are violated.
      */
     var LocalModuleScopeRegistry = /** @class */ (function () {
-        function LocalModuleScopeRegistry(localReader, dependencyScopeReader, refEmitter, aliasGenerator, componentScopeRegistry) {
+        function LocalModuleScopeRegistry(localReader, dependencyScopeReader, refEmitter, aliasingHost, componentScopeRegistry) {
             if (componentScopeRegistry === void 0) { componentScopeRegistry = new NoopComponentScopeRegistry(); }
             this.localReader = localReader;
             this.dependencyScopeReader = dependencyScopeReader;
             this.refEmitter = refEmitter;
-            this.aliasGenerator = aliasGenerator;
+            this.aliasingHost = aliasingHost;
             this.componentScopeRegistry = componentScopeRegistry;
             /**
              * Tracks whether the registry has been asked to produce scopes for a module or component. Once
@@ -43964,8 +44078,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * * a scope being produced with errors (returns `undefined`).
          */
         LocalModuleScopeRegistry.prototype.getScopeOfModuleReference = function (ref) {
-            var e_2, _a, e_3, _b, e_4, _c, e_5, _d, e_6, _e, e_7, _f, e_8, _g, e_9, _h, e_10, _j;
-            var _this = this;
+            var e_2, _a, e_3, _b, e_4, _c, e_5, _d, e_6, _e, e_7, _f, e_8, _g;
             if (this.cache.has(ref.node)) {
                 return this.cache.get(ref.node);
             }
@@ -43988,7 +44101,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var compilationDirectives = new Map();
             var compilationPipes = new Map();
             var declared = new Set();
-            var sourceFile = ref.node.getSourceFile();
             // Directives and pipes exported to any importing NgModules.
             var exportDirectives = new Map();
             var exportPipes = new Map();
@@ -44005,8 +44117,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 //    c) If it's neither an NgModule nor a directive/pipe in the compilation scope, then this
                 //       is an error.
                 // 1) add declarations.
-                for (var _k = __values(ngModule.declarations), _l = _k.next(); !_l.done; _l = _k.next()) {
-                    var decl = _l.value;
+                for (var _h = __values(ngModule.declarations), _j = _h.next(); !_j.done; _j = _h.next()) {
+                    var decl = _j.value;
                     var directive = this.localReader.getDirectiveMetadata(decl);
                     var pipe = this.localReader.getPipeMetadata(decl);
                     if (directive !== null) {
@@ -44026,14 +44138,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (_l && !_l.done && (_a = _k.return)) _a.call(_k);
+                    if (_j && !_j.done && (_a = _h.return)) _a.call(_h);
                 }
                 finally { if (e_2) throw e_2.error; }
             }
             try {
                 // 2) process imports.
-                for (var _m = __values(ngModule.imports), _o = _m.next(); !_o.done; _o = _m.next()) {
-                    var decl = _o.value;
+                for (var _k = __values(ngModule.imports), _l = _k.next(); !_l.done; _l = _k.next()) {
+                    var decl = _l.value;
                     var importScope = this.getExportedScope(decl, diagnostics, ref.node, 'import');
                     if (importScope === null) {
                         // An import wasn't an NgModule, so record an error.
@@ -44048,28 +44160,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         continue;
                     }
                     try {
-                        for (var _p = (e_4 = void 0, __values(importScope.exported.directives)), _q = _p.next(); !_q.done; _q = _p.next()) {
-                            var directive = _q.value;
+                        for (var _m = (e_4 = void 0, __values(importScope.exported.directives)), _o = _m.next(); !_o.done; _o = _m.next()) {
+                            var directive = _o.value;
                             compilationDirectives.set(directive.ref.node, directive);
                         }
                     }
                     catch (e_4_1) { e_4 = { error: e_4_1 }; }
                     finally {
                         try {
-                            if (_q && !_q.done && (_c = _p.return)) _c.call(_p);
+                            if (_o && !_o.done && (_c = _m.return)) _c.call(_m);
                         }
                         finally { if (e_4) throw e_4.error; }
                     }
                     try {
-                        for (var _r = (e_5 = void 0, __values(importScope.exported.pipes)), _s = _r.next(); !_s.done; _s = _r.next()) {
-                            var pipe = _s.value;
+                        for (var _p = (e_5 = void 0, __values(importScope.exported.pipes)), _q = _p.next(); !_q.done; _q = _p.next()) {
+                            var pipe = _q.value;
                             compilationPipes.set(pipe.ref.node, pipe);
                         }
                     }
                     catch (e_5_1) { e_5 = { error: e_5_1 }; }
                     finally {
                         try {
-                            if (_s && !_s.done && (_d = _r.return)) _d.call(_r);
+                            if (_q && !_q.done && (_d = _p.return)) _d.call(_p);
                         }
                         finally { if (e_5) throw e_5.error; }
                     }
@@ -44078,7 +44190,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_o && !_o.done && (_b = _m.return)) _b.call(_m);
+                    if (_l && !_l.done && (_b = _k.return)) _b.call(_k);
                 }
                 finally { if (e_3) throw e_3.error; }
             }
@@ -44088,8 +44200,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // Modules are straightforward. Directives and pipes from exported modules are added to the
                 // export maps. Directives/pipes are different - they might be exports of declared types or
                 // imported types.
-                for (var _t = __values(ngModule.exports), _u = _t.next(); !_u.done; _u = _t.next()) {
-                    var decl = _u.value;
+                for (var _r = __values(ngModule.exports), _s = _r.next(); !_s.done; _s = _r.next()) {
+                    var decl = _s.value;
                     // Attempt to resolve decl as an NgModule.
                     var importScope = this.getExportedScope(decl, diagnostics, ref.node, 'export');
                     if (importScope === undefined) {
@@ -44102,28 +44214,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     else if (importScope !== null) {
                         try {
                             // decl is an NgModule.
-                            for (var _v = (e_7 = void 0, __values(importScope.exported.directives)), _w = _v.next(); !_w.done; _w = _v.next()) {
-                                var directive = _w.value;
+                            for (var _t = (e_7 = void 0, __values(importScope.exported.directives)), _u = _t.next(); !_u.done; _u = _t.next()) {
+                                var directive = _u.value;
                                 exportDirectives.set(directive.ref.node, directive);
                             }
                         }
                         catch (e_7_1) { e_7 = { error: e_7_1 }; }
                         finally {
                             try {
-                                if (_w && !_w.done && (_f = _v.return)) _f.call(_v);
+                                if (_u && !_u.done && (_f = _t.return)) _f.call(_t);
                             }
                             finally { if (e_7) throw e_7.error; }
                         }
                         try {
-                            for (var _x = (e_8 = void 0, __values(importScope.exported.pipes)), _y = _x.next(); !_y.done; _y = _x.next()) {
-                                var pipe = _y.value;
+                            for (var _v = (e_8 = void 0, __values(importScope.exported.pipes)), _w = _v.next(); !_w.done; _w = _v.next()) {
+                                var pipe = _w.value;
                                 exportPipes.set(pipe.ref.node, pipe);
                             }
                         }
                         catch (e_8_1) { e_8 = { error: e_8_1 }; }
                         finally {
                             try {
-                                if (_y && !_y.done && (_g = _x.return)) _g.call(_x);
+                                if (_w && !_w.done && (_g = _v.return)) _g.call(_v);
                             }
                             finally { if (e_8) throw e_8.error; }
                         }
@@ -44154,7 +44266,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             catch (e_6_1) { e_6 = { error: e_6_1 }; }
             finally {
                 try {
-                    if (_u && !_u.done && (_e = _t.return)) _e.call(_t);
+                    if (_s && !_s.done && (_e = _r.return)) _e.call(_r);
                 }
                 finally { if (e_6) throw e_6.error; }
             }
@@ -44162,60 +44274,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 directives: Array.from(exportDirectives.values()),
                 pipes: Array.from(exportPipes.values()),
             };
-            var reexports = null;
-            if (this.aliasGenerator !== null) {
-                reexports = [];
-                var addReexport = function (ref) {
-                    if (!declared.has(ref.node) && ref.node.getSourceFile() !== sourceFile) {
-                        var exportName = _this.aliasGenerator.aliasSymbolName(ref.node, sourceFile);
-                        if (ref.alias && ref.alias instanceof ExternalExpr) {
-                            reexports.push({
-                                fromModule: ref.alias.value.moduleName,
-                                symbolName: ref.alias.value.name,
-                                asAlias: exportName,
-                            });
-                        }
-                        else {
-                            var expr = _this.refEmitter.emit(ref.cloneWithNoIdentifiers(), sourceFile);
-                            if (!(expr instanceof ExternalExpr) || expr.value.moduleName === null ||
-                                expr.value.name === null) {
-                                throw new Error('Expected ExternalExpr');
-                            }
-                            reexports.push({
-                                fromModule: expr.value.moduleName,
-                                symbolName: expr.value.name,
-                                asAlias: exportName,
-                            });
-                        }
-                    }
-                };
-                try {
-                    for (var _z = __values(exported.directives), _0 = _z.next(); !_0.done; _0 = _z.next()) {
-                        var ref_1 = _0.value.ref;
-                        addReexport(ref_1);
-                    }
-                }
-                catch (e_9_1) { e_9 = { error: e_9_1 }; }
-                finally {
-                    try {
-                        if (_0 && !_0.done && (_h = _z.return)) _h.call(_z);
-                    }
-                    finally { if (e_9) throw e_9.error; }
-                }
-                try {
-                    for (var _1 = __values(exported.pipes), _2 = _1.next(); !_2.done; _2 = _1.next()) {
-                        var ref_2 = _2.value.ref;
-                        addReexport(ref_2);
-                    }
-                }
-                catch (e_10_1) { e_10 = { error: e_10_1 }; }
-                finally {
-                    try {
-                        if (_2 && !_2.done && (_j = _1.return)) _j.call(_1);
-                    }
-                    finally { if (e_10) throw e_10.error; }
-                }
-            }
+            var reexports = this.getReexports(ngModule, ref, declared, exported, diagnostics);
             // Check if this scope had any errors during production.
             if (diagnostics.length > 0) {
                 // Cache undefined, to mark the fact that the scope is invalid.
@@ -44280,6 +44339,85 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return this.getScopeOfModuleReference(ref);
             }
         };
+        LocalModuleScopeRegistry.prototype.getReexports = function (ngModule, ref, declared, exported, diagnostics) {
+            var e_9, _a, e_10, _b;
+            var _this = this;
+            var reexports = null;
+            var sourceFile = ref.node.getSourceFile();
+            if (this.aliasingHost === null) {
+                return null;
+            }
+            reexports = [];
+            // Track re-exports by symbol name, to produce diagnostics if two alias re-exports would share
+            // the same name.
+            var reexportMap = new Map();
+            // Alias ngModuleRef added for readability below.
+            var ngModuleRef = ref;
+            var addReexport = function (exportRef) {
+                if (exportRef.node.getSourceFile() === sourceFile) {
+                    return;
+                }
+                var isReExport = !declared.has(exportRef.node);
+                var exportName = _this.aliasingHost.maybeAliasSymbolAs(exportRef, sourceFile, ngModule.ref.node.name.text, isReExport);
+                if (exportName === null) {
+                    return;
+                }
+                if (!reexportMap.has(exportName)) {
+                    if (exportRef.alias && exportRef.alias instanceof ExternalExpr) {
+                        reexports.push({
+                            fromModule: exportRef.alias.value.moduleName,
+                            symbolName: exportRef.alias.value.name,
+                            asAlias: exportName,
+                        });
+                    }
+                    else {
+                        var expr = _this.refEmitter.emit(exportRef.cloneWithNoIdentifiers(), sourceFile);
+                        if (!(expr instanceof ExternalExpr) || expr.value.moduleName === null ||
+                            expr.value.name === null) {
+                            throw new Error('Expected ExternalExpr');
+                        }
+                        reexports.push({
+                            fromModule: expr.value.moduleName,
+                            symbolName: expr.value.name,
+                            asAlias: exportName,
+                        });
+                    }
+                    reexportMap.set(exportName, exportRef);
+                }
+                else {
+                    // Another re-export already used this name. Produce a diagnostic.
+                    var prevRef = reexportMap.get(exportName);
+                    diagnostics.push(reexportCollision(ngModuleRef.node, prevRef, exportRef));
+                }
+            };
+            try {
+                for (var _c = __values(exported.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var ref_1 = _d.value.ref;
+                    addReexport(ref_1);
+                }
+            }
+            catch (e_9_1) { e_9 = { error: e_9_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_9) throw e_9.error; }
+            }
+            try {
+                for (var _e = __values(exported.pipes), _f = _e.next(); !_f.done; _f = _e.next()) {
+                    var ref_2 = _f.value.ref;
+                    addReexport(ref_2);
+                }
+            }
+            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+            finally {
+                try {
+                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                }
+                finally { if (e_10) throw e_10.error; }
+            }
+            return reexports;
+        };
         LocalModuleScopeRegistry.prototype.assertCollecting = function () {
             if (this.sealed) {
                 throw new Error("Assertion: LocalModuleScopeRegistry is not COLLECTING");
@@ -44308,6 +44446,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function invalidReexport(clazz, decl) {
         return makeDiagnostic(ErrorCode.NGMODULE_INVALID_REEXPORT, identifierOfNode(decl.node) || decl.node, "Present in the NgModule.exports of " + nodeNameForError(clazz) + " but neither declared nor imported");
+    }
+    /**
+     * Produce a `ts.Diagnostic` for a collision in re-export names between two directives/pipes.
+     */
+    function reexportCollision(module, refA, refB) {
+        var childMessageText = "This directive/pipe is part of the exports of '" + module.name.text + "' and shares the same name as another exported directive/pipe.";
+        return makeDiagnostic(ErrorCode.NGMODULE_REEXPORT_NAME_COLLISION, module.name, ("\n    There was a name collision between two classes named '" + refA.node.name.text + "', which are both part of the exports of '" + module.name.text + "'.\n\n    Angular generates re-exports of an NgModule's exported directives/pipes from the module's source file in certain cases, using the declared name of the class. If two classes of the same name are exported, this automatic naming does not work.\n\n    To fix this problem please re-export one or both classes directly from this file.\n  ").trim(), [
+            { node: refA.node.name, messageText: childMessageText },
+            { node: refB.node.name, messageText: childMessageText },
+        ]);
     }
 
     /**
@@ -47912,6 +48060,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.routeAnalyzer = null;
             this.constructionDiagnostics = [];
             this.metaReader = null;
+            this.aliasingHost = null;
             this.refEmitter = null;
             this.fileToModuleHost = null;
             this.perfRecorder = NOOP_PERF_RECORDER;
@@ -48152,6 +48301,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var afterDeclarationsTransforms = [
                 declarationTransformFactory(compilation),
             ];
+            // Only add aliasing re-exports to the .d.ts output if the `AliasingHost` requests it.
+            if (this.aliasingHost !== null && this.aliasingHost.aliasExportsInDts) {
+                afterDeclarationsTransforms.push(aliasTransformFactory(compilation.exportStatements));
+            }
             if (this.factoryToSourceInfo !== null) {
                 beforeTransforms.push(generatedFactoryTransform(this.factoryToSourceInfo, this.importRewriter));
             }
@@ -48267,7 +48420,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         NgtscProgram.prototype.makeCompilation = function () {
             var checker = this.tsProgram.getTypeChecker();
-            var aliasGenerator = null;
             // Construct the ReferenceEmitter.
             if (this.fileToModuleHost === null || !this.options._useHostForImportGeneration) {
                 // The CompilerHost doesn't have fileNameToModuleName, so build an NPM-centric reference
@@ -48282,6 +48434,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     // an error.
                     new LogicalProjectStrategy(this.reflector, new LogicalFileSystem(this.rootDirs)),
                 ]);
+                // If an entrypoint is present, then all user imports should be directed through the
+                // entrypoint and private exports are not needed. The compiler will validate that all publicly
+                // visible directives/pipes are importable via this entrypoint.
+                if (this.entryPoint === null && this.options.generateDeepReexports === true) {
+                    // No entrypoint is present and deep re-exports were requested, so configure the aliasing
+                    // system to generate them.
+                    this.aliasingHost = new PrivateExportAliasingHost(this.reflector);
+                }
             }
             else {
                 // The CompilerHost supports fileNameToModuleName, so use that to emit imports.
@@ -48293,14 +48453,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     // Then use fileNameToModuleName to emit imports.
                     new FileToModuleStrategy(this.reflector, this.fileToModuleHost),
                 ]);
-                aliasGenerator = new AliasGenerator(this.fileToModuleHost);
+                this.aliasingHost = new FileToModuleAliasingHost(this.fileToModuleHost);
             }
             var evaluator = new PartialEvaluator(this.reflector, checker, this.incrementalState);
             var dtsReader = new DtsMetadataReader(checker, this.reflector);
             var localMetaRegistry = new LocalMetadataRegistry();
             var localMetaReader = new CompoundMetadataReader([localMetaRegistry, this.incrementalState]);
-            var depScopeReader = new MetadataDtsModuleScopeResolver(dtsReader, aliasGenerator);
-            var scopeRegistry = new LocalModuleScopeRegistry(localMetaReader, depScopeReader, this.refEmitter, aliasGenerator, this.incrementalState);
+            var depScopeReader = new MetadataDtsModuleScopeResolver(dtsReader, this.aliasingHost);
+            var scopeRegistry = new LocalModuleScopeRegistry(localMetaReader, depScopeReader, this.refEmitter, this.aliasingHost, this.incrementalState);
             var scopeReader = new CompoundComponentScopeReader([scopeRegistry, this.incrementalState]);
             var metaRegistry = new CompoundMetadataRegistry([localMetaRegistry, scopeRegistry, this.incrementalState]);
             this.metaReader = new CompoundMetadataReader([localMetaReader, dtsReader]);
@@ -61818,7 +61978,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+35.sha-a86a179.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+37.sha-e030375.with-local-changes');
 
     /**
      * @license
@@ -72436,7 +72596,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+35.sha-a86a179.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+37.sha-e030375.with-local-changes');
 
     /**
      * @license
