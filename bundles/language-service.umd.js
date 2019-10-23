@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+66.sha-ba29e4d.with-local-changes
+ * @license Angular v9.0.0-next.12+67.sha-77240e1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19057,7 +19057,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+66.sha-ba29e4d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+67.sha-77240e1.with-local-changes');
 
     /**
      * @license
@@ -34509,7 +34509,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+66.sha-ba29e4d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+67.sha-77240e1.with-local-changes');
 
     /**
      * @license
@@ -47493,6 +47493,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         return expr;
                     }
                     else if (binding instanceof Reference) {
+                        if (!this.tcb.env.config.checkTypeOfReferences) {
+                            // References are pinned to 'any'.
+                            return NULL_AS_ANY;
+                        }
                         var target = this.tcb.boundTarget.getReferenceTarget(binding);
                         if (target === null) {
                             throw new Error("Unbound reference? " + binding.name);
@@ -48509,6 +48513,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     // - error TS2531: Object is possibly 'null'.
                     // - error TS2339: Property 'value' does not exist on type 'EventTarget'.
                     checkTypeOfDomEvents: false,
+                    checkTypeOfReferences: true,
                     checkTypeOfPipes: true,
                     strictSafeNavigationTypes: true,
                 };
@@ -48524,6 +48529,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     checkTypeOfOutputEvents: false,
                     checkTypeOfAnimationEvents: false,
                     checkTypeOfDomEvents: false,
+                    checkTypeOfReferences: false,
                     checkTypeOfPipes: false,
                     strictSafeNavigationTypes: false,
                 };
@@ -62183,7 +62189,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+66.sha-ba29e4d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+67.sha-77240e1.with-local-changes');
 
     /**
      * @license
@@ -72802,7 +72808,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+66.sha-ba29e4d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+67.sha-77240e1.with-local-changes');
 
     /**
      * @license
