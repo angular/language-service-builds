@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+64.sha-1b60752.with-local-changes
+ * @license Angular v9.0.0-next.12+65.sha-355e54a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19057,7 +19057,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+64.sha-1b60752.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+65.sha-355e54a.with-local-changes');
 
     /**
      * @license
@@ -25980,24 +25980,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 if (symbolMeta.__symbolic === 'class') {
                     if (metadataResolver.isDirective(symbol)) {
                         isNgSymbol = true;
-                        if (!isDeclarationFile) {
-                            // This directive either has a selector or doesn't. Selector-less directives get tracked
-                            // in abstractDirectives, not directives. The compiler doesn't deal with selector-less
-                            // directives at all, really, other than to persist their metadata. This is done so that
-                            // apps will have an easier time migrating to Ivy, which requires the selector-less
-                            // annotations to be applied.
-                            if (!metadataResolver.isAbstractDirective(symbol)) {
-                                // The directive is an ordinary directive.
-                                directives.push(symbol);
-                            }
-                            else {
-                                // The directive has no selector and is an "abstract" directive, so track it
-                                // accordingly.
-                                abstractDirectives.push(symbol);
-                            }
+                        // This directive either has a selector or doesn't. Selector-less directives get tracked
+                        // in abstractDirectives, not directives. The compiler doesn't deal with selector-less
+                        // directives at all, really, other than to persist their metadata. This is done so that
+                        // apps will have an easier time migrating to Ivy, which requires the selector-less
+                        // annotations to be applied.
+                        if (!metadataResolver.isAbstractDirective(symbol)) {
+                            // The directive is an ordinary directive.
+                            directives.push(symbol);
                         }
                         else {
-                            directives.push(symbol);
+                            // The directive has no selector and is an "abstract" directive, so track it
+                            // accordingly.
+                            abstractDirectives.push(symbol);
                         }
                     }
                     else if (metadataResolver.isPipe(symbol)) {
@@ -34514,7 +34509,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+64.sha-1b60752.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+65.sha-355e54a.with-local-changes');
 
     /**
      * @license
@@ -62188,7 +62183,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+64.sha-1b60752.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+65.sha-355e54a.with-local-changes');
 
     /**
      * @license
@@ -72807,7 +72802,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+64.sha-1b60752.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+65.sha-355e54a.with-local-changes');
 
     /**
      * @license
