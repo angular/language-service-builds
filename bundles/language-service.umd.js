@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+51.sha-398ff1e.with-local-changes
+ * @license Angular v9.0.0-next.12+54.sha-383457f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19042,7 +19042,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+51.sha-398ff1e.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+54.sha-383457f.with-local-changes');
 
     /**
      * @license
@@ -32561,22 +32561,37 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return false;
     }
     function getSelectors(info) {
+        var e_2, _a, e_3, _b;
         var map = new Map();
-        var selectors = flatten$1(info.directives.map(function (directive) {
-            var selectors = CssSelector.parse(directive.selector);
-            selectors.forEach(function (selector) { return map.set(selector, directive); });
-            return selectors;
-        }));
-        return { selectors: selectors, map: map };
-    }
-    function flatten$1(a) {
-        var _a;
-        return (_a = []).concat.apply(_a, __spread(a));
-    }
-    function removeSuffix(value, suffix) {
-        if (value.endsWith(suffix))
-            return value.substring(0, value.length - suffix.length);
-        return value;
+        var results = [];
+        try {
+            for (var _c = __values(info.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var directive = _d.value;
+                var selectors = CssSelector.parse(directive.selector);
+                try {
+                    for (var selectors_1 = (e_3 = void 0, __values(selectors)), selectors_1_1 = selectors_1.next(); !selectors_1_1.done; selectors_1_1 = selectors_1.next()) {
+                        var selector = selectors_1_1.value;
+                        results.push(selector);
+                        map.set(selector, directive);
+                    }
+                }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                finally {
+                    try {
+                        if (selectors_1_1 && !selectors_1_1.done && (_b = selectors_1.return)) _b.call(selectors_1);
+                    }
+                    finally { if (e_3) throw e_3.error; }
+                }
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        return { selectors: results, map: map };
     }
     function diagnosticInfoFromTemplateInfo(info) {
         return {
@@ -32671,7 +32686,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param node Potential node that represents an Angular directive.
      */
     function getDirectiveClassLike(node) {
-        var e_2, _a;
+        var e_4, _a;
         if (!ts.isClassDeclaration(node) || !node.name || !node.decorators) {
             return;
         }
@@ -32692,12 +32707,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_2) throw e_2.error; }
+            finally { if (e_4) throw e_4.error; }
         }
     }
     /**
@@ -33405,81 +33420,70 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function attributeCompletions(info, path) {
         var item = path.tail instanceof Element$1 ? path.tail : path.parentOf(path.tail);
         if (item instanceof Element$1) {
-            return attributeCompletionsForElement(info, item.name, item);
+            return attributeCompletionsForElement(info, item.name);
         }
         return [];
     }
-    function attributeCompletionsForElement(info, elementName, element) {
-        var attributes = getAttributeInfosForElement(info, elementName, element);
-        // Map all the attributes to a completion
-        return attributes.map(function (attr) {
-            var kind = attr.fromHtml ? CompletionKind.HTML_ATTRIBUTE : CompletionKind.ATTRIBUTE;
-            return {
-                name: nameOfAttr(attr),
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
-                kind: kind,
-                sortText: attr.name,
-            };
-        });
-    }
-    function getAttributeInfosForElement(info, elementName, element) {
-        var attributes = [];
-        // Add html attributes
-        var htmlAttributes = attributeNames(elementName) || [];
-        if (htmlAttributes) {
-            attributes.push.apply(attributes, __spread(htmlAttributes.map(function (name) { return ({ name: name, fromHtml: true }); })));
+    function attributeCompletionsForElement(info, elementName) {
+        var e_1, _a, e_2, _b, e_3, _c;
+        var results = [];
+        try {
+            // Add html attributes
+            for (var _d = __values(attributeNames(elementName)), _e = _d.next(); !_e.done; _e = _d.next()) {
+                var name_1 = _e.value;
+                results.push({
+                    name: name_1,
+                    kind: CompletionKind.HTML_ATTRIBUTE,
+                    sortText: name_1,
+                });
+            }
         }
-        // Add html properties
-        var htmlProperties = propertyNames(elementName);
-        if (htmlProperties) {
-            attributes.push.apply(attributes, __spread(htmlProperties.map(function (name) { return ({ name: name, input: true }); })));
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
+            }
+            finally { if (e_1) throw e_1.error; }
         }
-        // Add html events
-        var htmlEvents = eventNames(elementName);
-        if (htmlEvents) {
-            attributes.push.apply(attributes, __spread(htmlEvents.map(function (name) { return ({ name: name, output: true }); })));
+        try {
+            // Add html properties
+            for (var _f = __values(propertyNames(elementName)), _g = _f.next(); !_g.done; _g = _f.next()) {
+                var name_2 = _g.value;
+                results.push({
+                    name: "[" + name_2 + "]",
+                    kind: CompletionKind.ATTRIBUTE,
+                    sortText: name_2,
+                });
+            }
         }
-        var _a = getSelectors(info), selectors = _a.selectors, selectorMap = _a.map;
-        if (selectors && selectors.length) {
-            // All the attributes that are selectable should be shown.
-            var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element === elementName; });
-            var selectorAndAttributeNames = applicableSelectors.map(function (selector) { return ({ selector: selector, attrs: selector.attrs.filter(function (a) { return !!a; }) }); });
-            var attrs_1 = flatten$1(selectorAndAttributeNames.map(function (selectorAndAttr) {
-                var directive = selectorMap.get(selectorAndAttr.selector);
-                var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive.inputs, output: name in directive.outputs }); });
-                return result;
-            }));
-            // Add template attribute if a directive contains a template reference
-            selectorAndAttributeNames.forEach(function (selectorAndAttr) {
-                var selector = selectorAndAttr.selector;
-                var directive = selectorMap.get(selector);
-                if (directive && hasTemplateReference$1(directive.type) && selector.attrs.length &&
-                    selector.attrs[0]) {
-                    attrs_1.push({ name: selector.attrs[0], template: true });
-                }
-            });
-            // All input and output properties of the matching directives should be added.
-            var elementSelector = element ?
-                createElementCssSelector$1(element) :
-                createElementCssSelector$1(new Element$1(elementName, [], [], null, null, null));
-            var matcher = new SelectorMatcher();
-            matcher.addSelectables(selectors);
-            matcher.match(elementSelector, function (selector) {
-                var directive = selectorMap.get(selector);
-                if (directive) {
-                    var inputs_1 = directive.inputs, outputs_1 = directive.outputs;
-                    attrs_1.push.apply(attrs_1, __spread(Object.keys(inputs_1).map(function (name) { return ({ name: inputs_1[name], input: true }); })));
-                    attrs_1.push.apply(attrs_1, __spread(Object.keys(outputs_1).map(function (name) { return ({ name: outputs_1[name], output: true }); })));
-                }
-            });
-            // If a name shows up twice, fold it into a single value.
-            attrs_1 = foldAttrs(attrs_1);
-            // Now expand them back out to ensure that input/output shows up as well as input and
-            // output.
-            attributes.push.apply(attributes, __spread(flatten$1(attrs_1.map(expandedAttr))));
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
+            }
+            finally { if (e_2) throw e_2.error; }
         }
-        return attributes;
+        try {
+            // Add html events
+            for (var _h = __values(eventNames(elementName)), _j = _h.next(); !_j.done; _j = _h.next()) {
+                var name_3 = _j.value;
+                results.push({
+                    name: "(" + name_3 + ")",
+                    kind: CompletionKind.ATTRIBUTE,
+                    sortText: name_3,
+                });
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
+        // Add Angular attributes
+        results.push.apply(results, __spread(angularAttributes(info, elementName)));
+        return results;
     }
     function attributeValueCompletions(info, position, attr) {
         var path = findTemplateAstAt(info.templateAst, position);
@@ -33541,7 +33545,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param entries Completion Entries
      */
     function uniqueByName(entries) {
-        var e_1, _a;
+        var e_4, _a;
         var results = [];
         var set = new Set();
         try {
@@ -33553,12 +33557,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (entries_1_1 && !entries_1_1.done && (_a = entries_1.return)) _a.call(entries_1);
             }
-            finally { if (e_1) throw e_1.error; }
+            finally { if (e_4) throw e_4.error; }
         }
         return results;
     }
@@ -33747,99 +33751,157 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getSourceText(template, span) {
         return template.source.substring(span.start, span.end);
     }
-    function nameOfAttr(attr) {
-        var name = attr.name;
-        if (attr.output) {
-            name = removeSuffix(name, 'Events');
-            name = removeSuffix(name, 'Changed');
-        }
-        var result = [name];
-        if (attr.input) {
-            result.unshift('[');
-            result.push(']');
-        }
-        if (attr.output) {
-            result.unshift('(');
-            result.push(')');
-        }
-        if (attr.template) {
-            result.unshift('*');
-        }
-        return result.join('');
-    }
-    var templateAttr = /^(\w+:)?(template$|^\*)/;
-    function createElementCssSelector$1(element) {
-        var e_2, _a;
-        var cssSelector = new CssSelector();
-        var elNameNoNs = splitNsName(element.name)[1];
-        cssSelector.setElement(elNameNoNs);
-        try {
-            for (var _b = __values(element.attrs), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var attr = _c.value;
-                if (!attr.name.match(templateAttr)) {
-                    var _d = __read(splitNsName(attr.name), 2), _ = _d[0], attrNameNoNs = _d[1];
-                    cssSelector.addAttribute(attrNameNoNs, attr.value);
-                    if (attr.name.toLowerCase() === 'class') {
-                        var classes = attr.value.split(/s+/g);
-                        classes.forEach(function (className) { return cssSelector.addClassName(className); });
-                    }
-                }
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-        return cssSelector;
-    }
-    function foldAttrs(attrs) {
-        var inputOutput = new Map();
-        var templates = new Map();
-        var result = [];
-        attrs.forEach(function (attr) {
-            if (attr.fromHtml) {
-                return attr;
-            }
-            if (attr.template) {
-                var duplicate = templates.get(attr.name);
-                if (!duplicate) {
-                    result.push({ name: attr.name, template: true });
-                    templates.set(attr.name, attr);
-                }
-            }
-            if (attr.input || attr.output) {
-                var duplicate = inputOutput.get(attr.name);
-                if (duplicate) {
-                    duplicate.input = duplicate.input || attr.input;
-                    duplicate.output = duplicate.output || attr.output;
-                }
-                else {
-                    var cloneAttr = { name: attr.name };
-                    if (attr.input)
-                        cloneAttr.input = true;
-                    if (attr.output)
-                        cloneAttr.output = true;
-                    result.push(cloneAttr);
-                    inputOutput.set(attr.name, cloneAttr);
-                }
-            }
-        });
-        return result;
-    }
-    function expandedAttr(attr) {
-        if (attr.input && attr.output) {
-            return [
-                attr, { name: attr.name, input: true, output: false },
-                { name: attr.name, input: false, output: true }
-            ];
-        }
-        return [attr];
-    }
     function lowerName(name) {
         return name && (name[0].toLowerCase() + name.substr(1));
+    }
+    function angularAttributes(info, elementName) {
+        var e_6, _a, e_7, _b, e_8, _c, e_9, _d, e_10, _e, e_11, _f, e_12, _g, e_13, _h;
+        var _j = getSelectors(info), selectors = _j.selectors, selectorMap = _j.map;
+        var templateRefs = new Set();
+        var inputs = new Set();
+        var outputs = new Set();
+        var others = new Set();
+        try {
+            for (var selectors_1 = __values(selectors), selectors_1_1 = selectors_1.next(); !selectors_1_1.done; selectors_1_1 = selectors_1.next()) {
+                var selector = selectors_1_1.value;
+                if (selector.element && selector.element !== elementName) {
+                    continue;
+                }
+                var summary = selectorMap.get(selector);
+                try {
+                    for (var _k = (e_7 = void 0, __values(selector.attrs)), _l = _k.next(); !_l.done; _l = _k.next()) {
+                        var attr = _l.value;
+                        if (attr) {
+                            if (hasTemplateReference$1(summary.type)) {
+                                templateRefs.add(attr);
+                            }
+                            else {
+                                others.add(attr);
+                            }
+                        }
+                    }
+                }
+                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                finally {
+                    try {
+                        if (_l && !_l.done && (_b = _k.return)) _b.call(_k);
+                    }
+                    finally { if (e_7) throw e_7.error; }
+                }
+                try {
+                    for (var _m = (e_8 = void 0, __values(Object.values(summary.inputs))), _o = _m.next(); !_o.done; _o = _m.next()) {
+                        var input = _o.value;
+                        inputs.add(input);
+                    }
+                }
+                catch (e_8_1) { e_8 = { error: e_8_1 }; }
+                finally {
+                    try {
+                        if (_o && !_o.done && (_c = _m.return)) _c.call(_m);
+                    }
+                    finally { if (e_8) throw e_8.error; }
+                }
+                try {
+                    for (var _p = (e_9 = void 0, __values(Object.values(summary.outputs))), _q = _p.next(); !_q.done; _q = _p.next()) {
+                        var output = _q.value;
+                        outputs.add(output);
+                    }
+                }
+                catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                finally {
+                    try {
+                        if (_q && !_q.done && (_d = _p.return)) _d.call(_p);
+                    }
+                    finally { if (e_9) throw e_9.error; }
+                }
+            }
+        }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        finally {
+            try {
+                if (selectors_1_1 && !selectors_1_1.done && (_a = selectors_1.return)) _a.call(selectors_1);
+            }
+            finally { if (e_6) throw e_6.error; }
+        }
+        var results = [];
+        try {
+            for (var templateRefs_1 = __values(templateRefs), templateRefs_1_1 = templateRefs_1.next(); !templateRefs_1_1.done; templateRefs_1_1 = templateRefs_1.next()) {
+                var name_4 = templateRefs_1_1.value;
+                results.push({
+                    name: "*" + name_4,
+                    kind: CompletionKind.ATTRIBUTE,
+                    sortText: name_4,
+                });
+            }
+        }
+        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+        finally {
+            try {
+                if (templateRefs_1_1 && !templateRefs_1_1.done && (_e = templateRefs_1.return)) _e.call(templateRefs_1);
+            }
+            finally { if (e_10) throw e_10.error; }
+        }
+        try {
+            for (var inputs_1 = __values(inputs), inputs_1_1 = inputs_1.next(); !inputs_1_1.done; inputs_1_1 = inputs_1.next()) {
+                var name_5 = inputs_1_1.value;
+                results.push({
+                    name: "[" + name_5 + "]",
+                    kind: CompletionKind.ATTRIBUTE,
+                    sortText: name_5,
+                });
+                // Add banana-in-a-box syntax
+                // https://angular.io/guide/template-syntax#two-way-binding-
+                if (outputs.has(name_5 + "Change")) {
+                    results.push({
+                        name: "[(" + name_5 + ")]",
+                        kind: CompletionKind.ATTRIBUTE,
+                        sortText: name_5,
+                    });
+                }
+            }
+        }
+        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        finally {
+            try {
+                if (inputs_1_1 && !inputs_1_1.done && (_f = inputs_1.return)) _f.call(inputs_1);
+            }
+            finally { if (e_11) throw e_11.error; }
+        }
+        try {
+            for (var outputs_1 = __values(outputs), outputs_1_1 = outputs_1.next(); !outputs_1_1.done; outputs_1_1 = outputs_1.next()) {
+                var name_6 = outputs_1_1.value;
+                results.push({
+                    name: "(" + name_6 + ")",
+                    kind: CompletionKind.ATTRIBUTE,
+                    sortText: name_6,
+                });
+            }
+        }
+        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+        finally {
+            try {
+                if (outputs_1_1 && !outputs_1_1.done && (_g = outputs_1.return)) _g.call(outputs_1);
+            }
+            finally { if (e_12) throw e_12.error; }
+        }
+        try {
+            for (var others_1 = __values(others), others_1_1 = others_1.next(); !others_1_1.done; others_1_1 = others_1.next()) {
+                var name_7 = others_1_1.value;
+                results.push({
+                    name: name_7,
+                    kind: CompletionKind.ATTRIBUTE,
+                    sortText: name_7,
+                });
+            }
+        }
+        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        finally {
+            try {
+                if (others_1_1 && !others_1_1.done && (_h = others_1.return)) _h.call(others_1);
+            }
+            finally { if (e_13) throw e_13.error; }
+        }
+        return results;
     }
 
     /**
@@ -34437,7 +34499,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+51.sha-398ff1e.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+54.sha-383457f.with-local-changes');
 
     /**
      * @license
@@ -53039,7 +53101,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Flattens an array.
      */
-    function flatten$2(list, dst) {
+    function flatten$1(list, dst) {
         if (dst === undefined)
             dst = list;
         for (var i = 0; i < list.length; i++) {
@@ -53051,7 +53113,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     // we need to clone flat since we need to write to it.
                     dst = list.slice(0, i);
                 }
-                flatten$2(item, dst);
+                flatten$1(item, dst);
             }
             else if (dst !== list) {
                 dst.push(item);
@@ -70264,7 +70326,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+51.sha-398ff1e.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+54.sha-383457f.with-local-changes');
 
     /**
      * @license
@@ -76816,7 +76878,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * @param resultsTree The query results to store
          */
         QueryList.prototype.reset = function (resultsTree) {
-            this._results = flatten$2(resultsTree);
+            this._results = flatten$1(resultsTree);
             this.dirty = false;
             this.length = this._results.length;
             this.last = this._results[this.length - 1];
@@ -77596,7 +77658,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         if (allowDuplicateDeclarationsInRoot === void 0) { allowDuplicateDeclarationsInRoot = false; }
         ngDevMode && assertDefined(moduleType, 'Required value moduleType');
         ngDevMode && assertDefined(ngModule, 'Required value ngModule');
-        var declarations = flatten$2(ngModule.declarations || EMPTY_ARRAY$5);
+        var declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$5);
         var ngModuleDef = null;
         Object.defineProperty(moduleType, NG_MOD_DEF, {
             configurable: true,
@@ -77609,16 +77671,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng:///" + moduleType.name + "/\u0275mod.js", {
                         type: moduleType,
-                        bootstrap: flatten$2(ngModule.bootstrap || EMPTY_ARRAY$5).map(resolveForwardRef$1),
+                        bootstrap: flatten$1(ngModule.bootstrap || EMPTY_ARRAY$5).map(resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
-                        imports: flatten$2(ngModule.imports || EMPTY_ARRAY$5)
+                        imports: flatten$1(ngModule.imports || EMPTY_ARRAY$5)
                             .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
-                        exports: flatten$2(ngModule.exports || EMPTY_ARRAY$5)
+                        exports: flatten$1(ngModule.exports || EMPTY_ARRAY$5)
                             .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
                         emitInline: true,
-                        schemas: ngModule.schemas ? flatten$2(ngModule.schemas) : null,
+                        schemas: ngModule.schemas ? flatten$1(ngModule.schemas) : null,
                         id: ngModule.id || null,
                     });
                 }
@@ -77666,21 +77728,21 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         var errors = [];
         var declarations = maybeUnwrapFn(ngModuleDef.declarations);
         var imports = maybeUnwrapFn(ngModuleDef.imports);
-        flatten$2(imports).map(unwrapModuleWithProvidersImports).forEach(function (mod) {
+        flatten$1(imports).map(unwrapModuleWithProvidersImports).forEach(function (mod) {
             verifySemanticsOfNgModuleImport(mod, moduleType);
             verifySemanticsOfNgModuleDef(mod, false, moduleType);
         });
         var exports = maybeUnwrapFn(ngModuleDef.exports);
         declarations.forEach(verifyDeclarationsHaveDefinitions);
         declarations.forEach(verifyDirectivesHaveSelector);
-        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$2(imports.map(computeCombinedExports)).map(resolveForwardRef$1));
+        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$1(imports.map(computeCombinedExports)).map(resolveForwardRef$1));
         exports.forEach(verifyExportsAreDeclaredOrReExported);
         declarations.forEach(function (decl) { return verifyDeclarationIsUnique(decl, allowDuplicateDeclarationsInRoot); });
         declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
         var ngModule = getAnnotation(moduleType, 'NgModule');
         if (ngModule) {
             ngModule.imports &&
-                flatten$2(ngModule.imports).map(unwrapModuleWithProvidersImports).forEach(function (mod) {
+                flatten$1(ngModule.imports).map(unwrapModuleWithProvidersImports).forEach(function (mod) {
                     verifySemanticsOfNgModuleImport(mod, moduleType);
                     verifySemanticsOfNgModuleDef(mod, false, moduleType);
                 });
@@ -77815,7 +77877,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function computeCombinedExports(type) {
         type = resolveForwardRef$1(type);
         var ngModuleDef = getNgModuleDef(type, true);
-        return __spread(flatten$2(maybeUnwrapFn(ngModuleDef.exports).map(function (type) {
+        return __spread(flatten$1(maybeUnwrapFn(ngModuleDef.exports).map(function (type) {
             var ngModuleDef = getNgModuleDef(type);
             if (ngModuleDef) {
                 verifySemanticsOfNgModuleDef(type, false);
@@ -77832,7 +77894,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * the `ngSelectorScope` property of the declared type.
      */
     function setScopeOnDeclaredComponents(moduleType, ngModule) {
-        var declarations = flatten$2(ngModule.declarations || EMPTY_ARRAY$5);
+        var declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$5);
         var transitiveScopes = transitiveScopesFor(moduleType);
         declarations.forEach(function (declaration) {
             if (declaration.hasOwnProperty(NG_COMP_DEF)) {
@@ -83822,7 +83884,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+51.sha-398ff1e.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+54.sha-383457f.with-local-changes');
 
     /**
      * @license
