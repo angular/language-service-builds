@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.12+61.sha-8bc5fb2.with-local-changes
+ * @license Angular v9.0.0-next.12+62.sha-3f257e9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19042,7 +19042,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.12+61.sha-8bc5fb2.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.12+62.sha-3f257e9.with-local-changes');
 
     /**
      * @license
@@ -34499,7 +34499,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.12+61.sha-8bc5fb2.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.12+62.sha-3f257e9.with-local-changes');
 
     /**
      * @license
@@ -51482,6 +51482,66 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var EMPTY_SYMBOL_TABLE = {
+        size: 0,
+        get: function () { return undefined; },
+        has: function () { return false; },
+        values: function () { return []; },
+    };
+    /**
+     * A factory function that returns a symbol table that contains all global symbols
+     * available in an interpolation scope in a template.
+     * This function creates the table the first time it is called, and return a cached
+     * value for all subsequent calls.
+     */
+    var createGlobalSymbolTable = (function () {
+        var GLOBAL_SYMBOL_TABLE;
+        return function (query) {
+            if (GLOBAL_SYMBOL_TABLE) {
+                return GLOBAL_SYMBOL_TABLE;
+            }
+            GLOBAL_SYMBOL_TABLE = query.createSymbolTable([
+                // The `$any()` method casts the type of an expression to `any`.
+                // https://angular.io/guide/template-syntax#the-any-type-cast-function
+                {
+                    name: '$any',
+                    kind: 'method',
+                    type: {
+                        name: '$any',
+                        kind: 'method',
+                        type: undefined,
+                        language: 'typescript',
+                        container: undefined,
+                        public: true,
+                        callable: true,
+                        definition: undefined,
+                        nullable: false,
+                        members: function () { return EMPTY_SYMBOL_TABLE; },
+                        signatures: function () { return []; },
+                        selectSignature: function (args) {
+                            if (args.length !== 1) {
+                                return;
+                            }
+                            return {
+                                arguments: EMPTY_SYMBOL_TABLE,
+                                result: query.getBuiltinType(BuiltinType$1.Any),
+                            };
+                        },
+                        indexed: function () { return undefined; },
+                    },
+                },
+            ]);
+            return GLOBAL_SYMBOL_TABLE;
+        };
+    })();
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * A base class to represent a template and which component class it is
      * associated with. A template source could answer basic questions about
@@ -51512,8 +51572,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 if (!this.membersTable) {
                     var typeChecker = this.program.getTypeChecker();
                     var sourceFile = this.classDeclNode.getSourceFile();
-                    this.membersTable =
-                        getClassMembersFromDeclaration(this.program, typeChecker, sourceFile, this.classDeclNode);
+                    this.membersTable = this.query.mergeSymbolTable([
+                        createGlobalSymbolTable(this.query),
+                        getClassMembersFromDeclaration(this.program, typeChecker, sourceFile, this.classDeclNode),
+                    ]);
                 }
                 return this.membersTable;
             },
@@ -70326,7 +70388,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.12+61.sha-8bc5fb2.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.12+62.sha-3f257e9.with-local-changes');
 
     /**
      * @license
@@ -83884,7 +83946,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.12+61.sha-8bc5fb2.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.12+62.sha-3f257e9.with-local-changes');
 
     /**
      * @license
