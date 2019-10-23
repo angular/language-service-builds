@@ -25,6 +25,8 @@ export declare function offsetSpan(span: Span, amount: number): Span;
 export declare function isNarrower(spanA: Span, spanB: Span): boolean;
 export declare function hasTemplateReference(type: CompileTypeMetadata): boolean;
 export declare function getSelectors(info: AstResult): SelectorInfo;
+export declare function flatten<T>(a: T[][]): T[];
+export declare function removeSuffix(value: string, suffix: string): string;
 export declare function isTypescriptVersion(low: string, high?: string): boolean;
 export declare function diagnosticInfoFromTemplateInfo(info: AstResult): DiagnosticTemplateInfo;
 export declare function findTemplateAstAt(ast: TemplateAst[], position: number, allowWidening?: boolean): TemplateAstPath;
