@@ -7,4 +7,5 @@
  */
 /// <amd-module name="@angular/language-service/src/completions" />
 import { AstResult } from './common';
-export declare function getTemplateCompletions(templateInfo: AstResult, position: number): ts.CompletionEntry[];
+import * as ng from './types';
+export declare function getTemplateCompletions(templateInfo: AstResult, position: number): ng.CompletionEntry[];
