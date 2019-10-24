@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+3.sha-a1d7b6b.with-local-changes
+ * @license Angular v9.0.0-next.13+5.sha-2f3812a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19057,7 +19057,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+3.sha-a1d7b6b.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+5.sha-2f3812a.with-local-changes');
 
     /**
      * @license
@@ -34509,7 +34509,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+3.sha-a1d7b6b.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+5.sha-2f3812a.with-local-changes');
 
     /**
      * @license
@@ -38326,13 +38326,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var ngTemplateGuards = staticMembers.map(extractTemplateGuard)
             .filter(function (guard) { return guard !== null; });
         var hasNgTemplateContextGuard = staticMembers.some(function (member) { return member.kind === ClassMemberKind.Method && member.name === 'ngTemplateContextGuard'; });
-        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards };
+        var coercedInputFields = new Set(staticMembers.map(extractCoercedInput)
+            .filter(function (inputName) { return inputName !== null; }));
+        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards, coercedInputFields: coercedInputFields };
     }
     function extractTemplateGuard(member) {
         if (!member.name.startsWith('ngTemplateGuard_')) {
             return null;
         }
-        var inputName = member.name.split('_', 2)[1];
+        var inputName = afterUnderscore(member.name);
         if (member.kind === ClassMemberKind.Property) {
             var type = null;
             if (member.type !== null && ts.isLiteralTypeNode(member.type) &&
@@ -38351,6 +38353,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else {
             return null;
         }
+    }
+    function extractCoercedInput(member) {
+        if (member.kind !== ClassMemberKind.Property || !member.name.startsWith('ngAcceptInputType_')) {
+            return null;
+        }
+        return afterUnderscore(member.name);
     }
     /**
      * A `MetadataReader` that reads from an ordered set of child readers until it obtains the requested
@@ -38428,6 +38436,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return CompoundMetadataReader;
     }());
+    function afterUnderscore(str) {
+        var pos = str.indexOf('_');
+        if (pos === -1) {
+            throw new Error("Expected '" + str + "' to contain '_'");
+        }
+        return str.substr(pos + 1);
+    }
 
     /**
      * @license
@@ -45691,6 +45706,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* body */ body);
     }
     function constructTypeCtorParameter(node, meta, rawType) {
+        var e_1, _a;
         // initType is the type of 'init', the single argument to the type constructor method.
         // If the Directive has any inputs, its initType will be:
         //
@@ -45700,17 +45716,47 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // directive will be inferred.
         //
         // In the special case there are no inputs, initType is set to {}.
-        var initType;
+        var initType = null;
         var keys = meta.fields.inputs;
-        if (keys.length === 0) {
-            // Special case - no inputs, outputs, or other fields which could influence the result type.
-            initType = ts.createTypeLiteralNode([]);
+        var plainKeys = [];
+        var coercedKeys = [];
+        try {
+            for (var keys_1 = __values(keys), keys_1_1 = keys_1.next(); !keys_1_1.done; keys_1_1 = keys_1.next()) {
+                var key = keys_1_1.value;
+                if (!meta.coercedInputFields.has(key)) {
+                    plainKeys.push(ts.createLiteralTypeNode(ts.createStringLiteral(key)));
+                }
+                else {
+                    coercedKeys.push(ts.createPropertySignature(
+                    /* modifiers */ undefined, 
+                    /* name */ key, 
+                    /* questionToken */ undefined, 
+                    /* type */ ts.createTypeQueryNode(ts.createQualifiedName(rawType.typeName, "ngAcceptInputType_" + key)), 
+                    /* initializer */ undefined));
+                }
+            }
         }
-        else {
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (keys_1_1 && !keys_1_1.done && (_a = keys_1.return)) _a.call(keys_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        if (plainKeys.length > 0) {
             // Construct a union of all the field names.
-            var keyTypeUnion = ts.createUnionTypeNode(keys.map(function (key) { return ts.createLiteralTypeNode(ts.createStringLiteral(key)); }));
+            var keyTypeUnion = ts.createUnionTypeNode(plainKeys);
             // Construct the Pick<rawType, keyTypeUnion>.
             initType = ts.createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
+        }
+        if (coercedKeys.length > 0) {
+            var coercedLiteral = ts.createTypeLiteralNode(coercedKeys);
+            initType =
+                initType !== null ? ts.createUnionTypeNode([initType, coercedLiteral]) : coercedLiteral;
+        }
+        if (initType === null) {
+            // Special case - no inputs, outputs, or other fields which could influence the result type.
+            initType = ts.createTypeLiteralNode([]);
         }
         // Create the 'init' parameter itself.
         return ts.createParameter(
@@ -45858,7 +45904,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         outputs: Object.keys(dir.outputs),
                         // TODO: support queries
                         queries: dir.queries,
-                    }
+                    },
+                    coercedInputFields: dir.coercedInputFields,
                 };
                 var typeCtor = generateTypeCtorDeclarationFn(node, meta, nodeTypeRef.typeName, this.config);
                 this.typeCtorStatements.push(typeCtor);
@@ -47949,6 +47996,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                                 // TODO(alxhub): support queries
                                 queries: dir.queries,
                             },
+                            coercedInputFields: dir.coercedInputFields,
                         });
                     }
                 }
@@ -62207,7 +62255,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+3.sha-a1d7b6b.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+5.sha-2f3812a.with-local-changes');
 
     /**
      * @license
@@ -72826,7 +72874,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+3.sha-a1d7b6b.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+5.sha-2f3812a.with-local-changes');
 
     /**
      * @license
