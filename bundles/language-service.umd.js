@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+17.sha-63f0ded.with-local-changes
+ * @license Angular v9.0.0-next.13+19.sha-a42057d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18248,9 +18248,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (changeDetection != null && changeDetection !== ChangeDetectionStrategy.Default) {
             definitionMap.set('changeDetection', literal(changeDetection));
         }
-        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
-        // string literal, which must be on one line.
-        var selectorForType = (meta.selector || '').replace(/\n/g, '');
         var expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
         var type = createTypeForDef(meta, Identifiers$1.ComponentDefWithMeta);
         return { expression: expression, type: type };
@@ -18431,10 +18428,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function createTypeForDef(meta, typeBase) {
         // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
         // string literal, which must be on one line.
-        var selectorForType = (meta.selector || '').replace(/\n/g, '');
+        var selectorForType = meta.selector !== null ? meta.selector.replace(/\n/g, '') : null;
         return expressionType(importExpr(typeBase, [
             typeWithParameters(meta.type, meta.typeArgumentCount),
-            stringAsType(selectorForType),
+            selectorForType !== null ? stringAsType(selectorForType) : NONE_TYPE,
             meta.exportAs !== null ? stringArrayAsType(meta.exportAs) : NONE_TYPE,
             stringMapAsType(meta.inputs),
             stringMapAsType(meta.outputs),
@@ -19043,7 +19040,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+17.sha-63f0ded.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+19.sha-a42057d.with-local-changes');
 
     /**
      * @license
@@ -34495,7 +34492,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+17.sha-63f0ded.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+19.sha-a42057d.with-local-changes');
 
     /**
      * @license
@@ -38357,9 +38354,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function CompoundMetadataReader(readers) {
             this.readers = readers;
         }
-        CompoundMetadataReader.prototype.isAbstractDirective = function (node) {
-            return this.readers.some(function (r) { return r.isAbstractDirective(node); });
-        };
         CompoundMetadataReader.prototype.getDirectiveMetadata = function (node) {
             var e_1, _a;
             try {
@@ -39691,18 +39685,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         DirectiveDecoratorHandler.prototype.analyze = function (node, decorator) {
             var directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore);
             var analysis = directiveResult && directiveResult.metadata;
-            // If the directive has a selector, it should be registered with the `SelectorScopeRegistry` so
-            // when this directive appears in an `@NgModule` scope, its selector can be determined.
-            if (analysis && analysis.selector !== null) {
-                var ref = new Reference$1(node);
-                this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: analysis.selector, exportAs: analysis.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.queries.map(function (query) { return query.propertyName; }), isComponent: false }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
-            }
-            if (analysis && !analysis.selector) {
-                this.metaRegistry.registerAbstractDirective(node);
-            }
             if (analysis === undefined) {
                 return {};
             }
+            // Register this directive's information with the `MetadataRegistry`. This ensures that
+            // the information about the directive is available during the compile() phase.
+            var ref = new Reference$1(node);
+            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: analysis.selector, exportAs: analysis.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.queries.map(function (query) { return query.propertyName; }), isComponent: false }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
             return {
                 analysis: {
                     meta: analysis,
@@ -40273,10 +40262,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.checker = checker;
             this.reflector = reflector;
         }
-        DtsMetadataReader.prototype.isAbstractDirective = function (ref) {
-            var meta = this.getDirectiveMetadata(ref);
-            return meta !== null && meta.selector === null;
-        };
         /**
          * Read the metadata from a class that has already been compiled somehow (either it's in a .d.ts
          * file, or in a .ts file with a handwritten definition).
@@ -40324,11 +40309,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // The type metadata was the wrong shape.
                 return null;
             }
-            var selector = readStringType(def.type.typeArguments[1]);
-            if (selector === null) {
-                return null;
-            }
-            return __assign(__assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: selector, exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector)), { baseClass: readBaseClass$1(clazz, this.checker, this.reflector) });
+            return __assign(__assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector)), { baseClass: readBaseClass$1(clazz, this.checker, this.reflector) });
         };
         /**
          * Read pipe metadata from a referenced class in a .d.ts file.
@@ -40408,14 +40389,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var LocalMetadataRegistry = /** @class */ (function () {
         function LocalMetadataRegistry() {
-            this.abstractDirectives = new Set();
             this.directives = new Map();
             this.ngModules = new Map();
             this.pipes = new Map();
         }
-        LocalMetadataRegistry.prototype.isAbstractDirective = function (ref) {
-            return this.abstractDirectives.has(ref.node);
-        };
         LocalMetadataRegistry.prototype.getDirectiveMetadata = function (ref) {
             return this.directives.has(ref.node) ? this.directives.get(ref.node) : null;
         };
@@ -40425,7 +40402,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         LocalMetadataRegistry.prototype.getPipeMetadata = function (ref) {
             return this.pipes.has(ref.node) ? this.pipes.get(ref.node) : null;
         };
-        LocalMetadataRegistry.prototype.registerAbstractDirective = function (clazz) { this.abstractDirectives.add(clazz); };
         LocalMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) { this.directives.set(meta.ref.node, meta); };
         LocalMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) { this.ngModules.set(meta.ref.node, meta); };
         LocalMetadataRegistry.prototype.registerPipeMetadata = function (meta) { this.pipes.set(meta.ref.node, meta); };
@@ -40438,12 +40414,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function CompoundMetadataRegistry(registries) {
             this.registries = registries;
         }
-        CompoundMetadataRegistry.prototype.registerAbstractDirective = function (clazz) {
+        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
             var e_1, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerAbstractDirective(clazz);
+                    registry.registerDirectiveMetadata(meta);
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -40454,12 +40430,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_1) throw e_1.error; }
             }
         };
-        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
+        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
             var e_2, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerDirectiveMetadata(meta);
+                    registry.registerNgModuleMetadata(meta);
                 }
             }
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
@@ -40470,12 +40446,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_2) throw e_2.error; }
             }
         };
-        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
+        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
             var e_3, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerNgModuleMetadata(meta);
+                    registry.registerPipeMetadata(meta);
                 }
             }
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -40484,22 +40460,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_3) throw e_3.error; }
-            }
-        };
-        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
-            var e_4, _a;
-            try {
-                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var registry = _c.value;
-                    registry.registerPipeMetadata(meta);
-                }
-            }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_4) throw e_4.error; }
             }
         };
         return CompoundMetadataRegistry;
@@ -40800,14 +40760,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (template.errors !== undefined) {
                 throw new Error("Errors parsing template: " + template.errors.map(function (e) { return e.toString(); }).join(', '));
             }
-            // If the component has a selector, it should be registered with the
-            // `LocalModuleScopeRegistry`
-            // so that when this component appears in an `@NgModule` scope, its selector can be
-            // determined.
-            if (metadata.selector !== null) {
-                var ref = new Reference$1(node);
-                this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: metadata.selector, exportAs: metadata.exportAs, inputs: metadata.inputs, outputs: metadata.outputs, queries: metadata.queries.map(function (query) { return query.propertyName; }), isComponent: true }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
-            }
+            // Register this component's information with the `MetadataRegistry`. This ensures that
+            // the information about the component is available during the compile() phase.
+            var ref = new Reference$1(node);
+            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: metadata.selector, exportAs: metadata.exportAs, inputs: metadata.inputs, outputs: metadata.outputs, queries: metadata.queries.map(function (query) { return query.propertyName; }), isComponent: true }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
             // Figure out the set of styles. The ordering here is important: external resources (styleUrls)
             // precede inline styles, and styles defined in the template override styles defined in the
             // component.
@@ -40895,7 +40851,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 try {
                     for (var _b = __values(scope.compilation.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
                         var directive = _c.value;
-                        matcher.addSelectables(CssSelector.parse(directive.selector), directive);
+                        if (directive.selector !== null) {
+                            matcher.addSelectables(CssSelector.parse(directive.selector), directive);
+                        }
                     }
                 }
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
@@ -40944,8 +40902,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 try {
                     for (var _c = __values(scope.compilation.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var meta_1 = _d.value;
-                        var extMeta = flattenInheritedDirectiveMetadata(this.metaReader, meta_1.ref);
-                        matcher.addSelectables(CssSelector.parse(meta_1.selector), extMeta);
+                        if (meta_1.selector !== null) {
+                            var extMeta = flattenInheritedDirectiveMetadata(this.metaReader, meta_1.ref);
+                            matcher.addSelectables(CssSelector.parse(meta_1.selector), extMeta);
+                        }
                     }
                 }
                 catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -41013,9 +40973,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     for (var _e = __values(scope.compilation.directives), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var dir = _f.value;
                         var ref = dir.ref, selector = dir.selector;
-                        var expression = this.refEmitter.emit(ref, context);
-                        directives.push({ selector: selector, expression: expression });
-                        matcher.addSelectables(CssSelector.parse(selector), __assign(__assign({}, dir), { expression: expression }));
+                        if (selector !== null) {
+                            var expression = this.refEmitter.emit(ref, context);
+                            directives.push({ selector: selector, expression: expression });
+                            matcher.addSelectables(CssSelector.parse(selector), __assign(__assign({}, dir), { expression: expression }));
+                        }
                     }
                 }
                 catch (e_5_1) { e_5 = { error: e_5_1 }; }
@@ -41812,7 +41774,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 try {
                     for (var _e = __values(analysis.declarations), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var decl = _f.value;
-                        if (this.metaReader.isAbstractDirective(decl)) {
+                        var metadata = this.metaReader.getDirectiveMetadata(decl);
+                        if (metadata !== null && metadata.selector === null) {
                             throw new FatalDiagnosticError(ErrorCode.DIRECTIVE_MISSING_SELECTOR, decl.node, "Directive " + decl.node.name.text + " has no selector, please add it!");
                         }
                     }
@@ -42656,17 +42619,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var metadata = this.ensureMetadata(meta.ref.node.getSourceFile());
             metadata.ngModuleMeta.set(meta.ref.node, meta);
         };
-        IncrementalState.prototype.isAbstractDirective = function (ref) {
-            if (!this.metadata.has(ref.node.getSourceFile())) {
-                return false;
-            }
-            var metadata = this.metadata.get(ref.node.getSourceFile());
-            return metadata.abstractDirectives.has(ref.node);
-        };
-        IncrementalState.prototype.registerAbstractDirective = function (clazz) {
-            var metadata = this.ensureMetadata(clazz.getSourceFile());
-            metadata.abstractDirectives.add(clazz);
-        };
         IncrementalState.prototype.getDirectiveMetadata = function (ref) {
             if (!this.metadata.has(ref.node.getSourceFile())) {
                 return null;
@@ -42753,7 +42705,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             /** A set of source files that this file depends upon. */
             this.fileDependencies = new Set();
             this.resourcePaths = new Set();
-            this.abstractDirectives = new Set();
             this.directiveMeta = new Map();
             this.ngModuleMeta = new Map();
             this.pipeMeta = new Map();
@@ -44143,7 +44094,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_1) throw e_1.error; }
             }
         };
-        LocalModuleScopeRegistry.prototype.registerAbstractDirective = function (clazz) { };
         LocalModuleScopeRegistry.prototype.registerDirectiveMetadata = function (directive) { };
         LocalModuleScopeRegistry.prototype.registerPipeMetadata = function (pipe) { };
         LocalModuleScopeRegistry.prototype.getScopeForComponent = function (clazz) {
@@ -70482,7 +70432,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+17.sha-63f0ded.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+19.sha-a42057d.with-local-changes');
 
     /**
      * @license
@@ -75775,7 +75725,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -78316,7 +78266,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             name: type.name,
             type: type,
             typeArgumentCount: 0,
-            selector: metadata.selector,
+            selector: metadata.selector !== undefined ? metadata.selector : null,
             deps: reflectDependencies(type),
             host: metadata.host || EMPTY_OBJ,
             propMetadata: propMetadata,
@@ -84055,7 +84005,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+17.sha-63f0ded.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+19.sha-a42057d.with-local-changes');
 
     /**
      * @license
