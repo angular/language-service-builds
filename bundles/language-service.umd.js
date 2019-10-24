@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+27.sha-09a2bb8.with-local-changes
+ * @license Angular v9.0.0-next.13+28.sha-4aa51b7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19055,7 +19055,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+27.sha-09a2bb8.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
 
     /**
      * @license
@@ -34497,7 +34497,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+27.sha-09a2bb8.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
 
     /**
      * @license
@@ -35169,6 +35169,50 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function nocollapseHack(contents) {
         return contents.replace(R3_MATCH_DEFS, R3_NOCOLLAPSE_DEFS)
             .replace(R3_MATCH_TSICKLE_DECL, R3_NOCOLLAPSE_TSICKLE_DECL);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Minimum supported TypeScript version
+     * ∀ supported typescript version v, v >= MIN_TS_VERSION
+     */
+    var MIN_TS_VERSION = '3.6.4';
+    /**
+     * Supremum of supported TypeScript versions
+     * ∀ supported typescript version v, v < MAX_TS_VERSION
+     * MAX_TS_VERSION is not considered as a supported TypeScript version
+     */
+    var MAX_TS_VERSION = '3.7.0';
+    /**
+     * The currently used version of TypeScript, which can be adjusted for testing purposes using
+     * `setTypeScriptVersionForTesting` and `restoreTypeScriptVersionForTesting` below.
+     */
+    var tsVersion = ts.version;
+    /**
+     * Checks whether a given version ∈ [minVersion, maxVersion[
+     * An error will be thrown if the following statements are simultaneously true:
+     * - the given version ∉ [minVersion, maxVersion[,
+     *
+     * @param version The version on which the check will be performed
+     * @param minVersion The lower bound version. A valid version needs to be greater than minVersion
+     * @param maxVersion The upper bound version. A valid version needs to be strictly less than
+     * maxVersion
+     *
+     * @throws Will throw an error if the given version ∉ [minVersion, maxVersion[
+     */
+    function checkVersion(version, minVersion, maxVersion) {
+        if ((compareVersions(version, minVersion) < 0 || compareVersions(version, maxVersion) >= 0)) {
+            throw new Error("The Angular Compiler requires TypeScript >=" + minVersion + " and <" + maxVersion + " but " + version + " was found instead.");
+        }
+    }
+    function verifySupportedTypeScriptVersion() {
+        checkVersion(tsVersion, MIN_TS_VERSION, MAX_TS_VERSION);
     }
 
     /**
@@ -48204,6 +48248,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.fileToModuleHost = null;
             this.perfRecorder = NOOP_PERF_RECORDER;
             this.perfTracker = null;
+            if (!options.disableTypeScriptVersionCheck) {
+                verifySupportedTypeScriptVersion();
+            }
             if (shouldEnablePerfTracing(options)) {
                 this.perfTracker = PerfTracker.zeroedToNow();
                 this.perfRecorder = this.perfTracker;
@@ -50397,17 +50444,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var program = _a.program, targetSourceFile = _a.targetSourceFile, writeFile = _a.writeFile, cancellationToken = _a.cancellationToken, emitOnlyDtsFiles = _a.emitOnlyDtsFiles, customTransformers = _a.customTransformers;
         return program.emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
     };
-    /**
-     * Minimum supported TypeScript version
-     * ∀ supported typescript version v, v >= MIN_TS_VERSION
-     */
-    var MIN_TS_VERSION = '3.6.4';
-    /**
-     * Supremum of supported TypeScript versions
-     * ∀ supported typescript version v, v < MAX_TS_VERSION
-     * MAX_TS_VERSION is not considered as a supported TypeScript version
-     */
-    var MAX_TS_VERSION = '3.7.0';
     var AngularCompilerProgram = /** @class */ (function () {
         function AngularCompilerProgram(rootNames, options, host, oldProgram) {
             var _a;
@@ -50416,7 +50452,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.host = host;
             this._optionsDiagnostics = [];
             this.rootNames = __spread(rootNames);
-            checkVersion(ts.version, MIN_TS_VERSION, MAX_TS_VERSION, options.disableTypeScriptVersionCheck);
+            if (!options.disableTypeScriptVersionCheck) {
+                verifySupportedTypeScriptVersion();
+            }
             this.oldTsProgram = oldProgram ? oldProgram.getTsProgram() : undefined;
             if (oldProgram) {
                 this.oldProgramLibrarySummaries = oldProgram.getLibrarySummaries();
@@ -51122,30 +51160,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return AngularCompilerProgram;
     }());
-    /**
-     * Checks whether a given version ∈ [minVersion, maxVersion[
-     * An error will be thrown if the following statements are simultaneously true:
-     * - the given version ∉ [minVersion, maxVersion[,
-     * - the result of the version check is not meant to be bypassed (the parameter disableVersionCheck
-     * is false)
-     *
-     * @param version The version on which the check will be performed
-     * @param minVersion The lower bound version. A valid version needs to be greater than minVersion
-     * @param maxVersion The upper bound version. A valid version needs to be strictly less than
-     * maxVersion
-     * @param disableVersionCheck Indicates whether version check should be bypassed
-     *
-     * @throws Will throw an error if the following statements are simultaneously true:
-     * - the given version ∉ [minVersion, maxVersion[,
-     * - the result of the version check is not meant to be bypassed (the parameter disableVersionCheck
-     * is false)
-     */
-    function checkVersion(version, minVersion, maxVersion, disableVersionCheck) {
-        if ((compareVersions(version, minVersion) < 0 || compareVersions(version, maxVersion) >= 0) &&
-            !disableVersionCheck) {
-            throw new Error("The Angular Compiler requires TypeScript >=" + minVersion + " and <" + maxVersion + " but " + version + " was found instead.");
-        }
-    }
     // Compute the AotCompiler options
     function getAotCompilerOptions(options) {
         var missingTranslation = MissingTranslationStrategy.Warning;
@@ -62217,7 +62231,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+27.sha-09a2bb8.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
 
     /**
      * @license
@@ -72850,7 +72864,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+27.sha-09a2bb8.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
 
     /**
      * @license
