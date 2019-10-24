@@ -18,13 +18,6 @@ export interface AstResult {
     expressionParser: Parser;
     template: TemplateSource;
 }
-export interface AttrInfo {
-    name: string;
-    input?: boolean;
-    output?: boolean;
-    template?: boolean;
-    fromHtml?: boolean;
-}
 export declare type SelectorInfo = {
     selectors: CssSelector[];
     map: Map<CssSelector, CompileDirectiveSummary>;
