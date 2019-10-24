@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+1.sha-c79d6ec.with-local-changes
+ * @license Angular v9.0.0-next.13+2.sha-d40ee6a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19042,7 +19042,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+1.sha-c79d6ec.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+2.sha-d40ee6a.with-local-changes');
 
     /**
      * @license
@@ -34494,7 +34494,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+1.sha-c79d6ec.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+2.sha-d40ee6a.with-local-changes');
 
     /**
      * @license
@@ -55093,10 +55093,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var map;
         var allValuesTrue = false;
         if (typeof newValues === 'string') { // [class] bindings allow string values
-            if (newValues.length) {
-                props = newValues.split(/\s+/);
-                allValuesTrue = true;
-            }
+            props = splitOnWhitespace(newValues);
+            allValuesTrue = props !== null;
         }
         else {
             props = newValues ? Object.keys(newValues) : null;
@@ -55111,6 +55109,34 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         return stylingMapArr;
+    }
+    function splitOnWhitespace(text) {
+        var array = null;
+        var length = text.length;
+        var start = 0;
+        var foundChar = false;
+        for (var i = 0; i < length; i++) {
+            var char = text.charCodeAt(i);
+            if (char <= 32 /*' '*/) {
+                if (foundChar) {
+                    if (array === null)
+                        array = [];
+                    array.push(text.substring(start, i));
+                    foundChar = false;
+                }
+                start = i + 1;
+            }
+            else {
+                foundChar = true;
+            }
+        }
+        if (foundChar) {
+            if (array === null)
+                array = [];
+            array.push(text.substring(start, length));
+            foundChar = false;
+        }
+        return array;
     }
     // TODO (matsko|AndrewKushnir): refactor this once we figure out how to generate separate
     // `input('class') + classMap()` instructions.
@@ -70407,7 +70433,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+1.sha-c79d6ec.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+2.sha-d40ee6a.with-local-changes');
 
     /**
      * @license
@@ -83965,7 +83991,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+1.sha-c79d6ec.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+2.sha-d40ee6a.with-local-changes');
 
     /**
      * @license
