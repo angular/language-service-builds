@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+19.sha-a42057d.with-local-changes
+ * @license Angular v9.0.0-next.13+21.sha-73530a9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19055,7 +19055,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+19.sha-a42057d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+21.sha-73530a9.with-local-changes');
 
     /**
      * @license
@@ -33521,8 +33521,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var components = directiveElements.map(function (name) {
             return {
                 name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
                 kind: CompletionKind.COMPONENT,
                 sortText: name,
             };
@@ -33530,8 +33528,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var htmlElements = htmlNames.map(function (name) {
             return {
                 name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
                 kind: CompletionKind.ELEMENT,
                 sortText: name,
             };
@@ -33539,8 +33535,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var angularElements = ANGULAR_ELEMENTS.map(function (name) {
             return {
                 name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
                 kind: CompletionKind.ANGULAR_ELEMENT,
                 sortText: name,
             };
@@ -33585,8 +33579,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 result = Object.keys(NAMED_ENTITIES).map(function (name) {
                     return {
                         name: "&" + name + ";",
-                        // Need to cast to unknown because Angular's CompletionKind includes
-                        // HTML entites.
                         kind: CompletionKind.ENTITY,
                         sortText: name,
                     };
@@ -33672,8 +33664,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     _this.result = keys.map(function (key) {
                         return {
                             name: key,
-                            // Need to cast to unknown because Angular's CompletionKind includes
-                            // HTML entites.
                             kind: CompletionKind.KEY,
                             sortText: key,
                         };
@@ -34507,7 +34497,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+19.sha-a42057d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+21.sha-73530a9.with-local-changes');
 
     /**
      * @license
@@ -52333,6 +52323,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 isGlobalCompletion: false,
                 isMemberCompletion: false,
                 isNewIdentifierLocation: false,
+                // Cast CompletionEntry.kind from ng.CompletionKind to ts.ScriptElementKind
                 entries: results,
             };
         };
@@ -62206,7 +62197,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+19.sha-a42057d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+21.sha-73530a9.with-local-changes');
 
     /**
      * @license
@@ -72838,7 +72829,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+19.sha-a42057d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+21.sha-73530a9.with-local-changes');
 
     /**
      * @license
