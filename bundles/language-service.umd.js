@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+28.sha-4aa51b7.with-local-changes
+ * @license Angular v9.0.0-next.13+31.sha-0d9be22.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19040,7 +19040,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+31.sha-0d9be22.with-local-changes');
 
     /**
      * @license
@@ -34482,7 +34482,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+31.sha-0d9be22.with-local-changes');
 
     /**
      * @license
@@ -47578,10 +47578,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return expr;
             }
             else if (binding instanceof Reference) {
-                if (!this.tcb.env.config.checkTypeOfReferences) {
-                    // References are pinned to 'any'.
-                    return NULL_AS_ANY;
-                }
                 var target = this.tcb.boundTarget.getReferenceTarget(binding);
                 if (target === null) {
                     throw new Error("Unbound reference? " + binding.name);
@@ -47589,11 +47585,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // The reference is either to an element, an <ng-template> node, or to a directive on an
                 // element or template.
                 if (target instanceof Element) {
+                    if (!this.tcb.env.config.checkTypeOfDomReferences) {
+                        // References to DOM nodes are pinned to 'any'.
+                        return NULL_AS_ANY;
+                    }
                     var expr = ts.getMutableClone(this.scope.resolve(target));
                     addParseSpanInfo(expr, toAbsoluteSpan(ast.span, this.sourceSpan));
                     return expr;
                 }
                 else if (target instanceof Template) {
+                    if (!this.tcb.env.config.checkTypeOfNonDomReferences) {
+                        // References to `TemplateRef`s pinned to 'any'.
+                        return NULL_AS_ANY;
+                    }
                     // Direct references to an <ng-template> node simply require a value of type
                     // `TemplateRef<any>`. To get this, an expression of the form
                     // `(null as any as TemplateRef<any>)` is constructed.
@@ -47605,6 +47609,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     return value;
                 }
                 else {
+                    if (!this.tcb.env.config.checkTypeOfNonDomReferences) {
+                        // References to directives are pinned to 'any'.
+                        return NULL_AS_ANY;
+                    }
                     var expr = ts.getMutableClone(this.scope.resolve(target.node, target.directive));
                     addParseSpanInfo(expr, toAbsoluteSpan(ast.span, this.sourceSpan));
                     return expr;
@@ -47696,6 +47704,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function processAttribute(attr) {
             // Skip non-property bindings.
             if (attr instanceof BoundAttribute && attr.type !== 0 /* Property */) {
+                return;
+            }
+            // Skip text attributes if configured to do so.
+            if (!tcb.env.config.checkTypeOfAttributes && attr instanceof TextAttribute) {
                 return;
             }
             // Skip the attribute if the directive does not have an input for it.
@@ -48537,24 +48549,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // requested.
             var typeCheckingConfig;
             if (this.options.fullTemplateTypeCheck) {
+                var strictTemplates = !!this.options.strictTemplates;
                 typeCheckingConfig = {
                     applyTemplateContextGuards: true,
                     checkQueries: false,
                     checkTemplateBodies: true,
-                    checkTypeOfInputBindings: true,
-                    strictNullInputBindings: true,
+                    checkTypeOfInputBindings: strictTemplates,
+                    strictNullInputBindings: strictTemplates,
+                    checkTypeOfAttributes: strictTemplates,
                     // Even in full template type-checking mode, DOM binding checks are not quite ready yet.
                     checkTypeOfDomBindings: false,
-                    checkTypeOfOutputEvents: true,
-                    checkTypeOfAnimationEvents: true,
+                    checkTypeOfOutputEvents: strictTemplates,
+                    checkTypeOfAnimationEvents: strictTemplates,
                     // Checking of DOM events currently has an adverse effect on developer experience,
                     // e.g. for `<input (blur)="update($event.target.value)">` enabling this check results in:
                     // - error TS2531: Object is possibly 'null'.
                     // - error TS2339: Property 'value' does not exist on type 'EventTarget'.
-                    checkTypeOfDomEvents: false,
-                    checkTypeOfReferences: true,
+                    checkTypeOfDomEvents: strictTemplates,
+                    checkTypeOfDomReferences: strictTemplates,
+                    // Non-DOM references have the correct type in View Engine so there is no strictness flag.
+                    checkTypeOfNonDomReferences: true,
+                    // Pipes are checked in View Engine so there is no strictness flag.
                     checkTypeOfPipes: true,
-                    strictSafeNavigationTypes: true,
+                    strictSafeNavigationTypes: strictTemplates,
                 };
             }
             else {
@@ -48564,14 +48581,40 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     checkTemplateBodies: false,
                     checkTypeOfInputBindings: false,
                     strictNullInputBindings: false,
+                    checkTypeOfAttributes: false,
                     checkTypeOfDomBindings: false,
                     checkTypeOfOutputEvents: false,
                     checkTypeOfAnimationEvents: false,
                     checkTypeOfDomEvents: false,
-                    checkTypeOfReferences: false,
+                    checkTypeOfDomReferences: false,
+                    checkTypeOfNonDomReferences: false,
                     checkTypeOfPipes: false,
                     strictSafeNavigationTypes: false,
                 };
+            }
+            // Apply explicitly configured strictness flags on top of the default configuration
+            // based on "fullTemplateTypeCheck".
+            if (this.options.strictInputTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfInputBindings = this.options.strictInputTypes;
+            }
+            if (this.options.strictNullInputTypes !== undefined) {
+                typeCheckingConfig.strictNullInputBindings = this.options.strictNullInputTypes;
+            }
+            if (this.options.strictOutputEventTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfOutputEvents = this.options.strictOutputEventTypes;
+                typeCheckingConfig.checkTypeOfAnimationEvents = this.options.strictOutputEventTypes;
+            }
+            if (this.options.strictDomEventTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfDomEvents = this.options.strictDomEventTypes;
+            }
+            if (this.options.strictSafeNavigationTypes !== undefined) {
+                typeCheckingConfig.strictSafeNavigationTypes = this.options.strictSafeNavigationTypes;
+            }
+            if (this.options.strictDomLocalRefTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfDomReferences = this.options.strictDomLocalRefTypes;
+            }
+            if (this.options.strictAttributeTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfAttributes = this.options.strictAttributeTypes;
             }
             // Execute the typeCheck phase of each decorator in the program.
             var prepSpan = this.perfRecorder.start('typeCheckPrep');
@@ -70479,7 +70522,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+31.sha-0d9be22.with-local-changes');
 
     /**
      * @license
@@ -84053,7 +84096,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+28.sha-4aa51b7.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+31.sha-0d9be22.with-local-changes');
 
     /**
      * @license
