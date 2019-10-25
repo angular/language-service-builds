@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+33.sha-3f195fe.with-local-changes
+ * @license Angular v9.0.0-next.13+34.sha-ee4fc12.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19055,7 +19055,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+33.sha-3f195fe.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
 
     /**
      * @license
@@ -32757,7 +32757,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             class_1.prototype.visit = function (ast) {
-                if ((!excludeEmpty || ast.span.start < ast.span.end) && inSpan(position, ast.span)) {
+                if ((!excludeEmpty || ast.sourceSpan.start < ast.sourceSpan.end) &&
+                    inSpan(position, ast.sourceSpan)) {
                     path.push(ast);
                     visitAstChildren(ast, this);
                 }
@@ -33702,7 +33703,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         var span = new ParseSpan(0, this.attr.value.length);
                         var offset = ast.sourceSpan.start.offset;
                         this.attributeValueCompletions(binding.expression ? binding.expression.ast :
-                            new PropertyRead(span, span.toAbsolute(offset), new ImplicitReceiver(span, span.toAbsolute(offset)), ''), valueRelativePosition_1);
+                            new PropertyRead(span, span.toAbsolute(offset), new ImplicitReceiver(span, span.toAbsolute(offset)), ''), this.position);
                     }
                     else {
                         keyCompletions();
@@ -33711,9 +33712,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
-            var expressionPosition = this.position - ast.sourceSpan.start.offset;
-            if (inSpan(expressionPosition, ast.value.span)) {
-                var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, expressionPosition, this.info.template.query);
+            if (inSpan(this.position, ast.value.sourceSpan)) {
+                var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, this.position, this.info.template.query);
                 if (completions) {
                     this.result = this.symbolsToCompletions(completions);
                 }
@@ -33737,7 +33737,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
             get: function () {
                 if (this.attr && this.attr.valueSpan) {
-                    return this.position - this.attr.valueSpan.start.offset;
+                    return this.position;
                 }
                 return 0;
             },
@@ -33929,10 +33929,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path, inEvent);
                         if (attribute.valueSpan) {
-                            var expressionOffset = attribute.valueSpan.start.offset;
-                            var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
+                            var result = getExpressionSymbol(scope, ast, templatePosition, info.template.query);
                             if (result) {
                                 symbol_1 = result.symbol;
+                                var expressionOffset = attribute.valueSpan.start.offset;
                                 span_1 = offsetSpan$1(result.span, expressionOffset);
                             }
                         }
@@ -34016,7 +34016,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     if (inSpan(expressionPosition, ast.value.span)) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path, /* includeEvent */ false);
-                        var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
+                        var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template.query);
                         if (result) {
                             symbol_1 = result.symbol;
                             span_1 = offsetSpan$1(result.span, ast.sourceSpan.start.offset);
@@ -34497,7 +34497,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+33.sha-3f195fe.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
 
     /**
      * @license
@@ -62274,7 +62274,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+33.sha-3f195fe.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
 
     /**
      * @license
@@ -65930,7 +65930,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -72907,7 +72907,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+33.sha-3f195fe.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
 
     /**
      * @license
