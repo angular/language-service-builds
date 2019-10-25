@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+35.sha-dcdb433.with-local-changes
+ * @license Angular v9.0.0-next.13+43.sha-6323a35.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3653,6 +3653,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Identifiers.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵɵInheritDefinitionFeature', moduleName: CORE$1 };
+        Identifiers.CopyDefinitionFeature = { name: 'ɵɵCopyDefinitionFeature', moduleName: CORE$1 };
         Identifiers.ProvidersFeature = { name: 'ɵɵProvidersFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵɵlistener', moduleName: CORE$1 };
         Identifiers.getFactoryOf = {
@@ -18093,6 +18094,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (meta.usesInheritance) {
             features.push(importExpr(Identifiers$1.InheritDefinitionFeature));
         }
+        if (meta.fullInheritance) {
+            features.push(importExpr(Identifiers$1.CopyDefinitionFeature));
+        }
         if (meta.lifecycle.usesOnChanges) {
             features.push(importExpr(Identifiers$1.NgOnChangesFeature).callFn(EMPTY_ARRAY));
         }
@@ -18945,7 +18949,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         for (var field in propMetadata) {
             _loop_1(field);
         }
-        return __assign(__assign({}, facade), { typeSourceSpan: facade.typeSourceSpan, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.propMetadata, facade.typeSourceSpan, facade.host), inputs: __assign(__assign({}, inputsFromMetadata), inputsFromType), outputs: __assign(__assign({}, outputsFromMetadata), outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata) });
+        return __assign(__assign({}, facade), { typeSourceSpan: facade.typeSourceSpan, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.propMetadata, facade.typeSourceSpan, facade.host), inputs: __assign(__assign({}, inputsFromMetadata), inputsFromType), outputs: __assign(__assign({}, outputsFromMetadata), outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), fullInheritance: false });
     }
     function wrapExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
@@ -19043,7 +19047,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+43.sha-6323a35.with-local-changes');
 
     /**
      * @license
@@ -34485,7 +34489,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+43.sha-6323a35.with-local-changes');
 
     /**
      * @license
@@ -35231,6 +35235,26 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          */
         HandlerPrecedence[HandlerPrecedence["WEAK"] = 2] = "WEAK";
     })(HandlerPrecedence || (HandlerPrecedence = {}));
+    /**
+     * A set of options which can be passed to a `DecoratorHandler` by a consumer, to tailor the output
+     * of compilation beyond the decorators themselves.
+     */
+    var HandlerFlags;
+    (function (HandlerFlags) {
+        /**
+         * No flags set.
+         */
+        HandlerFlags[HandlerFlags["NONE"] = 0] = "NONE";
+        /**
+         * Indicates that this decorator is fully inherited from its parent at runtime. In addition to
+         * normally inherited aspects such as inputs and queries, full inheritance applies to every aspect
+         * of the component or directive, such as the template function itself.
+         *
+         * Its primary effect is to cause the `CopyDefinitionFeature` to be applied to the definition
+         * being compiled. See that class for more information.
+         */
+        HandlerFlags[HandlerFlags["FULL_INHERITANCE"] = 1] = "FULL_INHERITANCE";
+    })(HandlerFlags || (HandlerFlags = {}));
 
     /**
      * @license
@@ -35295,15 +35319,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * Raised when ngcc tries to inject a synthetic decorator over one that already exists.
          */
         ErrorCode[ErrorCode["NGCC_MIGRATION_DECORATOR_INJECTION_ERROR"] = 7001] = "NGCC_MIGRATION_DECORATOR_INJECTION_ERROR";
-        /**
-         * Raised when ngcc tries to decorate a base class that was imported from outside the package.
-         */
-        ErrorCode[ErrorCode["NGCC_MIGRATION_EXTERNAL_BASE_CLASS"] = 7002] = "NGCC_MIGRATION_EXTERNAL_BASE_CLASS";
-        /**
-         * Raised when ngcc tries to migrate a class that is extended from a dynamic base class
-         * expression.
-         */
-        ErrorCode[ErrorCode["NGCC_MIGRATION_DYNAMIC_BASE_CLASS"] = 7003] = "NGCC_MIGRATION_DYNAMIC_BASE_CLASS";
         /**
          * An element name failed validation against the DOM schema.
          */
@@ -35387,6 +35402,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var Decorator = {
+        nodeForError: function (decorator) {
+            if (decorator.node !== null) {
+                return decorator.node;
+            }
+            else {
+                // TODO(alxhub): we can't rely on narrowing until TS 3.6 is in g3.
+                return decorator.synthesizedFor;
+            }
+        },
+    };
     function isDecoratorIdentifier(exp) {
         return ts.isIdentifier(exp) ||
             ts.isPropertyAccessExpression(exp) && ts.isIdentifier(exp.expression);
@@ -39329,7 +39355,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var name = isCore || dec.import === null ? dec.name : dec.import.name;
                 if (name === 'Inject') {
                     if (dec.args === null || dec.args.length !== 1) {
-                        throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, dec.node, "Unexpected number of arguments to @Inject().");
+                        throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(dec), "Unexpected number of arguments to @Inject().");
                     }
                     token = new WrappedNodeExpr(dec.args[0]);
                 }
@@ -39347,13 +39373,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
                 else if (name === 'Attribute') {
                     if (dec.args === null || dec.args.length !== 1) {
-                        throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, dec.node, "Unexpected number of arguments to @Attribute().");
+                        throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(dec), "Unexpected number of arguments to @Attribute().");
                     }
                     token = new WrappedNodeExpr(dec.args[0]);
                     resolved = R3ResolvedDependencyType.Attribute;
                 }
                 else {
-                    throw new FatalDiagnosticError(ErrorCode.DECORATOR_UNEXPECTED, dec.node, "Unexpected decorator " + name + " on parameter.");
+                    throw new FatalDiagnosticError(ErrorCode.DECORATOR_UNEXPECTED, Decorator.nodeForError(dec), "Unexpected decorator " + name + " on parameter.");
                 }
             });
             if (token instanceof ExternalExpr && token.value.name === 'ChangeDetectorRef' &&
@@ -39555,14 +39581,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return expr instanceof WrappedNodeExpr;
     }
     function readBaseClass(node, reflector, evaluator) {
-        if (!isNamedClassDeclaration(node)) {
-            // If the node isn't a ts.ClassDeclaration, consider any base class to be dynamic for now.
-            return reflector.hasBaseClass(node) ? 'dynamic' : null;
-        }
         var baseExpression = reflector.getBaseClassExpression(node);
         if (baseExpression !== null) {
             var baseClass = evaluator.evaluate(baseExpression);
-            if (baseClass instanceof Reference$1 && isNamedClassDeclaration(baseClass.node)) {
+            if (baseClass instanceof Reference$1 && reflector.isClass(baseClass.node)) {
                 return baseClass;
             }
             else {
@@ -39667,6 +39689,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Convert a reflected decorator to metadata.
      */
     function decoratorToMetadata(decorator) {
+        if (decorator.identifier === null) {
+            throw new Error('Illegal state: synthesized decorator cannot be emitted in class metadata.');
+        }
         // Decorators have a type.
         var properties = [
             ts.createPropertyAssignment('type', ts.getMutableClone(decorator.identifier)),
@@ -39719,8 +39744,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return undefined;
             }
         };
-        DirectiveDecoratorHandler.prototype.analyze = function (node, decorator) {
-            var directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore);
+        DirectiveDecoratorHandler.prototype.analyze = function (node, decorator, flags) {
+            if (flags === void 0) { flags = HandlerFlags.NONE; }
+            var directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags);
             var analysis = directiveResult && directiveResult.metadata;
             if (analysis === undefined) {
                 return {};
@@ -39760,14 +39786,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * appear in the declarations of an `NgModule` and additional verification is done when processing
      * the module.
      */
-    function extractDirectiveMetadata(clazz, decorator, reflector, evaluator, defaultImportRecorder, isCore, defaultSelector) {
+    function extractDirectiveMetadata(clazz, decorator, reflector, evaluator, defaultImportRecorder, isCore, flags, defaultSelector) {
         if (defaultSelector === void 0) { defaultSelector = null; }
         var directive;
         if (decorator.args === null || decorator.args.length === 0) {
             directive = new Map();
         }
         else if (decorator.args.length !== 1) {
-            throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, decorator.node, "Incorrect number of arguments to @" + decorator.name + " decorator");
+            throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), "Incorrect number of arguments to @" + decorator.name + " decorator");
         }
         else {
             var meta = unwrapExpression(decorator.args[0]);
@@ -39845,6 +39871,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             },
             inputs: __assign(__assign({}, inputsFromMeta), inputsFromFields),
             outputs: __assign(__assign({}, outputsFromMeta), outputsFromFields), queries: queries, viewQueries: viewQueries, selector: selector,
+            fullInheritance: !!(flags & HandlerFlags.FULL_INHERITANCE),
             type: new WrappedNodeExpr(clazz.name),
             typeArgumentCount: reflector.getGenericArityOfClass(clazz) || 0,
             typeSourceSpan: EMPTY_SOURCE_SPAN, usesInheritance: usesInheritance, exportAs: exportAs, providers: providers
@@ -40018,7 +40045,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return fields.map(function (_a) {
             var member = _a.member, decorators = _a.decorators;
             var decorator = decorators[0];
-            var node = member.node || decorator.node;
+            var node = member.node || Decorator.nodeForError(decorator);
             // Throw in case of `@Input() @ContentChild('foo') foo: any`, which is not supported in Ivy
             if (member.decorators.some(function (v) { return v.name === 'Input'; })) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_COLLISION, node, 'Cannot combine @Input decorators with query decorators');
@@ -40029,7 +40056,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             else if (!isPropertyTypeMember(member)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_UNEXPECTED, node, 'Query decorator must go on a property-type member');
             }
-            return extractQueryMetadata(decorator.node, decorator.name, decorator.args || [], member.name, reflector, evaluator);
+            return extractQueryMetadata(node, decorator.name, decorator.args || [], member.name, reflector, evaluator);
         });
     }
     function isPropertyTypeMember(member) {
@@ -40729,13 +40756,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     .then(function () { return undefined; });
             }
         };
-        ComponentDecoratorHandler.prototype.analyze = function (node, decorator) {
+        ComponentDecoratorHandler.prototype.analyze = function (node, decorator, flags) {
             var e_1, _a;
+            if (flags === void 0) { flags = HandlerFlags.NONE; }
             var containingFile = node.getSourceFile().fileName;
             this.literalCache.delete(decorator);
             // @Component inherits @Directive, so begin by extracting the @Directive metadata and building
             // on it.
-            var directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, this.elementSchemaRegistry.getDefaultComponentElementName());
+            var directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags, this.elementSchemaRegistry.getDefaultComponentElementName());
             if (directiveResult === undefined) {
                 // `extractDirectiveMetadata` returns undefined when the @Directive has `jit: true`. In this
                 // case, compilation of the decorator is skipped. Returning an empty object signifies
@@ -41123,7 +41151,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return this.literalCache.get(decorator);
             }
             if (decorator.args === null || decorator.args.length !== 1) {
-                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, decorator.node, "Incorrect number of arguments to @Component decorator");
+                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), "Incorrect number of arguments to @Component decorator");
             }
             var meta = unwrapExpression(decorator.args[0]);
             if (!ts.isObjectLiteralExpression(meta)) {
@@ -41209,7 +41237,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         ComponentDecoratorHandler.prototype._extractInlineTemplate = function (node, decorator, component, containingFile) {
             var _this = this;
             if (!component.has('template')) {
-                throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, decorator.node, 'component is missing a template');
+                throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, Decorator.nodeForError(decorator), 'component is missing a template');
             }
             var templateExpr = component.get('template');
             var templateStr;
@@ -41403,7 +41431,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var type = new WrappedNodeExpr(clazz.name);
         var typeArgumentCount = reflector.getGenericArityOfClass(clazz) || 0;
         if (decorator.args === null) {
-            throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, decorator.node, '@Injectable must be called');
+            throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, Decorator.nodeForError(decorator), '@Injectable must be called');
         }
         if (decorator.args.length === 0) {
             return {
@@ -41484,7 +41512,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function extractInjectableCtorDeps(clazz, meta, decorator, reflector, defaultImportRecorder, isCore, strictCtorDeps) {
         if (decorator.args === null) {
-            throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, decorator.node, '@Injectable must be called');
+            throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, Decorator.nodeForError(decorator), '@Injectable must be called');
         }
         var ctorDeps = null;
         if (decorator.args.length === 0) {
@@ -41629,7 +41657,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var _this = this;
             var name = node.name.text;
             if (decorator.args === null || decorator.args.length > 1) {
-                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, decorator.node, "Incorrect number of arguments to @NgModule decorator");
+                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), "Incorrect number of arguments to @NgModule decorator");
             }
             // @NgModule can be invoked without arguments. In case it is, pretend as if a blank object
             // literal was specified. This simplifies the code below.
@@ -42085,10 +42113,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var name = clazz.name.text;
             var type = new WrappedNodeExpr(clazz.name);
             if (decorator.args === null) {
-                throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, decorator.node, "@Pipe must be called");
+                throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, Decorator.nodeForError(decorator), "@Pipe must be called");
             }
             if (decorator.args.length !== 1) {
-                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, decorator.node, '@Pipe must have exactly one argument');
+                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), '@Pipe must have exactly one argument');
             }
             var meta = unwrapExpression(decorator.args[0]);
             if (!ts.isObjectLiteralExpression(meta)) {
@@ -70262,6 +70290,105 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Fields which exist on either directive or component definitions, and need to be copied from
+     * parent to child classes by the `ɵɵCopyDefinitionFeature`.
+     */
+    var COPY_DIRECTIVE_FIELDS = [
+        // The child class should use the providers of its parent.
+        'providersResolver',
+    ];
+    /**
+     * Fields which exist only on component definitions, and need to be copied from parent to child
+     * classes by the `ɵɵCopyDefinitionFeature`.
+     *
+     * The type here allows any field of `ComponentDef` which is not also a property of `DirectiveDef`,
+     * since those should go in `COPY_DIRECTIVE_FIELDS` above.
+     */
+    var COPY_COMPONENT_FIELDS = [
+        // The child class should use the template function of its parent, including all template
+        // semantics.
+        'template',
+        'decls',
+        'consts',
+        'vars',
+        'onPush',
+        'ngContentSelectors',
+        // The child class should use the CSS styles of its parent, including all styling semantics.
+        'styles',
+        'encapsulation',
+        // The child class should be checked by the runtime in the same way as its parent.
+        'schemas',
+    ];
+    /**
+     * Copies the fields not handled by the `ɵɵInheritDefinitionFeature` from the supertype of a
+     * definition.
+     *
+     * This exists primarily to support ngcc migration of an existing View Engine pattern, where an
+     * entire decorator is inherited from a parent to a child class. When ngcc detects this case, it
+     * generates a skeleton definition on the child class, and applies this feature.
+     *
+     * The `ɵɵCopyDefinitionFeature` then copies any needed fields from the parent class' definition,
+     * including things like the component template function.
+     *
+     * @param definition The definition of a child class which inherits from a parent class with its
+     * own definition.
+     *
+     * @codeGenApi
+     */
+    function ɵɵCopyDefinitionFeature(definition) {
+        var e_1, _a, e_2, _b;
+        var superType = getSuperType(definition.type);
+        var superDef = undefined;
+        if (isComponentDef(definition)) {
+            // Don't use getComponentDef/getDirectiveDef. This logic relies on inheritance.
+            superDef = superType.ɵcmp;
+        }
+        else {
+            // Don't use getComponentDef/getDirectiveDef. This logic relies on inheritance.
+            superDef = superType.ɵdir;
+        }
+        // Needed because `definition` fields are readonly.
+        var defAny = definition;
+        try {
+            // Copy over any fields that apply to either directives or components.
+            for (var COPY_DIRECTIVE_FIELDS_1 = __values(COPY_DIRECTIVE_FIELDS), COPY_DIRECTIVE_FIELDS_1_1 = COPY_DIRECTIVE_FIELDS_1.next(); !COPY_DIRECTIVE_FIELDS_1_1.done; COPY_DIRECTIVE_FIELDS_1_1 = COPY_DIRECTIVE_FIELDS_1.next()) {
+                var field = COPY_DIRECTIVE_FIELDS_1_1.value;
+                defAny[field] = superDef[field];
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (COPY_DIRECTIVE_FIELDS_1_1 && !COPY_DIRECTIVE_FIELDS_1_1.done && (_a = COPY_DIRECTIVE_FIELDS_1.return)) _a.call(COPY_DIRECTIVE_FIELDS_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        if (isComponentDef(superDef)) {
+            try {
+                // Copy over any component-specific fields.
+                for (var COPY_COMPONENT_FIELDS_1 = __values(COPY_COMPONENT_FIELDS), COPY_COMPONENT_FIELDS_1_1 = COPY_COMPONENT_FIELDS_1.next(); !COPY_COMPONENT_FIELDS_1_1.done; COPY_COMPONENT_FIELDS_1_1 = COPY_COMPONENT_FIELDS_1.next()) {
+                    var field = COPY_COMPONENT_FIELDS_1_1.value;
+                    defAny[field] = superDef[field];
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (COPY_COMPONENT_FIELDS_1_1 && !COPY_COMPONENT_FIELDS_1_1.done && (_b = COPY_COMPONENT_FIELDS_1.return)) _b.call(COPY_COMPONENT_FIELDS_1);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Resolves the providers which are defined in the DirectiveDef.
      *
      * When inserting the tokens and the factories in their respective arrays, we can assume that
@@ -70753,7 +70880,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+43.sha-6323a35.with-local-changes');
 
     /**
      * @license
@@ -77891,6 +78018,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵtemplateRefExtractor': ɵɵtemplateRefExtractor,
         'ɵɵNgOnChangesFeature': ɵɵNgOnChangesFeature,
         'ɵɵProvidersFeature': ɵɵProvidersFeature,
+        'ɵɵCopyDefinitionFeature': ɵɵCopyDefinitionFeature,
         'ɵɵInheritDefinitionFeature': ɵɵInheritDefinitionFeature,
         'ɵɵcontainer': ɵɵcontainer,
         'ɵɵnextContext': ɵɵnextContext,
@@ -84305,7 +84433,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+43.sha-6323a35.with-local-changes');
 
     /**
      * @license
