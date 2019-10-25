@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+34.sha-ee4fc12.with-local-changes
+ * @license Angular v9.0.0-next.13+35.sha-dcdb433.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -14887,7 +14887,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         StylingBuilder.prototype._buildMapBasedInstruction = function (valueConverter, isClassBased, stylingInput) {
             // each styling binding value is stored in the LView
-            var totalBindingSlotsRequired = 1;
+            // map-based bindings allocate two slots: one for the
+            // previous binding value and another for the previous
+            // className or style attribute value.
+            var totalBindingSlotsRequired = 2;
             // these values must be outside of the update block so that they can
             // be evaluated (the AST visit call) during creation time so that any
             // pipes can be picked up in time before the template is built
@@ -19040,7 +19043,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
@@ -34482,7 +34485,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
@@ -55077,6 +55080,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return Array.isArray(value) && value.length >= 3 /* ValuesStartPosition */ &&
             typeof value[1] !== 'string';
     }
+    function isStylingMapArray(value) {
+        // the StylingMapArray is in the format of [initial, prop, string, prop, string]
+        // and this is the defining value to distinguish between arrays
+        return Array.isArray(value) &&
+            (typeof value[1 /* ValuesStartPosition */] === 'string');
+    }
     function getInitialStylingValue(context) {
         var map = getStylingMapArray(context);
         return map && map[0 /* RawValuePosition */] || '';
@@ -55106,13 +55115,17 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return classes || '';
     }
-    function forceStylesAsString(styles) {
+    function forceStylesAsString(styles, hyphenateProps) {
         var str = '';
         if (styles) {
             var props = Object.keys(styles);
             for (var i = 0; i < props.length; i++) {
                 var prop = props[i];
-                str = concatString(str, prop + ":" + styles[prop], ';');
+                var propLabel = hyphenateProps ? hyphenate$1(prop) : prop;
+                var value = styles[prop];
+                if (value !== null) {
+                    str = concatString(str, propLabel + ":" + value, ';');
+                }
             }
         }
         return str;
@@ -58036,6 +58049,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     * Use of this source code is governed by an MIT-style license that can be
     * found in the LICENSE file at https://angular.io/license
     */
+    var VALUE_IS_EXTERNALLY_MODIFIED = {};
     /**
      * --------
      *
@@ -58582,34 +58596,87 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @returns whether or not the styling map was applied to the element.
      */
-    function applyStylingMapDirectly(renderer, context, element, data, bindingIndex, map, isClassBased, applyFn, sanitizer, forceUpdate) {
-        if (forceUpdate || hasValueChanged(data[bindingIndex], map)) {
-            setValue(data, bindingIndex, map);
-            var initialStyles = hasConfig(context, 16 /* HasInitialStyling */) ? getStylingMapArray(context) : null;
-            for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
-                var prop = getMapProp(map, i);
-                var value = getMapValue(map, i);
-                // case 1: apply the map value (if it exists)
-                var applied = applyStylingValue(renderer, element, prop, value, applyFn, bindingIndex, sanitizer);
-                // case 2: apply the initial value (if it exists)
-                if (!applied && initialStyles) {
-                    applied = findAndApplyMapValue(renderer, element, applyFn, initialStyles, prop, bindingIndex, sanitizer);
-                }
-                // default case: apply `null` to remove the value
-                if (!applied) {
-                    applyFn(renderer, element, prop, null, bindingIndex);
+    function applyStylingMapDirectly(renderer, context, element, data, bindingIndex, value, isClassBased, sanitizer, forceUpdate, bindingValueContainsInitial) {
+        var oldValue = getValue(data, bindingIndex);
+        if (forceUpdate || hasValueChanged(oldValue, value)) {
+            var config = getConfig(context);
+            var hasInitial = config & 16 /* HasInitialStyling */;
+            var initialValue = hasInitial && !bindingValueContainsInitial ? getInitialStylingValue(context) : null;
+            setValue(data, bindingIndex, value);
+            // the cached value is the last snapshot of the style or class
+            // attribute value and is used in the if statement below to
+            // keep track of internal/external changes.
+            var cachedValueIndex = bindingIndex + 1;
+            var cachedValue = getValue(data, cachedValueIndex);
+            if (cachedValue === NO_CHANGE) {
+                cachedValue = initialValue;
+            }
+            cachedValue = typeof cachedValue !== 'string' ? '' : cachedValue;
+            // If a class/style value was modified externally then the styling
+            // fast pass cannot guarantee that the external values are retained.
+            // When this happens, the algorithm will bail out and not write to
+            // the style or className attribute directly.
+            var writeToAttrDirectly = !(config & 2 /* HasPropBindings */);
+            if (writeToAttrDirectly &&
+                checkIfExternallyModified(element, cachedValue, isClassBased)) {
+                writeToAttrDirectly = false;
+                if (oldValue !== VALUE_IS_EXTERNALLY_MODIFIED) {
+                    // direct styling will reset the attribute entirely each time,
+                    // and, for this reason, if the algorithm decides it cannot
+                    // write to the class/style attributes directly then it must
+                    // reset all the previous style/class values before it starts
+                    // to apply values in the non-direct way.
+                    removeStylingValues(renderer, element, oldValue, isClassBased);
+                    // this will instruct the algorithm not to apply class or style
+                    // values directly anymore.
+                    setValue(data, cachedValueIndex, VALUE_IS_EXTERNALLY_MODIFIED);
                 }
             }
-            var state = getStylingState(element, TEMPLATE_DIRECTIVE_INDEX);
-            if (isClassBased) {
-                state.lastDirectClassMap = map;
+            if (writeToAttrDirectly) {
+                var valueToApply = void 0;
+                if (isClassBased) {
+                    valueToApply = typeof value === 'string' ? value : objectToClassName(value);
+                    if (initialValue !== null) {
+                        valueToApply = concatString(initialValue, valueToApply, ' ');
+                    }
+                    setClassName(renderer, element, valueToApply);
+                }
+                else {
+                    valueToApply = forceStylesAsString(value, true);
+                    if (initialValue !== null) {
+                        valueToApply = initialValue + ';' + valueToApply;
+                    }
+                    setStyleAttr(renderer, element, valueToApply);
+                }
+                setValue(data, cachedValueIndex, valueToApply || null);
             }
             else {
-                state.lastDirectStyleMap = map;
+                var applyFn = isClassBased ? setClass : setStyle;
+                var map = normalizeIntoStylingMap(oldValue, value, !isClassBased);
+                var initialStyles = hasInitial ? getStylingMapArray(context) : null;
+                for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
+                    var prop = getMapProp(map, i);
+                    var value_1 = getMapValue(map, i);
+                    // case 1: apply the map value (if it exists)
+                    var applied = applyStylingValue(renderer, element, prop, value_1, applyFn, bindingIndex, sanitizer);
+                    // case 2: apply the initial value (if it exists)
+                    if (!applied && initialStyles) {
+                        applied = findAndApplyMapValue(renderer, element, applyFn, initialStyles, prop, bindingIndex, sanitizer);
+                    }
+                    // default case: apply `null` to remove the value
+                    if (!applied) {
+                        applyFn(renderer, element, prop, null, bindingIndex);
+                    }
+                }
+                var state = getStylingState(element, TEMPLATE_DIRECTIVE_INDEX);
+                if (isClassBased) {
+                    state.lastDirectClassMap = map;
+                }
+                else {
+                    state.lastDirectStyleMap = map;
+                }
             }
-            return true;
         }
-        return false;
     }
     /**
      * Applies the provided styling prop/value to the element directly (without context resolution).
@@ -58641,10 +58708,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @returns whether or not the prop/value styling was applied to the element.
      */
-    function applyStylingValueDirectly(renderer, context, element, data, bindingIndex, prop, value, isClassBased, applyFn, sanitizer) {
+    function applyStylingValueDirectly(renderer, context, element, data, bindingIndex, prop, value, isClassBased, sanitizer) {
         var applied = false;
         if (hasValueChanged(data[bindingIndex], value)) {
             setValue(data, bindingIndex, value);
+            var applyFn = isClassBased ? setClass : setStyle;
             // case 1: apply the provided value (if it exists)
             applied = applyStylingValue(renderer, element, prop, value, applyFn, bindingIndex, sanitizer);
             // case 2: find the matching property in a styling map and apply the detected value
@@ -58787,6 +58855,26 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
     };
+    var setClassName = function (renderer, native, className) {
+        if (renderer !== null) {
+            if (isProceduralRenderer(renderer)) {
+                renderer.setAttribute(native, 'class', className);
+            }
+            else {
+                native.className = className;
+            }
+        }
+    };
+    var setStyleAttr = function (renderer, native, value) {
+        if (renderer !== null) {
+            if (isProceduralRenderer(renderer)) {
+                renderer.setAttribute(native, 'style', value);
+            }
+            else {
+                native.setAttribute('style', value);
+            }
+        }
+    };
     /**
      * Iterates over all provided styling entries and renders them on the element.
      *
@@ -58808,6 +58896,59 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 else {
                     setStyle(renderer, element, prop, value, null);
                 }
+            }
+        }
+    }
+    function objectToClassName(obj) {
+        var str = '';
+        if (obj) {
+            for (var key in obj) {
+                var value = obj[key];
+                if (value) {
+                    str += (str.length ? ' ' : '') + key;
+                }
+            }
+        }
+        return str;
+    }
+    /**
+     * Determines whether or not an element style/className value has changed since the last update.
+     *
+     * This function helps Angular determine if a style or class attribute value was
+     * modified by an external plugin or API outside of the style binding code. This
+     * means any JS code that adds/removes class/style values on an element outside
+     * of Angular's styling binding algorithm.
+     *
+     * @returns true when the value was modified externally.
+     */
+    function checkIfExternallyModified(element, cachedValue, isClassBased) {
+        // this means it was checked before and there is no reason
+        // to compare the style/class values again. Either that or
+        // web workers are being used.
+        if (_global$1.Node === 'undefined' || cachedValue === VALUE_IS_EXTERNALLY_MODIFIED)
+            return true;
+        // comparing the DOM value against the cached value is the best way to
+        // see if something has changed.
+        var currentValue = (isClassBased ? element.className : (element.style && element.style.cssText)) || '';
+        return currentValue !== (cachedValue || '');
+    }
+    /**
+     * Removes provided styling values from the element
+     */
+    function removeStylingValues(renderer, element, values, isClassBased) {
+        var arr;
+        if (isStylingMapArray(values)) {
+            arr = values;
+        }
+        else {
+            arr = normalizeIntoStylingMap(null, values, !isClassBased);
+        }
+        var applyFn = isClassBased ? setClass : setStyle;
+        for (var i = 1 /* ValuesStartPosition */; i < arr.length; i += 2 /* TupleSize */) {
+            var value = getMapValue(arr, i);
+            if (value) {
+                var prop = getMapProp(arr, i);
+                applyFn(renderer, element, prop, false);
             }
         }
     }
@@ -58907,6 +59048,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var COMMENT_MARKER = {
         marker: 'comment'
     };
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
+     * provided handler.
+     *
+     * The reason why this function exists is because IE doesn't support
+     * the `Proxy` class. For this reason an error must be thrown.
+     */
+    function createProxy(handler) {
+        var g = _global$1;
+        if (!g.Proxy) {
+            throw new Error('Proxy is not supported in this browser');
+        }
+        return new g.Proxy({}, handler);
+    }
 
     /**
      * @license
@@ -59227,6 +59390,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
      * Instantiates and attaches an instance of `TStylingContextDebug` to the provided context
      */
     function attachStylingDebugObject(context, isClassBased) {
@@ -59435,10 +59605,50 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             get: function () {
                 var entries = {};
-                this._mapValues(function (prop, value, bindingIndex) {
+                var config = this.config;
+                var isClassBased = this._isClassBased;
+                var data = this._data;
+                // the direct pass code doesn't convert [style] or [class] values
+                // into StylingMapArray instances. For this reason, the values
+                // need to be converted ahead of time since the styling debug
+                // relies on context resolution to figure out what styling
+                // values have been added/removed on the element.
+                if (config.allowDirectStyling && config.hasMapBindings) {
+                    data = data.concat([]); // make a copy
+                    this._convertMapBindingsToStylingMapArrays(data);
+                }
+                this._mapValues(data, function (prop, value, bindingIndex) {
                     entries[prop] = { prop: prop, value: value, bindingIndex: bindingIndex };
                 });
-                return entries;
+                // because the styling algorithm runs into two different
+                // modes: direct and context-resolution, the output of the entries
+                // object is different because the removed values are not
+                // saved between updates. For this reason a proxy is created
+                // so that the behavior is the same when examining values
+                // that are no longer active on the element.
+                return createProxy({
+                    get: function (target, prop) {
+                        var value = entries[prop];
+                        if (!value) {
+                            value = {
+                                prop: prop,
+                                value: isClassBased ? false : null,
+                                bindingIndex: null,
+                            };
+                        }
+                        return value;
+                    },
+                    set: function (target, prop, value) { return false; },
+                    ownKeys: function () { return Object.keys(entries); },
+                    getOwnPropertyDescriptor: function (k) {
+                        // we use a special property descriptor here so that enumeration operations
+                        // such as `Object.keys` will work on this proxy.
+                        return {
+                            enumerable: true,
+                            configurable: true,
+                        };
+                    },
+                });
             },
             enumerable: true,
             configurable: true
@@ -59454,13 +59664,36 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             get: function () {
                 var entries = {};
-                this._mapValues(function (prop, value) { entries[prop] = value; });
+                var config = this.config;
+                var data = this._data;
+                // the direct pass code doesn't convert [style] or [class] values
+                // into StylingMapArray instances. For this reason, the values
+                // need to be converted ahead of time since the styling debug
+                // relies on context resolution to figure out what styling
+                // values have been added/removed on the element.
+                if (config.allowDirectStyling && config.hasMapBindings) {
+                    data = data.concat([]); // make a copy
+                    this._convertMapBindingsToStylingMapArrays(data);
+                }
+                this._mapValues(data, function (prop, value) { entries[prop] = value; });
                 return entries;
             },
             enumerable: true,
             configurable: true
         });
-        NodeStylingDebug.prototype._mapValues = function (fn) {
+        NodeStylingDebug.prototype._convertMapBindingsToStylingMapArrays = function (data) {
+            var context = this.context.context;
+            var limit = getPropValuesStartPosition(context);
+            for (var i = 3 /* ValuesStartPosition */ + 4 /* BindingsStartOffset */; i < limit; i++) {
+                var bindingIndex = context[i];
+                var bindingValue = bindingIndex !== 0 ? getValue(data, bindingIndex) : null;
+                if (bindingValue && !Array.isArray(bindingValue)) {
+                    var stylingMapArray = normalizeIntoStylingMap(null, bindingValue, !this._isClassBased);
+                    setValue(data, bindingIndex, stylingMapArray);
+                }
+            }
+        };
+        NodeStylingDebug.prototype._mapValues = function (data, fn) {
             // there is no need to store/track an element instance. The
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
@@ -59472,9 +59705,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
             // run the template bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
+            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, false);
             // and also the host bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
+            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, true);
         };
         return NodeStylingDebug;
     }());
@@ -66484,7 +66717,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // in this case we do not need to do anything, but the binding index
         // still needs to be incremented because all styling binding values
         // are stored inside of the lView.
-        var bindingIndex = lView[BINDING_INDEX]++;
+        var bindingIndex = getAndIncrementBindingIndex(lView, false);
         var updated = stylingProp(elementIndex, bindingIndex, prop, resolveStylePropValue(value, suffix), false);
         if (ngDevMode) {
             ngDevMode.styleProp++;
@@ -66514,7 +66747,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // in this case we do not need to do anything, but the binding index
         // still needs to be incremented because all styling binding values
         // are stored inside of the lView.
-        var bindingIndex = lView[BINDING_INDEX]++;
+        var bindingIndex = getAndIncrementBindingIndex(lView, false);
         var updated = stylingProp(getSelectedIndex(), bindingIndex, className, value, true);
         if (ngDevMode) {
             ngDevMode.classProp++;
@@ -66562,7 +66795,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (allowDirectStyling(context, hostBindingsMode)) {
             var sanitizerToUse = isClassBased ? null : sanitizer;
             var renderer = getRenderer(tNode, lView);
-            updated = applyStylingValueDirectly(renderer, context, native, lView, bindingIndex, prop, value, isClassBased, isClassBased ? setClass : setStyle, sanitizerToUse);
+            updated = applyStylingValueDirectly(renderer, context, native, lView, bindingIndex, prop, value, isClassBased, sanitizerToUse);
             if (sanitizerToUse) {
                 // it's important we remove the current style sanitizer once the
                 // element exits, otherwise it will be used by the next styling
@@ -66609,25 +66842,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var lView = getLView();
         var tNode = getTNode(index, lView);
         var context = getStylesContext(tNode);
+        var hasDirectiveInput = hasStyleInput(tNode);
         // if a value is interpolated then it may render a `NO_CHANGE` value.
         // in this case we do not need to do anything, but the binding index
         // still needs to be incremented because all styling binding values
         // are stored inside of the lView.
-        var bindingIndex = lView[BINDING_INDEX]++;
+        var bindingIndex = getAndIncrementBindingIndex(lView, true);
         // inputs are only evaluated from a template binding into a directive, therefore,
         // there should not be a situation where a directive host bindings function
         // evaluates the inputs (this should only happen in the template function)
-        if (!isHostStyling() && hasStyleInput(tNode) && styles !== NO_CHANGE) {
+        if (!isHostStyling() && hasDirectiveInput && styles !== NO_CHANGE) {
             updateDirectiveInputValue(context, lView, tNode, bindingIndex, styles, false);
             styles = NO_CHANGE;
         }
-        var updated = stylingMap(index, context, bindingIndex, styles, false);
-        if (ngDevMode) {
-            ngDevMode.styleMap++;
-            if (updated) {
-                ngDevMode.styleMapCacheMiss++;
-            }
-        }
+        stylingMap(context, tNode, lView, bindingIndex, styles, false, hasDirectiveInput);
     }
     /**
      * Update class bindings using an object literal or class-string on an element.
@@ -66660,25 +66888,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var lView = getLView();
         var tNode = getTNode(elementIndex, lView);
         var context = getClassesContext(tNode);
+        var hasDirectiveInput = hasClassInput(tNode);
         // if a value is interpolated then it may render a `NO_CHANGE` value.
         // in this case we do not need to do anything, but the binding index
         // still needs to be incremented because all styling binding values
         // are stored inside of the lView.
-        var bindingIndex = lView[BINDING_INDEX]++;
+        var bindingIndex = getAndIncrementBindingIndex(lView, true);
         // inputs are only evaluated from a template binding into a directive, therefore,
         // there should not be a situation where a directive host bindings function
         // evaluates the inputs (this should only happen in the template function)
-        if (!isHostStyling() && hasClassInput(tNode) && classes !== NO_CHANGE) {
+        if (!isHostStyling() && hasDirectiveInput && classes !== NO_CHANGE) {
             updateDirectiveInputValue(context, lView, tNode, bindingIndex, classes, true);
             classes = NO_CHANGE;
         }
-        var updated = stylingMap(elementIndex, context, bindingIndex, classes, true);
-        if (ngDevMode) {
-            ngDevMode.classMap++;
-            if (updated) {
-                ngDevMode.classMapCacheMiss++;
-            }
-        }
+        stylingMap(context, tNode, lView, bindingIndex, classes, true, hasDirectiveInput);
     }
     /**
      * Shared function used to update a map-based styling binding for an element.
@@ -66686,11 +66909,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * When this function is called it will activate support for `[style]` and
      * `[class]` bindings in Angular.
      */
-    function stylingMap(elementIndex, context, bindingIndex, value, isClassBased) {
-        var updated = false;
-        var lView = getLView();
+    function stylingMap(context, tNode, lView, bindingIndex, value, isClassBased, hasDirectiveInput) {
         var directiveIndex = getActiveDirectiveId();
-        var tNode = getTNode(elementIndex, lView);
         var native = getNativeByTNode(tNode, lView);
         var oldValue = getValue(lView, bindingIndex);
         var hostBindingsMode = isHostStyling();
@@ -66709,13 +66929,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (!isContextLocked(context, hostBindingsMode)) {
             patchConfig(context, 4 /* HasMapBindings */);
         }
-        var stylingMapArr = value === NO_CHANGE ? NO_CHANGE : normalizeIntoStylingMap(oldValue, value, !isClassBased);
         // Direct Apply Case: bypass context resolution and apply the
         // style/class map values directly to the element
         if (allowDirectStyling(context, hostBindingsMode)) {
             var sanitizerToUse = isClassBased ? null : sanitizer;
             var renderer = getRenderer(tNode, lView);
-            updated = applyStylingMapDirectly(renderer, context, native, lView, bindingIndex, stylingMapArr, isClassBased, isClassBased ? setClass : setStyle, sanitizerToUse, valueHasChanged);
+            applyStylingMapDirectly(renderer, context, native, lView, bindingIndex, value, isClassBased, sanitizerToUse, valueHasChanged, hasDirectiveInput);
             if (sanitizerToUse) {
                 // it's important we remove the current style sanitizer once the
                 // element exits, otherwise it will be used by the next styling
@@ -66724,7 +66943,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         else {
-            updated = valueHasChanged;
+            var stylingMapArr = value === NO_CHANGE ? NO_CHANGE : normalizeIntoStylingMap(oldValue, value, !isClassBased);
             activateStylingMapFeature();
             // Context Resolution (or first update) Case: save the map value
             // and defer to the context to flush and apply the style/class binding
@@ -66737,7 +66956,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             setElementExitFn(stylingApply);
         }
-        return updated;
+        if (ngDevMode) {
+            isClassBased ? ngDevMode.classMap : ngDevMode.styleMap++;
+            if (valueHasChanged) {
+                isClassBased ? ngDevMode.classMapCacheMiss : ngDevMode.styleMapCacheMiss++;
+            }
+        }
     }
     /**
      * Writes a value to a directive's `style` or `class` input binding (if it has changed).
@@ -66786,7 +67010,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 value = concatString(initialValue, forceClassesAsString(bindingValue));
             }
             else {
-                value = concatString(initialValue, forceStylesAsString(bindingValue), ';');
+                value = concatString(initialValue, forceStylesAsString(bindingValue, true), ';');
             }
         }
         return value;
@@ -66913,6 +67137,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function isHostStyling() {
         return isHostStylingActive(getActiveDirectiveId());
+    }
+    function getAndIncrementBindingIndex(lView, isMapBased) {
+        // map-based bindings use two slots because the previously constructed
+        // className / style value must be compared against.
+        var index = lView[BINDING_INDEX];
+        lView[BINDING_INDEX] += isMapBased ? 2 : 1;
+        return index;
     }
 
     /**
@@ -70522,7 +70753,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
@@ -80494,28 +80725,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
-     * provided handler.
-     *
-     * The reason why this function exists is because IE doesn't support
-     * the `Proxy` class. For this reason an error must be thrown.
-     */
-    function createProxy(handler) {
-        var g = _global$1;
-        if (!g.Proxy) {
-            throw new Error('Proxy is not supported in this browser');
-        }
-        return new g.Proxy({}, handler);
-    }
-
-    /**
      * @publicApi
      */
     var DebugEventListener = /** @class */ (function () {
@@ -84096,7 +84305,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
