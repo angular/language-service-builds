@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+51.sha-e4e8dbd.with-local-changes
+ * @license Angular v9.0.0-next.13+52.sha-8d15bfa.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3602,6 +3602,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Identifiers.injectAttribute = { name: 'ɵɵinjectAttribute', moduleName: CORE$1 };
         Identifiers.injectPipeChangeDetectorRef = { name: 'ɵɵinjectPipeChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE$1 };
+        Identifiers.invalidFactory = { name: 'ɵɵinvalidFactory', moduleName: CORE$1 };
         Identifiers.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
         Identifiers.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
@@ -5327,6 +5328,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         R3FactoryDelegateType[R3FactoryDelegateType["Function"] = 1] = "Function";
         R3FactoryDelegateType[R3FactoryDelegateType["Factory"] = 2] = "Factory";
     })(R3FactoryDelegateType || (R3FactoryDelegateType = {}));
+    var R3FactoryTarget;
+    (function (R3FactoryTarget) {
+        R3FactoryTarget[R3FactoryTarget["Directive"] = 0] = "Directive";
+        R3FactoryTarget[R3FactoryTarget["Component"] = 1] = "Component";
+        R3FactoryTarget[R3FactoryTarget["Injectable"] = 2] = "Injectable";
+        R3FactoryTarget[R3FactoryTarget["Pipe"] = 3] = "Pipe";
+        R3FactoryTarget[R3FactoryTarget["NgModule"] = 4] = "NgModule";
+    })(R3FactoryTarget || (R3FactoryTarget = {}));
     /**
      * Resolved type of a dependency.
      *
@@ -5355,8 +5364,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Construct a factory function expression for the given `R3FactoryMetadata`.
      */
-    function compileFactoryFunction(meta, isPipe) {
-        if (isPipe === void 0) { isPipe = false; }
+    function compileFactoryFunction(meta) {
         var t = variable('t');
         var statements = [];
         // The type to instantiate via constructor invocation. If there is no delegated factory, meaning
@@ -5369,8 +5377,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (meta.deps !== null) {
             // There is a constructor (either explicitly or implicitly defined).
             if (meta.deps !== 'invalid') {
-                ctorExpr =
-                    new InstantiateExpr(typeForCtor, injectDependencies(meta.deps, meta.injectFn, isPipe));
+                ctorExpr = new InstantiateExpr(typeForCtor, injectDependencies(meta.deps, meta.injectFn, meta.target === R3FactoryTarget.Pipe));
             }
         }
         else {
@@ -5394,7 +5401,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 ctorStmt = r.set(ctorExprFinal).toStmt();
             }
             else {
-                ctorStmt = makeErrorStmt(meta.name);
+                ctorStmt = importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt();
             }
             body.push(ifStmt(t, [ctorStmt], [r.set(nonCtorExpr).toStmt()]));
             return r;
@@ -5414,8 +5421,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else if (isDelegatedMetadata(meta)) {
             // This type is created with a delegated factory. If a type parameter is not specified, call
             // the factory instead.
-            var delegateArgs = injectDependencies(meta.delegateDeps, meta.injectFn, isPipe);
-            // Either call `new delegate(...)` or `delegate(...)` depending on meta.useNewForDelegate.
+            var delegateArgs = injectDependencies(meta.delegateDeps, meta.injectFn, meta.target === R3FactoryTarget.Pipe);
+            // Either call `new delegate(...)` or `delegate(...)` depending on meta.delegateType.
             var factoryExpr = new (meta.delegateType === R3FactoryDelegateType.Class ?
                 InstantiateExpr :
                 InvokeFunctionExpr)(meta.delegate, delegateArgs);
@@ -5432,25 +5439,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             body.push(new ReturnStatement(retExpr));
         }
         else {
-            body.push(makeErrorStmt(meta.name));
+            body.push(importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt());
         }
         return {
             factory: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, meta.name + "_Factory"),
             statements: statements,
             type: expressionType(importExpr(Identifiers$1.FactoryDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]))
         };
-    }
-    /**
-     * Constructs the factory def (`ɵfac`) from directive/component/pipe metadata.
-     */
-    function compileFactoryFromMetadata(meta) {
-        return compileFactoryFunction({
-            name: meta.name,
-            type: meta.type,
-            deps: meta.deps,
-            typeArgumentCount: meta.typeArgumentCount,
-            injectFn: meta.injectFn,
-        }, meta.isPipe);
     }
     function injectDependencies(deps, injectFn, isPipe) {
         return deps.map(function (dep) { return compileInjectDependency(dep, injectFn, isPipe); });
@@ -5532,11 +5527,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return deps;
     }
-    function makeErrorStmt(name) {
-        return new ThrowStmt(new InstantiateExpr(new ReadVarExpr('Error'), [
-            literal(name + " has a constructor which is not compatible with Dependency Injection. It should probably not be @Injectable().")
-        ]));
-    }
     function isDelegatedMetadata(meta) {
         return meta.delegateType !== undefined;
     }
@@ -5559,6 +5549,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             typeArgumentCount: meta.typeArgumentCount,
             deps: [],
             injectFn: Identifiers.inject,
+            target: R3FactoryTarget.Injectable,
         };
         if (meta.useClass !== undefined) {
             // meta.useClass has two modes of operation. Either deps are specified, in which case `new` is
@@ -9544,6 +9535,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             typeArgumentCount: 0,
             deps: meta.deps,
             injectFn: Identifiers$1.inject,
+            target: R3FactoryTarget.NgModule,
         });
         var definitionMap = {
             factory: result.factory,
@@ -9629,7 +9621,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             pure: pipe.pure,
         };
         var res = compilePipeFromMetadata(metadata);
-        var factoryRes = compileFactoryFromMetadata(__assign(__assign({}, metadata), { injectFn: Identifiers$1.directiveInject, isPipe: true }));
+        var factoryRes = compileFactoryFunction(__assign(__assign({}, metadata), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Pipe }));
         var definitionField = outputCtx.constantPool.propertyNameOf(3 /* Pipe */);
         var ngFactoryDefStatement = new ClassStmt(
         /* name */ name, 
@@ -18272,7 +18264,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var definitionField = outputCtx.constantPool.propertyNameOf(1 /* Directive */);
         var meta = directiveMetadataFromGlobalMetadata(directive, outputCtx, reflector);
         var res = compileDirectiveFromMetadata(meta, outputCtx.constantPool, bindingParser);
-        var factoryRes = compileFactoryFromMetadata(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject }));
+        var factoryRes = compileFactoryFunction(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Directive }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var directiveDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
@@ -18293,7 +18285,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // Compute the R3ComponentMetadata from the CompileDirectiveMetadata
         var meta = __assign(__assign({}, directiveMetadataFromGlobalMetadata(component, outputCtx, reflector)), { selector: component.selector, template: { nodes: render3Ast.nodes }, directives: [], pipes: typeMapToExpressionMap(pipeTypeByName, outputCtx), viewQueries: queriesFromGlobalMetadata(component.viewQueries, outputCtx), wrapDirectivesAndPipesInClosure: false, styles: (summary.template && summary.template.styles) || EMPTY_ARRAY, encapsulation: (summary.template && summary.template.encapsulation) || ViewEncapsulation.Emulated, interpolation: DEFAULT_INTERPOLATION_CONFIG, animations: null, viewProviders: component.viewProviders.length > 0 ? new WrappedNodeExpr(component.viewProviders) : null, relativeContextFilePath: '', i18nUseExternalIds: true });
         var res = compileComponentFromMetadata(meta, outputCtx.constantPool, bindingParser);
-        var factoryRes = compileFactoryFromMetadata(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject }));
+        var factoryRes = compileFactoryFunction(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Directive }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var componentDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
@@ -18789,6 +18781,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (jitEvaluator === void 0) { jitEvaluator = new JitEvaluator(); }
             this.jitEvaluator = jitEvaluator;
             this.R3ResolvedDependencyType = R3ResolvedDependencyType;
+            this.R3FactoryTarget = R3FactoryTarget;
             this.ResourceLoader = ResourceLoader;
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
@@ -18872,14 +18865,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return this.jitExpression(res.expression, angularCoreEnv, jitExpressionSourceMap, constantPool.statements);
         };
         CompilerFacadeImpl.prototype.compileFactory = function (angularCoreEnv, sourceMapUrl, meta) {
-            var factoryRes = compileFactoryFromMetadata({
+            var factoryRes = compileFactoryFunction({
                 name: meta.name,
                 type: new WrappedNodeExpr(meta.type),
                 typeArgumentCount: meta.typeArgumentCount,
                 deps: convertR3DependencyMetadataArray(meta.deps),
                 injectFn: meta.injectFn === 'directiveInject' ? Identifiers.directiveInject :
                     Identifiers.inject,
-                isPipe: meta.isPipe
+                target: meta.target,
             });
             return this.jitExpression(factoryRes.factory, angularCoreEnv, sourceMapUrl, factoryRes.statements);
         };
@@ -19047,7 +19040,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+51.sha-e4e8dbd.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+52.sha-8d15bfa.with-local-changes');
 
     /**
      * @license
@@ -33655,7 +33648,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+51.sha-e4e8dbd.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+52.sha-8d15bfa.with-local-changes');
 
     /**
      * @license
@@ -38486,7 +38479,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     function compileNgFactoryDefField(metadata) {
-        var res = compileFactoryFromMetadata(metadata);
+        var res = compileFactoryFunction(metadata);
         return { name: 'ɵfac', initializer: res.factory, statements: res.statements, type: res.type };
     }
 
@@ -38585,9 +38578,35 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return new ExternalExpr(valueRef);
         }
     }
+    /**
+     * Convert `ConstructorDeps` into the `R3DependencyMetadata` array for those deps if they're valid,
+     * or into an `'invalid'` signal if they're not.
+     *
+     * This is a companion function to `validateConstructorDependencies` which accepts invalid deps.
+     */
+    function unwrapConstructorDependencies(deps) {
+        if (deps === null) {
+            return null;
+        }
+        else if (deps.deps !== null) {
+            // These constructor dependencies are valid.
+            return deps.deps;
+        }
+        else {
+            // These deps are invalid.
+            return 'invalid';
+        }
+    }
     function getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore) {
         return validateConstructorDependencies(clazz, getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore));
     }
+    /**
+     * Validate that `ConstructorDeps` does not have any invalid dependencies and convert them into the
+     * `R3DependencyMetadata` array if so, or raise a diagnostic if some deps are invalid.
+     *
+     * This is a companion function to `unwrapConstructorDependencies` which does not accept invalid
+     * deps.
+     */
     function validateConstructorDependencies(clazz, deps) {
         if (deps === null) {
             return null;
@@ -38931,7 +38950,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         DirectiveDecoratorHandler.prototype.compile = function (node, analysis, pool) {
             var meta = analysis.meta;
             var res = compileDirectiveFromMetadata(meta, pool, makeBindingParser());
-            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject }));
+            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Directive }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -39027,11 +39046,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             exportAs = resolved.split(',').map(function (part) { return part.trim(); });
         }
+        var rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+        var ctorDeps;
+        // Non-abstract directives (those with a selector) require valid constructor dependencies, whereas
+        // abstract directives are allowed to have invalid dependencies, given that a subclass may call
+        // the constructor explicitly.
+        if (selector !== null) {
+            ctorDeps = validateConstructorDependencies(clazz, rawCtorDeps);
+        }
+        else {
+            ctorDeps = unwrapConstructorDependencies(rawCtorDeps);
+        }
         // Detect if the component inherits from another class
         var usesInheritance = reflector.hasBaseClass(clazz);
         var metadata = {
             name: clazz.name.text,
-            deps: getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore), host: host,
+            deps: ctorDeps, host: host,
             lifecycle: {
                 usesOnChanges: usesOnChanges,
             },
@@ -40299,7 +40329,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         ComponentDecoratorHandler.prototype.compile = function (node, analysis, pool) {
             var meta = analysis.meta;
             var res = compileComponentFromMetadata(meta, pool, makeBindingParser());
-            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject }));
+            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Component }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -40569,7 +40599,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     type: meta.type,
                     typeArgumentCount: meta.typeArgumentCount,
                     deps: analysis.ctorDeps,
-                    injectFn: Identifiers.inject
+                    injectFn: Identifiers.inject,
+                    target: R3FactoryTarget.Injectable,
                 });
                 if (analysis.metadataStmt !== null) {
                     factoryRes.statements.push(analysis.metadataStmt);
@@ -40688,45 +40719,25 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Angular's DI.
             //
             // To deal with this, @Injectable() without an argument is more lenient, and if the
-            // constructor signature does not work for DI then a provider def (ɵprov) that throws.
+            // constructor signature does not work for DI then a factory definition (ɵfac) that throws is
+            // generated.
             if (strictCtorDeps) {
                 ctorDeps = getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
             }
             else {
-                var possibleCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
-                if (possibleCtorDeps !== null) {
-                    if (possibleCtorDeps.deps !== null) {
-                        // This use of @Injectable has valid constructor dependencies.
-                        ctorDeps = possibleCtorDeps.deps;
-                    }
-                    else {
-                        // This use of @Injectable is technically invalid. Generate a factory function which
-                        // throws
-                        // an error.
-                        // TODO(alxhub): log warnings for the bad use of @Injectable.
-                        ctorDeps = 'invalid';
-                    }
-                }
+                ctorDeps = unwrapConstructorDependencies(getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore));
             }
             return ctorDeps;
         }
         else if (decorator.args.length === 1) {
             var rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
-            // rawCtorDeps will be null if the class has no constructor.
-            if (rawCtorDeps !== null) {
-                if (rawCtorDeps.deps !== null) {
-                    // A constructor existed and had valid dependencies.
-                    ctorDeps = rawCtorDeps.deps;
-                }
-                else {
-                    // A constructor existed but had invalid dependencies.
-                    ctorDeps = 'invalid';
-                }
-            }
-            if (strictCtorDeps && !meta.useValue && !meta.useExisting && !meta.useClass &&
-                !meta.useFactory) {
+            if (strictCtorDeps && meta.useValue === undefined && meta.useExisting === undefined &&
+                meta.useClass === undefined && meta.useFactory === undefined) {
                 // Since use* was not provided, validate the deps according to strictCtorDeps.
-                validateConstructorDependencies(clazz, rawCtorDeps);
+                ctorDeps = validateConstructorDependencies(clazz, rawCtorDeps);
+            }
+            else {
+                ctorDeps = unwrapConstructorDependencies(rawCtorDeps);
             }
         }
         return ctorDeps;
@@ -41324,7 +41335,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         PipeDecoratorHandler.prototype.compile = function (node, analysis) {
             var meta = analysis.meta;
             var res = compilePipeFromMetadata(meta);
-            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, isPipe: true }));
+            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Pipe }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -52910,6 +52921,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         R3ResolvedDependencyType[R3ResolvedDependencyType["Attribute"] = 1] = "Attribute";
         R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
     })(R3ResolvedDependencyType$1 || (R3ResolvedDependencyType$1 = {}));
+    var R3FactoryTarget$1;
+    (function (R3FactoryTarget) {
+        R3FactoryTarget[R3FactoryTarget["Directive"] = 0] = "Directive";
+        R3FactoryTarget[R3FactoryTarget["Component"] = 1] = "Component";
+        R3FactoryTarget[R3FactoryTarget["Injectable"] = 2] = "Injectable";
+        R3FactoryTarget[R3FactoryTarget["Pipe"] = 3] = "Pipe";
+        R3FactoryTarget[R3FactoryTarget["NgModule"] = 4] = "NgModule";
+    })(R3FactoryTarget$1 || (R3FactoryTarget$1 = {}));
 
     /**
      * @license
@@ -63988,15 +64007,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 get: function () {
                     if (ngFactoryDef === null) {
                         var metadata = getInjectableMetadata(type, srcMeta);
-                        ngFactoryDef =
-                            getCompilerFacade().compileFactory(angularCoreDiEnv, "ng:///" + type.name + "/\u0275fac.js", {
-                                name: metadata.name,
-                                type: metadata.type,
-                                typeArgumentCount: metadata.typeArgumentCount,
-                                deps: reflectDependencies(type),
-                                injectFn: 'inject',
-                                isPipe: false
-                            });
+                        var compiler = getCompilerFacade();
+                        ngFactoryDef = compiler.compileFactory(angularCoreDiEnv, "ng:///" + type.name + "/\u0275fac.js", {
+                            name: metadata.name,
+                            type: metadata.type,
+                            typeArgumentCount: metadata.typeArgumentCount,
+                            deps: reflectDependencies(type),
+                            injectFn: 'inject',
+                            target: compiler.R3FactoryTarget.Pipe
+                        });
                     }
                     return ngFactoryDef;
                 },
@@ -66698,6 +66717,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function ɵɵinjectAttribute(attrNameToInject) {
         return injectAttributeImpl(getPreviousOrParentTNode(), attrNameToInject);
+    }
+    /**
+     * Throws an error indicating that a factory function could not be generated by the compiler for a
+     * particular class.
+     *
+     * This instruction allows the actual error message to be optimized away when ngDevMode is turned
+     * off, saving bytes of generated code while still providing a good experience in dev mode.
+     *
+     * The name of the class is not mentioned here, but will be in the generated factory function name
+     * and thus in the stack trace.
+     *
+     * @codeGenApi
+     */
+    function ɵɵinvalidFactory() {
+        var msg = ngDevMode ? "This constructor was not compatible with Dependency Injection." : 'invalid';
+        throw new Error(msg);
     }
 
     /**
@@ -70899,7 +70934,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+51.sha-e4e8dbd.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+52.sha-8d15bfa.with-local-changes');
 
     /**
      * @license
@@ -76193,7 +76228,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -78033,6 +78068,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵgetInheritedFactory': ɵɵgetInheritedFactory,
         'ɵɵinject': ɵɵinject,
         'ɵɵinjectAttribute': ɵɵinjectAttribute,
+        'ɵɵinvalidFactory': ɵɵinvalidFactory,
         'ɵɵinjectPipeChangeDetectorRef': ɵɵinjectPipeChangeDetectorRef,
         'ɵɵtemplateRefExtractor': ɵɵtemplateRefExtractor,
         'ɵɵNgOnChangesFeature': ɵɵNgOnChangesFeature,
@@ -78713,7 +78749,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             get: function () {
                 if (ngFactoryDef === null) {
                     var meta = getDirectiveMetadata(type, metadata);
-                    ngFactoryDef = getCompilerFacade().compileFactory(angularCoreEnv, "ng:///" + type.name + "/\u0275fac.js", __assign(__assign({}, meta.metadata), { injectFn: 'directiveInject', isPipe: false }));
+                    var compiler = getCompilerFacade();
+                    ngFactoryDef = compiler.compileFactory(angularCoreEnv, "ng:///" + type.name + "/\u0275fac.js", __assign(__assign({}, meta.metadata), { injectFn: 'directiveInject', target: compiler.R3FactoryTarget.Directive }));
                 }
                 return ngFactoryDef;
             },
@@ -78891,7 +78928,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             get: function () {
                 if (ngFactoryDef === null) {
                     var metadata = getPipeMetadata(type, meta);
-                    ngFactoryDef = getCompilerFacade().compileFactory(angularCoreEnv, "ng:///" + metadata.name + "/\u0275fac.js", __assign(__assign({}, metadata), { injectFn: 'directiveInject', isPipe: true }));
+                    var compiler = getCompilerFacade();
+                    ngFactoryDef = compiler.compileFactory(angularCoreEnv, "ng:///" + metadata.name + "/\u0275fac.js", __assign(__assign({}, metadata), { injectFn: 'directiveInject', target: compiler.R3FactoryTarget.Pipe }));
                 }
                 return ngFactoryDef;
             },
@@ -84452,7 +84490,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+51.sha-e4e8dbd.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+52.sha-8d15bfa.with-local-changes');
 
     /**
      * @license
