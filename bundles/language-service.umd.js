@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+34.sha-ee4fc12.with-local-changes
+ * @license Angular v9.0.0-next.13+35.sha-dcdb433.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -14902,7 +14902,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         StylingBuilder.prototype._buildMapBasedInstruction = function (valueConverter, isClassBased, stylingInput) {
             // each styling binding value is stored in the LView
-            var totalBindingSlotsRequired = 1;
+            // map-based bindings allocate two slots: one for the
+            // previous binding value and another for the previous
+            // className or style attribute value.
+            var totalBindingSlotsRequired = 2;
             // these values must be outside of the update block so that they can
             // be evaluated (the AST visit call) during creation time so that any
             // pipes can be picked up in time before the template is built
@@ -19055,7 +19058,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
@@ -34497,7 +34500,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
@@ -54205,6 +54208,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
 
     var MAP_BASED_ENTRY_PROP_NAME = '[MAP]';
     var TEMPLATE_DIRECTIVE_INDEX = 0;
+    function allocStylingMapArray(value) {
+        return [value];
+    }
     function getConfig(context) {
         return context[0 /* ConfigPosition */];
     }
@@ -54270,6 +54276,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getDefaultValue(context, index) {
         return context[index + 4 /* BindingsStartOffset */ + getTotalSources(context)];
     }
+    function setValue(data, bindingIndex, value) {
+        data[bindingIndex] = value;
+    }
     function getValue(data, bindingIndex) {
         return bindingIndex !== 0 ? data[bindingIndex] : null;
     }
@@ -54295,6 +54304,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // set a value to an empty string to remove it.
         return value != null && value !== '';
     }
+    function hyphenate$1(value) {
+        return value.replace(/[a-z][A-Z]/g, function (v) { return v.charAt(0) + '-' + v.charAt(1); }).toLowerCase();
+    }
     function isStylingContext(value) {
         // the StylingMapArray is in the format of [initial, prop, string, prop, string]
         // and this is the defining value to distinguish between arrays
@@ -54304,8 +54316,114 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getMapProp(map, index) {
         return map[index + 0 /* PropOffset */];
     }
+    function setMapValue(map, index, value) {
+        map[index + 1 /* ValueOffset */] = value;
+    }
     function getMapValue(map, index) {
         return map[index + 1 /* ValueOffset */];
+    }
+    /**
+     * Inserts the provided item into the provided styling array at the right spot.
+     *
+     * The `StylingMapArray` type is a sorted key/value array of entries. This means
+     * that when a new entry is inserted it must be placed at the right spot in the
+     * array. This function figures out exactly where to place it.
+     */
+    function addItemToStylingMap(stylingMapArr, prop, value, allowOverwrite) {
+        for (var j = 1 /* ValuesStartPosition */; j < stylingMapArr.length; j += 2 /* TupleSize */) {
+            var propAtIndex = getMapProp(stylingMapArr, j);
+            if (prop <= propAtIndex) {
+                var applied = false;
+                if (propAtIndex === prop) {
+                    var valueAtIndex = stylingMapArr[j];
+                    if (allowOverwrite || !isStylingValueDefined(valueAtIndex)) {
+                        applied = true;
+                        setMapValue(stylingMapArr, j, value);
+                    }
+                }
+                else {
+                    applied = true;
+                    stylingMapArr.splice(j, 0, prop, value);
+                }
+                return applied;
+            }
+        }
+        stylingMapArr.push(prop, value);
+        return true;
+    }
+    /**
+     * Used to convert a {key:value} map into a `StylingMapArray` array.
+     *
+     * This function will either generate a new `StylingMapArray` instance
+     * or it will patch the provided `newValues` map value into an
+     * existing `StylingMapArray` value (this only happens if `bindingValue`
+     * is an instance of `StylingMapArray`).
+     *
+     * If a new key/value map is provided with an old `StylingMapArray`
+     * value then all properties will be overwritten with their new
+     * values or with `null`. This means that the array will never
+     * shrink in size (but it will also not be created and thrown
+     * away whenever the `{key:value}` map entries change).
+     */
+    function normalizeIntoStylingMap(bindingValue, newValues, normalizeProps) {
+        var stylingMapArr = Array.isArray(bindingValue) ? bindingValue : allocStylingMapArray(null);
+        stylingMapArr[0 /* RawValuePosition */] = newValues;
+        // because the new values may not include all the properties
+        // that the old ones had, all values are set to `null` before
+        // the new values are applied. This way, when flushed, the
+        // styling algorithm knows exactly what style/class values
+        // to remove from the element (since they are `null`).
+        for (var j = 1 /* ValuesStartPosition */; j < stylingMapArr.length; j += 2 /* TupleSize */) {
+            setMapValue(stylingMapArr, j, null);
+        }
+        var props = null;
+        var map;
+        var allValuesTrue = false;
+        if (typeof newValues === 'string') { // [class] bindings allow string values
+            props = splitOnWhitespace(newValues);
+            allValuesTrue = props !== null;
+        }
+        else {
+            props = newValues ? Object.keys(newValues) : null;
+            map = newValues;
+        }
+        if (props) {
+            for (var i = 0; i < props.length; i++) {
+                var prop = props[i];
+                var newProp = normalizeProps ? hyphenate$1(prop) : prop;
+                var value = allValuesTrue ? true : map[prop];
+                addItemToStylingMap(stylingMapArr, newProp, value, true);
+            }
+        }
+        return stylingMapArr;
+    }
+    function splitOnWhitespace(text) {
+        var array = null;
+        var length = text.length;
+        var start = 0;
+        var foundChar = false;
+        for (var i = 0; i < length; i++) {
+            var char = text.charCodeAt(i);
+            if (char <= 32 /*' '*/) {
+                if (foundChar) {
+                    if (array === null)
+                        array = [];
+                    array.push(text.substring(start, i));
+                    foundChar = false;
+                }
+                start = i + 1;
+            }
+            else {
+                foundChar = true;
+            }
+        }
+        if (foundChar) {
+            if (array === null)
+                array = [];
+            array.push(text.substring(start, length));
+            foundChar = false;
+        }
+        return array;
     }
 
     /**
@@ -56108,6 +56226,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
+     * provided handler.
+     *
+     * The reason why this function exists is because IE doesn't support
+     * the `Proxy` class. For this reason an error must be thrown.
+     */
+    function createProxy(handler) {
+        var g = _global$1;
+        if (!g.Proxy) {
+            throw new Error('Proxy is not supported in this browser');
+        }
+        return new g.Proxy({}, handler);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function attachDebugObject(obj, debug) {
         Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
     }
@@ -56420,6 +56560,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
      * A human-readable debug summary of the styling data present within `TStylingContext`.
      *
      * This class is designed to be used within testing code or when an
@@ -56620,10 +56767,50 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             get: function () {
                 var entries = {};
-                this._mapValues(function (prop, value, bindingIndex) {
+                var config = this.config;
+                var isClassBased = this._isClassBased;
+                var data = this._data;
+                // the direct pass code doesn't convert [style] or [class] values
+                // into StylingMapArray instances. For this reason, the values
+                // need to be converted ahead of time since the styling debug
+                // relies on context resolution to figure out what styling
+                // values have been added/removed on the element.
+                if (config.allowDirectStyling && config.hasMapBindings) {
+                    data = data.concat([]); // make a copy
+                    this._convertMapBindingsToStylingMapArrays(data);
+                }
+                this._mapValues(data, function (prop, value, bindingIndex) {
                     entries[prop] = { prop: prop, value: value, bindingIndex: bindingIndex };
                 });
-                return entries;
+                // because the styling algorithm runs into two different
+                // modes: direct and context-resolution, the output of the entries
+                // object is different because the removed values are not
+                // saved between updates. For this reason a proxy is created
+                // so that the behavior is the same when examining values
+                // that are no longer active on the element.
+                return createProxy({
+                    get: function (target, prop) {
+                        var value = entries[prop];
+                        if (!value) {
+                            value = {
+                                prop: prop,
+                                value: isClassBased ? false : null,
+                                bindingIndex: null,
+                            };
+                        }
+                        return value;
+                    },
+                    set: function (target, prop, value) { return false; },
+                    ownKeys: function () { return Object.keys(entries); },
+                    getOwnPropertyDescriptor: function (k) {
+                        // we use a special property descriptor here so that enumeration operations
+                        // such as `Object.keys` will work on this proxy.
+                        return {
+                            enumerable: true,
+                            configurable: true,
+                        };
+                    },
+                });
             },
             enumerable: true,
             configurable: true
@@ -56639,13 +56826,36 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             get: function () {
                 var entries = {};
-                this._mapValues(function (prop, value) { entries[prop] = value; });
+                var config = this.config;
+                var data = this._data;
+                // the direct pass code doesn't convert [style] or [class] values
+                // into StylingMapArray instances. For this reason, the values
+                // need to be converted ahead of time since the styling debug
+                // relies on context resolution to figure out what styling
+                // values have been added/removed on the element.
+                if (config.allowDirectStyling && config.hasMapBindings) {
+                    data = data.concat([]); // make a copy
+                    this._convertMapBindingsToStylingMapArrays(data);
+                }
+                this._mapValues(data, function (prop, value) { entries[prop] = value; });
                 return entries;
             },
             enumerable: true,
             configurable: true
         });
-        NodeStylingDebug.prototype._mapValues = function (fn) {
+        NodeStylingDebug.prototype._convertMapBindingsToStylingMapArrays = function (data) {
+            var context = this.context.context;
+            var limit = getPropValuesStartPosition(context);
+            for (var i = 3 /* ValuesStartPosition */ + 4 /* BindingsStartOffset */; i < limit; i++) {
+                var bindingIndex = context[i];
+                var bindingValue = bindingIndex !== 0 ? getValue(data, bindingIndex) : null;
+                if (bindingValue && !Array.isArray(bindingValue)) {
+                    var stylingMapArray = normalizeIntoStylingMap(null, bindingValue, !this._isClassBased);
+                    setValue(data, bindingIndex, stylingMapArray);
+                }
+            }
+        };
+        NodeStylingDebug.prototype._mapValues = function (data, fn) {
             // there is no need to store/track an element instance. The
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
@@ -56657,9 +56867,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
             // run the template bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
+            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, false);
             // and also the host bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
+            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, true);
         };
         return NodeStylingDebug;
     }());
@@ -62274,7 +62484,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
@@ -69303,28 +69513,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
-     * provided handler.
-     *
-     * The reason why this function exists is because IE doesn't support
-     * the `Proxy` class. For this reason an error must be thrown.
-     */
-    function createProxy(handler) {
-        var g = _global$1;
-        if (!g.Proxy) {
-            throw new Error('Proxy is not supported in this browser');
-        }
-        return new g.Proxy({}, handler);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * @publicApi
      */
     var DebugEventListener = /** @class */ (function () {
@@ -72907,7 +73095,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+34.sha-ee4fc12.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+35.sha-dcdb433.with-local-changes');
 
     /**
      * @license
