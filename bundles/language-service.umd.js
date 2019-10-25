@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+4.sha-3dff266.with-local-changes
+ * @license Angular v9.0.0-next.13+36.sha-b131f5b.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -14082,7 +14082,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }
                     hasInlineTemplates = true;
                     var parsedVariables_1 = [];
-                    _this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, attr.sourceSpan.start.offset, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables_1);
+                    var absoluteOffset = (attr.valueSpan || attr.sourceSpan).start.offset;
+                    _this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, absoluteOffset, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables_1);
                     templateElementVars.push.apply(templateElementVars, __spread(parsedVariables_1.map(function (v) { return VariableAst.fromParsedVariable(v); })));
                 }
                 if (!hasBinding && !hasTemplateBinding) {
@@ -14901,7 +14902,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         StylingBuilder.prototype._buildMapBasedInstruction = function (valueConverter, isClassBased, stylingInput) {
             // each styling binding value is stored in the LView
-            var totalBindingSlotsRequired = 1;
+            // map-based bindings allocate two slots: one for the
+            // previous binding value and another for the previous
+            // className or style attribute value.
+            var totalBindingSlotsRequired = 2;
             // these values must be outside of the update block so that they can
             // be evaluated (the AST visit call) during creation time so that any
             // pipes can be picked up in time before the template is built
@@ -18262,9 +18266,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (changeDetection != null && changeDetection !== ChangeDetectionStrategy.Default) {
             definitionMap.set('changeDetection', literal(changeDetection));
         }
-        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
-        // string literal, which must be on one line.
-        var selectorForType = (meta.selector || '').replace(/\n/g, '');
         var expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
         var type = createTypeForDef(meta, Identifiers$1.ComponentDefWithMeta);
         return { expression: expression, type: type };
@@ -18445,10 +18446,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function createTypeForDef(meta, typeBase) {
         // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
         // string literal, which must be on one line.
-        var selectorForType = (meta.selector || '').replace(/\n/g, '');
+        var selectorForType = meta.selector !== null ? meta.selector.replace(/\n/g, '') : null;
         return expressionType(importExpr(typeBase, [
             typeWithParameters(meta.type, meta.typeArgumentCount),
-            stringAsType(selectorForType),
+            selectorForType !== null ? stringAsType(selectorForType) : NONE_TYPE,
             meta.exportAs !== null ? stringArrayAsType(meta.exportAs) : NONE_TYPE,
             stringMapAsType(meta.inputs),
             stringMapAsType(meta.outputs),
@@ -19057,7 +19058,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+4.sha-3dff266.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+36.sha-b131f5b.with-local-changes');
 
     /**
      * @license
@@ -32759,7 +32760,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             class_1.prototype.visit = function (ast) {
-                if ((!excludeEmpty || ast.span.start < ast.span.end) && inSpan(position, ast.span)) {
+                if ((!excludeEmpty || ast.sourceSpan.start < ast.sourceSpan.end) &&
+                    inSpan(position, ast.sourceSpan)) {
                     path.push(ast);
                     visitAstChildren(ast, this);
                 }
@@ -33523,8 +33525,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var components = directiveElements.map(function (name) {
             return {
                 name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
                 kind: CompletionKind.COMPONENT,
                 sortText: name,
             };
@@ -33532,8 +33532,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var htmlElements = htmlNames.map(function (name) {
             return {
                 name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
                 kind: CompletionKind.ELEMENT,
                 sortText: name,
             };
@@ -33541,8 +33539,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var angularElements = ANGULAR_ELEMENTS.map(function (name) {
             return {
                 name: name,
-                // Need to cast to unknown because Angular's CompletionKind includes HTML
-                // entites.
                 kind: CompletionKind.ANGULAR_ELEMENT,
                 sortText: name,
             };
@@ -33587,8 +33583,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 result = Object.keys(NAMED_ENTITIES).map(function (name) {
                     return {
                         name: "&" + name + ";",
-                        // Need to cast to unknown because Angular's CompletionKind includes
-                        // HTML entites.
                         kind: CompletionKind.ENTITY,
                         sortText: name,
                     };
@@ -33674,8 +33668,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     _this.result = keys.map(function (key) {
                         return {
                             name: key,
-                            // Need to cast to unknown because Angular's CompletionKind includes
-                            // HTML entites.
                             kind: CompletionKind.KEY,
                             sortText: key,
                         };
@@ -33714,7 +33706,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         var span = new ParseSpan(0, this.attr.value.length);
                         var offset = ast.sourceSpan.start.offset;
                         this.attributeValueCompletions(binding.expression ? binding.expression.ast :
-                            new PropertyRead(span, span.toAbsolute(offset), new ImplicitReceiver(span, span.toAbsolute(offset)), ''), valueRelativePosition_1);
+                            new PropertyRead(span, span.toAbsolute(offset), new ImplicitReceiver(span, span.toAbsolute(offset)), ''), this.position);
                     }
                     else {
                         keyCompletions();
@@ -33723,9 +33715,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
-            var expressionPosition = this.position - ast.sourceSpan.start.offset;
-            if (inSpan(expressionPosition, ast.value.span)) {
-                var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, expressionPosition, this.info.template.query);
+            if (inSpan(this.position, ast.value.sourceSpan)) {
+                var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, this.position, this.info.template.query);
                 if (completions) {
                     this.result = this.symbolsToCompletions(completions);
                 }
@@ -33749,7 +33740,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
             get: function () {
                 if (this.attr && this.attr.valueSpan) {
-                    return this.position - this.attr.valueSpan.start.offset;
+                    return this.position;
                 }
                 return 0;
             },
@@ -33765,7 +33756,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return name && (name[0].toLowerCase() + name.substr(1));
     }
     function angularAttributes(info, elementName) {
-        var e_6, _a, e_7, _b, e_8, _c, e_9, _d, e_10, _e, e_11, _f, e_12, _g, e_13, _h;
+        var e_5, _a, e_6, _b, e_7, _c, e_8, _d, e_9, _e, e_10, _f, e_11, _g, e_12, _h;
         var _j = getSelectors(info), selectors = _j.selectors, selectorMap = _j.map;
         var templateRefs = new Set();
         var inputs = new Set();
@@ -33779,7 +33770,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
                 var summary = selectorMap.get(selector);
                 try {
-                    for (var _k = (e_7 = void 0, __values(selector.attrs)), _l = _k.next(); !_l.done; _l = _k.next()) {
+                    for (var _k = (e_6 = void 0, __values(selector.attrs)), _l = _k.next(); !_l.done; _l = _k.next()) {
                         var attr = _l.value;
                         if (attr) {
                             if (hasTemplateReference$1(summary.type)) {
@@ -33791,47 +33782,47 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         }
                     }
                 }
-                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
                 finally {
                     try {
                         if (_l && !_l.done && (_b = _k.return)) _b.call(_k);
                     }
+                    finally { if (e_6) throw e_6.error; }
+                }
+                try {
+                    for (var _m = (e_7 = void 0, __values(Object.values(summary.inputs))), _o = _m.next(); !_o.done; _o = _m.next()) {
+                        var input = _o.value;
+                        inputs.add(input);
+                    }
+                }
+                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                finally {
+                    try {
+                        if (_o && !_o.done && (_c = _m.return)) _c.call(_m);
+                    }
                     finally { if (e_7) throw e_7.error; }
                 }
                 try {
-                    for (var _m = (e_8 = void 0, __values(Object.values(summary.inputs))), _o = _m.next(); !_o.done; _o = _m.next()) {
-                        var input = _o.value;
-                        inputs.add(input);
+                    for (var _p = (e_8 = void 0, __values(Object.values(summary.outputs))), _q = _p.next(); !_q.done; _q = _p.next()) {
+                        var output = _q.value;
+                        outputs.add(output);
                     }
                 }
                 catch (e_8_1) { e_8 = { error: e_8_1 }; }
                 finally {
                     try {
-                        if (_o && !_o.done && (_c = _m.return)) _c.call(_m);
+                        if (_q && !_q.done && (_d = _p.return)) _d.call(_p);
                     }
                     finally { if (e_8) throw e_8.error; }
                 }
-                try {
-                    for (var _p = (e_9 = void 0, __values(Object.values(summary.outputs))), _q = _p.next(); !_q.done; _q = _p.next()) {
-                        var output = _q.value;
-                        outputs.add(output);
-                    }
-                }
-                catch (e_9_1) { e_9 = { error: e_9_1 }; }
-                finally {
-                    try {
-                        if (_q && !_q.done && (_d = _p.return)) _d.call(_p);
-                    }
-                    finally { if (e_9) throw e_9.error; }
-                }
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (selectors_1_1 && !selectors_1_1.done && (_a = selectors_1.return)) _a.call(selectors_1);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         var results = [];
         try {
@@ -33844,12 +33835,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 });
             }
         }
-        catch (e_10_1) { e_10 = { error: e_10_1 }; }
+        catch (e_9_1) { e_9 = { error: e_9_1 }; }
         finally {
             try {
                 if (templateRefs_1_1 && !templateRefs_1_1.done && (_e = templateRefs_1.return)) _e.call(templateRefs_1);
             }
-            finally { if (e_10) throw e_10.error; }
+            finally { if (e_9) throw e_9.error; }
         }
         try {
             for (var inputs_1 = __values(inputs), inputs_1_1 = inputs_1.next(); !inputs_1_1.done; inputs_1_1 = inputs_1.next()) {
@@ -33870,12 +33861,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
-        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        catch (e_10_1) { e_10 = { error: e_10_1 }; }
         finally {
             try {
                 if (inputs_1_1 && !inputs_1_1.done && (_f = inputs_1.return)) _f.call(inputs_1);
             }
-            finally { if (e_11) throw e_11.error; }
+            finally { if (e_10) throw e_10.error; }
         }
         try {
             for (var outputs_1 = __values(outputs), outputs_1_1 = outputs_1.next(); !outputs_1_1.done; outputs_1_1 = outputs_1.next()) {
@@ -33887,12 +33878,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 });
             }
         }
-        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+        catch (e_11_1) { e_11 = { error: e_11_1 }; }
         finally {
             try {
                 if (outputs_1_1 && !outputs_1_1.done && (_g = outputs_1.return)) _g.call(outputs_1);
             }
-            finally { if (e_12) throw e_12.error; }
+            finally { if (e_11) throw e_11.error; }
         }
         try {
             for (var others_1 = __values(others), others_1_1 = others_1.next(); !others_1_1.done; others_1_1 = others_1.next()) {
@@ -33904,12 +33895,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 });
             }
         }
-        catch (e_13_1) { e_13 = { error: e_13_1 }; }
+        catch (e_12_1) { e_12 = { error: e_12_1 }; }
         finally {
             try {
                 if (others_1_1 && !others_1_1.done && (_h = others_1.return)) _h.call(others_1);
             }
-            finally { if (e_13) throw e_13.error; }
+            finally { if (e_12) throw e_12.error; }
         }
         return results;
     }
@@ -33941,10 +33932,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path, inEvent);
                         if (attribute.valueSpan) {
-                            var expressionOffset = attribute.valueSpan.start.offset;
-                            var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
+                            var result = getExpressionSymbol(scope, ast, templatePosition, info.template.query);
                             if (result) {
                                 symbol_1 = result.symbol;
+                                var expressionOffset = attribute.valueSpan.start.offset;
                                 span_1 = offsetSpan$1(result.span, expressionOffset);
                             }
                         }
@@ -34028,7 +34019,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     if (inSpan(expressionPosition, ast.value.span)) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path, /* includeEvent */ false);
-                        var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
+                        var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template.query);
                         if (result) {
                             symbol_1 = result.symbol;
                             span_1 = offsetSpan$1(result.span, ast.sourceSpan.start.offset);
@@ -34509,7 +34500,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+4.sha-3dff266.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+36.sha-b131f5b.with-local-changes');
 
     /**
      * @license
@@ -35181,6 +35172,50 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function nocollapseHack(contents) {
         return contents.replace(R3_MATCH_DEFS, R3_NOCOLLAPSE_DEFS)
             .replace(R3_MATCH_TSICKLE_DECL, R3_NOCOLLAPSE_TSICKLE_DECL);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Minimum supported TypeScript version
+     * ∀ supported typescript version v, v >= MIN_TS_VERSION
+     */
+    var MIN_TS_VERSION = '3.6.4';
+    /**
+     * Supremum of supported TypeScript versions
+     * ∀ supported typescript version v, v < MAX_TS_VERSION
+     * MAX_TS_VERSION is not considered as a supported TypeScript version
+     */
+    var MAX_TS_VERSION = '3.7.0';
+    /**
+     * The currently used version of TypeScript, which can be adjusted for testing purposes using
+     * `setTypeScriptVersionForTesting` and `restoreTypeScriptVersionForTesting` below.
+     */
+    var tsVersion = ts.version;
+    /**
+     * Checks whether a given version ∈ [minVersion, maxVersion[
+     * An error will be thrown if the following statements are simultaneously true:
+     * - the given version ∉ [minVersion, maxVersion[,
+     *
+     * @param version The version on which the check will be performed
+     * @param minVersion The lower bound version. A valid version needs to be greater than minVersion
+     * @param maxVersion The upper bound version. A valid version needs to be strictly less than
+     * maxVersion
+     *
+     * @throws Will throw an error if the given version ∉ [minVersion, maxVersion[
+     */
+    function checkVersion(version, minVersion, maxVersion) {
+        if ((compareVersions(version, minVersion) < 0 || compareVersions(version, maxVersion) >= 0)) {
+            throw new Error("The Angular Compiler requires TypeScript >=" + minVersion + " and <" + maxVersion + " but " + version + " was found instead.");
+        }
+    }
+    function verifySupportedTypeScriptVersion() {
+        checkVersion(tsVersion, MIN_TS_VERSION, MAX_TS_VERSION);
     }
 
     /**
@@ -38326,13 +38361,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var ngTemplateGuards = staticMembers.map(extractTemplateGuard)
             .filter(function (guard) { return guard !== null; });
         var hasNgTemplateContextGuard = staticMembers.some(function (member) { return member.kind === ClassMemberKind.Method && member.name === 'ngTemplateContextGuard'; });
-        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards };
+        var coercedInputFields = new Set(staticMembers.map(extractCoercedInput)
+            .filter(function (inputName) { return inputName !== null; }));
+        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards, coercedInputFields: coercedInputFields };
     }
     function extractTemplateGuard(member) {
         if (!member.name.startsWith('ngTemplateGuard_')) {
             return null;
         }
-        var inputName = member.name.split('_', 2)[1];
+        var inputName = afterUnderscore(member.name);
         if (member.kind === ClassMemberKind.Property) {
             var type = null;
             if (member.type !== null && ts.isLiteralTypeNode(member.type) &&
@@ -38352,6 +38389,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return null;
         }
     }
+    function extractCoercedInput(member) {
+        if (member.kind !== ClassMemberKind.Property || !member.name.startsWith('ngAcceptInputType_')) {
+            return null;
+        }
+        return afterUnderscore(member.name);
+    }
     /**
      * A `MetadataReader` that reads from an ordered set of child readers until it obtains the requested
      * metadata.
@@ -38363,9 +38406,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function CompoundMetadataReader(readers) {
             this.readers = readers;
         }
-        CompoundMetadataReader.prototype.isAbstractDirective = function (node) {
-            return this.readers.some(function (r) { return r.isAbstractDirective(node); });
-        };
         CompoundMetadataReader.prototype.getDirectiveMetadata = function (node) {
             var e_1, _a;
             try {
@@ -38428,6 +38468,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return CompoundMetadataReader;
     }());
+    function afterUnderscore(str) {
+        var pos = str.indexOf('_');
+        if (pos === -1) {
+            throw new Error("Expected '" + str + "' to contain '_'");
+        }
+        return str.substr(pos + 1);
+    }
 
     /**
      * @license
@@ -39690,18 +39737,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         DirectiveDecoratorHandler.prototype.analyze = function (node, decorator) {
             var directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore);
             var analysis = directiveResult && directiveResult.metadata;
-            // If the directive has a selector, it should be registered with the `SelectorScopeRegistry` so
-            // when this directive appears in an `@NgModule` scope, its selector can be determined.
-            if (analysis && analysis.selector !== null) {
-                var ref = new Reference$1(node);
-                this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: analysis.selector, exportAs: analysis.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.queries.map(function (query) { return query.propertyName; }), isComponent: false }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
-            }
-            if (analysis && !analysis.selector) {
-                this.metaRegistry.registerAbstractDirective(node);
-            }
             if (analysis === undefined) {
                 return {};
             }
+            // Register this directive's information with the `MetadataRegistry`. This ensures that
+            // the information about the directive is available during the compile() phase.
+            var ref = new Reference$1(node);
+            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: analysis.selector, exportAs: analysis.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.queries.map(function (query) { return query.propertyName; }), isComponent: false }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
             return {
                 analysis: {
                     meta: analysis,
@@ -40272,10 +40314,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.checker = checker;
             this.reflector = reflector;
         }
-        DtsMetadataReader.prototype.isAbstractDirective = function (ref) {
-            var meta = this.getDirectiveMetadata(ref);
-            return meta !== null && meta.selector === null;
-        };
         /**
          * Read the metadata from a class that has already been compiled somehow (either it's in a .d.ts
          * file, or in a .ts file with a handwritten definition).
@@ -40323,11 +40361,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // The type metadata was the wrong shape.
                 return null;
             }
-            var selector = readStringType(def.type.typeArguments[1]);
-            if (selector === null) {
-                return null;
-            }
-            return __assign(__assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: selector, exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector)), { baseClass: readBaseClass$1(clazz, this.checker, this.reflector) });
+            return __assign(__assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector)), { baseClass: readBaseClass$1(clazz, this.checker, this.reflector) });
         };
         /**
          * Read pipe metadata from a referenced class in a .d.ts file.
@@ -40407,14 +40441,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var LocalMetadataRegistry = /** @class */ (function () {
         function LocalMetadataRegistry() {
-            this.abstractDirectives = new Set();
             this.directives = new Map();
             this.ngModules = new Map();
             this.pipes = new Map();
         }
-        LocalMetadataRegistry.prototype.isAbstractDirective = function (ref) {
-            return this.abstractDirectives.has(ref.node);
-        };
         LocalMetadataRegistry.prototype.getDirectiveMetadata = function (ref) {
             return this.directives.has(ref.node) ? this.directives.get(ref.node) : null;
         };
@@ -40424,7 +40454,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         LocalMetadataRegistry.prototype.getPipeMetadata = function (ref) {
             return this.pipes.has(ref.node) ? this.pipes.get(ref.node) : null;
         };
-        LocalMetadataRegistry.prototype.registerAbstractDirective = function (clazz) { this.abstractDirectives.add(clazz); };
         LocalMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) { this.directives.set(meta.ref.node, meta); };
         LocalMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) { this.ngModules.set(meta.ref.node, meta); };
         LocalMetadataRegistry.prototype.registerPipeMetadata = function (meta) { this.pipes.set(meta.ref.node, meta); };
@@ -40437,12 +40466,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function CompoundMetadataRegistry(registries) {
             this.registries = registries;
         }
-        CompoundMetadataRegistry.prototype.registerAbstractDirective = function (clazz) {
+        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
             var e_1, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerAbstractDirective(clazz);
+                    registry.registerDirectiveMetadata(meta);
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -40453,12 +40482,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_1) throw e_1.error; }
             }
         };
-        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
+        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
             var e_2, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerDirectiveMetadata(meta);
+                    registry.registerNgModuleMetadata(meta);
                 }
             }
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
@@ -40469,12 +40498,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_2) throw e_2.error; }
             }
         };
-        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
+        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
             var e_3, _a;
             try {
                 for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var registry = _c.value;
-                    registry.registerNgModuleMetadata(meta);
+                    registry.registerPipeMetadata(meta);
                 }
             }
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -40483,22 +40512,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_3) throw e_3.error; }
-            }
-        };
-        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
-            var e_4, _a;
-            try {
-                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var registry = _c.value;
-                    registry.registerPipeMetadata(meta);
-                }
-            }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_4) throw e_4.error; }
             }
         };
         return CompoundMetadataRegistry;
@@ -40799,14 +40812,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (template.errors !== undefined) {
                 throw new Error("Errors parsing template: " + template.errors.map(function (e) { return e.toString(); }).join(', '));
             }
-            // If the component has a selector, it should be registered with the
-            // `LocalModuleScopeRegistry`
-            // so that when this component appears in an `@NgModule` scope, its selector can be
-            // determined.
-            if (metadata.selector !== null) {
-                var ref = new Reference$1(node);
-                this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: metadata.selector, exportAs: metadata.exportAs, inputs: metadata.inputs, outputs: metadata.outputs, queries: metadata.queries.map(function (query) { return query.propertyName; }), isComponent: true }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
-            }
+            // Register this component's information with the `MetadataRegistry`. This ensures that
+            // the information about the component is available during the compile() phase.
+            var ref = new Reference$1(node);
+            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: metadata.selector, exportAs: metadata.exportAs, inputs: metadata.inputs, outputs: metadata.outputs, queries: metadata.queries.map(function (query) { return query.propertyName; }), isComponent: true }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
             // Figure out the set of styles. The ordering here is important: external resources (styleUrls)
             // precede inline styles, and styles defined in the template override styles defined in the
             // component.
@@ -40894,7 +40903,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 try {
                     for (var _b = __values(scope.compilation.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
                         var directive = _c.value;
-                        matcher.addSelectables(CssSelector.parse(directive.selector), directive);
+                        if (directive.selector !== null) {
+                            matcher.addSelectables(CssSelector.parse(directive.selector), directive);
+                        }
                     }
                 }
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
@@ -40943,8 +40954,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 try {
                     for (var _c = __values(scope.compilation.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var meta_1 = _d.value;
-                        var extMeta = flattenInheritedDirectiveMetadata(this.metaReader, meta_1.ref);
-                        matcher.addSelectables(CssSelector.parse(meta_1.selector), extMeta);
+                        if (meta_1.selector !== null) {
+                            var extMeta = flattenInheritedDirectiveMetadata(this.metaReader, meta_1.ref);
+                            matcher.addSelectables(CssSelector.parse(meta_1.selector), extMeta);
+                        }
                     }
                 }
                 catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -41012,9 +41025,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     for (var _e = __values(scope.compilation.directives), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var dir = _f.value;
                         var ref = dir.ref, selector = dir.selector;
-                        var expression = this.refEmitter.emit(ref, context);
-                        directives.push({ selector: selector, expression: expression });
-                        matcher.addSelectables(CssSelector.parse(selector), __assign(__assign({}, dir), { expression: expression }));
+                        if (selector !== null) {
+                            var expression = this.refEmitter.emit(ref, context);
+                            directives.push({ selector: selector, expression: expression });
+                            matcher.addSelectables(CssSelector.parse(selector), __assign(__assign({}, dir), { expression: expression }));
+                        }
                     }
                 }
                 catch (e_5_1) { e_5 = { error: e_5_1 }; }
@@ -41811,7 +41826,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 try {
                     for (var _e = __values(analysis.declarations), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var decl = _f.value;
-                        if (this.metaReader.isAbstractDirective(decl)) {
+                        var metadata = this.metaReader.getDirectiveMetadata(decl);
+                        if (metadata !== null && metadata.selector === null) {
                             throw new FatalDiagnosticError(ErrorCode.DIRECTIVE_MISSING_SELECTOR, decl.node, "Directive " + decl.node.name.text + " has no selector, please add it!");
                         }
                     }
@@ -42655,17 +42671,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var metadata = this.ensureMetadata(meta.ref.node.getSourceFile());
             metadata.ngModuleMeta.set(meta.ref.node, meta);
         };
-        IncrementalState.prototype.isAbstractDirective = function (ref) {
-            if (!this.metadata.has(ref.node.getSourceFile())) {
-                return false;
-            }
-            var metadata = this.metadata.get(ref.node.getSourceFile());
-            return metadata.abstractDirectives.has(ref.node);
-        };
-        IncrementalState.prototype.registerAbstractDirective = function (clazz) {
-            var metadata = this.ensureMetadata(clazz.getSourceFile());
-            metadata.abstractDirectives.add(clazz);
-        };
         IncrementalState.prototype.getDirectiveMetadata = function (ref) {
             if (!this.metadata.has(ref.node.getSourceFile())) {
                 return null;
@@ -42752,7 +42757,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             /** A set of source files that this file depends upon. */
             this.fileDependencies = new Set();
             this.resourcePaths = new Set();
-            this.abstractDirectives = new Set();
             this.directiveMeta = new Map();
             this.ngModuleMeta = new Map();
             this.pipeMeta = new Map();
@@ -44142,7 +44146,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_1) throw e_1.error; }
             }
         };
-        LocalModuleScopeRegistry.prototype.registerAbstractDirective = function (clazz) { };
         LocalModuleScopeRegistry.prototype.registerDirectiveMetadata = function (directive) { };
         LocalModuleScopeRegistry.prototype.registerPipeMetadata = function (pipe) { };
         LocalModuleScopeRegistry.prototype.getScopeForComponent = function (clazz) {
@@ -45691,6 +45694,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* body */ body);
     }
     function constructTypeCtorParameter(node, meta, rawType) {
+        var e_1, _a;
         // initType is the type of 'init', the single argument to the type constructor method.
         // If the Directive has any inputs, its initType will be:
         //
@@ -45700,17 +45704,47 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // directive will be inferred.
         //
         // In the special case there are no inputs, initType is set to {}.
-        var initType;
+        var initType = null;
         var keys = meta.fields.inputs;
-        if (keys.length === 0) {
-            // Special case - no inputs, outputs, or other fields which could influence the result type.
-            initType = ts.createTypeLiteralNode([]);
+        var plainKeys = [];
+        var coercedKeys = [];
+        try {
+            for (var keys_1 = __values(keys), keys_1_1 = keys_1.next(); !keys_1_1.done; keys_1_1 = keys_1.next()) {
+                var key = keys_1_1.value;
+                if (!meta.coercedInputFields.has(key)) {
+                    plainKeys.push(ts.createLiteralTypeNode(ts.createStringLiteral(key)));
+                }
+                else {
+                    coercedKeys.push(ts.createPropertySignature(
+                    /* modifiers */ undefined, 
+                    /* name */ key, 
+                    /* questionToken */ undefined, 
+                    /* type */ ts.createTypeQueryNode(ts.createQualifiedName(rawType.typeName, "ngAcceptInputType_" + key)), 
+                    /* initializer */ undefined));
+                }
+            }
         }
-        else {
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (keys_1_1 && !keys_1_1.done && (_a = keys_1.return)) _a.call(keys_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        if (plainKeys.length > 0) {
             // Construct a union of all the field names.
-            var keyTypeUnion = ts.createUnionTypeNode(keys.map(function (key) { return ts.createLiteralTypeNode(ts.createStringLiteral(key)); }));
+            var keyTypeUnion = ts.createUnionTypeNode(plainKeys);
             // Construct the Pick<rawType, keyTypeUnion>.
             initType = ts.createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
+        }
+        if (coercedKeys.length > 0) {
+            var coercedLiteral = ts.createTypeLiteralNode(coercedKeys);
+            initType =
+                initType !== null ? ts.createUnionTypeNode([initType, coercedLiteral]) : coercedLiteral;
+        }
+        if (initType === null) {
+            // Special case - no inputs, outputs, or other fields which could influence the result type.
+            initType = ts.createTypeLiteralNode([]);
         }
         // Create the 'init' parameter itself.
         return ts.createParameter(
@@ -45858,7 +45892,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         outputs: Object.keys(dir.outputs),
                         // TODO: support queries
                         queries: dir.queries,
-                    }
+                    },
+                    coercedInputFields: dir.coercedInputFields,
                 };
                 var typeCtor = generateTypeCtorDeclarationFn(node, meta, nodeTypeRef.typeName, this.config);
                 this.typeCtorStatements.push(typeCtor);
@@ -47561,10 +47596,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return expr;
             }
             else if (binding instanceof Reference) {
-                if (!this.tcb.env.config.checkTypeOfReferences) {
-                    // References are pinned to 'any'.
-                    return NULL_AS_ANY;
-                }
                 var target = this.tcb.boundTarget.getReferenceTarget(binding);
                 if (target === null) {
                     throw new Error("Unbound reference? " + binding.name);
@@ -47572,11 +47603,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // The reference is either to an element, an <ng-template> node, or to a directive on an
                 // element or template.
                 if (target instanceof Element) {
+                    if (!this.tcb.env.config.checkTypeOfDomReferences) {
+                        // References to DOM nodes are pinned to 'any'.
+                        return NULL_AS_ANY;
+                    }
                     var expr = ts.getMutableClone(this.scope.resolve(target));
                     addParseSpanInfo(expr, toAbsoluteSpan(ast.span, this.sourceSpan));
                     return expr;
                 }
                 else if (target instanceof Template) {
+                    if (!this.tcb.env.config.checkTypeOfNonDomReferences) {
+                        // References to `TemplateRef`s pinned to 'any'.
+                        return NULL_AS_ANY;
+                    }
                     // Direct references to an <ng-template> node simply require a value of type
                     // `TemplateRef<any>`. To get this, an expression of the form
                     // `(null as any as TemplateRef<any>)` is constructed.
@@ -47588,6 +47627,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     return value;
                 }
                 else {
+                    if (!this.tcb.env.config.checkTypeOfNonDomReferences) {
+                        // References to directives are pinned to 'any'.
+                        return NULL_AS_ANY;
+                    }
                     var expr = ts.getMutableClone(this.scope.resolve(target.node, target.directive));
                     addParseSpanInfo(expr, toAbsoluteSpan(ast.span, this.sourceSpan));
                     return expr;
@@ -47679,6 +47722,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         function processAttribute(attr) {
             // Skip non-property bindings.
             if (attr instanceof BoundAttribute && attr.type !== 0 /* Property */) {
+                return;
+            }
+            // Skip text attributes if configured to do so.
+            if (!tcb.env.config.checkTypeOfAttributes && attr instanceof TextAttribute) {
                 return;
             }
             // Skip the attribute if the directive does not have an input for it.
@@ -47949,6 +47996,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                                 // TODO(alxhub): support queries
                                 queries: dir.queries,
                             },
+                            coercedInputFields: dir.coercedInputFields,
                         });
                     }
                 }
@@ -48215,6 +48263,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.fileToModuleHost = null;
             this.perfRecorder = NOOP_PERF_RECORDER;
             this.perfTracker = null;
+            if (!options.disableTypeScriptVersionCheck) {
+                verifySupportedTypeScriptVersion();
+            }
             if (shouldEnablePerfTracing(options)) {
                 this.perfTracker = PerfTracker.zeroedToNow();
                 this.perfRecorder = this.perfTracker;
@@ -48516,24 +48567,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // requested.
             var typeCheckingConfig;
             if (this.options.fullTemplateTypeCheck) {
+                var strictTemplates = !!this.options.strictTemplates;
                 typeCheckingConfig = {
                     applyTemplateContextGuards: true,
                     checkQueries: false,
                     checkTemplateBodies: true,
-                    checkTypeOfInputBindings: true,
-                    strictNullInputBindings: true,
+                    checkTypeOfInputBindings: strictTemplates,
+                    strictNullInputBindings: strictTemplates,
+                    checkTypeOfAttributes: strictTemplates,
                     // Even in full template type-checking mode, DOM binding checks are not quite ready yet.
                     checkTypeOfDomBindings: false,
-                    checkTypeOfOutputEvents: true,
-                    checkTypeOfAnimationEvents: true,
+                    checkTypeOfOutputEvents: strictTemplates,
+                    checkTypeOfAnimationEvents: strictTemplates,
                     // Checking of DOM events currently has an adverse effect on developer experience,
                     // e.g. for `<input (blur)="update($event.target.value)">` enabling this check results in:
                     // - error TS2531: Object is possibly 'null'.
                     // - error TS2339: Property 'value' does not exist on type 'EventTarget'.
-                    checkTypeOfDomEvents: false,
-                    checkTypeOfReferences: true,
+                    checkTypeOfDomEvents: strictTemplates,
+                    checkTypeOfDomReferences: strictTemplates,
+                    // Non-DOM references have the correct type in View Engine so there is no strictness flag.
+                    checkTypeOfNonDomReferences: true,
+                    // Pipes are checked in View Engine so there is no strictness flag.
                     checkTypeOfPipes: true,
-                    strictSafeNavigationTypes: true,
+                    strictSafeNavigationTypes: strictTemplates,
                 };
             }
             else {
@@ -48543,14 +48599,40 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     checkTemplateBodies: false,
                     checkTypeOfInputBindings: false,
                     strictNullInputBindings: false,
+                    checkTypeOfAttributes: false,
                     checkTypeOfDomBindings: false,
                     checkTypeOfOutputEvents: false,
                     checkTypeOfAnimationEvents: false,
                     checkTypeOfDomEvents: false,
-                    checkTypeOfReferences: false,
+                    checkTypeOfDomReferences: false,
+                    checkTypeOfNonDomReferences: false,
                     checkTypeOfPipes: false,
                     strictSafeNavigationTypes: false,
                 };
+            }
+            // Apply explicitly configured strictness flags on top of the default configuration
+            // based on "fullTemplateTypeCheck".
+            if (this.options.strictInputTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfInputBindings = this.options.strictInputTypes;
+            }
+            if (this.options.strictNullInputTypes !== undefined) {
+                typeCheckingConfig.strictNullInputBindings = this.options.strictNullInputTypes;
+            }
+            if (this.options.strictOutputEventTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfOutputEvents = this.options.strictOutputEventTypes;
+                typeCheckingConfig.checkTypeOfAnimationEvents = this.options.strictOutputEventTypes;
+            }
+            if (this.options.strictDomEventTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfDomEvents = this.options.strictDomEventTypes;
+            }
+            if (this.options.strictSafeNavigationTypes !== undefined) {
+                typeCheckingConfig.strictSafeNavigationTypes = this.options.strictSafeNavigationTypes;
+            }
+            if (this.options.strictDomLocalRefTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfDomReferences = this.options.strictDomLocalRefTypes;
+            }
+            if (this.options.strictAttributeTypes !== undefined) {
+                typeCheckingConfig.checkTypeOfAttributes = this.options.strictAttributeTypes;
             }
             // Execute the typeCheck phase of each decorator in the program.
             var prepSpan = this.perfRecorder.start('typeCheckPrep');
@@ -50408,17 +50490,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var program = _a.program, targetSourceFile = _a.targetSourceFile, writeFile = _a.writeFile, cancellationToken = _a.cancellationToken, emitOnlyDtsFiles = _a.emitOnlyDtsFiles, customTransformers = _a.customTransformers;
         return program.emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
     };
-    /**
-     * Minimum supported TypeScript version
-     * ∀ supported typescript version v, v >= MIN_TS_VERSION
-     */
-    var MIN_TS_VERSION = '3.6.4';
-    /**
-     * Supremum of supported TypeScript versions
-     * ∀ supported typescript version v, v < MAX_TS_VERSION
-     * MAX_TS_VERSION is not considered as a supported TypeScript version
-     */
-    var MAX_TS_VERSION = '3.7.0';
     var AngularCompilerProgram = /** @class */ (function () {
         function AngularCompilerProgram(rootNames, options, host, oldProgram) {
             var _a;
@@ -50427,7 +50498,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.host = host;
             this._optionsDiagnostics = [];
             this.rootNames = __spread(rootNames);
-            checkVersion(ts.version, MIN_TS_VERSION, MAX_TS_VERSION, options.disableTypeScriptVersionCheck);
+            if (!options.disableTypeScriptVersionCheck) {
+                verifySupportedTypeScriptVersion();
+            }
             this.oldTsProgram = oldProgram ? oldProgram.getTsProgram() : undefined;
             if (oldProgram) {
                 this.oldProgramLibrarySummaries = oldProgram.getLibrarySummaries();
@@ -51133,30 +51206,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return AngularCompilerProgram;
     }());
-    /**
-     * Checks whether a given version ∈ [minVersion, maxVersion[
-     * An error will be thrown if the following statements are simultaneously true:
-     * - the given version ∉ [minVersion, maxVersion[,
-     * - the result of the version check is not meant to be bypassed (the parameter disableVersionCheck
-     * is false)
-     *
-     * @param version The version on which the check will be performed
-     * @param minVersion The lower bound version. A valid version needs to be greater than minVersion
-     * @param maxVersion The upper bound version. A valid version needs to be strictly less than
-     * maxVersion
-     * @param disableVersionCheck Indicates whether version check should be bypassed
-     *
-     * @throws Will throw an error if the following statements are simultaneously true:
-     * - the given version ∉ [minVersion, maxVersion[,
-     * - the result of the version check is not meant to be bypassed (the parameter disableVersionCheck
-     * is false)
-     */
-    function checkVersion(version, minVersion, maxVersion, disableVersionCheck) {
-        if ((compareVersions(version, minVersion) < 0 || compareVersions(version, maxVersion) >= 0) &&
-            !disableVersionCheck) {
-            throw new Error("The Angular Compiler requires TypeScript >=" + minVersion + " and <" + maxVersion + " but " + version + " was found instead.");
-        }
-    }
     // Compute the AotCompiler options
     function getAotCompilerOptions(options) {
         var missingTranslation = MissingTranslationStrategy.Warning;
@@ -52334,6 +52383,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 isGlobalCompletion: false,
                 isMemberCompletion: false,
                 isNewIdentifierLocation: false,
+                // Cast CompletionEntry.kind from ng.CompletionKind to ts.ScriptElementKind
                 entries: results,
             };
         };
@@ -53809,34 +53859,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     var instructionState = {
-        previousOrParentTNode: null,
-        isParent: null,
-        lView: null,
-        // tslint:disable-next-line: no-toplevel-property-access
-        selectedIndex: -1 << 1 /* Size */,
-        contextLView: null,
-        checkNoChangesMode: false,
-        elementDepthCount: 0,
+        lFrame: createLFrame(null),
         bindingsEnabled: true,
-        currentNamespace: null,
-        currentSanitizer: null,
-        currentDirectiveDef: null,
-        activeDirectiveId: 0,
-        bindingRootIndex: -1,
-        currentQueryIndex: 0,
         elementExitFn: null,
+        checkNoChangesMode: false,
     };
     function setCurrentDirectiveDef(def) {
-        instructionState.currentDirectiveDef = def;
-    }
-    function getLView() {
-        return instructionState.lView;
+        instructionState.lFrame.currentDirectiveDef = def;
     }
     /**
      * Determines whether or not a flag is currently set for the active element.
      */
     function hasActiveElementFlag(flag) {
-        return (instructionState.selectedIndex & flag) === flag;
+        return (instructionState.lFrame.selectedIndex & flag) === flag;
     }
     /**
      * Sets the active directive host element and resets the directive id value
@@ -53847,19 +53882,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function setActiveHostElement(elementIndex) {
         if (elementIndex === void 0) { elementIndex = null; }
-        if (getSelectedIndex() !== elementIndex) {
-            if (hasActiveElementFlag(1 /* RunExitFn */)) {
-                executeElementExitFn();
-            }
-            setSelectedIndex(elementIndex === null ? -1 : elementIndex);
-            instructionState.activeDirectiveId = 0;
+        if (hasActiveElementFlag(1 /* RunExitFn */)) {
+            executeElementExitFn();
         }
+        setSelectedIndex(elementIndex === null ? -1 : elementIndex);
+        instructionState.lFrame.activeDirectiveId = 0;
     }
     function executeElementExitFn() {
         instructionState.elementExitFn();
-        // TODO (matsko|misko): remove this unassignment once the state management of
-        //                      global variables are better managed.
-        instructionState.selectedIndex &= ~1 /* RunExitFn */;
+        instructionState.lFrame.selectedIndex &= ~1 /* RunExitFn */;
     }
     /**
      * Increments the current directive id value.
@@ -53887,38 +53918,62 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // directive uniqueId is not set anywhere--it is just incremented between
         // each hostBindings call and is useful for helping instruction code
         // uniquely determine which directive is currently active when executed.
-        instructionState.activeDirectiveId += 1;
+        instructionState.lFrame.activeDirectiveId += 1;
     }
     function getPreviousOrParentTNode() {
-        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return instructionState.previousOrParentTNode;
+        return instructionState.lFrame.previousOrParentTNode;
     }
     function setPreviousOrParentTNode(tNode, _isParent) {
-        instructionState.previousOrParentTNode = tNode;
-        instructionState.isParent = _isParent;
-    }
-    function setTNodeAndViewData(tNode, view) {
-        ngDevMode && assertLViewOrUndefined(view);
-        instructionState.previousOrParentTNode = tNode;
-        instructionState.lView = view;
+        instructionState.lFrame.previousOrParentTNode = tNode;
+        instructionState.lFrame.isParent = _isParent;
     }
     function getIsParent() {
-        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return instructionState.isParent;
+        return instructionState.lFrame.isParent;
     }
     function getCheckNoChangesMode() {
-        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
         return instructionState.checkNoChangesMode;
     }
     function setCheckNoChangesMode(mode) {
         instructionState.checkNoChangesMode = mode;
     }
     function setBindingRoot(value) {
-        instructionState.bindingRootIndex = value;
+        instructionState.lFrame.bindingRootIndex = value;
     }
     function setCurrentQueryIndex(value) {
-        instructionState.currentQueryIndex = value;
+        instructionState.lFrame.currentQueryIndex = value;
     }
+    /**
+     * This is a light weight version of the `enterView` which is needed by the DI system.
+     * @param newView
+     * @param tNode
+     */
+    function enterDI(newView, tNode) {
+        ngDevMode && assertLViewOrUndefined(newView);
+        var newLFrame = allocLFrame();
+        instructionState.lFrame = newLFrame;
+        newLFrame.previousOrParentTNode = tNode;
+        newLFrame.lView = newView;
+        if (ngDevMode) {
+            // resetting for safety in dev mode only.
+            newLFrame.isParent = DEV_MODE_VALUE;
+            newLFrame.selectedIndex = DEV_MODE_VALUE;
+            newLFrame.contextLView = DEV_MODE_VALUE;
+            newLFrame.elementDepthCount = DEV_MODE_VALUE;
+            newLFrame.currentNamespace = DEV_MODE_VALUE;
+            newLFrame.currentSanitizer = DEV_MODE_VALUE;
+            newLFrame.currentDirectiveDef = DEV_MODE_VALUE;
+            newLFrame.activeDirectiveId = DEV_MODE_VALUE;
+            newLFrame.bindingRootIndex = DEV_MODE_VALUE;
+            newLFrame.currentQueryIndex = DEV_MODE_VALUE;
+        }
+    }
+    var DEV_MODE_VALUE = 'Value indicating that DI is trying to read value which it should not need to know about.';
+    /**
+     * This is a light weight version of the `leaveView` which is needed by the DI system.
+     *
+     * Because the implementation is same it is only an alias
+     */
+    var leaveDI = leaveView;
     /**
      * Swap the current lView with a new lView.
      *
@@ -53928,29 +53983,63 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * exited the state has to be restored
      *
      * @param newView New lView to become active
-     * @param host Element to which the View is a child of
+     * @param tNode Element to which the View is a child of
      * @returns the previously active lView;
      */
-    function selectView(newView, hostTNode) {
+    function enterView(newView, tNode) {
+        ngDevMode && assertLViewOrUndefined(newView);
+        var newLFrame = allocLFrame();
+        instructionState.lFrame = newLFrame;
+        newLFrame.previousOrParentTNode = tNode;
+        newLFrame.isParent = true;
+        newLFrame.lView = newView;
+        newLFrame.selectedIndex = 0;
+        newLFrame.contextLView = newView;
+        newLFrame.elementDepthCount = 0;
+        newLFrame.currentNamespace = null;
+        newLFrame.currentSanitizer = null;
+        newLFrame.currentDirectiveDef = null;
+        newLFrame.activeDirectiveId = 0;
+        newLFrame.bindingRootIndex = -1;
+        newLFrame.currentQueryIndex = 0;
+    }
+    /**
+     * Allocates next free LFrame. This function tries to reuse the `LFrame`s to lower memory pressure.
+     */
+    function allocLFrame() {
+        var currentLFrame = instructionState.lFrame;
+        var childLFrame = currentLFrame === null ? null : currentLFrame.child;
+        var newLFrame = childLFrame === null ? createLFrame(currentLFrame) : childLFrame;
+        return newLFrame;
+    }
+    function createLFrame(parent) {
+        var lFrame = {
+            previousOrParentTNode: null,
+            isParent: true,
+            lView: null,
+            selectedIndex: 0,
+            contextLView: null,
+            elementDepthCount: 0,
+            currentNamespace: null,
+            currentSanitizer: null,
+            currentDirectiveDef: null,
+            activeDirectiveId: 0,
+            bindingRootIndex: -1,
+            currentQueryIndex: 0,
+            parent: parent,
+            child: null,
+        };
+        parent !== null && (parent.child = lFrame); // link the new LFrame for reuse.
+        return lFrame;
+    }
+    function leaveViewProcessExit() {
         if (hasActiveElementFlag(1 /* RunExitFn */)) {
             executeElementExitFn();
         }
-        ngDevMode && assertLViewOrUndefined(newView);
-        var oldView = instructionState.lView;
-        instructionState.previousOrParentTNode = hostTNode;
-        instructionState.isParent = true;
-        instructionState.lView = instructionState.contextLView = newView;
-        return oldView;
+        leaveView();
     }
-    /**
-     * Resets the application state.
-     */
-    function resetComponentState() {
-        instructionState.isParent = false;
-        instructionState.previousOrParentTNode = null;
-        instructionState.elementDepthCount = 0;
-        instructionState.bindingsEnabled = true;
-        setCurrentStyleSanitizer(null);
+    function leaveView() {
+        instructionState.lFrame = instructionState.lFrame.parent;
     }
     /**
      * Gets the most recent index passed to {@link select}
@@ -53959,7 +54048,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * current `LView` to act on.
      */
     function getSelectedIndex() {
-        return instructionState.selectedIndex >> 1 /* Size */;
+        return instructionState.lFrame.selectedIndex >> 1 /* Size */;
     }
     /**
      * Sets the most recent index passed to {@link select}
@@ -53971,20 +54060,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * run if and when the provided `index` value is different from the current selected index value.)
      */
     function setSelectedIndex(index) {
-        instructionState.selectedIndex = index << 1 /* Size */;
-    }
-    /**
-     * Sets the namespace used to create elements to `null`, which forces element creation to use
-     * `createElement` rather than `createElementNS`.
-     */
-    function namespaceHTMLInternal() {
-        instructionState.currentNamespace = null;
-    }
-    function setCurrentStyleSanitizer(sanitizer) {
-        instructionState.currentSanitizer = sanitizer;
+        instructionState.lFrame.selectedIndex = index << 1 /* Size */;
     }
     function getCurrentStyleSanitizer() {
-        return instructionState.currentSanitizer;
+        // TODO(misko): This should throw when there is no LView, but it turns out we can get here from
+        // `NodeStyleDebug` hence we return `null`. This should be fixed
+        var lFrame = instructionState.lFrame;
+        return lFrame === null ? null : lFrame.currentSanitizer;
     }
 
     /**
@@ -54126,6 +54208,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
 
     var MAP_BASED_ENTRY_PROP_NAME = '[MAP]';
     var TEMPLATE_DIRECTIVE_INDEX = 0;
+    function allocStylingMapArray(value) {
+        return [value];
+    }
     function getConfig(context) {
         return context[0 /* ConfigPosition */];
     }
@@ -54191,6 +54276,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getDefaultValue(context, index) {
         return context[index + 4 /* BindingsStartOffset */ + getTotalSources(context)];
     }
+    function setValue(data, bindingIndex, value) {
+        data[bindingIndex] = value;
+    }
     function getValue(data, bindingIndex) {
         return bindingIndex !== 0 ? data[bindingIndex] : null;
     }
@@ -54216,6 +54304,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // set a value to an empty string to remove it.
         return value != null && value !== '';
     }
+    function hyphenate$1(value) {
+        return value.replace(/[a-z][A-Z]/g, function (v) { return v.charAt(0) + '-' + v.charAt(1); }).toLowerCase();
+    }
     function isStylingContext(value) {
         // the StylingMapArray is in the format of [initial, prop, string, prop, string]
         // and this is the defining value to distinguish between arrays
@@ -54225,8 +54316,114 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getMapProp(map, index) {
         return map[index + 0 /* PropOffset */];
     }
+    function setMapValue(map, index, value) {
+        map[index + 1 /* ValueOffset */] = value;
+    }
     function getMapValue(map, index) {
         return map[index + 1 /* ValueOffset */];
+    }
+    /**
+     * Inserts the provided item into the provided styling array at the right spot.
+     *
+     * The `StylingMapArray` type is a sorted key/value array of entries. This means
+     * that when a new entry is inserted it must be placed at the right spot in the
+     * array. This function figures out exactly where to place it.
+     */
+    function addItemToStylingMap(stylingMapArr, prop, value, allowOverwrite) {
+        for (var j = 1 /* ValuesStartPosition */; j < stylingMapArr.length; j += 2 /* TupleSize */) {
+            var propAtIndex = getMapProp(stylingMapArr, j);
+            if (prop <= propAtIndex) {
+                var applied = false;
+                if (propAtIndex === prop) {
+                    var valueAtIndex = stylingMapArr[j];
+                    if (allowOverwrite || !isStylingValueDefined(valueAtIndex)) {
+                        applied = true;
+                        setMapValue(stylingMapArr, j, value);
+                    }
+                }
+                else {
+                    applied = true;
+                    stylingMapArr.splice(j, 0, prop, value);
+                }
+                return applied;
+            }
+        }
+        stylingMapArr.push(prop, value);
+        return true;
+    }
+    /**
+     * Used to convert a {key:value} map into a `StylingMapArray` array.
+     *
+     * This function will either generate a new `StylingMapArray` instance
+     * or it will patch the provided `newValues` map value into an
+     * existing `StylingMapArray` value (this only happens if `bindingValue`
+     * is an instance of `StylingMapArray`).
+     *
+     * If a new key/value map is provided with an old `StylingMapArray`
+     * value then all properties will be overwritten with their new
+     * values or with `null`. This means that the array will never
+     * shrink in size (but it will also not be created and thrown
+     * away whenever the `{key:value}` map entries change).
+     */
+    function normalizeIntoStylingMap(bindingValue, newValues, normalizeProps) {
+        var stylingMapArr = Array.isArray(bindingValue) ? bindingValue : allocStylingMapArray(null);
+        stylingMapArr[0 /* RawValuePosition */] = newValues;
+        // because the new values may not include all the properties
+        // that the old ones had, all values are set to `null` before
+        // the new values are applied. This way, when flushed, the
+        // styling algorithm knows exactly what style/class values
+        // to remove from the element (since they are `null`).
+        for (var j = 1 /* ValuesStartPosition */; j < stylingMapArr.length; j += 2 /* TupleSize */) {
+            setMapValue(stylingMapArr, j, null);
+        }
+        var props = null;
+        var map;
+        var allValuesTrue = false;
+        if (typeof newValues === 'string') { // [class] bindings allow string values
+            props = splitOnWhitespace(newValues);
+            allValuesTrue = props !== null;
+        }
+        else {
+            props = newValues ? Object.keys(newValues) : null;
+            map = newValues;
+        }
+        if (props) {
+            for (var i = 0; i < props.length; i++) {
+                var prop = props[i];
+                var newProp = normalizeProps ? hyphenate$1(prop) : prop;
+                var value = allValuesTrue ? true : map[prop];
+                addItemToStylingMap(stylingMapArr, newProp, value, true);
+            }
+        }
+        return stylingMapArr;
+    }
+    function splitOnWhitespace(text) {
+        var array = null;
+        var length = text.length;
+        var start = 0;
+        var foundChar = false;
+        for (var i = 0; i < length; i++) {
+            var char = text.charCodeAt(i);
+            if (char <= 32 /*' '*/) {
+                if (foundChar) {
+                    if (array === null)
+                        array = [];
+                    array.push(text.substring(start, i));
+                    foundChar = false;
+                }
+                start = i + 1;
+            }
+            else {
+                foundChar = true;
+            }
+        }
+        if (foundChar) {
+            if (array === null)
+                array = [];
+            array.push(text.substring(start, length));
+            foundChar = false;
+        }
+        return array;
     }
 
     /**
@@ -54601,9 +54798,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // If the ID stored here is a function, this is a special object like ElementRef or TemplateRef
             // so just call the factory function to create it.
             if (typeof bloomHash === 'function') {
-                var savePreviousOrParentTNode = getPreviousOrParentTNode();
-                var saveLView = getLView();
-                setTNodeAndViewData(tNode, lView);
+                enterDI(lView, tNode);
                 try {
                     var value = bloomHash();
                     if (value == null && !(flags & InjectFlags.Optional)) {
@@ -54614,7 +54809,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }
                 }
                 finally {
-                    setTNodeAndViewData(savePreviousOrParentTNode, saveLView);
+                    leaveDI();
                 }
             }
             else if (typeof bloomHash == 'number') {
@@ -54781,8 +54976,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     * cached `injectable`. Otherwise if it detects that the value is still a factory it
     * instantiates the `injectable` and caches the value.
     */
-    function getNodeInjectable(tData, lData, index, tNode) {
-        var value = lData[index];
+    function getNodeInjectable(tData, lView, index, tNode) {
+        var value = lView[index];
         if (isFactory(value)) {
             var factory = value;
             if (factory.resolving) {
@@ -54794,18 +54989,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (factory.injectImpl) {
                 previousInjectImplementation = setInjectImplementation(factory.injectImpl);
             }
-            var savePreviousOrParentTNode = getPreviousOrParentTNode();
-            var saveLView = getLView();
-            setTNodeAndViewData(tNode, lData);
+            enterDI(lView, tNode);
             try {
-                value = lData[index] = factory.factory(undefined, tData, lData, tNode);
+                value = lView[index] = factory.factory(undefined, tData, lView, tNode);
             }
             finally {
                 if (factory.injectImpl)
                     setInjectImplementation(previousInjectImplementation);
                 setIncludeViewProviders(previousIncludeViewProviders);
                 factory.resolving = false;
-                setTNodeAndViewData(savePreviousOrParentTNode, saveLView);
+                leaveDI();
             }
         }
         return value;
@@ -56033,6 +56226,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
+     * provided handler.
+     *
+     * The reason why this function exists is because IE doesn't support
+     * the `Proxy` class. For this reason an error must be thrown.
+     */
+    function createProxy(handler) {
+        var g = _global$1;
+        if (!g.Proxy) {
+            throw new Error('Proxy is not supported in this browser');
+        }
+        return new g.Proxy({}, handler);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function attachDebugObject(obj, debug) {
         Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
     }
@@ -56345,6 +56560,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
      * A human-readable debug summary of the styling data present within `TStylingContext`.
      *
      * This class is designed to be used within testing code or when an
@@ -56545,10 +56767,50 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             get: function () {
                 var entries = {};
-                this._mapValues(function (prop, value, bindingIndex) {
+                var config = this.config;
+                var isClassBased = this._isClassBased;
+                var data = this._data;
+                // the direct pass code doesn't convert [style] or [class] values
+                // into StylingMapArray instances. For this reason, the values
+                // need to be converted ahead of time since the styling debug
+                // relies on context resolution to figure out what styling
+                // values have been added/removed on the element.
+                if (config.allowDirectStyling && config.hasMapBindings) {
+                    data = data.concat([]); // make a copy
+                    this._convertMapBindingsToStylingMapArrays(data);
+                }
+                this._mapValues(data, function (prop, value, bindingIndex) {
                     entries[prop] = { prop: prop, value: value, bindingIndex: bindingIndex };
                 });
-                return entries;
+                // because the styling algorithm runs into two different
+                // modes: direct and context-resolution, the output of the entries
+                // object is different because the removed values are not
+                // saved between updates. For this reason a proxy is created
+                // so that the behavior is the same when examining values
+                // that are no longer active on the element.
+                return createProxy({
+                    get: function (target, prop) {
+                        var value = entries[prop];
+                        if (!value) {
+                            value = {
+                                prop: prop,
+                                value: isClassBased ? false : null,
+                                bindingIndex: null,
+                            };
+                        }
+                        return value;
+                    },
+                    set: function (target, prop, value) { return false; },
+                    ownKeys: function () { return Object.keys(entries); },
+                    getOwnPropertyDescriptor: function (k) {
+                        // we use a special property descriptor here so that enumeration operations
+                        // such as `Object.keys` will work on this proxy.
+                        return {
+                            enumerable: true,
+                            configurable: true,
+                        };
+                    },
+                });
             },
             enumerable: true,
             configurable: true
@@ -56564,13 +56826,36 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
              */
             get: function () {
                 var entries = {};
-                this._mapValues(function (prop, value) { entries[prop] = value; });
+                var config = this.config;
+                var data = this._data;
+                // the direct pass code doesn't convert [style] or [class] values
+                // into StylingMapArray instances. For this reason, the values
+                // need to be converted ahead of time since the styling debug
+                // relies on context resolution to figure out what styling
+                // values have been added/removed on the element.
+                if (config.allowDirectStyling && config.hasMapBindings) {
+                    data = data.concat([]); // make a copy
+                    this._convertMapBindingsToStylingMapArrays(data);
+                }
+                this._mapValues(data, function (prop, value) { entries[prop] = value; });
                 return entries;
             },
             enumerable: true,
             configurable: true
         });
-        NodeStylingDebug.prototype._mapValues = function (fn) {
+        NodeStylingDebug.prototype._convertMapBindingsToStylingMapArrays = function (data) {
+            var context = this.context.context;
+            var limit = getPropValuesStartPosition(context);
+            for (var i = 3 /* ValuesStartPosition */ + 4 /* BindingsStartOffset */; i < limit; i++) {
+                var bindingIndex = context[i];
+                var bindingValue = bindingIndex !== 0 ? getValue(data, bindingIndex) : null;
+                if (bindingValue && !Array.isArray(bindingValue)) {
+                    var stylingMapArray = normalizeIntoStylingMap(null, bindingValue, !this._isClassBased);
+                    setValue(data, bindingIndex, stylingMapArray);
+                }
+            }
+        };
+        NodeStylingDebug.prototype._mapValues = function (data, fn) {
             // there is no need to store/track an element instance. The
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
@@ -56582,9 +56867,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
             // run the template bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, false);
+            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, false);
             // and also the host bindings
-            applyStylingViaContext(this.context.context, null, mockElement, this._data, true, mapFn, sanitizer, true);
+            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, true);
         };
         return NodeStylingDebug;
     }());
@@ -57516,7 +57801,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function renderView(lView, tView, context) {
         ngDevMode && assertEqual(isCreationMode(lView), true, 'Should be run in creation mode');
-        var oldView = selectView(lView, lView[T_HOST]);
+        enterView(lView, lView[T_HOST]);
         try {
             var viewQuery = tView.viewQuery;
             if (viewQuery !== null) {
@@ -57556,7 +57841,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         finally {
             lView[FLAGS] &= ~4 /* CreationMode */;
-            selectView(oldView, null);
+            leaveView();
         }
     }
     /**
@@ -57569,7 +57854,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function refreshView(lView, tView, templateFn, context) {
         ngDevMode && assertEqual(isCreationMode(lView), false, 'Should be run in update mode');
-        var oldView = selectView(lView, lView[T_HOST]);
+        enterView(lView, lView[T_HOST]);
         var flags = lView[FLAGS];
         try {
             resetPreOrderHookFlags(lView);
@@ -57651,15 +57936,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         finally {
             lView[FLAGS] &= ~(64 /* Dirty */ | 8 /* FirstLViewPass */);
-            selectView(oldView, null);
+            leaveViewProcessExit();
         }
     }
     function renderComponentOrTemplate(hostView, templateFn, context) {
         var rendererFactory = hostView[RENDERER_FACTORY];
         var normalExecutionPath = !getCheckNoChangesMode();
         var creationModeIsActive = isCreationMode(hostView);
-        var previousOrParentTNode = getPreviousOrParentTNode();
-        var isParent = getIsParent();
         try {
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.begin) {
                 rendererFactory.begin();
@@ -57674,11 +57957,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.end) {
                 rendererFactory.end();
             }
-            setPreviousOrParentTNode(previousOrParentTNode, isParent);
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
-        namespaceHTMLInternal();
         var prevSelectedIndex = getSelectedIndex();
         try {
             setActiveHostElement(null);
@@ -58125,8 +58406,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function detectChangesInternal(view, context) {
         var rendererFactory = view[RENDERER_FACTORY];
-        var previousOrParentTNode = getPreviousOrParentTNode();
-        var isParent = getIsParent();
         if (rendererFactory.begin)
             rendererFactory.begin();
         try {
@@ -58140,7 +58419,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         finally {
             if (rendererFactory.end)
                 rendererFactory.end();
-            setPreviousOrParentTNode(previousOrParentTNode, isParent);
         }
     }
     /**
@@ -61832,7 +62110,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @returns Component view created
      */
     function createRootComponentView(rNode, def, rootView, rendererFactory, renderer, sanitizer) {
-        resetComponentState();
         var tView = rootView[TVIEW];
         ngDevMode && assertDataInRange(rootView, 0 + HEADER_OFFSET);
         rootView[0 + HEADER_OFFSET] = rNode;
@@ -62207,7 +62484,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+4.sha-3dff266.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+36.sha-b131f5b.with-local-changes');
 
     /**
      * @license
@@ -64939,9 +65216,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
-            // Ensure that the namespace for the root node is correct,
-            // otherwise the browser might not render out the element properly.
-            namespaceHTMLInternal();
             var hostRNode = rootSelectorOrNode ?
                 locateHostElement(rendererFactory, rootSelectorOrNode) :
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef), null);
@@ -64965,7 +65239,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var rootTView = createTView(-1, null, 1, 0, null, null, null, null, null);
             var rootLView = createLView(null, rootTView, rootContext, rootFlags, null, null, rendererFactory, renderer, sanitizer, rootViewInjector);
             // rootView is the parent when bootstrapping
-            var oldLView = selectView(rootLView, null);
+            // TODO(misko): it looks like we are entering view here but we don't really need to as
+            // `renderView` does that. However as the code is written it is needed because
+            // `createRootComponentView` and `createRootComponent` both read global state. Fixing those
+            // issues would allow us to drop this.
+            enterView(rootLView, null);
             var component;
             var tElementNode;
             try {
@@ -64985,7 +65263,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 renderView(rootLView, rootTView, null);
             }
             finally {
-                selectView(oldLView, null);
+                leaveView();
             }
             var componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootLView), rootLView, tElementNode);
             if (!rootSelectorOrNode || isIsolated) {
@@ -69095,7 +69373,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -69226,28 +69504,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
-     * provided handler.
-     *
-     * The reason why this function exists is because IE doesn't support
-     * the `Proxy` class. For this reason an error must be thrown.
-     */
-    function createProxy(handler) {
-        var g = _global$1;
-        if (!g.Proxy) {
-            throw new Error('Proxy is not supported in this browser');
-        }
-        return new g.Proxy({}, handler);
-    }
 
     /**
      * @license
@@ -69974,22 +70230,35 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return defaultKeyValueDiffers;
     }
     function _localeFactory(locale) {
-        if (locale) {
-            if (ivyEnabled) {
-                setLocaleId(locale);
-            }
-            return locale;
-        }
-        // Use `goog.LOCALE` as default value for `LOCALE_ID` token for Closure Compiler.
-        // Note: default `goog.LOCALE` value is `en`, when Angular used `en-US`. In order to preserve
-        // backwards compatibility, we use Angular default value over Closure Compiler's one.
+        locale = locale || getGlobalLocale();
+        return locale;
+    }
+    /**
+     * Work out the locale from the potential global properties.
+     *
+     * * Closure Compiler: use `goog.LOCALE`.
+     * * Ivy enabled: use `$localize.locale`
+     */
+    function getGlobalLocale() {
         if (ngI18nClosureMode && typeof goog !== 'undefined' && goog.LOCALE !== 'en') {
-            if (ivyEnabled) {
-                setLocaleId(goog.LOCALE);
-            }
+            // * The default `goog.LOCALE` value is `en`, while Angular used `en-US`.
+            // * In order to preserve backwards compatibility, we use Angular default value over
+            //   Closure Compiler's one.
             return goog.LOCALE;
         }
-        return DEFAULT_LOCALE_ID;
+        else {
+            // KEEP `typeof $localize !== 'undefined' && $localize.locale` IN SYNC WITH THE LOCALIZE
+            // COMPILE-TIME INLINER.
+            //
+            // * During compile time inlining of translations the expression will be replaced
+            //   with a string literal that is the current locale. Other forms of this expression are not
+            //   guaranteed to be replaced.
+            //
+            // * During runtime translation evaluation, the developer is required to set `$localize.locale`
+            //   if required, or just to provide their own `LOCALE_ID` provider.
+            return (ivyEnabled && typeof $localize !== 'undefined' && $localize.locale) ||
+                DEFAULT_LOCALE_ID;
+        }
     }
     /**
      * A built-in [dependency injection token](guide/glossary#di-token)
@@ -72826,7 +73095,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+4.sha-3dff266.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+36.sha-b131f5b.with-local-changes');
 
     /**
      * @license
