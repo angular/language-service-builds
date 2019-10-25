@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+58.sha-335854f.with-local-changes
+ * @license Angular v9.0.0-next.13+59.sha-5607ad8.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18991,7 +18991,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+58.sha-335854f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.13+59.sha-5607ad8.with-local-changes');
 
     /**
      * @license
@@ -33599,7 +33599,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+58.sha-335854f.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.13+59.sha-5607ad8.with-local-changes');
 
     /**
      * @license
@@ -54962,6 +54962,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return classes || '';
     }
     function forceStylesAsString(styles, hyphenateProps) {
+        if (typeof styles == 'string')
+            return styles;
         var str = '';
         if (styles) {
             var props = Object.keys(styles);
@@ -58479,21 +58481,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
             if (writeToAttrDirectly) {
-                var valueToApply = void 0;
-                if (isClassBased) {
-                    valueToApply = typeof value === 'string' ? value : objectToClassName(value);
-                    if (initialValue !== null) {
-                        valueToApply = concatString(initialValue, valueToApply, ' ');
-                    }
-                    setClassName(renderer, element, valueToApply);
-                }
-                else {
-                    valueToApply = forceStylesAsString(value, true);
-                    if (initialValue !== null) {
-                        valueToApply = initialValue + ';' + valueToApply;
-                    }
-                    setStyleAttr(renderer, element, valueToApply);
-                }
+                var initialValue_1 = hasInitial && !bindingValueContainsInitial ? getInitialStylingValue(context) : null;
+                var valueToApply = writeStylingValueDirectly(renderer, element, value, isClassBased, initialValue_1);
                 setValue(data, cachedValueIndex, valueToApply || null);
             }
             else {
@@ -58523,6 +58512,24 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
             }
         }
+    }
+    function writeStylingValueDirectly(renderer, element, value, isClassBased, initialValue) {
+        var valueToApply;
+        if (isClassBased) {
+            valueToApply = typeof value === 'string' ? value : objectToClassName(value);
+            if (initialValue !== null) {
+                valueToApply = concatString(initialValue, valueToApply, ' ');
+            }
+            setClassName(renderer, element, valueToApply);
+        }
+        else {
+            valueToApply = forceStylesAsString(value, true);
+            if (initialValue !== null) {
+                valueToApply = initialValue + ';' + valueToApply;
+            }
+            setStyleAttr(renderer, element, valueToApply);
+        }
+        return valueToApply;
     }
     /**
      * Applies the provided styling prop/value to the element directly (without context resolution).
@@ -61895,9 +61902,25 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * applied once the element is instantiated. This function applies each of the static
      * style and class entries to the element.
      */
-    function renderInitialStyling(renderer, native, tNode) {
-        renderStylingMap(renderer, native, tNode.classes, true);
-        renderStylingMap(renderer, native, tNode.styles, false);
+    function renderInitialStyling(renderer, native, tNode, append) {
+        if (tNode.classes !== null) {
+            if (append) {
+                renderStylingMap(renderer, native, tNode.classes, true);
+            }
+            else {
+                var classes = getInitialStylingValue(tNode.classes);
+                writeStylingValueDirectly(renderer, native, classes, true, null);
+            }
+        }
+        if (tNode.styles !== null) {
+            if (append) {
+                renderStylingMap(renderer, native, tNode.styles, false);
+            }
+            else {
+                var styles = getInitialStylingValue(tNode.styles);
+                writeStylingValueDirectly(renderer, native, styles, false, null);
+            }
+        }
     }
 
     /**
@@ -67047,7 +67070,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         if ((tNode.flags & 64 /* hasInitialStyling */) === 64 /* hasInitialStyling */) {
-            renderInitialStyling(renderer, native, tNode);
+            renderInitialStyling(renderer, native, tNode, false);
         }
         appendChild(native, tNode, lView);
         // any immediate children of a component or template container must be pre-emptively
@@ -67187,7 +67210,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // attribute values to the element.
                 if (stylingNeedsToBeRendered) {
                     var renderer = lView[RENDERER];
-                    renderInitialStyling(renderer, native, tNode);
+                    renderInitialStyling(renderer, native, tNode, true);
                 }
             }
         }
@@ -70681,7 +70704,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+58.sha-335854f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.13+59.sha-5607ad8.with-local-changes');
 
     /**
      * @license
@@ -84208,7 +84231,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+58.sha-335854f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.13+59.sha-5607ad8.with-local-changes');
 
     /**
      * @license
