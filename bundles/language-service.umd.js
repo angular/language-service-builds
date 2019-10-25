@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.13+52.sha-314e93f.with-local-changes
+ * @license Angular v9.0.0-next.14+1.sha-8e20bfa.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3617,15 +3617,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Identifiers.injectAttribute = { name: 'ɵɵinjectAttribute', moduleName: CORE$1 };
         Identifiers.injectPipeChangeDetectorRef = { name: 'ɵɵinjectPipeChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE$1 };
+        Identifiers.invalidFactory = { name: 'ɵɵinvalidFactory', moduleName: CORE$1 };
         Identifiers.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
         Identifiers.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
         Identifiers.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE$1 };
-        Identifiers.defineBase = { name: 'ɵɵdefineBase', moduleName: CORE$1 };
-        Identifiers.BaseDef = {
-            name: 'ɵɵBaseDef',
-            moduleName: CORE$1,
-        };
         Identifiers.defineComponent = { name: 'ɵɵdefineComponent', moduleName: CORE$1 };
         Identifiers.setComponentScope = { name: 'ɵɵsetComponentScope', moduleName: CORE$1 };
         Identifiers.ComponentDefWithMeta = {
@@ -5342,6 +5338,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         R3FactoryDelegateType[R3FactoryDelegateType["Function"] = 1] = "Function";
         R3FactoryDelegateType[R3FactoryDelegateType["Factory"] = 2] = "Factory";
     })(R3FactoryDelegateType || (R3FactoryDelegateType = {}));
+    var R3FactoryTarget;
+    (function (R3FactoryTarget) {
+        R3FactoryTarget[R3FactoryTarget["Directive"] = 0] = "Directive";
+        R3FactoryTarget[R3FactoryTarget["Component"] = 1] = "Component";
+        R3FactoryTarget[R3FactoryTarget["Injectable"] = 2] = "Injectable";
+        R3FactoryTarget[R3FactoryTarget["Pipe"] = 3] = "Pipe";
+        R3FactoryTarget[R3FactoryTarget["NgModule"] = 4] = "NgModule";
+    })(R3FactoryTarget || (R3FactoryTarget = {}));
     /**
      * Resolved type of a dependency.
      *
@@ -5370,8 +5374,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Construct a factory function expression for the given `R3FactoryMetadata`.
      */
-    function compileFactoryFunction(meta, isPipe) {
-        if (isPipe === void 0) { isPipe = false; }
+    function compileFactoryFunction(meta) {
         var t = variable('t');
         var statements = [];
         // The type to instantiate via constructor invocation. If there is no delegated factory, meaning
@@ -5384,8 +5387,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (meta.deps !== null) {
             // There is a constructor (either explicitly or implicitly defined).
             if (meta.deps !== 'invalid') {
-                ctorExpr =
-                    new InstantiateExpr(typeForCtor, injectDependencies(meta.deps, meta.injectFn, isPipe));
+                ctorExpr = new InstantiateExpr(typeForCtor, injectDependencies(meta.deps, meta.injectFn, meta.target === R3FactoryTarget.Pipe));
             }
         }
         else {
@@ -5409,7 +5411,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 ctorStmt = r.set(ctorExprFinal).toStmt();
             }
             else {
-                ctorStmt = makeErrorStmt(meta.name);
+                ctorStmt = importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt();
             }
             body.push(ifStmt(t, [ctorStmt], [r.set(nonCtorExpr).toStmt()]));
             return r;
@@ -5429,8 +5431,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else if (isDelegatedMetadata(meta)) {
             // This type is created with a delegated factory. If a type parameter is not specified, call
             // the factory instead.
-            var delegateArgs = injectDependencies(meta.delegateDeps, meta.injectFn, isPipe);
-            // Either call `new delegate(...)` or `delegate(...)` depending on meta.useNewForDelegate.
+            var delegateArgs = injectDependencies(meta.delegateDeps, meta.injectFn, meta.target === R3FactoryTarget.Pipe);
+            // Either call `new delegate(...)` or `delegate(...)` depending on meta.delegateType.
             var factoryExpr = new (meta.delegateType === R3FactoryDelegateType.Class ?
                 InstantiateExpr :
                 InvokeFunctionExpr)(meta.delegate, delegateArgs);
@@ -5447,25 +5449,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             body.push(new ReturnStatement(retExpr));
         }
         else {
-            body.push(makeErrorStmt(meta.name));
+            body.push(importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt());
         }
         return {
             factory: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, meta.name + "_Factory"),
             statements: statements,
             type: expressionType(importExpr(Identifiers$1.FactoryDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]))
         };
-    }
-    /**
-     * Constructs the factory def (`ɵfac`) from directive/component/pipe metadata.
-     */
-    function compileFactoryFromMetadata(meta) {
-        return compileFactoryFunction({
-            name: meta.name,
-            type: meta.type,
-            deps: meta.deps,
-            typeArgumentCount: meta.typeArgumentCount,
-            injectFn: meta.injectFn,
-        }, meta.isPipe);
     }
     function injectDependencies(deps, injectFn, isPipe) {
         return deps.map(function (dep) { return compileInjectDependency(dep, injectFn, isPipe); });
@@ -5547,11 +5537,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return deps;
     }
-    function makeErrorStmt(name) {
-        return new ThrowStmt(new InstantiateExpr(new ReadVarExpr('Error'), [
-            literal(name + " has a constructor which is not compatible with Dependency Injection. It should probably not be @Injectable().")
-        ]));
-    }
     function isDelegatedMetadata(meta) {
         return meta.delegateType !== undefined;
     }
@@ -5574,6 +5559,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             typeArgumentCount: meta.typeArgumentCount,
             deps: [],
             injectFn: Identifiers.inject,
+            target: R3FactoryTarget.Injectable,
         };
         if (meta.useClass !== undefined) {
             // meta.useClass has two modes of operation. Either deps are specified, in which case `new` is
@@ -9559,6 +9545,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             typeArgumentCount: 0,
             deps: meta.deps,
             injectFn: Identifiers$1.inject,
+            target: R3FactoryTarget.NgModule,
         });
         var definitionMap = {
             factory: result.factory,
@@ -9644,7 +9631,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             pure: pipe.pure,
         };
         var res = compilePipeFromMetadata(metadata);
-        var factoryRes = compileFactoryFromMetadata(__assign(__assign({}, metadata), { injectFn: Identifiers$1.directiveInject, isPipe: true }));
+        var factoryRes = compileFactoryFunction(__assign(__assign({}, metadata), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Pipe }));
         var definitionField = outputCtx.constantPool.propertyNameOf(3 /* Pipe */);
         var ngFactoryDefStatement = new ClassStmt(
         /* name */ name, 
@@ -18130,42 +18117,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return { expression: expression, type: type };
     }
     /**
-     * Compile a base definition for the render3 runtime as defined by {@link R3BaseRefMetadata}
-     * @param meta the metadata used for compilation.
-     */
-    function compileBaseDefFromMetadata(meta, constantPool, bindingParser) {
-        var definitionMap = new DefinitionMap();
-        if (meta.inputs) {
-            var inputs_1 = meta.inputs;
-            var inputsMap = Object.keys(inputs_1).map(function (key) {
-                var v = inputs_1[key];
-                var value = Array.isArray(v) ? literalArr(v.map(function (vx) { return literal(vx); })) : literal(v);
-                return { key: key, value: value, quoted: false };
-            });
-            definitionMap.set('inputs', literalMap(inputsMap));
-        }
-        if (meta.outputs) {
-            var outputs_1 = meta.outputs;
-            var outputsMap = Object.keys(outputs_1).map(function (key) {
-                var value = literal(outputs_1[key]);
-                return { key: key, value: value, quoted: false };
-            });
-            definitionMap.set('outputs', literalMap(outputsMap));
-        }
-        if (meta.viewQueries && meta.viewQueries.length > 0) {
-            definitionMap.set('viewQuery', createViewQueriesFunction(meta.viewQueries, constantPool));
-        }
-        if (meta.queries && meta.queries.length > 0) {
-            definitionMap.set('contentQueries', createContentQueriesFunction(meta.queries, constantPool));
-        }
-        if (meta.host) {
-            definitionMap.set('hostBindings', createHostBindingsFunction(meta.host, meta.typeSourceSpan, bindingParser, constantPool, meta.name));
-        }
-        var expression = importExpr(Identifiers$1.defineBase).callFn([definitionMap.toLiteralMap()]);
-        var type = new ExpressionType(importExpr(Identifiers$1.BaseDef), /* modifiers */ null, [expressionType(meta.type)]);
-        return { expression: expression, type: type };
-    }
-    /**
      * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
      */
     function compileComponentFromMetadata(meta, constantPool, bindingParser) {
@@ -18287,7 +18238,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var definitionField = outputCtx.constantPool.propertyNameOf(1 /* Directive */);
         var meta = directiveMetadataFromGlobalMetadata(directive, outputCtx, reflector);
         var res = compileDirectiveFromMetadata(meta, outputCtx.constantPool, bindingParser);
-        var factoryRes = compileFactoryFromMetadata(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject }));
+        var factoryRes = compileFactoryFunction(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Directive }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var directiveDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
@@ -18308,7 +18259,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // Compute the R3ComponentMetadata from the CompileDirectiveMetadata
         var meta = __assign(__assign({}, directiveMetadataFromGlobalMetadata(component, outputCtx, reflector)), { selector: component.selector, template: { nodes: render3Ast.nodes }, directives: [], pipes: typeMapToExpressionMap(pipeTypeByName, outputCtx), viewQueries: queriesFromGlobalMetadata(component.viewQueries, outputCtx), wrapDirectivesAndPipesInClosure: false, styles: (summary.template && summary.template.styles) || EMPTY_ARRAY, encapsulation: (summary.template && summary.template.encapsulation) || ViewEncapsulation.Emulated, interpolation: DEFAULT_INTERPOLATION_CONFIG, animations: null, viewProviders: component.viewProviders.length > 0 ? new WrappedNodeExpr(component.viewProviders) : null, relativeContextFilePath: '', i18nUseExternalIds: true });
         var res = compileComponentFromMetadata(meta, outputCtx.constantPool, bindingParser);
-        var factoryRes = compileFactoryFromMetadata(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject }));
+        var factoryRes = compileFactoryFunction(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Directive }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
         var componentDefStatement = new ClassStmt(name, null, [new ClassField(definitionField, INFERRED_TYPE, [StmtModifier.Static], res.expression)], [], new ClassMethod(null, [], []), []);
         // Create the partial class to be merged with the actual class.
@@ -18804,6 +18755,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             if (jitEvaluator === void 0) { jitEvaluator = new JitEvaluator(); }
             this.jitEvaluator = jitEvaluator;
             this.R3ResolvedDependencyType = R3ResolvedDependencyType;
+            this.R3FactoryTarget = R3FactoryTarget;
             this.ResourceLoader = ResourceLoader;
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
@@ -18887,24 +18839,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return this.jitExpression(res.expression, angularCoreEnv, jitExpressionSourceMap, constantPool.statements);
         };
         CompilerFacadeImpl.prototype.compileFactory = function (angularCoreEnv, sourceMapUrl, meta) {
-            var factoryRes = compileFactoryFromMetadata({
+            var factoryRes = compileFactoryFunction({
                 name: meta.name,
                 type: new WrappedNodeExpr(meta.type),
                 typeArgumentCount: meta.typeArgumentCount,
                 deps: convertR3DependencyMetadataArray(meta.deps),
                 injectFn: meta.injectFn === 'directiveInject' ? Identifiers.directiveInject :
                     Identifiers.inject,
-                isPipe: meta.isPipe
+                target: meta.target,
             });
             return this.jitExpression(factoryRes.factory, angularCoreEnv, sourceMapUrl, factoryRes.statements);
-        };
-        CompilerFacadeImpl.prototype.compileBase = function (angularCoreEnv, sourceMapUrl, facade) {
-            var constantPool = new ConstantPool();
-            var typeSourceSpan = this.createParseSourceSpan('Base', facade.name, "ng:///" + facade.name + ".js");
-            var meta = __assign(__assign({}, facade), { typeSourceSpan: typeSourceSpan, viewQueries: facade.viewQueries ? facade.viewQueries.map(convertToR3QueryMetadata) :
-                    facade.viewQueries, queries: facade.queries ? facade.queries.map(convertToR3QueryMetadata) : facade.queries, host: extractHostBindings(facade.propMetadata, typeSourceSpan) });
-            var res = compileBaseDefFromMetadata(meta, constantPool, makeBindingParser());
-            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, constantPool.statements);
         };
         CompilerFacadeImpl.prototype.createParseSourceSpan = function (kind, typeName, sourceUrl) {
             return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
@@ -19062,7 +19006,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.13+52.sha-314e93f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.14+1.sha-8e20bfa.with-local-changes');
 
     /**
      * @license
@@ -33670,7 +33614,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.13+52.sha-314e93f.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.14+1.sha-8e20bfa.with-local-changes');
 
     /**
      * @license
@@ -34314,7 +34258,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     // Typescript reference issue: https://github.com/Microsoft/TypeScript/issues/22497
     // Pattern matching all Render3 property names.
     var R3_DEF_NAME_PATTERN = [
-        'ngBaseDef',
         'ɵcmp',
         'ɵdir',
         'ɵprov',
@@ -34387,55 +34330,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function verifySupportedTypeScriptVersion() {
         checkVersion(tsVersion, MIN_TS_VERSION, MAX_TS_VERSION);
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var HandlerPrecedence;
-    (function (HandlerPrecedence) {
-        /**
-         * Handler with PRIMARY precedence cannot overlap - there can only be one on a given class.
-         *
-         * If more than one PRIMARY handler matches a class, an error is produced.
-         */
-        HandlerPrecedence[HandlerPrecedence["PRIMARY"] = 0] = "PRIMARY";
-        /**
-         * Handlers with SHARED precedence can match any class, possibly in addition to a single PRIMARY
-         * handler.
-         *
-         * It is not an error for a class to have any number of SHARED handlers.
-         */
-        HandlerPrecedence[HandlerPrecedence["SHARED"] = 1] = "SHARED";
-        /**
-         * Handlers with WEAK precedence that match a class are ignored if any handlers with stronger
-         * precedence match a class.
-         */
-        HandlerPrecedence[HandlerPrecedence["WEAK"] = 2] = "WEAK";
-    })(HandlerPrecedence || (HandlerPrecedence = {}));
-    /**
-     * A set of options which can be passed to a `DecoratorHandler` by a consumer, to tailor the output
-     * of compilation beyond the decorators themselves.
-     */
-    var HandlerFlags;
-    (function (HandlerFlags) {
-        /**
-         * No flags set.
-         */
-        HandlerFlags[HandlerFlags["NONE"] = 0] = "NONE";
-        /**
-         * Indicates that this decorator is fully inherited from its parent at runtime. In addition to
-         * normally inherited aspects such as inputs and queries, full inheritance applies to every aspect
-         * of the component or directive, such as the template function itself.
-         *
-         * Its primary effect is to cause the `CopyDefinitionFeature` to be applied to the definition
-         * being compiled. See that class for more information.
-         */
-        HandlerFlags[HandlerFlags["FULL_INHERITANCE"] = 1] = "FULL_INHERITANCE";
-    })(HandlerFlags || (HandlerFlags = {}));
 
     /**
      * @license
@@ -34567,6 +34461,853 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // Escape anything that isn't alphanumeric, '/' or '_'.
+    var CHARS_TO_ESCAPE = /[^a-zA-Z0-9/_]/g;
+    /**
+     * An `AliasingHost` which generates and consumes alias re-exports when module names for each file
+     * are determined by a `FileToModuleHost`.
+     *
+     * When using a `FileToModuleHost`, aliasing prevents issues with transitive dependencies. See the
+     * README.md for more details.
+     */
+    var FileToModuleAliasingHost = /** @class */ (function () {
+        function FileToModuleAliasingHost(fileToModuleHost) {
+            this.fileToModuleHost = fileToModuleHost;
+            /**
+             * With a `FileToModuleHost`, aliases are chosen automatically without the need to look through
+             * the exports present in a .d.ts file, so we can avoid cluttering the .d.ts files.
+             */
+            this.aliasExportsInDts = false;
+        }
+        FileToModuleAliasingHost.prototype.maybeAliasSymbolAs = function (ref, context, ngModuleName, isReExport) {
+            if (!isReExport) {
+                // Aliasing is used with a FileToModuleHost to prevent transitive dependencies. Thus, aliases
+                // only need to be created for directives/pipes which are not direct declarations of an
+                // NgModule which exports them.
+                return null;
+            }
+            return this.aliasName(ref.node, context);
+        };
+        /**
+         * Generates an `Expression` to import `decl` from `via`, assuming an export was added when `via`
+         * was compiled per `maybeAliasSymbolAs` above.
+         */
+        FileToModuleAliasingHost.prototype.getAliasIn = function (decl, via, isReExport) {
+            if (!isReExport) {
+                // Directly exported directives/pipes don't require an alias, per the logic in
+                // `maybeAliasSymbolAs`.
+                return null;
+            }
+            // viaModule is the module it'll actually be imported from.
+            var moduleName = this.fileToModuleHost.fileNameToModuleName(via.fileName, via.fileName);
+            return new ExternalExpr({ moduleName: moduleName, name: this.aliasName(decl, via) });
+        };
+        /**
+         * Generates an alias name based on the full module name of the file which declares the aliased
+         * directive/pipe.
+         */
+        FileToModuleAliasingHost.prototype.aliasName = function (decl, context) {
+            // The declared module is used to get the name of the alias.
+            var declModule = this.fileToModuleHost.fileNameToModuleName(decl.getSourceFile().fileName, context.fileName);
+            var replaced = declModule.replace(CHARS_TO_ESCAPE, '_').replace(/\//g, '$');
+            return 'ɵng$' + replaced + '$$' + decl.name.text;
+        };
+        return FileToModuleAliasingHost;
+    }());
+    /**
+     * An `AliasingHost` which exports directives from any file containing an NgModule in which they're
+     * declared/exported, under a private symbol name.
+     *
+     * These exports support cases where an NgModule is imported deeply from an absolute module path
+     * (that is, it's not part of an Angular Package Format entrypoint), and the compiler needs to
+     * import any matched directives/pipes from the same path (to the NgModule file). See README.md for
+     * more details.
+     */
+    var PrivateExportAliasingHost = /** @class */ (function () {
+        function PrivateExportAliasingHost(host) {
+            this.host = host;
+            /**
+             * Under private export aliasing, the `AbsoluteModuleStrategy` used for emitting references will
+             * will select aliased exports that it finds in the .d.ts file for an NgModule's file. Thus,
+             * emitting these exports in .d.ts is a requirement for the `PrivateExportAliasingHost` to
+             * function correctly.
+             */
+            this.aliasExportsInDts = true;
+        }
+        PrivateExportAliasingHost.prototype.maybeAliasSymbolAs = function (ref, context, ngModuleName) {
+            if (ref.hasOwningModuleGuess) {
+                // Skip nodes that already have an associated absolute module specifier, since they can be
+                // safely imported from that specifier.
+                return null;
+            }
+            // Look for a user-provided export of `decl` in `context`. If one exists, then an alias export
+            // is not needed.
+            // TODO(alxhub): maybe add a host method to check for the existence of an export without going
+            // through the entire list of exports.
+            var exports = this.host.getExportsOfModule(context);
+            if (exports === null) {
+                // Something went wrong, and no exports were available at all. Bail rather than risk creating
+                // re-exports when they're not needed.
+                throw new Error("Could not determine the exports of: " + context.fileName);
+            }
+            var found = false;
+            exports.forEach(function (value) {
+                if (value.node === ref.node) {
+                    found = true;
+                }
+            });
+            if (found) {
+                // The module exports the declared class directly, no alias is necessary.
+                return null;
+            }
+            return "\u0275ngExport\u0275" + ngModuleName + "\u0275" + ref.node.name.text;
+        };
+        /**
+         * A `PrivateExportAliasingHost` only generates re-exports and does not direct the compiler to
+         * directly consume the aliases it creates.
+         *
+         * Instead, they're consumed indirectly: `AbsoluteModuleStrategy` `ReferenceEmitterStrategy` will
+         * select these alias exports automatically when looking for an export of the directive/pipe from
+         * the same path as the NgModule was imported.
+         *
+         * Thus, `getAliasIn` always returns `null`.
+         */
+        PrivateExportAliasingHost.prototype.getAliasIn = function () { return null; };
+        return PrivateExportAliasingHost;
+    }());
+    /**
+     * A `ReferenceEmitStrategy` which will consume the alias attached to a particular `Reference` to a
+     * directive or pipe, if it exists.
+     */
+    var AliasStrategy = /** @class */ (function () {
+        function AliasStrategy() {
+        }
+        AliasStrategy.prototype.emit = function (ref, context, importMode) {
+            return ref.alias;
+        };
+        return AliasStrategy;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var TS_DTS_JS_EXTENSION$1 = /(?:\.d)?\.ts$|\.js$/;
+    function relativePathBetween(from, to) {
+        var relativePath = relative(dirname(resolve(from)), resolve(to)).replace(TS_DTS_JS_EXTENSION$1, '');
+        if (relativePath === '') {
+            return null;
+        }
+        // path.relative() does not include the leading './'.
+        if (!relativePath.startsWith('.')) {
+            relativePath = "./" + relativePath;
+        }
+        return relativePath;
+    }
+    function normalizeSeparators$1(path) {
+        // TODO: normalize path only for OS that need it.
+        return path.replace(/\\/g, '/');
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * `ImportRewriter` that does no rewriting.
+     */
+    var NoopImportRewriter = /** @class */ (function () {
+        function NoopImportRewriter() {
+        }
+        NoopImportRewriter.prototype.shouldImportSymbol = function (symbol, specifier) { return true; };
+        NoopImportRewriter.prototype.rewriteSymbol = function (symbol, specifier) { return symbol; };
+        NoopImportRewriter.prototype.rewriteSpecifier = function (specifier, inContextOfFile) { return specifier; };
+        return NoopImportRewriter;
+    }());
+    /**
+     * A mapping of supported symbols that can be imported from within @angular/core, and the names by
+     * which they're exported from r3_symbols.
+     */
+    var CORE_SUPPORTED_SYMBOLS = new Map([
+        ['ɵɵdefineInjectable', 'ɵɵdefineInjectable'],
+        ['ɵɵdefineInjector', 'ɵɵdefineInjector'],
+        ['ɵɵdefineNgModule', 'ɵɵdefineNgModule'],
+        ['ɵɵsetNgModuleScope', 'ɵɵsetNgModuleScope'],
+        ['ɵɵinject', 'ɵɵinject'],
+        ['ɵɵFactoryDef', 'ɵɵFactoryDef'],
+        ['ɵsetClassMetadata', 'setClassMetadata'],
+        ['ɵɵInjectableDef', 'ɵɵInjectableDef'],
+        ['ɵɵInjectorDef', 'ɵɵInjectorDef'],
+        ['ɵɵNgModuleDefWithMeta', 'ɵɵNgModuleDefWithMeta'],
+        ['ɵNgModuleFactory', 'NgModuleFactory'],
+    ]);
+    var CORE_MODULE = '@angular/core';
+    /**
+     * `ImportRewriter` that rewrites imports from '@angular/core' to be imported from the r3_symbols.ts
+     * file instead.
+     */
+    var R3SymbolsImportRewriter = /** @class */ (function () {
+        function R3SymbolsImportRewriter(r3SymbolsPath) {
+            this.r3SymbolsPath = r3SymbolsPath;
+        }
+        R3SymbolsImportRewriter.prototype.shouldImportSymbol = function (symbol, specifier) { return true; };
+        R3SymbolsImportRewriter.prototype.rewriteSymbol = function (symbol, specifier) {
+            if (specifier !== CORE_MODULE) {
+                // This import isn't from core, so ignore it.
+                return symbol;
+            }
+            return validateAndRewriteCoreSymbol(symbol);
+        };
+        R3SymbolsImportRewriter.prototype.rewriteSpecifier = function (specifier, inContextOfFile) {
+            if (specifier !== CORE_MODULE) {
+                // This module isn't core, so ignore it.
+                return specifier;
+            }
+            var relativePathToR3Symbols = relativePathBetween(inContextOfFile, this.r3SymbolsPath);
+            if (relativePathToR3Symbols === null) {
+                throw new Error("Failed to rewrite import inside " + CORE_MODULE + ": " + inContextOfFile + " -> " + this.r3SymbolsPath);
+            }
+            return relativePathToR3Symbols;
+        };
+        return R3SymbolsImportRewriter;
+    }());
+    function validateAndRewriteCoreSymbol(name) {
+        if (!CORE_SUPPORTED_SYMBOLS.has(name)) {
+            throw new Error("Importing unexpected symbol " + name + " while compiling " + CORE_MODULE);
+        }
+        return CORE_SUPPORTED_SYMBOLS.get(name);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var TS$2 = /\.tsx?$/i;
+    var D_TS = /\.d\.ts$/i;
+    function isDtsPath(filePath) {
+        return D_TS.test(filePath);
+    }
+    function isNonDeclarationTsPath(filePath) {
+        return TS$2.test(filePath) && !D_TS.test(filePath);
+    }
+    function nodeNameForError(node) {
+        if (node.name !== undefined && ts.isIdentifier(node.name)) {
+            return node.name.text;
+        }
+        else {
+            var kind = ts.SyntaxKind[node.kind];
+            var _a = ts.getLineAndCharacterOfPosition(node.getSourceFile(), node.getStart()), line = _a.line, character = _a.character;
+            return kind + "@" + line + ":" + character;
+        }
+    }
+    function getSourceFile(node) {
+        // In certain transformation contexts, `ts.Node.getSourceFile()` can actually return `undefined`,
+        // despite the type signature not allowing it. In that event, get the `ts.SourceFile` via the
+        // original node instead (which works).
+        var directSf = node.getSourceFile();
+        return directSf !== undefined ? directSf : ts.getOriginalNode(node).getSourceFile();
+    }
+    function getSourceFileOrNull(program, fileName) {
+        return program.getSourceFile(fileName) || null;
+    }
+    function getTokenAtPosition(sf, pos) {
+        // getTokenAtPosition is part of TypeScript's private API.
+        return ts.getTokenAtPosition(sf, pos);
+    }
+    function identifierOfNode(decl) {
+        if (decl.name !== undefined && ts.isIdentifier(decl.name)) {
+            return decl.name;
+        }
+        else {
+            return null;
+        }
+    }
+    function isDeclaration(node) {
+        return ts.isEnumDeclaration(node) || ts.isClassDeclaration(node) ||
+            ts.isFunctionDeclaration(node) || ts.isVariableDeclaration(node);
+    }
+    function getRootDirs(host, options) {
+        var rootDirs = [];
+        if (options.rootDirs !== undefined) {
+            rootDirs.push.apply(rootDirs, __spread(options.rootDirs));
+        }
+        else if (options.rootDir !== undefined) {
+            rootDirs.push(options.rootDir);
+        }
+        else {
+            rootDirs.push(host.getCurrentDirectory());
+        }
+        // In Windows the above might not always return posix separated paths
+        // See:
+        // https://github.com/Microsoft/TypeScript/blob/3f7357d37f66c842d70d835bc925ec2a873ecfec/src/compiler/sys.ts#L650
+        // Also compiler options might be set via an API which doesn't normalize paths
+        return rootDirs.map(function (rootDir) { return absoluteFrom(rootDir); });
+    }
+    function nodeDebugInfo(node) {
+        var sf = getSourceFile(node);
+        var _a = ts.getLineAndCharacterOfPosition(sf, node.pos), line = _a.line, character = _a.character;
+        return "[" + sf.fileName + ": " + ts.SyntaxKind[node.kind] + " @ " + line + ":" + character + "]";
+    }
+    /**
+     * Resolve the specified `moduleName` using the given `compilerOptions` and `compilerHost`.
+     *
+     * This helper will attempt to use the `CompilerHost.resolveModuleNames()` method if available.
+     * Otherwise it will fallback on the `ts.ResolveModuleName()` function.
+     */
+    function resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost) {
+        if (compilerHost.resolveModuleNames) {
+            // FIXME: Additional parameters are required in TS3.6, but ignored in 3.5.
+            // Remove the any cast once google3 is fully on TS3.6.
+            return compilerHost
+                .resolveModuleNames([moduleName], containingFile, undefined, undefined, compilerOptions)[0];
+        }
+        else {
+            return ts.resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost)
+                .resolvedModule;
+        }
+    }
+
+    /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
+     * An implementation of `DefaultImportRecorder` which does nothing.
+     *
+     * This is useful when default import tracking isn't required, such as when emitting .d.ts code
+     * or for ngcc.
+     */
+    var NOOP_DEFAULT_IMPORT_RECORDER = {
+        recordImportedIdentifier: function (id) { return void {}; },
+        recordUsedIdentifier: function (id) { return void {}; },
+    };
+    /**
+     * TypeScript has trouble with generating default imports inside of transformers for some module
+     * formats. The issue is that for the statement:
+     *
+     * import X from 'some/module';
+     * console.log(X);
+     *
+     * TypeScript will not use the "X" name in generated code. For normal user code, this is fine
+     * because references to X will also be renamed. However, if both the import and any references are
+     * added in a transformer, TypeScript does not associate the two, and will leave the "X" references
+     * dangling while renaming the import variable. The generated code looks something like:
+     *
+     * const module_1 = require('some/module');
+     * console.log(X); // now X is a dangling reference.
+     *
+     * Therefore, we cannot synthetically add default imports, and must reuse the imports that users
+     * include. Doing this poses a challenge for imports that are only consumed in the type position in
+     * the user's code. If Angular reuses the imported symbol in a value position (for example, we
+     * see a constructor parameter of type Foo and try to write "inject(Foo)") we will also end up with
+     * a dangling reference, as TS will elide the import because it was only used in the type position
+     * originally.
+     *
+     * To avoid this, the compiler must "touch" the imports with `ts.getMutableClone`, and should
+     * only do this for imports which are actually consumed. The `DefaultImportTracker` keeps track of
+     * these imports as they're encountered and emitted, and implements a transform which can correctly
+     * flag the imports as required.
+     *
+     * This problem does not exist for non-default imports as the compiler can easily insert
+     * "import * as X" style imports for those, and the "X" identifier survives transformation.
+     */
+    var DefaultImportTracker = /** @class */ (function () {
+        function DefaultImportTracker() {
+            /**
+             * A `Map` which tracks the `Map` of default import `ts.Identifier`s to their
+             * `ts.ImportDeclaration`s. These declarations are not guaranteed to be used.
+             */
+            this.sourceFileToImportMap = new Map();
+            /**
+             * A `Map` which tracks the `Set` of `ts.ImportDeclaration`s for default imports that were used in
+             * a given `ts.SourceFile` and need to be preserved.
+             */
+            this.sourceFileToUsedImports = new Map();
+        }
+        DefaultImportTracker.prototype.recordImportedIdentifier = function (id, decl) {
+            var sf = getSourceFile(id);
+            if (!this.sourceFileToImportMap.has(sf)) {
+                this.sourceFileToImportMap.set(sf, new Map());
+            }
+            this.sourceFileToImportMap.get(sf).set(id, decl);
+        };
+        DefaultImportTracker.prototype.recordUsedIdentifier = function (id) {
+            var sf = getSourceFile(id);
+            if (!this.sourceFileToImportMap.has(sf)) {
+                // The identifier's source file has no registered default imports at all.
+                return;
+            }
+            var identiferToDeclaration = this.sourceFileToImportMap.get(sf);
+            if (!identiferToDeclaration.has(id)) {
+                // The identifier isn't from a registered default import.
+                return;
+            }
+            var decl = identiferToDeclaration.get(id);
+            // Add the default import declaration to the set of used import declarations for the file.
+            if (!this.sourceFileToUsedImports.has(sf)) {
+                this.sourceFileToUsedImports.set(sf, new Set());
+            }
+            this.sourceFileToUsedImports.get(sf).add(decl);
+        };
+        /**
+         * Get a `ts.TransformerFactory` which will preserve default imports that were previously marked
+         * as used.
+         *
+         * This transformer must run after any other transformers which call `recordUsedIdentifier`.
+         */
+        DefaultImportTracker.prototype.importPreservingTransformer = function () {
+            var _this = this;
+            return function (context) {
+                return function (sf) { return _this.transformSourceFile(sf); };
+            };
+        };
+        /**
+         * Process a `ts.SourceFile` and replace any `ts.ImportDeclaration`s.
+         */
+        DefaultImportTracker.prototype.transformSourceFile = function (sf) {
+            var originalSf = ts.getOriginalNode(sf);
+            // Take a fast path if no import declarations need to be preserved in the file.
+            if (!this.sourceFileToUsedImports.has(originalSf)) {
+                return sf;
+            }
+            // There are declarations that need to be preserved.
+            var importsToPreserve = this.sourceFileToUsedImports.get(originalSf);
+            // Generate a new statement list which preserves any imports present in `importsToPreserve`.
+            var statements = sf.statements.map(function (stmt) {
+                if (ts.isImportDeclaration(stmt) && importsToPreserve.has(stmt)) {
+                    // Preserving an import that's marked as unreferenced (type-only) is tricky in TypeScript.
+                    //
+                    // Various approaches have been tried, with mixed success:
+                    //
+                    // 1. Using `ts.updateImportDeclaration` does not cause the import to be retained.
+                    //
+                    // 2. Using `ts.createImportDeclaration` with the same `ts.ImportClause` causes the import
+                    //    to correctly be retained, but when emitting CommonJS module format code, references
+                    //    to the imported value will not match the import variable.
+                    //
+                    // 3. Emitting "import * as" imports instead generates the correct import variable, but
+                    //    references are missing the ".default" access. This happens to work for tsickle code
+                    //    with goog.module transformations as tsickle strips the ".default" anyway.
+                    //
+                    // 4. It's possible to trick TypeScript by setting `ts.NodeFlag.Synthesized` on the import
+                    //    declaration. This causes the import to be correctly retained and generated, but can
+                    //    violate invariants elsewhere in the compiler and cause crashes.
+                    //
+                    // 5. Using `ts.getMutableClone` seems to correctly preserve the import and correctly
+                    //    generate references to the import variable across all module types.
+                    //
+                    // Therefore, option 5 is the one used here. It seems to be implemented as the correct way
+                    // to perform option 4, which preserves all the compiler's invariants.
+                    //
+                    // TODO(alxhub): discuss with the TypeScript team and determine if there's a better way to
+                    // deal with this issue.
+                    stmt = ts.getMutableClone(stmt);
+                }
+                return stmt;
+            });
+            // Save memory - there's no need to keep these around once the transform has run for the given
+            // file.
+            this.sourceFileToImportMap.delete(originalSf);
+            this.sourceFileToUsedImports.delete(originalSf);
+            return ts.updateSourceFileNode(sf, statements);
+        };
+        return DefaultImportTracker;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Find the name, if any, by which a node is exported from a given file.
+     */
+    function findExportedNameOfNode(target, file, reflector) {
+        var exports = reflector.getExportsOfModule(file);
+        if (exports === null) {
+            return null;
+        }
+        // Look for the export which declares the node.
+        var keys = Array.from(exports.keys());
+        var name = keys.find(function (key) {
+            var decl = exports.get(key);
+            return decl !== undefined && decl.node === target;
+        });
+        if (name === undefined) {
+            throw new Error("Failed to find exported name of node (" + target.getText() + ") in '" + file.fileName + "'.");
+        }
+        return name;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var ImportMode;
+    (function (ImportMode) {
+        ImportMode[ImportMode["UseExistingImport"] = 0] = "UseExistingImport";
+        ImportMode[ImportMode["ForceNewImport"] = 1] = "ForceNewImport";
+    })(ImportMode || (ImportMode = {}));
+    /**
+     * A `ts.Node` plus the context in which it was discovered.
+     *
+     * A `Reference` is a pointer to a `ts.Node` that was extracted from the program somehow. It
+     * contains not only the node itself, but the information regarding how the node was located. In
+     * particular, it might track different identifiers by which the node is exposed, as well as
+     * potentially a module specifier which might expose the node.
+     *
+     * The Angular compiler uses `Reference`s instead of `ts.Node`s when tracking classes or generating
+     * imports.
+     */
+    var Reference$1 = /** @class */ (function () {
+        function Reference(node, bestGuessOwningModule) {
+            if (bestGuessOwningModule === void 0) { bestGuessOwningModule = null; }
+            this.node = node;
+            this.identifiers = [];
+            /**
+             * Indicates that the Reference was created synthetically, not as a result of natural value
+             * resolution.
+             *
+             * This is used to avoid misinterpreting the Reference in certain contexts.
+             */
+            this.synthetic = false;
+            this._alias = null;
+            this.bestGuessOwningModule = bestGuessOwningModule;
+            var id = identifierOfNode(node);
+            if (id !== null) {
+                this.identifiers.push(id);
+            }
+        }
+        Object.defineProperty(Reference.prototype, "ownedByModuleGuess", {
+            /**
+             * The best guess at which module specifier owns this particular reference, or `null` if there
+             * isn't one.
+             */
+            get: function () {
+                if (this.bestGuessOwningModule !== null) {
+                    return this.bestGuessOwningModule.specifier;
+                }
+                else {
+                    return null;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Reference.prototype, "hasOwningModuleGuess", {
+            /**
+             * Whether this reference has a potential owning module or not.
+             *
+             * See `bestGuessOwningModule`.
+             */
+            get: function () { return this.bestGuessOwningModule !== null; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Reference.prototype, "debugName", {
+            /**
+             * A name for the node, if one is available.
+             *
+             * This is only suited for debugging. Any actual references to this node should be made with
+             * `ts.Identifier`s (see `getIdentityIn`).
+             */
+            get: function () {
+                var id = identifierOfNode(this.node);
+                return id !== null ? id.text : null;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Reference.prototype, "alias", {
+            get: function () { return this._alias; },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * Record a `ts.Identifier` by which it's valid to refer to this node, within the context of this
+         * `Reference`.
+         */
+        Reference.prototype.addIdentifier = function (identifier) { this.identifiers.push(identifier); };
+        /**
+         * Get a `ts.Identifier` within this `Reference` that can be used to refer within the context of a
+         * given `ts.SourceFile`, if any.
+         */
+        Reference.prototype.getIdentityIn = function (context) {
+            return this.identifiers.find(function (id) { return id.getSourceFile() === context; }) || null;
+        };
+        Reference.prototype.cloneWithAlias = function (alias) {
+            var ref = new Reference(this.node, this.bestGuessOwningModule);
+            ref.identifiers = __spread(this.identifiers);
+            ref._alias = alias;
+            return ref;
+        };
+        Reference.prototype.cloneWithNoIdentifiers = function () {
+            var ref = new Reference(this.node, this.bestGuessOwningModule);
+            ref._alias = this._alias;
+            ref.identifiers = [];
+            return ref;
+        };
+        return Reference;
+    }());
+
+    /**
+     * Generates `Expression`s which refer to `Reference`s in a given context.
+     *
+     * A `ReferenceEmitter` uses one or more `ReferenceEmitStrategy` implementations to produce an
+     * `Expression` which refers to a `Reference` in the context of a particular file.
+     */
+    var ReferenceEmitter = /** @class */ (function () {
+        function ReferenceEmitter(strategies) {
+            this.strategies = strategies;
+        }
+        ReferenceEmitter.prototype.emit = function (ref, context, importMode) {
+            var e_1, _a;
+            if (importMode === void 0) { importMode = ImportMode.UseExistingImport; }
+            try {
+                for (var _b = __values(this.strategies), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var strategy = _c.value;
+                    var emitted = strategy.emit(ref, context, importMode);
+                    if (emitted !== null) {
+                        return emitted;
+                    }
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            throw new Error("Unable to write a reference to " + nodeNameForError(ref.node) + " in " + ref.node.getSourceFile().fileName + " from " + context.fileName);
+        };
+        return ReferenceEmitter;
+    }());
+    /**
+     * A `ReferenceEmitStrategy` which will refer to declarations by any local `ts.Identifier`s, if
+     * such identifiers are available.
+     */
+    var LocalIdentifierStrategy = /** @class */ (function () {
+        function LocalIdentifierStrategy() {
+        }
+        LocalIdentifierStrategy.prototype.emit = function (ref, context, importMode) {
+            // If the emitter has specified ForceNewImport, then LocalIdentifierStrategy should not use a
+            // local identifier at all, *except* in the source file where the node is actually declared.
+            if (importMode === ImportMode.ForceNewImport &&
+                getSourceFile(ref.node) !== getSourceFile(context)) {
+                return null;
+            }
+            // A Reference can have multiple identities in different files, so it may already have an
+            // Identifier in the requested context file.
+            var identifier = ref.getIdentityIn(context);
+            if (identifier !== null) {
+                return new WrappedNodeExpr(identifier);
+            }
+            else {
+                return null;
+            }
+        };
+        return LocalIdentifierStrategy;
+    }());
+    /**
+     * A `ReferenceEmitStrategy` which will refer to declarations that come from `node_modules` using
+     * an absolute import.
+     *
+     * Part of this strategy involves looking at the target entry point and identifying the exported
+     * name of the targeted declaration, as it might be different from the declared name (e.g. a
+     * directive might be declared as FooDirImpl, but exported as FooDir). If no export can be found
+     * which maps back to the original directive, an error is thrown.
+     */
+    var AbsoluteModuleStrategy = /** @class */ (function () {
+        function AbsoluteModuleStrategy(program, checker, options, host, reflectionHost) {
+            this.program = program;
+            this.checker = checker;
+            this.options = options;
+            this.host = host;
+            this.reflectionHost = reflectionHost;
+            /**
+             * A cache of the exports of specific modules, because resolving a module to its exports is a
+             * costly operation.
+             */
+            this.moduleExportsCache = new Map();
+        }
+        AbsoluteModuleStrategy.prototype.emit = function (ref, context, importMode) {
+            if (ref.bestGuessOwningModule === null) {
+                // There is no module name available for this Reference, meaning it was arrived at via a
+                // relative path.
+                return null;
+            }
+            else if (!isDeclaration(ref.node)) {
+                // It's not possible to import something which isn't a declaration.
+                throw new Error('Debug assert: importing a Reference to non-declaration?');
+            }
+            // Try to find the exported name of the declaration, if one is available.
+            var _a = ref.bestGuessOwningModule, specifier = _a.specifier, resolutionContext = _a.resolutionContext;
+            var symbolName = this.resolveImportName(specifier, ref.node, resolutionContext);
+            if (symbolName === null) {
+                // TODO(alxhub): make this error a ts.Diagnostic pointing at whatever caused this import to be
+                // triggered.
+                throw new Error("Symbol " + ref.debugName + " declared in " + getSourceFile(ref.node).fileName + " is not exported from " + specifier + " (import into " + context.fileName + ")");
+            }
+            return new ExternalExpr(new ExternalReference(specifier, symbolName));
+        };
+        AbsoluteModuleStrategy.prototype.resolveImportName = function (moduleName, target, fromFile) {
+            var exports = this.getExportsOfModule(moduleName, fromFile);
+            if (exports !== null && exports.has(target)) {
+                return exports.get(target);
+            }
+            else {
+                return null;
+            }
+        };
+        AbsoluteModuleStrategy.prototype.getExportsOfModule = function (moduleName, fromFile) {
+            if (!this.moduleExportsCache.has(moduleName)) {
+                this.moduleExportsCache.set(moduleName, this.enumerateExportsOfModule(moduleName, fromFile));
+            }
+            return this.moduleExportsCache.get(moduleName);
+        };
+        AbsoluteModuleStrategy.prototype.enumerateExportsOfModule = function (specifier, fromFile) {
+            // First, resolve the module specifier to its entry point, and get the ts.Symbol for it.
+            var resolvedModule = resolveModuleName(specifier, fromFile, this.options, this.host);
+            if (resolvedModule === undefined) {
+                return null;
+            }
+            var entryPointFile = getSourceFileOrNull(this.program, absoluteFrom(resolvedModule.resolvedFileName));
+            if (entryPointFile === null) {
+                return null;
+            }
+            var exports = this.reflectionHost.getExportsOfModule(entryPointFile);
+            if (exports === null) {
+                return null;
+            }
+            var exportMap = new Map();
+            exports.forEach(function (declaration, name) {
+                // It's okay to skip inline declarations, since by definition they're not target-able with a
+                // ts.Declaration anyway.
+                if (declaration.node !== null) {
+                    exportMap.set(declaration.node, name);
+                }
+            });
+            return exportMap;
+        };
+        return AbsoluteModuleStrategy;
+    }());
+    /**
+     * A `ReferenceEmitStrategy` which will refer to declarations via relative paths, provided they're
+     * both in the logical project "space" of paths.
+     *
+     * This is trickier than it sounds, as the two files may be in different root directories in the
+     * project. Simply calculating a file system relative path between the two is not sufficient.
+     * Instead, `LogicalProjectPath`s are used.
+     */
+    var LogicalProjectStrategy = /** @class */ (function () {
+        function LogicalProjectStrategy(reflector, logicalFs) {
+            this.reflector = reflector;
+            this.logicalFs = logicalFs;
+        }
+        LogicalProjectStrategy.prototype.emit = function (ref, context) {
+            var destSf = getSourceFile(ref.node);
+            // Compute the relative path from the importing file to the file being imported. This is done
+            // as a logical path computation, because the two files might be in different rootDirs.
+            var destPath = this.logicalFs.logicalPathOfSf(destSf);
+            if (destPath === null) {
+                // The imported file is not within the logical project filesystem.
+                return null;
+            }
+            var originPath = this.logicalFs.logicalPathOfSf(context);
+            if (originPath === null) {
+                throw new Error("Debug assert: attempt to import from " + context.fileName + " but it's outside the program?");
+            }
+            // There's no way to emit a relative reference from a file to itself.
+            if (destPath === originPath) {
+                return null;
+            }
+            var name = findExportedNameOfNode(ref.node, destSf, this.reflector);
+            if (name === null) {
+                // The target declaration isn't exported from the file it's declared in. This is an issue!
+                return null;
+            }
+            // With both files expressed as LogicalProjectPaths, getting the module specifier as a relative
+            // path is now straightforward.
+            var moduleName = LogicalProjectPath.relativePathBetween(originPath, destPath);
+            return new ExternalExpr({ moduleName: moduleName, name: name });
+        };
+        return LogicalProjectStrategy;
+    }());
+    /**
+     * A `ReferenceEmitStrategy` which uses a `FileToModuleHost` to generate absolute import references.
+     */
+    var FileToModuleStrategy = /** @class */ (function () {
+        function FileToModuleStrategy(reflector, fileToModuleHost) {
+            this.reflector = reflector;
+            this.fileToModuleHost = fileToModuleHost;
+        }
+        FileToModuleStrategy.prototype.emit = function (ref, context) {
+            var destSf = getSourceFile(ref.node);
+            var name = findExportedNameOfNode(ref.node, destSf, this.reflector);
+            if (name === null) {
+                return null;
+            }
+            var moduleName = this.fileToModuleHost.fileNameToModuleName(destSf.fileName, context.fileName);
+            return new ExternalExpr({ moduleName: moduleName, name: name });
+        };
+        return FileToModuleStrategy;
+    }());
+
+    /**
+     * Used by `RouterEntryPointManager` and `NgModuleRouteAnalyzer` (which is in turn is used by
+     * `NgModuleDecoratorHandler`) for resolving the module source-files references in lazy-loaded
+     * routes (relative to the source-file containing the `NgModule` that provides the route
+     * definitions).
+     */
+    var ModuleResolver = /** @class */ (function () {
+        function ModuleResolver(program, compilerOptions, host) {
+            this.program = program;
+            this.compilerOptions = compilerOptions;
+            this.host = host;
+        }
+        ModuleResolver.prototype.resolveModuleName = function (module, containingFile) {
+            var resolved = resolveModuleName(module, containingFile.fileName, this.compilerOptions, this.host);
+            if (resolved === undefined) {
+                return null;
+            }
+            return getSourceFileOrNull(this.program, absoluteFrom(resolved.resolvedFileName));
+        };
+        return ModuleResolver;
+    }());
 
     /**
      * @license
@@ -35316,631 +36057,123 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var TS$2 = /\.tsx?$/i;
-    var D_TS = /\.d\.ts$/i;
-    function isDtsPath(filePath) {
-        return D_TS.test(filePath);
-    }
-    function isNonDeclarationTsPath(filePath) {
-        return TS$2.test(filePath) && !D_TS.test(filePath);
-    }
-    function nodeNameForError(node) {
-        if (node.name !== undefined && ts.isIdentifier(node.name)) {
-            return node.name.text;
+    function extractReferencesFromType(checker, def, ngModuleImportedFrom, resolutionContext) {
+        if (!ts.isTupleTypeNode(def)) {
+            return [];
         }
-        else {
-            var kind = ts.SyntaxKind[node.kind];
-            var _a = ts.getLineAndCharacterOfPosition(node.getSourceFile(), node.getStart()), line = _a.line, character = _a.character;
-            return kind + "@" + line + ":" + character;
-        }
+        return def.elementTypes.map(function (element) {
+            if (!ts.isTypeQueryNode(element)) {
+                throw new Error("Expected TypeQueryNode: " + nodeDebugInfo(element));
+            }
+            var type = element.exprName;
+            var _a = reflectTypeEntityToDeclaration(type, checker), node = _a.node, from = _a.from;
+            if (!isNamedClassDeclaration(node)) {
+                throw new Error("Expected named ClassDeclaration: " + nodeDebugInfo(node));
+            }
+            var specifier = (from !== null && !from.startsWith('.') ? from : ngModuleImportedFrom);
+            if (specifier !== null) {
+                return new Reference$1(node, { specifier: specifier, resolutionContext: resolutionContext });
+            }
+            else {
+                return new Reference$1(node);
+            }
+        });
     }
-    function getSourceFile(node) {
-        // In certain transformation contexts, `ts.Node.getSourceFile()` can actually return `undefined`,
-        // despite the type signature not allowing it. In that event, get the `ts.SourceFile` via the
-        // original node instead (which works).
-        var directSf = node.getSourceFile();
-        return directSf !== undefined ? directSf : ts.getOriginalNode(node).getSourceFile();
-    }
-    function getSourceFileOrNull(program, fileName) {
-        return program.getSourceFile(fileName) || null;
-    }
-    function getTokenAtPosition(sf, pos) {
-        // getTokenAtPosition is part of TypeScript's private API.
-        return ts.getTokenAtPosition(sf, pos);
-    }
-    function identifierOfNode(decl) {
-        if (decl.name !== undefined && ts.isIdentifier(decl.name)) {
-            return decl.name;
-        }
-        else {
+    function readStringType(type) {
+        if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) {
             return null;
         }
+        return type.literal.text;
     }
-    function isDeclaration(node) {
-        return ts.isEnumDeclaration(node) || ts.isClassDeclaration(node) ||
-            ts.isFunctionDeclaration(node) || ts.isVariableDeclaration(node);
-    }
-    function getRootDirs(host, options) {
-        var rootDirs = [];
-        if (options.rootDirs !== undefined) {
-            rootDirs.push.apply(rootDirs, __spread(options.rootDirs));
+    function readStringMapType(type) {
+        if (!ts.isTypeLiteralNode(type)) {
+            return {};
         }
-        else if (options.rootDir !== undefined) {
-            rootDirs.push(options.rootDir);
-        }
-        else {
-            rootDirs.push(host.getCurrentDirectory());
-        }
-        // In Windows the above might not always return posix separated paths
-        // See:
-        // https://github.com/Microsoft/TypeScript/blob/3f7357d37f66c842d70d835bc925ec2a873ecfec/src/compiler/sys.ts#L650
-        // Also compiler options might be set via an API which doesn't normalize paths
-        return rootDirs.map(function (rootDir) { return absoluteFrom(rootDir); });
-    }
-    function nodeDebugInfo(node) {
-        var sf = getSourceFile(node);
-        var _a = ts.getLineAndCharacterOfPosition(sf, node.pos), line = _a.line, character = _a.character;
-        return "[" + sf.fileName + ": " + ts.SyntaxKind[node.kind] + " @ " + line + ":" + character + "]";
-    }
-    /**
-     * Resolve the specified `moduleName` using the given `compilerOptions` and `compilerHost`.
-     *
-     * This helper will attempt to use the `CompilerHost.resolveModuleNames()` method if available.
-     * Otherwise it will fallback on the `ts.ResolveModuleName()` function.
-     */
-    function resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost) {
-        if (compilerHost.resolveModuleNames) {
-            // FIXME: Additional parameters are required in TS3.6, but ignored in 3.5.
-            // Remove the any cast once google3 is fully on TS3.6.
-            return compilerHost
-                .resolveModuleNames([moduleName], containingFile, undefined, undefined, compilerOptions)[0];
-        }
-        else {
-            return ts.resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost)
-                .resolvedModule;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // Escape anything that isn't alphanumeric, '/' or '_'.
-    var CHARS_TO_ESCAPE = /[^a-zA-Z0-9/_]/g;
-    /**
-     * An `AliasingHost` which generates and consumes alias re-exports when module names for each file
-     * are determined by a `FileToModuleHost`.
-     *
-     * When using a `FileToModuleHost`, aliasing prevents issues with transitive dependencies. See the
-     * README.md for more details.
-     */
-    var FileToModuleAliasingHost = /** @class */ (function () {
-        function FileToModuleAliasingHost(fileToModuleHost) {
-            this.fileToModuleHost = fileToModuleHost;
-            /**
-             * With a `FileToModuleHost`, aliases are chosen automatically without the need to look through
-             * the exports present in a .d.ts file, so we can avoid cluttering the .d.ts files.
-             */
-            this.aliasExportsInDts = false;
-        }
-        FileToModuleAliasingHost.prototype.maybeAliasSymbolAs = function (ref, context, ngModuleName, isReExport) {
-            if (!isReExport) {
-                // Aliasing is used with a FileToModuleHost to prevent transitive dependencies. Thus, aliases
-                // only need to be created for directives/pipes which are not direct declarations of an
-                // NgModule which exports them.
-                return null;
-            }
-            return this.aliasName(ref.node, context);
-        };
-        /**
-         * Generates an `Expression` to import `decl` from `via`, assuming an export was added when `via`
-         * was compiled per `maybeAliasSymbolAs` above.
-         */
-        FileToModuleAliasingHost.prototype.getAliasIn = function (decl, via, isReExport) {
-            if (!isReExport) {
-                // Directly exported directives/pipes don't require an alias, per the logic in
-                // `maybeAliasSymbolAs`.
-                return null;
-            }
-            // viaModule is the module it'll actually be imported from.
-            var moduleName = this.fileToModuleHost.fileNameToModuleName(via.fileName, via.fileName);
-            return new ExternalExpr({ moduleName: moduleName, name: this.aliasName(decl, via) });
-        };
-        /**
-         * Generates an alias name based on the full module name of the file which declares the aliased
-         * directive/pipe.
-         */
-        FileToModuleAliasingHost.prototype.aliasName = function (decl, context) {
-            // The declared module is used to get the name of the alias.
-            var declModule = this.fileToModuleHost.fileNameToModuleName(decl.getSourceFile().fileName, context.fileName);
-            var replaced = declModule.replace(CHARS_TO_ESCAPE, '_').replace(/\//g, '$');
-            return 'ɵng$' + replaced + '$$' + decl.name.text;
-        };
-        return FileToModuleAliasingHost;
-    }());
-    /**
-     * An `AliasingHost` which exports directives from any file containing an NgModule in which they're
-     * declared/exported, under a private symbol name.
-     *
-     * These exports support cases where an NgModule is imported deeply from an absolute module path
-     * (that is, it's not part of an Angular Package Format entrypoint), and the compiler needs to
-     * import any matched directives/pipes from the same path (to the NgModule file). See README.md for
-     * more details.
-     */
-    var PrivateExportAliasingHost = /** @class */ (function () {
-        function PrivateExportAliasingHost(host) {
-            this.host = host;
-            /**
-             * Under private export aliasing, the `AbsoluteModuleStrategy` used for emitting references will
-             * will select aliased exports that it finds in the .d.ts file for an NgModule's file. Thus,
-             * emitting these exports in .d.ts is a requirement for the `PrivateExportAliasingHost` to
-             * function correctly.
-             */
-            this.aliasExportsInDts = true;
-        }
-        PrivateExportAliasingHost.prototype.maybeAliasSymbolAs = function (ref, context, ngModuleName) {
-            if (ref.hasOwningModuleGuess) {
-                // Skip nodes that already have an associated absolute module specifier, since they can be
-                // safely imported from that specifier.
-                return null;
-            }
-            // Look for a user-provided export of `decl` in `context`. If one exists, then an alias export
-            // is not needed.
-            // TODO(alxhub): maybe add a host method to check for the existence of an export without going
-            // through the entire list of exports.
-            var exports = this.host.getExportsOfModule(context);
-            if (exports === null) {
-                // Something went wrong, and no exports were available at all. Bail rather than risk creating
-                // re-exports when they're not needed.
-                throw new Error("Could not determine the exports of: " + context.fileName);
-            }
-            var found = false;
-            exports.forEach(function (value) {
-                if (value.node === ref.node) {
-                    found = true;
-                }
-            });
-            if (found) {
-                // The module exports the declared class directly, no alias is necessary.
-                return null;
-            }
-            return "\u0275ngExport\u0275" + ngModuleName + "\u0275" + ref.node.name.text;
-        };
-        /**
-         * A `PrivateExportAliasingHost` only generates re-exports and does not direct the compiler to
-         * directly consume the aliases it creates.
-         *
-         * Instead, they're consumed indirectly: `AbsoluteModuleStrategy` `ReferenceEmitterStrategy` will
-         * select these alias exports automatically when looking for an export of the directive/pipe from
-         * the same path as the NgModule was imported.
-         *
-         * Thus, `getAliasIn` always returns `null`.
-         */
-        PrivateExportAliasingHost.prototype.getAliasIn = function () { return null; };
-        return PrivateExportAliasingHost;
-    }());
-    /**
-     * A `ReferenceEmitStrategy` which will consume the alias attached to a particular `Reference` to a
-     * directive or pipe, if it exists.
-     */
-    var AliasStrategy = /** @class */ (function () {
-        function AliasStrategy() {
-        }
-        AliasStrategy.prototype.emit = function (ref, context, importMode) {
-            return ref.alias;
-        };
-        return AliasStrategy;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var TS_DTS_JS_EXTENSION$1 = /(?:\.d)?\.ts$|\.js$/;
-    function relativePathBetween(from, to) {
-        var relativePath = relative(dirname(resolve(from)), resolve(to)).replace(TS_DTS_JS_EXTENSION$1, '');
-        if (relativePath === '') {
-            return null;
-        }
-        // path.relative() does not include the leading './'.
-        if (!relativePath.startsWith('.')) {
-            relativePath = "./" + relativePath;
-        }
-        return relativePath;
-    }
-    function normalizeSeparators$1(path) {
-        // TODO: normalize path only for OS that need it.
-        return path.replace(/\\/g, '/');
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * `ImportRewriter` that does no rewriting.
-     */
-    var NoopImportRewriter = /** @class */ (function () {
-        function NoopImportRewriter() {
-        }
-        NoopImportRewriter.prototype.shouldImportSymbol = function (symbol, specifier) { return true; };
-        NoopImportRewriter.prototype.rewriteSymbol = function (symbol, specifier) { return symbol; };
-        NoopImportRewriter.prototype.rewriteSpecifier = function (specifier, inContextOfFile) { return specifier; };
-        return NoopImportRewriter;
-    }());
-    /**
-     * A mapping of supported symbols that can be imported from within @angular/core, and the names by
-     * which they're exported from r3_symbols.
-     */
-    var CORE_SUPPORTED_SYMBOLS = new Map([
-        ['ɵɵdefineInjectable', 'ɵɵdefineInjectable'],
-        ['ɵɵdefineInjector', 'ɵɵdefineInjector'],
-        ['ɵɵdefineNgModule', 'ɵɵdefineNgModule'],
-        ['ɵɵsetNgModuleScope', 'ɵɵsetNgModuleScope'],
-        ['ɵɵinject', 'ɵɵinject'],
-        ['ɵɵFactoryDef', 'ɵɵFactoryDef'],
-        ['ɵsetClassMetadata', 'setClassMetadata'],
-        ['ɵɵInjectableDef', 'ɵɵInjectableDef'],
-        ['ɵɵInjectorDef', 'ɵɵInjectorDef'],
-        ['ɵɵNgModuleDefWithMeta', 'ɵɵNgModuleDefWithMeta'],
-        ['ɵNgModuleFactory', 'NgModuleFactory'],
-    ]);
-    var CORE_MODULE = '@angular/core';
-    /**
-     * `ImportRewriter` that rewrites imports from '@angular/core' to be imported from the r3_symbols.ts
-     * file instead.
-     */
-    var R3SymbolsImportRewriter = /** @class */ (function () {
-        function R3SymbolsImportRewriter(r3SymbolsPath) {
-            this.r3SymbolsPath = r3SymbolsPath;
-        }
-        R3SymbolsImportRewriter.prototype.shouldImportSymbol = function (symbol, specifier) { return true; };
-        R3SymbolsImportRewriter.prototype.rewriteSymbol = function (symbol, specifier) {
-            if (specifier !== CORE_MODULE) {
-                // This import isn't from core, so ignore it.
-                return symbol;
-            }
-            return validateAndRewriteCoreSymbol(symbol);
-        };
-        R3SymbolsImportRewriter.prototype.rewriteSpecifier = function (specifier, inContextOfFile) {
-            if (specifier !== CORE_MODULE) {
-                // This module isn't core, so ignore it.
-                return specifier;
-            }
-            var relativePathToR3Symbols = relativePathBetween(inContextOfFile, this.r3SymbolsPath);
-            if (relativePathToR3Symbols === null) {
-                throw new Error("Failed to rewrite import inside " + CORE_MODULE + ": " + inContextOfFile + " -> " + this.r3SymbolsPath);
-            }
-            return relativePathToR3Symbols;
-        };
-        return R3SymbolsImportRewriter;
-    }());
-    function validateAndRewriteCoreSymbol(name) {
-        if (!CORE_SUPPORTED_SYMBOLS.has(name)) {
-            throw new Error("Importing unexpected symbol " + name + " while compiling " + CORE_MODULE);
-        }
-        return CORE_SUPPORTED_SYMBOLS.get(name);
-    }
-
-    /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    /**
-     * An implementation of `DefaultImportRecorder` which does nothing.
-     *
-     * This is useful when default import tracking isn't required, such as when emitting .d.ts code
-     * or for ngcc.
-     */
-    var NOOP_DEFAULT_IMPORT_RECORDER = {
-        recordImportedIdentifier: function (id) { return void {}; },
-        recordUsedIdentifier: function (id) { return void {}; },
-    };
-    /**
-     * TypeScript has trouble with generating default imports inside of transformers for some module
-     * formats. The issue is that for the statement:
-     *
-     * import X from 'some/module';
-     * console.log(X);
-     *
-     * TypeScript will not use the "X" name in generated code. For normal user code, this is fine
-     * because references to X will also be renamed. However, if both the import and any references are
-     * added in a transformer, TypeScript does not associate the two, and will leave the "X" references
-     * dangling while renaming the import variable. The generated code looks something like:
-     *
-     * const module_1 = require('some/module');
-     * console.log(X); // now X is a dangling reference.
-     *
-     * Therefore, we cannot synthetically add default imports, and must reuse the imports that users
-     * include. Doing this poses a challenge for imports that are only consumed in the type position in
-     * the user's code. If Angular reuses the imported symbol in a value position (for example, we
-     * see a constructor parameter of type Foo and try to write "inject(Foo)") we will also end up with
-     * a dangling reference, as TS will elide the import because it was only used in the type position
-     * originally.
-     *
-     * To avoid this, the compiler must "touch" the imports with `ts.getMutableClone`, and should
-     * only do this for imports which are actually consumed. The `DefaultImportTracker` keeps track of
-     * these imports as they're encountered and emitted, and implements a transform which can correctly
-     * flag the imports as required.
-     *
-     * This problem does not exist for non-default imports as the compiler can easily insert
-     * "import * as X" style imports for those, and the "X" identifier survives transformation.
-     */
-    var DefaultImportTracker = /** @class */ (function () {
-        function DefaultImportTracker() {
-            /**
-             * A `Map` which tracks the `Map` of default import `ts.Identifier`s to their
-             * `ts.ImportDeclaration`s. These declarations are not guaranteed to be used.
-             */
-            this.sourceFileToImportMap = new Map();
-            /**
-             * A `Map` which tracks the `Set` of `ts.ImportDeclaration`s for default imports that were used in
-             * a given `ts.SourceFile` and need to be preserved.
-             */
-            this.sourceFileToUsedImports = new Map();
-        }
-        DefaultImportTracker.prototype.recordImportedIdentifier = function (id, decl) {
-            var sf = getSourceFile(id);
-            if (!this.sourceFileToImportMap.has(sf)) {
-                this.sourceFileToImportMap.set(sf, new Map());
-            }
-            this.sourceFileToImportMap.get(sf).set(id, decl);
-        };
-        DefaultImportTracker.prototype.recordUsedIdentifier = function (id) {
-            var sf = getSourceFile(id);
-            if (!this.sourceFileToImportMap.has(sf)) {
-                // The identifier's source file has no registered default imports at all.
+        var obj = {};
+        type.members.forEach(function (member) {
+            if (!ts.isPropertySignature(member) || member.type === undefined || member.name === undefined ||
+                !ts.isStringLiteral(member.name)) {
                 return;
             }
-            var identiferToDeclaration = this.sourceFileToImportMap.get(sf);
-            if (!identiferToDeclaration.has(id)) {
-                // The identifier isn't from a registered default import.
+            var value = readStringType(member.type);
+            if (value === null) {
+                return null;
+            }
+            obj[member.name.text] = value;
+        });
+        return obj;
+    }
+    function readStringArrayType(type) {
+        if (!ts.isTupleTypeNode(type)) {
+            return [];
+        }
+        var res = [];
+        type.elementTypes.forEach(function (el) {
+            if (!ts.isLiteralTypeNode(el) || !ts.isStringLiteral(el.literal)) {
                 return;
             }
-            var decl = identiferToDeclaration.get(id);
-            // Add the default import declaration to the set of used import declarations for the file.
-            if (!this.sourceFileToUsedImports.has(sf)) {
-                this.sourceFileToUsedImports.set(sf, new Set());
-            }
-            this.sourceFileToUsedImports.get(sf).add(decl);
-        };
-        /**
-         * Get a `ts.TransformerFactory` which will preserve default imports that were previously marked
-         * as used.
-         *
-         * This transformer must run after any other transformers which call `recordUsedIdentifier`.
-         */
-        DefaultImportTracker.prototype.importPreservingTransformer = function () {
-            var _this = this;
-            return function (context) {
-                return function (sf) { return _this.transformSourceFile(sf); };
-            };
-        };
-        /**
-         * Process a `ts.SourceFile` and replace any `ts.ImportDeclaration`s.
-         */
-        DefaultImportTracker.prototype.transformSourceFile = function (sf) {
-            var originalSf = ts.getOriginalNode(sf);
-            // Take a fast path if no import declarations need to be preserved in the file.
-            if (!this.sourceFileToUsedImports.has(originalSf)) {
-                return sf;
-            }
-            // There are declarations that need to be preserved.
-            var importsToPreserve = this.sourceFileToUsedImports.get(originalSf);
-            // Generate a new statement list which preserves any imports present in `importsToPreserve`.
-            var statements = sf.statements.map(function (stmt) {
-                if (ts.isImportDeclaration(stmt) && importsToPreserve.has(stmt)) {
-                    // Preserving an import that's marked as unreferenced (type-only) is tricky in TypeScript.
-                    //
-                    // Various approaches have been tried, with mixed success:
-                    //
-                    // 1. Using `ts.updateImportDeclaration` does not cause the import to be retained.
-                    //
-                    // 2. Using `ts.createImportDeclaration` with the same `ts.ImportClause` causes the import
-                    //    to correctly be retained, but when emitting CommonJS module format code, references
-                    //    to the imported value will not match the import variable.
-                    //
-                    // 3. Emitting "import * as" imports instead generates the correct import variable, but
-                    //    references are missing the ".default" access. This happens to work for tsickle code
-                    //    with goog.module transformations as tsickle strips the ".default" anyway.
-                    //
-                    // 4. It's possible to trick TypeScript by setting `ts.NodeFlag.Synthesized` on the import
-                    //    declaration. This causes the import to be correctly retained and generated, but can
-                    //    violate invariants elsewhere in the compiler and cause crashes.
-                    //
-                    // 5. Using `ts.getMutableClone` seems to correctly preserve the import and correctly
-                    //    generate references to the import variable across all module types.
-                    //
-                    // Therefore, option 5 is the one used here. It seems to be implemented as the correct way
-                    // to perform option 4, which preserves all the compiler's invariants.
-                    //
-                    // TODO(alxhub): discuss with the TypeScript team and determine if there's a better way to
-                    // deal with this issue.
-                    stmt = ts.getMutableClone(stmt);
-                }
-                return stmt;
-            });
-            // Save memory - there's no need to keep these around once the transform has run for the given
-            // file.
-            this.sourceFileToImportMap.delete(originalSf);
-            this.sourceFileToUsedImports.delete(originalSf);
-            return ts.updateSourceFileNode(sf, statements);
-        };
-        return DefaultImportTracker;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Find the name, if any, by which a node is exported from a given file.
-     */
-    function findExportedNameOfNode(target, file, reflector) {
-        var exports = reflector.getExportsOfModule(file);
-        if (exports === null) {
+            res.push(el.literal.text);
+        });
+        return res;
+    }
+    function extractDirectiveGuards(node, reflector) {
+        var staticMembers = reflector.getMembersOfClass(node).filter(function (member) { return member.isStatic; });
+        var ngTemplateGuards = staticMembers.map(extractTemplateGuard)
+            .filter(function (guard) { return guard !== null; });
+        var hasNgTemplateContextGuard = staticMembers.some(function (member) { return member.kind === ClassMemberKind.Method && member.name === 'ngTemplateContextGuard'; });
+        var coercedInputFields = new Set(staticMembers.map(extractCoercedInput)
+            .filter(function (inputName) { return inputName !== null; }));
+        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards, coercedInputFields: coercedInputFields };
+    }
+    function extractTemplateGuard(member) {
+        if (!member.name.startsWith('ngTemplateGuard_')) {
             return null;
         }
-        // Look for the export which declares the node.
-        var keys = Array.from(exports.keys());
-        var name = keys.find(function (key) {
-            var decl = exports.get(key);
-            return decl !== undefined && decl.node === target;
-        });
-        if (name === undefined) {
-            throw new Error("Failed to find exported name of node (" + target.getText() + ") in '" + file.fileName + "'.");
-        }
-        return name;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var ImportMode;
-    (function (ImportMode) {
-        ImportMode[ImportMode["UseExistingImport"] = 0] = "UseExistingImport";
-        ImportMode[ImportMode["ForceNewImport"] = 1] = "ForceNewImport";
-    })(ImportMode || (ImportMode = {}));
-    /**
-     * A `ts.Node` plus the context in which it was discovered.
-     *
-     * A `Reference` is a pointer to a `ts.Node` that was extracted from the program somehow. It
-     * contains not only the node itself, but the information regarding how the node was located. In
-     * particular, it might track different identifiers by which the node is exposed, as well as
-     * potentially a module specifier which might expose the node.
-     *
-     * The Angular compiler uses `Reference`s instead of `ts.Node`s when tracking classes or generating
-     * imports.
-     */
-    var Reference$1 = /** @class */ (function () {
-        function Reference(node, bestGuessOwningModule) {
-            if (bestGuessOwningModule === void 0) { bestGuessOwningModule = null; }
-            this.node = node;
-            this.identifiers = [];
-            /**
-             * Indicates that the Reference was created synthetically, not as a result of natural value
-             * resolution.
-             *
-             * This is used to avoid misinterpreting the Reference in certain contexts.
-             */
-            this.synthetic = false;
-            this._alias = null;
-            this.bestGuessOwningModule = bestGuessOwningModule;
-            var id = identifierOfNode(node);
-            if (id !== null) {
-                this.identifiers.push(id);
+        var inputName = afterUnderscore(member.name);
+        if (member.kind === ClassMemberKind.Property) {
+            var type = null;
+            if (member.type !== null && ts.isLiteralTypeNode(member.type) &&
+                ts.isStringLiteral(member.type.literal)) {
+                type = member.type.literal.text;
             }
+            // Only property members with string literal type 'binding' are considered as template guard.
+            if (type !== 'binding') {
+                return null;
+            }
+            return { inputName: inputName, type: type };
         }
-        Object.defineProperty(Reference.prototype, "ownedByModuleGuess", {
-            /**
-             * The best guess at which module specifier owns this particular reference, or `null` if there
-             * isn't one.
-             */
-            get: function () {
-                if (this.bestGuessOwningModule !== null) {
-                    return this.bestGuessOwningModule.specifier;
-                }
-                else {
-                    return null;
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Reference.prototype, "hasOwningModuleGuess", {
-            /**
-             * Whether this reference has a potential owning module or not.
-             *
-             * See `bestGuessOwningModule`.
-             */
-            get: function () { return this.bestGuessOwningModule !== null; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Reference.prototype, "debugName", {
-            /**
-             * A name for the node, if one is available.
-             *
-             * This is only suited for debugging. Any actual references to this node should be made with
-             * `ts.Identifier`s (see `getIdentityIn`).
-             */
-            get: function () {
-                var id = identifierOfNode(this.node);
-                return id !== null ? id.text : null;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Reference.prototype, "alias", {
-            get: function () { return this._alias; },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * Record a `ts.Identifier` by which it's valid to refer to this node, within the context of this
-         * `Reference`.
-         */
-        Reference.prototype.addIdentifier = function (identifier) { this.identifiers.push(identifier); };
-        /**
-         * Get a `ts.Identifier` within this `Reference` that can be used to refer within the context of a
-         * given `ts.SourceFile`, if any.
-         */
-        Reference.prototype.getIdentityIn = function (context) {
-            return this.identifiers.find(function (id) { return id.getSourceFile() === context; }) || null;
-        };
-        Reference.prototype.cloneWithAlias = function (alias) {
-            var ref = new Reference(this.node, this.bestGuessOwningModule);
-            ref.identifiers = __spread(this.identifiers);
-            ref._alias = alias;
-            return ref;
-        };
-        Reference.prototype.cloneWithNoIdentifiers = function () {
-            var ref = new Reference(this.node, this.bestGuessOwningModule);
-            ref._alias = this._alias;
-            ref.identifiers = [];
-            return ref;
-        };
-        return Reference;
-    }());
-
+        else if (member.kind === ClassMemberKind.Method) {
+            return { inputName: inputName, type: 'invocation' };
+        }
+        else {
+            return null;
+        }
+    }
+    function extractCoercedInput(member) {
+        if (member.kind !== ClassMemberKind.Property || !member.name.startsWith('ngAcceptInputType_')) {
+            return null;
+        }
+        return afterUnderscore(member.name);
+    }
     /**
-     * Generates `Expression`s which refer to `Reference`s in a given context.
+     * A `MetadataReader` that reads from an ordered set of child readers until it obtains the requested
+     * metadata.
      *
-     * A `ReferenceEmitter` uses one or more `ReferenceEmitStrategy` implementations to produce an
-     * `Expression` which refers to a `Reference` in the context of a particular file.
+     * This is used to combine `MetadataReader`s that read from different sources (e.g. from a registry
+     * and from .d.ts files).
      */
-    var ReferenceEmitter = /** @class */ (function () {
-        function ReferenceEmitter(strategies) {
-            this.strategies = strategies;
+    var CompoundMetadataReader = /** @class */ (function () {
+        function CompoundMetadataReader(readers) {
+            this.readers = readers;
         }
-        ReferenceEmitter.prototype.emit = function (ref, context, importMode) {
+        CompoundMetadataReader.prototype.getDirectiveMetadata = function (node) {
             var e_1, _a;
-            if (importMode === void 0) { importMode = ImportMode.UseExistingImport; }
             try {
-                for (var _b = __values(this.strategies), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var strategy = _c.value;
-                    var emitted = strategy.emit(ref, context, importMode);
-                    if (emitted !== null) {
-                        return emitted;
+                for (var _b = __values(this.readers), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var reader = _c.value;
+                    var meta = reader.getDirectiveMetadata(node);
+                    if (meta !== null) {
+                        return meta;
                     }
                 }
             }
@@ -35951,201 +36184,275 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            throw new Error("Unable to write a reference to " + nodeNameForError(ref.node) + " in " + ref.node.getSourceFile().fileName + " from " + context.fileName);
+            return null;
         };
-        return ReferenceEmitter;
-    }());
-    /**
-     * A `ReferenceEmitStrategy` which will refer to declarations by any local `ts.Identifier`s, if
-     * such identifiers are available.
-     */
-    var LocalIdentifierStrategy = /** @class */ (function () {
-        function LocalIdentifierStrategy() {
-        }
-        LocalIdentifierStrategy.prototype.emit = function (ref, context, importMode) {
-            // If the emitter has specified ForceNewImport, then LocalIdentifierStrategy should not use a
-            // local identifier at all, *except* in the source file where the node is actually declared.
-            if (importMode === ImportMode.ForceNewImport &&
-                getSourceFile(ref.node) !== getSourceFile(context)) {
-                return null;
-            }
-            // A Reference can have multiple identities in different files, so it may already have an
-            // Identifier in the requested context file.
-            var identifier = ref.getIdentityIn(context);
-            if (identifier !== null) {
-                return new WrappedNodeExpr(identifier);
-            }
-            else {
-                return null;
-            }
-        };
-        return LocalIdentifierStrategy;
-    }());
-    /**
-     * A `ReferenceEmitStrategy` which will refer to declarations that come from `node_modules` using
-     * an absolute import.
-     *
-     * Part of this strategy involves looking at the target entry point and identifying the exported
-     * name of the targeted declaration, as it might be different from the declared name (e.g. a
-     * directive might be declared as FooDirImpl, but exported as FooDir). If no export can be found
-     * which maps back to the original directive, an error is thrown.
-     */
-    var AbsoluteModuleStrategy = /** @class */ (function () {
-        function AbsoluteModuleStrategy(program, checker, options, host, reflectionHost) {
-            this.program = program;
-            this.checker = checker;
-            this.options = options;
-            this.host = host;
-            this.reflectionHost = reflectionHost;
-            /**
-             * A cache of the exports of specific modules, because resolving a module to its exports is a
-             * costly operation.
-             */
-            this.moduleExportsCache = new Map();
-        }
-        AbsoluteModuleStrategy.prototype.emit = function (ref, context, importMode) {
-            if (ref.bestGuessOwningModule === null) {
-                // There is no module name available for this Reference, meaning it was arrived at via a
-                // relative path.
-                return null;
-            }
-            else if (!isDeclaration(ref.node)) {
-                // It's not possible to import something which isn't a declaration.
-                throw new Error('Debug assert: importing a Reference to non-declaration?');
-            }
-            // Try to find the exported name of the declaration, if one is available.
-            var _a = ref.bestGuessOwningModule, specifier = _a.specifier, resolutionContext = _a.resolutionContext;
-            var symbolName = this.resolveImportName(specifier, ref.node, resolutionContext);
-            if (symbolName === null) {
-                // TODO(alxhub): make this error a ts.Diagnostic pointing at whatever caused this import to be
-                // triggered.
-                throw new Error("Symbol " + ref.debugName + " declared in " + getSourceFile(ref.node).fileName + " is not exported from " + specifier + " (import into " + context.fileName + ")");
-            }
-            return new ExternalExpr(new ExternalReference(specifier, symbolName));
-        };
-        AbsoluteModuleStrategy.prototype.resolveImportName = function (moduleName, target, fromFile) {
-            var exports = this.getExportsOfModule(moduleName, fromFile);
-            if (exports !== null && exports.has(target)) {
-                return exports.get(target);
-            }
-            else {
-                return null;
-            }
-        };
-        AbsoluteModuleStrategy.prototype.getExportsOfModule = function (moduleName, fromFile) {
-            if (!this.moduleExportsCache.has(moduleName)) {
-                this.moduleExportsCache.set(moduleName, this.enumerateExportsOfModule(moduleName, fromFile));
-            }
-            return this.moduleExportsCache.get(moduleName);
-        };
-        AbsoluteModuleStrategy.prototype.enumerateExportsOfModule = function (specifier, fromFile) {
-            // First, resolve the module specifier to its entry point, and get the ts.Symbol for it.
-            var resolvedModule = resolveModuleName(specifier, fromFile, this.options, this.host);
-            if (resolvedModule === undefined) {
-                return null;
-            }
-            var entryPointFile = getSourceFileOrNull(this.program, absoluteFrom(resolvedModule.resolvedFileName));
-            if (entryPointFile === null) {
-                return null;
-            }
-            var exports = this.reflectionHost.getExportsOfModule(entryPointFile);
-            if (exports === null) {
-                return null;
-            }
-            var exportMap = new Map();
-            exports.forEach(function (declaration, name) {
-                // It's okay to skip inline declarations, since by definition they're not target-able with a
-                // ts.Declaration anyway.
-                if (declaration.node !== null) {
-                    exportMap.set(declaration.node, name);
+        CompoundMetadataReader.prototype.getNgModuleMetadata = function (node) {
+            var e_2, _a;
+            try {
+                for (var _b = __values(this.readers), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var reader = _c.value;
+                    var meta = reader.getNgModuleMetadata(node);
+                    if (meta !== null) {
+                        return meta;
+                    }
                 }
-            });
-            return exportMap;
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+            return null;
         };
-        return AbsoluteModuleStrategy;
+        CompoundMetadataReader.prototype.getPipeMetadata = function (node) {
+            var e_3, _a;
+            try {
+                for (var _b = __values(this.readers), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var reader = _c.value;
+                    var meta = reader.getPipeMetadata(node);
+                    if (meta !== null) {
+                        return meta;
+                    }
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+            return null;
+        };
+        return CompoundMetadataReader;
     }());
-    /**
-     * A `ReferenceEmitStrategy` which will refer to declarations via relative paths, provided they're
-     * both in the logical project "space" of paths.
-     *
-     * This is trickier than it sounds, as the two files may be in different root directories in the
-     * project. Simply calculating a file system relative path between the two is not sufficient.
-     * Instead, `LogicalProjectPath`s are used.
-     */
-    var LogicalProjectStrategy = /** @class */ (function () {
-        function LogicalProjectStrategy(reflector, logicalFs) {
-            this.reflector = reflector;
-            this.logicalFs = logicalFs;
+    function afterUnderscore(str) {
+        var pos = str.indexOf('_');
+        if (pos === -1) {
+            throw new Error("Expected '" + str + "' to contain '_'");
         }
-        LogicalProjectStrategy.prototype.emit = function (ref, context) {
-            var destSf = getSourceFile(ref.node);
-            // Compute the relative path from the importing file to the file being imported. This is done
-            // as a logical path computation, because the two files might be in different rootDirs.
-            var destPath = this.logicalFs.logicalPathOfSf(destSf);
-            if (destPath === null) {
-                // The imported file is not within the logical project filesystem.
-                return null;
-            }
-            var originPath = this.logicalFs.logicalPathOfSf(context);
-            if (originPath === null) {
-                throw new Error("Debug assert: attempt to import from " + context.fileName + " but it's outside the program?");
-            }
-            // There's no way to emit a relative reference from a file to itself.
-            if (destPath === originPath) {
-                return null;
-            }
-            var name = findExportedNameOfNode(ref.node, destSf, this.reflector);
-            if (name === null) {
-                // The target declaration isn't exported from the file it's declared in. This is an issue!
-                return null;
-            }
-            // With both files expressed as LogicalProjectPaths, getting the module specifier as a relative
-            // path is now straightforward.
-            var moduleName = LogicalProjectPath.relativePathBetween(originPath, destPath);
-            return new ExternalExpr({ moduleName: moduleName, name: name });
-        };
-        return LogicalProjectStrategy;
-    }());
-    /**
-     * A `ReferenceEmitStrategy` which uses a `FileToModuleHost` to generate absolute import references.
-     */
-    var FileToModuleStrategy = /** @class */ (function () {
-        function FileToModuleStrategy(reflector, fileToModuleHost) {
-            this.reflector = reflector;
-            this.fileToModuleHost = fileToModuleHost;
-        }
-        FileToModuleStrategy.prototype.emit = function (ref, context) {
-            var destSf = getSourceFile(ref.node);
-            var name = findExportedNameOfNode(ref.node, destSf, this.reflector);
-            if (name === null) {
-                return null;
-            }
-            var moduleName = this.fileToModuleHost.fileNameToModuleName(destSf.fileName, context.fileName);
-            return new ExternalExpr({ moduleName: moduleName, name: name });
-        };
-        return FileToModuleStrategy;
-    }());
+        return str.substr(pos + 1);
+    }
 
     /**
-     * Used by `RouterEntryPointManager` and `NgModuleRouteAnalyzer` (which is in turn is used by
-     * `NgModuleDecoratorHandler`) for resolving the module source-files references in lazy-loaded
-     * routes (relative to the source-file containing the `NgModule` that provides the route
-     * definitions).
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
      */
-    var ModuleResolver = /** @class */ (function () {
-        function ModuleResolver(program, compilerOptions, host) {
-            this.program = program;
-            this.compilerOptions = compilerOptions;
-            this.host = host;
+    /**
+     * A `MetadataReader` that can read metadata from `.d.ts` files, which have static Ivy properties
+     * from an upstream compilation already.
+     */
+    var DtsMetadataReader = /** @class */ (function () {
+        function DtsMetadataReader(checker, reflector) {
+            this.checker = checker;
+            this.reflector = reflector;
         }
-        ModuleResolver.prototype.resolveModuleName = function (module, containingFile) {
-            var resolved = resolveModuleName(module, containingFile.fileName, this.compilerOptions, this.host);
-            if (resolved === undefined) {
+        /**
+         * Read the metadata from a class that has already been compiled somehow (either it's in a .d.ts
+         * file, or in a .ts file with a handwritten definition).
+         *
+         * @param ref `Reference` to the class of interest, with the context of how it was obtained.
+         */
+        DtsMetadataReader.prototype.getNgModuleMetadata = function (ref) {
+            var clazz = ref.node;
+            var resolutionContext = clazz.getSourceFile().fileName;
+            // This operation is explicitly not memoized, as it depends on `ref.ownedByModuleGuess`.
+            // TODO(alxhub): investigate caching of .d.ts module metadata.
+            var ngModuleDef = this.reflector.getMembersOfClass(clazz).find(function (member) { return member.name === 'ɵmod' && member.isStatic; });
+            if (ngModuleDef === undefined) {
                 return null;
             }
-            return getSourceFileOrNull(this.program, absoluteFrom(resolved.resolvedFileName));
+            else if (
+            // Validate that the shape of the ngModuleDef type is correct.
+            ngModuleDef.type === null || !ts.isTypeReferenceNode(ngModuleDef.type) ||
+                ngModuleDef.type.typeArguments === undefined ||
+                ngModuleDef.type.typeArguments.length !== 4) {
+                return null;
+            }
+            // Read the ModuleData out of the type arguments.
+            var _a = __read(ngModuleDef.type.typeArguments, 4), _ = _a[0], declarationMetadata = _a[1], importMetadata = _a[2], exportMetadata = _a[3];
+            return {
+                ref: ref,
+                declarations: extractReferencesFromType(this.checker, declarationMetadata, ref.ownedByModuleGuess, resolutionContext),
+                exports: extractReferencesFromType(this.checker, exportMetadata, ref.ownedByModuleGuess, resolutionContext),
+                imports: extractReferencesFromType(this.checker, importMetadata, ref.ownedByModuleGuess, resolutionContext),
+                schemas: [],
+            };
         };
-        return ModuleResolver;
+        /**
+         * Read directive (or component) metadata from a referenced class in a .d.ts file.
+         */
+        DtsMetadataReader.prototype.getDirectiveMetadata = function (ref) {
+            var clazz = ref.node;
+            var def = this.reflector.getMembersOfClass(clazz).find(function (field) { return field.isStatic && (field.name === 'ɵcmp' || field.name === 'ɵdir'); });
+            if (def === undefined) {
+                // No definition could be found.
+                return null;
+            }
+            else if (def.type === null || !ts.isTypeReferenceNode(def.type) ||
+                def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
+                // The type metadata was the wrong shape.
+                return null;
+            }
+            return __assign(__assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
+        };
+        /**
+         * Read pipe metadata from a referenced class in a .d.ts file.
+         */
+        DtsMetadataReader.prototype.getPipeMetadata = function (ref) {
+            var def = this.reflector.getMembersOfClass(ref.node).find(function (field) { return field.isStatic && field.name === 'ɵpipe'; });
+            if (def === undefined) {
+                // No definition could be found.
+                return null;
+            }
+            else if (def.type === null || !ts.isTypeReferenceNode(def.type) ||
+                def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
+                // The type metadata was the wrong shape.
+                return null;
+            }
+            var type = def.type.typeArguments[1];
+            if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) {
+                // The type metadata was the wrong type.
+                return null;
+            }
+            var name = type.literal.text;
+            return { ref: ref, name: name };
+        };
+        return DtsMetadataReader;
+    }());
+    function readBaseClass(clazz, checker, reflector) {
+        var e_1, _a;
+        if (!isNamedClassDeclaration(clazz)) {
+            // Technically this is an error in a .d.ts file, but for the purposes of finding the base class
+            // it's ignored.
+            return reflector.hasBaseClass(clazz) ? 'dynamic' : null;
+        }
+        if (clazz.heritageClauses !== undefined) {
+            try {
+                for (var _b = __values(clazz.heritageClauses), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var clause = _c.value;
+                    if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
+                        var baseExpr = clause.types[0].expression;
+                        var symbol = checker.getSymbolAtLocation(baseExpr);
+                        if (symbol === undefined) {
+                            return 'dynamic';
+                        }
+                        else if (symbol.flags & ts.SymbolFlags.Alias) {
+                            symbol = checker.getAliasedSymbol(symbol);
+                        }
+                        if (symbol.valueDeclaration !== undefined &&
+                            isNamedClassDeclaration(symbol.valueDeclaration)) {
+                            return new Reference$1(symbol.valueDeclaration);
+                        }
+                        else {
+                            return 'dynamic';
+                        }
+                    }
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A registry of directive, pipe, and module metadata for types defined in the current compilation
+     * unit, which supports both reading and registering.
+     */
+    var LocalMetadataRegistry = /** @class */ (function () {
+        function LocalMetadataRegistry() {
+            this.directives = new Map();
+            this.ngModules = new Map();
+            this.pipes = new Map();
+        }
+        LocalMetadataRegistry.prototype.getDirectiveMetadata = function (ref) {
+            return this.directives.has(ref.node) ? this.directives.get(ref.node) : null;
+        };
+        LocalMetadataRegistry.prototype.getNgModuleMetadata = function (ref) {
+            return this.ngModules.has(ref.node) ? this.ngModules.get(ref.node) : null;
+        };
+        LocalMetadataRegistry.prototype.getPipeMetadata = function (ref) {
+            return this.pipes.has(ref.node) ? this.pipes.get(ref.node) : null;
+        };
+        LocalMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) { this.directives.set(meta.ref.node, meta); };
+        LocalMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) { this.ngModules.set(meta.ref.node, meta); };
+        LocalMetadataRegistry.prototype.registerPipeMetadata = function (meta) { this.pipes.set(meta.ref.node, meta); };
+        return LocalMetadataRegistry;
+    }());
+    /**
+     * A `MetadataRegistry` which registers metdata with multiple delegate `MetadataRegistry` instances.
+     */
+    var CompoundMetadataRegistry = /** @class */ (function () {
+        function CompoundMetadataRegistry(registries) {
+            this.registries = registries;
+        }
+        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
+            var e_1, _a;
+            try {
+                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var registry = _c.value;
+                    registry.registerDirectiveMetadata(meta);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        };
+        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
+            var e_2, _a;
+            try {
+                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var registry = _c.value;
+                    registry.registerNgModuleMetadata(meta);
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+        };
+        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
+            var e_3, _a;
+            try {
+                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var registry = _c.value;
+                    registry.registerPipeMetadata(meta);
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+        };
+        return CompoundMetadataRegistry;
     }());
 
     /**
@@ -36155,6 +36462,925 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Given a reference to a directive, return a flattened version of its `DirectiveMeta` metadata
+     * which includes metadata from its entire inheritance chain.
+     *
+     * The returned `DirectiveMeta` will either have `baseClass: null` if the inheritance chain could be
+     * fully resolved, or `baseClass: 'dynamic'` if the inheritance chain could not be completely
+     * followed.
+     */
+    function flattenInheritedDirectiveMetadata(reader, dir) {
+        var topMeta = reader.getDirectiveMetadata(dir);
+        if (topMeta === null) {
+            throw new Error("Metadata not found for directive: " + dir.debugName);
+        }
+        var inputs = {};
+        var outputs = {};
+        var isDynamic = false;
+        var addMetadata = function (meta) {
+            if (meta.baseClass === 'dynamic') {
+                isDynamic = true;
+            }
+            else if (meta.baseClass !== null) {
+                var baseMeta = reader.getDirectiveMetadata(meta.baseClass);
+                if (baseMeta !== null) {
+                    addMetadata(baseMeta);
+                }
+                else {
+                    // Missing metadata for the base class means it's effectively dynamic.
+                    isDynamic = true;
+                }
+            }
+            inputs = __assign(__assign({}, inputs), meta.inputs);
+            outputs = __assign(__assign({}, outputs), meta.outputs);
+        };
+        addMetadata(topMeta);
+        return __assign(__assign({}, topMeta), { inputs: inputs,
+            outputs: outputs, baseClass: isDynamic ? 'dynamic' : null });
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Represents a value which cannot be determined statically.
+     */
+    var DynamicValue = /** @class */ (function () {
+        function DynamicValue(node, reason, code) {
+            this.node = node;
+            this.reason = reason;
+            this.code = code;
+        }
+        DynamicValue.fromDynamicInput = function (node, input) {
+            return new DynamicValue(node, input, 0 /* DYNAMIC_INPUT */);
+        };
+        DynamicValue.fromDynamicString = function (node) {
+            return new DynamicValue(node, undefined, 1 /* DYNAMIC_STRING */);
+        };
+        DynamicValue.fromExternalReference = function (node, ref) {
+            return new DynamicValue(node, ref, 2 /* EXTERNAL_REFERENCE */);
+        };
+        DynamicValue.fromUnknownExpressionType = function (node) {
+            return new DynamicValue(node, undefined, 3 /* UNKNOWN_EXPRESSION_TYPE */);
+        };
+        DynamicValue.fromUnknownIdentifier = function (node) {
+            return new DynamicValue(node, undefined, 4 /* UNKNOWN_IDENTIFIER */);
+        };
+        DynamicValue.fromInvalidExpressionType = function (node, value) {
+            return new DynamicValue(node, value, 5 /* INVALID_EXPRESSION_TYPE */);
+        };
+        DynamicValue.fromUnknown = function (node) {
+            return new DynamicValue(node, undefined, 6 /* UNKNOWN */);
+        };
+        DynamicValue.prototype.isFromDynamicInput = function () {
+            return this.code === 0 /* DYNAMIC_INPUT */;
+        };
+        DynamicValue.prototype.isFromDynamicString = function () {
+            return this.code === 1 /* DYNAMIC_STRING */;
+        };
+        DynamicValue.prototype.isFromExternalReference = function () {
+            return this.code === 2 /* EXTERNAL_REFERENCE */;
+        };
+        DynamicValue.prototype.isFromUnknownExpressionType = function () {
+            return this.code === 3 /* UNKNOWN_EXPRESSION_TYPE */;
+        };
+        DynamicValue.prototype.isFromUnknownIdentifier = function () {
+            return this.code === 4 /* UNKNOWN_IDENTIFIER */;
+        };
+        DynamicValue.prototype.isFromInvalidExpressionType = function () {
+            return this.code === 5 /* INVALID_EXPRESSION_TYPE */;
+        };
+        DynamicValue.prototype.isFromUnknown = function () {
+            return this.code === 6 /* UNKNOWN */;
+        };
+        return DynamicValue;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A value member of an enumeration.
+     *
+     * Contains a `Reference` to the enumeration itself, and the name of the referenced member.
+     */
+    var EnumValue = /** @class */ (function () {
+        function EnumValue(enumRef, name, resolved) {
+            this.enumRef = enumRef;
+            this.name = name;
+            this.resolved = resolved;
+        }
+        return EnumValue;
+    }());
+    /**
+     * An implementation of a builtin function, such as `Array.prototype.slice`.
+     */
+    var BuiltinFn = /** @class */ (function () {
+        function BuiltinFn() {
+        }
+        return BuiltinFn;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var ArraySliceBuiltinFn = /** @class */ (function (_super) {
+        __extends(ArraySliceBuiltinFn, _super);
+        function ArraySliceBuiltinFn(node, lhs) {
+            var _this = _super.call(this) || this;
+            _this.node = node;
+            _this.lhs = lhs;
+            return _this;
+        }
+        ArraySliceBuiltinFn.prototype.evaluate = function (args) {
+            if (args.length === 0) {
+                return this.lhs;
+            }
+            else {
+                return DynamicValue.fromUnknown(this.node);
+            }
+        };
+        return ArraySliceBuiltinFn;
+    }(BuiltinFn));
+    var ArrayConcatBuiltinFn = /** @class */ (function (_super) {
+        __extends(ArrayConcatBuiltinFn, _super);
+        function ArrayConcatBuiltinFn(node, lhs) {
+            var _this = _super.call(this) || this;
+            _this.node = node;
+            _this.lhs = lhs;
+            return _this;
+        }
+        ArrayConcatBuiltinFn.prototype.evaluate = function (args) {
+            var e_1, _a;
+            var result = __spread(this.lhs);
+            try {
+                for (var args_1 = __values(args), args_1_1 = args_1.next(); !args_1_1.done; args_1_1 = args_1.next()) {
+                    var arg = args_1_1.value;
+                    if (arg instanceof DynamicValue) {
+                        result.push(DynamicValue.fromDynamicInput(this.node, arg));
+                    }
+                    else if (Array.isArray(arg)) {
+                        result.push.apply(result, __spread(arg));
+                    }
+                    else {
+                        result.push(arg);
+                    }
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (args_1_1 && !args_1_1.done && (_a = args_1.return)) _a.call(args_1);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            return result;
+        };
+        return ArrayConcatBuiltinFn;
+    }(BuiltinFn));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function evaluateTsHelperInline(helper, node, args) {
+        if (helper === TsHelperFn.Spread) {
+            return evaluateTsSpreadHelper(node, args);
+        }
+        else {
+            throw new Error("Cannot evaluate unknown helper " + helper + " inline");
+        }
+    }
+    function evaluateTsSpreadHelper(node, args) {
+        var e_1, _a;
+        var result = [];
+        try {
+            for (var args_1 = __values(args), args_1_1 = args_1.next(); !args_1_1.done; args_1_1 = args_1.next()) {
+                var arg = args_1_1.value;
+                if (arg instanceof DynamicValue) {
+                    result.push(DynamicValue.fromDynamicInput(node, arg));
+                }
+                else if (Array.isArray(arg)) {
+                    result.push.apply(result, __spread(arg));
+                }
+                else {
+                    result.push(arg);
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (args_1_1 && !args_1_1.done && (_a = args_1.return)) _a.call(args_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        return result;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function literalBinaryOp(op) {
+        return { op: op, literal: true };
+    }
+    function referenceBinaryOp(op) {
+        return { op: op, literal: false };
+    }
+    var BINARY_OPERATORS = new Map([
+        [ts.SyntaxKind.PlusToken, literalBinaryOp(function (a, b) { return a + b; })],
+        [ts.SyntaxKind.MinusToken, literalBinaryOp(function (a, b) { return a - b; })],
+        [ts.SyntaxKind.AsteriskToken, literalBinaryOp(function (a, b) { return a * b; })],
+        [ts.SyntaxKind.SlashToken, literalBinaryOp(function (a, b) { return a / b; })],
+        [ts.SyntaxKind.PercentToken, literalBinaryOp(function (a, b) { return a % b; })],
+        [ts.SyntaxKind.AmpersandToken, literalBinaryOp(function (a, b) { return a & b; })],
+        [ts.SyntaxKind.BarToken, literalBinaryOp(function (a, b) { return a | b; })],
+        [ts.SyntaxKind.CaretToken, literalBinaryOp(function (a, b) { return a ^ b; })],
+        [ts.SyntaxKind.LessThanToken, literalBinaryOp(function (a, b) { return a < b; })],
+        [ts.SyntaxKind.LessThanEqualsToken, literalBinaryOp(function (a, b) { return a <= b; })],
+        [ts.SyntaxKind.GreaterThanToken, literalBinaryOp(function (a, b) { return a > b; })],
+        [ts.SyntaxKind.GreaterThanEqualsToken, literalBinaryOp(function (a, b) { return a >= b; })],
+        [ts.SyntaxKind.EqualsEqualsToken, literalBinaryOp(function (a, b) { return a == b; })],
+        [ts.SyntaxKind.EqualsEqualsEqualsToken, literalBinaryOp(function (a, b) { return a === b; })],
+        [ts.SyntaxKind.ExclamationEqualsToken, literalBinaryOp(function (a, b) { return a != b; })],
+        [ts.SyntaxKind.ExclamationEqualsEqualsToken, literalBinaryOp(function (a, b) { return a !== b; })],
+        [ts.SyntaxKind.LessThanLessThanToken, literalBinaryOp(function (a, b) { return a << b; })],
+        [ts.SyntaxKind.GreaterThanGreaterThanToken, literalBinaryOp(function (a, b) { return a >> b; })],
+        [ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken, literalBinaryOp(function (a, b) { return a >>> b; })],
+        [ts.SyntaxKind.AsteriskAsteriskToken, literalBinaryOp(function (a, b) { return Math.pow(a, b); })],
+        [ts.SyntaxKind.AmpersandAmpersandToken, referenceBinaryOp(function (a, b) { return a && b; })],
+        [ts.SyntaxKind.BarBarToken, referenceBinaryOp(function (a, b) { return a || b; })]
+    ]);
+    var UNARY_OPERATORS = new Map([
+        [ts.SyntaxKind.TildeToken, function (a) { return ~a; }], [ts.SyntaxKind.MinusToken, function (a) { return -a; }],
+        [ts.SyntaxKind.PlusToken, function (a) { return +a; }], [ts.SyntaxKind.ExclamationToken, function (a) { return !a; }]
+    ]);
+    var StaticInterpreter = /** @class */ (function () {
+        function StaticInterpreter(host, checker, dependencyTracker) {
+            this.host = host;
+            this.checker = checker;
+            this.dependencyTracker = dependencyTracker;
+        }
+        StaticInterpreter.prototype.visit = function (node, context) {
+            return this.visitExpression(node, context);
+        };
+        StaticInterpreter.prototype.visitExpression = function (node, context) {
+            var result;
+            if (node.kind === ts.SyntaxKind.TrueKeyword) {
+                return true;
+            }
+            else if (node.kind === ts.SyntaxKind.FalseKeyword) {
+                return false;
+            }
+            else if (node.kind === ts.SyntaxKind.NullKeyword) {
+                return null;
+            }
+            else if (ts.isStringLiteral(node)) {
+                return node.text;
+            }
+            else if (ts.isNoSubstitutionTemplateLiteral(node)) {
+                return node.text;
+            }
+            else if (ts.isTemplateExpression(node)) {
+                result = this.visitTemplateExpression(node, context);
+            }
+            else if (ts.isNumericLiteral(node)) {
+                return parseFloat(node.text);
+            }
+            else if (ts.isObjectLiteralExpression(node)) {
+                result = this.visitObjectLiteralExpression(node, context);
+            }
+            else if (ts.isIdentifier(node)) {
+                result = this.visitIdentifier(node, context);
+            }
+            else if (ts.isPropertyAccessExpression(node)) {
+                result = this.visitPropertyAccessExpression(node, context);
+            }
+            else if (ts.isCallExpression(node)) {
+                result = this.visitCallExpression(node, context);
+            }
+            else if (ts.isConditionalExpression(node)) {
+                result = this.visitConditionalExpression(node, context);
+            }
+            else if (ts.isPrefixUnaryExpression(node)) {
+                result = this.visitPrefixUnaryExpression(node, context);
+            }
+            else if (ts.isBinaryExpression(node)) {
+                result = this.visitBinaryExpression(node, context);
+            }
+            else if (ts.isArrayLiteralExpression(node)) {
+                result = this.visitArrayLiteralExpression(node, context);
+            }
+            else if (ts.isParenthesizedExpression(node)) {
+                result = this.visitParenthesizedExpression(node, context);
+            }
+            else if (ts.isElementAccessExpression(node)) {
+                result = this.visitElementAccessExpression(node, context);
+            }
+            else if (ts.isAsExpression(node)) {
+                result = this.visitExpression(node.expression, context);
+            }
+            else if (ts.isNonNullExpression(node)) {
+                result = this.visitExpression(node.expression, context);
+            }
+            else if (this.host.isClass(node)) {
+                result = this.visitDeclaration(node, context);
+            }
+            else {
+                return DynamicValue.fromUnknownExpressionType(node);
+            }
+            if (result instanceof DynamicValue && result.node !== node) {
+                return DynamicValue.fromDynamicInput(node, result);
+            }
+            return result;
+        };
+        StaticInterpreter.prototype.visitArrayLiteralExpression = function (node, context) {
+            var array = [];
+            for (var i = 0; i < node.elements.length; i++) {
+                var element = node.elements[i];
+                if (ts.isSpreadElement(element)) {
+                    array.push.apply(array, __spread(this.visitSpreadElement(element, context)));
+                }
+                else {
+                    array.push(this.visitExpression(element, context));
+                }
+            }
+            return array;
+        };
+        StaticInterpreter.prototype.visitObjectLiteralExpression = function (node, context) {
+            var map = new Map();
+            for (var i = 0; i < node.properties.length; i++) {
+                var property = node.properties[i];
+                if (ts.isPropertyAssignment(property)) {
+                    var name_1 = this.stringNameFromPropertyName(property.name, context);
+                    // Check whether the name can be determined statically.
+                    if (name_1 === undefined) {
+                        return DynamicValue.fromDynamicInput(node, DynamicValue.fromDynamicString(property.name));
+                    }
+                    map.set(name_1, this.visitExpression(property.initializer, context));
+                }
+                else if (ts.isShorthandPropertyAssignment(property)) {
+                    var symbol = this.checker.getShorthandAssignmentValueSymbol(property);
+                    if (symbol === undefined || symbol.valueDeclaration === undefined) {
+                        map.set(property.name.text, DynamicValue.fromUnknown(property));
+                    }
+                    else {
+                        map.set(property.name.text, this.visitDeclaration(symbol.valueDeclaration, context));
+                    }
+                }
+                else if (ts.isSpreadAssignment(property)) {
+                    var spread = this.visitExpression(property.expression, context);
+                    if (spread instanceof DynamicValue) {
+                        return DynamicValue.fromDynamicInput(node, spread);
+                    }
+                    else if (!(spread instanceof Map)) {
+                        throw new Error("Unexpected value in spread assignment: " + spread);
+                    }
+                    spread.forEach(function (value, key) { return map.set(key, value); });
+                }
+                else {
+                    return DynamicValue.fromUnknown(node);
+                }
+            }
+            return map;
+        };
+        StaticInterpreter.prototype.visitTemplateExpression = function (node, context) {
+            var pieces = [node.head.text];
+            for (var i = 0; i < node.templateSpans.length; i++) {
+                var span = node.templateSpans[i];
+                var value = this.visit(span.expression, context);
+                if (value instanceof EnumValue) {
+                    value = value.resolved;
+                }
+                if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ||
+                    value == null) {
+                    pieces.push("" + value);
+                }
+                else if (value instanceof DynamicValue) {
+                    return DynamicValue.fromDynamicInput(node, value);
+                }
+                else {
+                    return DynamicValue.fromDynamicInput(node, DynamicValue.fromDynamicString(span.expression));
+                }
+                pieces.push(span.literal.text);
+            }
+            return pieces.join('');
+        };
+        StaticInterpreter.prototype.visitIdentifier = function (node, context) {
+            var decl = this.host.getDeclarationOfIdentifier(node);
+            if (decl === null) {
+                if (node.originalKeywordKind === ts.SyntaxKind.UndefinedKeyword) {
+                    return undefined;
+                }
+                else {
+                    return DynamicValue.fromUnknownIdentifier(node);
+                }
+            }
+            var declContext = __assign(__assign({}, context), joinModuleContext(context, node, decl));
+            // The identifier's declaration is either concrete (a ts.Declaration exists for it) or inline
+            // (a direct reference to a ts.Expression).
+            // TODO(alxhub): remove cast once TS is upgraded in g3.
+            var result = decl.node !== null ?
+                this.visitDeclaration(decl.node, declContext) :
+                this.visitExpression(decl.expression, declContext);
+            if (result instanceof Reference$1) {
+                // Only record identifiers to non-synthetic references. Synthetic references may not have the
+                // same value at runtime as they do at compile time, so it's not legal to refer to them by the
+                // identifier here.
+                if (!result.synthetic) {
+                    result.addIdentifier(node);
+                }
+            }
+            else if (result instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, result);
+            }
+            return result;
+        };
+        StaticInterpreter.prototype.visitDeclaration = function (node, context) {
+            if (this.dependencyTracker) {
+                this.dependencyTracker.trackFileDependency(node.getSourceFile(), context.originatingFile);
+            }
+            if (this.host.isClass(node)) {
+                return this.getReference(node, context);
+            }
+            else if (ts.isVariableDeclaration(node)) {
+                return this.visitVariableDeclaration(node, context);
+            }
+            else if (ts.isParameter(node) && context.scope.has(node)) {
+                return context.scope.get(node);
+            }
+            else if (ts.isExportAssignment(node)) {
+                return this.visitExpression(node.expression, context);
+            }
+            else if (ts.isEnumDeclaration(node)) {
+                return this.visitEnumDeclaration(node, context);
+            }
+            else if (ts.isSourceFile(node)) {
+                return this.visitSourceFile(node, context);
+            }
+            else {
+                return this.getReference(node, context);
+            }
+        };
+        StaticInterpreter.prototype.visitVariableDeclaration = function (node, context) {
+            var value = this.host.getVariableValue(node);
+            if (value !== null) {
+                return this.visitExpression(value, context);
+            }
+            else if (isVariableDeclarationDeclared(node)) {
+                return this.getReference(node, context);
+            }
+            else {
+                return undefined;
+            }
+        };
+        StaticInterpreter.prototype.visitEnumDeclaration = function (node, context) {
+            var _this = this;
+            var enumRef = this.getReference(node, context);
+            var map = new Map();
+            node.members.forEach(function (member) {
+                var name = _this.stringNameFromPropertyName(member.name, context);
+                if (name !== undefined) {
+                    var resolved = member.initializer && _this.visit(member.initializer, context);
+                    map.set(name, new EnumValue(enumRef, name, resolved));
+                }
+            });
+            return map;
+        };
+        StaticInterpreter.prototype.visitElementAccessExpression = function (node, context) {
+            var lhs = this.visitExpression(node.expression, context);
+            if (node.argumentExpression === undefined) {
+                throw new Error("Expected argument in ElementAccessExpression");
+            }
+            if (lhs instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, lhs);
+            }
+            var rhs = this.visitExpression(node.argumentExpression, context);
+            if (rhs instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, rhs);
+            }
+            if (typeof rhs !== 'string' && typeof rhs !== 'number') {
+                throw new Error("ElementAccessExpression index should be string or number, got " + typeof rhs + ": " + rhs);
+            }
+            return this.accessHelper(node, lhs, rhs, context);
+        };
+        StaticInterpreter.prototype.visitPropertyAccessExpression = function (node, context) {
+            var lhs = this.visitExpression(node.expression, context);
+            var rhs = node.name.text;
+            // TODO: handle reference to class declaration.
+            if (lhs instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, lhs);
+            }
+            return this.accessHelper(node, lhs, rhs, context);
+        };
+        StaticInterpreter.prototype.visitSourceFile = function (node, context) {
+            var _this = this;
+            var declarations = this.host.getExportsOfModule(node);
+            if (declarations === null) {
+                return DynamicValue.fromUnknown(node);
+            }
+            var map = new Map();
+            declarations.forEach(function (decl, name) {
+                var declContext = __assign(__assign({}, context), joinModuleContext(context, node, decl));
+                // Visit both concrete and inline declarations.
+                // TODO(alxhub): remove cast once TS is upgraded in g3.
+                var value = decl.node !== null ?
+                    _this.visitDeclaration(decl.node, declContext) :
+                    _this.visitExpression(decl.expression, declContext);
+                map.set(name, value);
+            });
+            return map;
+        };
+        StaticInterpreter.prototype.accessHelper = function (node, lhs, rhs, context) {
+            var strIndex = "" + rhs;
+            if (lhs instanceof Map) {
+                if (lhs.has(strIndex)) {
+                    return lhs.get(strIndex);
+                }
+                else {
+                    return undefined;
+                }
+            }
+            else if (Array.isArray(lhs)) {
+                if (rhs === 'length') {
+                    return lhs.length;
+                }
+                else if (rhs === 'slice') {
+                    return new ArraySliceBuiltinFn(node, lhs);
+                }
+                else if (rhs === 'concat') {
+                    return new ArrayConcatBuiltinFn(node, lhs);
+                }
+                if (typeof rhs !== 'number' || !Number.isInteger(rhs)) {
+                    return DynamicValue.fromUnknown(node);
+                }
+                if (rhs < 0 || rhs >= lhs.length) {
+                    throw new Error("Index out of bounds: " + rhs + " vs " + lhs.length);
+                }
+                return lhs[rhs];
+            }
+            else if (lhs instanceof Reference$1) {
+                var ref = lhs.node;
+                if (this.host.isClass(ref)) {
+                    var module_1 = owningModule(context, lhs.bestGuessOwningModule);
+                    var value = undefined;
+                    var member = this.host.getMembersOfClass(ref).find(function (member) { return member.isStatic && member.name === strIndex; });
+                    if (member !== undefined) {
+                        if (member.value !== null) {
+                            value = this.visitExpression(member.value, context);
+                        }
+                        else if (member.implementation !== null) {
+                            value = new Reference$1(member.implementation, module_1);
+                        }
+                        else if (member.node) {
+                            value = new Reference$1(member.node, module_1);
+                        }
+                    }
+                    return value;
+                }
+                else if (isDeclaration(ref)) {
+                    return DynamicValue.fromDynamicInput(node, DynamicValue.fromExternalReference(ref, lhs));
+                }
+            }
+            else if (lhs instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, lhs);
+            }
+            return DynamicValue.fromUnknown(node);
+        };
+        StaticInterpreter.prototype.visitCallExpression = function (node, context) {
+            var _this = this;
+            var lhs = this.visitExpression(node.expression, context);
+            if (lhs instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, lhs);
+            }
+            // If the call refers to a builtin function, attempt to evaluate the function.
+            if (lhs instanceof BuiltinFn) {
+                return lhs.evaluate(this.evaluateFunctionArguments(node, context));
+            }
+            if (!(lhs instanceof Reference$1)) {
+                return DynamicValue.fromInvalidExpressionType(node.expression, lhs);
+            }
+            var fn = this.host.getDefinitionOfFunction(lhs.node);
+            if (fn === null) {
+                return DynamicValue.fromInvalidExpressionType(node.expression, lhs);
+            }
+            // If the function corresponds with a tslib helper function, evaluate it with custom logic.
+            if (fn.helper !== null) {
+                var args_1 = this.evaluateFunctionArguments(node, context);
+                return evaluateTsHelperInline(fn.helper, node, args_1);
+            }
+            if (!isFunctionOrMethodReference(lhs)) {
+                return DynamicValue.fromInvalidExpressionType(node.expression, lhs);
+            }
+            // If the function is foreign (declared through a d.ts file), attempt to resolve it with the
+            // foreignFunctionResolver, if one is specified.
+            if (fn.body === null) {
+                var expr = null;
+                if (context.foreignFunctionResolver) {
+                    expr = context.foreignFunctionResolver(lhs, node.arguments);
+                }
+                if (expr === null) {
+                    return DynamicValue.fromDynamicInput(node, DynamicValue.fromExternalReference(node.expression, lhs));
+                }
+                // If the function is declared in a different file, resolve the foreign function expression
+                // using the absolute module name of that file (if any).
+                if (lhs.bestGuessOwningModule !== null) {
+                    context = __assign(__assign({}, context), { absoluteModuleName: lhs.bestGuessOwningModule.specifier, resolutionContext: node.getSourceFile().fileName });
+                }
+                var res = this.visitExpression(expr, context);
+                if (res instanceof Reference$1) {
+                    // This Reference was created synthetically, via a foreign function resolver. The real
+                    // runtime value of the function expression may be different than the foreign function
+                    // resolved value, so mark the Reference as synthetic to avoid it being misinterpreted.
+                    res.synthetic = true;
+                }
+                return res;
+            }
+            var body = fn.body;
+            if (body.length !== 1 || !ts.isReturnStatement(body[0])) {
+                return DynamicValue.fromUnknown(node);
+            }
+            var ret = body[0];
+            var args = this.evaluateFunctionArguments(node, context);
+            var newScope = new Map();
+            var calleeContext = __assign(__assign({}, context), { scope: newScope });
+            fn.parameters.forEach(function (param, index) {
+                var arg = args[index];
+                if (param.node.dotDotDotToken !== undefined) {
+                    arg = args.slice(index);
+                }
+                if (arg === undefined && param.initializer !== null) {
+                    arg = _this.visitExpression(param.initializer, calleeContext);
+                }
+                newScope.set(param.node, arg);
+            });
+            return ret.expression !== undefined ? this.visitExpression(ret.expression, calleeContext) :
+                undefined;
+        };
+        StaticInterpreter.prototype.visitConditionalExpression = function (node, context) {
+            var condition = this.visitExpression(node.condition, context);
+            if (condition instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, condition);
+            }
+            if (condition) {
+                return this.visitExpression(node.whenTrue, context);
+            }
+            else {
+                return this.visitExpression(node.whenFalse, context);
+            }
+        };
+        StaticInterpreter.prototype.visitPrefixUnaryExpression = function (node, context) {
+            var operatorKind = node.operator;
+            if (!UNARY_OPERATORS.has(operatorKind)) {
+                throw new Error("Unsupported prefix unary operator: " + ts.SyntaxKind[operatorKind]);
+            }
+            var op = UNARY_OPERATORS.get(operatorKind);
+            var value = this.visitExpression(node.operand, context);
+            if (value instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, value);
+            }
+            else {
+                return op(value);
+            }
+        };
+        StaticInterpreter.prototype.visitBinaryExpression = function (node, context) {
+            var tokenKind = node.operatorToken.kind;
+            if (!BINARY_OPERATORS.has(tokenKind)) {
+                throw new Error("Unsupported binary operator: " + ts.SyntaxKind[tokenKind]);
+            }
+            var opRecord = BINARY_OPERATORS.get(tokenKind);
+            var lhs, rhs;
+            if (opRecord.literal) {
+                lhs = literal$1(this.visitExpression(node.left, context));
+                rhs = literal$1(this.visitExpression(node.right, context));
+            }
+            else {
+                lhs = this.visitExpression(node.left, context);
+                rhs = this.visitExpression(node.right, context);
+            }
+            if (lhs instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, lhs);
+            }
+            else if (rhs instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, rhs);
+            }
+            else {
+                return opRecord.op(lhs, rhs);
+            }
+        };
+        StaticInterpreter.prototype.visitParenthesizedExpression = function (node, context) {
+            return this.visitExpression(node.expression, context);
+        };
+        StaticInterpreter.prototype.evaluateFunctionArguments = function (node, context) {
+            var e_1, _a;
+            var args = [];
+            try {
+                for (var _b = __values(node.arguments), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var arg = _c.value;
+                    if (ts.isSpreadElement(arg)) {
+                        args.push.apply(args, __spread(this.visitSpreadElement(arg, context)));
+                    }
+                    else {
+                        args.push(this.visitExpression(arg, context));
+                    }
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            return args;
+        };
+        StaticInterpreter.prototype.visitSpreadElement = function (node, context) {
+            var spread = this.visitExpression(node.expression, context);
+            if (spread instanceof DynamicValue) {
+                return [DynamicValue.fromDynamicInput(node.expression, spread)];
+            }
+            else if (!Array.isArray(spread)) {
+                throw new Error("Unexpected value in spread expression: " + spread);
+            }
+            else {
+                return spread;
+            }
+        };
+        StaticInterpreter.prototype.stringNameFromPropertyName = function (node, context) {
+            if (ts.isIdentifier(node) || ts.isStringLiteral(node) || ts.isNumericLiteral(node)) {
+                return node.text;
+            }
+            else { // ts.ComputedPropertyName
+                var literal_1 = this.visitExpression(node.expression, context);
+                return typeof literal_1 === 'string' ? literal_1 : undefined;
+            }
+        };
+        StaticInterpreter.prototype.getReference = function (node, context) {
+            return new Reference$1(node, owningModule(context));
+        };
+        return StaticInterpreter;
+    }());
+    function isFunctionOrMethodReference(ref) {
+        return ts.isFunctionDeclaration(ref.node) || ts.isMethodDeclaration(ref.node) ||
+            ts.isFunctionExpression(ref.node);
+    }
+    function literal$1(value) {
+        if (value instanceof DynamicValue || value === null || value === undefined ||
+            typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            return value;
+        }
+        throw new Error("Value " + value + " is not literal and cannot be used in this context.");
+    }
+    function isVariableDeclarationDeclared(node) {
+        if (node.parent === undefined || !ts.isVariableDeclarationList(node.parent)) {
+            return false;
+        }
+        var declList = node.parent;
+        if (declList.parent === undefined || !ts.isVariableStatement(declList.parent)) {
+            return false;
+        }
+        var varStmt = declList.parent;
+        return varStmt.modifiers !== undefined &&
+            varStmt.modifiers.some(function (mod) { return mod.kind === ts.SyntaxKind.DeclareKeyword; });
+    }
+    var EMPTY = {};
+    function joinModuleContext(existing, node, decl) {
+        if (decl.viaModule !== null && decl.viaModule !== existing.absoluteModuleName) {
+            return {
+                absoluteModuleName: decl.viaModule,
+                resolutionContext: node.getSourceFile().fileName,
+            };
+        }
+        else {
+            return EMPTY;
+        }
+    }
+    function owningModule(context, override) {
+        if (override === void 0) { override = null; }
+        var specifier = context.absoluteModuleName;
+        if (override !== null) {
+            specifier = override.specifier;
+        }
+        if (specifier !== null) {
+            return {
+                specifier: specifier,
+                resolutionContext: context.resolutionContext,
+            };
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var PartialEvaluator = /** @class */ (function () {
+        function PartialEvaluator(host, checker, dependencyTracker) {
+            this.host = host;
+            this.checker = checker;
+            this.dependencyTracker = dependencyTracker;
+        }
+        PartialEvaluator.prototype.evaluate = function (expr, foreignFunctionResolver) {
+            var interpreter = new StaticInterpreter(this.host, this.checker, this.dependencyTracker);
+            return interpreter.visit(expr, {
+                originatingFile: expr.getSourceFile(),
+                absoluteModuleName: null,
+                resolutionContext: expr.getSourceFile().fileName,
+                scope: new Map(), foreignFunctionResolver: foreignFunctionResolver,
+            });
+        };
+        return PartialEvaluator;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var HandlerPrecedence;
+    (function (HandlerPrecedence) {
+        /**
+         * Handler with PRIMARY precedence cannot overlap - there can only be one on a given class.
+         *
+         * If more than one PRIMARY handler matches a class, an error is produced.
+         */
+        HandlerPrecedence[HandlerPrecedence["PRIMARY"] = 0] = "PRIMARY";
+        /**
+         * Handlers with SHARED precedence can match any class, possibly in addition to a single PRIMARY
+         * handler.
+         *
+         * It is not an error for a class to have any number of SHARED handlers.
+         */
+        HandlerPrecedence[HandlerPrecedence["SHARED"] = 1] = "SHARED";
+        /**
+         * Handlers with WEAK precedence that match a class are ignored if any handlers with stronger
+         * precedence match a class.
+         */
+        HandlerPrecedence[HandlerPrecedence["WEAK"] = 2] = "WEAK";
+    })(HandlerPrecedence || (HandlerPrecedence = {}));
+    /**
+     * A set of options which can be passed to a `DecoratorHandler` by a consumer, to tailor the output
+     * of compilation beyond the decorators themselves.
+     */
+    var HandlerFlags;
+    (function (HandlerFlags) {
+        /**
+         * No flags set.
+         */
+        HandlerFlags[HandlerFlags["NONE"] = 0] = "NONE";
+        /**
+         * Indicates that this decorator is fully inherited from its parent at runtime. In addition to
+         * normally inherited aspects such as inputs and queries, full inheritance applies to every aspect
+         * of the component or directive, such as the template function itself.
+         *
+         * Its primary effect is to cause the `CopyDefinitionFeature` to be applied to the definition
+         * being compiled. See that class for more information.
+         */
+        HandlerFlags[HandlerFlags["FULL_INHERITANCE"] = 1] = "FULL_INHERITANCE";
+    })(HandlerFlags || (HandlerFlags = {}));
 
     /**
      * @license
@@ -36179,7 +37405,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         });
         return Context;
     }());
-    var BINARY_OPERATORS = new Map([
+    var BINARY_OPERATORS$1 = new Map([
         [BinaryOperator.And, ts.SyntaxKind.AmpersandAmpersandToken],
         [BinaryOperator.Bigger, ts.SyntaxKind.GreaterThanToken],
         [BinaryOperator.BiggerEquals, ts.SyntaxKind.GreaterThanEqualsToken],
@@ -36373,10 +37599,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return ts.createFunctionExpression(undefined, undefined, ast.name || undefined, undefined, ast.params.map(function (param) { return ts.createParameter(undefined, undefined, undefined, param.name, undefined, undefined, undefined); }), undefined, ts.createBlock(ast.statements.map(function (stmt) { return stmt.visitStatement(_this, context); })));
         };
         ExpressionTranslatorVisitor.prototype.visitBinaryOperatorExpr = function (ast, context) {
-            if (!BINARY_OPERATORS.has(ast.operator)) {
+            if (!BINARY_OPERATORS$1.has(ast.operator)) {
                 throw new Error("Unknown binary operator: " + BinaryOperator[ast.operator]);
             }
-            return ts.createBinary(ast.lhs.visitExpression(this, context), BINARY_OPERATORS.get(ast.operator), ast.rhs.visitExpression(this, context));
+            return ts.createBinary(ast.lhs.visitExpression(this, context), BINARY_OPERATORS$1.get(ast.operator), ast.rhs.visitExpression(this, context));
         };
         ExpressionTranslatorVisitor.prototype.visitReadPropExpr = function (ast, context) {
             return ts.createPropertyAccess(ast.receiver.visitExpression(this, context), ast.name);
@@ -37482,251 +38708,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function extractReferencesFromType(checker, def, ngModuleImportedFrom, resolutionContext) {
-        if (!ts.isTupleTypeNode(def)) {
-            return [];
+    var NoopResourceDependencyRecorder = /** @class */ (function () {
+        function NoopResourceDependencyRecorder() {
         }
-        return def.elementTypes.map(function (element) {
-            if (!ts.isTypeQueryNode(element)) {
-                throw new Error("Expected TypeQueryNode: " + nodeDebugInfo(element));
-            }
-            var type = element.exprName;
-            var _a = reflectTypeEntityToDeclaration(type, checker), node = _a.node, from = _a.from;
-            if (!isNamedClassDeclaration(node)) {
-                throw new Error("Expected named ClassDeclaration: " + nodeDebugInfo(node));
-            }
-            var specifier = (from !== null && !from.startsWith('.') ? from : ngModuleImportedFrom);
-            if (specifier !== null) {
-                return new Reference$1(node, { specifier: specifier, resolutionContext: resolutionContext });
-            }
-            else {
-                return new Reference$1(node);
-            }
-        });
-    }
-    function readStringType(type) {
-        if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) {
-            return null;
-        }
-        return type.literal.text;
-    }
-    function readStringMapType(type) {
-        if (!ts.isTypeLiteralNode(type)) {
-            return {};
-        }
-        var obj = {};
-        type.members.forEach(function (member) {
-            if (!ts.isPropertySignature(member) || member.type === undefined || member.name === undefined ||
-                !ts.isStringLiteral(member.name)) {
-                return;
-            }
-            var value = readStringType(member.type);
-            if (value === null) {
-                return null;
-            }
-            obj[member.name.text] = value;
-        });
-        return obj;
-    }
-    function readStringArrayType(type) {
-        if (!ts.isTupleTypeNode(type)) {
-            return [];
-        }
-        var res = [];
-        type.elementTypes.forEach(function (el) {
-            if (!ts.isLiteralTypeNode(el) || !ts.isStringLiteral(el.literal)) {
-                return;
-            }
-            res.push(el.literal.text);
-        });
-        return res;
-    }
-    function extractDirectiveGuards(node, reflector) {
-        var staticMembers = reflector.getMembersOfClass(node).filter(function (member) { return member.isStatic; });
-        var ngTemplateGuards = staticMembers.map(extractTemplateGuard)
-            .filter(function (guard) { return guard !== null; });
-        var hasNgTemplateContextGuard = staticMembers.some(function (member) { return member.kind === ClassMemberKind.Method && member.name === 'ngTemplateContextGuard'; });
-        var coercedInputFields = new Set(staticMembers.map(extractCoercedInput)
-            .filter(function (inputName) { return inputName !== null; }));
-        return { hasNgTemplateContextGuard: hasNgTemplateContextGuard, ngTemplateGuards: ngTemplateGuards, coercedInputFields: coercedInputFields };
-    }
-    function extractTemplateGuard(member) {
-        if (!member.name.startsWith('ngTemplateGuard_')) {
-            return null;
-        }
-        var inputName = afterUnderscore(member.name);
-        if (member.kind === ClassMemberKind.Property) {
-            var type = null;
-            if (member.type !== null && ts.isLiteralTypeNode(member.type) &&
-                ts.isStringLiteral(member.type.literal)) {
-                type = member.type.literal.text;
-            }
-            // Only property members with string literal type 'binding' are considered as template guard.
-            if (type !== 'binding') {
-                return null;
-            }
-            return { inputName: inputName, type: type };
-        }
-        else if (member.kind === ClassMemberKind.Method) {
-            return { inputName: inputName, type: 'invocation' };
-        }
-        else {
-            return null;
-        }
-    }
-    function extractCoercedInput(member) {
-        if (member.kind !== ClassMemberKind.Property || !member.name.startsWith('ngAcceptInputType_')) {
-            return null;
-        }
-        return afterUnderscore(member.name);
-    }
-    /**
-     * A `MetadataReader` that reads from an ordered set of child readers until it obtains the requested
-     * metadata.
-     *
-     * This is used to combine `MetadataReader`s that read from different sources (e.g. from a registry
-     * and from .d.ts files).
-     */
-    var CompoundMetadataReader = /** @class */ (function () {
-        function CompoundMetadataReader(readers) {
-            this.readers = readers;
-        }
-        CompoundMetadataReader.prototype.getDirectiveMetadata = function (node) {
-            var e_1, _a;
-            try {
-                for (var _b = __values(this.readers), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var reader = _c.value;
-                    var meta = reader.getDirectiveMetadata(node);
-                    if (meta !== null) {
-                        return meta;
-                    }
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-            return null;
-        };
-        CompoundMetadataReader.prototype.getNgModuleMetadata = function (node) {
-            var e_2, _a;
-            try {
-                for (var _b = __values(this.readers), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var reader = _c.value;
-                    var meta = reader.getNgModuleMetadata(node);
-                    if (meta !== null) {
-                        return meta;
-                    }
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-            return null;
-        };
-        CompoundMetadataReader.prototype.getPipeMetadata = function (node) {
-            var e_3, _a;
-            try {
-                for (var _b = __values(this.readers), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var reader = _c.value;
-                    var meta = reader.getPipeMetadata(node);
-                    if (meta !== null) {
-                        return meta;
-                    }
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-            return null;
-        };
-        return CompoundMetadataReader;
-    }());
-    function afterUnderscore(str) {
-        var pos = str.indexOf('_');
-        if (pos === -1) {
-            throw new Error("Expected '" + str + "' to contain '_'");
-        }
-        return str.substr(pos + 1);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents a value which cannot be determined statically.
-     */
-    var DynamicValue = /** @class */ (function () {
-        function DynamicValue(node, reason, code) {
-            this.node = node;
-            this.reason = reason;
-            this.code = code;
-        }
-        DynamicValue.fromDynamicInput = function (node, input) {
-            return new DynamicValue(node, input, 0 /* DYNAMIC_INPUT */);
-        };
-        DynamicValue.fromDynamicString = function (node) {
-            return new DynamicValue(node, undefined, 1 /* DYNAMIC_STRING */);
-        };
-        DynamicValue.fromExternalReference = function (node, ref) {
-            return new DynamicValue(node, ref, 2 /* EXTERNAL_REFERENCE */);
-        };
-        DynamicValue.fromUnknownExpressionType = function (node) {
-            return new DynamicValue(node, undefined, 3 /* UNKNOWN_EXPRESSION_TYPE */);
-        };
-        DynamicValue.fromUnknownIdentifier = function (node) {
-            return new DynamicValue(node, undefined, 4 /* UNKNOWN_IDENTIFIER */);
-        };
-        DynamicValue.fromInvalidExpressionType = function (node, value) {
-            return new DynamicValue(node, value, 5 /* INVALID_EXPRESSION_TYPE */);
-        };
-        DynamicValue.fromUnknown = function (node) {
-            return new DynamicValue(node, undefined, 6 /* UNKNOWN */);
-        };
-        DynamicValue.prototype.isFromDynamicInput = function () {
-            return this.code === 0 /* DYNAMIC_INPUT */;
-        };
-        DynamicValue.prototype.isFromDynamicString = function () {
-            return this.code === 1 /* DYNAMIC_STRING */;
-        };
-        DynamicValue.prototype.isFromExternalReference = function () {
-            return this.code === 2 /* EXTERNAL_REFERENCE */;
-        };
-        DynamicValue.prototype.isFromUnknownExpressionType = function () {
-            return this.code === 3 /* UNKNOWN_EXPRESSION_TYPE */;
-        };
-        DynamicValue.prototype.isFromUnknownIdentifier = function () {
-            return this.code === 4 /* UNKNOWN_IDENTIFIER */;
-        };
-        DynamicValue.prototype.isFromInvalidExpressionType = function () {
-            return this.code === 5 /* INVALID_EXPRESSION_TYPE */;
-        };
-        DynamicValue.prototype.isFromUnknown = function () {
-            return this.code === 6 /* UNKNOWN */;
-        };
-        return DynamicValue;
+        NoopResourceDependencyRecorder.prototype.recordResourceDependency = function () { };
+        return NoopResourceDependencyRecorder;
     }());
 
     /**
@@ -37736,762 +38722,61 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var _tsSourceMapBug29300Fixed;
     /**
-     * A value member of an enumeration.
+     * Test the current version of TypeScript to see if it has fixed the external SourceMap
+     * file bug: https://github.com/Microsoft/TypeScript/issues/29300.
      *
-     * Contains a `Reference` to the enumeration itself, and the name of the referenced member.
-     */
-    var EnumValue = /** @class */ (function () {
-        function EnumValue(enumRef, name, resolved) {
-            this.enumRef = enumRef;
-            this.name = name;
-            this.resolved = resolved;
-        }
-        return EnumValue;
-    }());
-    /**
-     * An implementation of a builtin function, such as `Array.prototype.slice`.
-     */
-    var BuiltinFn = /** @class */ (function () {
-        function BuiltinFn() {
-        }
-        return BuiltinFn;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
+     * The bug is fixed in TS 3.3+ but this check avoid us having to rely upon the version number,
+     * and allows us to gracefully fail if the TS version still has the bug.
      *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var ArraySliceBuiltinFn = /** @class */ (function (_super) {
-        __extends(ArraySliceBuiltinFn, _super);
-        function ArraySliceBuiltinFn(node, lhs) {
-            var _this = _super.call(this) || this;
-            _this.node = node;
-            _this.lhs = lhs;
-            return _this;
-        }
-        ArraySliceBuiltinFn.prototype.evaluate = function (args) {
-            if (args.length === 0) {
-                return this.lhs;
-            }
-            else {
-                return DynamicValue.fromUnknown(this.node);
-            }
-        };
-        return ArraySliceBuiltinFn;
-    }(BuiltinFn));
-    var ArrayConcatBuiltinFn = /** @class */ (function (_super) {
-        __extends(ArrayConcatBuiltinFn, _super);
-        function ArrayConcatBuiltinFn(node, lhs) {
-            var _this = _super.call(this) || this;
-            _this.node = node;
-            _this.lhs = lhs;
-            return _this;
-        }
-        ArrayConcatBuiltinFn.prototype.evaluate = function (args) {
-            var e_1, _a;
-            var result = __spread(this.lhs);
-            try {
-                for (var args_1 = __values(args), args_1_1 = args_1.next(); !args_1_1.done; args_1_1 = args_1.next()) {
-                    var arg = args_1_1.value;
-                    if (arg instanceof DynamicValue) {
-                        result.push(DynamicValue.fromDynamicInput(this.node, arg));
-                    }
-                    else if (Array.isArray(arg)) {
-                        result.push.apply(result, __spread(arg));
-                    }
-                    else {
-                        result.push(arg);
-                    }
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (args_1_1 && !args_1_1.done && (_a = args_1.return)) _a.call(args_1);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-            return result;
-        };
-        return ArrayConcatBuiltinFn;
-    }(BuiltinFn));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
+     * We check for the bug by compiling a very small program `a;` and transforming it to `b;`,
+     * where we map the new `b` identifier to an external source file, which has different lines to
+     * the original source file.  If the bug is fixed then the output SourceMap should contain
+     * mappings that correspond ot the correct line/col pairs for this transformed node.
      *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
+     * @returns true if the bug is fixed.
      */
-    function evaluateTsHelperInline(helper, node, args) {
-        if (helper === TsHelperFn.Spread) {
-            return evaluateTsSpreadHelper(node, args);
-        }
-        else {
-            throw new Error("Cannot evaluate unknown helper " + helper + " inline");
-        }
-    }
-    function evaluateTsSpreadHelper(node, args) {
-        var e_1, _a;
-        var result = [];
-        try {
-            for (var args_1 = __values(args), args_1_1 = args_1.next(); !args_1_1.done; args_1_1 = args_1.next()) {
-                var arg = args_1_1.value;
-                if (arg instanceof DynamicValue) {
-                    result.push(DynamicValue.fromDynamicInput(node, arg));
-                }
-                else if (Array.isArray(arg)) {
-                    result.push.apply(result, __spread(arg));
-                }
-                else {
-                    result.push(arg);
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (args_1_1 && !args_1_1.done && (_a = args_1.return)) _a.call(args_1);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        return result;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function literalBinaryOp(op) {
-        return { op: op, literal: true };
-    }
-    function referenceBinaryOp(op) {
-        return { op: op, literal: false };
-    }
-    var BINARY_OPERATORS$1 = new Map([
-        [ts.SyntaxKind.PlusToken, literalBinaryOp(function (a, b) { return a + b; })],
-        [ts.SyntaxKind.MinusToken, literalBinaryOp(function (a, b) { return a - b; })],
-        [ts.SyntaxKind.AsteriskToken, literalBinaryOp(function (a, b) { return a * b; })],
-        [ts.SyntaxKind.SlashToken, literalBinaryOp(function (a, b) { return a / b; })],
-        [ts.SyntaxKind.PercentToken, literalBinaryOp(function (a, b) { return a % b; })],
-        [ts.SyntaxKind.AmpersandToken, literalBinaryOp(function (a, b) { return a & b; })],
-        [ts.SyntaxKind.BarToken, literalBinaryOp(function (a, b) { return a | b; })],
-        [ts.SyntaxKind.CaretToken, literalBinaryOp(function (a, b) { return a ^ b; })],
-        [ts.SyntaxKind.LessThanToken, literalBinaryOp(function (a, b) { return a < b; })],
-        [ts.SyntaxKind.LessThanEqualsToken, literalBinaryOp(function (a, b) { return a <= b; })],
-        [ts.SyntaxKind.GreaterThanToken, literalBinaryOp(function (a, b) { return a > b; })],
-        [ts.SyntaxKind.GreaterThanEqualsToken, literalBinaryOp(function (a, b) { return a >= b; })],
-        [ts.SyntaxKind.EqualsEqualsToken, literalBinaryOp(function (a, b) { return a == b; })],
-        [ts.SyntaxKind.EqualsEqualsEqualsToken, literalBinaryOp(function (a, b) { return a === b; })],
-        [ts.SyntaxKind.ExclamationEqualsToken, literalBinaryOp(function (a, b) { return a != b; })],
-        [ts.SyntaxKind.ExclamationEqualsEqualsToken, literalBinaryOp(function (a, b) { return a !== b; })],
-        [ts.SyntaxKind.LessThanLessThanToken, literalBinaryOp(function (a, b) { return a << b; })],
-        [ts.SyntaxKind.GreaterThanGreaterThanToken, literalBinaryOp(function (a, b) { return a >> b; })],
-        [ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken, literalBinaryOp(function (a, b) { return a >>> b; })],
-        [ts.SyntaxKind.AsteriskAsteriskToken, literalBinaryOp(function (a, b) { return Math.pow(a, b); })],
-        [ts.SyntaxKind.AmpersandAmpersandToken, referenceBinaryOp(function (a, b) { return a && b; })],
-        [ts.SyntaxKind.BarBarToken, referenceBinaryOp(function (a, b) { return a || b; })]
-    ]);
-    var UNARY_OPERATORS = new Map([
-        [ts.SyntaxKind.TildeToken, function (a) { return ~a; }], [ts.SyntaxKind.MinusToken, function (a) { return -a; }],
-        [ts.SyntaxKind.PlusToken, function (a) { return +a; }], [ts.SyntaxKind.ExclamationToken, function (a) { return !a; }]
-    ]);
-    var StaticInterpreter = /** @class */ (function () {
-        function StaticInterpreter(host, checker, dependencyTracker) {
-            this.host = host;
-            this.checker = checker;
-            this.dependencyTracker = dependencyTracker;
-        }
-        StaticInterpreter.prototype.visit = function (node, context) {
-            return this.visitExpression(node, context);
-        };
-        StaticInterpreter.prototype.visitExpression = function (node, context) {
-            var result;
-            if (node.kind === ts.SyntaxKind.TrueKeyword) {
-                return true;
-            }
-            else if (node.kind === ts.SyntaxKind.FalseKeyword) {
-                return false;
-            }
-            else if (node.kind === ts.SyntaxKind.NullKeyword) {
-                return null;
-            }
-            else if (ts.isStringLiteral(node)) {
-                return node.text;
-            }
-            else if (ts.isNoSubstitutionTemplateLiteral(node)) {
-                return node.text;
-            }
-            else if (ts.isTemplateExpression(node)) {
-                result = this.visitTemplateExpression(node, context);
-            }
-            else if (ts.isNumericLiteral(node)) {
-                return parseFloat(node.text);
-            }
-            else if (ts.isObjectLiteralExpression(node)) {
-                result = this.visitObjectLiteralExpression(node, context);
-            }
-            else if (ts.isIdentifier(node)) {
-                result = this.visitIdentifier(node, context);
-            }
-            else if (ts.isPropertyAccessExpression(node)) {
-                result = this.visitPropertyAccessExpression(node, context);
-            }
-            else if (ts.isCallExpression(node)) {
-                result = this.visitCallExpression(node, context);
-            }
-            else if (ts.isConditionalExpression(node)) {
-                result = this.visitConditionalExpression(node, context);
-            }
-            else if (ts.isPrefixUnaryExpression(node)) {
-                result = this.visitPrefixUnaryExpression(node, context);
-            }
-            else if (ts.isBinaryExpression(node)) {
-                result = this.visitBinaryExpression(node, context);
-            }
-            else if (ts.isArrayLiteralExpression(node)) {
-                result = this.visitArrayLiteralExpression(node, context);
-            }
-            else if (ts.isParenthesizedExpression(node)) {
-                result = this.visitParenthesizedExpression(node, context);
-            }
-            else if (ts.isElementAccessExpression(node)) {
-                result = this.visitElementAccessExpression(node, context);
-            }
-            else if (ts.isAsExpression(node)) {
-                result = this.visitExpression(node.expression, context);
-            }
-            else if (ts.isNonNullExpression(node)) {
-                result = this.visitExpression(node.expression, context);
-            }
-            else if (this.host.isClass(node)) {
-                result = this.visitDeclaration(node, context);
-            }
-            else {
-                return DynamicValue.fromUnknownExpressionType(node);
-            }
-            if (result instanceof DynamicValue && result.node !== node) {
-                return DynamicValue.fromDynamicInput(node, result);
-            }
-            return result;
-        };
-        StaticInterpreter.prototype.visitArrayLiteralExpression = function (node, context) {
-            var array = [];
-            for (var i = 0; i < node.elements.length; i++) {
-                var element = node.elements[i];
-                if (ts.isSpreadElement(element)) {
-                    array.push.apply(array, __spread(this.visitSpreadElement(element, context)));
-                }
-                else {
-                    array.push(this.visitExpression(element, context));
-                }
-            }
-            return array;
-        };
-        StaticInterpreter.prototype.visitObjectLiteralExpression = function (node, context) {
-            var map = new Map();
-            for (var i = 0; i < node.properties.length; i++) {
-                var property = node.properties[i];
-                if (ts.isPropertyAssignment(property)) {
-                    var name_1 = this.stringNameFromPropertyName(property.name, context);
-                    // Check whether the name can be determined statically.
-                    if (name_1 === undefined) {
-                        return DynamicValue.fromDynamicInput(node, DynamicValue.fromDynamicString(property.name));
-                    }
-                    map.set(name_1, this.visitExpression(property.initializer, context));
-                }
-                else if (ts.isShorthandPropertyAssignment(property)) {
-                    var symbol = this.checker.getShorthandAssignmentValueSymbol(property);
-                    if (symbol === undefined || symbol.valueDeclaration === undefined) {
-                        map.set(property.name.text, DynamicValue.fromUnknown(property));
-                    }
-                    else {
-                        map.set(property.name.text, this.visitDeclaration(symbol.valueDeclaration, context));
-                    }
-                }
-                else if (ts.isSpreadAssignment(property)) {
-                    var spread = this.visitExpression(property.expression, context);
-                    if (spread instanceof DynamicValue) {
-                        return DynamicValue.fromDynamicInput(node, spread);
-                    }
-                    else if (!(spread instanceof Map)) {
-                        throw new Error("Unexpected value in spread assignment: " + spread);
-                    }
-                    spread.forEach(function (value, key) { return map.set(key, value); });
-                }
-                else {
-                    return DynamicValue.fromUnknown(node);
-                }
-            }
-            return map;
-        };
-        StaticInterpreter.prototype.visitTemplateExpression = function (node, context) {
-            var pieces = [node.head.text];
-            for (var i = 0; i < node.templateSpans.length; i++) {
-                var span = node.templateSpans[i];
-                var value = this.visit(span.expression, context);
-                if (value instanceof EnumValue) {
-                    value = value.resolved;
-                }
-                if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ||
-                    value == null) {
-                    pieces.push("" + value);
-                }
-                else if (value instanceof DynamicValue) {
-                    return DynamicValue.fromDynamicInput(node, value);
-                }
-                else {
-                    return DynamicValue.fromDynamicInput(node, DynamicValue.fromDynamicString(span.expression));
-                }
-                pieces.push(span.literal.text);
-            }
-            return pieces.join('');
-        };
-        StaticInterpreter.prototype.visitIdentifier = function (node, context) {
-            var decl = this.host.getDeclarationOfIdentifier(node);
-            if (decl === null) {
-                if (node.originalKeywordKind === ts.SyntaxKind.UndefinedKeyword) {
-                    return undefined;
-                }
-                else {
-                    return DynamicValue.fromUnknownIdentifier(node);
-                }
-            }
-            var declContext = __assign(__assign({}, context), joinModuleContext(context, node, decl));
-            // The identifier's declaration is either concrete (a ts.Declaration exists for it) or inline
-            // (a direct reference to a ts.Expression).
-            // TODO(alxhub): remove cast once TS is upgraded in g3.
-            var result = decl.node !== null ?
-                this.visitDeclaration(decl.node, declContext) :
-                this.visitExpression(decl.expression, declContext);
-            if (result instanceof Reference$1) {
-                // Only record identifiers to non-synthetic references. Synthetic references may not have the
-                // same value at runtime as they do at compile time, so it's not legal to refer to them by the
-                // identifier here.
-                if (!result.synthetic) {
-                    result.addIdentifier(node);
-                }
-            }
-            else if (result instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, result);
-            }
-            return result;
-        };
-        StaticInterpreter.prototype.visitDeclaration = function (node, context) {
-            if (this.dependencyTracker) {
-                this.dependencyTracker.trackFileDependency(node.getSourceFile(), context.originatingFile);
-            }
-            if (this.host.isClass(node)) {
-                return this.getReference(node, context);
-            }
-            else if (ts.isVariableDeclaration(node)) {
-                return this.visitVariableDeclaration(node, context);
-            }
-            else if (ts.isParameter(node) && context.scope.has(node)) {
-                return context.scope.get(node);
-            }
-            else if (ts.isExportAssignment(node)) {
-                return this.visitExpression(node.expression, context);
-            }
-            else if (ts.isEnumDeclaration(node)) {
-                return this.visitEnumDeclaration(node, context);
-            }
-            else if (ts.isSourceFile(node)) {
-                return this.visitSourceFile(node, context);
-            }
-            else {
-                return this.getReference(node, context);
-            }
-        };
-        StaticInterpreter.prototype.visitVariableDeclaration = function (node, context) {
-            var value = this.host.getVariableValue(node);
-            if (value !== null) {
-                return this.visitExpression(value, context);
-            }
-            else if (isVariableDeclarationDeclared(node)) {
-                return this.getReference(node, context);
-            }
-            else {
-                return undefined;
-            }
-        };
-        StaticInterpreter.prototype.visitEnumDeclaration = function (node, context) {
-            var _this = this;
-            var enumRef = this.getReference(node, context);
-            var map = new Map();
-            node.members.forEach(function (member) {
-                var name = _this.stringNameFromPropertyName(member.name, context);
-                if (name !== undefined) {
-                    var resolved = member.initializer && _this.visit(member.initializer, context);
-                    map.set(name, new EnumValue(enumRef, name, resolved));
-                }
-            });
-            return map;
-        };
-        StaticInterpreter.prototype.visitElementAccessExpression = function (node, context) {
-            var lhs = this.visitExpression(node.expression, context);
-            if (node.argumentExpression === undefined) {
-                throw new Error("Expected argument in ElementAccessExpression");
-            }
-            if (lhs instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, lhs);
-            }
-            var rhs = this.visitExpression(node.argumentExpression, context);
-            if (rhs instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, rhs);
-            }
-            if (typeof rhs !== 'string' && typeof rhs !== 'number') {
-                throw new Error("ElementAccessExpression index should be string or number, got " + typeof rhs + ": " + rhs);
-            }
-            return this.accessHelper(node, lhs, rhs, context);
-        };
-        StaticInterpreter.prototype.visitPropertyAccessExpression = function (node, context) {
-            var lhs = this.visitExpression(node.expression, context);
-            var rhs = node.name.text;
-            // TODO: handle reference to class declaration.
-            if (lhs instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, lhs);
-            }
-            return this.accessHelper(node, lhs, rhs, context);
-        };
-        StaticInterpreter.prototype.visitSourceFile = function (node, context) {
-            var _this = this;
-            var declarations = this.host.getExportsOfModule(node);
-            if (declarations === null) {
-                return DynamicValue.fromUnknown(node);
-            }
-            var map = new Map();
-            declarations.forEach(function (decl, name) {
-                var declContext = __assign(__assign({}, context), joinModuleContext(context, node, decl));
-                // Visit both concrete and inline declarations.
-                // TODO(alxhub): remove cast once TS is upgraded in g3.
-                var value = decl.node !== null ?
-                    _this.visitDeclaration(decl.node, declContext) :
-                    _this.visitExpression(decl.expression, declContext);
-                map.set(name, value);
-            });
-            return map;
-        };
-        StaticInterpreter.prototype.accessHelper = function (node, lhs, rhs, context) {
-            var strIndex = "" + rhs;
-            if (lhs instanceof Map) {
-                if (lhs.has(strIndex)) {
-                    return lhs.get(strIndex);
-                }
-                else {
-                    return undefined;
-                }
-            }
-            else if (Array.isArray(lhs)) {
-                if (rhs === 'length') {
-                    return lhs.length;
-                }
-                else if (rhs === 'slice') {
-                    return new ArraySliceBuiltinFn(node, lhs);
-                }
-                else if (rhs === 'concat') {
-                    return new ArrayConcatBuiltinFn(node, lhs);
-                }
-                if (typeof rhs !== 'number' || !Number.isInteger(rhs)) {
-                    return DynamicValue.fromUnknown(node);
-                }
-                if (rhs < 0 || rhs >= lhs.length) {
-                    throw new Error("Index out of bounds: " + rhs + " vs " + lhs.length);
-                }
-                return lhs[rhs];
-            }
-            else if (lhs instanceof Reference$1) {
-                var ref = lhs.node;
-                if (this.host.isClass(ref)) {
-                    var module_1 = owningModule(context, lhs.bestGuessOwningModule);
-                    var value = undefined;
-                    var member = this.host.getMembersOfClass(ref).find(function (member) { return member.isStatic && member.name === strIndex; });
-                    if (member !== undefined) {
-                        if (member.value !== null) {
-                            value = this.visitExpression(member.value, context);
-                        }
-                        else if (member.implementation !== null) {
-                            value = new Reference$1(member.implementation, module_1);
-                        }
-                        else if (member.node) {
-                            value = new Reference$1(member.node, module_1);
-                        }
-                    }
-                    return value;
-                }
-                else if (isDeclaration(ref)) {
-                    return DynamicValue.fromDynamicInput(node, DynamicValue.fromExternalReference(ref, lhs));
-                }
-            }
-            else if (lhs instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, lhs);
-            }
-            return DynamicValue.fromUnknown(node);
-        };
-        StaticInterpreter.prototype.visitCallExpression = function (node, context) {
-            var _this = this;
-            var lhs = this.visitExpression(node.expression, context);
-            if (lhs instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, lhs);
-            }
-            // If the call refers to a builtin function, attempt to evaluate the function.
-            if (lhs instanceof BuiltinFn) {
-                return lhs.evaluate(this.evaluateFunctionArguments(node, context));
-            }
-            if (!(lhs instanceof Reference$1)) {
-                return DynamicValue.fromInvalidExpressionType(node.expression, lhs);
-            }
-            var fn = this.host.getDefinitionOfFunction(lhs.node);
-            if (fn === null) {
-                return DynamicValue.fromInvalidExpressionType(node.expression, lhs);
-            }
-            // If the function corresponds with a tslib helper function, evaluate it with custom logic.
-            if (fn.helper !== null) {
-                var args_1 = this.evaluateFunctionArguments(node, context);
-                return evaluateTsHelperInline(fn.helper, node, args_1);
-            }
-            if (!isFunctionOrMethodReference(lhs)) {
-                return DynamicValue.fromInvalidExpressionType(node.expression, lhs);
-            }
-            // If the function is foreign (declared through a d.ts file), attempt to resolve it with the
-            // foreignFunctionResolver, if one is specified.
-            if (fn.body === null) {
-                var expr = null;
-                if (context.foreignFunctionResolver) {
-                    expr = context.foreignFunctionResolver(lhs, node.arguments);
-                }
-                if (expr === null) {
-                    return DynamicValue.fromDynamicInput(node, DynamicValue.fromExternalReference(node.expression, lhs));
-                }
-                // If the function is declared in a different file, resolve the foreign function expression
-                // using the absolute module name of that file (if any).
-                if (lhs.bestGuessOwningModule !== null) {
-                    context = __assign(__assign({}, context), { absoluteModuleName: lhs.bestGuessOwningModule.specifier, resolutionContext: node.getSourceFile().fileName });
-                }
-                var res = this.visitExpression(expr, context);
-                if (res instanceof Reference$1) {
-                    // This Reference was created synthetically, via a foreign function resolver. The real
-                    // runtime value of the function expression may be different than the foreign function
-                    // resolved value, so mark the Reference as synthetic to avoid it being misinterpreted.
-                    res.synthetic = true;
-                }
-                return res;
-            }
-            var body = fn.body;
-            if (body.length !== 1 || !ts.isReturnStatement(body[0])) {
-                return DynamicValue.fromUnknown(node);
-            }
-            var ret = body[0];
-            var args = this.evaluateFunctionArguments(node, context);
-            var newScope = new Map();
-            var calleeContext = __assign(__assign({}, context), { scope: newScope });
-            fn.parameters.forEach(function (param, index) {
-                var arg = args[index];
-                if (param.node.dotDotDotToken !== undefined) {
-                    arg = args.slice(index);
-                }
-                if (arg === undefined && param.initializer !== null) {
-                    arg = _this.visitExpression(param.initializer, calleeContext);
-                }
-                newScope.set(param.node, arg);
-            });
-            return ret.expression !== undefined ? this.visitExpression(ret.expression, calleeContext) :
-                undefined;
-        };
-        StaticInterpreter.prototype.visitConditionalExpression = function (node, context) {
-            var condition = this.visitExpression(node.condition, context);
-            if (condition instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, condition);
-            }
-            if (condition) {
-                return this.visitExpression(node.whenTrue, context);
-            }
-            else {
-                return this.visitExpression(node.whenFalse, context);
-            }
-        };
-        StaticInterpreter.prototype.visitPrefixUnaryExpression = function (node, context) {
-            var operatorKind = node.operator;
-            if (!UNARY_OPERATORS.has(operatorKind)) {
-                throw new Error("Unsupported prefix unary operator: " + ts.SyntaxKind[operatorKind]);
-            }
-            var op = UNARY_OPERATORS.get(operatorKind);
-            var value = this.visitExpression(node.operand, context);
-            if (value instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, value);
-            }
-            else {
-                return op(value);
-            }
-        };
-        StaticInterpreter.prototype.visitBinaryExpression = function (node, context) {
-            var tokenKind = node.operatorToken.kind;
-            if (!BINARY_OPERATORS$1.has(tokenKind)) {
-                throw new Error("Unsupported binary operator: " + ts.SyntaxKind[tokenKind]);
-            }
-            var opRecord = BINARY_OPERATORS$1.get(tokenKind);
-            var lhs, rhs;
-            if (opRecord.literal) {
-                lhs = literal$1(this.visitExpression(node.left, context));
-                rhs = literal$1(this.visitExpression(node.right, context));
-            }
-            else {
-                lhs = this.visitExpression(node.left, context);
-                rhs = this.visitExpression(node.right, context);
-            }
-            if (lhs instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, lhs);
-            }
-            else if (rhs instanceof DynamicValue) {
-                return DynamicValue.fromDynamicInput(node, rhs);
-            }
-            else {
-                return opRecord.op(lhs, rhs);
-            }
-        };
-        StaticInterpreter.prototype.visitParenthesizedExpression = function (node, context) {
-            return this.visitExpression(node.expression, context);
-        };
-        StaticInterpreter.prototype.evaluateFunctionArguments = function (node, context) {
-            var e_1, _a;
-            var args = [];
-            try {
-                for (var _b = __values(node.arguments), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var arg = _c.value;
-                    if (ts.isSpreadElement(arg)) {
-                        args.push.apply(args, __spread(this.visitSpreadElement(arg, context)));
-                    }
-                    else {
-                        args.push(this.visitExpression(arg, context));
-                    }
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-            return args;
-        };
-        StaticInterpreter.prototype.visitSpreadElement = function (node, context) {
-            var spread = this.visitExpression(node.expression, context);
-            if (spread instanceof DynamicValue) {
-                return [DynamicValue.fromDynamicInput(node.expression, spread)];
-            }
-            else if (!Array.isArray(spread)) {
-                throw new Error("Unexpected value in spread expression: " + spread);
-            }
-            else {
-                return spread;
-            }
-        };
-        StaticInterpreter.prototype.stringNameFromPropertyName = function (node, context) {
-            if (ts.isIdentifier(node) || ts.isStringLiteral(node) || ts.isNumericLiteral(node)) {
-                return node.text;
-            }
-            else { // ts.ComputedPropertyName
-                var literal_1 = this.visitExpression(node.expression, context);
-                return typeof literal_1 === 'string' ? literal_1 : undefined;
-            }
-        };
-        StaticInterpreter.prototype.getReference = function (node, context) {
-            return new Reference$1(node, owningModule(context));
-        };
-        return StaticInterpreter;
-    }());
-    function isFunctionOrMethodReference(ref) {
-        return ts.isFunctionDeclaration(ref.node) || ts.isMethodDeclaration(ref.node) ||
-            ts.isFunctionExpression(ref.node);
-    }
-    function literal$1(value) {
-        if (value instanceof DynamicValue || value === null || value === undefined ||
-            typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-            return value;
-        }
-        throw new Error("Value " + value + " is not literal and cannot be used in this context.");
-    }
-    function isVariableDeclarationDeclared(node) {
-        if (node.parent === undefined || !ts.isVariableDeclarationList(node.parent)) {
-            return false;
-        }
-        var declList = node.parent;
-        if (declList.parent === undefined || !ts.isVariableStatement(declList.parent)) {
-            return false;
-        }
-        var varStmt = declList.parent;
-        return varStmt.modifiers !== undefined &&
-            varStmt.modifiers.some(function (mod) { return mod.kind === ts.SyntaxKind.DeclareKeyword; });
-    }
-    var EMPTY = {};
-    function joinModuleContext(existing, node, decl) {
-        if (decl.viaModule !== null && decl.viaModule !== existing.absoluteModuleName) {
-            return {
-                absoluteModuleName: decl.viaModule,
-                resolutionContext: node.getSourceFile().fileName,
+    function tsSourceMapBug29300Fixed() {
+        if (_tsSourceMapBug29300Fixed === undefined) {
+            var writtenFiles_1 = {};
+            var sourceFile_1 = ts.createSourceFile('test.ts', 'a;', ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+            var host = {
+                getSourceFile: function () { return sourceFile_1; },
+                fileExists: function () { return true; },
+                readFile: function () { return ''; },
+                writeFile: function (fileName, data) { writtenFiles_1[fileName] = data; },
+                getDefaultLibFileName: function () { return ''; },
+                getCurrentDirectory: function () { return ''; },
+                getDirectories: function () { return []; },
+                getCanonicalFileName: function () { return ''; },
+                useCaseSensitiveFileNames: function () { return true; },
+                getNewLine: function () { return '\n'; },
             };
-        }
-        else {
-            return EMPTY;
-        }
-    }
-    function owningModule(context, override) {
-        if (override === void 0) { override = null; }
-        var specifier = context.absoluteModuleName;
-        if (override !== null) {
-            specifier = override.specifier;
-        }
-        if (specifier !== null) {
-            return {
-                specifier: specifier,
-                resolutionContext: context.resolutionContext,
+            var transform = function (context) {
+                return function (node) { return ts.visitNode(node, visitor); };
+                function visitor(node) {
+                    if (ts.isIdentifier(node) && node.text === 'a') {
+                        var newNode = ts.createIdentifier('b');
+                        ts.setSourceMapRange(newNode, {
+                            pos: 16,
+                            end: 16,
+                            source: ts.createSourceMapSource('test.html', 'abc\ndef\nghi\njkl\nmno\npqr')
+                        });
+                        return newNode;
+                    }
+                    return ts.visitEachChild(node, visitor, context);
+                }
             };
+            var program = ts.createProgram(['test.ts'], { sourceMap: true }, host);
+            program.emit(sourceFile_1, undefined, undefined, undefined, { after: [transform] });
+            // The first two mappings in the source map should look like:
+            // [0,1,4,0] col 0 => source file 1, row 4, column 0)
+            // [1,0,0,0] col 1 => source file 1, row 4, column 0)
+            _tsSourceMapBug29300Fixed = /ACIA,CAAA/.test(writtenFiles_1['test.js.map']);
         }
-        else {
-            return null;
-        }
+        return _tsSourceMapBug29300Fixed;
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var PartialEvaluator = /** @class */ (function () {
-        function PartialEvaluator(host, checker, dependencyTracker) {
-            this.host = host;
-            this.checker = checker;
-            this.dependencyTracker = dependencyTracker;
-        }
-        PartialEvaluator.prototype.evaluate = function (expr, foreignFunctionResolver) {
-            var interpreter = new StaticInterpreter(this.host, this.checker, this.dependencyTracker);
-            return interpreter.visit(expr, {
-                originatingFile: expr.getSourceFile(),
-                absoluteModuleName: null,
-                resolutionContext: expr.getSourceFile().fileName,
-                scope: new Map(), foreignFunctionResolver: foreignFunctionResolver,
-            });
-        };
-        return PartialEvaluator;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -38501,7 +38786,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     function compileNgFactoryDefField(metadata) {
-        var res = compileFactoryFromMetadata(metadata);
+        var res = compileFactoryFunction(metadata);
         return { name: 'ɵfac', initializer: res.factory, statements: res.statements, type: res.type };
     }
 
@@ -38600,9 +38885,35 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return new ExternalExpr(valueRef);
         }
     }
+    /**
+     * Convert `ConstructorDeps` into the `R3DependencyMetadata` array for those deps if they're valid,
+     * or into an `'invalid'` signal if they're not.
+     *
+     * This is a companion function to `validateConstructorDependencies` which accepts invalid deps.
+     */
+    function unwrapConstructorDependencies(deps) {
+        if (deps === null) {
+            return null;
+        }
+        else if (deps.deps !== null) {
+            // These constructor dependencies are valid.
+            return deps.deps;
+        }
+        else {
+            // These deps are invalid.
+            return 'invalid';
+        }
+    }
     function getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore) {
         return validateConstructorDependencies(clazz, getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore));
     }
+    /**
+     * Validate that `ConstructorDeps` does not have any invalid dependencies and convert them into the
+     * `R3DependencyMetadata` array if so, or raise a diagnostic if some deps are invalid.
+     *
+     * This is a companion function to `unwrapConstructorDependencies` which does not accept invalid
+     * deps.
+     */
     function validateConstructorDependencies(clazz, deps) {
         if (deps === null) {
             return null;
@@ -38761,7 +39072,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function isWrappedTsNodeExpr(expr) {
         return expr instanceof WrappedNodeExpr;
     }
-    function readBaseClass(node, reflector, evaluator) {
+    function readBaseClass$1(node, reflector, evaluator) {
         var baseExpression = reflector.getBaseClassExpression(node);
         if (baseExpression !== null) {
             var baseClass = evaluator.evaluate(baseExpression);
@@ -38901,6 +39212,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     var EMPTY_OBJECT = {};
+    var FIELD_DECORATORS = [
+        'Input', 'Output', 'ViewChild', 'ViewChildren', 'ContentChild', 'ContentChildren', 'HostBinding',
+        'HostListener'
+    ];
+    var LIFECYCLE_HOOKS = new Set([
+        'ngOnChanges', 'ngOnInit', 'ngOnDestroy', 'ngDoCheck', 'ngAfterViewInit', 'ngAfterViewChecked',
+        'ngAfterContentInit', 'ngAfterContentChecked'
+    ]);
     var DirectiveDecoratorHandler = /** @class */ (function () {
         function DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, defaultImportRecorder, isCore) {
             this.reflector = reflector;
@@ -38911,18 +39230,29 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.precedence = HandlerPrecedence.PRIMARY;
         }
         DirectiveDecoratorHandler.prototype.detect = function (node, decorators) {
-            if (!decorators) {
+            var _this = this;
+            // Compiling declaration files is invalid.
+            if (node.getSourceFile().isDeclarationFile) {
                 return undefined;
             }
-            var decorator = findAngularDecorator(decorators, 'Directive', this.isCore);
-            if (decorator !== undefined) {
-                return {
-                    trigger: decorator.node,
-                    metadata: decorator,
-                };
+            // If the class is undecorated, check if any of the fields have Angular decorators or lifecycle
+            // hooks, and if they do, label the class as an abstract directive.
+            if (!decorators) {
+                var angularField = this.reflector.getMembersOfClass(node).find(function (member) {
+                    if (!member.isStatic && member.kind === ClassMemberKind.Method &&
+                        LIFECYCLE_HOOKS.has(member.name)) {
+                        return true;
+                    }
+                    if (member.decorators) {
+                        return member.decorators.some(function (decorator) { return FIELD_DECORATORS.some(function (decoratorName) { return isAngularDecorator(decorator, decoratorName, _this.isCore); }); });
+                    }
+                    return false;
+                });
+                return angularField ? { trigger: angularField.node, metadata: null } : undefined;
             }
             else {
-                return undefined;
+                var decorator = findAngularDecorator(decorators, 'Directive', this.isCore);
+                return decorator ? { trigger: decorator.node, metadata: decorator } : undefined;
             }
         };
         DirectiveDecoratorHandler.prototype.analyze = function (node, decorator, flags) {
@@ -38935,7 +39265,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Register this directive's information with the `MetadataRegistry`. This ensures that
             // the information about the directive is available during the compile() phase.
             var ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: analysis.selector, exportAs: analysis.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.queries.map(function (query) { return query.propertyName; }), isComponent: false }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
+            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: analysis.selector, exportAs: analysis.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.queries.map(function (query) { return query.propertyName; }), isComponent: false }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass$1(node, this.reflector, this.evaluator) }));
             return {
                 analysis: {
                     meta: analysis,
@@ -38946,7 +39276,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         DirectiveDecoratorHandler.prototype.compile = function (node, analysis, pool) {
             var meta = analysis.meta;
             var res = compileDirectiveFromMetadata(meta, pool, makeBindingParser());
-            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject }));
+            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Directive }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -38970,7 +39300,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function extractDirectiveMetadata(clazz, decorator, reflector, evaluator, defaultImportRecorder, isCore, flags, defaultSelector) {
         if (defaultSelector === void 0) { defaultSelector = null; }
         var directive;
-        if (decorator.args === null || decorator.args.length === 0) {
+        if (decorator === null || decorator.args === null || decorator.args.length === 0) {
             directive = new Map();
         }
         else if (decorator.args.length !== 1) {
@@ -39042,11 +39372,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             exportAs = resolved.split(',').map(function (part) { return part.trim(); });
         }
+        var rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+        var ctorDeps;
+        // Non-abstract directives (those with a selector) require valid constructor dependencies, whereas
+        // abstract directives are allowed to have invalid dependencies, given that a subclass may call
+        // the constructor explicitly.
+        if (selector !== null) {
+            ctorDeps = validateConstructorDependencies(clazz, rawCtorDeps);
+        }
+        else {
+            ctorDeps = unwrapConstructorDependencies(rawCtorDeps);
+        }
         // Detect if the component inherits from another class
         var usesInheritance = reflector.hasBaseClass(clazz);
         var metadata = {
             name: clazz.name.text,
-            deps: getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore), host: host,
+            deps: ctorDeps, host: host,
             lifecycle: {
                 usesOnChanges: usesOnChanges,
             },
@@ -39057,7 +39398,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             typeArgumentCount: reflector.getGenericArityOfClass(clazz) || 0,
             typeSourceSpan: EMPTY_SOURCE_SPAN, usesInheritance: usesInheritance, exportAs: exportAs, providers: providers
         };
-        return { decoratedElements: decoratedElements, decorator: directive, metadata: metadata };
+        return { decorator: directive, metadata: metadata };
     }
     function extractQueryMetadata(exprNode, name, args, propertyName, reflector, evaluator) {
         if (args.length === 0) {
@@ -39341,505 +39682,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function containsNgTopLevelDecorator(decorators, isCore) {
-        if (!decorators) {
-            return false;
-        }
-        return decorators.some(function (decorator) { return isAngularDecorator(decorator, 'Component', isCore) ||
-            isAngularDecorator(decorator, 'Directive', isCore) ||
-            isAngularDecorator(decorator, 'NgModule', isCore); });
-    }
-    var BaseDefDecoratorHandler = /** @class */ (function () {
-        function BaseDefDecoratorHandler(reflector, evaluator, isCore) {
-            this.reflector = reflector;
-            this.evaluator = evaluator;
-            this.isCore = isCore;
-            this.precedence = HandlerPrecedence.WEAK;
-        }
-        BaseDefDecoratorHandler.prototype.detect = function (node, decorators) {
-            var _this = this;
-            if (containsNgTopLevelDecorator(decorators, this.isCore)) {
-                // If the class is already decorated by @Component or @Directive let that
-                // DecoratorHandler handle this. BaseDef is unnecessary.
-                return undefined;
-            }
-            var result = undefined;
-            this.reflector.getMembersOfClass(node).forEach(function (property) {
-                var e_1, _a;
-                var decorators = property.decorators;
-                if (!decorators) {
-                    return;
-                }
-                try {
-                    for (var decorators_1 = __values(decorators), decorators_1_1 = decorators_1.next(); !decorators_1_1.done; decorators_1_1 = decorators_1.next()) {
-                        var decorator = decorators_1_1.value;
-                        if (isAngularDecorator(decorator, 'Input', _this.isCore)) {
-                            result = result || {};
-                            var inputs = result.inputs = result.inputs || [];
-                            inputs.push({ decorator: decorator, property: property });
-                        }
-                        else if (isAngularDecorator(decorator, 'Output', _this.isCore)) {
-                            result = result || {};
-                            var outputs = result.outputs = result.outputs || [];
-                            outputs.push({ decorator: decorator, property: property });
-                        }
-                        else if (isAngularDecorator(decorator, 'ViewChild', _this.isCore) ||
-                            isAngularDecorator(decorator, 'ViewChildren', _this.isCore)) {
-                            result = result || {};
-                            var viewQueries = result.viewQueries = result.viewQueries || [];
-                            viewQueries.push({ member: property, decorators: decorators });
-                        }
-                        else if (isAngularDecorator(decorator, 'ContentChild', _this.isCore) ||
-                            isAngularDecorator(decorator, 'ContentChildren', _this.isCore)) {
-                            result = result || {};
-                            var queries = result.queries = result.queries || [];
-                            queries.push({ member: property, decorators: decorators });
-                        }
-                        else if (isAngularDecorator(decorator, 'HostBinding', _this.isCore) ||
-                            isAngularDecorator(decorator, 'HostListener', _this.isCore)) {
-                            result = result || {};
-                            var host = result.host = result.host || [];
-                            host.push(property);
-                        }
-                    }
-                }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                finally {
-                    try {
-                        if (decorators_1_1 && !decorators_1_1.done && (_a = decorators_1.return)) _a.call(decorators_1);
-                    }
-                    finally { if (e_1) throw e_1.error; }
-                }
-            });
-            if (result !== undefined) {
-                return {
-                    metadata: result,
-                    trigger: null,
-                };
-            }
-            else {
-                return undefined;
-            }
-        };
-        BaseDefDecoratorHandler.prototype.analyze = function (node, metadata) {
-            var _this = this;
-            var analysis = {
-                name: node.name.text,
-                type: new WrappedNodeExpr(node.name),
-                typeSourceSpan: EMPTY_SOURCE_SPAN,
-            };
-            if (metadata.inputs) {
-                var inputs_1 = analysis.inputs = {};
-                metadata.inputs.forEach(function (_a) {
-                    var decorator = _a.decorator, property = _a.property;
-                    var propName = property.name;
-                    var args = decorator.args;
-                    var value;
-                    if (args && args.length > 0) {
-                        var resolvedValue = _this.evaluator.evaluate(args[0]);
-                        if (typeof resolvedValue !== 'string') {
-                            throw new TypeError('Input alias does not resolve to a string value');
-                        }
-                        value = [resolvedValue, propName];
-                    }
-                    else {
-                        value = propName;
-                    }
-                    inputs_1[propName] = value;
-                });
-            }
-            if (metadata.outputs) {
-                var outputs_1 = analysis.outputs = {};
-                metadata.outputs.forEach(function (_a) {
-                    var decorator = _a.decorator, property = _a.property;
-                    var propName = property.name;
-                    var args = decorator.args;
-                    var value;
-                    if (args && args.length > 0) {
-                        var resolvedValue = _this.evaluator.evaluate(args[0]);
-                        if (typeof resolvedValue !== 'string') {
-                            throw new TypeError('Output alias does not resolve to a string value');
-                        }
-                        value = resolvedValue;
-                    }
-                    else {
-                        value = propName;
-                    }
-                    outputs_1[propName] = value;
-                });
-            }
-            if (metadata.viewQueries) {
-                analysis.viewQueries =
-                    queriesFromFields(metadata.viewQueries, this.reflector, this.evaluator);
-            }
-            if (metadata.queries) {
-                analysis.queries = queriesFromFields(metadata.queries, this.reflector, this.evaluator);
-            }
-            if (metadata.host) {
-                analysis.host = extractHostBindings$1(metadata.host, this.evaluator, this.isCore ? undefined : '@angular/core');
-            }
-            return { analysis: analysis };
-        };
-        BaseDefDecoratorHandler.prototype.compile = function (node, analysis, pool) {
-            var _a = compileBaseDefFromMetadata(analysis, pool, makeBindingParser()), expression = _a.expression, type = _a.type;
-            return {
-                name: 'ngBaseDef',
-                initializer: expression, type: type,
-                statements: [],
-            };
-        };
-        return BaseDefDecoratorHandler;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A `MetadataReader` that can read metadata from `.d.ts` files, which have static Ivy properties
-     * from an upstream compilation already.
-     */
-    var DtsMetadataReader = /** @class */ (function () {
-        function DtsMetadataReader(checker, reflector) {
-            this.checker = checker;
-            this.reflector = reflector;
-        }
-        /**
-         * Read the metadata from a class that has already been compiled somehow (either it's in a .d.ts
-         * file, or in a .ts file with a handwritten definition).
-         *
-         * @param ref `Reference` to the class of interest, with the context of how it was obtained.
-         */
-        DtsMetadataReader.prototype.getNgModuleMetadata = function (ref) {
-            var clazz = ref.node;
-            var resolutionContext = clazz.getSourceFile().fileName;
-            // This operation is explicitly not memoized, as it depends on `ref.ownedByModuleGuess`.
-            // TODO(alxhub): investigate caching of .d.ts module metadata.
-            var ngModuleDef = this.reflector.getMembersOfClass(clazz).find(function (member) { return member.name === 'ɵmod' && member.isStatic; });
-            if (ngModuleDef === undefined) {
-                return null;
-            }
-            else if (
-            // Validate that the shape of the ngModuleDef type is correct.
-            ngModuleDef.type === null || !ts.isTypeReferenceNode(ngModuleDef.type) ||
-                ngModuleDef.type.typeArguments === undefined ||
-                ngModuleDef.type.typeArguments.length !== 4) {
-                return null;
-            }
-            // Read the ModuleData out of the type arguments.
-            var _a = __read(ngModuleDef.type.typeArguments, 4), _ = _a[0], declarationMetadata = _a[1], importMetadata = _a[2], exportMetadata = _a[3];
-            return {
-                ref: ref,
-                declarations: extractReferencesFromType(this.checker, declarationMetadata, ref.ownedByModuleGuess, resolutionContext),
-                exports: extractReferencesFromType(this.checker, exportMetadata, ref.ownedByModuleGuess, resolutionContext),
-                imports: extractReferencesFromType(this.checker, importMetadata, ref.ownedByModuleGuess, resolutionContext),
-                schemas: [],
-            };
-        };
-        /**
-         * Read directive (or component) metadata from a referenced class in a .d.ts file.
-         */
-        DtsMetadataReader.prototype.getDirectiveMetadata = function (ref) {
-            var clazz = ref.node;
-            var def = this.reflector.getMembersOfClass(clazz).find(function (field) { return field.isStatic && (field.name === 'ɵcmp' || field.name === 'ɵdir'); });
-            if (def === undefined) {
-                // No definition could be found.
-                return null;
-            }
-            else if (def.type === null || !ts.isTypeReferenceNode(def.type) ||
-                def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
-                // The type metadata was the wrong shape.
-                return null;
-            }
-            return __assign(__assign({ ref: ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector)), { baseClass: readBaseClass$1(clazz, this.checker, this.reflector) });
-        };
-        /**
-         * Read pipe metadata from a referenced class in a .d.ts file.
-         */
-        DtsMetadataReader.prototype.getPipeMetadata = function (ref) {
-            var def = this.reflector.getMembersOfClass(ref.node).find(function (field) { return field.isStatic && field.name === 'ɵpipe'; });
-            if (def === undefined) {
-                // No definition could be found.
-                return null;
-            }
-            else if (def.type === null || !ts.isTypeReferenceNode(def.type) ||
-                def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
-                // The type metadata was the wrong shape.
-                return null;
-            }
-            var type = def.type.typeArguments[1];
-            if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) {
-                // The type metadata was the wrong type.
-                return null;
-            }
-            var name = type.literal.text;
-            return { ref: ref, name: name };
-        };
-        return DtsMetadataReader;
-    }());
-    function readBaseClass$1(clazz, checker, reflector) {
-        var e_1, _a;
-        if (!isNamedClassDeclaration(clazz)) {
-            // Technically this is an error in a .d.ts file, but for the purposes of finding the base class
-            // it's ignored.
-            return reflector.hasBaseClass(clazz) ? 'dynamic' : null;
-        }
-        if (clazz.heritageClauses !== undefined) {
-            try {
-                for (var _b = __values(clazz.heritageClauses), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var clause = _c.value;
-                    if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
-                        var baseExpr = clause.types[0].expression;
-                        var symbol = checker.getSymbolAtLocation(baseExpr);
-                        if (symbol === undefined) {
-                            return 'dynamic';
-                        }
-                        else if (symbol.flags & ts.SymbolFlags.Alias) {
-                            symbol = checker.getAliasedSymbol(symbol);
-                        }
-                        if (symbol.valueDeclaration !== undefined &&
-                            isNamedClassDeclaration(symbol.valueDeclaration)) {
-                            return new Reference$1(symbol.valueDeclaration);
-                        }
-                        else {
-                            return 'dynamic';
-                        }
-                    }
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A registry of directive, pipe, and module metadata for types defined in the current compilation
-     * unit, which supports both reading and registering.
-     */
-    var LocalMetadataRegistry = /** @class */ (function () {
-        function LocalMetadataRegistry() {
-            this.directives = new Map();
-            this.ngModules = new Map();
-            this.pipes = new Map();
-        }
-        LocalMetadataRegistry.prototype.getDirectiveMetadata = function (ref) {
-            return this.directives.has(ref.node) ? this.directives.get(ref.node) : null;
-        };
-        LocalMetadataRegistry.prototype.getNgModuleMetadata = function (ref) {
-            return this.ngModules.has(ref.node) ? this.ngModules.get(ref.node) : null;
-        };
-        LocalMetadataRegistry.prototype.getPipeMetadata = function (ref) {
-            return this.pipes.has(ref.node) ? this.pipes.get(ref.node) : null;
-        };
-        LocalMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) { this.directives.set(meta.ref.node, meta); };
-        LocalMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) { this.ngModules.set(meta.ref.node, meta); };
-        LocalMetadataRegistry.prototype.registerPipeMetadata = function (meta) { this.pipes.set(meta.ref.node, meta); };
-        return LocalMetadataRegistry;
-    }());
-    /**
-     * A `MetadataRegistry` which registers metdata with multiple delegate `MetadataRegistry` instances.
-     */
-    var CompoundMetadataRegistry = /** @class */ (function () {
-        function CompoundMetadataRegistry(registries) {
-            this.registries = registries;
-        }
-        CompoundMetadataRegistry.prototype.registerDirectiveMetadata = function (meta) {
-            var e_1, _a;
-            try {
-                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var registry = _c.value;
-                    registry.registerDirectiveMetadata(meta);
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-        };
-        CompoundMetadataRegistry.prototype.registerNgModuleMetadata = function (meta) {
-            var e_2, _a;
-            try {
-                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var registry = _c.value;
-                    registry.registerNgModuleMetadata(meta);
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-        };
-        CompoundMetadataRegistry.prototype.registerPipeMetadata = function (meta) {
-            var e_3, _a;
-            try {
-                for (var _b = __values(this.registries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var registry = _c.value;
-                    registry.registerPipeMetadata(meta);
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-        };
-        return CompoundMetadataRegistry;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Given a reference to a directive, return a flattened version of its `DirectiveMeta` metadata
-     * which includes metadata from its entire inheritance chain.
-     *
-     * The returned `DirectiveMeta` will either have `baseClass: null` if the inheritance chain could be
-     * fully resolved, or `baseClass: 'dynamic'` if the inheritance chain could not be completely
-     * followed.
-     */
-    function flattenInheritedDirectiveMetadata(reader, dir) {
-        var topMeta = reader.getDirectiveMetadata(dir);
-        if (topMeta === null) {
-            throw new Error("Metadata not found for directive: " + dir.debugName);
-        }
-        var inputs = {};
-        var outputs = {};
-        var isDynamic = false;
-        var addMetadata = function (meta) {
-            if (meta.baseClass === 'dynamic') {
-                isDynamic = true;
-            }
-            else if (meta.baseClass !== null) {
-                var baseMeta = reader.getDirectiveMetadata(meta.baseClass);
-                if (baseMeta !== null) {
-                    addMetadata(baseMeta);
-                }
-                else {
-                    // Missing metadata for the base class means it's effectively dynamic.
-                    isDynamic = true;
-                }
-            }
-            inputs = __assign(__assign({}, inputs), meta.inputs);
-            outputs = __assign(__assign({}, outputs), meta.outputs);
-        };
-        addMetadata(topMeta);
-        return __assign(__assign({}, topMeta), { inputs: inputs,
-            outputs: outputs, baseClass: isDynamic ? 'dynamic' : null });
-    }
-
-    var NoopResourceDependencyRecorder = /** @class */ (function () {
-        function NoopResourceDependencyRecorder() {
-        }
-        NoopResourceDependencyRecorder.prototype.recordResourceDependency = function () { };
-        return NoopResourceDependencyRecorder;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var _tsSourceMapBug29300Fixed;
-    /**
-     * Test the current version of TypeScript to see if it has fixed the external SourceMap
-     * file bug: https://github.com/Microsoft/TypeScript/issues/29300.
-     *
-     * The bug is fixed in TS 3.3+ but this check avoid us having to rely upon the version number,
-     * and allows us to gracefully fail if the TS version still has the bug.
-     *
-     * We check for the bug by compiling a very small program `a;` and transforming it to `b;`,
-     * where we map the new `b` identifier to an external source file, which has different lines to
-     * the original source file.  If the bug is fixed then the output SourceMap should contain
-     * mappings that correspond ot the correct line/col pairs for this transformed node.
-     *
-     * @returns true if the bug is fixed.
-     */
-    function tsSourceMapBug29300Fixed() {
-        if (_tsSourceMapBug29300Fixed === undefined) {
-            var writtenFiles_1 = {};
-            var sourceFile_1 = ts.createSourceFile('test.ts', 'a;', ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
-            var host = {
-                getSourceFile: function () { return sourceFile_1; },
-                fileExists: function () { return true; },
-                readFile: function () { return ''; },
-                writeFile: function (fileName, data) { writtenFiles_1[fileName] = data; },
-                getDefaultLibFileName: function () { return ''; },
-                getCurrentDirectory: function () { return ''; },
-                getDirectories: function () { return []; },
-                getCanonicalFileName: function () { return ''; },
-                useCaseSensitiveFileNames: function () { return true; },
-                getNewLine: function () { return '\n'; },
-            };
-            var transform = function (context) {
-                return function (node) { return ts.visitNode(node, visitor); };
-                function visitor(node) {
-                    if (ts.isIdentifier(node) && node.text === 'a') {
-                        var newNode = ts.createIdentifier('b');
-                        ts.setSourceMapRange(newNode, {
-                            pos: 16,
-                            end: 16,
-                            source: ts.createSourceMapSource('test.html', 'abc\ndef\nghi\njkl\nmno\npqr')
-                        });
-                        return newNode;
-                    }
-                    return ts.visitEachChild(node, visitor, context);
-                }
-            };
-            var program = ts.createProgram(['test.ts'], { sourceMap: true }, host);
-            program.emit(sourceFile_1, undefined, undefined, undefined, { after: [transform] });
-            // The first two mappings in the source map should look like:
-            // [0,1,4,0] col 0 => source file 1, row 4, column 0)
-            // [1,0,0,0] col 1 => source file 1, row 4, column 0)
-            _tsSourceMapBug29300Fixed = /ACIA,CAAA/.test(writtenFiles_1['test.js.map']);
-        }
-        return _tsSourceMapBug29300Fixed;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var EMPTY_MAP = new Map();
     var EMPTY_ARRAY$2 = [];
     /**
@@ -40009,7 +39851,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Register this component's information with the `MetadataRegistry`. This ensures that
             // the information about the component is available during the compile() phase.
             var ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: metadata.selector, exportAs: metadata.exportAs, inputs: metadata.inputs, outputs: metadata.outputs, queries: metadata.queries.map(function (query) { return query.propertyName; }), isComponent: true }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass(node, this.reflector, this.evaluator) }));
+            this.metaRegistry.registerDirectiveMetadata(__assign(__assign({ ref: ref, name: node.name.text, selector: metadata.selector, exportAs: metadata.exportAs, inputs: metadata.inputs, outputs: metadata.outputs, queries: metadata.queries.map(function (query) { return query.propertyName; }), isComponent: true }, extractDirectiveGuards(node, this.reflector)), { baseClass: readBaseClass$1(node, this.reflector, this.evaluator) }));
             // Figure out the set of styles. The ordering here is important: external resources (styleUrls)
             // precede inline styles, and styles defined in the template override styles defined in the
             // component.
@@ -40314,7 +40156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         ComponentDecoratorHandler.prototype.compile = function (node, analysis, pool) {
             var meta = analysis.meta;
             var res = compileComponentFromMetadata(meta, pool, makeBindingParser());
-            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject }));
+            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Component }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -40584,7 +40426,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     type: meta.type,
                     typeArgumentCount: meta.typeArgumentCount,
                     deps: analysis.ctorDeps,
-                    injectFn: Identifiers.inject
+                    injectFn: Identifiers.inject,
+                    target: R3FactoryTarget.Injectable,
                 });
                 if (analysis.metadataStmt !== null) {
                     factoryRes.statements.push(analysis.metadataStmt);
@@ -40703,45 +40546,25 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // Angular's DI.
             //
             // To deal with this, @Injectable() without an argument is more lenient, and if the
-            // constructor signature does not work for DI then a provider def (ɵprov) that throws.
+            // constructor signature does not work for DI then a factory definition (ɵfac) that throws is
+            // generated.
             if (strictCtorDeps) {
                 ctorDeps = getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
             }
             else {
-                var possibleCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
-                if (possibleCtorDeps !== null) {
-                    if (possibleCtorDeps.deps !== null) {
-                        // This use of @Injectable has valid constructor dependencies.
-                        ctorDeps = possibleCtorDeps.deps;
-                    }
-                    else {
-                        // This use of @Injectable is technically invalid. Generate a factory function which
-                        // throws
-                        // an error.
-                        // TODO(alxhub): log warnings for the bad use of @Injectable.
-                        ctorDeps = 'invalid';
-                    }
-                }
+                ctorDeps = unwrapConstructorDependencies(getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore));
             }
             return ctorDeps;
         }
         else if (decorator.args.length === 1) {
             var rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
-            // rawCtorDeps will be null if the class has no constructor.
-            if (rawCtorDeps !== null) {
-                if (rawCtorDeps.deps !== null) {
-                    // A constructor existed and had valid dependencies.
-                    ctorDeps = rawCtorDeps.deps;
-                }
-                else {
-                    // A constructor existed but had invalid dependencies.
-                    ctorDeps = 'invalid';
-                }
-            }
-            if (strictCtorDeps && !meta.useValue && !meta.useExisting && !meta.useClass &&
-                !meta.useFactory) {
+            if (strictCtorDeps && meta.useValue === undefined && meta.useExisting === undefined &&
+                meta.useClass === undefined && meta.useFactory === undefined) {
                 // Since use* was not provided, validate the deps according to strictCtorDeps.
-                validateConstructorDependencies(clazz, rawCtorDeps);
+                ctorDeps = validateConstructorDependencies(clazz, rawCtorDeps);
+            }
+            else {
+                ctorDeps = unwrapConstructorDependencies(rawCtorDeps);
             }
         }
         return ctorDeps;
@@ -41339,7 +41162,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         PipeDecoratorHandler.prototype.compile = function (node, analysis) {
             var meta = analysis.meta;
             var res = compilePipeFromMetadata(meta);
-            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, isPipe: true }));
+            var factoryRes = compileNgFactoryDefField(__assign(__assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Pipe }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
@@ -47908,7 +47731,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.routeAnalyzer = new NgModuleRouteAnalyzer(this.moduleResolver, evaluator);
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             var handlers = [
-                new BaseDefDecoratorHandler(this.reflector, evaluator, this.isCore),
                 new ComponentDecoratorHandler(this.reflector, evaluator, metaRegistry, this.metaReader, scopeReader, scopeRegistry, this.isCore, this.resourceManager, this.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.getI18nLegacyMessageFormat(), this.moduleResolver, this.cycleAnalyzer, this.refEmitter, this.defaultImportTracker, this.incrementalState),
                 new DirectiveDecoratorHandler(this.reflector, evaluator, metaRegistry, this.defaultImportTracker, this.isCore),
                 new InjectableDecoratorHandler(this.reflector, this.defaultImportTracker, this.isCore, this.options.strictInjectionParameters || false),
@@ -52914,6 +52736,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         R3ResolvedDependencyType[R3ResolvedDependencyType["Attribute"] = 1] = "Attribute";
         R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
     })(R3ResolvedDependencyType$1 || (R3ResolvedDependencyType$1 = {}));
+    var R3FactoryTarget$1;
+    (function (R3FactoryTarget) {
+        R3FactoryTarget[R3FactoryTarget["Directive"] = 0] = "Directive";
+        R3FactoryTarget[R3FactoryTarget["Component"] = 1] = "Component";
+        R3FactoryTarget[R3FactoryTarget["Injectable"] = 2] = "Injectable";
+        R3FactoryTarget[R3FactoryTarget["Pipe"] = 3] = "Pipe";
+        R3FactoryTarget[R3FactoryTarget["NgModule"] = 4] = "NgModule";
+    })(R3FactoryTarget$1 || (R3FactoryTarget$1 = {}));
 
     /**
      * @license
@@ -52935,7 +52765,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
     var NG_MOD_DEF = getClosureSafeProperty({ ɵmod: getClosureSafeProperty });
     var NG_LOC_ID_DEF = getClosureSafeProperty({ ɵloc: getClosureSafeProperty });
-    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
     var NG_FACTORY_DEF = getClosureSafeProperty({ ɵfac: getClosureSafeProperty });
     /**
      * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
@@ -62236,6 +62065,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Represents a basic change from a previous to a new value for a single
      * property on a directive instance. Passed as a value in a
@@ -62257,22 +62102,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
         return SimpleChange;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -62539,7 +62368,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.13+52.sha-314e93f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.14+1.sha-8e20bfa.with-local-changes');
 
     /**
      * @license
@@ -73150,7 +72979,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.13+52.sha-314e93f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.14+1.sha-8e20bfa.with-local-changes');
 
     /**
      * @license
