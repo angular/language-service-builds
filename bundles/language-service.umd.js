@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.14+5.sha-4ee354d.with-local-changes
+ * @license Angular v9.0.0-next.14+8.sha-c61f413.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18991,7 +18991,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.14+5.sha-4ee354d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.14+8.sha-c61f413.with-local-changes');
 
     /**
      * @license
@@ -33599,7 +33599,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.14+5.sha-4ee354d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.14+8.sha-c61f413.with-local-changes');
 
     /**
      * @license
@@ -50973,18 +50973,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return [];
         }
         var dinfo = diagnosticInfoFromTemplateInfo(info);
-        var visitor = new ExpressionVisitor$1(info, position, attr, function () { return getExpressionScope(dinfo, path, false); });
+        var visitor = new ExpressionVisitor$1(info, position, function () { return getExpressionScope(dinfo, path, false); }, attr);
         path.tail.visit(visitor, null);
-        if (!visitor.result || !visitor.result.length) {
-            // Try allwoing widening the path
-            var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
-            if (widerPath_1.tail) {
-                var widerVisitor = new ExpressionVisitor$1(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
-                widerPath_1.tail.visit(widerVisitor, null);
-                return widerVisitor.result || [];
-            }
+        var results = visitor.results;
+        if (results.length) {
+            return results;
         }
-        return visitor.result || [];
+        // Try allowing widening the path
+        var widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
+        if (widerPath.tail) {
+            var widerVisitor = new ExpressionVisitor$1(info, position, function () { return getExpressionScope(dinfo, widerPath, false); }, attr);
+            widerPath.tail.visit(widerVisitor, null);
+            return widerVisitor.results;
+        }
+        return results;
     }
     function elementCompletions(info) {
         var e_4, _a;
@@ -51018,32 +51020,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return results;
     }
-    /**
-     * Filter the specified `entries` by unique name.
-     * @param entries Completion Entries
-     */
-    function uniqueByName(entries) {
-        var e_5, _a;
-        var results = [];
-        var set = new Set();
-        try {
-            for (var entries_1 = __values(entries), entries_1_1 = entries_1.next(); !entries_1_1.done; entries_1_1 = entries_1.next()) {
-                var entry = entries_1_1.value;
-                if (!set.has(entry.name)) {
-                    set.add(entry.name);
-                    results.push(entry);
-                }
-            }
-        }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
-        finally {
-            try {
-                if (entries_1_1 && !entries_1_1.done && (_a = entries_1.return)) _a.call(entries_1);
-            }
-            finally { if (e_5) throw e_5.error; }
-        }
-        return results;
-    }
     function entityCompletions(value, position) {
         // Look for entity completions
         var re = /&[A-Za-z]*;?(?!\d)/g;
@@ -51070,9 +51046,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (!templatePath.tail) {
             return [];
         }
-        var visitor = new ExpressionVisitor$1(info, position, undefined, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
+        var visitor = new ExpressionVisitor$1(info, position, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
         templatePath.tail.visit(visitor, null);
-        return uniqueByName(visitor.result || []);
+        return visitor.results;
     }
     // There is a special case of HTML where text that contains a unclosed tag is treated as
     // text. For exaple '<h1> Some <a text </h1>' produces a text nodes inside of the H1
@@ -51095,119 +51071,136 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     var ExpressionVisitor$1 = /** @class */ (function (_super) {
         __extends(ExpressionVisitor, _super);
-        function ExpressionVisitor(info, position, attr, getExpressionScope) {
+        function ExpressionVisitor(info, position, getExpressionScope, attr) {
             var _this = _super.call(this) || this;
             _this.info = info;
             _this.position = position;
+            _this.getExpressionScope = getExpressionScope;
             _this.attr = attr;
-            _this.getExpressionScope = getExpressionScope || (function () { return info.template.members; });
+            _this.completions = new Map();
             return _this;
         }
+        Object.defineProperty(ExpressionVisitor.prototype, "results", {
+            get: function () { return Array.from(this.completions.values()); },
+            enumerable: true,
+            configurable: true
+        });
         ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
-            this.attributeValueCompletions(ast.value);
+            this.addAttributeValuesToCompletions(ast.value);
         };
         ExpressionVisitor.prototype.visitElementProperty = function (ast) {
-            this.attributeValueCompletions(ast.value);
+            this.addAttributeValuesToCompletions(ast.value);
         };
-        ExpressionVisitor.prototype.visitEvent = function (ast) { this.attributeValueCompletions(ast.handler); };
+        ExpressionVisitor.prototype.visitEvent = function (ast) { this.addAttributeValuesToCompletions(ast.handler); };
         ExpressionVisitor.prototype.visitElement = function (ast) {
-            var _this = this;
-            if (this.attr && getSelectors(this.info) && this.attr.name.startsWith(TEMPLATE_ATTR_PREFIX$2)) {
-                // The value is a template expression but the expression AST was not produced when the
-                // TemplateAst was produce so
-                // do that now.
-                var key_1 = this.attr.name.substr(TEMPLATE_ATTR_PREFIX$2.length);
-                // Find the selector
-                var selectorInfo = getSelectors(this.info);
-                var selectors = selectorInfo.selectors;
-                var selector_1 = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 === 0 && attr === key_1; }); })[0];
-                var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null, 0);
-                // find the template binding that contains the position
-                if (!this.attr.valueSpan)
-                    return;
-                var valueRelativePosition_1 = this.position - this.attr.valueSpan.start.offset;
-                var bindings = templateBindingResult.templateBindings;
-                var binding = bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span, /* exclusive */ true); }) ||
-                    bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span); });
-                var keyCompletions = function () {
-                    var keys = [];
-                    if (selector_1) {
-                        var attrNames = selector_1.attrs.filter(function (_, i) { return i % 2 === 0; });
-                        keys = attrNames.filter(function (name) { return name.startsWith(key_1) && name != key_1; })
-                            .map(function (name) { return lowerName(name.substr(key_1.length)); });
-                    }
-                    keys.push('let');
-                    _this.result = keys.map(function (key) {
-                        return {
-                            name: key,
-                            kind: CompletionKind.KEY,
-                            sortText: key,
-                        };
-                    });
-                };
-                if (!binding || (binding.key === key_1 && !binding.expression)) {
-                    // We are in the root binding. We should return `let` and keys that are left in the
-                    // selector.
-                    keyCompletions();
-                }
-                else if (binding.keyIsVar) {
+            if (!this.attr || !this.attr.valueSpan || !this.attr.name.startsWith(TEMPLATE_ATTR_PREFIX$2)) {
+                return;
+            }
+            // The value is a template expression but the expression AST was not produced when the
+            // TemplateAst was produce so do that now.
+            var key = this.attr.name.substr(TEMPLATE_ATTR_PREFIX$2.length);
+            // Find the selector
+            var selectorInfo = getSelectors(this.info);
+            var selectors = selectorInfo.selectors;
+            var selector = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 === 0 && attr === key; }); })[0];
+            if (!selector) {
+                return;
+            }
+            var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key, this.attr.value, null, 0);
+            // find the template binding that contains the position
+            var valueRelativePosition = this.position - this.attr.valueSpan.start.offset;
+            var bindings = templateBindingResult.templateBindings;
+            var binding = bindings.find(function (binding) { return inSpan(valueRelativePosition, binding.span, /* exclusive */ true); }) ||
+                bindings.find(function (binding) { return inSpan(valueRelativePosition, binding.span); });
+            if (binding) {
+                if (binding.keyIsVar) {
                     var equalLocation = this.attr.value.indexOf('=');
-                    this.result = [];
-                    if (equalLocation >= 0 && valueRelativePosition_1 >= equalLocation) {
+                    if (equalLocation >= 0 && valueRelativePosition >= equalLocation) {
                         // We are after the '=' in a let clause. The valid values here are the members of the
                         // template reference's type parameter.
-                        var directiveMetadata = selectorInfo.map.get(selector_1);
+                        var directiveMetadata = selectorInfo.map.get(selector);
                         if (directiveMetadata) {
                             var contextTable = this.info.template.query.getTemplateContext(directiveMetadata.type.reference);
                             if (contextTable) {
-                                this.result = this.symbolsToCompletions(contextTable.values());
+                                this.addSymbolsToCompletions(contextTable.values());
+                                return;
                             }
                         }
                     }
-                    else if (binding.key && valueRelativePosition_1 <= (binding.key.length - key_1.length)) {
-                        keyCompletions();
-                    }
                 }
-                else {
+                if ((binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) ||
                     // If the position is in the expression or after the key or there is no key, return the
                     // expression completions
-                    if ((binding.expression && inSpan(valueRelativePosition_1, binding.expression.ast.span)) ||
-                        (binding.key &&
-                            valueRelativePosition_1 > binding.span.start + (binding.key.length - key_1.length)) ||
-                        !binding.key) {
-                        var span = new ParseSpan(0, this.attr.value.length);
-                        var offset = ast.sourceSpan.start.offset;
-                        this.attributeValueCompletions(binding.expression ? binding.expression.ast :
-                            new PropertyRead(span, span.toAbsolute(offset), new ImplicitReceiver(span, span.toAbsolute(offset)), ''), this.position);
+                    valueRelativePosition > binding.span.start + binding.key.length - key.length) {
+                    var span = new ParseSpan(0, this.attr.value.length);
+                    var offset = ast.sourceSpan.start.offset;
+                    var expressionAst = void 0;
+                    if (binding.expression) {
+                        expressionAst = binding.expression.ast;
                     }
                     else {
-                        keyCompletions();
+                        var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
+                        expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
                     }
+                    this.addAttributeValuesToCompletions(expressionAst, this.position);
+                    return;
                 }
             }
+            this.addKeysToCompletions(selector, key);
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
             if (inSpan(this.position, ast.value.sourceSpan)) {
                 var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, this.position, this.info.template.query);
                 if (completions) {
-                    this.result = this.symbolsToCompletions(completions);
+                    this.addSymbolsToCompletions(completions);
                 }
             }
         };
-        ExpressionVisitor.prototype.attributeValueCompletions = function (value, position) {
+        ExpressionVisitor.prototype.addAttributeValuesToCompletions = function (value, position) {
             var symbols = getExpressionCompletions(this.getExpressionScope(), value, position === undefined ? this.attributeValuePosition : position, this.info.template.query);
             if (symbols) {
-                this.result = this.symbolsToCompletions(symbols);
+                this.addSymbolsToCompletions(symbols);
             }
         };
-        ExpressionVisitor.prototype.symbolsToCompletions = function (symbols) {
-            return symbols.filter(function (s) { return !s.name.startsWith('__') && s.public; }).map(function (symbol) {
-                return {
-                    name: symbol.name,
-                    kind: symbol.kind,
-                    sortText: symbol.name,
-                };
+        ExpressionVisitor.prototype.addKeysToCompletions = function (selector, key) {
+            if (key !== 'ngFor') {
+                return;
+            }
+            this.completions.set('let', {
+                name: 'let',
+                kind: CompletionKind.KEY,
+                sortText: 'let',
             });
+            if (selector.attrs.some(function (attr) { return attr === 'ngForOf'; })) {
+                this.completions.set('of', {
+                    name: 'of',
+                    kind: CompletionKind.KEY,
+                    sortText: 'of',
+                });
+            }
+        };
+        ExpressionVisitor.prototype.addSymbolsToCompletions = function (symbols) {
+            var e_5, _a;
+            try {
+                for (var symbols_1 = __values(symbols), symbols_1_1 = symbols_1.next(); !symbols_1_1.done; symbols_1_1 = symbols_1.next()) {
+                    var s = symbols_1_1.value;
+                    if (s.name.startsWith('__') || !s.public || this.completions.has(s.name)) {
+                        continue;
+                    }
+                    this.completions.set(s.name, {
+                        name: s.name,
+                        kind: s.kind,
+                        sortText: s.name,
+                    });
+                }
+            }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            finally {
+                try {
+                    if (symbols_1_1 && !symbols_1_1.done && (_a = symbols_1.return)) _a.call(symbols_1);
+                }
+                finally { if (e_5) throw e_5.error; }
+            }
         };
         Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
             get: function () {
@@ -51223,9 +51216,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(NullTemplateVisitor));
     function getSourceText(template, span) {
         return template.source.substring(span.start, span.end);
-    }
-    function lowerName(name) {
-        return name && (name[0].toLowerCase() + name.substr(1));
     }
     function angularAttributes(info, elementName) {
         var e_6, _a, e_7, _b, e_8, _c, e_9, _d, e_10, _e, e_11, _f, e_12, _g, e_13, _h;
@@ -70704,7 +70694,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.14+5.sha-4ee354d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.14+8.sha-c61f413.with-local-changes');
 
     /**
      * @license
@@ -84231,7 +84221,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.14+5.sha-4ee354d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.14+8.sha-c61f413.with-local-changes');
 
     /**
      * @license
