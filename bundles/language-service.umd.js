@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.14+8.sha-c61f413.with-local-changes
+ * @license Angular v9.0.0-next.14+10.sha-e483aca.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19006,7 +19006,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.14+8.sha-c61f413.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.14+10.sha-e483aca.with-local-changes');
 
     /**
      * @license
@@ -33614,7 +33614,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.14+8.sha-c61f413.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.14+10.sha-e483aca.with-local-changes');
 
     /**
      * @license
@@ -53128,6 +53128,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             throwError(msg);
         }
     }
+    function assertLessThanOrEqual(actual, expected, msg) {
+        if (actual > expected) {
+            throwError(msg);
+        }
+    }
     function assertGreaterThan(actual, expected, msg) {
         if (actual <= expected) {
             throwError(msg);
@@ -53441,20 +53446,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var NEXT = 4;
     var QUERIES = 5;
     var T_HOST = 6;
-    var BINDING_INDEX = 7;
-    var CLEANUP = 8;
-    var CONTEXT = 9;
-    var INJECTOR$1 = 10;
-    var RENDERER_FACTORY = 11;
-    var RENDERER = 12;
-    var SANITIZER = 13;
-    var CHILD_HEAD = 14;
-    var CHILD_TAIL = 15;
-    var DECLARATION_VIEW = 16;
-    var DECLARATION_LCONTAINER = 17;
-    var PREORDER_HOOK_FLAGS = 18;
+    var CLEANUP = 7;
+    var CONTEXT = 8;
+    var INJECTOR$1 = 9;
+    var RENDERER_FACTORY = 10;
+    var RENDERER = 11;
+    var SANITIZER = 12;
+    var CHILD_HEAD = 13;
+    var CHILD_TAIL = 14;
+    var DECLARATION_VIEW = 15;
+    var DECLARATION_LCONTAINER = 16;
+    var PREORDER_HOOK_FLAGS = 17;
     /** Size of LView's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 19;
+    var HEADER_OFFSET = 18;
 
     /**
      * @license
@@ -53802,6 +53806,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function setCheckNoChangesMode(mode) {
         instructionState.checkNoChangesMode = mode;
     }
+    function getBindingIndex() {
+        return instructionState.lFrame.bindingIndex;
+    }
+    function setBindingIndex(value) {
+        return instructionState.lFrame.bindingIndex = value;
+    }
+    /**
+     * Set a new binding root index so that host template functions can execute.
+     *
+     * Bindings inside the host template are 0 index. But because we don't know ahead of time
+     * how many host bindings we have we can't pre-compute them. For this reason they are all
+     * 0 index and we just shift the root so that they match next available location in the LView.
+     * @param value
+     */
     function setBindingRoot(value) {
         instructionState.lFrame.bindingRootIndex = value;
     }
@@ -53867,6 +53885,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         newLFrame.currentDirectiveDef = null;
         newLFrame.activeDirectiveId = 0;
         newLFrame.bindingRootIndex = -1;
+        newLFrame.bindingIndex = newView === null ? -1 : newView[TVIEW].bindingStartIndex;
         newLFrame.currentQueryIndex = 0;
     }
     /**
@@ -53891,6 +53910,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             currentDirectiveDef: null,
             activeDirectiveId: 0,
             bindingRootIndex: -1,
+            bindingIndex: -1,
             currentQueryIndex: 0,
             parent: parent,
             child: null,
@@ -57188,11 +57208,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(LViewDebug.prototype, "bindingIndex", {
-            get: function () { return this._raw_lView[BINDING_INDEX]; },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(LViewDebug.prototype, "childViews", {
             /**
              * Normalized view of child views (and containers) attached at this location.
@@ -57493,11 +57508,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     var _CLEAN_PROMISE = (ɵ0$4)();
     /** Sets the host bindings for the current view. */
-    function setHostBindings(tView, viewData) {
+    function setHostBindings(tView, lView) {
         var selectedIndex = getSelectedIndex();
         try {
             if (tView.expandoInstructions !== null) {
-                var bindingRootIndex = viewData[BINDING_INDEX] = tView.expandoStartIndex;
+                var bindingRootIndex = setBindingIndex(tView.expandoStartIndex);
                 setBindingRoot(bindingRootIndex);
                 var currentDirectiveIndex = -1;
                 var currentElementIndex = -1;
@@ -57533,8 +57548,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                             // It is important that this be called first before the actual instructions
                             // are run because this way the first directive ID value is not zero.
                             incrementActiveDirectiveId();
-                            viewData[BINDING_INDEX] = bindingRootIndex;
-                            var hostCtx = unwrapRNode(viewData[currentDirectiveIndex]);
+                            setBindingIndex(bindingRootIndex);
+                            var hostCtx = unwrapRNode(lView[currentDirectiveIndex]);
                             instruction(2 /* Update */, hostCtx, currentElementIndex);
                         }
                         currentDirectiveIndex++;
@@ -57724,7 +57739,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var flags = lView[FLAGS];
         try {
             resetPreOrderHookFlags(lView);
-            setBindingRoot(lView[BINDING_INDEX] = tView.bindingStartIndex);
+            setBindingIndex(tView.bindingStartIndex);
             if (templateFn !== null) {
                 executeTemplate(lView, templateFn, 2 /* Update */, context);
             }
@@ -57940,7 +57955,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         for (var i = 0; i < initialViewLength; i++) {
             blueprint.push(i < bindingStartIndex ? null : NO_CHANGE);
         }
-        blueprint[BINDING_INDEX] = bindingStartIndex;
         return blueprint;
     }
     function createError(text, token) {
@@ -58090,7 +58104,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * A lighter version of postProcessDirective() that is used for the root component.
      */
     function postProcessBaseDirective(lView, hostTNode, directive) {
-        ngDevMode && assertEqual(lView[BINDING_INDEX], lView[TVIEW].bindingStartIndex, 'directives should be created before any bindings');
+        ngDevMode && assertLessThanOrEqual(getBindingIndex(), lView[TVIEW].bindingStartIndex, 'directives should be created before any bindings');
         attachPatchData(directive, lView);
         var native = getNativeByTNode(hostTNode, lView);
         if (native) {
@@ -62358,7 +62372,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.14+8.sha-c61f413.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.14+10.sha-e483aca.with-local-changes');
 
     /**
      * @license
@@ -72969,7 +72983,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.14+8.sha-c61f413.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.14+10.sha-e483aca.with-local-changes');
 
     /**
      * @license
