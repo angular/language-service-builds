@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.14+17.sha-4e38cab.with-local-changes
+ * @license Angular v9.0.0-next.14+22.sha-936700a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19006,7 +19006,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.14+17.sha-4e38cab.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.14+22.sha-936700a.with-local-changes');
 
     /**
      * @license
@@ -19902,6 +19902,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var _FILE_TAG = 'file';
     var _SOURCE_TAG$1 = 'source';
     var _SEGMENT_SOURCE_TAG = 'seg-source';
+    var _ALT_TRANS_TAG = 'alt-trans';
     var _TARGET_TAG = 'target';
     var _UNIT_TAG = 'trans-unit';
     var _CONTEXT_GROUP_TAG = 'context-group';
@@ -20053,6 +20054,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // ignore those tags
                 case _SOURCE_TAG$1:
                 case _SEGMENT_SOURCE_TAG:
+                case _ALT_TRANS_TAG:
                     break;
                 case _TARGET_TAG:
                     var innerTextStart = element.startSourceSpan.end.offset;
@@ -33614,7 +33616,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.14+17.sha-4e38cab.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.14+22.sha-936700a.with-local-changes');
 
     /**
      * @license
@@ -50842,6 +50844,74 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             sortText: 'ng-template',
         },
     ];
+    function isIdentifierPart$1(code) {
+        // Identifiers consist of alphanumeric characters, '_', or '$'.
+        return isAsciiLetter(code) || isDigit(code) || code == $$ || code == $_;
+    }
+    /**
+     * Gets the span of word in a template that surrounds `position`. If there is no word around
+     * `position`, nothing is returned.
+     */
+    function getBoundedWordSpan(templateInfo, position) {
+        var template = templateInfo.template;
+        var templateSrc = template.source;
+        if (!templateSrc)
+            return;
+        // TODO(ayazhafiz): A solution based on word expansion will always be expensive compared to one
+        // based on ASTs. Whatever penalty we incur is probably manageable for small-length (i.e. the
+        // majority of) identifiers, but the current solution involes a number of branchings and we can't
+        // control potentially very long identifiers. Consider moving to an AST-based solution once
+        // existing difficulties with AST spans are more clearly resolved (see #31898 for discussion of
+        // known problems, and #33091 for how they affect text replacement).
+        //
+        // `templatePosition` represents the right-bound location of a cursor in the template.
+        //    key.ent|ry
+        //           ^---- cursor, at position `r` is at.
+        // A cursor is not itself a character in the template; it has a left (lower) and right (upper)
+        // index bound that hugs the cursor itself.
+        var templatePosition = position - template.span.start;
+        // To perform word expansion, we want to determine the left and right indices that hug the cursor.
+        // There are three cases here.
+        var left, right;
+        if (templatePosition === 0) {
+            // 1. Case like
+            //      |rest of template
+            //    the cursor is at the start of the template, hugged only by the right side (0-index).
+            left = right = 0;
+        }
+        else if (templatePosition === templateSrc.length) {
+            // 2. Case like
+            //      rest of template|
+            //    the cursor is at the end of the template, hugged only by the left side (last-index).
+            left = right = templateSrc.length - 1;
+        }
+        else {
+            // 3. Case like
+            //      wo|rd
+            //    there is a clear left and right index.
+            left = templatePosition - 1;
+            right = templatePosition;
+        }
+        if (!isIdentifierPart$1(templateSrc.charCodeAt(left)) &&
+            !isIdentifierPart$1(templateSrc.charCodeAt(right))) {
+            // Case like
+            //         .|.
+            // left ---^ ^--- right
+            // There is no word here.
+            return;
+        }
+        // Expand on the left and right side until a word boundary is hit. Back up one expansion on both
+        // side to stay inside the word.
+        while (left >= 0 && isIdentifierPart$1(templateSrc.charCodeAt(left)))
+            --left;
+        ++left;
+        while (right < templateSrc.length && isIdentifierPart$1(templateSrc.charCodeAt(right)))
+            ++right;
+        --right;
+        var absoluteStartPosition = position - (templatePosition - left);
+        var length = right - left + 1;
+        return { start: absoluteStartPosition, length: length };
+    }
     function getTemplateCompletions(templateInfo, position) {
         var result = [];
         var htmlAst = templateInfo.htmlAst, template = templateInfo.template;
@@ -50910,7 +50980,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 visitExpansionCase: function (ast) { }
             }, null);
         }
-        return result;
+        var replacementSpan = getBoundedWordSpan(templateInfo, position);
+        return result.map(function (entry) {
+            return __assign(__assign({}, entry), { replacementSpan: replacementSpan });
+        });
     }
     function attributeCompletions(info, path) {
         var item = path.tail instanceof Element$1 ? path.tail : path.parentOf(path.tail);
@@ -62372,7 +62445,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.14+17.sha-4e38cab.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.14+22.sha-936700a.with-local-changes');
 
     /**
      * @license
@@ -72983,7 +73056,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.14+17.sha-4e38cab.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.14+22.sha-936700a.with-local-changes');
 
     /**
      * @license
