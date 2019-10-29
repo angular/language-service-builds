@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.12+3.sha-26a6db2.with-local-changes
+ * @license Angular v8.2.12+5.sha-f97c464.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.12+3.sha-26a6db2.with-local-changes');
+    var VERSION$1 = new Version('8.2.12+5.sha-f97c464.with-local-changes');
 
     /**
      * @license
@@ -19000,6 +19000,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var _FILE_TAG = 'file';
     var _SOURCE_TAG$1 = 'source';
     var _SEGMENT_SOURCE_TAG = 'seg-source';
+    var _ALT_TRANS_TAG = 'alt-trans';
     var _TARGET_TAG = 'target';
     var _UNIT_TAG = 'trans-unit';
     var _CONTEXT_GROUP_TAG = 'context-group';
@@ -19151,6 +19152,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // ignore those tags
                 case _SOURCE_TAG$1:
                 case _SEGMENT_SOURCE_TAG:
+                case _ALT_TRANS_TAG:
                     break;
                 case _TARGET_TAG:
                     var innerTextStart = element.startSourceSpan.end.offset;
@@ -38627,7 +38629,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.12+3.sha-26a6db2.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.12+5.sha-f97c464.with-local-changes');
 
     /**
      * @license
@@ -45680,7 +45682,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -49498,7 +49500,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.12+3.sha-26a6db2.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.12+5.sha-f97c464.with-local-changes');
 
     /**
      * @license
