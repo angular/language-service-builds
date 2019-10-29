@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.14+24.sha-d1246a1.with-local-changes
+ * @license Angular v9.0.0-next.14+25.sha-c3e9356.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18041,10 +18041,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     var ATTR_REGEX = /attr\.([^\]]+)/;
     function baseDirectiveFields(meta, constantPool, bindingParser) {
         var definitionMap = new DefinitionMap();
+        var selectors = parseSelectorToR3Selector(meta.selector);
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.type);
         // e.g. `selectors: [['', 'someDir', '']]`
-        definitionMap.set('selectors', createDirectiveSelector(meta.selector));
+        if (selectors.length > 0) {
+            definitionMap.set('selectors', asLiteral(selectors));
+        }
         if (meta.queries.length > 0) {
             // e.g. `contentQueries: (rf, ctx, dirIndex) => { ... }
             definitionMap.set('contentQueries', createContentQueriesFunction(meta.queries, constantPool, meta.name));
@@ -18301,10 +18304,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             parameters.push(query.read);
         }
         return parameters;
-    }
-    // Turn a directive selector into an R3-compatible selector for directive def
-    function createDirectiveSelector(selector) {
-        return asLiteral(parseSelectorToR3Selector(selector));
     }
     function convertAttributesToExpressions(attributes) {
         var e_2, _a;
@@ -18991,7 +18990,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.14+24.sha-d1246a1.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.14+25.sha-c3e9356.with-local-changes');
 
     /**
      * @license
@@ -33601,7 +33600,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.14+24.sha-d1246a1.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.14+25.sha-c3e9356.with-local-changes');
 
     /**
      * @license
@@ -53584,7 +53583,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             onPush: componentDefinition.changeDetection === ChangeDetectionStrategy$1.OnPush,
             directiveDefs: null,
             pipeDefs: null,
-            selectors: componentDefinition.selectors,
+            selectors: componentDefinition.selectors || EMPTY_ARRAY$3,
             viewQuery: componentDefinition.viewQuery || null,
             features: componentDefinition.features || null,
             data: componentDefinition.data || {},
@@ -70783,7 +70782,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.14+24.sha-d1246a1.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.14+25.sha-c3e9356.with-local-changes');
 
     /**
      * @license
@@ -84321,7 +84320,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.14+24.sha-d1246a1.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.14+25.sha-c3e9356.with-local-changes');
 
     /**
      * @license
