@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.14+19.sha-da4eb91.with-local-changes
+ * @license Angular v9.0.0-next.14+20.sha-bd40c89.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18991,7 +18991,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.14+19.sha-da4eb91.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.14+20.sha-bd40c89.with-local-changes');
 
     /**
      * @license
@@ -33599,7 +33599,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-next.14+19.sha-da4eb91.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-next.14+20.sha-bd40c89.with-local-changes');
 
     /**
      * @license
@@ -70781,7 +70781,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-next.14+19.sha-da4eb91.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.14+20.sha-bd40c89.with-local-changes');
 
     /**
      * @license
@@ -74326,10 +74326,21 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // Read the instructions to insert/move/remove DOM elements
         var visitedNodes = readCreateOpCodes(rootIndex, tI18n.create, lView);
         // Remove deleted nodes
-        for (var i = rootIndex + 1; i <= lastCreatedNode.index - HEADER_OFFSET; i++) {
-            if (visitedNodes.indexOf(i) === -1) {
-                removeNode(i, lView, /* markAsDetached */ true);
+        var index = rootIndex + 1;
+        while (index <= lastCreatedNode.index - HEADER_OFFSET) {
+            if (visitedNodes.indexOf(index) === -1) {
+                removeNode(index, lView, /* markAsDetached */ true);
             }
+            // Check if an element has any local refs and skip them
+            var tNode = getTNode(index, lView);
+            if (tNode && (tNode.type === 3 /* Element */ || tNode.type === 4 /* ElementContainer */) &&
+                tNode.localNames !== null) {
+                // Divide by 2 to get the number of local refs,
+                // since they are stored as an array that also includes directive indexes,
+                // i.e. ["localRef", directiveIndex, ...]
+                index += tNode.localNames.length >> 1;
+            }
+            index++;
         }
     }
     /**
@@ -84308,7 +84319,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.14+19.sha-da4eb91.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.14+20.sha-bd40c89.with-local-changes');
 
     /**
      * @license
