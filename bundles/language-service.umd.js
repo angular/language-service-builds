@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+4.sha-66ab701.with-local-changes
+ * @license Angular v9.0.0-rc.0+11.sha-4452d6d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18990,7 +18990,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+11.sha-4452d6d.with-local-changes');
 
     /**
      * @license
@@ -33600,7 +33600,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+11.sha-4452d6d.with-local-changes');
 
     /**
      * @license
@@ -35686,23 +35686,18 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 symbol.declarations.length !== 1) {
                 return null;
             }
-            // Ignore decorators that are defined locally (not imported).
             var decl = symbol.declarations[0];
-            if (!ts.isImportSpecifier(decl)) {
+            var importDecl = getContainingImportDeclaration(decl);
+            // Ignore declarations that are defined locally (not imported).
+            if (importDecl === null) {
                 return null;
             }
-            // Walk back from the specifier to find the declaration, which carries the module specifier.
-            var importDecl = decl.parent.parent.parent;
             // The module specifier is guaranteed to be a string literal, so this should always pass.
             if (!ts.isStringLiteral(importDecl.moduleSpecifier)) {
                 // Not allowed to happen in TypeScript ASTs.
                 return null;
             }
-            // Read the module specifier.
-            var from = importDecl.moduleSpecifier.text;
-            // Compute the name by which the decorator was exported, not imported.
-            var name = (decl.propertyName !== undefined ? decl.propertyName : decl.name).text;
-            return { from: from, name: name };
+            return { from: importDecl.moduleSpecifier.text, name: getExportedName(decl, id) };
         };
         /**
          * Try to get the import info for this identifier as though it is a namespaced import.
@@ -36015,6 +36010,24 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             propertyAccess = propertyAccess.expression;
         }
         return ts.isIdentifier(propertyAccess.expression) ? propertyAccess.expression : null;
+    }
+    /**
+     * Return the ImportDeclaration for the given `node` if it is either an `ImportSpecifier` or a
+     * `NamespaceImport`. If not return `null`.
+     */
+    function getContainingImportDeclaration(node) {
+        return ts.isImportSpecifier(node) ? node.parent.parent.parent :
+            ts.isNamespaceImport(node) ? node.parent.parent : null;
+    }
+    /**
+     * Compute the name by which the `decl` was exported, not imported.
+     * If no such declaration can be found (e.g. it is a namespace import)
+     * then fallback to the `originalId`.
+     */
+    function getExportedName(decl, originalId) {
+        return ts.isImportSpecifier(decl) ?
+            (decl.propertyName !== undefined ? decl.propertyName : decl.name).text :
+            originalId.text;
     }
 
     /**
@@ -53246,11 +53259,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             throwError(msg);
         }
     }
-    function assertLessThanOrEqual(actual, expected, msg) {
-        if (actual > expected) {
-            throwError(msg);
-        }
-    }
     function assertGreaterThan(actual, expected, msg) {
         if (actual <= expected) {
             throwError(msg);
@@ -60828,7 +60836,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function createDirectivesInstances(tView, lView, tNode) {
         if (!getBindingsEnabled())
             return;
-        instantiateAllDirectives(tView, lView, tNode);
+        instantiateAllDirectives(tView, lView, tNode, getNativeByTNode(tNode, lView));
         if ((tNode.flags & 256 /* hasHostBindings */) === 256 /* hasHostBindings */) {
             invokeDirectivesHostBindings(tView, lView, tNode);
         }
@@ -61262,16 +61270,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Instantiate a root component.
      */
-    function instantiateRootComponent(tView, viewData, def) {
+    function instantiateRootComponent(tView, lView, def) {
         var rootTNode = getPreviousOrParentTNode();
         if (tView.firstTemplatePass) {
             if (def.providersResolver)
                 def.providersResolver(def);
             generateExpandoInstructionBlock(tView, rootTNode, 1);
-            baseResolveDirective(tView, viewData, def);
+            baseResolveDirective(tView, lView, def);
         }
-        var directive = getNodeInjectable(tView.data, viewData, viewData.length - 1, rootTNode);
-        postProcessBaseDirective(viewData, rootTNode, directive);
+        var directive = getNodeInjectable(tView.data, lView, lView.length - 1, rootTNode);
+        attachPatchData(directive, lView);
+        var native = getNativeByTNode(rootTNode, lView);
+        if (native) {
+            attachPatchData(native, lView);
+        }
         return directive;
     }
     /**
@@ -61323,19 +61335,30 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Instantiate all the directives that were previously resolved on the current node.
      */
-    function instantiateAllDirectives(tView, lView, tNode) {
+    function instantiateAllDirectives(tView, lView, tNode, native) {
         var start = tNode.directiveStart;
         var end = tNode.directiveEnd;
         if (!tView.firstTemplatePass) {
             getOrCreateNodeInjectorForNode(tNode, lView);
         }
+        attachPatchData(native, lView);
+        var initialInputs = tNode.initialInputs;
         for (var i = start; i < end; i++) {
             var def = tView.data[i];
-            if (isComponentDef(def)) {
+            var isComponent = isComponentDef(def);
+            if (isComponent) {
+                ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */);
                 addComponentLogic(lView, tNode, def);
             }
             var directive = getNodeInjectable(tView.data, lView, i, tNode);
-            postProcessDirective(lView, tNode, directive, def, i - start);
+            attachPatchData(directive, lView);
+            if (initialInputs !== null) {
+                setInputsFromAttrs(lView, i - start, directive, def, tNode, initialInputs);
+            }
+            if (isComponent) {
+                var componentView = getComponentLViewByIndex(tNode.index, lView);
+                componentView[CONTEXT] = directive;
+            }
         }
     }
     function invokeDirectivesHostBindings(tView, viewData, tNode) {
@@ -61390,30 +61413,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
         var providerCount = tView.data.length - providerStartIndex;
         (tView.expandoInstructions || (tView.expandoInstructions = [])).push(elementIndex, providerCount, directiveCount);
-    }
-    /**
-     * Process a directive on the current node after its creation.
-     */
-    function postProcessDirective(lView, hostTNode, directive, def, directiveDefIdx) {
-        postProcessBaseDirective(lView, hostTNode, directive);
-        if (hostTNode.initialInputs !== null) {
-            setInputsFromAttrs(lView, directiveDefIdx, directive, def, hostTNode);
-        }
-        if (isComponentDef(def)) {
-            var componentView = getComponentLViewByIndex(hostTNode.index, lView);
-            componentView[CONTEXT] = directive;
-        }
-    }
-    /**
-     * A lighter version of postProcessDirective() that is used for the root component.
-     */
-    function postProcessBaseDirective(lView, hostTNode, directive) {
-        ngDevMode && assertLessThanOrEqual(getBindingIndex(), lView[TVIEW].bindingStartIndex, 'directives should be created before any bindings');
-        attachPatchData(directive, lView);
-        var native = getNativeByTNode(hostTNode, lView);
-        if (native) {
-            attachPatchData(native, lView);
-        }
     }
     /**
     * Matches the current node against all available selectors.
@@ -61549,8 +61548,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param def The directive def that contains the list of inputs
      * @param tNode The static data for this node
      */
-    function setInputsFromAttrs(lView, directiveIndex, instance, def, tNode) {
-        var initialInputData = tNode.initialInputs;
+    function setInputsFromAttrs(lView, directiveIndex, instance, def, tNode, initialInputData) {
         var initialInputs = initialInputData[directiveIndex];
         if (initialInputs !== null) {
             var setInput = def.setInput;
@@ -70797,7 +70795,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+11.sha-4452d6d.with-local-changes');
 
     /**
      * @license
@@ -76102,7 +76100,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -84335,7 +84333,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+11.sha-4452d6d.with-local-changes');
 
     /**
      * @license
