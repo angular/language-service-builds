@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+7.sha-1d141a8.with-local-changes
+ * @license Angular v9.0.0-rc.0+4.sha-66ab701.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18990,7 +18990,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+7.sha-1d141a8.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
 
     /**
      * @license
@@ -33600,7 +33600,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+7.sha-1d141a8.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
 
     /**
      * @license
@@ -35686,18 +35686,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 symbol.declarations.length !== 1) {
                 return null;
             }
+            // Ignore decorators that are defined locally (not imported).
             var decl = symbol.declarations[0];
-            var importDecl = getContainingImportDeclaration(decl);
-            // Ignore declarations that are defined locally (not imported).
-            if (importDecl === null) {
+            if (!ts.isImportSpecifier(decl)) {
                 return null;
             }
+            // Walk back from the specifier to find the declaration, which carries the module specifier.
+            var importDecl = decl.parent.parent.parent;
             // The module specifier is guaranteed to be a string literal, so this should always pass.
             if (!ts.isStringLiteral(importDecl.moduleSpecifier)) {
                 // Not allowed to happen in TypeScript ASTs.
                 return null;
             }
-            return { from: importDecl.moduleSpecifier.text, name: getExportedName(decl, id) };
+            // Read the module specifier.
+            var from = importDecl.moduleSpecifier.text;
+            // Compute the name by which the decorator was exported, not imported.
+            var name = (decl.propertyName !== undefined ? decl.propertyName : decl.name).text;
+            return { from: from, name: name };
         };
         /**
          * Try to get the import info for this identifier as though it is a namespaced import.
@@ -36010,24 +36015,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             propertyAccess = propertyAccess.expression;
         }
         return ts.isIdentifier(propertyAccess.expression) ? propertyAccess.expression : null;
-    }
-    /**
-     * Return the ImportDeclaration for the given `node` if it is either an `ImportSpecifier` or a
-     * `NamespaceImport`. If not return `null`.
-     */
-    function getContainingImportDeclaration(node) {
-        return ts.isImportSpecifier(node) ? node.parent.parent.parent :
-            ts.isNamespaceImport(node) ? node.parent.parent : null;
-    }
-    /**
-     * Compute the name by which the `decl` was exported, not imported.
-     * If no such declaration can be found (e.g. it is a namespace import)
-     * then fallback to the `originalId`.
-     */
-    function getExportedName(decl, originalId) {
-        return ts.isImportSpecifier(decl) ?
-            (decl.propertyName !== undefined ? decl.propertyName : decl.name).text :
-            originalId.text;
     }
 
     /**
@@ -70810,7 +70797,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+7.sha-1d141a8.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
 
     /**
      * @license
@@ -84348,7 +84335,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+7.sha-1d141a8.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+4.sha-66ab701.with-local-changes');
 
     /**
      * @license
