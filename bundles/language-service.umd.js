@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+7.sha-a0f6b58.with-local-changes
+ * @license Angular v9.0.0-rc.0+14.sha-7dbf716.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19005,7 +19005,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+7.sha-a0f6b58.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+14.sha-7dbf716.with-local-changes');
 
     /**
      * @license
@@ -33615,7 +33615,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+7.sha-a0f6b58.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+14.sha-7dbf716.with-local-changes');
 
     /**
      * @license
@@ -53213,11 +53213,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             throwError(msg);
         }
     }
-    function assertLessThanOrEqual(actual, expected, msg) {
-        if (actual > expected) {
-            throwError(msg);
-        }
-    }
     function assertGreaterThan(actual, expected, msg) {
         if (actual <= expected) {
             throwError(msg);
@@ -53890,9 +53885,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function setCheckNoChangesMode(mode) {
         instructionState.checkNoChangesMode = mode;
-    }
-    function getBindingIndex() {
-        return instructionState.lFrame.bindingIndex;
     }
     function setBindingIndex(value) {
         return instructionState.lFrame.bindingIndex = value;
@@ -58146,16 +58138,20 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * Instantiate a root component.
      */
-    function instantiateRootComponent(tView, viewData, def) {
+    function instantiateRootComponent(tView, lView, def) {
         var rootTNode = getPreviousOrParentTNode();
         if (tView.firstTemplatePass) {
             if (def.providersResolver)
                 def.providersResolver(def);
             generateExpandoInstructionBlock(tView, rootTNode, 1);
-            baseResolveDirective(tView, viewData, def);
+            baseResolveDirective(tView, lView, def);
         }
-        var directive = getNodeInjectable(tView.data, viewData, viewData.length - 1, rootTNode);
-        postProcessBaseDirective(viewData, rootTNode, directive);
+        var directive = getNodeInjectable(tView.data, lView, lView.length - 1, rootTNode);
+        attachPatchData(directive, lView);
+        var native = getNativeByTNode(rootTNode, lView);
+        if (native) {
+            attachPatchData(native, lView);
+        }
         return directive;
     }
     function invokeHostBindingsInCreationMode(def, expando, directive, tNode, firstTemplatePass) {
@@ -58184,17 +58180,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
         var providerCount = tView.data.length - providerStartIndex;
         (tView.expandoInstructions || (tView.expandoInstructions = [])).push(elementIndex, providerCount, directiveCount);
-    }
-    /**
-     * A lighter version of postProcessDirective() that is used for the root component.
-     */
-    function postProcessBaseDirective(lView, hostTNode, directive) {
-        ngDevMode && assertLessThanOrEqual(getBindingIndex(), lView[TVIEW].bindingStartIndex, 'directives should be created before any bindings');
-        attachPatchData(directive, lView);
-        var native = getNativeByTNode(hostTNode, lView);
-        if (native) {
-            attachPatchData(native, lView);
-        }
     }
     /**
      * Marks a given TNode as a component's host. This consists of:
@@ -62472,7 +62457,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+7.sha-a0f6b58.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+14.sha-7dbf716.with-local-changes');
 
     /**
      * @license
@@ -73083,7 +73068,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+7.sha-a0f6b58.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+14.sha-7dbf716.with-local-changes');
 
     /**
      * @license
