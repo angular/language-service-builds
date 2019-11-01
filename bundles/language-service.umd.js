@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+19.sha-ce30888.with-local-changes
+ * @license Angular v9.0.0-rc.0+21.sha-31116f0c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18994,7 +18994,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+21.sha-31116f0c.with-local-changes');
 
     /**
      * @license
@@ -33605,7 +33605,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+21.sha-31116f0c.with-local-changes');
 
     /**
      * @license
@@ -51944,26 +51944,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param ast contains HTML and template AST
      */
     function getTemplateDiagnostics(ast) {
-        var results = [];
         var parseErrors = ast.parseErrors, templateAst = ast.templateAst, htmlAst = ast.htmlAst, template = ast.template;
-        if (parseErrors) {
-            results.push.apply(results, __spread(parseErrors.map(function (e) {
+        if (parseErrors && parseErrors.length) {
+            return parseErrors.map(function (e) {
                 return {
                     kind: DiagnosticKind$1.Error,
                     span: offsetSpan$1(spanOf$2(e.span), template.span.start),
                     message: e.msg,
                 };
-            })));
+            });
         }
-        var expressionDiagnostics = getTemplateExpressionDiagnostics({
+        return getTemplateExpressionDiagnostics({
             templateAst: templateAst,
             htmlAst: htmlAst,
             offset: template.span.start,
             query: template.query,
             members: template.members,
         });
-        results.push.apply(results, __spread(expressionDiagnostics));
-        return results;
     }
     /**
      * Generate an error message that indicates a directive is not part of any
@@ -70879,7 +70876,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+21.sha-31116f0c.with-local-changes');
 
     /**
      * @license
@@ -84417,7 +84414,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+21.sha-31116f0c.with-local-changes');
 
     /**
      * @license
