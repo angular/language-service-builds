@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+14.sha-72eba77.with-local-changes
+ * @license Angular v9.0.0-rc.0+16.sha-38758d8.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -6242,11 +6242,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }(AST));
     var BindingPipe = /** @class */ (function (_super) {
         __extends(BindingPipe, _super);
-        function BindingPipe(span, sourceSpan, exp, name, args) {
+        function BindingPipe(span, sourceSpan, exp, name, args, nameSpan) {
             var _this = _super.call(this, span, sourceSpan) || this;
             _this.exp = exp;
             _this.name = name;
             _this.args = args;
+            _this.nameSpan = nameSpan;
             return _this;
         }
         BindingPipe.prototype.visit = function (visitor, context) {
@@ -6589,7 +6590,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return new Conditional(ast.span, ast.sourceSpan, ast.condition.visit(this), ast.trueExp.visit(this), ast.falseExp.visit(this));
         };
         AstTransformer.prototype.visitPipe = function (ast, context) {
-            return new BindingPipe(ast.span, ast.sourceSpan, ast.exp.visit(this), ast.name, this.visitAll(ast.args));
+            return new BindingPipe(ast.span, ast.sourceSpan, ast.exp.visit(this), ast.name, this.visitAll(ast.args), ast.nameSpan);
         };
         AstTransformer.prototype.visitKeyedRead = function (ast, context) {
             return new KeyedRead(ast.span, ast.sourceSpan, ast.obj.visit(this), ast.key.visit(this));
@@ -6720,7 +6721,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var exp = ast.exp.visit(this);
             var args = this.visitAll(ast.args);
             if (exp !== ast.exp || args !== ast.args) {
-                return new BindingPipe(ast.span, ast.sourceSpan, exp, ast.name, args);
+                return new BindingPipe(ast.span, ast.sourceSpan, exp, ast.name, args, ast.nameSpan);
             }
             return ast;
         };
@@ -7178,13 +7179,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     this.error('Cannot have a pipe in an action expression');
                 }
                 do {
+                    var nameStart = this.inputIndex;
                     var name_1 = this.expectIdentifierOrKeyword();
+                    var nameSpan = this.span(nameStart);
                     var args = [];
                     while (this.optionalCharacter($COLON)) {
                         args.push(this.parseExpression());
                     }
                     var start = result.span.start;
-                    result = new BindingPipe(this.span(start), this.sourceSpan(start), result, name_1, args);
+                    result =
+                        new BindingPipe(this.span(start), this.sourceSpan(start), result, name_1, args, nameSpan);
                 } while (this.optionalOperator('|'));
             }
             return result;
@@ -19005,7 +19009,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+14.sha-72eba77.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+16.sha-38758d8.with-local-changes');
 
     /**
      * @license
@@ -27795,14 +27799,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     dirTarget = directives.find(function (dir) { return dir.isComponent; }) || null;
                 }
                 else {
-                    // This is a reference to a directive exported via exportAs. One should exist.
+                    // This should be a reference to a directive exported via exportAs.
                     dirTarget =
                         directives.find(function (dir) { return dir.exportAs !== null && dir.exportAs.some(function (value) { return value === ref.value; }); }) ||
                             null;
-                    // Check if a matching directive was found, and error if it wasn't.
+                    // Check if a matching directive was found.
                     if (dirTarget === null) {
-                        // TODO(alxhub): Return an error value here that can be used for template validation.
-                        throw new Error("Assertion error: failed to find directive with exportAs: " + ref.value);
+                        // No matching directive was found - this reference points to an unknown target. Leave it
+                        // unmapped.
+                        return;
                     }
                 }
                 if (dirTarget !== null) {
@@ -33615,7 +33620,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+14.sha-72eba77.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+16.sha-38758d8.with-local-changes');
 
     /**
      * @license
@@ -34403,6 +34408,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * An element's attribute name failed validation against the DOM schema.
          */
         ErrorCode[ErrorCode["SCHEMA_INVALID_ATTRIBUTE"] = 8002] = "SCHEMA_INVALID_ATTRIBUTE";
+        /**
+         * No matching directive was found for a `#ref="target"` expression.
+         */
+        ErrorCode[ErrorCode["MISSING_REFERENCE_TARGET"] = 8003] = "MISSING_REFERENCE_TARGET";
+        /**
+         * No matching pipe was found for a
+         */
+        ErrorCode[ErrorCode["MISSING_PIPE"] = 8004] = "MISSING_PIPE";
     })(ErrorCode || (ErrorCode = {}));
     function ngErrorCode(code) {
         return parseInt('-99' + code);
@@ -44220,19 +44233,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Translates a `ParseSpan` into an `AbsoluteSpan` by incorporating the location information that
      * the `ParseSourceSpan` represents.
      */
     function toAbsoluteSpan(span, sourceSpan) {
         var offset = sourceSpan.start.offset;
         return { start: span.start + offset, end: span.end + offset };
+    }
+    function absoluteSourceSpanToSourceLocation(id, span) {
+        return __assign({ id: id }, span);
     }
     /**
      * Wraps the node in parenthesis such that inserted span comments become attached to the proper
@@ -45126,6 +45135,42 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var OutOfBandDiagnosticRecorderImpl = /** @class */ (function () {
+        function OutOfBandDiagnosticRecorderImpl(resolver) {
+            this.resolver = resolver;
+            this._diagnostics = [];
+        }
+        Object.defineProperty(OutOfBandDiagnosticRecorderImpl.prototype, "diagnostics", {
+            get: function () { return this._diagnostics; },
+            enumerable: true,
+            configurable: true
+        });
+        OutOfBandDiagnosticRecorderImpl.prototype.missingReferenceTarget = function (templateId, ref) {
+            var mapping = this.resolver.getSourceMapping(templateId);
+            var value = ref.value.trim();
+            var errorMsg = "No directive found with exportAs '" + value + "'.";
+            this._diagnostics.push(makeTemplateDiagnostic(mapping, ref.valueSpan || ref.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
+        };
+        OutOfBandDiagnosticRecorderImpl.prototype.missingPipe = function (templateId, ast, absSpan) {
+            var mapping = this.resolver.getSourceMapping(templateId);
+            var errorMsg = "No pipe found with name '" + ast.name + "'.";
+            var location = absoluteSourceSpanToSourceLocation(templateId, absSpan);
+            var sourceSpan = this.resolver.sourceLocationToSpan(location);
+            if (sourceSpan === null) {
+                throw new Error("Assertion failure: no SourceLocation found for usage of pipe '" + ast.name + "'.");
+            }
+            this._diagnostics.push(makeTemplateDiagnostic(mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
+        };
+        return OutOfBandDiagnosticRecorderImpl;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var LF_CHAR = 10;
     var CR_CHAR = 13;
     var LINE_SEP_CHAR = 8232;
@@ -45492,12 +45537,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * When passed through TypeScript's TypeChecker, type errors that arise within the type check block
      * function indicate issues in the template itself.
      *
-     * @param node the TypeScript node for the component class.
+     * As a side effect of generating a TCB for the component, `ts.Diagnostic`s may also be produced
+     * directly for issues within the template which are identified during generation. These issues are
+     * recorded in either the `domSchemaChecker` (which checks usage of DOM elements and bindings) as
+     * well as the `oobRecorder` (which records errors when the type-checking code generator is unable
+     * to sufficiently understand a template).
+     *
+     * @param env an `Environment` into which type-checking code will be generated.
+     * @param ref a `Reference` to the component class which should be type-checked.
+     * @param name a `ts.Identifier` to use for the generated `ts.FunctionDeclaration`.
      * @param meta metadata about the component's template and the function being generated.
-     * @param importManager an `ImportManager` for the file into which the TCB will be written.
+     * @param domSchemaChecker used to check and record errors regarding improper usage of DOM elements
+     * and bindings.
+     * @param oobRecorder used to record errors regarding template elements which could not be correctly
+     * translated into types during TCB generation.
      */
-    function generateTypeCheckBlock(env, ref, name, meta, domSchemaChecker) {
-        var tcb = new Context$1(env, domSchemaChecker, meta.id, meta.boundTarget, meta.pipes, meta.schemas);
+    function generateTypeCheckBlock(env, ref, name, meta, domSchemaChecker, oobRecorder) {
+        var tcb = new Context$1(env, domSchemaChecker, oobRecorder, meta.id, meta.boundTarget, meta.pipes, meta.schemas);
         var scope = Scope$1.forNodes(tcb, null, tcb.boundTarget.target.template);
         var ctxRawType = env.referenceType(ref);
         if (!ts.isTypeReferenceNode(ctxRawType)) {
@@ -46091,9 +46147,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * also contains the template metadata itself.
      */
     var Context$1 = /** @class */ (function () {
-        function Context(env, domSchemaChecker, id, boundTarget, pipes, schemas) {
+        function Context(env, domSchemaChecker, oobRecorder, id, boundTarget, pipes, schemas) {
             this.env = env;
             this.domSchemaChecker = domSchemaChecker;
+            this.oobRecorder = oobRecorder;
             this.id = id;
             this.boundTarget = boundTarget;
             this.pipes = pipes;
@@ -46109,7 +46166,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Context.prototype.allocateId = function () { return ts.createIdentifier("_t" + this.nextId++); };
         Context.prototype.getPipeByName = function (name) {
             if (!this.pipes.has(name)) {
-                throw new Error("Missing pipe: " + name);
+                return null;
             }
             return this.env.pipeInst(this.pipes.get(name));
         };
@@ -46349,6 +46406,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     }
                     finally { if (e_9) throw e_9.error; }
                 }
+                this.checkReferencesOfNode(node);
             }
             else if (node instanceof Template) {
                 // Template children are rendered in a child scope.
@@ -46359,13 +46417,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     this.templateCtxOpMap.set(node, ctxIndex);
                     this.opQueue.push(new TcbTemplateBodyOp(this.tcb, this, node));
                 }
+                this.checkReferencesOfNode(node);
             }
             else if (node instanceof BoundText) {
                 this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, node));
             }
         };
+        Scope.prototype.checkReferencesOfNode = function (node) {
+            var e_10, _a;
+            try {
+                for (var _b = __values(node.references), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var ref = _c.value;
+                    if (this.tcb.boundTarget.getReferenceTarget(ref) === null) {
+                        this.tcb.oobRecorder.missingReferenceTarget(this.tcb.id, ref);
+                    }
+                }
+            }
+            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_10) throw e_10.error; }
+            }
+        };
         Scope.prototype.appendDirectivesAndInputsOfNode = function (node) {
-            var e_10, _a, e_11, _b, e_12, _c;
+            var e_11, _a, e_12, _b, e_13, _c;
             // Collect all the inputs on the element.
             var claimedInputs = new Set();
             var directives = this.tcb.boundTarget.getDirectivesOfNode(node);
@@ -46386,12 +46463,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     dirMap.set(dir, dirIndex);
                 }
             }
-            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+            catch (e_11_1) { e_11 = { error: e_11_1 }; }
             finally {
                 try {
                     if (directives_2_1 && !directives_2_1.done && (_a = directives_2.return)) _a.call(directives_2);
                 }
-                finally { if (e_10) throw e_10.error; }
+                finally { if (e_11) throw e_11.error; }
             }
             this.directiveOpMap.set(node, dirMap);
             // After expanding the directives, we might need to queue an operation to check any unclaimed
@@ -46402,27 +46479,27 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     for (var directives_3 = __values(directives), directives_3_1 = directives_3.next(); !directives_3_1.done; directives_3_1 = directives_3.next()) {
                         var dir = directives_3_1.value;
                         try {
-                            for (var _d = (e_12 = void 0, __values(Object.keys(dir.inputs))), _e = _d.next(); !_e.done; _e = _d.next()) {
+                            for (var _d = (e_13 = void 0, __values(Object.keys(dir.inputs))), _e = _d.next(); !_e.done; _e = _d.next()) {
                                 var fieldName = _e.value;
                                 var value = dir.inputs[fieldName];
                                 claimedInputs.add(Array.isArray(value) ? value[0] : value);
                             }
                         }
-                        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+                        catch (e_13_1) { e_13 = { error: e_13_1 }; }
                         finally {
                             try {
                                 if (_e && !_e.done && (_c = _d.return)) _c.call(_d);
                             }
-                            finally { if (e_12) throw e_12.error; }
+                            finally { if (e_13) throw e_13.error; }
                         }
                     }
                 }
-                catch (e_11_1) { e_11 = { error: e_11_1 }; }
+                catch (e_12_1) { e_12 = { error: e_12_1 }; }
                 finally {
                     try {
                         if (directives_3_1 && !directives_3_1.done && (_b = directives_3.return)) _b.call(directives_3);
                     }
-                    finally { if (e_11) throw e_11.error; }
+                    finally { if (e_12) throw e_12.error; }
                 }
                 this.opQueue.push(new TcbUnclaimedInputsOp(this.tcb, this, node, claimedInputs));
                 // If there are no directives which match this element, then it's a "plain" DOM element (or a
@@ -46434,7 +46511,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         };
         Scope.prototype.appendOutputsOfNode = function (node) {
-            var e_13, _a, e_14, _b, e_15, _c;
+            var e_14, _a, e_15, _b, e_16, _c;
             // Collect all the outputs on the element.
             var claimedOutputs = new Set();
             var directives = this.tcb.boundTarget.getDirectivesOfNode(node);
@@ -46453,12 +46530,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     this.opQueue.push(new TcbDirectiveOutputsOp(this.tcb, this, node, dir));
                 }
             }
-            catch (e_13_1) { e_13 = { error: e_13_1 }; }
+            catch (e_14_1) { e_14 = { error: e_14_1 }; }
             finally {
                 try {
                     if (directives_4_1 && !directives_4_1.done && (_a = directives_4.return)) _a.call(directives_4);
                 }
-                finally { if (e_13) throw e_13.error; }
+                finally { if (e_14) throw e_14.error; }
             }
             // After expanding the directives, we might need to queue an operation to check any unclaimed
             // outputs.
@@ -46468,26 +46545,26 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     for (var directives_5 = __values(directives), directives_5_1 = directives_5.next(); !directives_5_1.done; directives_5_1 = directives_5.next()) {
                         var dir = directives_5_1.value;
                         try {
-                            for (var _d = (e_15 = void 0, __values(Object.keys(dir.outputs))), _e = _d.next(); !_e.done; _e = _d.next()) {
+                            for (var _d = (e_16 = void 0, __values(Object.keys(dir.outputs))), _e = _d.next(); !_e.done; _e = _d.next()) {
                                 var outputField = _e.value;
                                 claimedOutputs.add(dir.outputs[outputField]);
                             }
                         }
-                        catch (e_15_1) { e_15 = { error: e_15_1 }; }
+                        catch (e_16_1) { e_16 = { error: e_16_1 }; }
                         finally {
                             try {
                                 if (_e && !_e.done && (_c = _d.return)) _c.call(_d);
                             }
-                            finally { if (e_15) throw e_15.error; }
+                            finally { if (e_16) throw e_16.error; }
                         }
                     }
                 }
-                catch (e_14_1) { e_14 = { error: e_14_1 }; }
+                catch (e_15_1) { e_15 = { error: e_15_1 }; }
                 finally {
                     try {
                         if (directives_5_1 && !directives_5_1.done && (_b = directives_5.return)) _b.call(directives_5);
                     }
-                    finally { if (e_14) throw e_14.error; }
+                    finally { if (e_15) throw e_15.error; }
                 }
                 this.opQueue.push(new TcbUnclaimedOutputsOp(this.tcb, this, node, claimedOutputs));
             }
@@ -46573,6 +46650,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var pipe = void 0;
                 if (this.tcb.env.config.checkTypeOfPipes) {
                     pipe = this.tcb.getPipeByName(ast.name);
+                    if (pipe === null) {
+                        // No pipe by that name exists in scope. Record this as an error.
+                        var nameAbsoluteSpan = toAbsoluteSpan(ast.nameSpan, this.sourceSpan);
+                        this.tcb.oobRecorder.missingPipe(this.tcb.id, ast, nameAbsoluteSpan);
+                        // Return an 'any' value to at least allow the rest of the expression to be checked.
+                        pipe = NULL_AS_ANY;
+                    }
                 }
                 else {
                     pipe = ts.createParen(ts.createAsExpression(ts.createNull(), ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)));
@@ -46629,7 +46713,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             else if (binding instanceof Reference) {
                 var target = this.tcb.boundTarget.getReferenceTarget(binding);
                 if (target === null) {
-                    throw new Error("Unbound reference? " + binding.name);
+                    // This reference is unbound. Traversal of the `TmplAstReference` itself should have
+                    // recorded the error in the `OutOfBandDiagnosticRecorder`.
+                    // Still check the rest of the expression if possible by using an `any` value.
+                    return NULL_AS_ANY;
                 }
                 // The reference is either to an element, an <ng-template> node, or to a directive on an
                 // element or template.
@@ -46712,7 +46799,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* argumentsArray */ [ts.createObjectLiteral(members)]);
     }
     function tcbGetDirectiveInputs(el, dir, tcb, scope) {
-        var e_16, _a;
+        var e_17, _a;
         var directiveInputs = [];
         // `dir.inputs` is an object map of field names on the directive class to property names.
         // This is backwards from what's needed to match bindings - a map of properties to field names
@@ -46738,12 +46825,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 directiveInputs.push({ type: 'unset', field: field });
             }
         }
-        catch (e_16_1) { e_16 = { error: e_16_1 }; }
+        catch (e_17_1) { e_17 = { error: e_17_1 }; }
         finally {
             try {
                 if (unsetFields_1_1 && !unsetFields_1_1.done && (_a = unsetFields_1.return)) _a.call(unsetFields_1);
             }
-            finally { if (e_16) throw e_16.error; }
+            finally { if (e_17) throw e_17.error; }
         }
         return directiveInputs;
         /**
@@ -46885,9 +46972,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             _this.tcbStatements = [];
             return _this;
         }
-        TypeCheckFile.prototype.addTypeCheckBlock = function (ref, meta, domSchemaChecker) {
+        TypeCheckFile.prototype.addTypeCheckBlock = function (ref, meta, domSchemaChecker, oobRecorder) {
             var fnId = ts.createIdentifier("_tcb" + this.nextTcbId++);
-            var fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker);
+            var fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker, oobRecorder);
             this.tcbStatements.push(fn);
         };
         TypeCheckFile.prototype.render = function () {
@@ -46995,6 +47082,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.typeCtorPending = new Set();
             this.sourceManager = new TcbSourceManager();
             this.domSchemaChecker = new RegistryDomSchemaChecker(this.sourceManager);
+            this.oobRecorder = new OutOfBandDiagnosticRecorderImpl(this.sourceManager);
             this.typeCheckFile = new TypeCheckFile(typeCheckFilePath, this.config, this.refEmitter);
         }
         /**
@@ -47047,7 +47135,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             else {
                 // The class can be type-checked externally as normal.
-                this.typeCheckFile.addTypeCheckBlock(ref, tcbMetadata, this.domSchemaChecker);
+                this.typeCheckFile.addTypeCheckBlock(ref, tcbMetadata, this.domSchemaChecker, this.oobRecorder);
             }
         };
         /**
@@ -47173,6 +47261,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_3) throw e_3.error; }
             }
             diagnostics.push.apply(diagnostics, __spread(this.domSchemaChecker.diagnostics));
+            diagnostics.push.apply(diagnostics, __spread(this.oobRecorder.diagnostics));
             return {
                 diagnostics: diagnostics,
                 program: typeCheckProgram,
@@ -47184,7 +47273,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 this.opMap.set(sf, []);
             }
             var ops = this.opMap.get(sf);
-            ops.push(new TcbOp$1(ref, tcbMeta, this.config, this.domSchemaChecker));
+            ops.push(new TcbOp$1(ref, tcbMeta, this.config, this.domSchemaChecker, this.oobRecorder));
         };
         return TypeCheckContext;
     }());
@@ -47192,11 +47281,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * A type check block operation which produces type check code for a particular component.
      */
     var TcbOp$1 = /** @class */ (function () {
-        function TcbOp(ref, meta, config, domSchemaChecker) {
+        function TcbOp(ref, meta, config, domSchemaChecker, oobRecorder) {
             this.ref = ref;
             this.meta = meta;
             this.config = config;
             this.domSchemaChecker = domSchemaChecker;
+            this.oobRecorder = oobRecorder;
         }
         Object.defineProperty(TcbOp.prototype, "splitPoint", {
             /**
@@ -47209,7 +47299,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         TcbOp.prototype.execute = function (im, sf, refEmitter, printer) {
             var env = new Environment(this.config, im, refEmitter, sf);
             var fnName = ts.createIdentifier("_tcb_" + this.ref.node.pos);
-            var fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta, this.domSchemaChecker);
+            var fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta, this.domSchemaChecker, this.oobRecorder);
             return printer.printNode(ts.EmitHint.Unspecified, fn, sf);
         };
         return TcbOp;
@@ -62457,7 +62547,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+14.sha-72eba77.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+16.sha-38758d8.with-local-changes');
 
     /**
      * @license
@@ -73068,7 +73158,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+14.sha-72eba77.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+16.sha-38758d8.with-local-changes');
 
     /**
      * @license
