@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+18.sha-4d4b527.with-local-changes
+ * @license Angular v9.0.0-rc.0+19.sha-ce30888.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18994,7 +18994,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+18.sha-4d4b527.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
 
     /**
      * @license
@@ -33605,7 +33605,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+18.sha-4d4b527.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
 
     /**
      * @license
@@ -36545,8 +36545,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         DynamicValue.fromExternalReference = function (node, ref) {
             return new DynamicValue(node, ref, 2 /* EXTERNAL_REFERENCE */);
         };
-        DynamicValue.fromUnknownExpressionType = function (node) {
-            return new DynamicValue(node, undefined, 3 /* UNKNOWN_EXPRESSION_TYPE */);
+        DynamicValue.fromUnsupportedSyntax = function (node) {
+            return new DynamicValue(node, undefined, 3 /* UNSUPPORTED_SYNTAX */);
         };
         DynamicValue.fromUnknownIdentifier = function (node) {
             return new DynamicValue(node, undefined, 4 /* UNKNOWN_IDENTIFIER */);
@@ -36566,8 +36566,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         DynamicValue.prototype.isFromExternalReference = function () {
             return this.code === 2 /* EXTERNAL_REFERENCE */;
         };
-        DynamicValue.prototype.isFromUnknownExpressionType = function () {
-            return this.code === 3 /* UNKNOWN_EXPRESSION_TYPE */;
+        DynamicValue.prototype.isFromUnsupportedSyntax = function () {
+            return this.code === 3 /* UNSUPPORTED_SYNTAX */;
         };
         DynamicValue.prototype.isFromUnknownIdentifier = function () {
             return this.code === 4 /* UNKNOWN_IDENTIFIER */;
@@ -36827,7 +36827,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 result = this.visitDeclaration(node, context);
             }
             else {
-                return DynamicValue.fromUnknownExpressionType(node);
+                return DynamicValue.fromUnsupportedSyntax(node);
             }
             if (result instanceof DynamicValue && result.node !== node) {
                 return DynamicValue.fromDynamicInput(node, result);
@@ -36874,7 +36874,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         return DynamicValue.fromDynamicInput(node, spread);
                     }
                     else if (!(spread instanceof Map)) {
-                        throw new Error("Unexpected value in spread assignment: " + spread);
+                        return DynamicValue.fromDynamicInput(node, DynamicValue.fromInvalidExpressionType(property, spread));
                     }
                     spread.forEach(function (value, key) { return map.set(key, value); });
                 }
@@ -36989,9 +36989,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         StaticInterpreter.prototype.visitElementAccessExpression = function (node, context) {
             var lhs = this.visitExpression(node.expression, context);
-            if (node.argumentExpression === undefined) {
-                throw new Error("Expected argument in ElementAccessExpression");
-            }
             if (lhs instanceof DynamicValue) {
                 return DynamicValue.fromDynamicInput(node, lhs);
             }
@@ -37000,7 +36997,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 return DynamicValue.fromDynamicInput(node, rhs);
             }
             if (typeof rhs !== 'string' && typeof rhs !== 'number') {
-                throw new Error("ElementAccessExpression index should be string or number, got " + typeof rhs + ": " + rhs);
+                return DynamicValue.fromInvalidExpressionType(node, rhs);
             }
             return this.accessHelper(node, lhs, rhs, context);
         };
@@ -37052,10 +37049,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     return new ArrayConcatBuiltinFn(node, lhs);
                 }
                 if (typeof rhs !== 'number' || !Number.isInteger(rhs)) {
-                    return DynamicValue.fromUnknown(node);
-                }
-                if (rhs < 0 || rhs >= lhs.length) {
-                    throw new Error("Index out of bounds: " + rhs + " vs " + lhs.length);
+                    return DynamicValue.fromInvalidExpressionType(node, rhs);
                 }
                 return lhs[rhs];
             }
@@ -37172,7 +37166,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         StaticInterpreter.prototype.visitPrefixUnaryExpression = function (node, context) {
             var operatorKind = node.operator;
             if (!UNARY_OPERATORS.has(operatorKind)) {
-                throw new Error("Unsupported prefix unary operator: " + ts.SyntaxKind[operatorKind]);
+                return DynamicValue.fromUnsupportedSyntax(node);
             }
             var op = UNARY_OPERATORS.get(operatorKind);
             var value = this.visitExpression(node.operand, context);
@@ -37186,13 +37180,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         StaticInterpreter.prototype.visitBinaryExpression = function (node, context) {
             var tokenKind = node.operatorToken.kind;
             if (!BINARY_OPERATORS.has(tokenKind)) {
-                throw new Error("Unsupported binary operator: " + ts.SyntaxKind[tokenKind]);
+                return DynamicValue.fromUnsupportedSyntax(node);
             }
             var opRecord = BINARY_OPERATORS.get(tokenKind);
             var lhs, rhs;
             if (opRecord.literal) {
-                lhs = literal$1(this.visitExpression(node.left, context));
-                rhs = literal$1(this.visitExpression(node.right, context));
+                lhs = literal$1(this.visitExpression(node.left, context), node.left);
+                rhs = literal$1(this.visitExpression(node.right, context), node.right);
             }
             else {
                 lhs = this.visitExpression(node.left, context);
@@ -37237,10 +37231,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         StaticInterpreter.prototype.visitSpreadElement = function (node, context) {
             var spread = this.visitExpression(node.expression, context);
             if (spread instanceof DynamicValue) {
-                return [DynamicValue.fromDynamicInput(node.expression, spread)];
+                return [DynamicValue.fromDynamicInput(node, spread)];
             }
             else if (!Array.isArray(spread)) {
-                throw new Error("Unexpected value in spread expression: " + spread);
+                return [DynamicValue.fromInvalidExpressionType(node, spread)];
             }
             else {
                 return spread;
@@ -37264,12 +37258,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return ts.isFunctionDeclaration(ref.node) || ts.isMethodDeclaration(ref.node) ||
             ts.isFunctionExpression(ref.node);
     }
-    function literal$1(value) {
+    function literal$1(value, node) {
         if (value instanceof DynamicValue || value === null || value === undefined ||
             typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
             return value;
         }
-        throw new Error("Value " + value + " is not literal and cannot be used in this context.");
+        return DynamicValue.fromInvalidExpressionType(node, value);
     }
     function isVariableDeclarationDeclared(node) {
         if (node.parent === undefined || !ts.isVariableDeclarationList(node.parent)) {
@@ -70885,7 +70879,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+18.sha-4d4b527.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
 
     /**
      * @license
@@ -84423,7 +84417,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+18.sha-4d4b527.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+19.sha-ce30888.with-local-changes');
 
     /**
      * @license
