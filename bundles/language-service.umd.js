@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+34.sha-5437e2d.with-local-changes
+ * @license Angular v9.0.0-rc.0+35.sha-66725b7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16875,9 +16875,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             });
             // add attributes for directive and projection matching purposes
             attributes.push.apply(attributes, __spread(this.prepareNonRenderAttrs(allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs, ngProjectAsAttr)));
-            parameters.push(this.addConstants(attributes));
+            parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
-            parameters.push(this.prepareRefsParameter(element.references));
+            var refs = this.prepareRefsArray(element.references);
+            parameters.push(this.addToConsts(refs));
             var wasInNamespace = this._namespace;
             var currentNamespace = this.getNamespaceInstruction(namespaceKey);
             // If the namespace is changing now, include an instruction to change it
@@ -17104,10 +17105,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var attrsExprs = [];
             template.attributes.forEach(function (a) { attrsExprs.push(asLiteral(a.name), asLiteral(a.value)); });
             attrsExprs.push.apply(attrsExprs, __spread(this.prepareNonRenderAttrs(template.inputs, template.outputs, undefined, template.templateAttrs)));
-            parameters.push(this.addConstants(attrsExprs));
+            parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
-                parameters.push(this.prepareRefsParameter(template.references));
+                var refs = this.prepareRefsArray(template.references);
+                parameters.push(this.addToConsts(refs));
                 parameters.push(importExpr(Identifiers$1.templateRefExtractor));
             }
             // Create the template function
@@ -17440,20 +17442,22 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
             return attrExprs;
         };
-        TemplateDefinitionBuilder.prototype.addConstants = function (constExprs) {
-            if (constExprs.length > 0) {
-                var literal$1 = literalArr(constExprs);
-                // Try to reuse a literal that's already in the array, if possible.
-                for (var i = 0; i < this._constants.length; i++) {
-                    if (this._constants[i].isEquivalent(literal$1)) {
-                        return literal(i);
-                    }
-                }
-                return literal(this._constants.push(literal$1) - 1);
+        TemplateDefinitionBuilder.prototype.addToConsts = function (expression) {
+            if (isNull(expression)) {
+                return TYPED_NULL_EXPR;
             }
-            return TYPED_NULL_EXPR;
+            // Try to reuse a literal that's already in the array, if possible.
+            for (var i = 0; i < this._constants.length; i++) {
+                if (this._constants[i].isEquivalent(expression)) {
+                    return literal(i);
+                }
+            }
+            return literal(this._constants.push(expression) - 1);
         };
-        TemplateDefinitionBuilder.prototype.prepareRefsParameter = function (references) {
+        TemplateDefinitionBuilder.prototype.addAttrsToConsts = function (attrs) {
+            return attrs.length > 0 ? this.addToConsts(literalArr(attrs)) : TYPED_NULL_EXPR;
+        };
+        TemplateDefinitionBuilder.prototype.prepareRefsArray = function (references) {
             var _this = this;
             if (!references || references.length === 0) {
                 return TYPED_NULL_EXPR;
@@ -17473,7 +17477,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }, true);
                 return [reference.name, reference.value];
             }));
-            return this.constantPool.getConstLiteral(asLiteral(refsParam), true);
+            return asLiteral(refsParam);
         };
         TemplateDefinitionBuilder.prototype.prepareListenerParameter = function (tagName, outputAst, index) {
             var _this = this;
@@ -19009,7 +19013,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+34.sha-5437e2d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+35.sha-66725b7.with-local-changes');
 
     /**
      * @license
@@ -33620,7 +33624,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+34.sha-5437e2d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+35.sha-66725b7.with-local-changes');
 
     /**
      * @license
@@ -58068,7 +58072,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             typeof pipes === 'function' ? pipes() : pipes, // pipeRegistry: PipeDefList|null,
             null, // firstChild: TNode|null,
             schemas, // schemas: SchemaMetadata[]|null,
-            consts) : // consts: TAttributes[]
+            consts) : // consts: TConstants|null
             {
                 id: viewIndex,
                 blueprint: blueprint,
@@ -62530,7 +62534,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+34.sha-5437e2d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+35.sha-66725b7.with-local-changes');
 
     /**
      * @license
@@ -73141,7 +73145,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+34.sha-5437e2d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+35.sha-66725b7.with-local-changes');
 
     /**
      * @license
