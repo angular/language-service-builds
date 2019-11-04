@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+32.sha-ac9d044.with-local-changes
+ * @license Angular v9.0.0-rc.0+33.sha-c83f501.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18994,7 +18994,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+32.sha-ac9d044.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+33.sha-c83f501.with-local-changes');
 
     /**
      * @license
@@ -33605,7 +33605,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+32.sha-ac9d044.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+33.sha-c83f501.with-local-changes');
 
     /**
      * @license
@@ -61367,10 +61367,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // tsickle.
         ngDevMode && assertFirstTemplatePass(tView);
         if (!getBindingsEnabled())
-            return;
+            return false;
         var directives = findDirectiveMatches(tView, lView, tNode);
         var exportsMap = localRefs ? { '': -1 } : null;
+        var hasDirectives = false;
         if (directives !== null) {
+            hasDirectives = true;
             initNodeFlags(tNode, tView.data.length, directives.length);
             // When the same token is provided by several directives on the same node, some rules apply in
             // the viewEngine:
@@ -61404,6 +61406,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         if (exportsMap)
             cacheMatchingLocalNames(tNode, localRefs, exportsMap);
+        return hasDirectives;
     }
     /**
      * Instantiate all the directives that were previously resolved on the current node.
@@ -67248,7 +67251,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // and `[class]` bindings work for multiple directives.)
         if (tView.firstTemplatePass) {
             ngDevMode && ngDevMode.firstTemplatePass++;
-            resolveDirectives(tView, lView, tNode, localRefs || null);
+            var hasDirectives = resolveDirectives(tView, lView, tNode, localRefs || null);
+            ngDevMode && validateElement(lView, native, tNode, hasDirectives);
             if (tView.queries !== null) {
                 tView.queries.elementStart(tView, tNode);
             }
@@ -67386,6 +67390,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // is applied during creation mode. This is a deviation from VE and should
         // be (Jira Issue = FW-1467).
         setInputsForProperty(lView, stylingInputs, value);
+    }
+    function validateElement(hostView, element, tNode, hasDirectives) {
+        var tagName = tNode.tagName;
+        // If the element matches any directive, it's considered as valid.
+        if (!hasDirectives && tagName !== null) {
+            // The element is unknown if it's an instance of HTMLUnknownElement or it isn't registered
+            // as a custom element. Note that unknown elements with a dash in their name won't be instances
+            // of HTMLUnknownElement in browsers that support web components.
+            var isUnknown = (typeof HTMLUnknownElement === 'function' && element instanceof HTMLUnknownElement) ||
+                (typeof customElements !== 'undefined' && tagName.indexOf('-') > -1 &&
+                    !customElements.get(tagName));
+            if (isUnknown && !matchingSchemas(hostView, tagName)) {
+                var errorMessage = "'" + tagName + "' is not a known element:\n";
+                errorMessage +=
+                    "1. If '" + tagName + "' is an Angular component, then verify that it is part of this module.\n";
+                if (tagName && tagName.indexOf('-') > -1) {
+                    errorMessage +=
+                        "2. If '" + tagName + "' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.";
+                }
+                else {
+                    errorMessage +=
+                        "2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.";
+                }
+                throw new Error(errorMessage);
+            }
+        }
     }
 
     /**
@@ -70868,7 +70898,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+32.sha-ac9d044.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+33.sha-c83f501.with-local-changes');
 
     /**
      * @license
@@ -84406,7 +84436,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+32.sha-ac9d044.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+33.sha-c83f501.with-local-changes');
 
     /**
      * @license
