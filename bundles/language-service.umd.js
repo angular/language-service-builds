@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+53.sha-c5894e0.with-local-changes
+ * @license Angular v9.0.0-rc.0+43.sha-d9a3892.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -5367,9 +5367,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // parameter provided by the user (t) if specified, or the current type if not. If there is a
         // delegated factory (which is used to create the current type) then this is only the type-to-
         // create parameter (t).
-        var typeForCtor = !isDelegatedMetadata(meta) ?
-            new BinaryOperatorExpr(BinaryOperator.Or, t, meta.internalType) :
-            t;
+        var typeForCtor = !isDelegatedMetadata(meta) ? new BinaryOperatorExpr(BinaryOperator.Or, t, meta.type) : t;
         var ctorExpr = null;
         if (meta.deps !== null) {
             // There is a constructor (either explicitly or implicitly defined).
@@ -5380,8 +5378,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else {
             var baseFactory = variable("\u0275" + meta.name + "_BaseFactory");
             var getInheritedFactory = importExpr(Identifiers$1.getInheritedFactory);
-            var baseFactoryStmt = baseFactory.set(getInheritedFactory.callFn([meta.internalType]))
-                .toDeclStmt(INFERRED_TYPE, [StmtModifier.Exported, StmtModifier.Final]);
+            var baseFactoryStmt = baseFactory.set(getInheritedFactory.callFn([meta.type])).toDeclStmt(INFERRED_TYPE, [
+                StmtModifier.Exported, StmtModifier.Final
+            ]);
             statements.push(baseFactoryStmt);
             // There is no constructor, use the base class' factory to construct typeForCtor.
             ctorExpr = baseFactory.callFn([typeForCtor]);
@@ -5405,7 +5404,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (isDelegatedMetadata(meta) && meta.delegateType === R3FactoryDelegateType.Factory) {
             var delegateFactory = variable("\u0275" + meta.name + "_BaseFactory");
             var getFactoryOf = importExpr(Identifiers$1.getFactoryOf);
-            if (meta.delegate.isEquivalent(meta.internalType)) {
+            if (meta.delegate.isEquivalent(meta.type)) {
                 throw new Error("Illegal state: compiling factory that delegates to itself");
             }
             var delegateFactoryStmt = delegateFactory.set(getFactoryOf.callFn([meta.delegate])).toDeclStmt(INFERRED_TYPE, [
@@ -5542,7 +5541,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var factoryMeta = {
             name: meta.name,
             type: meta.type,
-            internalType: meta.internalType,
             typeArgumentCount: meta.typeArgumentCount,
             deps: [],
             injectFn: Identifiers.inject,
@@ -5555,7 +5553,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             //
             // A special case exists for useClass: Type where Type is the injectable type itself and no
             // deps are specified, in which case 'useClass' is effectively ignored.
-            var useClassOnSelf = meta.useClass.isEquivalent(meta.internalType);
+            var useClassOnSelf = meta.useClass.isEquivalent(meta.type);
             var deps = undefined;
             if (meta.userDeps !== undefined) {
                 deps = meta.userDeps;
@@ -5593,9 +5591,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             result = compileFactoryFunction(__assign(__assign({}, factoryMeta), { expression: importExpr(Identifiers.inject).callFn([meta.useExisting]) }));
         }
         else {
-            result = delegateToFactory(meta.internalType);
+            result = delegateToFactory(meta.type);
         }
-        var token = meta.internalType;
+        var token = meta.type;
         var providedIn = meta.providedIn;
         var expression = importExpr(Identifiers.ɵɵdefineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
         var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]));
@@ -5608,7 +5606,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function delegateToFactory(type) {
         return {
             statements: [],
-            // () => type.ɵfac(t)
+            // () => meta.type.ɵfac(t)
             factory: fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ɵfac', [variable('t')]))])
         };
     }
@@ -9457,10 +9455,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        var internalType = meta.internalType, moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls, emitInline = meta.emitInline, id = meta.id;
+        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls, emitInline = meta.emitInline, id = meta.id;
         var additionalStatements = [];
         var definitionMap = {
-            type: internalType
+            type: moduleType
         };
         // Only generate the keys in the metadata if the arrays have values.
         if (bootstrap.length) {
@@ -9507,7 +9505,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * symbols to become tree-shakeable.
      */
     function generateSetNgModuleScopeCall(meta) {
-        var moduleType = meta.adjacentType, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, containsForwardDecls = meta.containsForwardDecls;
+        var moduleType = meta.type, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, containsForwardDecls = meta.containsForwardDecls;
         var scopeMap = {};
         if (declarations.length) {
             scopeMap.declarations = refsToArray(declarations, containsForwardDecls);
@@ -9533,7 +9531,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var result = compileFactoryFunction({
             name: meta.name,
             type: meta.type,
-            internalType: meta.internalType,
             typeArgumentCount: 0,
             deps: meta.deps,
             injectFn: Identifiers$1.inject,
@@ -9614,12 +9611,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (!name) {
             return error("Cannot resolve the name of " + pipe.type);
         }
-        var type = outputCtx.importExpr(pipe.type.reference);
         var metadata = {
             name: name,
-            type: type,
-            internalType: type,
             pipeName: pipe.name,
+            type: outputCtx.importExpr(pipe.type.reference),
             typeArgumentCount: 0,
             deps: dependenciesFromGlobalMetadata(pipe.type, outputCtx, reflector),
             pure: pipe.pure,
@@ -18064,7 +18059,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var definitionMap = new DefinitionMap();
         var selectors = parseSelectorToR3Selector(meta.selector);
         // e.g. `type: MyDirective`
-        definitionMap.set('type', meta.internalType);
+        definitionMap.set('type', meta.type);
         // e.g. `selectors: [['', 'someDir', '']]`
         if (selectors.length > 0) {
             definitionMap.set('selectors', asLiteral(selectors));
@@ -18768,7 +18763,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var metadata = {
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
-                internalType: new WrappedNodeExpr(facade.type),
                 typeArgumentCount: facade.typeArgumentCount,
                 deps: convertR3DependencyMetadataArray(facade.deps),
                 pipeName: facade.pipeName,
@@ -18781,7 +18775,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var _a = compileInjectable({
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
-                internalType: new WrappedNodeExpr(facade.type),
                 typeArgumentCount: facade.typeArgumentCount,
                 providedIn: computeProvidedIn(facade.providedIn),
                 useClass: wrapExpression(facade, USE_CLASS),
@@ -18796,7 +18789,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var meta = {
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
-                internalType: new WrappedNodeExpr(facade.type),
                 deps: convertR3DependencyMetadataArray(facade.deps),
                 providers: new WrappedNodeExpr(facade.providers),
                 imports: facade.imports.map(function (i) { return new WrappedNodeExpr(i); }),
@@ -18807,8 +18799,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         CompilerFacadeImpl.prototype.compileNgModule = function (angularCoreEnv, sourceMapUrl, facade) {
             var meta = {
                 type: new WrappedNodeExpr(facade.type),
-                internalType: new WrappedNodeExpr(facade.type),
-                adjacentType: new WrappedNodeExpr(facade.type),
                 bootstrap: facade.bootstrap.map(wrapReference),
                 declarations: facade.declarations.map(wrapReference),
                 imports: facade.imports.map(wrapReference),
@@ -18852,7 +18842,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var factoryRes = compileFactoryFunction({
                 name: meta.name,
                 type: new WrappedNodeExpr(meta.type),
-                internalType: new WrappedNodeExpr(meta.type),
                 typeArgumentCount: meta.typeArgumentCount,
                 deps: convertR3DependencyMetadataArray(meta.deps),
                 injectFn: meta.injectFn === 'directiveInject' ? Identifiers.directiveInject :
@@ -18919,7 +18908,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         for (var field in propMetadata) {
             _loop_1(field);
         }
-        return __assign(__assign({}, facade), { typeSourceSpan: facade.typeSourceSpan, type: new WrappedNodeExpr(facade.type), internalType: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.propMetadata, facade.typeSourceSpan, facade.host), inputs: __assign(__assign({}, inputsFromMetadata), inputsFromType), outputs: __assign(__assign({}, outputsFromMetadata), outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), fullInheritance: false });
+        return __assign(__assign({}, facade), { typeSourceSpan: facade.typeSourceSpan, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.propMetadata, facade.typeSourceSpan, facade.host), inputs: __assign(__assign({}, inputsFromMetadata), inputsFromType), outputs: __assign(__assign({}, outputsFromMetadata), outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), fullInheritance: false });
     }
     function wrapExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
@@ -19017,7 +19006,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+53.sha-c5894e0.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+43.sha-d9a3892.with-local-changes');
 
     /**
      * @license
@@ -33628,7 +33617,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+53.sha-c5894e0.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+43.sha-d9a3892.with-local-changes');
 
     /**
      * @license
@@ -35716,8 +35705,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return declaration.initializer || null;
         };
         TypeScriptReflectionHost.prototype.getDtsDeclaration = function (_) { return null; };
-        TypeScriptReflectionHost.prototype.getInternalNameOfClass = function (clazz) { return clazz.name; };
-        TypeScriptReflectionHost.prototype.getAdjacentNameOfClass = function (clazz) { return clazz.name; };
         TypeScriptReflectionHost.prototype.getDirectImportOfIdentifier = function (id) {
             var symbol = this.checker.getSymbolAtLocation(id);
             if (symbol === undefined || symbol.declarations === undefined ||
@@ -39135,7 +39122,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (!reflection.isClass(clazz)) {
             return null;
         }
-        var id = ts.updateIdentifier(reflection.getAdjacentNameOfClass(clazz));
+        var id = ts.updateIdentifier(clazz.name);
         // Reflect over the class decorators. If none are present, or those that are aren't from
         // Angular, then return null. Otherwise, turn them into metadata.
         var classDecorators = reflection.getDecoratorsOfDeclaration(clazz);
@@ -39426,7 +39413,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             outputs: __assign(__assign({}, outputsFromMeta), outputsFromFields), queries: queries, viewQueries: viewQueries, selector: selector,
             fullInheritance: !!(flags & HandlerFlags.FULL_INHERITANCE),
             type: new WrappedNodeExpr(clazz.name),
-            internalType: new WrappedNodeExpr(reflector.getInternalNameOfClass(clazz)),
             typeArgumentCount: reflector.getGenericArityOfClass(clazz) || 0,
             typeSourceSpan: EMPTY_SOURCE_SPAN, usesInheritance: usesInheritance, exportAs: exportAs, providers: providers
         };
@@ -40456,7 +40442,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var factoryRes = compileNgFactoryDefField({
                     name: meta.name,
                     type: meta.type,
-                    internalType: meta.internalType,
                     typeArgumentCount: meta.typeArgumentCount,
                     deps: analysis.ctorDeps,
                     injectFn: Identifiers.inject,
@@ -40486,7 +40471,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function extractInjectableMetadata(clazz, decorator, reflector) {
         var name = clazz.name.text;
         var type = new WrappedNodeExpr(clazz.name);
-        var internalType = new WrappedNodeExpr(reflector.getInternalNameOfClass(clazz));
         var typeArgumentCount = reflector.getGenericArityOfClass(clazz) || 0;
         if (decorator.args === null) {
             throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, Decorator.nodeForError(decorator), '@Injectable must be called');
@@ -40496,7 +40480,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 name: name,
                 type: type,
                 typeArgumentCount: typeArgumentCount,
-                internalType: internalType,
                 providedIn: new LiteralExpr(null),
             };
         }
@@ -40527,7 +40510,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     name: name,
                     type: type,
                     typeArgumentCount: typeArgumentCount,
-                    internalType: internalType,
                     providedIn: providedIn,
                     useValue: new WrappedNodeExpr(unwrapForwardRef(meta.get('useValue'), reflector)),
                 };
@@ -40537,7 +40519,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     name: name,
                     type: type,
                     typeArgumentCount: typeArgumentCount,
-                    internalType: internalType,
                     providedIn: providedIn,
                     useExisting: new WrappedNodeExpr(unwrapForwardRef(meta.get('useExisting'), reflector)),
                 };
@@ -40547,7 +40528,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     name: name,
                     type: type,
                     typeArgumentCount: typeArgumentCount,
-                    internalType: internalType,
                     providedIn: providedIn,
                     useClass: new WrappedNodeExpr(unwrapForwardRef(meta.get('useClass'), reflector)),
                     userDeps: userDeps,
@@ -40560,13 +40540,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     name: name,
                     type: type,
                     typeArgumentCount: typeArgumentCount,
-                    internalType: internalType,
                     providedIn: providedIn,
                     useFactory: factory, userDeps: userDeps,
                 };
             }
             else {
-                return { name: name, type: type, typeArgumentCount: typeArgumentCount, internalType: internalType, providedIn: providedIn };
+                return { name: name, type: type, typeArgumentCount: typeArgumentCount, providedIn: providedIn };
             }
         }
         else {
@@ -40815,8 +40794,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 exports.some(isForwardReference);
             var ngModuleDef = {
                 type: new WrappedNodeExpr(node.name),
-                internalType: new WrappedNodeExpr(this.reflector.getInternalNameOfClass(node)),
-                adjacentType: new WrappedNodeExpr(this.reflector.getAdjacentNameOfClass(node)),
                 bootstrap: bootstrap,
                 declarations: declarations,
                 exports: exports,
@@ -40842,7 +40819,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var ngInjectorDef = {
                 name: name,
                 type: new WrappedNodeExpr(node.name),
-                internalType: new WrappedNodeExpr(this.reflector.getInternalNameOfClass(node)),
                 deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
                 providers: providers,
                 imports: injectorImports,
@@ -41158,7 +41134,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         PipeDecoratorHandler.prototype.analyze = function (clazz, decorator) {
             var name = clazz.name.text;
             var type = new WrappedNodeExpr(clazz.name);
-            var internalType = new WrappedNodeExpr(this.reflector.getInternalNameOfClass(clazz));
             if (decorator.args === null) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, Decorator.nodeForError(decorator), "@Pipe must be called");
             }
@@ -41194,7 +41169,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     meta: {
                         name: name,
                         type: type,
-                        internalType: internalType,
                         typeArgumentCount: this.reflector.getGenericArityOfClass(clazz) || 0, pipeName: pipeName,
                         deps: getValidConstructorDependencies(clazz, this.reflector, this.defaultImportRecorder, this.isCore),
                         pure: pure,
@@ -70940,7 +70914,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+53.sha-c5894e0.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+43.sha-d9a3892.with-local-changes');
 
     /**
      * @license
@@ -73798,6 +73772,44 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This const is used to store the locale data registered with `registerLocaleData`
+     */
+    var LOCALE_DATA = {};
+    /**
+     * Index of each type of locale data from the locale data array
+     */
+    var LocaleDataIndex;
+    (function (LocaleDataIndex) {
+        LocaleDataIndex[LocaleDataIndex["LocaleId"] = 0] = "LocaleId";
+        LocaleDataIndex[LocaleDataIndex["DayPeriodsFormat"] = 1] = "DayPeriodsFormat";
+        LocaleDataIndex[LocaleDataIndex["DayPeriodsStandalone"] = 2] = "DayPeriodsStandalone";
+        LocaleDataIndex[LocaleDataIndex["DaysFormat"] = 3] = "DaysFormat";
+        LocaleDataIndex[LocaleDataIndex["DaysStandalone"] = 4] = "DaysStandalone";
+        LocaleDataIndex[LocaleDataIndex["MonthsFormat"] = 5] = "MonthsFormat";
+        LocaleDataIndex[LocaleDataIndex["MonthsStandalone"] = 6] = "MonthsStandalone";
+        LocaleDataIndex[LocaleDataIndex["Eras"] = 7] = "Eras";
+        LocaleDataIndex[LocaleDataIndex["FirstDayOfWeek"] = 8] = "FirstDayOfWeek";
+        LocaleDataIndex[LocaleDataIndex["WeekendRange"] = 9] = "WeekendRange";
+        LocaleDataIndex[LocaleDataIndex["DateFormat"] = 10] = "DateFormat";
+        LocaleDataIndex[LocaleDataIndex["TimeFormat"] = 11] = "TimeFormat";
+        LocaleDataIndex[LocaleDataIndex["DateTimeFormat"] = 12] = "DateTimeFormat";
+        LocaleDataIndex[LocaleDataIndex["NumberSymbols"] = 13] = "NumberSymbols";
+        LocaleDataIndex[LocaleDataIndex["NumberFormats"] = 14] = "NumberFormats";
+        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 15] = "CurrencySymbol";
+        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 16] = "CurrencyName";
+        LocaleDataIndex[LocaleDataIndex["Currencies"] = 17] = "Currencies";
+        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 18] = "PluralCase";
+        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 19] = "ExtraData";
+    })(LocaleDataIndex || (LocaleDataIndex = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // THIS CODE IS GENERATED - DO NOT MODIFY
     // See angular/tools/gulp-tasks/cldr/extract.js
     var u = undefined;
@@ -73838,34 +73850,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * This const is used to store the locale data registered with `registerLocaleData`
-     */
-    var LOCALE_DATA = {};
-    /**
-     * Finds the locale data for a given locale.
-     *
-     * @param locale The locale code.
-     * @returns The locale data.
-     * @see [Internationalization (i18n) Guide](https://angular.io/guide/i18n)
-     */
-    function findLocaleData(locale) {
-        var normalizedLocale = normalizeLocale(locale);
-        var match = getLocaleData(normalizedLocale);
-        if (match) {
-            return match;
-        }
-        // let's try to find a parent locale
-        var parentLocale = normalizedLocale.split('-')[0];
-        match = getLocaleData(parentLocale);
-        if (match) {
-            return match;
-        }
-        if (parentLocale === 'en') {
-            return localeEn;
-        }
-        throw new Error("Missing locale data for the locale \"" + locale + "\".");
-    }
-    /**
      * Retrieves the plural function used by ICU expressions to determine the plural case to use
      * for a given locale.
      * @param locale A locale code for the locale format rules to use.
@@ -73878,47 +73862,28 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return data[LocaleDataIndex.PluralCase];
     }
     /**
-     * Helper function to get the given `normalizedLocale` from `LOCALE_DATA`
-     * or from the global `ng.common.locale`.
+     * Finds the locale data for a given locale.
+     *
+     * @param locale The locale code.
+     * @returns The locale data.
+     * @see [Internationalization (i18n) Guide](https://angular.io/guide/i18n)
      */
-    function getLocaleData(normalizedLocale) {
-        if (!(normalizedLocale in LOCALE_DATA)) {
-            LOCALE_DATA[normalizedLocale] = _global$1.ng && _global$1.ng.common && _global$1.ng.common.locales &&
-                _global$1.ng.common.locales[normalizedLocale];
+    function findLocaleData(locale) {
+        var normalizedLocale = locale.toLowerCase().replace(/_/g, '-');
+        var match = LOCALE_DATA[normalizedLocale];
+        if (match) {
+            return match;
         }
-        return LOCALE_DATA[normalizedLocale];
-    }
-    /**
-     * Index of each type of locale data from the locale data array
-     */
-    var LocaleDataIndex;
-    (function (LocaleDataIndex) {
-        LocaleDataIndex[LocaleDataIndex["LocaleId"] = 0] = "LocaleId";
-        LocaleDataIndex[LocaleDataIndex["DayPeriodsFormat"] = 1] = "DayPeriodsFormat";
-        LocaleDataIndex[LocaleDataIndex["DayPeriodsStandalone"] = 2] = "DayPeriodsStandalone";
-        LocaleDataIndex[LocaleDataIndex["DaysFormat"] = 3] = "DaysFormat";
-        LocaleDataIndex[LocaleDataIndex["DaysStandalone"] = 4] = "DaysStandalone";
-        LocaleDataIndex[LocaleDataIndex["MonthsFormat"] = 5] = "MonthsFormat";
-        LocaleDataIndex[LocaleDataIndex["MonthsStandalone"] = 6] = "MonthsStandalone";
-        LocaleDataIndex[LocaleDataIndex["Eras"] = 7] = "Eras";
-        LocaleDataIndex[LocaleDataIndex["FirstDayOfWeek"] = 8] = "FirstDayOfWeek";
-        LocaleDataIndex[LocaleDataIndex["WeekendRange"] = 9] = "WeekendRange";
-        LocaleDataIndex[LocaleDataIndex["DateFormat"] = 10] = "DateFormat";
-        LocaleDataIndex[LocaleDataIndex["TimeFormat"] = 11] = "TimeFormat";
-        LocaleDataIndex[LocaleDataIndex["DateTimeFormat"] = 12] = "DateTimeFormat";
-        LocaleDataIndex[LocaleDataIndex["NumberSymbols"] = 13] = "NumberSymbols";
-        LocaleDataIndex[LocaleDataIndex["NumberFormats"] = 14] = "NumberFormats";
-        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 15] = "CurrencySymbol";
-        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 16] = "CurrencyName";
-        LocaleDataIndex[LocaleDataIndex["Currencies"] = 17] = "Currencies";
-        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 18] = "PluralCase";
-        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 19] = "ExtraData";
-    })(LocaleDataIndex || (LocaleDataIndex = {}));
-    /**
-     * Returns the canonical form of a locale name - lowercase with `_` replaced with `-`.
-     */
-    function normalizeLocale(locale) {
-        return locale.toLowerCase().replace(/_/g, '-');
+        // let's try to find a parent locale
+        var parentLocale = normalizedLocale.split('-')[0];
+        match = LOCALE_DATA[parentLocale];
+        if (match) {
+            return match;
+        }
+        if (parentLocale === 'en') {
+            return localeEn;
+        }
+        throw new Error("Missing locale data for the locale \"" + locale + "\".");
     }
 
     /**
@@ -84487,7 +84452,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+53.sha-c5894e0.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+43.sha-d9a3892.with-local-changes');
 
     /**
      * @license
