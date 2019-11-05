@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+37.sha-e3189f9.with-local-changes
+ * @license Angular v9.0.0-rc.0+40.sha-4abf15c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19013,7 +19013,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+37.sha-e3189f9.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+40.sha-4abf15c.with-local-changes');
 
     /**
      * @license
@@ -33624,7 +33624,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+37.sha-e3189f9.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+40.sha-4abf15c.with-local-changes');
 
     /**
      * @license
@@ -53454,7 +53454,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var locationString = typeof location !== 'undefined' ? location.toString() : '';
         var newCounters = {
             namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
-            firstTemplatePass: 0,
+            firstCreatePass: 0,
             tNode: 0,
             tView: 0,
             rendererCreateTextNode: 0,
@@ -53708,8 +53708,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         assertDefined(value, 'LView must be defined');
         assertEqual(isLView(value), true, 'Expecting LView');
     }
-    function assertFirstTemplatePass(tView, errMessage) {
-        assertEqual(tView.firstTemplatePass, true, errMessage || 'Should only be called in first template pass.');
+    function assertFirstCreatePass(tView, errMessage) {
+        assertEqual(tView.firstCreatePass, true, errMessage || 'Should only be called in first create pass.');
     }
 
     /**
@@ -54698,7 +54698,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param type The directive token to register
      */
     function bloomAdd(injectorIndex, tView, type) {
-        ngDevMode && assertEqual(tView.firstTemplatePass, true, 'expected firstTemplatePass to be true');
+        ngDevMode && assertEqual(tView.firstCreatePass, true, 'expected firstCreatePass to be true');
         var id = typeof type !== 'string' ? type[NG_ELEMENT_ID] : type.charCodeAt(0) || 0;
         // Set a unique ID on the directive type, so if something tries to inject the directive,
         // we can easily retrieve the ID and hash it into the bloom bit that should be checked.
@@ -54740,7 +54740,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return existingInjectorIndex;
         }
         var tView = hostView[TVIEW];
-        if (tView.firstTemplatePass) {
+        if (tView.firstCreatePass) {
             tNode.injectorIndex = hostView.length;
             insertBloom(tView.data, tNode); // foundation for node bloom
             insertBloom(hostView, null); // foundation for cumulative bloom
@@ -55845,7 +55845,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param initialPreOrderCheckHooksLength same as previous for pre-order check hooks
      */
     function registerPreOrderHooks(directiveIndex, directiveDef, tView, nodeIndex, initialPreOrderHooksLength, initialPreOrderCheckHooksLength) {
-        ngDevMode && assertFirstTemplatePass(tView);
+        ngDevMode && assertFirstCreatePass(tView);
         var onChanges = directiveDef.onChanges, onInit = directiveDef.onInit, doCheck = directiveDef.doCheck;
         if (initialPreOrderHooksLength >= 0 &&
             (!tView.preOrderHooks || initialPreOrderHooksLength === tView.preOrderHooks.length) &&
@@ -55889,7 +55889,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param tNode The TNode whose directives are to be searched for hooks to queue
      */
     function registerPostOrderHooks(tView, tNode) {
-        ngDevMode && assertFirstTemplatePass(tView);
+        ngDevMode && assertFirstCreatePass(tView);
         // It's necessary to loop through the directives at elementEnd() (rather than processing in
         // directiveCreate) so we can preserve the current hook order. Content, view, and destroy
         // hooks for projected components and directives must be called *before* their hosts.
@@ -56998,7 +56998,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         bindingStartIndex, //
         expandoStartIndex, //
         expandoInstructions, //
-        firstTemplatePass, //
+        firstCreatePass, //
+        firstUpdatePass, //
         staticViewQueries, //
         staticContentQueries, //
         preOrderHooks, //
@@ -57026,7 +57027,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.bindingStartIndex = bindingStartIndex;
             this.expandoStartIndex = expandoStartIndex;
             this.expandoInstructions = expandoInstructions;
-            this.firstTemplatePass = firstTemplatePass;
+            this.firstCreatePass = firstCreatePass;
+            this.firstUpdatePass = firstUpdatePass;
             this.staticViewQueries = staticViewQueries;
             this.staticContentQueries = staticContentQueries;
             this.preOrderHooks = preOrderHooks;
@@ -57851,10 +57853,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // This needs to be set before children are processed to support recursive components.
             // This must be set to false immediately after the first creation run because in an
             // ngFor loop, all the views will be created together before update mode runs and turns
-            // off firstTemplatePass. If we don't set it here, instances will perform directive
+            // off firstCreatePass. If we don't set it here, instances will perform directive
             // matching, etc again and again.
-            if (tView.firstTemplatePass) {
-                tView.firstTemplatePass = false;
+            if (tView.firstCreatePass) {
+                tView.firstCreatePass = false;
             }
             // We resolve content queries specifically marked as `static` in creation mode. Dynamic
             // content queries are resolved during change detection (i.e. update mode), after embedded
@@ -57970,6 +57972,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
         finally {
+            if (tView.firstUpdatePass === true) {
+                tView.firstUpdatePass = false;
+            }
             lView[FLAGS] &= ~(64 /* Dirty */ | 8 /* FirstLViewPass */);
             leaveViewProcessExit();
         }
@@ -58053,7 +58058,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             bindingStartIndex, // bindingStartIndex: number,
             initialViewLength, // expandoStartIndex: number,
             null, // expandoInstructions: ExpandoInstructions|null,
-            true, // firstTemplatePass: boolean,
+            true, // firstCreatePass: boolean,
+            true, // firstUpdatePass: boolean,
             false, // staticViewQueries: boolean,
             false, // staticContentQueries: boolean,
             null, // preOrderHooks: HookData|null,
@@ -58084,7 +58090,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 bindingStartIndex: bindingStartIndex,
                 expandoStartIndex: initialViewLength,
                 expandoInstructions: null,
-                firstTemplatePass: true,
+                firstCreatePass: true,
+                firstUpdatePass: true,
                 staticViewQueries: false,
                 staticContentQueries: false,
                 preOrderHooks: null,
@@ -58146,7 +58153,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function storeCleanupFn(view, cleanupFn) {
         getCleanup(view).push(cleanupFn);
-        if (view[TVIEW].firstTemplatePass) {
+        if (view[TVIEW].firstCreatePass) {
             getTViewCleanup(view).push(view[CLEANUP].length - 1, null);
         }
     }
@@ -58217,7 +58224,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function instantiateRootComponent(tView, lView, def) {
         var rootTNode = getPreviousOrParentTNode();
-        if (tView.firstTemplatePass) {
+        if (tView.firstCreatePass) {
             if (def.providersResolver)
                 def.providersResolver(def);
             generateExpandoInstructionBlock(tView, rootTNode, 1);
@@ -58231,7 +58238,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return directive;
     }
-    function invokeHostBindingsInCreationMode(def, expando, directive, tNode, firstTemplatePass) {
+    function invokeHostBindingsInCreationMode(def, expando, directive, tNode, firstCreatePass) {
         var previousExpandoLength = expando.length;
         setCurrentDirectiveDef(def);
         var elementIndex = tNode.index - HEADER_OFFSET;
@@ -58241,7 +58248,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         // (e.g. it may not if it only contains host listeners), so we need to check whether
         // `expandoInstructions` has changed and if not - we still push `hostBindings` to
         // expando block, to make sure we execute it for DI cycle
-        if (previousExpandoLength === expando.length && firstTemplatePass) {
+        if (previousExpandoLength === expando.length && firstCreatePass) {
             expando.push(def.hostBindings);
         }
     }
@@ -58252,7 +58259,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     * it from the hostVar count) and the directive count. See more in VIEW_DATA.md.
     */
     function generateExpandoInstructionBlock(tView, tNode, directiveCount) {
-        ngDevMode && assertEqual(tView.firstTemplatePass, true, 'Expando block should only be generated on first template pass.');
+        ngDevMode && assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
         var elementIndex = -(tNode.index - HEADER_OFFSET);
         var providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
         var providerCount = tView.data.length - providerStartIndex;
@@ -58264,7 +58271,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * - storing index of component's host element so it will be queued for view refresh during CD.
     */
     function markAsComponentHost(tView, hostTNode) {
-        ngDevMode && assertFirstTemplatePass(tView);
+        ngDevMode && assertFirstCreatePass(tView);
         hostTNode.flags |= 2 /* isComponentHost */;
         (tView.components || (tView.components = ngDevMode ? new TViewComponents() : [])).push(hostTNode.index);
     }
@@ -62157,7 +62164,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         rootView[0 + HEADER_OFFSET] = rNode;
         var tNode = getOrCreateTNode(tView, null, 0, 3 /* Element */, null, null);
         var componentView = createLView(rootView, getOrCreateTView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
-        if (tView.firstTemplatePass) {
+        if (tView.firstCreatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), tView, def.type);
             markAsComponentHost(tView, tNode);
             initNodeFlags(tNode, rootView.length, 1);
@@ -62183,12 +62190,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             componentDef.contentQueries(1 /* Create */, component, rootView.length - 1);
         }
         var rootTNode = getPreviousOrParentTNode();
-        if (tView.firstTemplatePass && componentDef.hostBindings) {
+        if (tView.firstCreatePass && componentDef.hostBindings) {
             var elementIndex = rootTNode.index - HEADER_OFFSET;
             setActiveHostElement(elementIndex);
             incrementActiveDirectiveId();
             var expando = tView.expandoInstructions;
-            invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
+            invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstCreatePass);
             setActiveHostElement(null);
         }
         return component;
@@ -62534,7 +62541,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+37.sha-e3189f9.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+40.sha-4abf15c.with-local-changes');
 
     /**
      * @license
@@ -67498,7 +67505,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.queries = queries;
         }
         TQueries_.prototype.elementStart = function (tView, tNode) {
-            ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
+            ngDevMode && assertFirstCreatePass(tView, 'Queries should collect results on the first template pass only');
             for (var i = 0; i < this.queries.length; i++) {
                 this.queries[i].elementStart(tView, tNode);
             }
@@ -67526,7 +67533,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return queriesForTemplateRef !== null ? new TQueries_(queriesForTemplateRef) : null;
         };
         TQueries_.prototype.template = function (tView, tNode) {
-            ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
+            ngDevMode && assertFirstCreatePass(tView, 'Queries should collect results on the first template pass only');
             for (var i = 0; i < this.queries.length; i++) {
                 this.queries[i].template(tView, tNode);
             }
@@ -73145,7 +73152,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+37.sha-e3189f9.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+40.sha-4abf15c.with-local-changes');
 
     /**
      * @license
