@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+53.sha-12ddda3.with-local-changes
+ * @license Angular v9.0.0-rc.0+62.sha-d8e6501.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+53.sha-12ddda3.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+62.sha-d8e6501.with-local-changes');
 
     /**
      * @license
@@ -33643,7 +33643,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+53.sha-12ddda3.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+62.sha-d8e6501.with-local-changes');
 
     /**
      * @license
@@ -43733,8 +43733,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var comment = '';
             if (original.statements.length > 0) {
                 var firstStatement = original.statements[0];
-                if (firstStatement.getLeadingTriviaWidth() > 0) {
-                    comment = firstStatement.getFullText().substr(0, firstStatement.getLeadingTriviaWidth());
+                // Must pass SourceFile to getLeadingTriviaWidth(), otherwise it'll try to
+                // get SourceFile by recursively looking up the parent of the Node and fail,
+                // because parent is undefined.
+                var leadingTriviaWidth = firstStatement.getLeadingTriviaWidth(original);
+                if (leadingTriviaWidth > 0) {
+                    comment = firstStatement.getFullText().substr(0, leadingTriviaWidth);
                 }
             }
             var sourceText = comment;
@@ -62575,7 +62579,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+53.sha-12ddda3.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+62.sha-d8e6501.with-local-changes');
 
     /**
      * @license
@@ -66223,7 +66227,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -73178,7 +73182,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+53.sha-12ddda3.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+62.sha-d8e6501.with-local-changes');
 
     /**
      * @license
