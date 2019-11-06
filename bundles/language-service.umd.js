@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+63.sha-88eefd8.with-local-changes
+ * @license Angular v9.0.0-rc.0+66.sha-1735135.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+63.sha-88eefd8.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+66.sha-1735135.with-local-changes');
 
     /**
      * @license
@@ -33643,7 +33643,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+63.sha-88eefd8.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+66.sha-1735135.with-local-changes');
 
     /**
      * @license
@@ -54299,15 +54299,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Determines whether or not to apply styles/classes directly or via context resolution.
      *
      * There are three cases that are matched here:
-     * 1. there are no directives present AND ngDevMode is falsy
-     * 2. context is locked for template or host bindings (depending on `hostBindingsMode`)
+     * 1. there are no directives present AND `ngDevMode` is falsy
+     * 2. the `firstUpdatePass` has not already run (which means that
+     *    there are more bindings to register and, therefore, direct
+     *    style/class application is not yet possible)
      * 3. There are no collisions (i.e. properties with more than one binding) across multiple
      *    sources (i.e. template + directive, directive + directive, directive + component)
      */
-    function allowDirectStyling(context, hostBindingsMode) {
+    function allowDirectStyling(context, firstUpdatePass) {
         var allow = false;
         var config = getConfig(context);
-        var contextIsLocked = (config & getLockedConfig(hostBindingsMode)) !== 0;
         var hasNoDirectives = (config & 1 /* HasDirectives */) === 0;
         // if no directives are present then we do not need populate a context at all. This
         // is because duplicate prop bindings cannot be registered through the template. If
@@ -54317,9 +54318,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // `ngDevMode` is required to be checked here because tests/debugging rely on the context being
             // populated. If things are in production mode then there is no need to build a context
             // therefore the direct apply can be allowed (even on the first update).
-            allow = ngDevMode ? contextIsLocked : true;
+            allow = ngDevMode ? !firstUpdatePass : true;
         }
-        else if (contextIsLocked) {
+        else if (!firstUpdatePass) {
             var hasNoCollisions = (config & 8 /* HasCollisions */) === 0;
             var hasOnlyMapsOrOnlyProps = (config & 6 /* HasPropAndMapBindings */) !== 6 /* HasPropAndMapBindings */;
             allow = hasNoCollisions && hasOnlyMapsOrOnlyProps;
@@ -54359,10 +54360,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     }
     function getValue(data, bindingIndex) {
         return bindingIndex !== 0 ? data[bindingIndex] : null;
-    }
-    function getLockedConfig(hostBindingsMode) {
-        return hostBindingsMode ? 256 /* HostBindingsLocked */ :
-            128 /* TemplateBindingsLocked */;
     }
     function getPropValuesStartPosition(context) {
         var startPosition = 3 /* ValuesStartPosition */;
@@ -56957,17 +56954,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var hasCollisions = hasConfig(context, 8 /* HasCollisions */);
         var hasTemplateBindings = hasConfig(context, 32 /* HasTemplateBindings */);
         var hasHostBindings = hasConfig(context, 64 /* HasHostBindings */);
-        var templateBindingsLocked = hasConfig(context, 128 /* TemplateBindingsLocked */);
-        var hostBindingsLocked = hasConfig(context, 256 /* HostBindingsLocked */);
-        var allowDirectStyling$1 = allowDirectStyling(context, false) || allowDirectStyling(context, true);
+        // `firstTemplatePass` here is false because the context has already been constructed
+        // directly within the behavior of the debugging tools (outside of style/class debugging,
+        // the context is constructed during the first template pass).
+        var allowDirectStyling$1 = allowDirectStyling(context, false);
         return {
             hasMapBindings: hasMapBindings,
             hasPropBindings: hasPropBindings,
             hasCollisions: hasCollisions,
             hasTemplateBindings: hasTemplateBindings,
             hasHostBindings: hasHostBindings,
-            templateBindingsLocked: templateBindingsLocked,
-            hostBindingsLocked: hostBindingsLocked,
             allowDirectStyling: allowDirectStyling$1,
         };
     }
@@ -62579,7 +62575,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+63.sha-88eefd8.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+66.sha-1735135.with-local-changes');
 
     /**
      * @license
@@ -73182,7 +73178,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+63.sha-88eefd8.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+66.sha-1735135.with-local-changes');
 
     /**
      * @license
