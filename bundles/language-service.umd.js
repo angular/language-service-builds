@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+69.sha-41560b4.with-local-changes
+ * @license Angular v9.0.0-rc.0+77.sha-2ed04ff.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -6067,7 +6067,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             this.sourceSpan = sourceSpan;
         }
         AST.prototype.visit = function (visitor, context) {
-            if (context === void 0) { context = null; }
             return null;
         };
         AST.prototype.toString = function () { return 'AST'; };
@@ -6108,7 +6107,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return _super !== null && _super.apply(this, arguments) || this;
         }
         EmptyExpr.prototype.visit = function (visitor, context) {
-            if (context === void 0) { context = null; }
             // do nothing
         };
         return EmptyExpr;
@@ -18245,7 +18243,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var name = identifierName(directive.type);
         name || error("Cannot resolver the name of " + directive.type);
         var definitionField = outputCtx.constantPool.propertyNameOf(1 /* Directive */);
-        var meta = directiveMetadataFromGlobalMetadata(directive, outputCtx, reflector);
+        var meta = directiveMetadataFromGlobalMetadata();
         var res = compileDirectiveFromMetadata(meta, outputCtx.constantPool, bindingParser);
         var factoryRes = compileFactoryFunction(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Directive }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
@@ -18266,7 +18264,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var definitionField = outputCtx.constantPool.propertyNameOf(2 /* Component */);
         var summary = component.toSummary();
         // Compute the R3ComponentMetadata from the CompileDirectiveMetadata
-        var meta = __assign(__assign({}, directiveMetadataFromGlobalMetadata(component, outputCtx, reflector)), { selector: component.selector, template: { nodes: render3Ast.nodes }, directives: [], pipes: typeMapToExpressionMap(pipeTypeByName, outputCtx), viewQueries: queriesFromGlobalMetadata(component.viewQueries, outputCtx), wrapDirectivesAndPipesInClosure: false, styles: (summary.template && summary.template.styles) || EMPTY_ARRAY, encapsulation: (summary.template && summary.template.encapsulation) || ViewEncapsulation.Emulated, interpolation: DEFAULT_INTERPOLATION_CONFIG, animations: null, viewProviders: component.viewProviders.length > 0 ? new WrappedNodeExpr(component.viewProviders) : null, relativeContextFilePath: '', i18nUseExternalIds: true });
+        var meta = __assign(__assign({}, directiveMetadataFromGlobalMetadata()), { selector: component.selector, template: { nodes: render3Ast.nodes }, directives: [], pipes: typeMapToExpressionMap(pipeTypeByName, outputCtx), viewQueries: queriesFromGlobalMetadata(component.viewQueries, outputCtx), wrapDirectivesAndPipesInClosure: false, styles: (summary.template && summary.template.styles) || EMPTY_ARRAY, encapsulation: (summary.template && summary.template.encapsulation) || ViewEncapsulation.Emulated, interpolation: DEFAULT_INTERPOLATION_CONFIG, animations: null, viewProviders: component.viewProviders.length > 0 ? new WrappedNodeExpr(component.viewProviders) : null, relativeContextFilePath: '', i18nUseExternalIds: true });
         var res = compileComponentFromMetadata(meta, outputCtx.constantPool, bindingParser);
         var factoryRes = compileFactoryFunction(__assign(__assign({}, meta), { injectFn: Identifiers$1.directiveInject, target: R3FactoryTarget.Directive }));
         var ngFactoryDefStatement = new ClassStmt(name, null, [new ClassField('ɵfac', INFERRED_TYPE, [StmtModifier.Static], factoryRes.factory)], [], new ClassMethod(null, [], []), []);
@@ -19017,7 +19015,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+77.sha-2ed04ff.with-local-changes');
 
     /**
      * @license
@@ -19239,8 +19237,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     break;
                 case PreparsedElementType.STYLESHEET:
                     this.styleUrls.push(preparsedElement.hrefAttr);
-                    break;
-                default:
                     break;
             }
             if (preparsedElement.nonBindable) {
@@ -27274,22 +27270,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function createOfflineCompileUrlResolver() {
         return new UrlResolver('.');
     }
@@ -27561,22 +27541,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         parts[_ComponentIndex.Path] = path;
         return _joinAndCanonicalizePath(parts);
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -28052,31 +28016,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     // This function call has a global side effects and publishes the compiler into global namespace for
     // the late binding of the Compiler to the @angular/core for jit compilation.
     publishFacade(_global);
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // This file only reexports content of the `src` folder. Keep it that way.
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -29162,7 +29101,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         TypeWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
         TypeWrapper.prototype.selectSignature = function (types) {
-            return selectSignature(this.tsType, this.context, types);
+            return selectSignature(this.tsType, this.context);
         };
         TypeWrapper.prototype.indexed = function (argument) { return undefined; };
         return TypeWrapper;
@@ -29229,7 +29168,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         SymbolWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
         SymbolWrapper.prototype.selectSignature = function (types) {
-            return selectSignature(this.tsType, this.context, types);
+            return selectSignature(this.tsType, this.context);
         };
         SymbolWrapper.prototype.indexed = function (argument) { return undefined; };
         Object.defineProperty(SymbolWrapper.prototype, "tsType", {
@@ -29523,7 +29462,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         PipeSymbol.prototype.members = function () { return EmptyTable.instance; };
         PipeSymbol.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
         PipeSymbol.prototype.selectSignature = function (types) {
-            var signature = selectSignature(this.tsType, this.context, types);
+            var signature = selectSignature(this.tsType, this.context);
             if (types.length > 0) {
                 var parameterType = types[0];
                 if (parameterType instanceof TypeWrapper) {
@@ -32214,14 +32153,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var DEFAULT_ERROR_CODE = 100;
     var SOURCE = 'angular';
     var EmitFlags;
@@ -32418,14 +32349,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return newMetadata;
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -33435,14 +33358,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return fs.basename(filePath, extension);
     }
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
     var LogicalProjectPath = {
         /**
          * Get the relative path between two `LogicalProjectPath`s.
@@ -33620,15 +33535,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var VERSION$2 = new Version('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+77.sha-2ed04ff.with-local-changes');
 
     /**
      * @license
@@ -34483,22 +34390,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // Escape anything that isn't alphanumeric, '/' or '_'.
     var CHARS_TO_ESCAPE = /[^a-zA-Z0-9/_]/g;
     /**
@@ -34770,7 +34661,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
     }
     function isDeclaration(node) {
-        return ts.isEnumDeclaration(node) || ts.isClassDeclaration(node) ||
+        return  ts.isEnumDeclaration(node) || ts.isClassDeclaration(node) ||
             ts.isFunctionDeclaration(node) || ts.isVariableDeclaration(node);
     }
     function getRootDirs(host, options) {
@@ -35338,14 +35229,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var Decorator = {
         nodeForError: function (decorator) {
             if (decorator.node !== null) {
@@ -35381,6 +35264,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * Indicates the `__spread` function.
          */
         TsHelperFn[TsHelperFn["Spread"] = 0] = "Spread";
+        /**
+         * Indicates the `__spreadArrays` function.
+         */
+        TsHelperFn[TsHelperFn["SpreadArrays"] = 1] = "SpreadArrays";
     })(TsHelperFn || (TsHelperFn = {}));
 
     /**
@@ -36086,14 +35973,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function extractReferencesFromType(checker, def, ngModuleImportedFrom, resolutionContext) {
         if (!ts.isTupleTypeNode(def)) {
             return [];
@@ -36499,14 +36378,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Given a reference to a directive, return a flattened version of its `DirectiveMeta` metadata
      * which includes metadata from its entire inheritance chain.
@@ -36705,11 +36576,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     function evaluateTsHelperInline(helper, node, args) {
-        if (helper === TsHelperFn.Spread) {
-            return evaluateTsSpreadHelper(node, args);
-        }
-        else {
-            throw new Error("Cannot evaluate unknown helper " + helper + " inline");
+        switch (helper) {
+            case TsHelperFn.Spread:
+            case TsHelperFn.SpreadArrays:
+                return evaluateTsSpreadHelper(node, args);
+            default:
+                throw new Error("Cannot evaluate unknown helper " + helper + " inline");
         }
     }
     function evaluateTsSpreadHelper(node, args) {
@@ -37363,14 +37235,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var HandlerPrecedence;
     (function (HandlerPrecedence) {
         /**
@@ -37839,14 +37703,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return ts.createTaggedTemplate(ts.createIdentifier('$localize'), template);
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * Adds extra imports in the import manage for this source file, after the existing imports
@@ -38730,14 +38586,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function isFromAngularCore(decorator) {
         return decorator.import !== null && decorator.import.from === '@angular/core';
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     var NoopResourceDependencyRecorder = /** @class */ (function () {
         function NoopResourceDependencyRecorder() {
@@ -41253,14 +41101,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Analyzes a `ts.Program` for cycles.
      */
@@ -41364,14 +41204,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function isLocalFile(sf) {
         return !sf.fileName.endsWith('.d.ts');
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -41647,14 +41479,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Accumulates state between compilations.
      */
@@ -41834,14 +41658,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Describes the kind of identifier found in a template.
      */
@@ -41889,14 +41705,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         IndexingContext.prototype.addComponent = function (info) { this.components.add(info); };
         return IndexingContext;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * Visits the AST of an Angular template syntax expression, finding interesting
@@ -42363,14 +42171,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         PerfLogEventType[PerfLogEventType["SPAN_CLOSE"] = 1] = "SPAN_CLOSE";
         PerfLogEventType[PerfLogEventType["MARK"] = 2] = "MARK";
     })(PerfLogEventType || (PerfLogEventType = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -42877,14 +42677,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return NgModuleRouteAnalyzer;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * A noop registry that doesn't do anything.
@@ -43657,14 +43449,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function generatedModuleName(originalModuleName, originalFileName, genSuffix) {
         var moduleName;
         if (originalFileName.endsWith('/index.ts')) {
@@ -44083,14 +43867,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var IVY_SWITCH_PRE_SUFFIX = '__PRE_R3__';
     var IVY_SWITCH_POST_SUFFIX = '__POST_R3__';
     function ivySwitchTransform(_) {
@@ -44212,14 +43988,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return stmt.declarationList.declarations.some(function (decl) { return decl.initializer !== undefined && ts.isIdentifier(decl.initializer) &&
             decl.initializer.text.endsWith(IVY_SWITCH_PRE_SUFFIX); });
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -46926,7 +46694,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* modifier */ undefined, 
         /* typeParameters */ undefined, 
         /* parameters */ [eventParam], 
-        /* type */ undefined, 
+        /* type */ ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword), 
         /* equalsGreaterThanToken*/ undefined, 
         /* body */ handler);
     }
@@ -47367,14 +47135,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         splits.push(str.substring(start));
         return splits;
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -49587,7 +49347,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return function (sourceFile) {
                 var module = moduleMap.get(sourceFile.fileName);
                 if (module && module.statements.length > 0) {
-                    var _a = __read(updateSourceFile(sourceFile, module, context), 1), newSourceFile = _a[0];
+                    var _a = __read(updateSourceFile(sourceFile, module), 1), newSourceFile = _a[0];
                     return newSourceFile;
                 }
                 return sourceFile;
@@ -50568,30 +50328,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Extension of the TypeScript compiler host that supports files added to the Program which
      * were never on disk.
@@ -50673,14 +50409,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         SyntheticFilesCompilerHost.prototype.trace = function (s) { console.error(s); };
         return SyntheticFilesCompilerHost;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -52318,8 +52046,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         return;
                     return getDirectiveModule(directiveSymbol, { start: directiveId.getStart(), length: directiveId.end - directiveId.getStart() }, host);
                 }
-                break;
-            default:
                 break;
         }
         return undefined;
@@ -57758,16 +57484,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
     }
 
-    // Note: This hack is necessary so we don't erroneously get a circular dependency
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
     /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
@@ -58972,10 +58688,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var prop = getMapProp(stylingMapArr, i);
                 var value = getMapValue(stylingMapArr, i);
                 if (isClassBased) {
-                    setClass(renderer, element, prop, value, null);
+                    setClass(renderer, element, prop, value);
                 }
                 else {
-                    setStyle(renderer, element, prop, value, null);
+                    setStyle(renderer, element, prop, value);
                 }
             }
         }
@@ -65512,22 +65228,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * A DI token that you can use to create a virtual [provider](guide/glossary#provider)
      * that will populate the `entryComponents` field of components and NgModules
@@ -65816,14 +65516,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return _symbolIterator;
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -67234,7 +66926,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var context = isClassBased ? tNode.classes : tNode.styles;
         if (!isStylingContext(context)) {
             var hasDirectives = isDirectiveHost(tNode);
-            context = allocTStylingContext(context, hasDirectives);
+            context = allocTStylingContext(context);
             if (ngDevMode) {
                 attachStylingDebugObject(context, tNode, isClassBased);
             }
@@ -67991,14 +67683,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return result;
         };
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -69675,14 +69359,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Returns the component instance associated with a given DOM host element.
      * Elements which don't represent components return `null`.
@@ -69984,14 +69660,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         return debugNode;
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -70839,14 +70507,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * A wrapper around a native element inside of a View.
      *
@@ -70985,7 +70645,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+77.sha-2ed04ff.with-local-changes');
 
     /**
      * @license
@@ -73179,7 +72839,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 throw new Error("The ng module " + stringify$1(this.instance.constructor) + " has already been destroyed.");
             }
             this._destroyed = true;
-            callNgModuleLifecycle(this, 131072 /* OnDestroy */);
+            callNgModuleLifecycle(this);
             this._destroyListeners.forEach(function (listener) { return listener(); });
         };
         NgModuleRef_.prototype.onDestroy = function (callback) { this._destroyListeners.push(callback); };
@@ -75300,14 +74960,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Bindings for pure functions are stored after regular bindings.
      *
@@ -75748,20 +75400,19 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return newValue;
     }
 
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function isFunction(x) {
         return typeof x === 'function';
     }
 
-    let _enable_super_gross_mode_that_will_cause_bad_things = false;
-    const config = {
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var _enable_super_gross_mode_that_will_cause_bad_things = false;
+    var config = {
         Promise: undefined,
         set useDeprecatedSynchronousErrorHandling(value) {
             if (value) {
-                const error = new Error();
-                console.warn('DEPRECATED! RxJS was set to use deprecated synchronous error handling behavior by code at: \n' + error.stack);
-            }
-            else if (_enable_super_gross_mode_that_will_cause_bad_things) {
-                console.log('RxJS: Back to a better error behavior. Thank you. <3');
+                var error = /*@__PURE__*/ new Error();
+                /*@__PURE__*/ console.warn('DEPRECATED! RxJS was set to use deprecated synchronous error handling behavior by code at: \n' + error.stack);
             }
             _enable_super_gross_mode_that_will_cause_bad_things = value;
         },
@@ -75770,14 +75421,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         },
     };
 
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function hostReportError(err) {
-        setTimeout(() => { throw err; }, 0);
+        setTimeout(function () { throw err; }, 0);
     }
 
-    const empty$1 = {
+    /** PURE_IMPORTS_START _config,_util_hostReportError PURE_IMPORTS_END */
+    var empty$1 = {
         closed: true,
-        next(value) { },
-        error(err) {
+        next: function (value) { },
+        error: function (err) {
             if (config.useDeprecatedSynchronousErrorHandling) {
                 throw err;
             }
@@ -75785,32 +75438,35 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 hostReportError(err);
             }
         },
-        complete() { }
+        complete: function () { }
     };
 
-    const isArray = (() => Array.isArray || ((x) => x && typeof x.length === 'number'))();
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var isArray = /*@__PURE__*/ (function () { return Array.isArray || (function (x) { return x && typeof x.length === 'number'; }); })();
 
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function isObject(x) {
         return x !== null && typeof x === 'object';
     }
 
-    const UnsubscriptionErrorImpl = (() => {
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var UnsubscriptionErrorImpl = /*@__PURE__*/ (function () {
         function UnsubscriptionErrorImpl(errors) {
             Error.call(this);
             this.message = errors ?
-                `${errors.length} errors occurred during unsubscription:
-${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
+                errors.length + " errors occurred during unsubscription:\n" + errors.map(function (err, i) { return i + 1 + ") " + err.toString(); }).join('\n  ') : '';
             this.name = 'UnsubscriptionError';
             this.errors = errors;
             return this;
         }
-        UnsubscriptionErrorImpl.prototype = Object.create(Error.prototype);
+        UnsubscriptionErrorImpl.prototype = /*@__PURE__*/ Object.create(Error.prototype);
         return UnsubscriptionErrorImpl;
     })();
-    const UnsubscriptionError = UnsubscriptionErrorImpl;
+    var UnsubscriptionError = UnsubscriptionErrorImpl;
 
-    class Subscription {
-        constructor(unsubscribe) {
+    /** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_UnsubscriptionError PURE_IMPORTS_END */
+    var Subscription = /*@__PURE__*/ (function () {
+        function Subscription(unsubscribe) {
             this.closed = false;
             this._parentOrParents = null;
             this._subscriptions = null;
@@ -75818,12 +75474,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 this._unsubscribe = unsubscribe;
             }
         }
-        unsubscribe() {
-            let errors;
+        Subscription.prototype.unsubscribe = function () {
+            var errors;
             if (this.closed) {
                 return;
             }
-            let { _parentOrParents, _unsubscribe, _subscriptions } = this;
+            var _a = this, _parentOrParents = _a._parentOrParents, _unsubscribe = _a._unsubscribe, _subscriptions = _a._subscriptions;
             this.closed = true;
             this._parentOrParents = null;
             this._subscriptions = null;
@@ -75831,9 +75487,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 _parentOrParents.remove(this);
             }
             else if (_parentOrParents !== null) {
-                for (let index = 0; index < _parentOrParents.length; ++index) {
-                    const parent = _parentOrParents[index];
-                    parent.remove(this);
+                for (var index = 0; index < _parentOrParents.length; ++index) {
+                    var parent_1 = _parentOrParents[index];
+                    parent_1.remove(this);
                 }
             }
             if (isFunction(_unsubscribe)) {
@@ -75845,10 +75501,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
             if (isArray(_subscriptions)) {
-                let index = -1;
-                let len = _subscriptions.length;
+                var index = -1;
+                var len = _subscriptions.length;
                 while (++index < len) {
-                    const sub = _subscriptions[index];
+                    var sub = _subscriptions[index];
                     if (isObject(sub)) {
                         try {
                             sub.unsubscribe();
@@ -75868,9 +75524,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (errors) {
                 throw new UnsubscriptionError(errors);
             }
-        }
-        add(teardown) {
-            let subscription = teardown;
+        };
+        Subscription.prototype.add = function (teardown) {
+            var subscription = teardown;
             if (!teardown) {
                 return Subscription.EMPTY;
             }
@@ -75886,7 +75542,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         return subscription;
                     }
                     else if (!(subscription instanceof Subscription)) {
-                        const tmp = subscription;
+                        var tmp = subscription;
                         subscription = new Subscription();
                         subscription._subscriptions = [tmp];
                     }
@@ -75895,7 +75551,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     throw new Error('unrecognized teardown ' + teardown + ' added to Subscription.');
                 }
             }
-            let { _parentOrParents } = subscription;
+            var _parentOrParents = subscription._parentOrParents;
             if (_parentOrParents === null) {
                 subscription._parentOrParents = this;
             }
@@ -75911,7 +75567,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             else {
                 return subscription;
             }
-            const subscriptions = this._subscriptions;
+            var subscriptions = this._subscriptions;
             if (subscriptions === null) {
                 this._subscriptions = [subscription];
             }
@@ -75919,120 +75575,129 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 subscriptions.push(subscription);
             }
             return subscription;
-        }
-        remove(subscription) {
-            const subscriptions = this._subscriptions;
+        };
+        Subscription.prototype.remove = function (subscription) {
+            var subscriptions = this._subscriptions;
             if (subscriptions) {
-                const subscriptionIndex = subscriptions.indexOf(subscription);
+                var subscriptionIndex = subscriptions.indexOf(subscription);
                 if (subscriptionIndex !== -1) {
                     subscriptions.splice(subscriptionIndex, 1);
                 }
             }
-        }
-    }
-    Subscription.EMPTY = (function (empty) {
-        empty.closed = true;
-        return empty;
-    }(new Subscription()));
+        };
+        Subscription.EMPTY = (function (empty) {
+            empty.closed = true;
+            return empty;
+        }(new Subscription()));
+        return Subscription;
+    }());
     function flattenUnsubscriptionErrors(errors) {
-        return errors.reduce((errs, err) => errs.concat((err instanceof UnsubscriptionError) ? err.errors : err), []);
+        return errors.reduce(function (errs, err) { return errs.concat((err instanceof UnsubscriptionError) ? err.errors : err); }, []);
     }
 
-    const rxSubscriber = (() => typeof Symbol === 'function'
-        ? Symbol('rxSubscriber')
-        : '@@rxSubscriber_' + Math.random())();
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var rxSubscriber = /*@__PURE__*/ (function () {
+        return typeof Symbol === 'function'
+            ? /*@__PURE__*/ Symbol('rxSubscriber')
+            : '@@rxSubscriber_' + /*@__PURE__*/ Math.random();
+    })();
 
-    class Subscriber extends Subscription {
-        constructor(destinationOrNext, error, complete) {
-            super();
-            this.syncErrorValue = null;
-            this.syncErrorThrown = false;
-            this.syncErrorThrowable = false;
-            this.isStopped = false;
+    /** PURE_IMPORTS_START tslib,_util_isFunction,_Observer,_Subscription,_internal_symbol_rxSubscriber,_config,_util_hostReportError PURE_IMPORTS_END */
+    var Subscriber = /*@__PURE__*/ (function (_super) {
+        __extends(Subscriber, _super);
+        function Subscriber(destinationOrNext, error, complete) {
+            var _this = _super.call(this) || this;
+            _this.syncErrorValue = null;
+            _this.syncErrorThrown = false;
+            _this.syncErrorThrowable = false;
+            _this.isStopped = false;
             switch (arguments.length) {
                 case 0:
-                    this.destination = empty$1;
+                    _this.destination = empty$1;
                     break;
                 case 1:
                     if (!destinationOrNext) {
-                        this.destination = empty$1;
+                        _this.destination = empty$1;
                         break;
                     }
                     if (typeof destinationOrNext === 'object') {
                         if (destinationOrNext instanceof Subscriber) {
-                            this.syncErrorThrowable = destinationOrNext.syncErrorThrowable;
-                            this.destination = destinationOrNext;
-                            destinationOrNext.add(this);
+                            _this.syncErrorThrowable = destinationOrNext.syncErrorThrowable;
+                            _this.destination = destinationOrNext;
+                            destinationOrNext.add(_this);
                         }
                         else {
-                            this.syncErrorThrowable = true;
-                            this.destination = new SafeSubscriber(this, destinationOrNext);
+                            _this.syncErrorThrowable = true;
+                            _this.destination = new SafeSubscriber(_this, destinationOrNext);
                         }
                         break;
                     }
                 default:
-                    this.syncErrorThrowable = true;
-                    this.destination = new SafeSubscriber(this, destinationOrNext, error, complete);
+                    _this.syncErrorThrowable = true;
+                    _this.destination = new SafeSubscriber(_this, destinationOrNext, error, complete);
                     break;
             }
+            return _this;
         }
-        [rxSubscriber]() { return this; }
-        static create(next, error, complete) {
-            const subscriber = new Subscriber(next, error, complete);
+        Subscriber.prototype[rxSubscriber] = function () { return this; };
+        Subscriber.create = function (next, error, complete) {
+            var subscriber = new Subscriber(next, error, complete);
             subscriber.syncErrorThrowable = false;
             return subscriber;
-        }
-        next(value) {
+        };
+        Subscriber.prototype.next = function (value) {
             if (!this.isStopped) {
                 this._next(value);
             }
-        }
-        error(err) {
+        };
+        Subscriber.prototype.error = function (err) {
             if (!this.isStopped) {
                 this.isStopped = true;
                 this._error(err);
             }
-        }
-        complete() {
+        };
+        Subscriber.prototype.complete = function () {
             if (!this.isStopped) {
                 this.isStopped = true;
                 this._complete();
             }
-        }
-        unsubscribe() {
+        };
+        Subscriber.prototype.unsubscribe = function () {
             if (this.closed) {
                 return;
             }
             this.isStopped = true;
-            super.unsubscribe();
-        }
-        _next(value) {
+            _super.prototype.unsubscribe.call(this);
+        };
+        Subscriber.prototype._next = function (value) {
             this.destination.next(value);
-        }
-        _error(err) {
+        };
+        Subscriber.prototype._error = function (err) {
             this.destination.error(err);
             this.unsubscribe();
-        }
-        _complete() {
+        };
+        Subscriber.prototype._complete = function () {
             this.destination.complete();
             this.unsubscribe();
-        }
-        _unsubscribeAndRecycle() {
-            const { _parentOrParents } = this;
+        };
+        Subscriber.prototype._unsubscribeAndRecycle = function () {
+            var _parentOrParents = this._parentOrParents;
             this._parentOrParents = null;
             this.unsubscribe();
             this.closed = false;
             this.isStopped = false;
             this._parentOrParents = _parentOrParents;
             return this;
-        }
-    }
-    class SafeSubscriber extends Subscriber {
-        constructor(_parentSubscriber, observerOrNext, error, complete) {
-            super();
-            this._parentSubscriber = _parentSubscriber;
-            let next;
-            let context = this;
+        };
+        return Subscriber;
+    }(Subscription));
+    var SafeSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(SafeSubscriber, _super);
+        function SafeSubscriber(_parentSubscriber, observerOrNext, error, complete) {
+            var _this = _super.call(this) || this;
+            _this._parentSubscriber = _parentSubscriber;
+            var next;
+            var context = _this;
             if (isFunction(observerOrNext)) {
                 next = observerOrNext;
             }
@@ -76043,19 +75708,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (observerOrNext !== empty$1) {
                     context = Object.create(observerOrNext);
                     if (isFunction(context.unsubscribe)) {
-                        this.add(context.unsubscribe.bind(context));
+                        _this.add(context.unsubscribe.bind(context));
                     }
-                    context.unsubscribe = this.unsubscribe.bind(this);
+                    context.unsubscribe = _this.unsubscribe.bind(_this);
                 }
             }
-            this._context = context;
-            this._next = next;
-            this._error = error;
-            this._complete = complete;
+            _this._context = context;
+            _this._next = next;
+            _this._error = error;
+            _this._complete = complete;
+            return _this;
         }
-        next(value) {
+        SafeSubscriber.prototype.next = function (value) {
             if (!this.isStopped && this._next) {
-                const { _parentSubscriber } = this;
+                var _parentSubscriber = this._parentSubscriber;
                 if (!config.useDeprecatedSynchronousErrorHandling || !_parentSubscriber.syncErrorThrowable) {
                     this.__tryOrUnsub(this._next, value);
                 }
@@ -76063,11 +75729,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     this.unsubscribe();
                 }
             }
-        }
-        error(err) {
+        };
+        SafeSubscriber.prototype.error = function (err) {
             if (!this.isStopped) {
-                const { _parentSubscriber } = this;
-                const { useDeprecatedSynchronousErrorHandling } = config;
+                var _parentSubscriber = this._parentSubscriber;
+                var useDeprecatedSynchronousErrorHandling = config.useDeprecatedSynchronousErrorHandling;
                 if (this._error) {
                     if (!useDeprecatedSynchronousErrorHandling || !_parentSubscriber.syncErrorThrowable) {
                         this.__tryOrUnsub(this._error, err);
@@ -76096,12 +75762,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     this.unsubscribe();
                 }
             }
-        }
-        complete() {
+        };
+        SafeSubscriber.prototype.complete = function () {
+            var _this = this;
             if (!this.isStopped) {
-                const { _parentSubscriber } = this;
+                var _parentSubscriber = this._parentSubscriber;
                 if (this._complete) {
-                    const wrappedComplete = () => this._complete.call(this._context);
+                    var wrappedComplete = function () { return _this._complete.call(_this._context); };
                     if (!config.useDeprecatedSynchronousErrorHandling || !_parentSubscriber.syncErrorThrowable) {
                         this.__tryOrUnsub(wrappedComplete);
                         this.unsubscribe();
@@ -76115,8 +75782,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     this.unsubscribe();
                 }
             }
-        }
-        __tryOrUnsub(fn, value) {
+        };
+        SafeSubscriber.prototype.__tryOrUnsub = function (fn, value) {
             try {
                 fn.call(this._context, value);
             }
@@ -76129,8 +75796,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     hostReportError(err);
                 }
             }
-        }
-        __tryOrSetError(parent, fn, value) {
+        };
+        SafeSubscriber.prototype.__tryOrSetError = function (parent, fn, value) {
             if (!config.useDeprecatedSynchronousErrorHandling) {
                 throw new Error('bad call');
             }
@@ -76149,19 +75816,21 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
             return false;
-        }
-        _unsubscribe() {
-            const { _parentSubscriber } = this;
+        };
+        SafeSubscriber.prototype._unsubscribe = function () {
+            var _parentSubscriber = this._parentSubscriber;
             this._context = null;
             this._parentSubscriber = null;
             _parentSubscriber.unsubscribe();
-        }
-    }
+        };
+        return SafeSubscriber;
+    }(Subscriber));
 
+    /** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */
     function canReportError(observer) {
         while (observer) {
-            const { closed, destination, isStopped } = observer;
-            if (closed || isStopped) {
+            var _a = observer, closed_1 = _a.closed, destination = _a.destination, isStopped = _a.isStopped;
+            if (closed_1 || isStopped) {
                 return false;
             }
             else if (destination && destination instanceof Subscriber) {
@@ -76174,6 +75843,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return true;
     }
 
+    /** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
     function toSubscriber(nextOrObserver, error, complete) {
         if (nextOrObserver) {
             if (nextOrObserver instanceof Subscriber) {
@@ -76189,10 +75859,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return new Subscriber(nextOrObserver, error, complete);
     }
 
-    const observable = (() => typeof Symbol === 'function' && Symbol.observable || '@@observable')();
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
 
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function noop() { }
 
+    /** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
     function pipeFromArray(fns) {
         if (!fns) {
             return noop;
@@ -76201,26 +75874,27 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return fns[0];
         }
         return function piped(input) {
-            return fns.reduce((prev, fn) => fn(prev), input);
+            return fns.reduce(function (prev, fn) { return fn(prev); }, input);
         };
     }
 
-    class Observable {
-        constructor(subscribe) {
+    /** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
+    var Observable = /*@__PURE__*/ (function () {
+        function Observable(subscribe) {
             this._isScalar = false;
             if (subscribe) {
                 this._subscribe = subscribe;
             }
         }
-        lift(operator) {
-            const observable = new Observable();
+        Observable.prototype.lift = function (operator) {
+            var observable = new Observable();
             observable.source = this;
             observable.operator = operator;
             return observable;
-        }
-        subscribe(observerOrNext, error, complete) {
-            const { operator } = this;
-            const sink = toSubscriber(observerOrNext, error, complete);
+        };
+        Observable.prototype.subscribe = function (observerOrNext, error, complete) {
+            var operator = this.operator;
+            var sink = toSubscriber(observerOrNext, error, complete);
             if (operator) {
                 sink.add(operator.call(sink, this.source));
             }
@@ -76238,8 +75912,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
             return sink;
-        }
-        _trySubscribe(sink) {
+        };
+        Observable.prototype._trySubscribe = function (sink) {
             try {
                 return this._subscribe(sink);
             }
@@ -76255,12 +75929,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     console.warn(err);
                 }
             }
-        }
-        forEach(next, promiseCtor) {
+        };
+        Observable.prototype.forEach = function (next, promiseCtor) {
+            var _this = this;
             promiseCtor = getPromiseCtor(promiseCtor);
-            return new promiseCtor((resolve, reject) => {
-                let subscription;
-                subscription = this.subscribe((value) => {
+            return new promiseCtor(function (resolve, reject) {
+                var subscription;
+                subscription = _this.subscribe(function (value) {
                     try {
                         next(value);
                     }
@@ -76272,34 +75947,40 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                 }, reject, resolve);
             });
-        }
-        _subscribe(subscriber) {
-            const { source } = this;
+        };
+        Observable.prototype._subscribe = function (subscriber) {
+            var source = this.source;
             return source && source.subscribe(subscriber);
-        }
-        [observable]() {
+        };
+        Observable.prototype[observable] = function () {
             return this;
-        }
-        pipe(...operations) {
+        };
+        Observable.prototype.pipe = function () {
+            var operations = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                operations[_i] = arguments[_i];
+            }
             if (operations.length === 0) {
                 return this;
             }
             return pipeFromArray(operations)(this);
-        }
-        toPromise(promiseCtor) {
+        };
+        Observable.prototype.toPromise = function (promiseCtor) {
+            var _this = this;
             promiseCtor = getPromiseCtor(promiseCtor);
-            return new promiseCtor((resolve, reject) => {
-                let value;
-                this.subscribe((x) => value = x, (err) => reject(err), () => resolve(value));
+            return new promiseCtor(function (resolve, reject) {
+                var value;
+                _this.subscribe(function (x) { return value = x; }, function (err) { return reject(err); }, function () { return resolve(value); });
             });
-        }
-    }
-    Observable.create = (subscribe) => {
-        return new Observable(subscribe);
-    };
+        };
+        Observable.create = function (subscribe) {
+            return new Observable(subscribe);
+        };
+        return Observable;
+    }());
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor =  Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -76307,121 +75988,132 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return promiseCtor;
     }
 
-    const ObjectUnsubscribedErrorImpl = (() => {
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var ObjectUnsubscribedErrorImpl = /*@__PURE__*/ (function () {
         function ObjectUnsubscribedErrorImpl() {
             Error.call(this);
             this.message = 'object unsubscribed';
             this.name = 'ObjectUnsubscribedError';
             return this;
         }
-        ObjectUnsubscribedErrorImpl.prototype = Object.create(Error.prototype);
+        ObjectUnsubscribedErrorImpl.prototype = /*@__PURE__*/ Object.create(Error.prototype);
         return ObjectUnsubscribedErrorImpl;
     })();
-    const ObjectUnsubscribedError = ObjectUnsubscribedErrorImpl;
+    var ObjectUnsubscribedError = ObjectUnsubscribedErrorImpl;
 
-    class SubjectSubscription extends Subscription {
-        constructor(subject, subscriber) {
-            super();
-            this.subject = subject;
-            this.subscriber = subscriber;
-            this.closed = false;
+    /** PURE_IMPORTS_START tslib,_Subscription PURE_IMPORTS_END */
+    var SubjectSubscription = /*@__PURE__*/ (function (_super) {
+        __extends(SubjectSubscription, _super);
+        function SubjectSubscription(subject, subscriber) {
+            var _this = _super.call(this) || this;
+            _this.subject = subject;
+            _this.subscriber = subscriber;
+            _this.closed = false;
+            return _this;
         }
-        unsubscribe() {
+        SubjectSubscription.prototype.unsubscribe = function () {
             if (this.closed) {
                 return;
             }
             this.closed = true;
-            const subject = this.subject;
-            const observers = subject.observers;
+            var subject = this.subject;
+            var observers = subject.observers;
             this.subject = null;
             if (!observers || observers.length === 0 || subject.isStopped || subject.closed) {
                 return;
             }
-            const subscriberIndex = observers.indexOf(this.subscriber);
+            var subscriberIndex = observers.indexOf(this.subscriber);
             if (subscriberIndex !== -1) {
                 observers.splice(subscriberIndex, 1);
             }
-        }
-    }
+        };
+        return SubjectSubscription;
+    }(Subscription));
 
-    class SubjectSubscriber extends Subscriber {
-        constructor(destination) {
-            super(destination);
-            this.destination = destination;
+    /** PURE_IMPORTS_START tslib,_Observable,_Subscriber,_Subscription,_util_ObjectUnsubscribedError,_SubjectSubscription,_internal_symbol_rxSubscriber PURE_IMPORTS_END */
+    var SubjectSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(SubjectSubscriber, _super);
+        function SubjectSubscriber(destination) {
+            var _this = _super.call(this, destination) || this;
+            _this.destination = destination;
+            return _this;
         }
-    }
-    class Subject extends Observable {
-        constructor() {
-            super();
-            this.observers = [];
-            this.closed = false;
-            this.isStopped = false;
-            this.hasError = false;
-            this.thrownError = null;
+        return SubjectSubscriber;
+    }(Subscriber));
+    var Subject = /*@__PURE__*/ (function (_super) {
+        __extends(Subject, _super);
+        function Subject() {
+            var _this = _super.call(this) || this;
+            _this.observers = [];
+            _this.closed = false;
+            _this.isStopped = false;
+            _this.hasError = false;
+            _this.thrownError = null;
+            return _this;
         }
-        [rxSubscriber]() {
+        Subject.prototype[rxSubscriber] = function () {
             return new SubjectSubscriber(this);
-        }
-        lift(operator) {
-            const subject = new AnonymousSubject(this, this);
+        };
+        Subject.prototype.lift = function (operator) {
+            var subject = new AnonymousSubject(this, this);
             subject.operator = operator;
             return subject;
-        }
-        next(value) {
+        };
+        Subject.prototype.next = function (value) {
             if (this.closed) {
                 throw new ObjectUnsubscribedError();
             }
             if (!this.isStopped) {
-                const { observers } = this;
-                const len = observers.length;
-                const copy = observers.slice();
-                for (let i = 0; i < len; i++) {
+                var observers = this.observers;
+                var len = observers.length;
+                var copy = observers.slice();
+                for (var i = 0; i < len; i++) {
                     copy[i].next(value);
                 }
             }
-        }
-        error(err) {
+        };
+        Subject.prototype.error = function (err) {
             if (this.closed) {
                 throw new ObjectUnsubscribedError();
             }
             this.hasError = true;
             this.thrownError = err;
             this.isStopped = true;
-            const { observers } = this;
-            const len = observers.length;
-            const copy = observers.slice();
-            for (let i = 0; i < len; i++) {
+            var observers = this.observers;
+            var len = observers.length;
+            var copy = observers.slice();
+            for (var i = 0; i < len; i++) {
                 copy[i].error(err);
             }
             this.observers.length = 0;
-        }
-        complete() {
+        };
+        Subject.prototype.complete = function () {
             if (this.closed) {
                 throw new ObjectUnsubscribedError();
             }
             this.isStopped = true;
-            const { observers } = this;
-            const len = observers.length;
-            const copy = observers.slice();
-            for (let i = 0; i < len; i++) {
+            var observers = this.observers;
+            var len = observers.length;
+            var copy = observers.slice();
+            for (var i = 0; i < len; i++) {
                 copy[i].complete();
             }
             this.observers.length = 0;
-        }
-        unsubscribe() {
+        };
+        Subject.prototype.unsubscribe = function () {
             this.isStopped = true;
             this.closed = true;
             this.observers = null;
-        }
-        _trySubscribe(subscriber) {
+        };
+        Subject.prototype._trySubscribe = function (subscriber) {
             if (this.closed) {
                 throw new ObjectUnsubscribedError();
             }
             else {
-                return super._trySubscribe(subscriber);
+                return _super.prototype._trySubscribe.call(this, subscriber);
             }
-        }
-        _subscribe(subscriber) {
+        };
+        Subject.prototype._subscribe = function (subscriber) {
             if (this.closed) {
                 throw new ObjectUnsubscribedError();
             }
@@ -76437,84 +76129,92 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 this.observers.push(subscriber);
                 return new SubjectSubscription(this, subscriber);
             }
-        }
-        asObservable() {
-            const observable = new Observable();
+        };
+        Subject.prototype.asObservable = function () {
+            var observable = new Observable();
             observable.source = this;
             return observable;
+        };
+        Subject.create = function (destination, source) {
+            return new AnonymousSubject(destination, source);
+        };
+        return Subject;
+    }(Observable));
+    var AnonymousSubject = /*@__PURE__*/ (function (_super) {
+        __extends(AnonymousSubject, _super);
+        function AnonymousSubject(destination, source) {
+            var _this = _super.call(this) || this;
+            _this.destination = destination;
+            _this.source = source;
+            return _this;
         }
-    }
-    Subject.create = (destination, source) => {
-        return new AnonymousSubject(destination, source);
-    };
-    class AnonymousSubject extends Subject {
-        constructor(destination, source) {
-            super();
-            this.destination = destination;
-            this.source = source;
-        }
-        next(value) {
-            const { destination } = this;
+        AnonymousSubject.prototype.next = function (value) {
+            var destination = this.destination;
             if (destination && destination.next) {
                 destination.next(value);
             }
-        }
-        error(err) {
-            const { destination } = this;
+        };
+        AnonymousSubject.prototype.error = function (err) {
+            var destination = this.destination;
             if (destination && destination.error) {
                 this.destination.error(err);
             }
-        }
-        complete() {
-            const { destination } = this;
+        };
+        AnonymousSubject.prototype.complete = function () {
+            var destination = this.destination;
             if (destination && destination.complete) {
                 this.destination.complete();
             }
-        }
-        _subscribe(subscriber) {
-            const { source } = this;
+        };
+        AnonymousSubject.prototype._subscribe = function (subscriber) {
+            var source = this.source;
             if (source) {
                 return this.source.subscribe(subscriber);
             }
             else {
                 return Subscription.EMPTY;
             }
-        }
-    }
+        };
+        return AnonymousSubject;
+    }(Subject));
 
+    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
     function refCount() {
         return function refCountOperatorFunction(source) {
             return source.lift(new RefCountOperator(source));
         };
     }
-    class RefCountOperator {
-        constructor(connectable) {
+    var RefCountOperator = /*@__PURE__*/ (function () {
+        function RefCountOperator(connectable) {
             this.connectable = connectable;
         }
-        call(subscriber, source) {
-            const { connectable } = this;
+        RefCountOperator.prototype.call = function (subscriber, source) {
+            var connectable = this.connectable;
             connectable._refCount++;
-            const refCounter = new RefCountSubscriber(subscriber, connectable);
-            const subscription = source.subscribe(refCounter);
+            var refCounter = new RefCountSubscriber(subscriber, connectable);
+            var subscription = source.subscribe(refCounter);
             if (!refCounter.closed) {
                 refCounter.connection = connectable.connect();
             }
             return subscription;
+        };
+        return RefCountOperator;
+    }());
+    var RefCountSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(RefCountSubscriber, _super);
+        function RefCountSubscriber(destination, connectable) {
+            var _this = _super.call(this, destination) || this;
+            _this.connectable = connectable;
+            return _this;
         }
-    }
-    class RefCountSubscriber extends Subscriber {
-        constructor(destination, connectable) {
-            super(destination);
-            this.connectable = connectable;
-        }
-        _unsubscribe() {
-            const { connectable } = this;
+        RefCountSubscriber.prototype._unsubscribe = function () {
+            var connectable = this.connectable;
             if (!connectable) {
                 this.connection = null;
                 return;
             }
             this.connectable = null;
-            const refCount = connectable._refCount;
+            var refCount = connectable._refCount;
             if (refCount <= 0) {
                 this.connection = null;
                 return;
@@ -76524,35 +76224,39 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 this.connection = null;
                 return;
             }
-            const { connection } = this;
-            const sharedConnection = connectable._connection;
+            var connection = this.connection;
+            var sharedConnection = connectable._connection;
             this.connection = null;
             if (sharedConnection && (!connection || sharedConnection === connection)) {
                 sharedConnection.unsubscribe();
             }
-        }
-    }
+        };
+        return RefCountSubscriber;
+    }(Subscriber));
 
-    class ConnectableObservable extends Observable {
-        constructor(source, subjectFactory) {
-            super();
-            this.source = source;
-            this.subjectFactory = subjectFactory;
-            this._refCount = 0;
-            this._isComplete = false;
+    /** PURE_IMPORTS_START tslib,_Subject,_Observable,_Subscriber,_Subscription,_operators_refCount PURE_IMPORTS_END */
+    var ConnectableObservable = /*@__PURE__*/ (function (_super) {
+        __extends(ConnectableObservable, _super);
+        function ConnectableObservable(source, subjectFactory) {
+            var _this = _super.call(this) || this;
+            _this.source = source;
+            _this.subjectFactory = subjectFactory;
+            _this._refCount = 0;
+            _this._isComplete = false;
+            return _this;
         }
-        _subscribe(subscriber) {
+        ConnectableObservable.prototype._subscribe = function (subscriber) {
             return this.getSubject().subscribe(subscriber);
-        }
-        getSubject() {
-            const subject = this._subject;
+        };
+        ConnectableObservable.prototype.getSubject = function () {
+            var subject = this._subject;
             if (!subject || subject.isStopped) {
                 this._subject = this.subjectFactory();
             }
             return this._subject;
-        }
-        connect() {
-            let connection = this._connection;
+        };
+        ConnectableObservable.prototype.connect = function () {
+            var connection = this._connection;
             if (!connection) {
                 this._isComplete = false;
                 connection = this._connection = new Subscription();
@@ -76564,13 +76268,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
             return connection;
-        }
-        refCount() {
+        };
+        ConnectableObservable.prototype.refCount = function () {
             return refCount()(this);
-        }
-    }
-    const connectableObservableDescriptor = (() => {
-        const connectableProto = ConnectableObservable.prototype;
+        };
+        return ConnectableObservable;
+    }(Observable));
+    var connectableObservableDescriptor = /*@__PURE__*/ (function () {
+        var connectableProto = ConnectableObservable.prototype;
         return {
             operator: { value: null },
             _refCount: { value: 0, writable: true },
@@ -76583,25 +76288,27 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             refCount: { value: connectableProto.refCount }
         };
     })();
-    class ConnectableSubscriber extends SubjectSubscriber {
-        constructor(destination, connectable) {
-            super(destination);
-            this.connectable = connectable;
+    var ConnectableSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(ConnectableSubscriber, _super);
+        function ConnectableSubscriber(destination, connectable) {
+            var _this = _super.call(this, destination) || this;
+            _this.connectable = connectable;
+            return _this;
         }
-        _error(err) {
+        ConnectableSubscriber.prototype._error = function (err) {
             this._unsubscribe();
-            super._error(err);
-        }
-        _complete() {
+            _super.prototype._error.call(this, err);
+        };
+        ConnectableSubscriber.prototype._complete = function () {
             this.connectable._isComplete = true;
             this._unsubscribe();
-            super._complete();
-        }
-        _unsubscribe() {
-            const connectable = this.connectable;
+            _super.prototype._complete.call(this);
+        };
+        ConnectableSubscriber.prototype._unsubscribe = function () {
+            var connectable = this.connectable;
             if (connectable) {
                 this.connectable = null;
-                const connection = connectable._connection;
+                var connection = connectable._connection;
                 connectable._refCount = 0;
                 connectable._subject = null;
                 connectable._connection = null;
@@ -76609,201 +76316,30 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     connection.unsubscribe();
                 }
             }
-        }
-    }
+        };
+        return ConnectableSubscriber;
+    }(SubjectSubscriber));
 
-    class Action extends Subscription {
-        constructor(scheduler, work) {
-            super();
-        }
-        schedule(state, delay = 0) {
-            return this;
-        }
-    }
-
-    class AsyncAction extends Action {
-        constructor(scheduler, work) {
-            super(scheduler, work);
-            this.scheduler = scheduler;
-            this.work = work;
-            this.pending = false;
-        }
-        schedule(state, delay = 0) {
-            if (this.closed) {
-                return this;
-            }
-            this.state = state;
-            const id = this.id;
-            const scheduler = this.scheduler;
-            if (id != null) {
-                this.id = this.recycleAsyncId(scheduler, id, delay);
-            }
-            this.pending = true;
-            this.delay = delay;
-            this.id = this.id || this.requestAsyncId(scheduler, this.id, delay);
-            return this;
-        }
-        requestAsyncId(scheduler, id, delay = 0) {
-            return setInterval(scheduler.flush.bind(scheduler, this), delay);
-        }
-        recycleAsyncId(scheduler, id, delay = 0) {
-            if (delay !== null && this.delay === delay && this.pending === false) {
-                return id;
-            }
-            clearInterval(id);
-            return undefined;
-        }
-        execute(state, delay) {
-            if (this.closed) {
-                return new Error('executing a cancelled action');
-            }
-            this.pending = false;
-            const error = this._execute(state, delay);
-            if (error) {
-                return error;
-            }
-            else if (this.pending === false && this.id != null) {
-                this.id = this.recycleAsyncId(this.scheduler, this.id, null);
-            }
-        }
-        _execute(state, delay) {
-            let errored = false;
-            let errorValue = undefined;
-            try {
-                this.work(state);
-            }
-            catch (e) {
-                errored = true;
-                errorValue = !!e && e || new Error(e);
-            }
-            if (errored) {
-                this.unsubscribe();
-                return errorValue;
-            }
-        }
-        _unsubscribe() {
-            const id = this.id;
-            const scheduler = this.scheduler;
-            const actions = scheduler.actions;
-            const index = actions.indexOf(this);
-            this.work = null;
-            this.state = null;
-            this.pending = false;
-            this.scheduler = null;
-            if (index !== -1) {
-                actions.splice(index, 1);
-            }
-            if (id != null) {
-                this.id = this.recycleAsyncId(scheduler, id, null);
-            }
-            this.delay = null;
-        }
-    }
-
-    class QueueAction extends AsyncAction {
-        constructor(scheduler, work) {
-            super(scheduler, work);
-            this.scheduler = scheduler;
-            this.work = work;
-        }
-        schedule(state, delay = 0) {
-            if (delay > 0) {
-                return super.schedule(state, delay);
-            }
-            this.delay = delay;
-            this.state = state;
-            this.scheduler.flush(this);
-            return this;
-        }
-        execute(state, delay) {
-            return (delay > 0 || this.closed) ?
-                super.execute(state, delay) :
-                this._execute(state, delay);
-        }
-        requestAsyncId(scheduler, id, delay = 0) {
-            if ((delay !== null && delay > 0) || (delay === null && this.delay > 0)) {
-                return super.requestAsyncId(scheduler, id, delay);
-            }
-            return scheduler.flush(this);
-        }
-    }
-
-    class Scheduler {
-        constructor(SchedulerAction, now = Scheduler.now) {
-            this.SchedulerAction = SchedulerAction;
-            this.now = now;
-        }
-        schedule(work, delay = 0, state) {
-            return new this.SchedulerAction(this, work).schedule(state, delay);
-        }
-    }
-    Scheduler.now = () => Date.now();
-
-    class AsyncScheduler extends Scheduler {
-        constructor(SchedulerAction, now = Scheduler.now) {
-            super(SchedulerAction, () => {
-                if (AsyncScheduler.delegate && AsyncScheduler.delegate !== this) {
-                    return AsyncScheduler.delegate.now();
-                }
-                else {
-                    return now();
-                }
-            });
-            this.actions = [];
-            this.active = false;
-            this.scheduled = undefined;
-        }
-        schedule(work, delay = 0, state) {
-            if (AsyncScheduler.delegate && AsyncScheduler.delegate !== this) {
-                return AsyncScheduler.delegate.schedule(work, delay, state);
-            }
-            else {
-                return super.schedule(work, delay, state);
-            }
-        }
-        flush(action) {
-            const { actions } = this;
-            if (this.active) {
-                actions.push(action);
-                return;
-            }
-            let error;
-            this.active = true;
-            do {
-                if (error = action.execute(action.state, action.delay)) {
-                    break;
-                }
-            } while (action = actions.shift());
-            this.active = false;
-            if (error) {
-                while (action = actions.shift()) {
-                    action.unsubscribe();
-                }
-                throw error;
-            }
-        }
-    }
-
-    class QueueScheduler extends AsyncScheduler {
-    }
-
-    const queue = new QueueScheduler(QueueAction);
-
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function isScheduler(value) {
         return value && typeof value.schedule === 'function';
     }
 
-    const subscribeToArray = (array) => (subscriber) => {
-        for (let i = 0, len = array.length; i < len && !subscriber.closed; i++) {
-            subscriber.next(array[i]);
-        }
-        subscriber.complete();
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var subscribeToArray = function (array) {
+        return function (subscriber) {
+            for (var i = 0, len = array.length; i < len && !subscriber.closed; i++) {
+                subscriber.next(array[i]);
+            }
+            subscriber.complete();
+        };
     };
 
+    /** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
     function scheduleArray(input, scheduler) {
-        return new Observable(subscriber => {
-            const sub = new Subscription();
-            let i = 0;
+        return new Observable(function (subscriber) {
+            var sub = new Subscription();
+            var i = 0;
             sub.add(scheduler.schedule(function () {
                 if (i === input.length) {
                     subscriber.complete();
@@ -76818,6 +76354,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
     }
 
+    /** PURE_IMPORTS_START _Observable,_util_subscribeToArray,_scheduled_scheduleArray PURE_IMPORTS_END */
     function fromArray(input, scheduler) {
         if (!scheduler) {
             return new Observable(subscribeToArray(input));
@@ -76827,141 +76364,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
     }
 
-    var NotificationKind;
-    (function (NotificationKind) {
-        NotificationKind["NEXT"] = "N";
-        NotificationKind["ERROR"] = "E";
-        NotificationKind["COMPLETE"] = "C";
-    })(NotificationKind || (NotificationKind = {}));
-
-    let nextHandle = 1;
-    const tasksByHandle = {};
-    function runIfPresent(handle) {
-        const cb = tasksByHandle[handle];
-        if (cb) {
-            cb();
-        }
-    }
-    const Immediate = {
-        setImmediate(cb) {
-            const handle = nextHandle++;
-            tasksByHandle[handle] = cb;
-            Promise.resolve().then(() => runIfPresent(handle));
-            return handle;
-        },
-        clearImmediate(handle) {
-            delete tasksByHandle[handle];
-        },
-    };
-
-    class AsapAction extends AsyncAction {
-        constructor(scheduler, work) {
-            super(scheduler, work);
-            this.scheduler = scheduler;
-            this.work = work;
-        }
-        requestAsyncId(scheduler, id, delay = 0) {
-            if (delay !== null && delay > 0) {
-                return super.requestAsyncId(scheduler, id, delay);
-            }
-            scheduler.actions.push(this);
-            return scheduler.scheduled || (scheduler.scheduled = Immediate.setImmediate(scheduler.flush.bind(scheduler, null)));
-        }
-        recycleAsyncId(scheduler, id, delay = 0) {
-            if ((delay !== null && delay > 0) || (delay === null && this.delay > 0)) {
-                return super.recycleAsyncId(scheduler, id, delay);
-            }
-            if (scheduler.actions.length === 0) {
-                Immediate.clearImmediate(id);
-                scheduler.scheduled = undefined;
-            }
-            return undefined;
-        }
-    }
-
-    class AsapScheduler extends AsyncScheduler {
-        flush(action) {
-            this.active = true;
-            this.scheduled = undefined;
-            const { actions } = this;
-            let error;
-            let index = -1;
-            let count = actions.length;
-            action = action || actions.shift();
-            do {
-                if (error = action.execute(action.state, action.delay)) {
-                    break;
-                }
-            } while (++index < count && (action = actions.shift()));
-            this.active = false;
-            if (error) {
-                while (++index < count && (action = actions.shift())) {
-                    action.unsubscribe();
-                }
-                throw error;
-            }
-        }
-    }
-
-    const asap = new AsapScheduler(AsapAction);
-
-    const async = new AsyncScheduler(AsyncAction);
-
-    class AnimationFrameAction extends AsyncAction {
-        constructor(scheduler, work) {
-            super(scheduler, work);
-            this.scheduler = scheduler;
-            this.work = work;
-        }
-        requestAsyncId(scheduler, id, delay = 0) {
-            if (delay !== null && delay > 0) {
-                return super.requestAsyncId(scheduler, id, delay);
-            }
-            scheduler.actions.push(this);
-            return scheduler.scheduled || (scheduler.scheduled = requestAnimationFrame(() => scheduler.flush(null)));
-        }
-        recycleAsyncId(scheduler, id, delay = 0) {
-            if ((delay !== null && delay > 0) || (delay === null && this.delay > 0)) {
-                return super.recycleAsyncId(scheduler, id, delay);
-            }
-            if (scheduler.actions.length === 0) {
-                cancelAnimationFrame(id);
-                scheduler.scheduled = undefined;
-            }
-            return undefined;
-        }
-    }
-
-    class AnimationFrameScheduler extends AsyncScheduler {
-        flush(action) {
-            this.active = true;
-            this.scheduled = undefined;
-            const { actions } = this;
-            let error;
-            let index = -1;
-            let count = actions.length;
-            action = action || actions.shift();
-            do {
-                if (error = action.execute(action.state, action.delay)) {
-                    break;
-                }
-            } while (++index < count && (action = actions.shift()));
-            this.active = false;
-            if (error) {
-                while (++index < count && (action = actions.shift())) {
-                    action.unsubscribe();
-                }
-                throw error;
-            }
-        }
-    }
-
-    const animationFrame = new AnimationFrameScheduler(AnimationFrameAction);
-
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function identity(x) {
         return x;
     }
 
+    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
     function map(project, thisArg) {
         return function mapOperation(source) {
             if (typeof project !== 'function') {
@@ -76970,24 +76378,27 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return source.lift(new MapOperator(project, thisArg));
         };
     }
-    class MapOperator {
-        constructor(project, thisArg) {
+    var MapOperator = /*@__PURE__*/ (function () {
+        function MapOperator(project, thisArg) {
             this.project = project;
             this.thisArg = thisArg;
         }
-        call(subscriber, source) {
+        MapOperator.prototype.call = function (subscriber, source) {
             return source.subscribe(new MapSubscriber(subscriber, this.project, this.thisArg));
+        };
+        return MapOperator;
+    }());
+    var MapSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(MapSubscriber, _super);
+        function MapSubscriber(destination, project, thisArg) {
+            var _this = _super.call(this, destination) || this;
+            _this.project = project;
+            _this.count = 0;
+            _this.thisArg = thisArg || _this;
+            return _this;
         }
-    }
-    class MapSubscriber extends Subscriber {
-        constructor(destination, project, thisArg) {
-            super(destination);
-            this.project = project;
-            this.count = 0;
-            this.thisArg = thisArg || this;
-        }
-        _next(value) {
-            let result;
+        MapSubscriber.prototype._next = function (value) {
+            var result;
             try {
                 result = this.project.call(this.thisArg, value, this.count++);
             }
@@ -76996,101 +76407,125 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 return;
             }
             this.destination.next(result);
-        }
-    }
+        };
+        return MapSubscriber;
+    }(Subscriber));
 
-    class OuterSubscriber extends Subscriber {
-        notifyNext(outerValue, innerValue, outerIndex, innerIndex, innerSub) {
+    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
+    var OuterSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(OuterSubscriber, _super);
+        function OuterSubscriber() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        OuterSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
             this.destination.next(innerValue);
-        }
-        notifyError(error, innerSub) {
+        };
+        OuterSubscriber.prototype.notifyError = function (error, innerSub) {
             this.destination.error(error);
-        }
-        notifyComplete(innerSub) {
+        };
+        OuterSubscriber.prototype.notifyComplete = function (innerSub) {
             this.destination.complete();
-        }
-    }
+        };
+        return OuterSubscriber;
+    }(Subscriber));
 
-    class InnerSubscriber extends Subscriber {
-        constructor(parent, outerValue, outerIndex) {
-            super();
-            this.parent = parent;
-            this.outerValue = outerValue;
-            this.outerIndex = outerIndex;
-            this.index = 0;
+    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
+    var InnerSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(InnerSubscriber, _super);
+        function InnerSubscriber(parent, outerValue, outerIndex) {
+            var _this = _super.call(this) || this;
+            _this.parent = parent;
+            _this.outerValue = outerValue;
+            _this.outerIndex = outerIndex;
+            _this.index = 0;
+            return _this;
         }
-        _next(value) {
+        InnerSubscriber.prototype._next = function (value) {
             this.parent.notifyNext(this.outerValue, value, this.outerIndex, this.index++, this);
-        }
-        _error(error) {
+        };
+        InnerSubscriber.prototype._error = function (error) {
             this.parent.notifyError(error, this);
             this.unsubscribe();
-        }
-        _complete() {
+        };
+        InnerSubscriber.prototype._complete = function () {
             this.parent.notifyComplete(this);
             this.unsubscribe();
-        }
-    }
+        };
+        return InnerSubscriber;
+    }(Subscriber));
 
-    const subscribeToPromise = (promise) => (subscriber) => {
-        promise.then((value) => {
-            if (!subscriber.closed) {
-                subscriber.next(value);
-                subscriber.complete();
-            }
-        }, (err) => subscriber.error(err))
-            .then(null, hostReportError);
-        return subscriber;
+    /** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */
+    var subscribeToPromise = function (promise) {
+        return function (subscriber) {
+            promise.then(function (value) {
+                if (!subscriber.closed) {
+                    subscriber.next(value);
+                    subscriber.complete();
+                }
+            }, function (err) { return subscriber.error(err); })
+                .then(null, hostReportError);
+            return subscriber;
+        };
     };
 
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function getSymbolIterator$1() {
         if (typeof Symbol !== 'function' || !Symbol.iterator) {
             return '@@iterator';
         }
         return Symbol.iterator;
     }
-    const iterator = getSymbolIterator$1();
+    var iterator = /*@__PURE__*/ getSymbolIterator$1();
 
-    const subscribeToIterable = (iterable) => (subscriber) => {
-        const iterator$1 = iterable[iterator]();
-        do {
-            const item = iterator$1.next();
-            if (item.done) {
-                subscriber.complete();
-                break;
-            }
-            subscriber.next(item.value);
-            if (subscriber.closed) {
-                break;
-            }
-        } while (true);
-        if (typeof iterator$1.return === 'function') {
-            subscriber.add(() => {
-                if (iterator$1.return) {
-                    iterator$1.return();
+    /** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
+    var subscribeToIterable = function (iterable) {
+        return function (subscriber) {
+            var iterator$1 = iterable[iterator]();
+            do {
+                var item = iterator$1.next();
+                if (item.done) {
+                    subscriber.complete();
+                    break;
                 }
-            });
-        }
-        return subscriber;
+                subscriber.next(item.value);
+                if (subscriber.closed) {
+                    break;
+                }
+            } while (true);
+            if (typeof iterator$1.return === 'function') {
+                subscriber.add(function () {
+                    if (iterator$1.return) {
+                        iterator$1.return();
+                    }
+                });
+            }
+            return subscriber;
+        };
     };
 
-    const subscribeToObservable = (obj) => (subscriber) => {
-        const obs = obj[observable]();
-        if (typeof obs.subscribe !== 'function') {
-            throw new TypeError('Provided object does not correctly implement Symbol.observable');
-        }
-        else {
-            return obs.subscribe(subscriber);
-        }
+    /** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
+    var subscribeToObservable = function (obj) {
+        return function (subscriber) {
+            var obs = obj[observable]();
+            if (typeof obs.subscribe !== 'function') {
+                throw new TypeError('Provided object does not correctly implement Symbol.observable');
+            }
+            else {
+                return obs.subscribe(subscriber);
+            }
+        };
     };
 
-    const isArrayLike = ((x) => x && typeof x.length === 'number' && typeof x !== 'function');
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+    var isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
 
+    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function isPromise$2(value) {
         return !!value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
     }
 
-    const subscribeTo = (result) => {
+    /** PURE_IMPORTS_START _subscribeToArray,_subscribeToPromise,_subscribeToIterable,_subscribeToObservable,_isArrayLike,_isPromise,_isObject,_symbol_iterator,_symbol_observable PURE_IMPORTS_END */
+    var subscribeTo = function (result) {
         if (!!result && typeof result[observable] === 'function') {
             return subscribeToObservable(result);
         }
@@ -77104,14 +76539,18 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return subscribeToIterable(result);
         }
         else {
-            const value = isObject(result) ? 'an invalid object' : `'${result}'`;
-            const msg = `You provided ${value} where a stream was expected.`
+            var value = isObject(result) ? 'an invalid object' : "'" + result + "'";
+            var msg = "You provided " + value + " where a stream was expected."
                 + ' You can provide an Observable, Promise, Array, or Iterable.';
             throw new TypeError(msg);
         }
     };
 
-    function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination = new InnerSubscriber(outerSubscriber, outerValue, outerIndex)) {
+    /** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
+    function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
+        if (destination === void 0) {
+            destination = new InnerSubscriber(outerSubscriber, outerValue, outerIndex);
+        }
         if (destination.closed) {
             return undefined;
         }
@@ -77121,58 +76560,63 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return subscribeTo(result)(destination);
     }
 
+    /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
     function scheduleObservable(input, scheduler) {
-        return new Observable(subscriber => {
-            const sub = new Subscription();
-            sub.add(scheduler.schedule(() => {
-                const observable$1 = input[observable]();
+        return new Observable(function (subscriber) {
+            var sub = new Subscription();
+            sub.add(scheduler.schedule(function () {
+                var observable$1 = input[observable]();
                 sub.add(observable$1.subscribe({
-                    next(value) { sub.add(scheduler.schedule(() => subscriber.next(value))); },
-                    error(err) { sub.add(scheduler.schedule(() => subscriber.error(err))); },
-                    complete() { sub.add(scheduler.schedule(() => subscriber.complete())); },
+                    next: function (value) { sub.add(scheduler.schedule(function () { return subscriber.next(value); })); },
+                    error: function (err) { sub.add(scheduler.schedule(function () { return subscriber.error(err); })); },
+                    complete: function () { sub.add(scheduler.schedule(function () { return subscriber.complete(); })); },
                 }));
             }));
             return sub;
         });
     }
 
+    /** PURE_IMPORTS_START _Observable,_Subscription PURE_IMPORTS_END */
     function schedulePromise(input, scheduler) {
-        return new Observable(subscriber => {
-            const sub = new Subscription();
-            sub.add(scheduler.schedule(() => input.then(value => {
-                sub.add(scheduler.schedule(() => {
-                    subscriber.next(value);
-                    sub.add(scheduler.schedule(() => subscriber.complete()));
-                }));
-            }, err => {
-                sub.add(scheduler.schedule(() => subscriber.error(err)));
-            })));
+        return new Observable(function (subscriber) {
+            var sub = new Subscription();
+            sub.add(scheduler.schedule(function () {
+                return input.then(function (value) {
+                    sub.add(scheduler.schedule(function () {
+                        subscriber.next(value);
+                        sub.add(scheduler.schedule(function () { return subscriber.complete(); }));
+                    }));
+                }, function (err) {
+                    sub.add(scheduler.schedule(function () { return subscriber.error(err); }));
+                });
+            }));
             return sub;
         });
     }
 
+    /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_iterator PURE_IMPORTS_END */
     function scheduleIterable(input, scheduler) {
         if (!input) {
             throw new Error('Iterable cannot be null');
         }
-        return new Observable(subscriber => {
-            const sub = new Subscription();
-            let iterator$1;
-            sub.add(() => {
+        return new Observable(function (subscriber) {
+            var sub = new Subscription();
+            var iterator$1;
+            sub.add(function () {
                 if (iterator$1 && typeof iterator$1.return === 'function') {
                     iterator$1.return();
                 }
             });
-            sub.add(scheduler.schedule(() => {
+            sub.add(scheduler.schedule(function () {
                 iterator$1 = input[iterator]();
                 sub.add(scheduler.schedule(function () {
                     if (subscriber.closed) {
                         return;
                     }
-                    let value;
-                    let done;
+                    var value;
+                    var done;
                     try {
-                        const result = iterator$1.next();
+                        var result = iterator$1.next();
                         value = result.value;
                         done = result.done;
                     }
@@ -77193,14 +76637,17 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
     }
 
+    /** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
     function isInteropObservable(input) {
         return input && typeof input[observable] === 'function';
     }
 
+    /** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */
     function isIterable(input) {
         return input && typeof input[iterator] === 'function';
     }
 
+    /** PURE_IMPORTS_START _scheduleObservable,_schedulePromise,_scheduleArray,_scheduleIterable,_util_isInteropObservable,_util_isPromise,_util_isArrayLike,_util_isIterable PURE_IMPORTS_END */
     function scheduled(input, scheduler) {
         if (input != null) {
             if (isInteropObservable(input)) {
@@ -77219,6 +76666,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         throw new TypeError((input !== null && typeof input || input) + ' is not observable');
     }
 
+    /** PURE_IMPORTS_START _Observable,_util_subscribeTo,_scheduled_scheduled PURE_IMPORTS_END */
     function from(input, scheduler) {
         if (!scheduler) {
             if (input instanceof Observable) {
@@ -77231,45 +76679,58 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
     }
 
-    function mergeMap(project, resultSelector, concurrent = Number.POSITIVE_INFINITY) {
+    /** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
+    function mergeMap(project, resultSelector, concurrent) {
+        if (concurrent === void 0) {
+            concurrent = Number.POSITIVE_INFINITY;
+        }
         if (typeof resultSelector === 'function') {
-            return (source) => source.pipe(mergeMap((a, i) => from(project(a, i)).pipe(map((b, ii) => resultSelector(a, b, i, ii))), concurrent));
+            return function (source) { return source.pipe(mergeMap(function (a, i) { return from(project(a, i)).pipe(map(function (b, ii) { return resultSelector(a, b, i, ii); })); }, concurrent)); };
         }
         else if (typeof resultSelector === 'number') {
             concurrent = resultSelector;
         }
-        return (source) => source.lift(new MergeMapOperator(project, concurrent));
+        return function (source) { return source.lift(new MergeMapOperator(project, concurrent)); };
     }
-    class MergeMapOperator {
-        constructor(project, concurrent = Number.POSITIVE_INFINITY) {
+    var MergeMapOperator = /*@__PURE__*/ (function () {
+        function MergeMapOperator(project, concurrent) {
+            if (concurrent === void 0) {
+                concurrent = Number.POSITIVE_INFINITY;
+            }
             this.project = project;
             this.concurrent = concurrent;
         }
-        call(observer, source) {
+        MergeMapOperator.prototype.call = function (observer, source) {
             return source.subscribe(new MergeMapSubscriber(observer, this.project, this.concurrent));
+        };
+        return MergeMapOperator;
+    }());
+    var MergeMapSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(MergeMapSubscriber, _super);
+        function MergeMapSubscriber(destination, project, concurrent) {
+            if (concurrent === void 0) {
+                concurrent = Number.POSITIVE_INFINITY;
+            }
+            var _this = _super.call(this, destination) || this;
+            _this.project = project;
+            _this.concurrent = concurrent;
+            _this.hasCompleted = false;
+            _this.buffer = [];
+            _this.active = 0;
+            _this.index = 0;
+            return _this;
         }
-    }
-    class MergeMapSubscriber extends OuterSubscriber {
-        constructor(destination, project, concurrent = Number.POSITIVE_INFINITY) {
-            super(destination);
-            this.project = project;
-            this.concurrent = concurrent;
-            this.hasCompleted = false;
-            this.buffer = [];
-            this.active = 0;
-            this.index = 0;
-        }
-        _next(value) {
+        MergeMapSubscriber.prototype._next = function (value) {
             if (this.active < this.concurrent) {
                 this._tryNext(value);
             }
             else {
                 this.buffer.push(value);
             }
-        }
-        _tryNext(value) {
-            let result;
-            const index = this.index++;
+        };
+        MergeMapSubscriber.prototype._tryNext = function (value) {
+            var result;
+            var index = this.index++;
             try {
                 result = this.project(value, index);
             }
@@ -77279,25 +76740,25 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             this.active++;
             this._innerSub(result, value, index);
-        }
-        _innerSub(ish, value, index) {
-            const innerSubscriber = new InnerSubscriber(this, undefined, undefined);
-            const destination = this.destination;
+        };
+        MergeMapSubscriber.prototype._innerSub = function (ish, value, index) {
+            var innerSubscriber = new InnerSubscriber(this, undefined, undefined);
+            var destination = this.destination;
             destination.add(innerSubscriber);
             subscribeToResult(this, ish, value, index, innerSubscriber);
-        }
-        _complete() {
+        };
+        MergeMapSubscriber.prototype._complete = function () {
             this.hasCompleted = true;
             if (this.active === 0 && this.buffer.length === 0) {
                 this.destination.complete();
             }
             this.unsubscribe();
-        }
-        notifyNext(outerValue, innerValue, outerIndex, innerIndex, innerSub) {
+        };
+        MergeMapSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
             this.destination.next(innerValue);
-        }
-        notifyComplete(innerSub) {
-            const buffer = this.buffer;
+        };
+        MergeMapSubscriber.prototype.notifyComplete = function (innerSub) {
+            var buffer = this.buffer;
             this.remove(innerSub);
             this.active--;
             if (buffer.length > 0) {
@@ -77306,17 +76767,27 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             else if (this.active === 0 && this.hasCompleted) {
                 this.destination.complete();
             }
-        }
-    }
+        };
+        return MergeMapSubscriber;
+    }(OuterSubscriber));
 
-    function mergeAll(concurrent = Number.POSITIVE_INFINITY) {
+    /** PURE_IMPORTS_START _mergeMap,_util_identity PURE_IMPORTS_END */
+    function mergeAll(concurrent) {
+        if (concurrent === void 0) {
+            concurrent = Number.POSITIVE_INFINITY;
+        }
         return mergeMap(identity, concurrent);
     }
 
-    function merge$1(...observables) {
-        let concurrent = Number.POSITIVE_INFINITY;
-        let scheduler = null;
-        let last = observables[observables.length - 1];
+    /** PURE_IMPORTS_START _Observable,_util_isScheduler,_operators_mergeAll,_fromArray PURE_IMPORTS_END */
+    function merge$1() {
+        var observables = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            observables[_i] = arguments[_i];
+        }
+        var concurrent = Number.POSITIVE_INFINITY;
+        var scheduler = null;
+        var last = observables[observables.length - 1];
         if (isScheduler(last)) {
             scheduler = observables.pop();
             if (observables.length > 1 && typeof observables[observables.length - 1] === 'number') {
@@ -77577,22 +77048,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return QueryList;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -78095,14 +77550,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return value;
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -79101,17 +78548,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     var SWITCH_COMPILE_NGMODULE__POST_R3__ = compileNgModule$1;
     var SWITCH_COMPILE_NGMODULE = SWITCH_COMPILE_NGMODULE__POST_R3__;
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
+    /** PURE_IMPORTS_START _observable_ConnectableObservable PURE_IMPORTS_END */
     function multicast(subjectOrSubjectFactory, selector) {
         return function multicastOperatorFunction(source) {
-            let subjectFactory;
+            var subjectFactory;
             if (typeof subjectOrSubjectFactory === 'function') {
                 subjectFactory = subjectOrSubjectFactory;
             }
@@ -79123,40 +78563,34 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (typeof selector === 'function') {
                 return source.lift(new MulticastOperator(subjectFactory, selector));
             }
-            const connectable = Object.create(source, connectableObservableDescriptor);
+            var connectable = Object.create(source, connectableObservableDescriptor);
             connectable.source = source;
             connectable.subjectFactory = subjectFactory;
             return connectable;
         };
     }
-    class MulticastOperator {
-        constructor(subjectFactory, selector) {
+    var MulticastOperator = /*@__PURE__*/ (function () {
+        function MulticastOperator(subjectFactory, selector) {
             this.subjectFactory = subjectFactory;
             this.selector = selector;
         }
-        call(subscriber, source) {
-            const { selector } = this;
-            const subject = this.subjectFactory();
-            const subscription = selector(subject).subscribe(subscriber);
+        MulticastOperator.prototype.call = function (subscriber, source) {
+            var selector = this.selector;
+            var subject = this.subjectFactory();
+            var subscription = selector(subject).subscribe(subscriber);
             subscription.add(source.subscribe(subject));
             return subscription;
-        }
-    }
+        };
+        return MulticastOperator;
+    }());
 
+    /** PURE_IMPORTS_START _multicast,_refCount,_Subject PURE_IMPORTS_END */
     function shareSubjectFactory() {
         return new Subject();
     }
     function share() {
-        return (source) => refCount()(multicast(shareSubjectFactory)(source));
+        return function (source) { return refCount()(multicast(shareSubjectFactory)(source)); };
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -79405,16 +78839,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         MissingTranslationStrategy[MissingTranslationStrategy["Warning"] = 1] = "Warning";
         MissingTranslationStrategy[MissingTranslationStrategy["Ignore"] = 2] = "Ignore";
     })(MissingTranslationStrategy$1 || (MissingTranslationStrategy$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     /**
      * @license
@@ -80826,30 +80250,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return result;
     }
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
     /**
@@ -80881,7 +80281,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            return  this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -81000,14 +80400,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         return EmbeddedViewRef;
     }(ViewRef$1));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @publicApi
@@ -81688,14 +81080,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var _CORE_PLATFORM_PROVIDERS = [
         // Set a default platform name for platforms that don't set it explicitly.
         { provide: PLATFORM_ID, useValue: 'unknown' },
@@ -81753,7 +81137,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             //
             // * During runtime translation evaluation, the developer is required to set `$localize.locale`
             //   if required, or just to provide their own `LOCALE_ID` provider.
-            return (ivyEnabled && typeof $localize !== 'undefined' && $localize.locale) ||
+            return ( typeof $localize !== 'undefined' && $localize.locale) ||
                 DEFAULT_LOCALE_ID;
         }
     }
@@ -82509,7 +81893,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 case 32 /* TypePureArray */:
                 case 64 /* TypePureObject */:
                 case 128 /* TypePurePipe */:
-                    nodeData = createPureExpression(view, nodeDef);
+                    nodeData = createPureExpression();
                     break;
                 case 67108864 /* TypeContentQuery */:
                 case 134217728 /* TypeViewQuery */:
@@ -83660,39 +83044,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // clang-format on
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     if (ngDevMode) {
         // This helper is to give a reasonable error message to people upgrading to v9 that have not yet
         // installed `@angular/localize` in their app.
@@ -83704,23 +83055,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 '(For non-CLI projects, add `import \'@angular/localize/init\';` to your polyfills.ts file)');
         };
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // This file only reexports content of the `src` folder. Keep it that way.
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -84590,30 +83924,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+77.sha-2ed04ff.with-local-changes');
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    exports.createLanguageService = createLanguageService;
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
-    exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
     exports.VERSION = VERSION$4;
-    exports.getExternalFiles = getExternalFiles;
     exports.create = create;
+    exports.createLanguageService = createLanguageService;
+    exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
+    exports.getExternalFiles = getExternalFiles;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
