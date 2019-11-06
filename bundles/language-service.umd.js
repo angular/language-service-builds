@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+68.sha-e89c2dd.with-local-changes
+ * @license Angular v9.0.0-rc.0+70.sha-2a4061a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+68.sha-e89c2dd.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+70.sha-2a4061a.with-local-changes');
 
     /**
      * @license
@@ -33643,7 +33643,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+68.sha-e89c2dd.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+70.sha-2a4061a.with-local-changes');
 
     /**
      * @license
@@ -54289,11 +54289,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function allocStylingMapArray(value) {
         return [value];
     }
-    function getConfig(context) {
-        return context[0 /* ConfigPosition */];
-    }
-    function hasConfig(context, flag) {
-        return (getConfig(context) & flag) !== 0;
+    function hasConfig(tNode, flag) {
+        return (tNode.flags & flag) !== 0;
     }
     /**
      * Determines whether or not to apply styles/classes directly or via context resolution.
@@ -54306,24 +54303,26 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * 3. There are no collisions (i.e. properties with more than one binding) across multiple
      *    sources (i.e. template + directive, directive + directive, directive + component)
      */
-    function allowDirectStyling(context, firstUpdatePass) {
+    function allowDirectStyling(tNode, isClassBased, firstUpdatePass) {
         var allow = false;
-        var config = getConfig(context);
-        var hasNoDirectives = (config & 1 /* HasDirectives */) === 0;
         // if no directives are present then we do not need populate a context at all. This
         // is because duplicate prop bindings cannot be registered through the template. If
         // and when this happens we can safely apply the value directly without context
         // resolution...
-        if (hasNoDirectives) {
+        var hasDirectives = hasConfig(tNode, 128 /* hasHostBindings */);
+        if (!hasDirectives) {
             // `ngDevMode` is required to be checked here because tests/debugging rely on the context being
             // populated. If things are in production mode then there is no need to build a context
             // therefore the direct apply can be allowed (even on the first update).
             allow = ngDevMode ? !firstUpdatePass : true;
         }
         else if (!firstUpdatePass) {
-            var hasNoCollisions = (config & 8 /* HasCollisions */) === 0;
-            var hasOnlyMapsOrOnlyProps = (config & 6 /* HasPropAndMapBindings */) !== 6 /* HasPropAndMapBindings */;
-            allow = hasNoCollisions && hasOnlyMapsOrOnlyProps;
+            var duplicateStylingFlag = isClassBased ? 8192 /* hasDuplicateClassBindings */ : 262144 /* hasDuplicateStyleBindings */;
+            var hasDuplicates = hasConfig(tNode, duplicateStylingFlag);
+            var hasOnlyMapOrPropsFlag = isClassBased ? 1536 /* hasClassPropAndMapBindings */ :
+                49152 /* hasStylePropAndMapBindings */;
+            var hasOnlyMapsOrOnlyProps = (tNode.flags & hasOnlyMapOrPropsFlag) !== hasOnlyMapOrPropsFlag;
+            allow = !hasDuplicates && hasOnlyMapsOrOnlyProps;
         }
         return allow;
     }
@@ -54347,7 +54346,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return getTotalSources(context) + 1;
     }
     function getTotalSources(context) {
-        return context[1 /* TotalSourcesPosition */];
+        return context[0 /* TotalSourcesPosition */];
     }
     function getBindingValue(context, index, offset) {
         return context[index + 4 /* BindingsStartOffset */ + offset];
@@ -54361,9 +54360,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function getValue(data, bindingIndex) {
         return bindingIndex !== 0 ? data[bindingIndex] : null;
     }
-    function getPropValuesStartPosition(context) {
-        var startPosition = 3 /* ValuesStartPosition */;
-        if (hasConfig(context, 4 /* HasMapBindings */)) {
+    function getPropValuesStartPosition(context, tNode, isClassBased) {
+        var startPosition = 2 /* ValuesStartPosition */;
+        var flag = isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */;
+        if (hasConfig(tNode, flag)) {
             startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
         }
         return startPosition;
@@ -54385,7 +54385,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function isStylingContext(value) {
         // the StylingMapArray is in the format of [initial, prop, string, prop, string]
         // and this is the defining value to distinguish between arrays
-        return Array.isArray(value) && value.length >= 3 /* ValuesStartPosition */ &&
+        return Array.isArray(value) && value.length >= 2 /* ValuesStartPosition */ &&
             typeof value[1] !== 'string';
     }
     function getMapProp(map, index) {
@@ -56137,13 +56137,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * the `flushStyling` function so that it can call this function for both
      * the styles and classes contexts).
      */
-    function applyStylingViaContext(context, renderer, element, bindingData, bitMaskValue, applyStylingFn, sanitizer, hostBindingsMode) {
+    function applyStylingViaContext(context, tNode, renderer, element, bindingData, bitMaskValue, applyStylingFn, sanitizer, hostBindingsMode, isClassBased) {
         var bitMask = normalizeBitMaskValue(bitMaskValue);
         var stylingMapsSyncFn = null;
         var applyAllValues = false;
-        if (hasConfig(context, 4 /* HasMapBindings */)) {
+        var mapBindingsFlag = isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */;
+        if (hasConfig(tNode, mapBindingsFlag)) {
             stylingMapsSyncFn = getStylingMapsSyncFn();
-            var mapsGuardMask = getGuardMask(context, 3 /* ValuesStartPosition */, hostBindingsMode);
+            var mapsGuardMask = getGuardMask(context, 2 /* ValuesStartPosition */, hostBindingsMode);
             applyAllValues = (bitMask & mapsGuardMask) !== 0;
         }
         var valuesCount = getValuesCount(context);
@@ -56153,7 +56154,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             mapsMode |= 8 /* RecurseInnerMaps */;
             totalBindingsToVisit = valuesCount - 1;
         }
-        var i = getPropValuesStartPosition(context);
+        var i = getPropValuesStartPosition(context, tNode, isClassBased);
         while (i < context.length) {
             var guardMask = getGuardMask(context, i, hostBindingsMode);
             if (bitMask & guardMask) {
@@ -56475,7 +56476,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var targetPropValueWasApplied = false;
         if (currentMapIndex <= mapsLimit) {
             var cursor = getCurrentSyncCursor(currentMapIndex);
-            var bindingIndex = getBindingValue(context, 3 /* ValuesStartPosition */, currentMapIndex);
+            var bindingIndex = getBindingValue(context, 2 /* ValuesStartPosition */, currentMapIndex);
             var stylingMapArr = getValue(data, bindingIndex);
             if (stylingMapArr) {
                 while (cursor < stylingMapArr.length) {
@@ -56648,12 +56649,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * application has `ngDevMode` activated.
      */
     var TStylingContextDebug = /** @class */ (function () {
-        function TStylingContextDebug(context, _isClassBased) {
+        function TStylingContextDebug(context, _tNode, _isClassBased) {
             this.context = context;
+            this._tNode = _tNode;
             this._isClassBased = _isClassBased;
         }
         Object.defineProperty(TStylingContextDebug.prototype, "config", {
-            get: function () { return buildConfig(this.context); },
+            get: function () { return buildConfig(this._tNode, this._isClassBased); },
             enumerable: true,
             configurable: true
         });
@@ -56667,7 +56669,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var context = this.context;
                 var totalColumns = getValuesCount(context);
                 var entries = {};
-                var start = getPropValuesStartPosition(context);
+                var start = getPropValuesStartPosition(context, this._tNode, this._isClassBased);
                 var i = start;
                 while (i < context.length) {
                     var prop = getProp(context, i);
@@ -56713,7 +56715,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var hostBindingsMode = i !== TEMPLATE_DIRECTIVE_INDEX;
                 var type = getTypeFromColumn(i, totalColumns);
                 var entries = [];
-                var j = 3 /* ValuesStartPosition */;
+                var j = 2 /* ValuesStartPosition */;
                 while (j < context.length) {
                     var value = getBindingValue(context, j, i);
                     if (isDefaultColumn || value > 0) {
@@ -56760,7 +56762,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var totalColumns = getValuesCount(context);
             var itemsPerRow = 4 /* BindingsStartOffset */ + totalColumns;
             var totalProps = Math.floor(context.length / itemsPerRow);
-            var i = 3 /* ValuesStartPosition */;
+            var i = 2 /* ValuesStartPosition */;
             while (i < context.length) {
                 var prop = getProp(context, i);
                 var isMapBased = prop === MAP_BASED_ENTRY_PROP_NAME;
@@ -56816,12 +56818,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * application has `ngDevMode` activated.
      */
     var NodeStylingDebug = /** @class */ (function () {
-        function NodeStylingDebug(context, _data, _isClassBased) {
+        function NodeStylingDebug(context, _tNode, _data, _isClassBased) {
+            this._tNode = _tNode;
             this._data = _data;
             this._isClassBased = _isClassBased;
             this._sanitizer = null;
             this._debugContext = isStylingContext(context) ?
-                new TStylingContextDebug(context, _isClassBased) :
+                new TStylingContextDebug(context, _tNode, _isClassBased) :
                 context;
         }
         Object.defineProperty(NodeStylingDebug.prototype, "context", {
@@ -56891,7 +56894,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             configurable: true
         });
         Object.defineProperty(NodeStylingDebug.prototype, "config", {
-            get: function () { return buildConfig(this.context.context); },
+            get: function () { return buildConfig(this._tNode, this._isClassBased); },
             enumerable: true,
             configurable: true
         });
@@ -56920,8 +56923,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         });
         NodeStylingDebug.prototype._convertMapBindingsToStylingMapArrays = function (data) {
             var context = this.context.context;
-            var limit = getPropValuesStartPosition(context);
-            for (var i = 3 /* ValuesStartPosition */ + 4 /* BindingsStartOffset */; i < limit; i++) {
+            var limit = getPropValuesStartPosition(context, this._tNode, this._isClassBased);
+            for (var i = 2 /* ValuesStartPosition */ + 4 /* BindingsStartOffset */; i < limit; i++) {
                 var bindingIndex = context[i];
                 var bindingValue = bindingIndex !== 0 ? getValue(data, bindingIndex) : null;
                 if (bindingValue && !Array.isArray(bindingValue)) {
@@ -56935,29 +56938,30 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
             var mockElement = {};
-            var hasMaps = hasConfig(this.context.context, 4 /* HasMapBindings */);
+            var mapBindingsFlag = this._isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */;
+            var hasMaps = hasConfig(this._tNode, mapBindingsFlag);
             if (hasMaps) {
                 activateStylingMapFeature();
             }
             var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
             // run the template bindings
-            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, false);
+            applyStylingViaContext(this.context.context, this._tNode, null, mockElement, data, true, mapFn, sanitizer, false, this._isClassBased);
             // and also the host bindings
-            applyStylingViaContext(this.context.context, null, mockElement, data, true, mapFn, sanitizer, true);
+            applyStylingViaContext(this.context.context, this._tNode, null, mockElement, data, true, mapFn, sanitizer, true, this._isClassBased);
         };
         return NodeStylingDebug;
     }());
-    function buildConfig(context) {
-        var hasMapBindings = hasConfig(context, 4 /* HasMapBindings */);
-        var hasPropBindings = hasConfig(context, 2 /* HasPropBindings */);
-        var hasCollisions = hasConfig(context, 8 /* HasCollisions */);
-        var hasTemplateBindings = hasConfig(context, 32 /* HasTemplateBindings */);
-        var hasHostBindings = hasConfig(context, 64 /* HasHostBindings */);
+    function buildConfig(tNode, isClassBased) {
+        var hasMapBindings = hasConfig(tNode, isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */);
+        var hasPropBindings = hasConfig(tNode, isClassBased ? 1024 /* hasClassPropBindings */ : 32768 /* hasStylePropBindings */);
+        var hasCollisions = hasConfig(tNode, isClassBased ? 8192 /* hasDuplicateClassBindings */ : 262144 /* hasDuplicateStyleBindings */);
+        var hasTemplateBindings = hasConfig(tNode, isClassBased ? 2048 /* hasTemplateClassBindings */ : 65536 /* hasTemplateStyleBindings */);
+        var hasHostBindings = hasConfig(tNode, isClassBased ? 4096 /* hasHostClassBindings */ : 131072 /* hasHostStyleBindings */);
         // `firstTemplatePass` here is false because the context has already been constructed
         // directly within the behavior of the debugging tools (outside of style/class debugging,
         // the context is constructed during the first template pass).
-        var allowDirectStyling$1 = allowDirectStyling(context, false);
+        var allowDirectStyling$1 = allowDirectStyling(tNode, isClassBased, false);
         return {
             hasMapBindings: hasMapBindings,
             hasPropBindings: hasPropBindings,
@@ -57171,15 +57175,15 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     flags.push('TNodeFlags.hasContentQuery');
                 if (this.flags & 32 /* hasStyleInput */)
                     flags.push('TNodeFlags.hasStyleInput');
-                if (this.flags & 64 /* hasInitialStyling */)
+                if (this.flags & 256 /* hasInitialStyling */)
                     flags.push('TNodeFlags.hasInitialStyling');
-                if (this.flags & 256 /* hasHostBindings */)
+                if (this.flags & 128 /* hasHostBindings */)
                     flags.push('TNodeFlags.hasHostBindings');
                 if (this.flags & 2 /* isComponentHost */)
                     flags.push('TNodeFlags.isComponentHost');
                 if (this.flags & 1 /* isDirectiveHost */)
                     flags.push('TNodeFlags.isDirectiveHost');
-                if (this.flags & 128 /* isDetached */)
+                if (this.flags & 64 /* isDetached */)
                     flags.push('TNodeFlags.isDetached');
                 if (this.flags & 4 /* isProjected */)
                     flags.push('TNodeFlags.isProjected');
@@ -57441,10 +57445,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var native = unwrapRNode(rawValue);
         var componentLViewDebug = toDebug(readLViewValue(rawValue));
         var styles = isStylingContext(tNode.styles) ?
-            new NodeStylingDebug(tNode.styles, lView, false) :
+            new NodeStylingDebug(tNode.styles, tNode, lView, false) :
             null;
         var classes = isStylingContext(tNode.classes) ?
-            new NodeStylingDebug(tNode.classes, lView, true) :
+            new NodeStylingDebug(tNode.classes, tNode, lView, true) :
             null;
         return {
             html: toHtml(native),
@@ -58877,7 +58881,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     tNode.flags |= 4 /* isProjected */;
                 }
             }
-            if ((tNode.flags & 128 /* isDetached */) !== 128 /* isDetached */) {
+            if ((tNode.flags & 64 /* isDetached */) !== 64 /* isDetached */) {
                 if (tNodeType === 4 /* ElementContainer */ || tNodeType === 5 /* IcuContainer */) {
                     applyNodes(renderer, action, tNode.child, lView, renderParent, beforeNode, false);
                     applyToElementOrContainer(action, renderer, renderParent, rawSlotValue, beforeNode);
@@ -62575,7 +62579,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+68.sha-e89c2dd.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+70.sha-2a4061a.with-local-changes');
 
     /**
      * @license
@@ -73236,7 +73240,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+68.sha-e89c2dd.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+70.sha-2a4061a.with-local-changes');
 
     /**
      * @license
