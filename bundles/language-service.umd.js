@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+74.sha-fe12d0d.with-local-changes
+ * @license Angular v9.0.0-rc.0+69.sha-41560b4.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+74.sha-fe12d0d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
 
     /**
      * @license
@@ -33643,7 +33643,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+74.sha-fe12d0d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
 
     /**
      * @license
@@ -35396,10 +35396,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * Indicates the `__spread` function.
          */
         TsHelperFn[TsHelperFn["Spread"] = 0] = "Spread";
-        /**
-         * Indicates the `__spreadArrays` function.
-         */
-        TsHelperFn[TsHelperFn["SpreadArrays"] = 1] = "SpreadArrays";
     })(TsHelperFn || (TsHelperFn = {}));
 
     /**
@@ -36724,12 +36720,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * found in the LICENSE file at https://angular.io/license
      */
     function evaluateTsHelperInline(helper, node, args) {
-        switch (helper) {
-            case TsHelperFn.Spread:
-            case TsHelperFn.SpreadArrays:
-                return evaluateTsSpreadHelper(node, args);
-            default:
-                throw new Error("Cannot evaluate unknown helper " + helper + " inline");
+        if (helper === TsHelperFn.Spread) {
+            return evaluateTsSpreadHelper(node, args);
+        }
+        else {
+            throw new Error("Cannot evaluate unknown helper " + helper + " inline");
         }
     }
     function evaluateTsSpreadHelper(node, args) {
@@ -46946,7 +46941,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         /* modifier */ undefined, 
         /* typeParameters */ undefined, 
         /* parameters */ [eventParam], 
-        /* type */ ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword), 
+        /* type */ undefined, 
         /* equalsGreaterThanToken*/ undefined, 
         /* body */ handler);
     }
@@ -62584,7 +62579,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+74.sha-fe12d0d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
 
     /**
      * @license
@@ -73245,7 +73240,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+74.sha-fe12d0d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+69.sha-41560b4.with-local-changes');
 
     /**
      * @license
