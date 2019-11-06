@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.0+63.sha-3de72e4.with-local-changes
+ * @license Angular v9.0.0-rc.0+64.sha-8c6fb17.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.0+63.sha-3de72e4.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.0+64.sha-8c6fb17.with-local-changes');
 
     /**
      * @license
@@ -33643,7 +33643,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.0+63.sha-3de72e4.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.0+64.sha-8c6fb17.with-local-changes');
 
     /**
      * @license
@@ -52083,11 +52083,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }
                 try {
                     for (var errors_1 = (e_4 = void 0, __values(errors)), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
-                        var error_1 = errors_1_1.value;
+                        var error = errors_1_1.value;
                         results.push({
                             kind: DiagnosticKind$1.Error,
-                            message: error_1.message,
-                            span: error_1.span,
+                            message: error.message,
+                            span: error.span,
                         });
                     }
                 }
@@ -53172,9 +53172,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // reason why correctly written application should cause this exception.
                 // TODO(misko): uncomment the next line once `ngDevMode` works with closure.
                 // if (ngDevMode) debugger;
-                var error_1 = new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
-                error_1.name = 'NullInjectorError';
-                throw error_1;
+                var error = new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
+                error.name = 'NullInjectorError';
+                throw error;
             }
             return notFoundValue;
         };
@@ -62579,7 +62579,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.0+63.sha-3de72e4.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.0+64.sha-8c6fb17.with-local-changes');
 
     /**
      * @license
@@ -73240,7 +73240,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.0+63.sha-3de72e4.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.0+64.sha-8c6fb17.with-local-changes');
 
     /**
      * @license
