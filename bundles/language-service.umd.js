@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+21.sha-a33162b.with-local-changes
+ * @license Angular v9.0.0-rc.1+23.sha-f63e5d9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19017,7 +19017,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+21.sha-a33162b.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+23.sha-f63e5d9.with-local-changes');
 
     /**
      * @license
@@ -33525,7 +33525,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+21.sha-a33162b.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+23.sha-f63e5d9.with-local-changes');
 
     /**
      * @license
@@ -62454,24 +62454,51 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         }
     }
+    /**
+     * Returns the first native node for a given LView, starting from the provided TNode.
+     *
+     * Native nodes are returned in the order in which those appear in the native tree (DOM).
+     */
+    function getFirstNativeNode(lView, tNode) {
+        if (tNode !== null) {
+            ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */, 4 /* ElementContainer */, 5 /* IcuContainer */, 1 /* Projection */);
+            var tNodeType = tNode.type;
+            if (tNodeType === 3 /* Element */) {
+                return getNativeByTNode(tNode, lView);
+            }
+            else if (tNodeType === 0 /* Container */) {
+                var lContainer = lView[tNode.index];
+                if (lContainer.length > CONTAINER_HEADER_OFFSET) {
+                    var firstView = lContainer[CONTAINER_HEADER_OFFSET];
+                    return getFirstNativeNode(firstView, firstView[TVIEW].firstChild);
+                }
+                else {
+                    return lContainer[NATIVE];
+                }
+            }
+            else if (tNodeType === 4 /* ElementContainer */ || tNodeType === 5 /* IcuContainer */) {
+                return getFirstNativeNode(lView, tNode.child);
+            }
+            else {
+                var componentView = findComponentView(lView);
+                var componentHost = componentView[T_HOST];
+                var parentView = getLViewParent(componentView);
+                var firstProjectedTNode = componentHost.projection[tNode.projection];
+                if (firstProjectedTNode != null) {
+                    return getFirstNativeNode(parentView, firstProjectedTNode);
+                }
+                else {
+                    return getFirstNativeNode(lView, tNode.next);
+                }
+            }
+        }
+        return null;
+    }
     function getBeforeNodeForView(viewIndexInContainer, lContainer) {
         var nextViewIndex = CONTAINER_HEADER_OFFSET + viewIndexInContainer + 1;
         if (nextViewIndex < lContainer.length) {
             var lView = lContainer[nextViewIndex];
-            ngDevMode && assertDefined(lView[T_HOST], 'Missing Host TNode');
-            var tViewNodeChild = lView[T_HOST].child;
-            if (tViewNodeChild !== null) {
-                if (tViewNodeChild.type === 4 /* ElementContainer */ ||
-                    tViewNodeChild.type === 5 /* IcuContainer */) {
-                    var currentChild = tViewNodeChild.child;
-                    while (currentChild && (currentChild.type === 4 /* ElementContainer */ ||
-                        currentChild.type === 5 /* IcuContainer */)) {
-                        currentChild = currentChild.child;
-                    }
-                    tViewNodeChild = currentChild || tViewNodeChild;
-                }
-                return getNativeByTNodeOrNull(tViewNodeChild, lView);
-            }
+            return getFirstNativeNode(lView, lView[TVIEW].firstChild);
         }
         return lContainer[NATIVE];
     }
@@ -70675,7 +70702,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+21.sha-a33162b.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+23.sha-f63e5d9.with-local-changes');
 
     /**
      * @license
@@ -83958,7 +83985,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+21.sha-a33162b.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+23.sha-f63e5d9.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;
