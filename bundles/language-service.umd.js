@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+50.sha-b3c3000.with-local-changes
+ * @license Angular v9.0.0-rc.1+54.sha-e511bfc.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19017,7 +19017,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+50.sha-b3c3000.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+54.sha-e511bfc.with-local-changes');
 
     /**
      * @license
@@ -33525,7 +33525,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+50.sha-b3c3000.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+54.sha-e511bfc.with-local-changes');
 
     /**
      * @license
@@ -54426,6 +54426,51 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Most of the use of `document` in Angular is from within the DI system so it is possible to simply
+     * inject the `DOCUMENT` token and are done.
+     *
+     * Ivy is special because it does not rely upon the DI and must get hold of the document some other
+     * way.
+     *
+     * The solution is to define `getDocument()` and `setDocument()` top-level functions for ivy.
+     * Wherever ivy needs the global document, it calls `getDocument()` instead.
+     *
+     * When running ivy outside of a browser environment, it is necessary to call `setDocument()` to
+     * tell ivy what the global `document` is.
+     *
+     * Angular does this for us in each of the standard platforms (`Browser`, `Server`, and `WebWorker`)
+     * by calling `setDocument()` when providing the `DOCUMENT` token.
+     */
+    var DOCUMENT = undefined;
+    /**
+     * Access the object that represents the `document` for this platform.
+     *
+     * Ivy calls this whenever it needs to access the `document` object.
+     * For example to create the renderer or to do sanitization.
+     */
+    function getDocument() {
+        if (DOCUMENT !== undefined) {
+            return DOCUMENT;
+        }
+        else if (typeof document !== 'undefined') {
+            return document;
+        }
+        // No "document" can be found. This should only happen if we are running ivy outside Angular and
+        // the current platform is not a browser. Since this is not a supported scenario at the moment
+        // this should not happen in Angular apps.
+        // Once we support running ivy outside of Angular we will need to publish `setDocument()` as a
+        // public API. Meanwhile we just return `undefined` and let the application fail.
+        return undefined;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // TODO: cleanup once the code is merged in angular/angular
     var RendererStyleFlags3;
     (function (RendererStyleFlags3) {
@@ -54437,7 +54482,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return !!(renderer.listen);
     }
     var domRendererFactory3 = {
-        createRenderer: function (hostElement, rendererType) { return document; }
+        createRenderer: function (hostElement, rendererType) { return getDocument(); }
     };
 
     /**
@@ -56686,7 +56731,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (allowSanitizationBypassAndThrow(unsafeHtml, "HTML" /* Html */)) {
             return unwrapSafeValue(unsafeHtml);
         }
-        return _sanitizeHtml(document, renderStringify(unsafeHtml));
+        return _sanitizeHtml(getDocument(), renderStringify(unsafeHtml));
     }
     /**
      * A `style` sanitizer which converts untrusted `style` **string** into trusted string by removing
@@ -70704,7 +70749,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+50.sha-b3c3000.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+54.sha-e511bfc.with-local-changes');
 
     /**
      * @license
@@ -74717,7 +74762,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * @param expandoStartIndex
      */
     function parseIcuCase(unsafeHtml, parentIndex, nestedIcus, tIcus, expandoStartIndex) {
-        var inertBodyHelper = new InertBodyHelper(document);
+        var inertBodyHelper = new InertBodyHelper(getDocument());
         var inertBodyElement = inertBodyHelper.getInertBodyElement(unsafeHtml);
         if (!inertBodyElement) {
             throw new Error('Unable to generate inert body element');
@@ -83987,7 +84032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+50.sha-b3c3000.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+54.sha-e511bfc.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;
