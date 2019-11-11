@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+33.sha-1d429b2.with-local-changes
+ * @license Angular v9.0.0-rc.1+41.sha-b197e90.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+33.sha-1d429b2.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+41.sha-b197e90.with-local-changes');
 
     /**
      * @license
@@ -33540,7 +33540,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+33.sha-1d429b2.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+41.sha-b197e90.with-local-changes');
 
     /**
      * @license
@@ -58957,7 +58957,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         });
         return RootViewRef;
     }(ViewRef));
-    function collectNativeNodes(lView, tNode, result) {
+    function collectNativeNodes(lView, tNode, result, isProjection) {
+        if (isProjection === void 0) { isProjection = false; }
         while (tNode !== null) {
             ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */, 1 /* Projection */, 4 /* ElementContainer */, 5 /* IcuContainer */);
             var lNode = lView[tNode.index];
@@ -58984,13 +58985,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var componentView = findComponentView(lView);
                 var componentHost = componentView[T_HOST];
                 var parentView = getLViewParent(componentView);
-                var currentProjectedNode = componentHost.projection[tNode.projection];
-                while (currentProjectedNode !== null && parentView !== null) {
-                    result.push(getNativeByTNode(currentProjectedNode, parentView));
-                    currentProjectedNode = currentProjectedNode.next;
+                var firstProjectedNode = componentHost.projection[tNode.projection];
+                if (firstProjectedNode !== null && parentView !== null) {
+                    collectNativeNodes(parentView, firstProjectedNode, result, true);
                 }
             }
-            tNode = tNode.next;
+            tNode = isProjection ? tNode.projectionNext : tNode.next;
         }
         return result;
     }
@@ -61982,7 +61982,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+33.sha-1d429b2.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+41.sha-b197e90.with-local-changes');
 
     /**
      * @license
@@ -72260,7 +72260,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+33.sha-1d429b2.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+41.sha-b197e90.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;
