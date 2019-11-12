@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+68.sha-641c671.with-local-changes
+ * @license Angular v9.0.0-rc.1+77.sha-84a0105.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19060,7 +19060,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+68.sha-641c671.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+77.sha-84a0105.with-local-changes');
 
     /**
      * @license
@@ -33607,7 +33607,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+68.sha-641c671.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+77.sha-84a0105.with-local-changes');
 
     /**
      * @license
@@ -38191,12 +38191,32 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var recordSpan = this.perf.start('recordDependencies');
             this.scopeRegistry.getCompilationScopes().forEach(function (scope) {
                 var file = scope.declaration.getSourceFile();
-                // Register the file containing the NgModule where the declaration is declared.
-                _this.incrementalState.trackFileDependency(scope.ngModule.getSourceFile(), file);
+                var ngModuleFile = scope.ngModule.getSourceFile();
+                // A change to any dependency of the declaration causes the declaration to be invalidated,
+                // which requires the NgModule to be invalidated as well.
+                var deps = _this.incrementalState.getFileDependencies(file);
+                _this.incrementalState.trackFileDependencies(deps, ngModuleFile);
+                // A change to the NgModule file should cause the declaration itself to be invalidated.
+                _this.incrementalState.trackFileDependency(ngModuleFile, file);
+                // A change to any directive/pipe in the compilation scope should cause the declaration to be
+                // invalidated.
                 scope.directives.forEach(function (directive) {
-                    return _this.incrementalState.trackFileDependency(directive.ref.node.getSourceFile(), file);
+                    var dirSf = directive.ref.node.getSourceFile();
+                    // When a directive in scope is updated, the declaration needs to be recompiled as e.g.
+                    // a selector may have changed.
+                    _this.incrementalState.trackFileDependency(dirSf, file);
+                    // When any of the dependencies of the declaration changes, the NgModule scope may be
+                    // affected so a component within scope must be recompiled. Only components need to be
+                    // recompiled, as directives are not dependent upon the compilation scope.
+                    if (directive.isComponent) {
+                        _this.incrementalState.trackFileDependencies(deps, dirSf);
+                    }
                 });
-                scope.pipes.forEach(function (pipe) { return _this.incrementalState.trackFileDependency(pipe.ref.node.getSourceFile(), file); });
+                scope.pipes.forEach(function (pipe) {
+                    // When a pipe in scope is updated, the declaration needs to be recompiled as e.g.
+                    // the pipe's name may have changed.
+                    _this.incrementalState.trackFileDependency(pipe.ref.node.getSourceFile(), file);
+                });
             });
             this.perf.stop(recordSpan);
         };
@@ -41606,6 +41626,23 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         IncrementalState.prototype.trackFileDependency = function (dep, src) {
             var metadata = this.ensureMetadata(src);
             metadata.fileDependencies.add(dep);
+        };
+        IncrementalState.prototype.trackFileDependencies = function (deps, src) {
+            var e_2, _a;
+            var metadata = this.ensureMetadata(src);
+            try {
+                for (var deps_1 = __values(deps), deps_1_1 = deps_1.next(); !deps_1_1.done; deps_1_1 = deps_1.next()) {
+                    var dep = deps_1_1.value;
+                    metadata.fileDependencies.add(dep);
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (deps_1_1 && !deps_1_1.done && (_a = deps_1.return)) _a.call(deps_1);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
         };
         IncrementalState.prototype.getFileDependencies = function (file) {
             if (!this.metadata.has(file)) {
@@ -54469,9 +54506,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      */
     function findComponentView(lView) {
         var rootTNode = lView[T_HOST];
-        while (rootTNode !== null && rootTNode.type === 2 /* View */) {
-            ngDevMode && assertDefined(lView[DECLARATION_VIEW], 'lView[DECLARATION_VIEW]');
-            lView = lView[DECLARATION_VIEW];
+        var declaredView;
+        while (rootTNode !== null && rootTNode.type === 2 /* View */ &&
+            (declaredView = lView[DECLARATION_VIEW]) !== null) {
+            lView = declaredView;
             rootTNode = lView[T_HOST];
         }
         ngDevMode && assertLView(lView);
@@ -58149,6 +58187,31 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                     ngDevMode && assertDefined(embeddedTView, 'TView must be allocated');
                     refreshView(embeddedLView, embeddedTView, embeddedTView.template, embeddedLView[CONTEXT]);
                 }
+                var movedViews = viewOrContainer[MOVED_VIEWS];
+                if (movedViews !== null) {
+                    // We should only CD moved views if the component where they were inserted does not match
+                    // the component where they were declared. Moved views also contains intra component moves,
+                    // which we don't care about.
+                    // TODO(misko): this is not the most efficient way to do this as we have to do a lot of
+                    // searches. Will refactor for performance later.
+                    var declaredComponentLView = findComponentView(lView);
+                    for (var i = 0; i < movedViews.length; i++) {
+                        var movedLView = movedViews[i];
+                        var parentLView = movedLView[PARENT];
+                        while (isLContainer(parentLView)) {
+                            parentLView = parentLView[PARENT];
+                        }
+                        var insertedComponentLView = findComponentView(parentLView);
+                        var insertionIsOnPush = (insertedComponentLView[FLAGS] & 16 /* CheckAlways */) !== 16 /* CheckAlways */;
+                        if (insertionIsOnPush && insertedComponentLView !== declaredComponentLView) {
+                            // Here we know that the template has been transplanted across components
+                            // (not just moved within a component)
+                            var movedTView = movedLView[TVIEW];
+                            ngDevMode && assertDefined(movedTView, 'TView must be allocated');
+                            refreshView(movedLView, movedTView, movedTView.template, movedLView[CONTEXT]);
+                        }
+                    }
+                }
             }
             viewOrContainer = viewOrContainer[NEXT];
         }
@@ -58467,9 +58530,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function detachMovedView(declarationContainer, lView) {
         ngDevMode && assertLContainer(declarationContainer);
         ngDevMode && assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
-        var projectedViews = declarationContainer[MOVED_VIEWS];
-        var declaredViewIndex = projectedViews.indexOf(lView);
-        projectedViews.splice(declaredViewIndex, 1);
+        var movedViews = declarationContainer[MOVED_VIEWS];
+        var declaredViewIndex = movedViews.indexOf(lView);
+        movedViews.splice(declaredViewIndex, 1);
     }
     /**
      * A standalone function which destroys an LView,
@@ -62101,7 +62164,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+68.sha-641c671.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+77.sha-84a0105.with-local-changes');
 
     /**
      * @license
@@ -72379,7 +72442,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+68.sha-641c671.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+77.sha-84a0105.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;
