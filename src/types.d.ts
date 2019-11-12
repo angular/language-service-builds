@@ -225,6 +225,7 @@ export declare enum CompletionKind {
     ELEMENT = "element",
     ENTITY = "entity",
     HTML_ATTRIBUTE = "html attribute",
+    HTML_ELEMENT = "html element",
     KEY = "key",
     METHOD = "method",
     PIPE = "pipe",
@@ -233,6 +234,9 @@ export declare enum CompletionKind {
     TYPE = "type",
     VARIABLE = "variable"
 }
+export declare type CompletionEntry = Omit<ts.CompletionEntry, 'kind'> & {
+    kind: CompletionKind;
+};
 /**
  * A template diagnostics message chain. This is similar to the TypeScript
  * DiagnosticMessageChain. The messages are intended to be formatted as separate
