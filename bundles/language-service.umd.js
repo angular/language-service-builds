@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+51.sha-c540061.with-local-changes
+ * @license Angular v9.0.0-rc.1+58.sha-6615743.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+51.sha-c540061.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+58.sha-6615743.with-local-changes');
 
     /**
      * @license
@@ -28558,58 +28558,97 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 }];
         }
     }
-    function getVarDeclarations(info, path) {
+    /**
+     * Resolve the specified `variable` from the `directives` list and return the
+     * corresponding symbol. If resolution fails, return the `any` type.
+     * @param variable template variable to resolve
+     * @param directives template context
+     * @param query
+     */
+    function findSymbolForVariableInDirectives(variable, directives, query) {
         var e_2, _a;
-        var result = [];
-        var current = path.tail;
-        while (current) {
-            if (current instanceof EmbeddedTemplateAst) {
-                var _loop_2 = function (variable) {
-                    var name = variable.name;
-                    // Find the first directive with a context.
-                    var context = current.directives.map(function (d) { return info.query.getTemplateContext(d.directive.type.reference); })
-                        .find(function (c) { return !!c; });
-                    // Determine the type of the context field referenced by variable.value.
-                    var type = undefined;
-                    if (context) {
-                        var value = context.get(variable.value);
-                        if (value) {
-                            type = value.type;
-                            var kind = info.query.getTypeKind(type);
-                            if (kind === BuiltinType$1.Any || kind == BuiltinType$1.Unbound) {
-                                // The any type is not very useful here. For special cases, such as ngFor, we can do
-                                // better.
-                                type = refinedVariableType(type, info, current);
-                            }
-                        }
-                    }
-                    if (!type) {
-                        type = info.query.getBuiltinType(BuiltinType$1.Any);
-                    }
-                    result.push({
-                        name: name,
-                        kind: 'variable', type: type, get definition() { return getDefinitionOf(info, variable); }
-                    });
-                };
-                try {
-                    for (var _b = (e_2 = void 0, __values(current.variables)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var variable = _c.value;
-                        _loop_2(variable);
-                    }
+        try {
+            for (var directives_1 = __values(directives), directives_1_1 = directives_1.next(); !directives_1_1.done; directives_1_1 = directives_1.next()) {
+                var d = directives_1_1.value;
+                // Get the symbol table for the directive's StaticSymbol
+                var table = query.getTemplateContext(d.directive.type.reference);
+                if (!table) {
+                    continue;
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_2) throw e_2.error; }
+                var symbol = table.get(variable.value);
+                if (symbol) {
+                    return symbol;
                 }
             }
-            current = path.parentOf(current);
         }
-        return result;
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (directives_1_1 && !directives_1_1.done && (_a = directives_1.return)) _a.call(directives_1);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        return query.getBuiltinType(BuiltinType$1.Any);
     }
-    function refinedVariableType(type, info, templateElement) {
+    /**
+     * Resolve all variable declarations in a template by traversing the specified
+     * `path`.
+     * @param info
+     * @param path template AST path
+     */
+    function getVarDeclarations(info, path) {
+        var e_3, _a;
+        var results = [];
+        for (var current = path.head; current; current = path.childOf(current)) {
+            if (!(current instanceof EmbeddedTemplateAst)) {
+                continue;
+            }
+            var directives = current.directives, variables = current.variables;
+            var _loop_2 = function (variable) {
+                var symbol = findSymbolForVariableInDirectives(variable, directives, info.query);
+                var kind = info.query.getTypeKind(symbol);
+                if (kind === BuiltinType$1.Any || kind === BuiltinType$1.Unbound) {
+                    // For special cases such as ngFor and ngIf, the any type is not very useful.
+                    // We can do better by resolving the binding value.
+                    var symbolsInScope = info.query.mergeSymbolTable([
+                        info.members,
+                        // Since we are traversing the AST path from head to tail, any variables
+                        // that have been declared so far are also in scope.
+                        info.query.createSymbolTable(results),
+                    ]);
+                    symbol = refinedVariableType(symbolsInScope, info.query, current);
+                }
+                results.push({
+                    name: variable.name,
+                    kind: 'variable',
+                    type: symbol, get definition() { return getDefinitionOf(info, variable); },
+                });
+            };
+            try {
+                for (var variables_1 = (e_3 = void 0, __values(variables)), variables_1_1 = variables_1.next(); !variables_1_1.done; variables_1_1 = variables_1.next()) {
+                    var variable = variables_1_1.value;
+                    _loop_2(variable);
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (variables_1_1 && !variables_1_1.done && (_a = variables_1.return)) _a.call(variables_1);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+        }
+        return results;
+    }
+    /**
+     * Resolve a more specific type for the variable in `templateElement` by inspecting
+     * all variables that are in scope in the `mergedTable`. This function is a special
+     * case for `ngFor` and `ngIf`. If resolution fails, return the `any` type.
+     * @param mergedTable symbol table for all variables in scope
+     * @param query
+     * @param templateElement
+     */
+    function refinedVariableType(mergedTable, query, templateElement) {
         // Special case the ngFor directive
         var ngForDirective = templateElement.directives.find(function (d) {
             var name = identifierName(d.directive.type);
@@ -28618,9 +28657,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (ngForDirective) {
             var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
             if (ngForOfBinding) {
-                var bindingType = new AstType(info.members, info.query, {}).getType(ngForOfBinding.value);
+                var bindingType = new AstType(mergedTable, query, {}).getType(ngForOfBinding.value);
                 if (bindingType) {
-                    var result = info.query.getElementType(bindingType);
+                    var result = query.getElementType(bindingType);
                     if (result) {
                         return result;
                     }
@@ -28632,14 +28671,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         if (ngIfDirective) {
             var ngIfBinding = ngIfDirective.inputs.find(function (i) { return i.directiveName === 'ngIf'; });
             if (ngIfBinding) {
-                var bindingType = new AstType(info.members, info.query, {}).getType(ngIfBinding.value);
+                var bindingType = new AstType(mergedTable, query, {}).getType(ngIfBinding.value);
                 if (bindingType) {
                     return bindingType;
                 }
             }
         }
         // We can't do better, return any
-        return info.query.getBuiltinType(BuiltinType$1.Any);
+        return query.getBuiltinType(BuiltinType$1.Any);
     }
     function getEventDeclaration(info, includeEvent) {
         var result = [];
@@ -28762,7 +28801,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
     function hasTemplateReference(type) {
-        var e_3, _a;
+        var e_4, _a;
         if (type.diDeps) {
             try {
                 for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -28772,12 +28811,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                         return true;
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
         }
         return false;
@@ -33540,7 +33579,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+51.sha-c540061.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+58.sha-6615743.with-local-changes');
 
     /**
      * @license
@@ -53846,6 +53885,51 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Most of the use of `document` in Angular is from within the DI system so it is possible to simply
+     * inject the `DOCUMENT` token and are done.
+     *
+     * Ivy is special because it does not rely upon the DI and must get hold of the document some other
+     * way.
+     *
+     * The solution is to define `getDocument()` and `setDocument()` top-level functions for ivy.
+     * Wherever ivy needs the global document, it calls `getDocument()` instead.
+     *
+     * When running ivy outside of a browser environment, it is necessary to call `setDocument()` to
+     * tell ivy what the global `document` is.
+     *
+     * Angular does this for us in each of the standard platforms (`Browser`, `Server`, and `WebWorker`)
+     * by calling `setDocument()` when providing the `DOCUMENT` token.
+     */
+    var DOCUMENT = undefined;
+    /**
+     * Access the object that represents the `document` for this platform.
+     *
+     * Ivy calls this whenever it needs to access the `document` object.
+     * For example to create the renderer or to do sanitization.
+     */
+    function getDocument() {
+        if (DOCUMENT !== undefined) {
+            return DOCUMENT;
+        }
+        else if (typeof document !== 'undefined') {
+            return document;
+        }
+        // No "document" can be found. This should only happen if we are running ivy outside Angular and
+        // the current platform is not a browser. Since this is not a supported scenario at the moment
+        // this should not happen in Angular apps.
+        // Once we support running ivy outside of Angular we will need to publish `setDocument()` as a
+        // public API. Meanwhile we just return `undefined` and let the application fail.
+        return undefined;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // TODO: cleanup once the code is merged in angular/angular
     var RendererStyleFlags3;
     (function (RendererStyleFlags3) {
@@ -53856,7 +53940,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function isProceduralRenderer(renderer) {
         return !!(renderer.listen);
     }
-    var ɵ0$2 = function (hostElement, rendererType) { return document; };
+    var ɵ0$2 = function (hostElement, rendererType) { return getDocument(); };
     var domRendererFactory3 = {
         createRenderer: ɵ0$2
     };
@@ -61982,7 +62066,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+51.sha-c540061.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+58.sha-6615743.with-local-changes');
 
     /**
      * @license
@@ -72260,7 +72344,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+51.sha-c540061.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+58.sha-6615743.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;
