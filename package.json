@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "9.0.0-rc.1+86.sha-49e517d.with-local-changes",
+  "version": "9.0.0-rc.1+87.sha-b4d7a68.with-local-changes",
   "description": "Angular - language services",
   "main": "./bundles/language-service.umd.js",
   "module": "./fesm5/language-service.js",
@@ -32,5 +32,8 @@
       "@angular/localize",
       "@angular/service-worker"
     ]
+  },
+  "publishConfig":{
+    "registry":"https://wombat-dressing-room.appspot.com"
   }
 }
