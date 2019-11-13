@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+78.sha-f750f18.with-local-changes
+ * @license Angular v9.0.0-rc.1+80.sha-8ed32e5.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+78.sha-f750f18.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+80.sha-8ed32e5.with-local-changes');
 
     /**
      * @license
@@ -33579,7 +33579,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+78.sha-f750f18.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+80.sha-8ed32e5.with-local-changes');
 
     /**
      * @license
@@ -52733,6 +52733,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         R3FactoryTarget[R3FactoryTarget["Pipe"] = 3] = "Pipe";
         R3FactoryTarget[R3FactoryTarget["NgModule"] = 4] = "NgModule";
     })(R3FactoryTarget$1 || (R3FactoryTarget$1 = {}));
+    var ViewEncapsulation$1;
+    (function (ViewEncapsulation) {
+        ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
+        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
+        ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
+    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
 
     /**
      * @license
@@ -53222,7 +53229,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      *
      * @publicApi
      */
-    var ViewEncapsulation$1;
+    var ViewEncapsulation$2;
     (function (ViewEncapsulation) {
         /**
          * Emulate `Native` scoping of styles by adding an attribute containing surrogate id to the Host
@@ -53254,7 +53261,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
          * creating a ShadowRoot for Component's Host Element.
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
-    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
+    })(ViewEncapsulation$2 || (ViewEncapsulation$2 = {}));
 
     /**
      * @license
@@ -57963,19 +57970,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     function createError(text, token) {
         return new Error("Renderer: " + text + " [" + stringifyForError(token) + "]");
     }
-    /**
-     * Locates the host native element, used for bootstrapping existing nodes into rendering pipeline.
-     *
-     * @param elementOrSelector Render element or CSS selector to locate the element.
-     */
-    function locateHostElement(factory, elementOrSelector) {
-        var defaultRenderer = factory.createRenderer(null, null);
-        var rNode = typeof elementOrSelector === 'string' ?
-            (isProceduralRenderer(defaultRenderer) ?
-                defaultRenderer.selectRootElement(elementOrSelector) :
-                defaultRenderer.querySelector(elementOrSelector)) :
-            elementOrSelector;
-        if (ngDevMode && !rNode) {
+    function assertHostNodeExists(rElement, elementOrSelector) {
+        if (!rElement) {
             if (typeof elementOrSelector === 'string') {
                 throw createError('Host node with selector not found:', elementOrSelector);
             }
@@ -57983,7 +57979,31 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 throw createError('Host node is required:', elementOrSelector);
             }
         }
-        return rNode;
+    }
+    /**
+     * Locates the host native element, used for bootstrapping existing nodes into rendering pipeline.
+     *
+     * @param rendererFactory Factory function to create renderer instance.
+     * @param elementOrSelector Render element or CSS selector to locate the element.
+     * @param encapsulation View Encapsulation defined for component that requests host element.
+     */
+    function locateHostElement(rendererFactory, elementOrSelector, encapsulation) {
+        var renderer = rendererFactory.createRenderer(null, null);
+        if (isProceduralRenderer(renderer)) {
+            // When using native Shadow DOM, do not clear host element to allow native slot projection
+            var preserveContent = encapsulation === ViewEncapsulation$2.ShadowDom;
+            return renderer.selectRootElement(elementOrSelector, preserveContent);
+        }
+        var rElement = typeof elementOrSelector === 'string' ?
+            renderer.querySelector(elementOrSelector) :
+            elementOrSelector;
+        ngDevMode && assertHostNodeExists(rElement, elementOrSelector);
+        // Always clear host element's content when Renderer3 is in use. For procedural renderer case we
+        // make it depend on whether ShadowDom encapsulation is used (in which case the content should be
+        // preserved to allow native slot projection). ShadowDom encapsulation requires procedural
+        // renderer, and procedural renderer case is handled above.
+        rElement.textContent = '';
+        return rElement;
     }
     /**
      * Saves the cleanup function itself in LView.cleanupInstances.
@@ -62136,7 +62156,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+78.sha-f750f18.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+80.sha-8ed32e5.with-local-changes');
 
     /**
      * @license
@@ -63579,7 +63599,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 (renderParent.flags & 33554432 /* ComponentView */) === 0 ||
                 (renderParent.element.componentRendererType &&
                     renderParent.element.componentRendererType.encapsulation ===
-                        ViewEncapsulation$1.Native)) {
+                        ViewEncapsulation$2.Native)) {
                 // only children of non components, or children of components with native encapsulation should
                 // be attached.
                 return asElementData(view, def.renderParent.nodeIndex).renderElement;
@@ -64869,7 +64889,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
             var hostRNode = rootSelectorOrNode ?
-                locateHostElement(rendererFactory, rootSelectorOrNode) :
+                locateHostElement(rendererFactory, rootSelectorOrNode, this.componentDef.encapsulation) :
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef), null);
             var rootFlags = this.componentDef.onPush ? 64 /* Dirty */ | 512 /* IsRoot */ :
                 16 /* CheckAlways */ | 512 /* IsRoot */;
@@ -69721,7 +69741,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         else {
             // when using native Shadow DOM, do not clear the root element contents to allow slot projection
             var preserveContent = (!!elDef.componentRendererType &&
-                elDef.componentRendererType.encapsulation === ViewEncapsulation$1.ShadowDom);
+                elDef.componentRendererType.encapsulation === ViewEncapsulation$2.ShadowDom);
             el = renderer.selectRootElement(rootSelectorOrNode, preserveContent);
         }
         if (elDef.attrs) {
@@ -71744,7 +71764,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 // This tracks the CompileConfig in codegen.ts. Currently these options
                 // are hard-coded.
                 var config = new CompilerConfig({
-                    defaultEncapsulation: ViewEncapsulation$1.Emulated,
+                    defaultEncapsulation: ViewEncapsulation$2.Emulated,
                     useJit: false,
                 });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
@@ -71825,6 +71845,52 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 finally { if (e_1) throw e_1.error; }
             }
             return this.analyzedModules;
+        };
+        /**
+         * Checks whether the program has changed, and invalidate caches if it has.
+         * Returns true if modules are up-to-date, false otherwise.
+         * This should only be called by getAnalyzedModules().
+         */
+        TypeScriptServiceHost.prototype.upToDate = function () {
+            var e_3, _a;
+            var _this = this;
+            var _b = this, lastProgram = _b.lastProgram, program = _b.program;
+            if (lastProgram === program) {
+                return true;
+            }
+            this.lastProgram = program;
+            // Invalidate file that have changed in the static symbol resolver
+            var seen = new Set();
+            try {
+                for (var _c = __values(program.getSourceFiles()), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var sourceFile = _d.value;
+                    var fileName = sourceFile.fileName;
+                    seen.add(fileName);
+                    var version = this.tsLsHost.getScriptVersion(fileName);
+                    var lastVersion = this.fileVersions.get(fileName);
+                    this.fileVersions.set(fileName, version);
+                    // Should not invalidate file on the first encounter or if file hasn't changed
+                    if (lastVersion !== undefined && version !== lastVersion) {
+                        var symbols = this.staticSymbolResolver.invalidateFile(fileName);
+                        this.reflector.invalidateSymbols(symbols);
+                    }
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+            // Remove file versions that are no longer in the program and invalidate them.
+            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen.has(f); });
+            missing.forEach(function (f) {
+                _this.fileVersions.delete(f);
+                var symbols = _this.staticSymbolResolver.invalidateFile(f);
+                _this.reflector.invalidateSymbols(symbols);
+            });
+            return false;
         };
         /**
          * Find all templates in the specified `file`.
@@ -71921,52 +71987,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             enumerable: true,
             configurable: true
         });
-        /**
-         * Checks whether the program has changed, and invalidate caches if it has.
-         * Returns true if modules are up-to-date, false otherwise.
-         * This should only be called by getAnalyzedModules().
-         */
-        TypeScriptServiceHost.prototype.upToDate = function () {
-            var e_3, _a;
-            var _this = this;
-            var _b = this, lastProgram = _b.lastProgram, program = _b.program;
-            if (lastProgram === program) {
-                return true;
-            }
-            this.lastProgram = program;
-            // Invalidate file that have changed in the static symbol resolver
-            var seen = new Set();
-            try {
-                for (var _c = __values(program.getSourceFiles()), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var sourceFile = _d.value;
-                    var fileName = sourceFile.fileName;
-                    seen.add(fileName);
-                    var version = this.tsLsHost.getScriptVersion(fileName);
-                    var lastVersion = this.fileVersions.get(fileName);
-                    this.fileVersions.set(fileName, version);
-                    // Should not invalidate file on the first encounter or if file hasn't changed
-                    if (lastVersion !== undefined && version !== lastVersion) {
-                        var symbols = this.staticSymbolResolver.invalidateFile(fileName);
-                        this.reflector.invalidateSymbols(symbols);
-                    }
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-            // Remove file versions that are no longer in the program and invalidate them.
-            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen.has(f); });
-            missing.forEach(function (f) {
-                _this.fileVersions.delete(f);
-                var symbols = _this.staticSymbolResolver.invalidateFile(f);
-                _this.reflector.invalidateSymbols(symbols);
-            });
-            return false;
-        };
         /**
          * Return the TemplateSource if `node` is a template node.
          *
@@ -72414,7 +72434,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+78.sha-f750f18.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+80.sha-8ed32e5.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;
