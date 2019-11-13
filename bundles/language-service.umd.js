@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+80.sha-2be0a1d.with-local-changes
+ * @license Angular v9.0.0-rc.1+79.sha-cf10b33.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19060,7 +19060,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+80.sha-2be0a1d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+79.sha-cf10b33.with-local-changes');
 
     /**
      * @license
@@ -33607,7 +33607,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+80.sha-2be0a1d.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+79.sha-cf10b33.with-local-changes');
 
     /**
      * @license
@@ -62184,7 +62184,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+80.sha-2be0a1d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+79.sha-cf10b33.with-local-changes');
 
     /**
      * @license
@@ -71875,52 +71875,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return this.analyzedModules;
         };
         /**
-         * Checks whether the program has changed, and invalidate caches if it has.
-         * Returns true if modules are up-to-date, false otherwise.
-         * This should only be called by getAnalyzedModules().
-         */
-        TypeScriptServiceHost.prototype.upToDate = function () {
-            var e_3, _a;
-            var _this = this;
-            var _b = this, lastProgram = _b.lastProgram, program = _b.program;
-            if (lastProgram === program) {
-                return true;
-            }
-            this.lastProgram = program;
-            // Invalidate file that have changed in the static symbol resolver
-            var seen = new Set();
-            try {
-                for (var _c = __values(program.getSourceFiles()), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var sourceFile = _d.value;
-                    var fileName = sourceFile.fileName;
-                    seen.add(fileName);
-                    var version = this.tsLsHost.getScriptVersion(fileName);
-                    var lastVersion = this.fileVersions.get(fileName);
-                    this.fileVersions.set(fileName, version);
-                    // Should not invalidate file on the first encounter or if file hasn't changed
-                    if (lastVersion !== undefined && version !== lastVersion) {
-                        var symbols = this.staticSymbolResolver.invalidateFile(fileName);
-                        this.reflector.invalidateSymbols(symbols);
-                    }
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-            // Remove file versions that are no longer in the program and invalidate them.
-            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen.has(f); });
-            missing.forEach(function (f) {
-                _this.fileVersions.delete(f);
-                var symbols = _this.staticSymbolResolver.invalidateFile(f);
-                _this.reflector.invalidateSymbols(symbols);
-            });
-            return false;
-        };
-        /**
          * Find all templates in the specified `file`.
          * @param fileName TS or HTML file
          */
@@ -72015,6 +71969,52 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             enumerable: true,
             configurable: true
         });
+        /**
+         * Checks whether the program has changed, and invalidate caches if it has.
+         * Returns true if modules are up-to-date, false otherwise.
+         * This should only be called by getAnalyzedModules().
+         */
+        TypeScriptServiceHost.prototype.upToDate = function () {
+            var e_3, _a;
+            var _this = this;
+            var _b = this, lastProgram = _b.lastProgram, program = _b.program;
+            if (lastProgram === program) {
+                return true;
+            }
+            this.lastProgram = program;
+            // Invalidate file that have changed in the static symbol resolver
+            var seen = new Set();
+            try {
+                for (var _c = __values(program.getSourceFiles()), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var sourceFile = _d.value;
+                    var fileName = sourceFile.fileName;
+                    seen.add(fileName);
+                    var version = this.tsLsHost.getScriptVersion(fileName);
+                    var lastVersion = this.fileVersions.get(fileName);
+                    this.fileVersions.set(fileName, version);
+                    // Should not invalidate file on the first encounter or if file hasn't changed
+                    if (lastVersion !== undefined && version !== lastVersion) {
+                        var symbols = this.staticSymbolResolver.invalidateFile(fileName);
+                        this.reflector.invalidateSymbols(symbols);
+                    }
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+            // Remove file versions that are no longer in the program and invalidate them.
+            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen.has(f); });
+            missing.forEach(function (f) {
+                _this.fileVersions.delete(f);
+                var symbols = _this.staticSymbolResolver.invalidateFile(f);
+                _this.reflector.invalidateSymbols(symbols);
+            });
+            return false;
+        };
         /**
          * Return the TemplateSource if `node` is a template node.
          *
@@ -72462,7 +72462,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+80.sha-2be0a1d.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+79.sha-cf10b33.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;

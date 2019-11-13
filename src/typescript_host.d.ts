@@ -75,12 +75,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     getAnalyzedModules(ensureSynchronized?: boolean): NgAnalyzedModules;
     /**
-     * Checks whether the program has changed, and invalidate caches if it has.
-     * Returns true if modules are up-to-date, false otherwise.
-     * This should only be called by getAnalyzedModules().
-     */
-    private upToDate;
-    /**
      * Find all templates in the specified `file`.
      * @param fileName TS or HTML file
      */
@@ -95,6 +89,12 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     getDeclarations(fileName: string): Declaration[];
     getSourceFile(fileName: string): ts.SourceFile | undefined;
     readonly program: ts.Program;
+    /**
+     * Checks whether the program has changed, and invalidate caches if it has.
+     * Returns true if modules are up-to-date, false otherwise.
+     * This should only be called by getAnalyzedModules().
+     */
+    private upToDate;
     /**
      * Return the TemplateSource if `node` is a template node.
      *
