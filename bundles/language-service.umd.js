@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+89.sha-f1b3284.with-local-changes
+ * @license Angular v9.0.0-rc.1+100.sha-b30bb8d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17563,11 +17563,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return new BuiltinFunctionCall(array.span, array.sourceSpan, this.visitAll(array.expressions), function (values) {
                 // If the literal has calculated (non-literal) elements transform it into
                 // calls to literal factories that compose the literal and will cache intermediate
-                // values. Otherwise, just return an literal array that contains the values.
+                // values.
                 var literal = literalArr(values);
-                return values.every(function (a) { return a.isConstant(); }) ?
-                    _this.constantPool.getConstLiteral(literal, true) :
-                    getLiteralFactory(_this.constantPool, literal, _this.allocatePureFunctionSlots);
+                return getLiteralFactory(_this.constantPool, literal, _this.allocatePureFunctionSlots);
             });
         };
         ValueConverter.prototype.visitLiteralMap = function (map, context) {
@@ -17575,11 +17573,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return new BuiltinFunctionCall(map.span, map.sourceSpan, this.visitAll(map.values), function (values) {
                 // If the literal has calculated (non-literal) elements  transform it into
                 // calls to literal factories that compose the literal and will cache intermediate
-                // values. Otherwise, just return an literal array that contains the values.
+                // values.
                 var literal = literalMap(values.map(function (value, index) { return ({ key: map.keys[index].key, value: value, quoted: map.keys[index].quoted }); }));
-                return values.every(function (a) { return a.isConstant(); }) ?
-                    _this.constantPool.getConstLiteral(literal, true) :
-                    getLiteralFactory(_this.constantPool, literal, _this.allocatePureFunctionSlots);
+                return getLiteralFactory(_this.constantPool, literal, _this.allocatePureFunctionSlots);
             });
         };
         return ValueConverter;
@@ -17616,14 +17612,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var _a = constantPool.getLiteralFactory(literal$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
         // Allocate 1 slot for the result plus 1 per argument
         var startSlot = allocateSlots(1 + literalFactoryArguments.length);
-        literalFactoryArguments.length > 0 || error("Expected arguments to a literal factory function");
         var _b = pureFunctionCallInfo(literalFactoryArguments), identifier = _b.identifier, isVarLength = _b.isVarLength;
         // Literal factories are pure functions that only need to be re-invoked when the parameters
         // change.
-        var args = [
-            literal(startSlot),
-            literalFactory,
-        ];
+        var args = [literal(startSlot), literalFactory];
         if (isVarLength) {
             args.push(literalArr(literalFactoryArguments));
         }
@@ -19060,7 +19052,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+89.sha-f1b3284.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+100.sha-b30bb8d.with-local-changes');
 
     /**
      * @license
@@ -33607,7 +33599,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$2 = new Version('9.0.0-rc.1+89.sha-f1b3284.with-local-changes');
+    var VERSION$2 = new Version('9.0.0-rc.1+100.sha-b30bb8d.with-local-changes');
 
     /**
      * @license
@@ -37366,7 +37358,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             configurable: true
         });
         Object.defineProperty(Context.prototype, "withStatementMode", {
-            get: function () { return this.isStatement ? new Context(true) : this; },
+            get: function () { return !this.isStatement ? new Context(true) : this; },
             enumerable: true,
             configurable: true
         });
@@ -37426,23 +37418,26 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         };
         return ImportManager;
     }());
-    function translateExpression(expression, imports, defaultImportRecorder) {
-        return expression.visitExpression(new ExpressionTranslatorVisitor(imports, defaultImportRecorder), new Context(false));
+    function translateExpression(expression, imports, defaultImportRecorder, scriptTarget) {
+        return expression.visitExpression(new ExpressionTranslatorVisitor(imports, defaultImportRecorder, scriptTarget), new Context(false));
     }
-    function translateStatement(statement, imports, defaultImportRecorder) {
-        return statement.visitStatement(new ExpressionTranslatorVisitor(imports, defaultImportRecorder), new Context(true));
+    function translateStatement(statement, imports, defaultImportRecorder, scriptTarget) {
+        return statement.visitStatement(new ExpressionTranslatorVisitor(imports, defaultImportRecorder, scriptTarget), new Context(true));
     }
     function translateType(type, imports) {
         return type.visitType(new TypeTranslatorVisitor(imports), new Context(false));
     }
     var ExpressionTranslatorVisitor = /** @class */ (function () {
-        function ExpressionTranslatorVisitor(imports, defaultImportRecorder) {
+        function ExpressionTranslatorVisitor(imports, defaultImportRecorder, scriptTarget) {
             this.imports = imports;
             this.defaultImportRecorder = defaultImportRecorder;
+            this.scriptTarget = scriptTarget;
             this.externalSourceFiles = new Map();
         }
         ExpressionTranslatorVisitor.prototype.visitDeclareVarStmt = function (stmt, context) {
-            var nodeFlags = stmt.hasModifier(StmtModifier.Final) ? ts.NodeFlags.Const : ts.NodeFlags.None;
+            var nodeFlags = ((this.scriptTarget >= ts.ScriptTarget.ES2015) && stmt.hasModifier(StmtModifier.Final)) ?
+                ts.NodeFlags.Const :
+                ts.NodeFlags.None;
             return ts.createVariableStatement(undefined, ts.createVariableDeclarationList([ts.createVariableDeclaration(stmt.name, undefined, stmt.value &&
                     stmt.value.visitExpression(this, context.withExpressionMode))], nodeFlags));
         };
@@ -37457,6 +37452,10 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return ts.createReturn(stmt.value.visitExpression(this, context.withExpressionMode));
         };
         ExpressionTranslatorVisitor.prototype.visitDeclareClassStmt = function (stmt, context) {
+            if (this.scriptTarget < ts.ScriptTarget.ES2015) {
+                throw new Error("Unsupported mode: Visiting a \"declare class\" statement (class " + stmt.name + ") while " +
+                    ("targeting " + ts.ScriptTarget[this.scriptTarget] + "."));
+            }
             throw new Error('Method not implemented.');
         };
         ExpressionTranslatorVisitor.prototype.visitIfStmt = function (stmt, context) {
@@ -37535,6 +37534,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             return expr;
         };
         ExpressionTranslatorVisitor.prototype.visitLocalizedString = function (ast, context) {
+            if (this.scriptTarget < ts.ScriptTarget.ES2015) {
+                // This should never happen.
+                throw new Error('Unsupported mode: Visiting a localized string (which produces a tagged template ' +
+                    ("literal) ' while targeting " + ts.ScriptTarget[this.scriptTarget] + "."));
+            }
             return visitLocalizedString(ast, context, this);
         };
         ExpressionTranslatorVisitor.prototype.visitExternalExpr = function (ast, context) {
@@ -37743,7 +37747,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
             }
         };
         TypeTranslatorVisitor.prototype.visitTypeofExpr = function (ast, context) {
-            var expr = translateExpression(ast.expr, this.imports, NOOP_DEFAULT_IMPORT_RECORDER);
+            var expr = translateExpression(ast.expr, this.imports, NOOP_DEFAULT_IMPORT_RECORDER, ts.ScriptTarget.ES2015);
             return ts.createTypeQueryNode(expr);
         };
         return TypeTranslatorVisitor;
@@ -38500,11 +38504,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
                 var members_1 = __spread(node.members);
                 res.forEach(function (field) {
                     // Translate the initializer for the field into TS nodes.
-                    var exprNode = translateExpression(field.initializer, _this.importManager, _this.defaultImportRecorder);
+                    var exprNode = translateExpression(field.initializer, _this.importManager, _this.defaultImportRecorder, ts.ScriptTarget.ES2015);
                     // Create a static property declaration for the new field.
                     var property = ts.createProperty(undefined, [ts.createToken(ts.SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
                     field.statements
-                        .map(function (stmt) { return translateStatement(stmt, _this.importManager, _this.defaultImportRecorder); })
+                        .map(function (stmt) { return translateStatement(stmt, _this.importManager, _this.defaultImportRecorder, ts.ScriptTarget.ES2015); })
                         .forEach(function (stmt) { return statements_1.push(stmt); });
                     members_1.push(property);
                 });
@@ -38621,7 +38625,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         var sf = visit(file, visitor, context);
         // Generate the constant statements first, as they may involve adding additional imports
         // to the ImportManager.
-        var constants = constantPool.statements.map(function (stmt) { return translateStatement(stmt, importManager, defaultImportRecorder); });
+        var constants = constantPool.statements.map(function (stmt) {
+            return translateStatement(stmt, importManager, defaultImportRecorder, ts.ScriptTarget.ES2015);
+        });
         // Preserve @fileoverview comments required by Closure, since the location might change as a
         // result of adding extra imports and constant pool statements.
         var fileOverviewMeta = isClosureCompilerEnabled ? getFileOverviewComment(sf.statements) : null;
@@ -39098,9 +39104,16 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         }
         // Do the same for property decorators.
         var metaPropDecorators = ts.createNull();
-        var decoratedMembers = reflection.getMembersOfClass(clazz)
-            .filter(function (member) { return !member.isStatic && member.decorators !== null; })
-            .map(function (member) { return classMemberToMetadata(member.name, member.decorators, isCore); });
+        var classMembers = reflection.getMembersOfClass(clazz).filter(function (member) { return !member.isStatic && member.decorators !== null && member.decorators.length > 0; });
+        var duplicateDecoratedMemberNames = classMembers.map(function (member) { return member.name; }).filter(function (name, i, arr) { return arr.indexOf(name) < i; });
+        if (duplicateDecoratedMemberNames.length > 0) {
+            // This should theoretically never happen, because the only way to have duplicate instance
+            // member names is getter/setter pairs and decorators cannot appear in both a getter and the
+            // corresponding setter.
+            throw new Error("Duplicate decorated properties found on class '" + clazz.name.text + "': " +
+                duplicateDecoratedMemberNames.join(', '));
+        }
+        var decoratedMembers = classMembers.map(function (member) { return classMemberToMetadata(member.name, member.decorators, isCore); });
         if (decoratedMembers.length > 0) {
             metaPropDecorators = ts.createObjectLiteral(decoratedMembers);
         }
@@ -44939,7 +44952,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
         Environment.prototype.reference = function (ref) {
             var ngExpr = this.refEmitter.emit(ref, this.contextFile);
             // Use `translateExpression` to convert the `Expression` into a `ts.Expression`.
-            return translateExpression(ngExpr, this.importManager, NOOP_DEFAULT_IMPORT_RECORDER);
+            return translateExpression(ngExpr, this.importManager, NOOP_DEFAULT_IMPORT_RECORDER, ts.ScriptTarget.ES2015);
         };
         /**
          * Generate a `ts.TypeNode` that references the given node as a type.
@@ -62184,7 +62197,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
     /**
      * @publicApi
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+89.sha-f1b3284.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+100.sha-b30bb8d.with-local-changes');
 
     /**
      * @license
@@ -72462,7 +72475,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs', 'typescript/lib/tsserverlib
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-rc.1+89.sha-f1b3284.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-rc.1+100.sha-b30bb8d.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$4;
