@@ -7,8 +7,8 @@
  */
 /// <amd-module name="@angular/language-service/src/types" />
 import { CompileDirectiveMetadata, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
-import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from '@angular/compiler-cli/src/language_services';
 import { AstResult } from './common';
+import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from './symbols';
 export { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, StaticSymbol, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable };
 /**
  * The information `LanguageService` needs from the `LanguageServiceHost` to describe the content of
