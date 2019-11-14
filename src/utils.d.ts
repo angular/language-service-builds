@@ -7,9 +7,9 @@
  */
 /// <amd-module name="@angular/language-service/src/utils" />
 import { CompileTypeMetadata, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
-import { DiagnosticTemplateInfo } from '@angular/compiler-cli/src/language_services';
 import * as ts from 'typescript';
 import { AstResult, SelectorInfo } from './common';
+import { DiagnosticTemplateInfo } from './expression_diagnostics';
 import { Span } from './types';
 export interface SpanHolder {
     sourceSpan: ParseSourceSpan;
