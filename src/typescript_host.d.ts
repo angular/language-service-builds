@@ -75,7 +75,8 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     getAnalyzedModules(ensureSynchronized?: boolean): NgAnalyzedModules;
     /**
-     * Checks whether the program has changed, and invalidate caches if it has.
+     * Checks whether the program has changed, and invalidate static symbols in
+     * the source files that have changed.
      * Returns true if modules are up-to-date, false otherwise.
      * This should only be called by getAnalyzedModules().
      */
