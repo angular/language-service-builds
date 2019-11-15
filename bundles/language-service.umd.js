@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+110.sha-e51ec67.with-local-changes
+ * @license Angular v9.0.0-rc.1+125.sha-9d21065.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -508,15 +508,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' + //":not("
-        '([-\\w]+)|' + // "tag"
-        '(?:\\.([-\\w]+))|' + // ".class"
+    var _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' + // 1: ":not("
+        '(([\\.\\#]?)[-\\w]+)|' + // 2: "tag"; 3: "."/"#";
         // "-" should appear first in the regexp below as FF31 parses "[.-\w]" as a range
+        // 4: attribute; 5: attribute_string; 6: attribute_value
         '(?:\\[([-.\\w*]+)(?:=([\"\']?)([^\\]\"\']*)\\5)?\\])|' + // "[name]", "[name=value]",
         // "[name="value"]",
         // "[name='value']"
-        '(\\))|' + // ")"
-        '(\\s*,\\s*)', // ","
+        '(\\))|' + // 7: ")"
+        '(\\s*,\\s*)', // 8: ","
     'g');
     /**
      * A css selector contains an element name,
@@ -556,28 +556,39 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var inNot = false;
             _SELECTOR_REGEXP.lastIndex = 0;
             while (match = _SELECTOR_REGEXP.exec(selector)) {
-                if (match[1]) {
+                if (match[1 /* NOT */]) {
                     if (inNot) {
-                        throw new Error('Nesting :not is not allowed in a selector');
+                        throw new Error('Nesting :not in a selector is not allowed');
                     }
                     inNot = true;
                     current = new CssSelector();
                     cssSelector.notSelectors.push(current);
                 }
-                if (match[2]) {
-                    current.setElement(match[2]);
+                var tag = match[2 /* TAG */];
+                if (tag) {
+                    var prefix = match[3 /* PREFIX */];
+                    if (prefix === '#') {
+                        // #hash
+                        current.addAttribute('id', tag.substr(1));
+                    }
+                    else if (prefix === '.') {
+                        // Class
+                        current.addClassName(tag.substr(1));
+                    }
+                    else {
+                        // Element
+                        current.setElement(tag);
+                    }
                 }
-                if (match[3]) {
-                    current.addClassName(match[3]);
+                var attribute = match[4 /* ATTRIBUTE */];
+                if (attribute) {
+                    current.addAttribute(attribute, match[6 /* ATTRIBUTE_VALUE */]);
                 }
-                if (match[4]) {
-                    current.addAttribute(match[4], match[6]);
-                }
-                if (match[7]) {
+                if (match[7 /* NOT_END */]) {
                     inNot = false;
                     current = cssSelector;
                 }
-                if (match[8]) {
+                if (match[8 /* SEPARATOR */]) {
                     if (inNot) {
                         throw new Error('Multiple selectors in :not are not supported');
                     }
@@ -18519,7 +18530,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+110.sha-e51ec67.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+125.sha-9d21065.with-local-changes');
 
     /**
      * @license
@@ -25098,53 +25109,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
     }
     /**
-     * Resolve the specified `variable` from the `directives` list and return the
-     * corresponding symbol. If resolution fails, return the `any` type.
-     * @param variable template variable to resolve
-     * @param directives template context
-     * @param query
-     */
-    function findSymbolForVariableInDirectives(variable, directives, query) {
-        var e_2, _a;
-        try {
-            for (var directives_1 = __values(directives), directives_1_1 = directives_1.next(); !directives_1_1.done; directives_1_1 = directives_1.next()) {
-                var d = directives_1_1.value;
-                // Get the symbol table for the directive's StaticSymbol
-                var table = query.getTemplateContext(d.directive.type.reference);
-                if (!table) {
-                    continue;
-                }
-                var symbol = table.get(variable.value);
-                if (symbol) {
-                    return symbol;
-                }
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (directives_1_1 && !directives_1_1.done && (_a = directives_1.return)) _a.call(directives_1);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-        return query.getBuiltinType(BuiltinType$1.Any);
-    }
-    /**
      * Resolve all variable declarations in a template by traversing the specified
      * `path`.
      * @param info
      * @param path template AST path
      */
     function getVarDeclarations(info, path) {
-        var e_3, _a;
+        var e_2, _a;
         var results = [];
         for (var current = path.head; current; current = path.childOf(current)) {
             if (!(current instanceof EmbeddedTemplateAst)) {
                 continue;
             }
-            var directives = current.directives, variables = current.variables;
             var _loop_2 = function (variable) {
-                var symbol = findSymbolForVariableInDirectives(variable, directives, info.query);
+                var symbol = info.members.get(variable.value) || info.query.getBuiltinType(BuiltinType$1.Any);
                 var kind = info.query.getTypeKind(symbol);
                 if (kind === BuiltinType$1.Any || kind === BuiltinType$1.Unbound) {
                     // For special cases such as ngFor and ngIf, the any type is not very useful.
@@ -25164,17 +25142,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 });
             };
             try {
-                for (var variables_1 = (e_3 = void 0, __values(variables)), variables_1_1 = variables_1.next(); !variables_1_1.done; variables_1_1 = variables_1.next()) {
-                    var variable = variables_1_1.value;
+                for (var _b = (e_2 = void 0, __values(current.variables)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var variable = _c.value;
                     _loop_2(variable);
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (variables_1_1 && !variables_1_1.done && (_a = variables_1.return)) _a.call(variables_1);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_2) throw e_2.error; }
             }
         }
         return results;
@@ -25340,7 +25318,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
     function hasTemplateReference(type) {
-        var e_4, _a;
+        var e_3, _a;
         if (type.diDeps) {
             try {
                 for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -25350,12 +25328,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         return true;
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_3) throw e_3.error; }
             }
         }
         return false;
@@ -26345,7 +26323,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         TypeScriptSymbolQuery.prototype.getBuiltinType = function (kind) {
             var result = this.typeCache.get(kind);
             if (!result) {
-                var type = getBuiltinTypeFromTs(kind, { checker: this.checker, node: this.source, program: this.program });
+                var type = getTsTypeFromBuiltinType(kind, {
+                    checker: this.checker,
+                    node: this.source,
+                    program: this.program,
+                });
                 result =
                     new TypeWrapper(type, { program: this.program, checker: this.checker, node: this.source });
                 this.typeCache.set(kind, result);
@@ -26892,7 +26874,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                                     resultType = getTypeParameterOf(parameterType.tsType, parameterType.name);
                                     break;
                                 default:
-                                    resultType = getBuiltinTypeFromTs(BuiltinType$1.Any, this.context);
+                                    resultType = getTsTypeFromBuiltinType(BuiltinType$1.Any, this.context);
                                     break;
                             }
                             break;
@@ -26917,7 +26899,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         type = this._tsType = this.findTransformMethodType(classSymbol);
                     }
                     if (!type) {
-                        type = this._tsType = getBuiltinTypeFromTs(BuiltinType$1.Any, this.context);
+                        type = this._tsType = getTsTypeFromBuiltinType(BuiltinType$1.Any, this.context);
                     }
                 }
                 return type;
@@ -26971,55 +26953,33 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function isSymbolPrivate(s) {
         return !!s.valueDeclaration && isPrivate(s.valueDeclaration);
     }
-    function getBuiltinTypeFromTs(kind, context) {
-        var type;
-        var checker = context.checker;
-        var node = context.node;
-        switch (kind) {
+    function getTsTypeFromBuiltinType(builtinType, ctx) {
+        var syntaxKind;
+        switch (builtinType) {
             case BuiltinType$1.Any:
-                type = checker.getTypeAtLocation(setParents({
-                    kind: ts.SyntaxKind.AsExpression,
-                    expression: { kind: ts.SyntaxKind.TrueKeyword },
-                    type: { kind: ts.SyntaxKind.AnyKeyword }
-                }, node));
+                syntaxKind = ts.SyntaxKind.AnyKeyword;
                 break;
             case BuiltinType$1.Boolean:
-                type =
-                    checker.getTypeAtLocation(setParents({ kind: ts.SyntaxKind.TrueKeyword }, node));
+                syntaxKind = ts.SyntaxKind.BooleanKeyword;
                 break;
             case BuiltinType$1.Null:
-                type =
-                    checker.getTypeAtLocation(setParents({ kind: ts.SyntaxKind.NullKeyword }, node));
+                syntaxKind = ts.SyntaxKind.NullKeyword;
                 break;
             case BuiltinType$1.Number:
-                var numeric = {
-                    kind: ts.SyntaxKind.NumericLiteral,
-                    text: node.getText(),
-                };
-                setParents({ kind: ts.SyntaxKind.ExpressionStatement, expression: numeric }, node);
-                type = checker.getTypeAtLocation(numeric);
+                syntaxKind = ts.SyntaxKind.NumberKeyword;
                 break;
             case BuiltinType$1.String:
-                type = checker.getTypeAtLocation(setParents({
-                    kind: ts.SyntaxKind.NoSubstitutionTemplateLiteral,
-                    text: node.getText(),
-                }, node));
+                syntaxKind = ts.SyntaxKind.StringKeyword;
                 break;
             case BuiltinType$1.Undefined:
-                type = checker.getTypeAtLocation(setParents({
-                    kind: ts.SyntaxKind.VoidExpression,
-                    expression: { kind: ts.SyntaxKind.NumericLiteral }
-                }, node));
+                syntaxKind = ts.SyntaxKind.UndefinedKeyword;
                 break;
             default:
-                throw new Error("Internal error, unhandled literal kind " + kind + ":" + BuiltinType$1[kind]);
+                throw new Error("Internal error, unhandled literal kind " + builtinType + ":" + BuiltinType$1[builtinType]);
         }
-        return type;
-    }
-    function setParents(node, parent) {
-        node.parent = parent;
-        ts.forEachChild(node, function (child) { return setParents(child, node); });
-        return node;
+        var node = ts.createNode(syntaxKind);
+        node.parent = ctx.node;
+        return ctx.checker.getTypeAtLocation(node);
     }
     function spanAt(sourceFile, line, column) {
         if (line != null && column != null) {
@@ -28781,10 +28741,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         function LanguageServiceImpl(host) {
             this.host = host;
         }
-        LanguageServiceImpl.prototype.getTemplateReferences = function () {
-            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
-            return this.host.getTemplateReferences();
-        };
         LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
             var e_1, _a;
             var analyzedModules = this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
@@ -31412,9 +31368,91 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SafeValueImpl = /** @class */ (function () {
+        function SafeValueImpl(changingThisBreaksApplicationSecurity) {
+            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
+        }
+        SafeValueImpl.prototype.toString = function () {
+            return "SafeValue must use [property]=binding: " + this.changingThisBreaksApplicationSecurity +
+                " (see http://g.co/ng/security#xss)";
+        };
+        return SafeValueImpl;
+    }());
+    var SafeHtmlImpl = /** @class */ (function (_super) {
+        __extends(SafeHtmlImpl, _super);
+        function SafeHtmlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeHtmlImpl.prototype.getTypeName = function () { return "HTML" /* Html */; };
+        return SafeHtmlImpl;
+    }(SafeValueImpl));
+    var SafeStyleImpl = /** @class */ (function (_super) {
+        __extends(SafeStyleImpl, _super);
+        function SafeStyleImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeStyleImpl.prototype.getTypeName = function () { return "Style" /* Style */; };
+        return SafeStyleImpl;
+    }(SafeValueImpl));
+    var SafeScriptImpl = /** @class */ (function (_super) {
+        __extends(SafeScriptImpl, _super);
+        function SafeScriptImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeScriptImpl.prototype.getTypeName = function () { return "Script" /* Script */; };
+        return SafeScriptImpl;
+    }(SafeValueImpl));
+    var SafeUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeUrlImpl, _super);
+        function SafeUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeUrlImpl.prototype.getTypeName = function () { return "URL" /* Url */; };
+        return SafeUrlImpl;
+    }(SafeValueImpl));
+    var SafeResourceUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeResourceUrlImpl, _super);
+        function SafeResourceUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
+        return SafeResourceUrlImpl;
+    }(SafeValueImpl));
+    function unwrapSafeValue(value) {
+        return value instanceof SafeValueImpl ? value.changingThisBreaksApplicationSecurity :
+            value;
+    }
+    function allowSanitizationBypassAndThrow(value, type) {
+        var actualType = getSanitizationBypassType(value);
+        if (actualType != null && actualType !== type) {
+            // Allow ResourceURLs in URL contexts, they are strictly more trusted.
+            if (actualType === "ResourceURL" /* ResourceUrl */ && type === "URL" /* Url */)
+                return true;
+            throw new Error("Required a safe " + type + ", got a " + actualType + " (see http://g.co/ng/security#xss)");
+        }
+        return actualType === type;
+    }
+    function getSanitizationBypassType(value) {
+        return value instanceof SafeValueImpl && value.getTypeName() || null;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /** A special value which designates that a value has not changed. */
     var NO_CHANGE = {};
 
+    /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
     var MAP_BASED_ENTRY_PROP_NAME = '[MAP]';
     var TEMPLATE_DIRECTIVE_INDEX = 0;
     /**
@@ -31542,6 +31580,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
         }
         return startPosition;
+    }
+    function hasValueChangedUnwrapSafeValue(a, b) {
+        return hasValueChanged(unwrapSafeValue(a), unwrapSafeValue(b));
     }
     function hasValueChanged(a, b) {
         if (b === NO_CHANGE)
@@ -31765,226 +31806,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     // `input('class') + classMap()` instructions.
     function selectClassBasedInputName(inputs) {
         return inputs.hasOwnProperty('class') ? 'class' : 'className';
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * This property will be monkey-patched on elements, components and directives
-     */
-    var MONKEY_PATCH_KEY_NAME = '__ngContext__';
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * For efficiency reasons we often put several different data types (`RNode`, `LView`, `LContainer`)
-     * in same location in `LView`. This is because we don't want to pre-allocate space for it
-     * because the storage is sparse. This file contains utilities for dealing with such data types.
-     *
-     * How do we know what is stored at a given location in `LView`.
-     * - `Array.isArray(value) === false` => `RNode` (The normal storage value)
-     * - `Array.isArray(value) === true` => then the `value[0]` represents the wrapped value.
-     *   - `typeof value[TYPE] === 'object'` => `LView`
-     *      - This happens when we have a component at a given location
-     *   - `typeof value[TYPE] === true` => `LContainer`
-     *      - This happens when we have `LContainer` binding at a given location.
-     *
-     *
-     * NOTE: it is assumed that `Array.isArray` and `typeof` operations are very efficient.
-     */
-    /**
-     * Returns `RNode`.
-     * @param value wrapped value of `RNode`, `LView`, `LContainer`
-     */
-    function unwrapRNode(value) {
-        while (Array.isArray(value)) {
-            value = value[HOST];
-        }
-        return value;
-    }
-    /**
-     * Retrieves an element value from the provided `viewData`, by unwrapping
-     * from any containers, component views, or style contexts.
-     */
-    function getNativeByIndex(index, lView) {
-        return unwrapRNode(lView[index + HEADER_OFFSET]);
-    }
-    /**
-     * Retrieve an `RNode` for a given `TNode` and `LView`.
-     *
-     * This function guarantees in dev mode to retrieve a non-null `RNode`.
-     *
-     * @param tNode
-     * @param lView
-     */
-    function getNativeByTNode(tNode, lView) {
-        ngDevMode && assertTNodeForLView(tNode, lView);
-        ngDevMode && assertDataInRange(lView, tNode.index);
-        var node = unwrapRNode(lView[tNode.index]);
-        ngDevMode && !isProceduralRenderer(lView[RENDERER]) && assertDomNode(node);
-        return node;
-    }
-    /**
-     * Retrieve an `RNode` or `null` for a given `TNode` and `LView`.
-     *
-     * Some `TNode`s don't have associated `RNode`s. For example `Projection`
-     *
-     * @param tNode
-     * @param lView
-     */
-    function getNativeByTNodeOrNull(tNode, lView) {
-        var index = tNode.index;
-        if (index !== -1) {
-            ngDevMode && assertTNodeForLView(tNode, lView);
-            var node = unwrapRNode(lView[index]);
-            ngDevMode && node !== null && !isProceduralRenderer(lView[RENDERER]) && assertDomNode(node);
-            return node;
-        }
-        return null;
-    }
-    function getTNode(index, view) {
-        ngDevMode && assertGreaterThan(index, -1, 'wrong index for TNode');
-        ngDevMode && assertLessThan(index, view[TVIEW].data.length, 'wrong index for TNode');
-        return view[TVIEW].data[index + HEADER_OFFSET];
-    }
-    /** Retrieves a value from any `LView` or `TData`. */
-    function load(view, index) {
-        ngDevMode && assertDataInRange(view, index + HEADER_OFFSET);
-        return view[index + HEADER_OFFSET];
-    }
-    function getComponentLViewByIndex(nodeIndex, hostView) {
-        // Could be an LView or an LContainer. If LContainer, unwrap to find LView.
-        ngDevMode && assertDataInRange(hostView, nodeIndex);
-        var slotValue = hostView[nodeIndex];
-        var lView = isLView(slotValue) ? slotValue : slotValue[HOST];
-        return lView;
-    }
-    /**
-     * Returns the monkey-patch value data present on the target (which could be
-     * a component, directive or a DOM node).
-     */
-    function readPatchedData(target) {
-        ngDevMode && assertDefined(target, 'Target expected');
-        return target[MONKEY_PATCH_KEY_NAME] || null;
-    }
-    function readPatchedLView(target) {
-        var value = readPatchedData(target);
-        if (value) {
-            return Array.isArray(value) ? value : value.lView;
-        }
-        return null;
-    }
-    /** Checks whether a given view is in creation mode */
-    function isCreationMode(view) {
-        return (view[FLAGS] & 4 /* CreationMode */) === 4 /* CreationMode */;
-    }
-    /**
-     * Returns a boolean for whether the view is attached to the change detection tree.
-     *
-     * Note: This determines whether a view should be checked, not whether it's inserted
-     * into a container. For that, you'll want `viewAttachedToContainer` below.
-     */
-    function viewAttachedToChangeDetector(view) {
-        return (view[FLAGS] & 128 /* Attached */) === 128 /* Attached */;
-    }
-    /** Returns a boolean for whether the view is attached to a container. */
-    function viewAttachedToContainer(view) {
-        return isLContainer(view[PARENT]);
-    }
-    /** Returns a constant from `TConstants` instance. */
-    function getConstant(consts, index) {
-        return consts === null || index == null ? null : consts[index];
-    }
-    /**
-     * Resets the pre-order hook flags of the view.
-     * @param lView the LView on which the flags are reset
-     */
-    function resetPreOrderHookFlags(lView) {
-        lView[PREORDER_HOOK_FLAGS] = 0;
-    }
-    function getLContainerActiveIndex(lContainer) {
-        return lContainer[ACTIVE_INDEX] >> 1 /* SHIFT */;
-    }
-    function setLContainerActiveIndex(lContainer, index) {
-        lContainer[ACTIVE_INDEX] = index << 1 /* SHIFT */;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Gets the parent LView of the passed LView, if the PARENT is an LContainer, will get the parent of
-     * that LContainer, which is an LView
-     * @param lView the lView whose parent to get
-     */
-    function getLViewParent(lView) {
-        ngDevMode && assertLView(lView);
-        var parent = lView[PARENT];
-        return isLContainer(parent) ? parent[PARENT] : parent;
-    }
-    /**
-     * Retrieve the root view from any component or `LView` by walking the parent `LView` until
-     * reaching the root `LView`.
-     *
-     * @param componentOrLView any component or `LView`
-     */
-    function getRootView(componentOrLView) {
-        ngDevMode && assertDefined(componentOrLView, 'component');
-        var lView = isLView(componentOrLView) ? componentOrLView : readPatchedLView(componentOrLView);
-        while (lView && !(lView[FLAGS] & 512 /* IsRoot */)) {
-            lView = getLViewParent(lView);
-        }
-        ngDevMode && assertLView(lView);
-        return lView;
-    }
-    /**
-     * Given an `LView`, find the closest declaration view which is not an embedded view.
-     *
-     * This method searches for the `LView` associated with the component which declared the `LView`.
-     *
-     * This function may return itself if the `LView` passed in is not an embedded `LView`. Otherwise
-     * it walks the declaration parents until it finds a component view (non-embedded-view.)
-     *
-     * @param lView LView for which we want a host element node
-     * @returns The host node
-     */
-    function findComponentView(lView) {
-        var rootTNode = lView[T_HOST];
-        var declaredView;
-        while (rootTNode !== null && rootTNode.type === 2 /* View */ &&
-            (declaredView = lView[DECLARATION_VIEW]) !== null) {
-            lView = declaredView;
-            rootTNode = lView[T_HOST];
-        }
-        ngDevMode && assertLView(lView);
-        return lView;
-    }
-    /**
-     * Returns the `RootContext` instance that is associated with
-     * the application where the target is situated. It does this by walking the parent views until it
-     * gets to the root view, then getting the context off of that.
-     *
-     * @param viewOrComponent the `LView` or component to get the root context for.
-     */
-    function getRootContext(viewOrComponent) {
-        var rootView = getRootView(viewOrComponent);
-        ngDevMode &&
-            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
-        return rootView[CONTEXT];
     }
 
     /**
@@ -32294,7 +32115,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var previousTView = null;
                 var injectorIndex = getInjectorIndex(tNode, lView);
                 var parentLocation = NO_PARENT_INJECTOR;
-                var hostTElementNode = flags & InjectFlags.Host ? findComponentView(lView)[T_HOST] : null;
+                var hostTElementNode = flags & InjectFlags.Host ? lView[DECLARATION_COMPONENT_VIEW][T_HOST] : null;
                 // If we should skip this injector, or if there is no injector on this node, start by
                 // searching
                 // the parent injector.
@@ -32707,81 +32528,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var NO_ERRORS_SCHEMA$1 = {
         name: 'no-errors-schema'
     };
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var SafeValueImpl = /** @class */ (function () {
-        function SafeValueImpl(changingThisBreaksApplicationSecurity) {
-            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
-        }
-        SafeValueImpl.prototype.toString = function () {
-            return "SafeValue must use [property]=binding: " + this.changingThisBreaksApplicationSecurity +
-                " (see http://g.co/ng/security#xss)";
-        };
-        return SafeValueImpl;
-    }());
-    var SafeHtmlImpl = /** @class */ (function (_super) {
-        __extends(SafeHtmlImpl, _super);
-        function SafeHtmlImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeHtmlImpl.prototype.getTypeName = function () { return "HTML" /* Html */; };
-        return SafeHtmlImpl;
-    }(SafeValueImpl));
-    var SafeStyleImpl = /** @class */ (function (_super) {
-        __extends(SafeStyleImpl, _super);
-        function SafeStyleImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeStyleImpl.prototype.getTypeName = function () { return "Style" /* Style */; };
-        return SafeStyleImpl;
-    }(SafeValueImpl));
-    var SafeScriptImpl = /** @class */ (function (_super) {
-        __extends(SafeScriptImpl, _super);
-        function SafeScriptImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeScriptImpl.prototype.getTypeName = function () { return "Script" /* Script */; };
-        return SafeScriptImpl;
-    }(SafeValueImpl));
-    var SafeUrlImpl = /** @class */ (function (_super) {
-        __extends(SafeUrlImpl, _super);
-        function SafeUrlImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeUrlImpl.prototype.getTypeName = function () { return "URL" /* Url */; };
-        return SafeUrlImpl;
-    }(SafeValueImpl));
-    var SafeResourceUrlImpl = /** @class */ (function (_super) {
-        __extends(SafeResourceUrlImpl, _super);
-        function SafeResourceUrlImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
-        return SafeResourceUrlImpl;
-    }(SafeValueImpl));
-    function unwrapSafeValue(value) {
-        return value instanceof SafeValueImpl ? value.changingThisBreaksApplicationSecurity :
-            value;
-    }
-    function allowSanitizationBypassAndThrow(value, type) {
-        var actualType = getSanitizationBypassType(value);
-        if (actualType != null && actualType !== type) {
-            // Allow ResourceURLs in URL contexts, they are strictly more trusted.
-            if (actualType === "ResourceURL" /* ResourceUrl */ && type === "URL" /* Url */)
-                return true;
-            throw new Error("Required a safe " + type + ", got a " + actualType + " (see http://g.co/ng/security#xss)");
-        }
-        return actualType === type;
-    }
-    function getSanitizationBypassType(value) {
-        return value instanceof SafeValueImpl && value.getTypeName() || null;
-    }
 
     /**
      * @license
@@ -33679,6 +33425,158 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         catch (e) {
             return '[ERROR] Exception while trying to serialize the value';
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * This property will be monkey-patched on elements, components and directives
+     */
+    var MONKEY_PATCH_KEY_NAME = '__ngContext__';
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * For efficiency reasons we often put several different data types (`RNode`, `LView`, `LContainer`)
+     * in same location in `LView`. This is because we don't want to pre-allocate space for it
+     * because the storage is sparse. This file contains utilities for dealing with such data types.
+     *
+     * How do we know what is stored at a given location in `LView`.
+     * - `Array.isArray(value) === false` => `RNode` (The normal storage value)
+     * - `Array.isArray(value) === true` => then the `value[0]` represents the wrapped value.
+     *   - `typeof value[TYPE] === 'object'` => `LView`
+     *      - This happens when we have a component at a given location
+     *   - `typeof value[TYPE] === true` => `LContainer`
+     *      - This happens when we have `LContainer` binding at a given location.
+     *
+     *
+     * NOTE: it is assumed that `Array.isArray` and `typeof` operations are very efficient.
+     */
+    /**
+     * Returns `RNode`.
+     * @param value wrapped value of `RNode`, `LView`, `LContainer`
+     */
+    function unwrapRNode(value) {
+        while (Array.isArray(value)) {
+            value = value[HOST];
+        }
+        return value;
+    }
+    /**
+     * Retrieves an element value from the provided `viewData`, by unwrapping
+     * from any containers, component views, or style contexts.
+     */
+    function getNativeByIndex(index, lView) {
+        return unwrapRNode(lView[index + HEADER_OFFSET]);
+    }
+    /**
+     * Retrieve an `RNode` for a given `TNode` and `LView`.
+     *
+     * This function guarantees in dev mode to retrieve a non-null `RNode`.
+     *
+     * @param tNode
+     * @param lView
+     */
+    function getNativeByTNode(tNode, lView) {
+        ngDevMode && assertTNodeForLView(tNode, lView);
+        ngDevMode && assertDataInRange(lView, tNode.index);
+        var node = unwrapRNode(lView[tNode.index]);
+        ngDevMode && !isProceduralRenderer(lView[RENDERER]) && assertDomNode(node);
+        return node;
+    }
+    /**
+     * Retrieve an `RNode` or `null` for a given `TNode` and `LView`.
+     *
+     * Some `TNode`s don't have associated `RNode`s. For example `Projection`
+     *
+     * @param tNode
+     * @param lView
+     */
+    function getNativeByTNodeOrNull(tNode, lView) {
+        var index = tNode.index;
+        if (index !== -1) {
+            ngDevMode && assertTNodeForLView(tNode, lView);
+            var node = unwrapRNode(lView[index]);
+            ngDevMode && node !== null && !isProceduralRenderer(lView[RENDERER]) && assertDomNode(node);
+            return node;
+        }
+        return null;
+    }
+    function getTNode(index, view) {
+        ngDevMode && assertGreaterThan(index, -1, 'wrong index for TNode');
+        ngDevMode && assertLessThan(index, view[TVIEW].data.length, 'wrong index for TNode');
+        return view[TVIEW].data[index + HEADER_OFFSET];
+    }
+    /** Retrieves a value from any `LView` or `TData`. */
+    function load(view, index) {
+        ngDevMode && assertDataInRange(view, index + HEADER_OFFSET);
+        return view[index + HEADER_OFFSET];
+    }
+    function getComponentLViewByIndex(nodeIndex, hostView) {
+        // Could be an LView or an LContainer. If LContainer, unwrap to find LView.
+        ngDevMode && assertDataInRange(hostView, nodeIndex);
+        var slotValue = hostView[nodeIndex];
+        var lView = isLView(slotValue) ? slotValue : slotValue[HOST];
+        return lView;
+    }
+    /**
+     * Returns the monkey-patch value data present on the target (which could be
+     * a component, directive or a DOM node).
+     */
+    function readPatchedData(target) {
+        ngDevMode && assertDefined(target, 'Target expected');
+        return target[MONKEY_PATCH_KEY_NAME] || null;
+    }
+    function readPatchedLView(target) {
+        var value = readPatchedData(target);
+        if (value) {
+            return Array.isArray(value) ? value : value.lView;
+        }
+        return null;
+    }
+    /** Checks whether a given view is in creation mode */
+    function isCreationMode(view) {
+        return (view[FLAGS] & 4 /* CreationMode */) === 4 /* CreationMode */;
+    }
+    /**
+     * Returns a boolean for whether the view is attached to the change detection tree.
+     *
+     * Note: This determines whether a view should be checked, not whether it's inserted
+     * into a container. For that, you'll want `viewAttachedToContainer` below.
+     */
+    function viewAttachedToChangeDetector(view) {
+        return (view[FLAGS] & 128 /* Attached */) === 128 /* Attached */;
+    }
+    /** Returns a boolean for whether the view is attached to a container. */
+    function viewAttachedToContainer(view) {
+        return isLContainer(view[PARENT]);
+    }
+    /** Returns a constant from `TConstants` instance. */
+    function getConstant(consts, index) {
+        return consts === null || index == null ? null : consts[index];
+    }
+    /**
+     * Resets the pre-order hook flags of the view.
+     * @param lView the LView on which the flags are reset
+     */
+    function resetPreOrderHookFlags(lView) {
+        lView[PREORDER_HOOK_FLAGS] = 0;
+    }
+    function getLContainerActiveIndex(lContainer) {
+        return lContainer[ACTIVE_INDEX] >> 1 /* SHIFT */;
+    }
+    function setLContainerActiveIndex(lContainer, index) {
+        lContainer[ACTIVE_INDEX] = index << 1 /* SHIFT */;
     }
 
     /**
@@ -35503,6 +35401,52 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Gets the parent LView of the passed LView, if the PARENT is an LContainer, will get the parent of
+     * that LContainer, which is an LView
+     * @param lView the lView whose parent to get
+     */
+    function getLViewParent(lView) {
+        ngDevMode && assertLView(lView);
+        var parent = lView[PARENT];
+        return isLContainer(parent) ? parent[PARENT] : parent;
+    }
+    /**
+     * Retrieve the root view from any component or `LView` by walking the parent `LView` until
+     * reaching the root `LView`.
+     *
+     * @param componentOrLView any component or `LView`
+     */
+    function getRootView(componentOrLView) {
+        ngDevMode && assertDefined(componentOrLView, 'component');
+        var lView = isLView(componentOrLView) ? componentOrLView : readPatchedLView(componentOrLView);
+        while (lView && !(lView[FLAGS] & 512 /* IsRoot */)) {
+            lView = getLViewParent(lView);
+        }
+        ngDevMode && assertLView(lView);
+        return lView;
+    }
+    /**
+     * Returns the `RootContext` instance that is associated with
+     * the application where the target is situated. It does this by walking the parent views until it
+     * gets to the root view, then getting the context off of that.
+     *
+     * @param viewOrComponent the `LView` or component to get the root context for.
+     */
+    function getRootContext(viewOrComponent) {
+        var rootView = getRootView(viewOrComponent);
+        ngDevMode &&
+            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
+        return rootView[CONTEXT];
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Advances to an element for later binding instructions.
      *
      * Used in conjunction with instructions like {@link property} to act on elements with specified
@@ -37186,9 +37130,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         lView[SANITIZER] = sanitizer || parentLView && parentLView[SANITIZER] || null;
         lView[INJECTOR$1] = injector || parentLView && parentLView[INJECTOR$1] || null;
         lView[T_HOST] = tHostNode;
-        lView[DECLARATION_COMPONENT_VIEW] = tView.type == 2 /* Embedded */ ?
-            (parentLView === null ? null : parentLView[DECLARATION_COMPONENT_VIEW]) :
-            lView;
+        ngDevMode && assertEqual(tView.type == 2 /* Embedded */ ? parentLView !== null : true, true, 'Embedded views must have parentLView');
+        lView[DECLARATION_COMPONENT_VIEW] =
+            tView.type == 2 /* Embedded */ ? parentLView[DECLARATION_COMPONENT_VIEW] : lView;
         ngDevMode && attachLViewDebug(lView);
         return lView;
     }
@@ -39323,7 +39267,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
             else {
-                var componentView = findComponentView(lView);
+                var componentView = lView[DECLARATION_COMPONENT_VIEW];
                 var componentHost = componentView[T_HOST];
                 var parentView = getLViewParent(componentView);
                 var firstProjectedTNode = componentHost.projection[tNode.projection];
@@ -39454,7 +39398,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param beforeNode Before which node the insertions should happen.
      */
     function applyProjectionRecursive(renderer, action, lView, tProjectionNode, renderParent, beforeNode) {
-        var componentLView = findComponentView(lView);
+        var componentLView = lView[DECLARATION_COMPONENT_VIEW];
         var componentNode = componentLView[T_HOST];
         ngDevMode &&
             assertEqual(typeof tProjectionNode.projection, 'number', 'expecting projection index');
@@ -39860,7 +39804,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 collectNativeNodes(lView, tNode.child, result);
             }
             else if (tNodeType === 1 /* Projection */) {
-                var componentView = findComponentView(lView);
+                var componentView = lView[DECLARATION_COMPONENT_VIEW];
                 var componentHost = componentView[T_HOST];
                 var parentView = getLViewParent(componentView);
                 var firstProjectedNode = componentHost.projection[tNode.projection];
@@ -40188,7 +40132,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             tNode.type === 4 /* ElementContainer */) {
             // The LView represents the location where the injection is requested from.
             // We need to locate the containing LView (in case where the `lView` is an embedded view)
-            var hostComponentView = findComponentView(lView); // look up
+            var hostComponentView = lView[DECLARATION_COMPONENT_VIEW]; // look up
             return new ViewRef(hostComponentView, lView);
         }
         return null;
@@ -43507,7 +43451,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // as well.
         if (ngDevMode && getCheckNoChangesMode()) {
             var oldValue = getValue(lView, bindingIndex);
-            if (hasValueChanged(oldValue, value)) {
+            if (hasValueChangedUnwrapSafeValue(oldValue, value)) {
                 throwErrorIfNoChangesMode(false, oldValue, value);
             }
         }
@@ -44676,7 +44620,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @codeGenApi
      */
     function ɵɵprojectionDef(projectionSlots) {
-        var componentNode = findComponentView(getLView())[T_HOST];
+        var componentNode = getLView()[DECLARATION_COMPONENT_VIEW][T_HOST];
         if (!componentNode.projection) {
             // If no explicit projection slots are defined, fall back to a single
             // projection slot with the wildcard selector.
@@ -47551,7 +47495,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+110.sha-e51ec67.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+125.sha-9d21065.with-local-changes');
 
     /**
      * @license
@@ -57801,7 +57745,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         else if (tNode.type === 1 /* Projection */) {
             // Case 3: the TNode is a projection insertion point (i.e. a <ng-content>).
             // The nodes projected at this location all need to be processed.
-            var componentView = findComponentView(lView);
+            var componentView = lView[DECLARATION_COMPONENT_VIEW];
             var componentHost = componentView[T_HOST];
             var head = componentHost.projection[tNode.projection];
             if (Array.isArray(head)) {
@@ -59962,7 +59906,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             throw new Error('It looks like your application or one of its dependencies is using i18n.\n' +
                 'Angular 9 introduced a global `$localize()` function that needs to be loaded.\n' +
                 'Please run `ng add @angular/localize` from the Angular CLI.\n' +
-                '(For non-CLI projects, add `import \'@angular/localize/init\';` to your polyfills.ts file)');
+                '(For non-CLI projects, add `import \'@angular/localize/init\';` to your `polyfills.ts` file.\n' +
+                'For server-side rendering applications add the import to your `main.server.ts` file.)');
         };
     }
 
@@ -61941,7 +61886,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
-        TypeScriptServiceHost.prototype.getTemplateReferences = function () { return __spread(this.templateReferences); };
+        TypeScriptServiceHost.prototype.getTemplateReferences = function () {
+            this.getAnalyzedModules();
+            return __spread(this.templateReferences);
+        };
         /**
          * Checks whether the program has changed and returns all analyzed modules.
          * If program has changed, invalidate all caches and update fileToComponent
@@ -62003,50 +61951,85 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return this.analyzedModules;
         };
         /**
-         * Checks whether the program has changed, and invalidate caches if it has.
+         * Checks whether the program has changed, and invalidate static symbols in
+         * the source files that have changed.
          * Returns true if modules are up-to-date, false otherwise.
          * This should only be called by getAnalyzedModules().
          */
         TypeScriptServiceHost.prototype.upToDate = function () {
-            var e_3, _a;
-            var _this = this;
-            var _b = this, lastProgram = _b.lastProgram, program = _b.program;
+            var e_3, _a, e_4, _b, e_5, _c;
+            var _d = this, lastProgram = _d.lastProgram, program = _d.program;
             if (lastProgram === program) {
                 return true;
             }
             this.lastProgram = program;
-            // Invalidate file that have changed in the static symbol resolver
+            // Even though the program has changed, it could be the case that none of
+            // the source files have changed. If all source files remain the same, then
+            // program is still up-to-date, and we should not invalidate caches.
+            var filesAdded = 0;
+            var filesChangedOrRemoved = [];
+            // Check if any source files have been added / changed since last computation.
             var seen = new Set();
             try {
-                for (var _c = __values(program.getSourceFiles()), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var sourceFile = _d.value;
-                    var fileName = sourceFile.fileName;
+                for (var _e = __values(program.getSourceFiles()), _f = _e.next(); !_f.done; _f = _e.next()) {
+                    var fileName = _f.value.fileName;
                     seen.add(fileName);
                     var version = this.tsLsHost.getScriptVersion(fileName);
                     var lastVersion = this.fileVersions.get(fileName);
-                    this.fileVersions.set(fileName, version);
-                    // Should not invalidate file on the first encounter or if file hasn't changed
-                    if (lastVersion !== undefined && version !== lastVersion) {
-                        var symbols = this.staticSymbolResolver.invalidateFile(fileName);
-                        this.reflector.invalidateSymbols(symbols);
+                    if (lastVersion === undefined) {
+                        filesAdded++;
+                        this.fileVersions.set(fileName, version);
+                    }
+                    else if (version !== lastVersion) {
+                        filesChangedOrRemoved.push(fileName); // changed
+                        this.fileVersions.set(fileName, version);
                     }
                 }
             }
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                    if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
                 }
                 finally { if (e_3) throw e_3.error; }
             }
-            // Remove file versions that are no longer in the program and invalidate them.
-            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen.has(f); });
-            missing.forEach(function (f) {
-                _this.fileVersions.delete(f);
-                var symbols = _this.staticSymbolResolver.invalidateFile(f);
-                _this.reflector.invalidateSymbols(symbols);
-            });
-            return false;
+            try {
+                // Check if any source files have been removed since last computation.
+                for (var _g = __values(this.fileVersions), _h = _g.next(); !_h.done; _h = _g.next()) {
+                    var _j = __read(_h.value, 1), fileName = _j[0];
+                    if (!seen.has(fileName)) {
+                        filesChangedOrRemoved.push(fileName); // removed
+                        // Because Maps are iterated in insertion order, it is safe to delete
+                        // entries from the same map while iterating.
+                        // See https://stackoverflow.com/questions/35940216 and
+                        // https://www.ecma-international.org/ecma-262/10.0/index.html#sec-map.prototype.foreach
+                        this.fileVersions.delete(fileName);
+                    }
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
+                }
+                finally { if (e_4) throw e_4.error; }
+            }
+            try {
+                for (var filesChangedOrRemoved_1 = __values(filesChangedOrRemoved), filesChangedOrRemoved_1_1 = filesChangedOrRemoved_1.next(); !filesChangedOrRemoved_1_1.done; filesChangedOrRemoved_1_1 = filesChangedOrRemoved_1.next()) {
+                    var fileName = filesChangedOrRemoved_1_1.value;
+                    var symbols = this.staticSymbolResolver.invalidateFile(fileName);
+                    this.reflector.invalidateSymbols(symbols);
+                }
+            }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            finally {
+                try {
+                    if (filesChangedOrRemoved_1_1 && !filesChangedOrRemoved_1_1.done && (_c = filesChangedOrRemoved_1.return)) _c.call(filesChangedOrRemoved_1);
+                }
+                finally { if (e_5) throw e_5.error; }
+            }
+            // Program is up-to-date iff no files are added, changed, or removed.
+            return filesAdded === 0 && filesChangedOrRemoved.length === 0;
         };
         /**
          * Find all templates in the specified `file`.
@@ -62275,7 +62258,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          * @param classSymbol Angular Symbol that defines a directive
          */
         TypeScriptServiceHost.prototype.getModuleMetadataForDirective = function (classSymbol) {
-            var e_4, _a, e_5, _b, _c;
+            var e_6, _a, e_7, _b, _c;
             var result = {
                 directives: [],
                 pipes: [],
@@ -62298,12 +62281,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
             finally {
                 try {
                     if (directives_1_1 && !directives_1_1.done && (_a = directives_1.return)) _a.call(directives_1);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_6) throw e_6.error; }
             }
             try {
                 for (var pipes_1 = __values(pipes), pipes_1_1 = pipes_1.next(); !pipes_1_1.done; pipes_1_1 = pipes_1.next()) {
@@ -62312,12 +62295,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     result.pipes.push(metadata.toSummary());
                 }
             }
-            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            catch (e_7_1) { e_7 = { error: e_7_1 }; }
             finally {
                 try {
                     if (pipes_1_1 && !pipes_1_1.done && (_b = pipes_1.return)) _b.call(pipes_1);
                 }
-                finally { if (e_5) throw e_5.error; }
+                finally { if (e_7) throw e_7.error; }
             }
             (_c = result.schemas).push.apply(_c, __spread(ngModule.schemas));
             return result;
@@ -62410,7 +62393,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return TypeScriptServiceHost;
     }());
     function findSuitableDefaultModule(modules) {
-        var e_6, _a;
+        var e_8, _a;
         var result = undefined;
         var resultSize = 0;
         try {
@@ -62423,12 +62406,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_8) throw e_8.error; }
         }
         return result;
     }
@@ -62495,7 +62478,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // Without an Angular host there is no way to get template references.
             return [];
         }
-        ngLSHost.getAnalyzedModules();
         var templates = ngLSHost.getTemplateReferences();
         var logger = project.projectService.logger;
         if (logger.hasLevel(tss.server.LogLevel.verbose)) {
@@ -62590,7 +62572,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+110.sha-e51ec67.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+125.sha-9d21065.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
