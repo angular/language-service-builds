@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+177.sha-6bf2531.with-local-changes
+ * @license Angular v9.0.0-rc.1+172.sha-f69c6e2.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12841,19 +12841,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var _this = this;
             if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
                 return {
+                    sourceSpan: sourceSpan,
                     reference: Identifiers$1.elementHostAttrs,
-                    calls: [{
-                            sourceSpan: sourceSpan,
-                            allocateBindingSlots: 0,
-                            params: function () {
-                                // params => elementHostAttrs(attrs)
-                                _this.populateInitialStylingAttrs(attrs);
-                                var attrArray = !attrs.some(function (attr) { return attr instanceof WrappedNodeExpr; }) ?
-                                    getConstantLiteralFromArray(constantPool, attrs) :
-                                    literalArr(attrs);
-                                return [attrArray];
-                            }
-                        }]
+                    allocateBindingSlots: 0,
+                    params: function () {
+                        // params => elementHostAttrs(attrs)
+                        _this.populateInitialStylingAttrs(attrs);
+                        var attrArray = !attrs.some(function (attr) { return attr instanceof WrappedNodeExpr; }) ?
+                            getConstantLiteralFromArray(constantPool, attrs) :
+                            literalArr(attrs);
+                        return [attrArray];
+                    }
                 };
             }
             return null;
@@ -12901,35 +12899,31 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 reference = isClassBased ? Identifiers$1.classMap : Identifiers$1.styleMap;
             }
             return {
+                sourceSpan: stylingInput.sourceSpan,
                 reference: reference,
-                calls: [{
-                        supportsInterpolation: isClassBased,
-                        sourceSpan: stylingInput.sourceSpan,
-                        allocateBindingSlots: totalBindingSlotsRequired,
-                        params: function (convertFn) {
-                            var convertResult = convertFn(mapValue);
-                            return Array.isArray(convertResult) ? convertResult : [convertResult];
-                        }
-                    }]
+                allocateBindingSlots: totalBindingSlotsRequired,
+                supportsInterpolation: isClassBased,
+                params: function (convertFn) {
+                    var convertResult = convertFn(mapValue);
+                    return Array.isArray(convertResult) ? convertResult : [convertResult];
+                }
             };
         };
         StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter, getInterpolationExpressionFn) {
-            var instructions = [];
-            inputs.forEach(function (input) {
-                var previousInstruction = instructions[instructions.length - 1];
+            return inputs.map(function (input) {
                 var value = input.value.visit(valueConverter);
-                var referenceForCall = reference;
-                var totalBindingSlotsRequired = 1; // each styling binding value is stored in the LView
+                // each styling binding value is stored in the LView
+                var totalBindingSlotsRequired = 1;
                 if (value instanceof Interpolation) {
                     totalBindingSlotsRequired += value.expressions.length;
                     if (getInterpolationExpressionFn) {
-                        referenceForCall = getInterpolationExpressionFn(value);
+                        reference = getInterpolationExpressionFn(value);
                     }
                 }
-                var call = {
+                return {
                     sourceSpan: input.sourceSpan,
-                    allocateBindingSlots: totalBindingSlotsRequired,
                     supportsInterpolation: !!getInterpolationExpressionFn,
+                    allocateBindingSlots: totalBindingSlotsRequired, reference: reference,
                     params: function (convertFn) {
                         // params => stylingProp(propName, value)
                         var params = [];
@@ -12947,19 +12941,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         return params;
                     }
                 };
-                // If we ended up generating a call to the same instruction as the previous styling property
-                // we can chain the calls together safely to save some bytes, otherwise we have to generate
-                // a separate instruction call. This is primarily a concern with interpolation instructions
-                // where we may start off with one `reference`, but end up using another based on the
-                // number of interpolations.
-                if (previousInstruction && previousInstruction.reference === referenceForCall) {
-                    previousInstruction.calls.push(call);
-                }
-                else {
-                    instructions.push({ reference: referenceForCall, calls: [call] });
-                }
             });
-            return instructions;
         };
         StylingBuilder.prototype._buildClassInputs = function (valueConverter) {
             if (this._singleClassInputs) {
@@ -12975,12 +12957,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         StylingBuilder.prototype._buildSanitizerFn = function () {
             return {
+                sourceSpan: this._firstStylingInput ? this._firstStylingInput.sourceSpan : null,
                 reference: Identifiers$1.styleSanitizer,
-                calls: [{
-                        sourceSpan: this._firstStylingInput ? this._firstStylingInput.sourceSpan : null,
-                        allocateBindingSlots: 0,
-                        params: function () { return [importExpr(Identifiers$1.defaultStyleSanitizer)]; }
-                    }]
+                allocateBindingSlots: 0,
+                params: function () { return [importExpr(Identifiers$1.defaultStyleSanitizer)]; }
             };
         };
         /**
@@ -16600,7 +16580,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var limit = stylingInstructions.length - 1;
             for (var i = 0; i <= limit; i++) {
                 var instruction_1 = stylingInstructions[i];
-                this._bindingSlots += this.processStylingUpdateInstruction(elementIndex, instruction_1);
+                this._bindingSlots += instruction_1.allocateBindingSlots;
+                this.processStylingInstruction(elementIndex, instruction_1, false);
             }
             // the reason why `undefined` is used is because the renderer understands this as a
             // special value to symbolize that there is no RHS to this binding
@@ -16898,26 +16879,25 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return instruction(span, reference, params).toStmt();
             });
         };
-        TemplateDefinitionBuilder.prototype.processStylingUpdateInstruction = function (elementIndex, instruction) {
+        TemplateDefinitionBuilder.prototype.processStylingInstruction = function (elementIndex, instruction, createMode) {
             var _this = this;
-            var allocateBindingSlots = 0;
             if (instruction) {
-                var calls_1 = [];
-                instruction.calls.forEach(function (call) {
-                    allocateBindingSlots += call.allocateBindingSlots;
-                    calls_1.push({
-                        sourceSpan: call.sourceSpan,
-                        value: function () {
-                            return call
-                                .params(function (value) { return (call.supportsInterpolation && value instanceof Interpolation) ?
-                                _this.getUpdateInstructionArguments(value) :
-                                _this.convertPropertyBinding(value); });
-                        }
+                if (createMode) {
+                    this.creationInstruction(instruction.sourceSpan, instruction.reference, function () {
+                        return instruction.params(function (value) { return _this.convertPropertyBinding(value); });
                     });
-                });
-                this.updateInstructionChainWithAdvance(elementIndex, instruction.reference, calls_1);
+                }
+                else {
+                    this.updateInstructionWithAdvance(elementIndex, instruction.sourceSpan, instruction.reference, function () {
+                        return instruction
+                            .params(function (value) {
+                            return (instruction.supportsInterpolation && value instanceof Interpolation) ?
+                                _this.getUpdateInstructionArguments(value) :
+                                _this.convertPropertyBinding(value);
+                        });
+                    });
+                }
             }
-            return allocateBindingSlots;
         };
         TemplateDefinitionBuilder.prototype.creationInstruction = function (span, reference, paramsOrFn, prepend) {
             this.instructionFn(this._creationCodeFns, span, reference, paramsOrFn || [], prepend);
@@ -16939,13 +16919,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var span = bindings.length ? bindings[0].sourceSpan : null;
             this._updateCodeFns.push(function () {
                 var calls = bindings.map(function (property) {
-                    var value = property.value();
-                    var fnParams = Array.isArray(value) ? value : [value];
-                    if (property.params) {
-                        fnParams.push.apply(fnParams, __spread(property.params));
-                    }
+                    var fnParams = __spread([property.value()], (property.params || []));
                     if (property.name) {
-                        // We want the property name to always be the first function parameter.
                         fnParams.unshift(literal(property.name));
                     }
                     return fnParams;
@@ -18111,25 +18086,19 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // collected earlier.
         var hostAttrs = convertAttributesToExpressions(hostBindingsMetadata.attributes);
         var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
-        if (hostInstruction && hostInstruction.calls.length > 0) {
-            createStatements.push(chainedInstruction(hostInstruction.reference, hostInstruction.calls.map(function (call) { return convertStylingCall(call, bindingContext, bindingFn); }))
-                .toStmt());
+        if (hostInstruction) {
+            createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
         }
         if (styleBuilder.hasBindings) {
             // finally each binding that was registered in the statement above will need to be added to
             // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
             // are evaluated and updated for the element.
             styleBuilder.buildUpdateLevelInstructions(getValueConverter()).forEach(function (instruction) {
-                if (instruction.calls.length > 0) {
-                    var calls_1 = [];
-                    instruction.calls.forEach(function (call) {
-                        // we subtract a value of `1` here because the binding slot was already allocated
-                        // at the top of this method when all the input bindings were counted.
-                        totalHostVarsCount += Math.max(call.allocateBindingSlots - 1, 0);
-                        calls_1.push(convertStylingCall(call, bindingContext, bindingFn));
-                    });
-                    updateStatements.push(chainedInstruction(instruction.reference, calls_1).toStmt());
-                }
+                // we subtract a value of `1` here because the binding slot was already
+                // allocated at the top of this method when all the input bindings were
+                // counted.
+                totalHostVarsCount += Math.max(instruction.allocateBindingSlots - 1, 0);
+                updateStatements.push(createStylingStmt(instruction, bindingContext, bindingFn));
             });
         }
         if (totalHostVarsCount) {
@@ -18154,8 +18123,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function bindingFn(implicit, value) {
         return convertPropertyBinding(null, implicit, value, 'b', BindingForm.TrySimple, function () { return error('Unexpected interpolation'); });
     }
-    function convertStylingCall(call, bindingContext, bindingFn) {
-        return call.params(function (value) { return bindingFn(bindingContext, value).currValExpr; });
+    function createStylingStmt(instruction, bindingContext, bindingFn) {
+        var params = instruction.params(function (value) { return bindingFn(bindingContext, value).currValExpr; });
+        return importExpr(instruction.reference, null, instruction.sourceSpan)
+            .callFn(params, instruction.sourceSpan)
+            .toStmt();
     }
     function getBindingNameAndInstruction(binding) {
         var bindingName = binding.name;
@@ -18591,7 +18563,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+177.sha-6bf2531.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+172.sha-f69c6e2.with-local-changes');
 
     /**
      * @license
@@ -34692,8 +34664,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         attrs, // attrs: (string|AttributeMarker|(string|SelectorFlags)[])[]|null
         null, // localNames: (string|number)[]|null
         undefined, // initialInputs: (string[]|null)[]|null|undefined
-        null, // inputs: PropertyAliases|null
-        null, // outputs: PropertyAliases|null
+        undefined, // inputs: PropertyAliases|null|undefined
+        undefined, // outputs: PropertyAliases|null|undefined
         null, // tViews: ITView|ITView[]|null
         null, // next: ITNode|null
         null, // projectionNext: ITNode|null
@@ -34715,8 +34687,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 attrs: attrs,
                 localNames: null,
                 initialInputs: undefined,
-                inputs: null,
-                outputs: null,
+                inputs: undefined,
+                outputs: undefined,
                 tViews: null,
                 next: null,
                 projectionNext: null,
@@ -38824,7 +38796,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+177.sha-6bf2531.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+172.sha-f69c6e2.with-local-changes');
 
     /**
      * @license
@@ -50899,7 +50871,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+177.sha-6bf2531.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+172.sha-f69c6e2.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
