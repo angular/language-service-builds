@@ -99,9 +99,12 @@ export interface Symbol {
     selectSignature(types: Symbol[]): Signature | undefined;
     /**
      * Return the type of the expression if this symbol is indexed by `argument`.
+     * Sometimes we need the key of arguments to get the type of the expression, for example
+     * in the case of tuples (`type Example = [string, number]`).
+     * [string, number]).
      * If the symbol cannot be indexed, this method should return `undefined`.
      */
-    indexed(argument: Symbol): Symbol | undefined;
+    indexed(argument: Symbol, key?: any): Symbol | undefined;
 }
 /**
  * A table of `Symbol`s accessible by name.
