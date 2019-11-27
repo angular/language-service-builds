@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+289.sha-c291c8e.with-local-changes
+ * @license Angular v9.0.0-rc.1+301.sha-85b551a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18597,7 +18597,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+289.sha-c291c8e.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+301.sha-85b551a.with-local-changes');
 
     /**
      * @license
@@ -24917,7 +24917,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         AstType.prototype.visitKeyedRead = function (ast) {
             var targetType = this.getType(ast.obj);
             var keyType = this.getType(ast.key);
-            var result = targetType.indexed(keyType);
+            var result = targetType.indexed(keyType, ast.key instanceof LiteralPrimitive ? ast.key.value : undefined);
             return result || this.anyType;
         };
         AstType.prototype.visitKeyedWrite = function (ast) {
@@ -26596,7 +26596,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         TypeWrapper.prototype.selectSignature = function (types) {
             return selectSignature(this.tsType, this.context);
         };
-        TypeWrapper.prototype.indexed = function (argument) {
+        TypeWrapper.prototype.indexed = function (argument, value) {
             var type = argument instanceof TypeWrapper ? argument : argument.type;
             if (!(type instanceof TypeWrapper))
                 return;
@@ -26604,7 +26604,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             switch (typeKind) {
                 case BuiltinType$1.Number:
                     var nType = this.tsType.getNumberIndexType();
-                    return nType && new TypeWrapper(nType, this.context);
+                    if (nType) {
+                        // get the right tuple type by value, like 'var t: [number, string];'
+                        if (nType.isUnion()) {
+                            // return undefined if array index out of bound.
+                            return nType.types[value] && new TypeWrapper(nType.types[value], this.context);
+                        }
+                        return new TypeWrapper(nType, this.context);
+                    }
+                    return undefined;
                 case BuiltinType$1.String:
                     var sType = this.tsType.getStringIndexType();
                     return sType && new TypeWrapper(sType, this.context);
@@ -44186,6 +44194,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         setInputsForProperty(lView, stylingInputs, propName, value);
     }
     function validateElement(hostView, element, tNode, hasDirectives) {
+        var schemas = hostView[TVIEW].schemas;
+        // If `schemas` is set to `null`, that's an indication that this Component was compiled in AOT
+        // mode where this check happens at compile time. In JIT mode, `schemas` is always present and
+        // defined as an array (as an empty array in case `schemas` field is not defined) and we should
+        // execute the check below.
+        if (schemas === null)
+            return;
         var tagName = tNode.tagName;
         // If the element matches any directive, it's considered as valid.
         if (!hasDirectives && tagName !== null) {
@@ -47670,7 +47685,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+289.sha-c291c8e.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+301.sha-85b551a.with-local-changes');
 
     /**
      * @license
@@ -54842,6 +54857,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         schemas: ngModule.schemas ? flatten$1(ngModule.schemas) : null,
                         id: ngModule.id || null,
                     });
+                    // Set `schemas` on ngModuleDef to an empty array in JIT mode to indicate that runtime
+                    // should verify that there are no unknown elements in a template. In AOT mode, that check
+                    // happens at compile time and `schemas` information is not present on Component and Module
+                    // defs after compilation (so the check doesn't happen the second time at runtime).
+                    if (!ngModuleDef.schemas) {
+                        ngModuleDef.schemas = [];
+                    }
                 }
                 return ngModuleDef;
             }
@@ -62669,7 +62691,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+289.sha-c291c8e.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+301.sha-85b551a.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
