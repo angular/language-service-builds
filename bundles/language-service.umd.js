@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+270.sha-fadb2d9.with-local-changes
+ * @license Angular v9.0.0-rc.1+286.sha-3f68377.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18597,7 +18597,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+270.sha-fadb2d9.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+286.sha-3f68377.with-local-changes');
 
     /**
      * @license
@@ -26590,7 +26590,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // the former includes properties on the base class whereas the latter does
             // not. This provides properties like .bind(), .call(), .apply(), etc for
             // functions.
-            return new SymbolTableWrapper(this.tsType.getApparentProperties(), this.context);
+            return new SymbolTableWrapper(this.tsType.getApparentProperties(), this.context, this.tsType);
         };
         TypeWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
         TypeWrapper.prototype.selectSignature = function (types) {
@@ -26613,8 +26613,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return TypeWrapper;
     }());
     var SymbolWrapper = /** @class */ (function () {
-        function SymbolWrapper(symbol, context) {
+        function SymbolWrapper(symbol, 
+        /** TypeScript type context of the symbol. */
+        context, 
+        /** Type of the TypeScript symbol, if known. If not provided, the type of the symbol
+        * will be determined dynamically; see `SymbolWrapper#tsType`. */
+        _tsType) {
             this.context = context;
+            this._tsType = _tsType;
             this.nullable = false;
             this.language = 'typescript';
             this.symbol = symbol && context && (symbol.flags & ts.SymbolFlags.Alias) ?
@@ -26667,7 +26673,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     this._members = typeWrapper.members();
                 }
                 else {
-                    this._members = new SymbolTableWrapper(this.symbol.members, this.context);
+                    this._members = new SymbolTableWrapper(this.symbol.members, this.context, this.tsType);
                 }
             }
             return this._members;
@@ -26814,8 +26820,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return result;
     }
     var SymbolTableWrapper = /** @class */ (function () {
-        function SymbolTableWrapper(symbols, context) {
+        /**
+         * Creates a queryable table of symbols belonging to a TypeScript entity.
+         * @param symbols symbols to query belonging to the entity
+         * @param context program context
+         * @param type original TypeScript type of entity owning the symbols, if known
+         */
+        function SymbolTableWrapper(symbols, context, type) {
             this.context = context;
+            this.type = type;
             symbols = symbols || [];
             if (Array.isArray(symbols)) {
                 this.symbols = symbols;
@@ -26825,6 +26838,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.symbols = toSymbols(symbols);
                 this.symbolTable = symbols;
             }
+            if (type) {
+                this.stringIndexType = type.getStringIndexType();
+            }
         }
         Object.defineProperty(SymbolTableWrapper.prototype, "size", {
             get: function () { return this.symbols.length; },
@@ -26833,11 +26849,28 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         SymbolTableWrapper.prototype.get = function (key) {
             var symbol = getFromSymbolTable(this.symbolTable, key);
-            return symbol ? new SymbolWrapper(symbol, this.context) : undefined;
+            if (symbol) {
+                return new SymbolWrapper(symbol, this.context);
+            }
+            if (this.stringIndexType) {
+                // If the key does not exist as an explicit symbol on the type, it may be accessing a string
+                // index signature using dot notation:
+                //
+                //   const obj<T>: { [key: string]: T };
+                //   obj.stringIndex // equivalent to obj['stringIndex'];
+                //
+                // In this case, return the type indexed by an arbitrary string key.
+                var symbol_1 = this.stringIndexType.getSymbol();
+                if (symbol_1) {
+                    return new SymbolWrapper(symbol_1, this.context, this.stringIndexType);
+                }
+            }
+            return undefined;
         };
         SymbolTableWrapper.prototype.has = function (key) {
             var table = this.symbolTable;
-            return (typeof table.has === 'function') ? table.has(key) : table[key] != null;
+            return ((typeof table.has === 'function') ? table.has(key) : table[key] != null) ||
+                this.stringIndexType !== undefined;
         };
         SymbolTableWrapper.prototype.values = function () {
             var _this = this;
@@ -46667,7 +46700,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      *
      * To see this in action run the following command:
      *
-     *   bazel run --define=compile=aot
+     *   bazel run --config=ivy
      *   //packages/core/test/bundling/todo:devserver
      *
      *  Then load `localhost:5432` and start using the console tools.
@@ -47637,7 +47670,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+270.sha-fadb2d9.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+286.sha-3f68377.with-local-changes');
 
     /**
      * @license
@@ -50752,7 +50785,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 values.push(blocks);
             }
         }
-        assertGreaterThan(cases.indexOf('other'), -1, 'Missing key "other" in ICU statement.');
         // TODO(ocombe): support ICU expressions in attributes, see #21615
         return { type: icuType, mainBinding: mainBinding, cases: cases, values: values };
     }
@@ -51385,15 +51417,19 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                                     // Update the active caseIndex
                                     var caseIndex = getCaseIndex(tIcu, value);
                                     icuTNode.activeCaseIndex = caseIndex !== -1 ? caseIndex : null;
-                                    // Add the nodes for the new case
-                                    readCreateOpCodes(-1, tIcu.create[caseIndex], viewData);
-                                    caseCreated = true;
+                                    if (caseIndex > -1) {
+                                        // Add the nodes for the new case
+                                        readCreateOpCodes(-1, tIcu.create[caseIndex], viewData);
+                                        caseCreated = true;
+                                    }
                                     break;
                                 case 3 /* IcuUpdate */:
                                     tIcuIndex = updateOpCodes[++j];
                                     tIcu = icus[tIcuIndex];
                                     icuTNode = getTNode(nodeIndex, viewData);
-                                    readUpdateOpCodes(tIcu.update[icuTNode.activeCaseIndex], icus, bindingsStartIndex, changeMask, viewData, caseCreated);
+                                    if (icuTNode.activeCaseIndex !== null) {
+                                        readUpdateOpCodes(tIcu.update[icuTNode.activeCaseIndex], icus, bindingsStartIndex, changeMask, viewData, caseCreated);
+                                    }
                                     break;
                             }
                         }
@@ -62633,7 +62669,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+270.sha-fadb2d9.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+286.sha-3f68377.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
