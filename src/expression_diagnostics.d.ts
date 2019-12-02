@@ -7,8 +7,9 @@
  */
 /// <amd-module name="@angular/language-service/src/expression_diagnostics" />
 import { AST, Node, TemplateAst, TemplateAstPath } from '@angular/compiler';
-import { DiagnosticKind, ExpressionDiagnosticsContext, TypeDiagnostic } from './expression_type';
-import { Span, SymbolQuery, SymbolTable } from './symbols';
+import { ExpressionDiagnosticsContext, TypeDiagnostic } from './expression_type';
+import { SymbolQuery, SymbolTable } from './symbols';
+import { Diagnostic } from './types';
 export interface DiagnosticTemplateInfo {
     fileName?: string;
     offset: number;
@@ -17,11 +18,6 @@ export interface DiagnosticTemplateInfo {
     htmlAst: Node[];
     templateAst: TemplateAst[];
 }
-export interface ExpressionDiagnostic {
-    message: string;
-    span: Span;
-    kind: DiagnosticKind;
-}
-export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): ExpressionDiagnostic[];
+export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): Diagnostic[];
 export declare function getExpressionDiagnostics(scope: SymbolTable, ast: AST, query: SymbolQuery, context?: ExpressionDiagnosticsContext): TypeDiagnostic[];
 export declare function getExpressionScope(info: DiagnosticTemplateInfo, path: TemplateAstPath, includeEvent: boolean): SymbolTable;

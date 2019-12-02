@@ -158,7 +158,7 @@ export interface LanguageServiceHost {
     /**
      * Return the AST for both HTML and template for the contextFile.
      */
-    getTemplateAst(template: TemplateSource): AstResult | Diagnostic;
+    getTemplateAst(template: TemplateSource): AstResult | undefined;
     /**
      * Return the template AST for the node that corresponds to the position.
      */
@@ -197,15 +197,6 @@ export declare type Completions = Completion[];
 export interface Location {
     fileName: string;
     span: Span;
-}
-/**
- * The kind of diagnostic message.
- *
- * @publicApi
- */
-export declare enum DiagnosticKind {
-    Error = 0,
-    Warning = 1
 }
 /**
  * The type of Angular directive. Used for QuickInfo in template.
@@ -266,7 +257,7 @@ export interface Diagnostic {
     /**
      * The kind of diagnostic message
      */
-    kind: DiagnosticKind;
+    kind: ts.DiagnosticCategory;
     /**
      * The source span that should be highlighted.
      */

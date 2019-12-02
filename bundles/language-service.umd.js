@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+314.sha-c16a79d.with-local-changes
+ * @license Angular v9.0.0-rc.1+321.sha-5a7f334.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -96,17 +96,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         for (var ar = [], i = 0; i < arguments.length; i++)
             ar = ar.concat(__read(arguments[i]));
         return ar;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function isAstResult(result) {
-        return result.hasOwnProperty('templateAst');
     }
 
     /**
@@ -18597,7 +18586,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+314.sha-c16a79d.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+321.sha-5a7f334.with-local-changes');
 
     /**
      * @license
@@ -24694,11 +24683,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var DiagnosticKind;
-    (function (DiagnosticKind) {
-        DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
-        DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
-    })(DiagnosticKind || (DiagnosticKind = {}));
     var TypeDiagnostic = /** @class */ (function () {
         function TypeDiagnostic(kind, message, ast) {
             this.kind = kind;
@@ -25078,13 +25062,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         AstType.prototype.reportError = function (message, ast) {
             if (this.diagnostics) {
-                this.diagnostics.push(new TypeDiagnostic(DiagnosticKind.Error, message, ast));
+                this.diagnostics.push(new TypeDiagnostic(ts.DiagnosticCategory.Error, message, ast));
             }
             return this.anyType;
         };
         AstType.prototype.reportWarning = function (message, ast) {
             if (this.diagnostics) {
-                this.diagnostics.push(new TypeDiagnostic(DiagnosticKind.Warning, message, ast));
+                this.diagnostics.push(new TypeDiagnostic(ts.DiagnosticCategory.Warning, message, ast));
             }
             return this.anyType;
         };
@@ -25398,11 +25382,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
         ExpressionDiagnosticsVisitor.prototype.reportError = function (message, span) {
             if (span) {
-                this.diagnostics.push({ span: offsetSpan(span, this.info.offset), kind: DiagnosticKind.Error, message: message });
+                this.diagnostics.push({ span: offsetSpan(span, this.info.offset), kind: ts.DiagnosticCategory.Error, message: message });
             }
         };
         ExpressionDiagnosticsVisitor.prototype.reportWarning = function (message, span) {
-            this.diagnostics.push({ span: offsetSpan(span, this.info.offset), kind: DiagnosticKind.Warning, message: message });
+            this.diagnostics.push({ span: offsetSpan(span, this.info.offset), kind: ts.DiagnosticCategory.Warning, message: message });
         };
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
@@ -25441,16 +25425,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * The kind of diagnostic message.
-     *
-     * @publicApi
-     */
-    var DiagnosticKind$1;
-    (function (DiagnosticKind) {
-        DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
-        DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
-    })(DiagnosticKind$1 || (DiagnosticKind$1 = {}));
     /**
      * The type of Angular directive. Used for QuickInfo in template.
      */
@@ -27327,7 +27301,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         // TODO: There is circular dependency here between TemplateSource and
                         // TypeScriptHost. Consider refactoring the code to break this cycle.
                         var ast = _this.host.getTemplateAst(_this);
-                        var pipes = isAstResult(ast) ? ast.pipes : [];
+                        var pipes = (ast && ast.pipes) || [];
                         return getPipesTable(sourceFile_1, program_1, typeChecker_1, pipes);
                     });
                 }
@@ -28513,7 +28487,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (parseErrors && parseErrors.length) {
             return parseErrors.map(function (e) {
                 return {
-                    kind: DiagnosticKind$1.Error,
+                    kind: ts.DiagnosticCategory.Error,
                     span: offsetSpan$1(spanOf$2(e.span), template.span.start),
                     message: e.msg,
                 };
@@ -28537,12 +28511,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var type = isComponent ? 'Component' : 'Directive';
         return type + " '" + name + "' is not included in a module and will not be " +
             'available inside a template. Consider adding it to a NgModule declaration.';
-    }
-    /**
-     * Logs an error for an impossible state with a certain message.
-     */
-    function logImpossibleState(message) {
-        console.error("Impossible state: " + message);
     }
     /**
      * Performs a variety diagnostics on directive declarations.
@@ -28587,21 +28555,21 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var errors = declaration.errors, metadata = declaration.metadata, type = declaration.type, declarationSpan = declaration.declarationSpan;
                 var sf = host.getSourceFile(type.filePath);
                 if (!sf) {
-                    logImpossibleState("directive " + type.name + " exists but has no source file");
+                    host.error("directive " + type.name + " exists but has no source file");
                     return [];
                 }
                 // TypeScript identifier of the directive declaration annotation (e.g. "Component" or
                 // "Directive") on a directive class.
                 var directiveIdentifier = findTightestNode(sf, declarationSpan.start);
                 if (!directiveIdentifier) {
-                    logImpossibleState("directive " + type.name + " exists but has no identifier");
+                    host.error("directive " + type.name + " exists but has no identifier");
                     return [];
                 }
                 try {
                     for (var errors_1 = (e_4 = void 0, __values(errors)), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
                         var error = errors_1_1.value;
                         results.push({
-                            kind: DiagnosticKind$1.Error,
+                            kind: ts.DiagnosticCategory.Error,
                             message: error.message,
                             span: error.span,
                         });
@@ -28620,7 +28588,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 if (metadata.isComponent) {
                     if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
                         results.push({
-                            kind: DiagnosticKind$1.Error,
+                            kind: ts.DiagnosticCategory.Suggestion,
                             message: missingDirective(type.name, metadata.isComponent),
                             span: declarationSpan,
                         });
@@ -28628,7 +28596,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     var _j = metadata.template, template = _j.template, templateUrl = _j.templateUrl, styleUrls = _j.styleUrls;
                     if (template === null && !templateUrl) {
                         results.push({
-                            kind: DiagnosticKind$1.Error,
+                            kind: ts.DiagnosticCategory.Error,
                             message: "Component '" + type.name + "' must have a template or templateUrl",
                             span: declarationSpan,
                         });
@@ -28636,7 +28604,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     else if (templateUrl) {
                         if (template) {
                             results.push({
-                                kind: DiagnosticKind$1.Error,
+                                kind: ts.DiagnosticCategory.Error,
                                 message: "Component '" + type.name + "' must not have both template and templateUrl",
                                 span: declarationSpan,
                             });
@@ -28648,7 +28616,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         // instead of string literals. We can then perform a mass migration of all literal usages.
                         var templateUrlNode = findPropertyValueOfType(directiveIdentifier.parent, 'templateUrl', ts.isLiteralExpression);
                         if (!templateUrlNode) {
-                            logImpossibleState("templateUrl " + templateUrl + " exists but its TypeScript node doesn't");
+                            host.error("templateUrl " + templateUrl + " exists but its TypeScript node doesn't");
                             return [];
                         }
                         results.push.apply(results, __spread(validateUrls([templateUrlNode], host.tsLsHost)));
@@ -28658,7 +28626,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         // directive identifier.
                         var styleUrlsNode = findPropertyValueOfType(directiveIdentifier.parent, 'styleUrls', ts.isArrayLiteralExpression);
                         if (!styleUrlsNode) {
-                            logImpossibleState("styleUrls property exists but its TypeScript node doesn't'");
+                            host.error("styleUrls property exists but its TypeScript node doesn't'");
                             return [];
                         }
                         results.push.apply(results, __spread(validateUrls(styleUrlsNode.elements, host.tsLsHost)));
@@ -28666,7 +28634,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
                 else if (!directives.has(declaration.type)) {
                     results.push({
-                        kind: DiagnosticKind$1.Error,
+                        kind: ts.DiagnosticCategory.Suggestion,
                         message: missingDirective(type.name, metadata.isComponent),
                         span: declarationSpan,
                     });
@@ -28710,7 +28678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (tsLsHost.fileExists(url))
                 continue;
             allErrors.push({
-                kind: DiagnosticKind$1.Error,
+                kind: ts.DiagnosticCategory.Error,
                 message: "URL does not point to a valid file",
                 // Exclude opening and closing quotes in the url span.
                 span: { start: urlNode.getStart() + 1, end: urlNode.end - 1 },
@@ -28741,7 +28709,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: typeof d.message === 'string' ? d.message : chainDiagnostics(d.message),
-            category: ts.DiagnosticCategory.Error,
+            category: d.kind,
             code: 0,
             source: 'ng',
         };
@@ -28915,12 +28883,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             try {
                 for (var templates_1 = __values(templates), templates_1_1 = templates_1.next(); !templates_1_1.done; templates_1_1 = templates_1.next()) {
                     var template = templates_1_1.value;
-                    var astOrDiagnostic = this.host.getTemplateAst(template);
-                    if (isAstResult(astOrDiagnostic)) {
-                        results.push.apply(results, __spread(getTemplateDiagnostics(astOrDiagnostic)));
-                    }
-                    else {
-                        results.push(astOrDiagnostic);
+                    var ast = this.host.getTemplateAst(template);
+                    if (ast) {
+                        results.push.apply(results, __spread(getTemplateDiagnostics(ast)));
                     }
                 }
             }
@@ -47707,7 +47672,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+314.sha-c16a79d.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+321.sha-5a7f334.with-local-changes');
 
     /**
      * @license
@@ -62380,11 +62345,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (!template) {
                 return;
             }
-            var astResult = this.getTemplateAst(template);
-            if (!isAstResult(astResult)) {
-                return;
-            }
-            return astResult;
+            return this.getTemplateAst(template);
         };
         /**
          * Gets a StaticSymbol from a file and symbol name.
@@ -62447,53 +62408,35 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return result;
         };
         /**
-         * Parse the `template` and return its AST if there's no error. Otherwise
-         * return a Diagnostic message.
+         * Parse the `template` and return its AST, if any.
          * @param template template to be parsed
          */
         TypeScriptServiceHost.prototype.getTemplateAst = function (template) {
             var classSymbol = template.type, fileName = template.fileName;
-            try {
-                var data = this.resolver.getNonNormalizedDirectiveMetadata(classSymbol);
-                if (!data) {
-                    return {
-                        kind: DiagnosticKind$1.Error,
-                        message: "No metadata found for '" + classSymbol.name + "' in " + fileName + ".",
-                        span: template.span,
-                    };
-                }
-                var htmlParser = new I18NHtmlParser(new HtmlParser());
-                var expressionParser = new Parser$1(new Lexer());
-                var parser = new TemplateParser(new CompilerConfig(), this.reflector, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, // console
-                [] // tranforms
-                );
-                var htmlResult = htmlParser.parse(template.source, fileName, {
-                    tokenizeExpansionForms: true,
-                    preserveLineEndings: true,
-                });
-                var _a = this.getModuleMetadataForDirective(classSymbol), directives = _a.directives, pipes = _a.pipes, schemas = _a.schemas;
-                var parseResult = parser.tryParseHtml(htmlResult, data.metadata, directives, pipes, schemas);
-                if (!parseResult.templateAst) {
-                    return {
-                        kind: DiagnosticKind$1.Error,
-                        message: "Failed to parse template for '" + classSymbol.name + "' in " + fileName,
-                        span: template.span,
-                    };
-                }
-                return {
-                    htmlAst: htmlResult.rootNodes,
-                    templateAst: parseResult.templateAst,
-                    directive: data.metadata, directives: directives, pipes: pipes,
-                    parseErrors: parseResult.errors, expressionParser: expressionParser, template: template,
-                };
+            var data = this.resolver.getNonNormalizedDirectiveMetadata(classSymbol);
+            if (!data) {
+                return;
             }
-            catch (e) {
-                return {
-                    kind: DiagnosticKind$1.Error,
-                    message: e.message,
-                    span: e.fileName === fileName && template.query.getSpanAt(e.line, e.column) || template.span,
-                };
+            var htmlParser = new I18NHtmlParser(new HtmlParser());
+            var expressionParser = new Parser$1(new Lexer());
+            var parser = new TemplateParser(new CompilerConfig(), this.reflector, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, // console
+            [] // tranforms
+            );
+            var htmlResult = htmlParser.parse(template.source, fileName, {
+                tokenizeExpansionForms: true,
+                preserveLineEndings: true,
+            });
+            var _a = this.getModuleMetadataForDirective(classSymbol), directives = _a.directives, pipes = _a.pipes, schemas = _a.schemas;
+            var parseResult = parser.tryParseHtml(htmlResult, data.metadata, directives, pipes, schemas);
+            if (!parseResult.templateAst) {
+                return;
             }
+            return {
+                htmlAst: htmlResult.rootNodes,
+                templateAst: parseResult.templateAst,
+                directive: data.metadata, directives: directives, pipes: pipes,
+                parseErrors: parseResult.errors, expressionParser: expressionParser, template: template,
+            };
         };
         /**
          * Log the specified `msg` to file at INFO level. If logging is not enabled
@@ -62713,7 +62656,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+314.sha-c16a79d.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+321.sha-5a7f334.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
