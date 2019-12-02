@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+329.sha-02958c0.with-local-changes
+ * @license Angular v9.0.0-rc.1+330.sha-755d2d5.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -5476,7 +5476,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 result = compileFactoryFunction(factoryMeta);
             }
             else {
-                result = delegateToFactory(meta.useClass);
+                result = delegateToFactory(meta.type, meta.useClass);
             }
         }
         else if (meta.useFactory !== undefined) {
@@ -5501,7 +5501,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             result = compileFactoryFunction(__assign(__assign({}, factoryMeta), { expression: importExpr(Identifiers.inject).callFn([meta.useExisting]) }));
         }
         else {
-            result = delegateToFactory(meta.internalType);
+            result = delegateToFactory(meta.type, meta.internalType);
         }
         var token = meta.internalType;
         var providedIn = meta.providedIn;
@@ -5513,11 +5513,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             statements: result.statements,
         };
     }
-    function delegateToFactory(type) {
+    function delegateToFactory(type, internalType) {
         return {
             statements: [],
-            // () => type.ɵfac(t)
-            factory: fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ɵfac', [variable('t')]))])
+            // If types are the same, we can generate `factory: type.ɵfac`
+            // If types are different, we have to generate a wrapper function to ensure
+            // the internal type has been resolved (`factory: function(t) { return type.ɵfac(t); }`)
+            factory: type.node === internalType.node ?
+                internalType.prop('ɵfac') :
+                fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(internalType.callMethod('ɵfac', [variable('t')]))])
         };
     }
 
@@ -18601,7 +18605,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+329.sha-02958c0.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+330.sha-755d2d5.with-local-changes');
 
     /**
      * @license
@@ -38880,7 +38884,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+329.sha-02958c0.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+330.sha-755d2d5.with-local-changes');
 
     /**
      * @license
@@ -50841,7 +50845,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+329.sha-02958c0.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+330.sha-755d2d5.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
