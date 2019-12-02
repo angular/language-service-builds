@@ -9,7 +9,7 @@
 import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader, StaticSymbol } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult } from './common';
-import { Declaration, Diagnostic, LanguageService, LanguageServiceHost, TemplateSource } from './types';
+import { Declaration, LanguageService, LanguageServiceHost, TemplateSource } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
@@ -135,11 +135,10 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     private getModuleMetadataForDirective;
     /**
-     * Parse the `template` and return its AST if there's no error. Otherwise
-     * return a Diagnostic message.
+     * Parse the `template` and return its AST, if any.
      * @param template template to be parsed
      */
-    getTemplateAst(template: TemplateSource): AstResult | Diagnostic;
+    getTemplateAst(template: TemplateSource): AstResult | undefined;
     /**
      * Log the specified `msg` to file at INFO level. If logging is not enabled
      * this method is a no-op.
