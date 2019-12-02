@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+329.sha-02958c0.with-local-changes
+ * @license Angular v9.0.0-rc.1+330.sha-755d2d5.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -5461,7 +5461,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 result = compileFactoryFunction(factoryMeta);
             }
             else {
-                result = delegateToFactory(meta.useClass);
+                result = delegateToFactory(meta.type, meta.useClass);
             }
         }
         else if (meta.useFactory !== undefined) {
@@ -5486,7 +5486,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             result = compileFactoryFunction(__assign(__assign({}, factoryMeta), { expression: importExpr(Identifiers.inject).callFn([meta.useExisting]) }));
         }
         else {
-            result = delegateToFactory(meta.internalType);
+            result = delegateToFactory(meta.type, meta.internalType);
         }
         var token = meta.internalType;
         var providedIn = meta.providedIn;
@@ -5498,11 +5498,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             statements: result.statements,
         };
     }
-    function delegateToFactory(type) {
+    function delegateToFactory(type, internalType) {
         return {
             statements: [],
-            // () => type.ɵfac(t)
-            factory: fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ɵfac', [variable('t')]))])
+            // If types are the same, we can generate `factory: type.ɵfac`
+            // If types are different, we have to generate a wrapper function to ensure
+            // the internal type has been resolved (`factory: function(t) { return type.ɵfac(t); }`)
+            factory: type.node === internalType.node ?
+                internalType.prop('ɵfac') :
+                fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(internalType.callMethod('ɵfac', [variable('t')]))])
         };
     }
 
@@ -18586,7 +18590,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+329.sha-02958c0.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+330.sha-755d2d5.with-local-changes');
 
     /**
      * @license
@@ -47672,7 +47676,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+329.sha-02958c0.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+330.sha-755d2d5.with-local-changes');
 
     /**
      * @license
@@ -55694,7 +55698,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.initialized = true;
         };
         ApplicationInitStatus.ɵfac = function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(ɵɵinject(APP_INITIALIZER, 8)); };
-        ApplicationInitStatus.ɵprov = ɵɵdefineInjectable({ token: ApplicationInitStatus, factory: function (t) { return ApplicationInitStatus.ɵfac(t); }, providedIn: null });
+        ApplicationInitStatus.ɵprov = ɵɵdefineInjectable({ token: ApplicationInitStatus, factory: ApplicationInitStatus.ɵfac, providedIn: null });
         return ApplicationInitStatus;
     }());
 
@@ -55776,7 +55780,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             console.warn(message);
         };
         Console.ɵfac = function Console_Factory(t) { return new (t || Console)(); };
-        Console.ɵprov = ɵɵdefineInjectable({ token: Console, factory: function (t) { return Console.ɵfac(t); }, providedIn: null });
+        Console.ɵprov = ɵɵdefineInjectable({ token: Console, factory: Console.ɵfac, providedIn: null });
         return Console;
     }());
 
@@ -55974,7 +55978,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          */
         Compiler.prototype.getModuleId = function (moduleType) { return undefined; };
         Compiler.ɵfac = function Compiler_Factory(t) { return new (t || Compiler)(); };
-        Compiler.ɵprov = ɵɵdefineInjectable({ token: Compiler, factory: function (t) { return Compiler.ɵfac(t); }, providedIn: null });
+        Compiler.ɵprov = ɵɵdefineInjectable({ token: Compiler, factory: Compiler.ɵfac, providedIn: null });
         return Compiler;
     }());
     /**
@@ -56530,7 +56534,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return [];
         };
         Testability.ɵfac = function Testability_Factory(t) { return new (t || Testability)(ɵɵinject(NgZone)); };
-        Testability.ɵprov = ɵɵdefineInjectable({ token: Testability, factory: function (t) { return Testability.ɵfac(t); }, providedIn: null });
+        Testability.ɵprov = ɵɵdefineInjectable({ token: Testability, factory: Testability.ɵfac, providedIn: null });
         return Testability;
     }());
     /**
@@ -56584,7 +56588,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
         };
         TestabilityRegistry.ɵfac = function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); };
-        TestabilityRegistry.ɵprov = ɵɵdefineInjectable({ token: TestabilityRegistry, factory: function (t) { return TestabilityRegistry.ɵfac(t); }, providedIn: null });
+        TestabilityRegistry.ɵprov = ɵɵdefineInjectable({ token: TestabilityRegistry, factory: TestabilityRegistry.ɵfac, providedIn: null });
         return TestabilityRegistry;
     }());
     var _NoopGetTestability = /** @class */ (function () {
@@ -56843,7 +56847,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             configurable: true
         });
         PlatformRef.ɵfac = function PlatformRef_Factory(t) { return new (t || PlatformRef)(ɵɵinject(Injector)); };
-        PlatformRef.ɵprov = ɵɵdefineInjectable({ token: PlatformRef, factory: function (t) { return PlatformRef.ɵfac(t); }, providedIn: null });
+        PlatformRef.ɵprov = ɵɵdefineInjectable({ token: PlatformRef, factory: PlatformRef.ɵfac, providedIn: null });
         return PlatformRef;
     }());
     function getNgZone(ngZoneOption, ngZoneEventCoalescing) {
@@ -57192,7 +57196,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             configurable: true
         });
         ApplicationRef.ɵfac = function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(ɵɵinject(NgZone), ɵɵinject(Console), ɵɵinject(Injector), ɵɵinject(ErrorHandler), ɵɵinject(ComponentFactoryResolver), ɵɵinject(ApplicationInitStatus)); };
-        ApplicationRef.ɵprov = ɵɵdefineInjectable({ token: ApplicationRef, factory: function (t) { return ApplicationRef.ɵfac(t); }, providedIn: null });
+        ApplicationRef.ɵprov = ɵɵdefineInjectable({ token: ApplicationRef, factory: ApplicationRef.ɵfac, providedIn: null });
         return ApplicationRef;
     }());
     function remove(list, el) {
@@ -57263,7 +57267,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 .then(function (factory) { return checkNotEmpty(factory, module, exportName); });
         };
         SystemJsNgModuleLoader.ɵfac = function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(ɵɵinject(Compiler), ɵɵinject(SystemJsNgModuleLoaderConfig, 8)); };
-        SystemJsNgModuleLoader.ɵprov = ɵɵdefineInjectable({ token: SystemJsNgModuleLoader, factory: function (t) { return SystemJsNgModuleLoader.ɵfac(t); }, providedIn: null });
+        SystemJsNgModuleLoader.ɵprov = ɵɵdefineInjectable({ token: SystemJsNgModuleLoader, factory: SystemJsNgModuleLoader.ɵfac, providedIn: null });
         return SystemJsNgModuleLoader;
     }());
     function checkNotEmpty(value, modulePath, exportName) {
@@ -62656,7 +62660,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+329.sha-02958c0.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+330.sha-755d2d5.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
