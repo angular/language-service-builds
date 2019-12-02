@@ -7,7 +7,7 @@
  */
 /// <amd-module name="@angular/language-service/src/common" />
 import { CompileDirectiveMetadata, CompileDirectiveSummary, CompilePipeSummary, CssSelector, Node as HtmlAst, ParseError, Parser, TemplateAst } from '@angular/compiler';
-import { TemplateSource } from './types';
+import { Diagnostic, TemplateSource } from './types';
 export interface AstResult {
     htmlAst: HtmlAst[];
     templateAst: TemplateAst[];
@@ -22,3 +22,4 @@ export declare type SelectorInfo = {
     selectors: CssSelector[];
     map: Map<CssSelector, CompileDirectiveSummary>;
 };
+export declare function isAstResult(result: AstResult | Diagnostic): result is AstResult;
