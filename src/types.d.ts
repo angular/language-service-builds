@@ -199,15 +199,6 @@ export interface Location {
     span: Span;
 }
 /**
- * The kind of diagnostic message.
- *
- * @publicApi
- */
-export declare enum DiagnosticKind {
-    Error = 0,
-    Warning = 1
-}
-/**
  * The type of Angular directive. Used for QuickInfo in template.
  */
 export declare enum DirectiveKind {
@@ -266,7 +257,7 @@ export interface Diagnostic {
     /**
      * The kind of diagnostic message
      */
-    kind: DiagnosticKind;
+    kind: ts.DiagnosticCategory;
     /**
      * The source span that should be highlighted.
      */

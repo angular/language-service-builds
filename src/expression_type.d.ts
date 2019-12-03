@@ -7,19 +7,16 @@
  */
 /// <amd-module name="@angular/language-service/src/expression_type" />
 import { AST, AstVisitor, Binary, BindingPipe, Chain, Conditional, FunctionCall, ImplicitReceiver, Interpolation, KeyedRead, KeyedWrite, LiteralArray, LiteralMap, LiteralPrimitive, MethodCall, NonNullAssert, PrefixNot, PropertyRead, PropertyWrite, Quote, SafeMethodCall, SafePropertyRead } from '@angular/compiler';
+import * as ts from 'typescript';
 import { Symbol, SymbolQuery, SymbolTable } from './symbols';
 export interface ExpressionDiagnosticsContext {
     event?: boolean;
 }
-export declare enum DiagnosticKind {
-    Error = 0,
-    Warning = 1
-}
 export declare class TypeDiagnostic {
-    kind: DiagnosticKind;
+    kind: ts.DiagnosticCategory;
     message: string;
     ast: AST;
-    constructor(kind: DiagnosticKind, message: string, ast: AST);
+    constructor(kind: ts.DiagnosticCategory, message: string, ast: AST);
 }
 export declare class AstType implements AstVisitor {
     private scope;
