@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+333.sha-c60d756.with-local-changes
+ * @license Angular v9.0.0-rc.1+334.sha-dd944ef.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18590,7 +18590,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+333.sha-c60d756.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+334.sha-dd944ef.with-local-changes');
 
     /**
      * @license
@@ -27854,6 +27854,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         name: s.name,
                         kind: s.kind,
                         sortText: s.name,
+                        insertText: s.callable ? s.name + "()" : s.name,
                     });
                 }
             }
@@ -47676,7 +47677,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+333.sha-c60d756.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+334.sha-dd944ef.with-local-changes');
 
     /**
      * @license
@@ -62660,7 +62661,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+333.sha-c60d756.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+334.sha-dd944ef.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
