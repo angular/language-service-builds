@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+332.sha-d4b8368.with-local-changes
+ * @license Angular v9.0.0-rc.1+333.sha-c60d756.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18590,7 +18590,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+332.sha-d4b8368.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+333.sha-c60d756.with-local-changes');
 
     /**
      * @license
@@ -29566,7 +29566,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     var INJECTOR = new InjectionToken('INJECTOR', -1 // `-1` is used by Ivy DI system as special value to recognize it as `Injector`.
     );
-    var _THROW_IF_NOT_FOUND = new Object();
+    var _THROW_IF_NOT_FOUND = {};
     var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
     var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
     var NG_TOKEN_PATH = 'ngTokenPath';
@@ -41923,7 +41923,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     // Threshold for the dynamic version
-    var UNDEFINED = new Object();
+    var UNDEFINED = {};
     /**
      * A ReflectiveDependency injection container used for instantiating objects and resolving
      * dependencies.
@@ -47676,7 +47676,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+332.sha-d4b8368.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+333.sha-c60d756.with-local-changes');
 
     /**
      * @license
@@ -49237,7 +49237,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var UNDEFINED_VALUE = new Object();
+    var UNDEFINED_VALUE = {};
     var InjectorRefTokenKey = tokenKey(Injector);
     var INJECTORRefTokenKey = tokenKey(INJECTOR);
     var NgModuleRefTokenKey = tokenKey(NgModuleRef);
@@ -49514,7 +49514,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_CONTEXT = new Object();
+    var EMPTY_CONTEXT = {};
     function getComponentViewDefinitionFactory(componentFactory) {
         return componentFactory.viewDefFactory;
     }
@@ -62660,7 +62660,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+332.sha-d4b8368.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+333.sha-c60d756.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
