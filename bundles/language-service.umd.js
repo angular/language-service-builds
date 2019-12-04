@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+363.sha-60b13d9.with-local-changes
+ * @license Angular v9.0.0-rc.1+364.sha-c50faa9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16721,6 +16721,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var _this = this;
             var NG_TEMPLATE_TAG_NAME = 'ng-template';
             var templateIndex = this.allocateDataSlot();
+            var ngProjectAsAttr;
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
@@ -16738,8 +16739,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
             var attrsExprs = [];
-            template.attributes.forEach(function (a) { attrsExprs.push(asLiteral(a.name), asLiteral(a.value)); });
-            attrsExprs.push.apply(attrsExprs, __spread(this.prepareNonRenderAttrs(template.inputs, template.outputs, undefined, template.templateAttrs)));
+            template.attributes.forEach(function (attr) {
+                if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
+                    ngProjectAsAttr = attr;
+                }
+                attrsExprs.push(asLiteral(attr.name), asLiteral(attr.value));
+            });
+            attrsExprs.push.apply(attrsExprs, __spread(this.prepareNonRenderAttrs(template.inputs, template.outputs, undefined, template.templateAttrs, undefined, ngProjectAsAttr)));
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -18588,7 +18594,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+363.sha-60b13d9.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+364.sha-c50faa9.with-local-changes');
 
     /**
      * @license
@@ -47677,7 +47683,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+363.sha-60b13d9.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+364.sha-c50faa9.with-local-changes');
 
     /**
      * @license
@@ -62673,7 +62679,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+363.sha-60b13d9.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+364.sha-c50faa9.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
