@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+387.sha-0d95c08.with-local-changes
+ * @license Angular v9.0.0-rc.1+391.sha-a91ca99.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18607,7 +18607,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+387.sha-0d95c08.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+391.sha-a91ca99.with-local-changes');
 
     /**
      * @license
@@ -26575,10 +26575,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         }
         Object.defineProperty(TypeWrapper.prototype, "name", {
-            get: function () {
-                var symbol = this.tsType.symbol;
-                return (symbol && symbol.name) || '<anonymous>';
-            },
+            get: function () { return this.context.checker.typeToString(this.tsType); },
             enumerable: true,
             configurable: true
         });
@@ -26637,6 +26634,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return TypeWrapper;
     }());
+    // If stringIndexType a primitive type(e.g. 'string'), the Symbol is undefined;
+    // and in AstType.resolvePropertyRead method, the Symbol.type should get the right type.
+    var StringIndexTypeWrapper = /** @class */ (function (_super) {
+        __extends(StringIndexTypeWrapper, _super);
+        function StringIndexTypeWrapper() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.type = new TypeWrapper(_this.tsType, _this.context);
+            return _this;
+        }
+        return StringIndexTypeWrapper;
+    }(TypeWrapper));
     var SymbolWrapper = /** @class */ (function () {
         function SymbolWrapper(symbol, 
         /** TypeScript type context of the symbol. */
@@ -26885,10 +26893,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 //   obj.stringIndex // equivalent to obj['stringIndex'];
                 //
                 // In this case, return the type indexed by an arbitrary string key.
-                var symbol_1 = this.stringIndexType.getSymbol();
-                if (symbol_1) {
-                    return new SymbolWrapper(symbol_1, this.context, this.stringIndexType);
-                }
+                return new StringIndexTypeWrapper(this.stringIndexType, this.context);
             }
             return undefined;
         };
@@ -27009,15 +27014,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     var resultType = undefined;
                     switch (this.name) {
                         case 'async':
-                            switch (parameterType.name) {
-                                case 'Observable':
-                                case 'Promise':
-                                case 'EventEmitter':
-                                    resultType = getTypeParameterOf(parameterType.tsType, parameterType.name);
-                                    break;
-                                default:
-                                    resultType = getTsTypeFromBuiltinType(BuiltinType$1.Any, this.context);
-                                    break;
+                            // Get symbol of 'Observable', 'Promise', or 'EventEmitter' type.
+                            var symbol = parameterType.tsType.symbol;
+                            if (symbol) {
+                                resultType = getTypeParameterOf(parameterType.tsType, symbol.name);
                             }
                             break;
                         case 'slice':
@@ -47696,7 +47696,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+387.sha-0d95c08.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+391.sha-a91ca99.with-local-changes');
 
     /**
      * @license
@@ -62693,7 +62693,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+387.sha-0d95c08.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+391.sha-a91ca99.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
