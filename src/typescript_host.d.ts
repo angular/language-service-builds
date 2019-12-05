@@ -48,7 +48,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly collectedErrors;
     private readonly fileVersions;
     private lastProgram;
-    private templateReferences;
     private analyzedModules;
     constructor(tsLsHost: ts.LanguageServiceHost, tsLS: ts.LanguageService);
     private _resolver;
@@ -61,7 +60,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * MetadataResolver.
      */
     private readonly reflector;
-    getTemplateReferences(): string[];
     /**
      * Checks whether the program has changed and returns all analyzed modules.
      * If program has changed, invalidate all caches and update fileToComponent
