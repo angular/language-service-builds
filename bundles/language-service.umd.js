@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+391.sha-a91ca99.with-local-changes
+ * @license Angular v9.0.0-rc.1+392.sha-f05e171.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18622,7 +18622,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+391.sha-a91ca99.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+392.sha-f05e171.with-local-changes');
 
     /**
      * @license
@@ -38901,7 +38901,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+391.sha-a91ca99.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+392.sha-f05e171.with-local-changes');
 
     /**
      * @license
@@ -50137,7 +50137,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.collectedErrors = new Map();
             this.fileVersions = new Map();
             this.lastProgram = undefined;
-            this.templateReferences = [];
             this.analyzedModules = {
                 files: [],
                 ngModuleByPipeOrDirective: new Map(),
@@ -50200,10 +50199,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
-        TypeScriptServiceHost.prototype.getTemplateReferences = function () {
-            this.getAnalyzedModules();
-            return __spread(this.templateReferences);
-        };
         /**
          * Checks whether the program has changed and returns all analyzed modules.
          * If program has changed, invalidate all caches and update fileToComponent
@@ -50222,7 +50217,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return this.analyzedModules;
             }
             // Invalidate caches
-            this.templateReferences = [];
             this.fileToComponent.clear();
             this.collectedErrors.clear();
             this.resolver.clearCache();
@@ -50242,7 +50236,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                                 var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
                                 this.fileToComponent.set(templateName, directive.reference);
-                                this.templateReferences.push(templateName);
                             }
                         }
                     }
@@ -50739,47 +50732,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * A note about importing TypeScript module.
-     * The TypeScript module is supplied by tsserver at runtime to ensure version
-     * compatibility. In Angular language service, the rollup output is augmented
-     * with a "banner" shim that overwrites 'typescript' and
-     * 'typescript/lib/tsserverlibrary' imports with the value supplied by tsserver.
-     * This means import of either modules will not be "required", but they'll work
-     * just like regular imports.
-     */
-    var projectHostMap = new WeakMap();
-    /**
-     * Return the external templates discovered through processing all NgModules in
-     * the specified `project`.
-     * This function is called in a few situations:
-     * 1. When a ConfiguredProject is created
-     *    https://github.com/microsoft/TypeScript/blob/c26c44d5fceb04ea14da20b6ed23449df777ff34/src/server/editorServices.ts#L1755
-     * 2. When updateGraph() is called on a Project
-     *    https://github.com/microsoft/TypeScript/blob/c26c44d5fceb04ea14da20b6ed23449df777ff34/src/server/project.ts#L915
-     * @param project Most likely a ConfiguredProject
-     */
-    function getExternalFiles(project) {
-        if (!project.hasRoots()) {
-            // During project initialization where there is no root files yet we should
-            // not do any work.
-            return [];
-        }
-        var ngLSHost = projectHostMap.get(project);
-        if (!ngLSHost) {
-            // Without an Angular host there is no way to get template references.
-            return [];
-        }
-        var templates = ngLSHost.getTemplateReferences();
-        var logger = project.projectService.logger;
-        if (logger.hasLevel(tss.server.LogLevel.verbose)) {
-            // Log external files to help debugging.
-            logger.info("External files in " + project.projectName + ": " + JSON.stringify(templates));
-        }
-        return templates;
-    }
     function create(info) {
-        var project = info.project, tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config;
+        var tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config;
         // This plugin could operate under two different modes:
         // 1. TS + Angular
         //    Plugin augments TS language service to provide additional Angular
@@ -50792,7 +50746,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var angularOnly = config ? config.angularOnly === true : false;
         var ngLSHost = new TypeScriptServiceHost(tsLSHost, tsLS);
         var ngLS = createLanguageService(ngLSHost);
-        projectHostMap.set(project, ngLSHost);
         function getCompletionsAtPosition(fileName, position, options) {
             if (!angularOnly) {
                 var results = tsLS.getCompletionsAtPosition(fileName, position, options);
@@ -50864,14 +50817,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+391.sha-a91ca99.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+392.sha-f05e171.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
     exports.create = create;
     exports.createLanguageService = createLanguageService;
     exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
-    exports.getExternalFiles = getExternalFiles;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
