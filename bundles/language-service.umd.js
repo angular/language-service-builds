@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.5+28.sha-6e944ac.with-local-changes
+ * @license Angular v9.0.0-rc.5+32.sha-10a33ef.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -6428,6 +6428,40 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.visitAllStatements(catchStmts, ctx);
             ctx.decIndent();
             ctx.println(stmt, "}");
+            return null;
+        };
+        AbstractJsEmitterVisitor.prototype.visitLocalizedString = function (ast, ctx) {
+            var _this = this;
+            // The following convoluted piece of code is effectively the downlevelled equivalent of
+            // ```
+            // $localize `...`
+            // ```
+            // which is effectively like:
+            // ```
+            // $localize(__makeTemplateObject(cooked, raw), expression1, expression2, ...);
+            // ```
+            //
+            // The `$localize` function expects a "template object", which is an array of "cooked" strings
+            // plus a `raw` property that contains an array of "raw" strings.
+            //
+            // In some environments a helper function called `__makeTemplateObject(cooked, raw)` might be
+            // available, in which case we use that. Otherwise we must create our own helper function
+            // inline.
+            //
+            // In the inline function, if `Object.defineProperty` is available we use that to attach the
+            // `raw` array.
+            ctx.print(ast, '$localize((this&&this.__makeTemplateObject||function(e,t){return Object.defineProperty?Object.defineProperty(e,"raw",{value:t}):e.raw=t,e})(');
+            var parts = [ast.serializeI18nHead()];
+            for (var i = 1; i < ast.messageParts.length; i++) {
+                parts.push(ast.serializeI18nTemplatePart(i));
+            }
+            ctx.print(ast, "[" + parts.map(function (part) { return escapeIdentifier(part.cooked, false); }).join(', ') + "], ");
+            ctx.print(ast, "[" + parts.map(function (part) { return escapeIdentifier(part.raw, false); }).join(', ') + "])");
+            ast.expressions.forEach(function (expression) {
+                ctx.print(ast, ', ');
+                expression.visitExpression(_this, ctx);
+            });
+            ctx.print(ast, ')');
             return null;
         };
         AbstractJsEmitterVisitor.prototype._visitParams = function (params, ctx) {
@@ -18571,7 +18605,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.5+28.sha-6e944ac.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.5+32.sha-10a33ef.with-local-changes');
 
     /**
      * @license
@@ -34411,8 +34445,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function refreshView(lView, tView, templateFn, context) {
         ngDevMode && assertEqual(isCreationMode(lView), false, 'Should be run in update mode');
-        enterView(lView, lView[T_HOST]);
         var flags = lView[FLAGS];
+        if ((flags & 256 /* Destroyed */) === 256 /* Destroyed */)
+            return;
+        enterView(lView, lView[T_HOST]);
         try {
             resetPreOrderHookFlags(lView);
             setBindingIndex(tView.bindingStartIndex);
@@ -38850,7 +38886,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.5+28.sha-6e944ac.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.5+32.sha-10a33ef.with-local-changes');
 
     /**
      * @license
@@ -50765,7 +50801,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.5+28.sha-6e944ac.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.5+32.sha-10a33ef.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
