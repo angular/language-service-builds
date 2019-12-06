@@ -7,13 +7,13 @@
  */
 /// <amd-module name="@angular/language-service/src/typescript_host" />
 import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader, StaticSymbol } from '@angular/compiler';
-import * as ts from 'typescript';
+import * as tss from 'typescript/lib/tsserverlibrary';
 import { AstResult } from './common';
 import { Declaration, LanguageService, LanguageServiceHost, TemplateSource } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
-export declare function createLanguageServiceFromTypescript(host: ts.LanguageServiceHost, service: ts.LanguageService): LanguageService;
+export declare function createLanguageServiceFromTypescript(host: tss.LanguageServiceHost, service: tss.LanguageService): LanguageService;
 /**
  * The language service never needs the normalized versions of the metadata. To avoid parsing
  * the content and resolving references, return an empty file. This also allows normalizing
@@ -38,7 +38,7 @@ export declare class DummyResourceLoader extends ResourceLoader {
  * @publicApi
  */
 export declare class TypeScriptServiceHost implements LanguageServiceHost {
-    readonly tsLsHost: ts.LanguageServiceHost;
+    readonly tsLsHost: tss.LanguageServiceHost;
     private readonly tsLS;
     private readonly summaryResolver;
     private readonly reflectorHost;
@@ -49,7 +49,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly fileVersions;
     private lastProgram;
     private analyzedModules;
-    constructor(tsLsHost: ts.LanguageServiceHost, tsLS: ts.LanguageService);
+    constructor(tsLsHost: tss.LanguageServiceHost, tsLS: tss.LanguageService);
     private _resolver;
     /**
      * Return the singleton instance of the MetadataResolver.
@@ -92,8 +92,8 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * @param fileName TS file
      */
     getDeclarations(fileName: string): Declaration[];
-    getSourceFile(fileName: string): ts.SourceFile | undefined;
-    readonly program: ts.Program;
+    getSourceFile(fileName: string): tss.SourceFile | undefined;
+    readonly program: tss.Program;
     /**
      * Return the TemplateSource if `node` is a template node.
      *
