@@ -1,26 +1,31 @@
 /**
- * @license Angular v9.0.0-rc.5+22.sha-0e911f8.with-local-changes
- * (c) 2010-2019 Google LLC. https://angular.io/
+ * @license Angular v9.0.0-rc.5+25.sha-7dfd327.with-local-changes
+ * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
 
-var $reflect = {defineMetadata: function() {}, getOwnMetadata: function() {}};
-var Reflect = (typeof global !== 'undefined' ? global : {})['Reflect'] || {};
-Object.keys($reflect).forEach(function(key) { Reflect[key] = Reflect[key] || $reflect[key]; });
-var $deferred, $resolved, $provided;
-function $getModule(name) {
-  if (name === 'typescript/lib/tsserverlibrary') return $provided['typescript'] || require(name);
-  return $provided[name] || require(name);
+let $deferred;
+function define(modules, callback) {
+  $deferred = {modules, callback};
 }
-function define(modules, cb) { $deferred = { modules: modules, cb: cb }; }
 module.exports = function(provided) {
-  if ($resolved) return $resolved;
-  var result = {};
-  $provided = Object.assign({'reflect-metadata': $reflect}, provided || {}, { exports: result });
-  $deferred.cb.apply(this, $deferred.modules.map($getModule));
-  $resolved = result;
-  return result;
-}
+  const ts = provided['typescript'];
+  if (!ts) {
+    throw new Error('Caller does not provide typescript module');
+  }
+  const results = {};
+  const resolvedModules = $deferred.modules.map(m => {
+    if (m === 'exports') {
+      return results;
+    }
+    if (m === 'typescript' || m === 'typescript/lib/tsserverlibrary') {
+      return ts;
+    }
+    return require(m);
+  });
+  $deferred.callback(...resolvedModules);
+  return results;
+};
 
 define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], function (exports, ts, path, tss) { 'use strict';
 
@@ -18566,7 +18571,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.5+22.sha-0e911f8.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.5+25.sha-7dfd327.with-local-changes');
 
     /**
      * @license
@@ -38845,7 +38850,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.5+22.sha-0e911f8.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.5+25.sha-7dfd327.with-local-changes');
 
     /**
      * @license
@@ -50296,12 +50301,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         results.push(template);
                     }
                     else {
-                        ts.forEachChild(child, visit_1);
+                        tss.forEachChild(child, visit_1);
                     }
                 };
                 var sourceFile = this.getSourceFile(fileName);
                 if (sourceFile) {
-                    ts.forEachChild(sourceFile, visit_1);
+                    tss.forEachChild(sourceFile, visit_1);
                 }
             }
             else {
@@ -50355,7 +50360,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     child.forEachChild(visit);
                 }
             };
-            ts.forEachChild(sourceFile, visit);
+            tss.forEachChild(sourceFile, visit);
             return results;
         };
         TypeScriptServiceHost.prototype.getSourceFile = function (fileName) {
@@ -50390,7 +50395,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          * @param node Potential template node
          */
         TypeScriptServiceHost.prototype.getInternalTemplate = function (node) {
-            if (!ts.isStringLiteralLike(node)) {
+            if (!tss.isStringLiteralLike(node)) {
                 return;
             }
             var tmplAsgn = getPropertyAssignmentFromValue(node);
@@ -50429,7 +50434,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // TODO: This only considers top-level class declarations in a source file.
             // This would not find a class declaration in a namespace, for example.
             var classDecl = sourceFile.forEachChild(function (child) {
-                if (ts.isClassDeclaration(child) && child.name && child.name.text === classSymbol.name) {
+                if (tss.isClassDeclaration(child) && child.name && child.name.text === classSymbol.name) {
                     return child;
                 }
             });
@@ -50648,14 +50653,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     function spanAt$1(sourceFile, line, column) {
         if (line != null && column != null) {
-            var position_1 = ts.getPositionOfLineAndCharacter(sourceFile, line, column);
+            var position_1 = tss.getPositionOfLineAndCharacter(sourceFile, line, column);
             var findChild = function findChild(node) {
-                if (node.kind > ts.SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
-                    var betterNode = ts.forEachChild(node, findChild);
+                if (node.kind > tss.SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
+                    var betterNode = tss.forEachChild(node, findChild);
                     return betterNode || node;
                 }
             };
-            var node = ts.forEachChild(sourceFile, findChild);
+            var node = tss.forEachChild(sourceFile, findChild);
             if (node) {
                 return { start: node.getStart(), end: node.getEnd() };
             }
@@ -50760,7 +50765,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.5+22.sha-0e911f8.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.5+25.sha-7dfd327.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
