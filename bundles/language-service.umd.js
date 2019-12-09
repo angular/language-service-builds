@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+405.sha-2f3d41f.with-local-changes
+ * @license Angular v9.0.0-rc.1+408.sha-9fa2c39.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -3605,6 +3605,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         Identifiers.injectPipeChangeDetectorRef = { name: 'ɵɵinjectPipeChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.invalidFactory = { name: 'ɵɵinvalidFactory', moduleName: CORE$1 };
+        Identifiers.invalidFactoryDep = { name: 'ɵɵinvalidFactoryDep', moduleName: CORE$1 };
         Identifiers.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
         Identifiers.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
@@ -5321,6 +5322,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          * Injecting the `ChangeDetectorRef` token. Needs special handling when injected into a pipe.
          */
         R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
+        /**
+         * An invalid dependency (no token could be determined). An error should be thrown at runtime.
+         */
+        R3ResolvedDependencyType[R3ResolvedDependencyType["Invalid"] = 3] = "Invalid";
     })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
     /**
      * Construct a factory function expression for the given `R3FactoryMetadata`.
@@ -5410,9 +5415,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
     }
     function injectDependencies(deps, injectFn, isPipe) {
-        return deps.map(function (dep) { return compileInjectDependency(dep, injectFn, isPipe); });
+        return deps.map(function (dep, index) { return compileInjectDependency(dep, injectFn, isPipe, index); });
     }
-    function compileInjectDependency(dep, injectFn, isPipe) {
+    function compileInjectDependency(dep, injectFn, isPipe, index) {
         // Interpret the dependency according to its resolved type.
         switch (dep.resolved) {
             case R3ResolvedDependencyType.Token:
@@ -5438,6 +5443,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             case R3ResolvedDependencyType.Attribute:
                 // In the case of attributes, the attribute name in question is given as the token.
                 return importExpr(Identifiers$1.injectAttribute).callFn([dep.token]);
+            case R3ResolvedDependencyType.Invalid:
+                return importExpr(Identifiers$1.invalidFactoryDep).callFn([literal(index)]);
             default:
                 return unsupported("Unknown R3ResolvedDependencyType: " + R3ResolvedDependencyType[dep.resolved]);
         }
@@ -18661,7 +18668,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+405.sha-2f3d41f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+408.sha-9fa2c39.with-local-changes');
 
     /**
      * @license
@@ -29483,6 +29490,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         R3ResolvedDependencyType[R3ResolvedDependencyType["Token"] = 0] = "Token";
         R3ResolvedDependencyType[R3ResolvedDependencyType["Attribute"] = 1] = "Attribute";
         R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
+        R3ResolvedDependencyType[R3ResolvedDependencyType["Invalid"] = 3] = "Invalid";
     })(R3ResolvedDependencyType$1 || (R3ResolvedDependencyType$1 = {}));
     var R3FactoryTarget$1;
     (function (R3FactoryTarget) {
@@ -29520,6 +29528,91 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
     var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function ngDevModeResetPerfCounters() {
+        var locationString = typeof location !== 'undefined' ? location.toString() : '';
+        var newCounters = {
+            namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
+            firstCreatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererAppendChild: 0,
+            rendererInsertBefore: 0,
+            rendererCreateComment: 0,
+            styleMap: 0,
+            styleMapCacheMiss: 0,
+            classMap: 0,
+            classMapCacheMiss: 0,
+            styleProp: 0,
+            stylePropCacheMiss: 0,
+            classProp: 0,
+            classPropCacheMiss: 0,
+            flushStyling: 0,
+            classesApplied: 0,
+            stylesApplied: 0,
+        };
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+        var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
+        _global$1['ngDevMode'] = allowNgDevModeTrue && newCounters;
+        return newCounters;
+    }
+    /**
+     * This function checks to see if the `ngDevMode` has been set. If yes,
+     * then we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     *
+     * `ɵɵdefineComponent` is guaranteed to have been called before any component template functions
+     * (and thus Ivy instructions), so a single initialization there is sufficient to ensure ngDevMode
+     * is defined for the entire instruction set.
+     *
+     * When using checking `ngDevMode` on toplevel, always init it before referencing it
+     * (e.g. `((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode())`), otherwise you can
+     *  get a `ReferenceError` like in https://github.com/angular/angular/issues/31595.
+     *
+     * Details on possible values for `ngDevMode` can be found on its docstring.
+     *
+     * NOTE:
+     * - changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
+     */
+    function initNgDevMode() {
+        // The below checks are to ensure that calling `initNgDevMode` multiple times does not
+        // reset the counters.
+        // If the `ngDevMode` is not an object, then it means we have not created the perf counters
+        // yet.
+        if (typeof ngDevMode === 'undefined' || ngDevMode) {
+            if (typeof ngDevMode !== 'object') {
+                ngDevModeResetPerfCounters();
+            }
+            return !!ngDevMode;
+        }
+        return false;
+    }
 
     /**
      * @license
@@ -30021,91 +30114,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$2 || (ViewEncapsulation$2 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function ngDevModeResetPerfCounters() {
-        var locationString = typeof location !== 'undefined' ? location.toString() : '';
-        var newCounters = {
-            namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
-            firstCreatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererAppendChild: 0,
-            rendererInsertBefore: 0,
-            rendererCreateComment: 0,
-            styleMap: 0,
-            styleMapCacheMiss: 0,
-            classMap: 0,
-            classMapCacheMiss: 0,
-            styleProp: 0,
-            stylePropCacheMiss: 0,
-            classProp: 0,
-            classPropCacheMiss: 0,
-            flushStyling: 0,
-            classesApplied: 0,
-            stylesApplied: 0,
-        };
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-        var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
-        _global$1['ngDevMode'] = allowNgDevModeTrue && newCounters;
-        return newCounters;
-    }
-    /**
-     * This function checks to see if the `ngDevMode` has been set. If yes,
-     * then we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     *
-     * `ɵɵdefineComponent` is guaranteed to have been called before any component template functions
-     * (and thus Ivy instructions), so a single initialization there is sufficient to ensure ngDevMode
-     * is defined for the entire instruction set.
-     *
-     * When using checking `ngDevMode` on toplevel, always init it before referencing it
-     * (e.g. `((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode())`), otherwise you can
-     *  get a `ReferenceError` like in https://github.com/angular/angular/issues/31595.
-     *
-     * Details on possible values for `ngDevMode` can be found on its docstring.
-     *
-     * NOTE:
-     * - changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
-     */
-    function initNgDevMode() {
-        // The below checks are to ensure that calling `initNgDevMode` multiple times does not
-        // reset the counters.
-        // If the `ngDevMode` is not an object, then it means we have not created the perf counters
-        // yet.
-        if (typeof ngDevMode === 'undefined' || ngDevMode) {
-            if (typeof ngDevMode !== 'object') {
-                ngDevModeResetPerfCounters();
-            }
-            return !!ngDevMode;
-        }
-        return false;
-    }
 
     /**
     * @license
@@ -38942,7 +38950,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+405.sha-2f3d41f.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+408.sha-9fa2c39.with-local-changes');
 
     /**
      * @license
@@ -50881,7 +50889,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+405.sha-2f3d41f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+408.sha-9fa2c39.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
