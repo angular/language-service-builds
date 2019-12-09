@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.5+32.sha-10a33ef.with-local-changes
+ * @license Angular v9.0.0-rc.5+35.sha-1347064.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18605,7 +18605,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.5+32.sha-10a33ef.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.5+35.sha-1347064.with-local-changes');
 
     /**
      * @license
@@ -38886,7 +38886,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.5+32.sha-10a33ef.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.5+35.sha-1347064.with-local-changes');
 
     /**
      * @license
@@ -43740,6 +43740,29 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      *   template: '<button counting>Increment</button>',
      * })
      * class App {}
+     *
+     * ```
+     *
+     * The following example registers another DOM event handler that listens for key-press events.
+     * ``` ts
+     * import { HostListener, Component } from "@angular/core";
+     *
+     * @Component({
+     *   selector: 'app',
+     *   template: `<h1>Hello, you have pressed keys {{counter}} number of times!</h1> Press any key to
+     * increment the counter.
+     *   <button (click)="resetCounter()">Reset Counter</button>`
+     * })
+     * class AppComponent {
+     *   counter = 0;
+     *   @HostListener('window:keydown', ['$event'])
+     *   handleKeyDown(event: KeyboardEvent) {
+     *     this.counter++;
+     *   }
+     *   resetCounter() {
+     *     this.counter = 0;
+     *   }
+     * }
      * ```
      *
      * @Annotation
@@ -50801,7 +50824,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.5+32.sha-10a33ef.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.5+35.sha-1347064.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
