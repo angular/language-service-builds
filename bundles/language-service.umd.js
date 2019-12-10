@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+417.sha-bb52fb7.with-local-changes
+ * @license Angular v9.0.0-rc.1+419.sha-c8447d2.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18653,7 +18653,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+417.sha-bb52fb7.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+419.sha-c8447d2.with-local-changes');
 
     /**
      * @license
@@ -37244,13 +37244,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function setHostBindings(tView, lView) {
         var selectedIndex = getSelectedIndex();
         try {
-            if (tView.expandoInstructions !== null) {
+            var expandoInstructions = tView.expandoInstructions;
+            if (expandoInstructions !== null) {
                 var bindingRootIndex = setBindingIndex(tView.expandoStartIndex);
                 setBindingRoot(bindingRootIndex);
                 var currentDirectiveIndex = -1;
                 var currentElementIndex = -1;
-                for (var i = 0; i < tView.expandoInstructions.length; i++) {
-                    var instruction = tView.expandoInstructions[i];
+                for (var i = 0; i < expandoInstructions.length; i++) {
+                    var instruction = expandoInstructions[i];
                     if (typeof instruction === 'number') {
                         if (instruction <= 0) {
                             // Negative numbers mean that we are starting new EXPANDO block and need to update
@@ -37258,7 +37259,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             currentElementIndex = -instruction;
                             setActiveHostElement(currentElementIndex);
                             // Injector block and providers are taken into account.
-                            var providerCount = tView.expandoInstructions[++i];
+                            var providerCount = expandoInstructions[++i];
                             bindingRootIndex += INJECTOR_BLOOM_PARENT_SIZE + providerCount;
                             currentDirectiveIndex = bindingRootIndex;
                         }
@@ -38251,7 +38252,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     */
     function generateExpandoInstructionBlock(tView, tNode, directiveCount) {
         ngDevMode && assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
-        var elementIndex = -(tNode.index - HEADER_OFFSET);
+        // Important: In JS `-x` and `0-x` is not the same! If `x===0` then `-x` will produce `-0` which
+        // requires non standard math arithmetic and it can prevent VM optimizations.
+        // `0-0` will always produce `0` and will not cause a potential deoptimization in VM.
+        var elementIndex = HEADER_OFFSET - tNode.index;
         var providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
         var providerCount = tView.data.length - providerStartIndex;
         (tView.expandoInstructions || (tView.expandoInstructions = [])).push(elementIndex, providerCount, directiveCount);
@@ -47767,7 +47771,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+417.sha-bb52fb7.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+419.sha-c8447d2.with-local-changes');
 
     /**
      * @license
@@ -62741,7 +62745,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+417.sha-bb52fb7.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+419.sha-c8447d2.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
