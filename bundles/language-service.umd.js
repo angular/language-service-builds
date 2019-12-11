@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+420.sha-ed486b5.with-local-changes
+ * @license Angular v9.0.0-rc.1+421.sha-7cd465a.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -12608,7 +12608,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // we use a string array here instead of a string map
         // because a string-map is not guaranteed to retain the
         // order of the entries whereas a string array can be
-        // construted in a [key, value, key, value] format.
+        // constructed in a [key, value, key, value] format.
         var styles = [];
         var i = 0;
         var parenDepth = 0;
@@ -18668,7 +18668,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+420.sha-ed486b5.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+421.sha-7cd465a.with-local-changes');
 
     /**
      * @license
@@ -29553,6 +29553,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             rendererSetClassName: 0,
             rendererAddClass: 0,
             rendererRemoveClass: 0,
+            rendererCssText: 0,
             rendererSetStyle: 0,
             rendererRemoveStyle: 0,
             rendererDestroy: 0,
@@ -31366,7 +31367,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var foundChar = false;
         for (var i = 0; i < length; i++) {
             var char = text.charCodeAt(i);
-            if (char <= 32 /*' '*/) {
+            if (char <= 32 /* SPACE */) {
                 if (foundChar) {
                     if (array === null)
                         array = [];
@@ -38954,7 +38955,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+420.sha-ed486b5.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+421.sha-7cd465a.with-local-changes');
 
     /**
      * @license
@@ -50893,7 +50894,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+420.sha-ed486b5.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+421.sha-7cd465a.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
