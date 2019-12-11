@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.5+51.sha-bbb9412.with-local-changes
+ * @license Angular v9.0.0-rc.5+58.sha-ad82ed8.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -3605,6 +3605,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         Identifiers.injectPipeChangeDetectorRef = { name: 'ɵɵinjectPipeChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.invalidFactory = { name: 'ɵɵinvalidFactory', moduleName: CORE$1 };
+        Identifiers.invalidFactoryDep = { name: 'ɵɵinvalidFactoryDep', moduleName: CORE$1 };
         Identifiers.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
         Identifiers.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
@@ -3637,6 +3638,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         Identifiers.NgModuleDefWithMeta = {
             name: 'ɵɵNgModuleDefWithMeta',
+            moduleName: CORE$1,
+        };
+        Identifiers.ModuleWithProviders = {
+            name: 'ModuleWithProviders',
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵɵdefineNgModule', moduleName: CORE$1 };
@@ -5321,6 +5326,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          * Injecting the `ChangeDetectorRef` token. Needs special handling when injected into a pipe.
          */
         R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
+        /**
+         * An invalid dependency (no token could be determined). An error should be thrown at runtime.
+         */
+        R3ResolvedDependencyType[R3ResolvedDependencyType["Invalid"] = 3] = "Invalid";
     })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
     /**
      * Construct a factory function expression for the given `R3FactoryMetadata`.
@@ -5410,9 +5419,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
     }
     function injectDependencies(deps, injectFn, isPipe) {
-        return deps.map(function (dep) { return compileInjectDependency(dep, injectFn, isPipe); });
+        return deps.map(function (dep, index) { return compileInjectDependency(dep, injectFn, isPipe, index); });
     }
-    function compileInjectDependency(dep, injectFn, isPipe) {
+    function compileInjectDependency(dep, injectFn, isPipe, index) {
         // Interpret the dependency according to its resolved type.
         switch (dep.resolved) {
             case R3ResolvedDependencyType.Token:
@@ -5438,6 +5447,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             case R3ResolvedDependencyType.Attribute:
                 // In the case of attributes, the attribute name in question is given as the token.
                 return importExpr(Identifiers$1.injectAttribute).callFn([dep.token]);
+            case R3ResolvedDependencyType.Invalid:
+                return importExpr(Identifiers$1.invalidFactoryDep).callFn([literal(index)]);
             default:
                 return unsupported("Unknown R3ResolvedDependencyType: " + R3ResolvedDependencyType[dep.resolved]);
         }
@@ -12904,17 +12915,19 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var _this = this;
             if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
                 return {
-                    sourceSpan: sourceSpan,
                     reference: Identifiers$1.elementHostAttrs,
-                    allocateBindingSlots: 0,
-                    params: function () {
-                        // params => elementHostAttrs(attrs)
-                        _this.populateInitialStylingAttrs(attrs);
-                        var attrArray = !attrs.some(function (attr) { return attr instanceof WrappedNodeExpr; }) ?
-                            getConstantLiteralFromArray(constantPool, attrs) :
-                            literalArr(attrs);
-                        return [attrArray];
-                    }
+                    calls: [{
+                            sourceSpan: sourceSpan,
+                            allocateBindingSlots: 0,
+                            params: function () {
+                                // params => elementHostAttrs(attrs)
+                                _this.populateInitialStylingAttrs(attrs);
+                                var attrArray = !attrs.some(function (attr) { return attr instanceof WrappedNodeExpr; }) ?
+                                    getConstantLiteralFromArray(constantPool, attrs) :
+                                    literalArr(attrs);
+                                return [attrArray];
+                            }
+                        }]
                 };
             }
             return null;
@@ -12962,31 +12975,35 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 reference = isClassBased ? Identifiers$1.classMap : Identifiers$1.styleMap;
             }
             return {
-                sourceSpan: stylingInput.sourceSpan,
                 reference: reference,
-                allocateBindingSlots: totalBindingSlotsRequired,
-                supportsInterpolation: isClassBased,
-                params: function (convertFn) {
-                    var convertResult = convertFn(mapValue);
-                    return Array.isArray(convertResult) ? convertResult : [convertResult];
-                }
+                calls: [{
+                        supportsInterpolation: isClassBased,
+                        sourceSpan: stylingInput.sourceSpan,
+                        allocateBindingSlots: totalBindingSlotsRequired,
+                        params: function (convertFn) {
+                            var convertResult = convertFn(mapValue);
+                            return Array.isArray(convertResult) ? convertResult : [convertResult];
+                        }
+                    }]
             };
         };
         StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter, getInterpolationExpressionFn) {
-            return inputs.map(function (input) {
+            var instructions = [];
+            inputs.forEach(function (input) {
+                var previousInstruction = instructions[instructions.length - 1];
                 var value = input.value.visit(valueConverter);
-                // each styling binding value is stored in the LView
-                var totalBindingSlotsRequired = 1;
+                var referenceForCall = reference;
+                var totalBindingSlotsRequired = 1; // each styling binding value is stored in the LView
                 if (value instanceof Interpolation) {
                     totalBindingSlotsRequired += value.expressions.length;
                     if (getInterpolationExpressionFn) {
-                        reference = getInterpolationExpressionFn(value);
+                        referenceForCall = getInterpolationExpressionFn(value);
                     }
                 }
-                return {
+                var call = {
                     sourceSpan: input.sourceSpan,
+                    allocateBindingSlots: totalBindingSlotsRequired,
                     supportsInterpolation: !!getInterpolationExpressionFn,
-                    allocateBindingSlots: totalBindingSlotsRequired, reference: reference,
                     params: function (convertFn) {
                         // params => stylingProp(propName, value)
                         var params = [];
@@ -13004,7 +13021,19 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         return params;
                     }
                 };
+                // If we ended up generating a call to the same instruction as the previous styling property
+                // we can chain the calls together safely to save some bytes, otherwise we have to generate
+                // a separate instruction call. This is primarily a concern with interpolation instructions
+                // where we may start off with one `reference`, but end up using another based on the
+                // number of interpolations.
+                if (previousInstruction && previousInstruction.reference === referenceForCall) {
+                    previousInstruction.calls.push(call);
+                }
+                else {
+                    instructions.push({ reference: referenceForCall, calls: [call] });
+                }
             });
+            return instructions;
         };
         StylingBuilder.prototype._buildClassInputs = function (valueConverter) {
             if (this._singleClassInputs) {
@@ -13020,10 +13049,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         StylingBuilder.prototype._buildSanitizerFn = function () {
             return {
-                sourceSpan: this._firstStylingInput ? this._firstStylingInput.sourceSpan : null,
                 reference: Identifiers$1.styleSanitizer,
-                allocateBindingSlots: 0,
-                params: function () { return [importExpr(Identifiers$1.defaultStyleSanitizer)]; }
+                calls: [{
+                        sourceSpan: this._firstStylingInput ? this._firstStylingInput.sourceSpan : null,
+                        allocateBindingSlots: 0,
+                        params: function () { return [importExpr(Identifiers$1.defaultStyleSanitizer)]; }
+                    }]
             };
         };
         /**
@@ -16610,9 +16641,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 }
                 // Generate Listeners (outputs)
-                element.outputs.forEach(function (outputAst) {
-                    _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter(element.name, outputAst, elementIndex));
-                });
+                if (element.outputs.length > 0) {
+                    var listeners = element.outputs.map(function (outputAst) { return ({
+                        sourceSpan: outputAst.sourceSpan,
+                        params: _this.prepareListenerParameter(element.name, outputAst, elementIndex)
+                    }); });
+                    this.creationInstructionChain(Identifiers$1.listener, listeners);
+                }
                 // Note: it's important to keep i18n/i18nStart instructions after i18nAttributes and
                 // listeners, to make sure i18nAttributes instruction targets current element at runtime.
                 if (isI18nRootElement) {
@@ -16627,8 +16662,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var limit = stylingInstructions.length - 1;
             for (var i = 0; i <= limit; i++) {
                 var instruction_1 = stylingInstructions[i];
-                this._bindingSlots += instruction_1.allocateBindingSlots;
-                this.processStylingInstruction(elementIndex, instruction_1, false);
+                this._bindingSlots += this.processStylingUpdateInstruction(elementIndex, instruction_1);
             }
             // the reason why `undefined` is used is because the renderer understands this as a
             // special value to symbolize that there is no RHS to this binding
@@ -16810,9 +16844,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 // Add the input bindings
                 this.templatePropertyBindings(templateIndex, template.inputs);
                 // Generate listeners for directive output
-                template.outputs.forEach(function (outputAst) {
-                    _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter('ng_template', outputAst, templateIndex));
-                });
+                if (template.outputs.length > 0) {
+                    var listeners = template.outputs.map(function (outputAst) { return ({
+                        sourceSpan: outputAst.sourceSpan,
+                        params: _this.prepareListenerParameter('ng_template', outputAst, templateIndex)
+                    }); });
+                    this.creationInstructionChain(Identifiers$1.listener, listeners);
+                }
             }
         };
         TemplateDefinitionBuilder.prototype.visitBoundText = function (text) {
@@ -16928,28 +16966,35 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return instruction(span, reference, params).toStmt();
             });
         };
-        TemplateDefinitionBuilder.prototype.processStylingInstruction = function (elementIndex, instruction, createMode) {
+        TemplateDefinitionBuilder.prototype.processStylingUpdateInstruction = function (elementIndex, instruction) {
             var _this = this;
+            var allocateBindingSlots = 0;
             if (instruction) {
-                if (createMode) {
-                    this.creationInstruction(instruction.sourceSpan, instruction.reference, function () {
-                        return instruction.params(function (value) { return _this.convertPropertyBinding(value); });
-                    });
-                }
-                else {
-                    this.updateInstructionWithAdvance(elementIndex, instruction.sourceSpan, instruction.reference, function () {
-                        return instruction
-                            .params(function (value) {
-                            return (instruction.supportsInterpolation && value instanceof Interpolation) ?
+                var calls_1 = [];
+                instruction.calls.forEach(function (call) {
+                    allocateBindingSlots += call.allocateBindingSlots;
+                    calls_1.push({
+                        sourceSpan: call.sourceSpan,
+                        value: function () {
+                            return call
+                                .params(function (value) { return (call.supportsInterpolation && value instanceof Interpolation) ?
                                 _this.getUpdateInstructionArguments(value) :
-                                _this.convertPropertyBinding(value);
-                        });
+                                _this.convertPropertyBinding(value); });
+                        }
                     });
-                }
+                });
+                this.updateInstructionChainWithAdvance(elementIndex, instruction.reference, calls_1);
             }
+            return allocateBindingSlots;
         };
         TemplateDefinitionBuilder.prototype.creationInstruction = function (span, reference, paramsOrFn, prepend) {
             this.instructionFn(this._creationCodeFns, span, reference, paramsOrFn || [], prepend);
+        };
+        TemplateDefinitionBuilder.prototype.creationInstructionChain = function (reference, calls) {
+            var span = calls.length ? calls[0].sourceSpan : null;
+            this._creationCodeFns.push(function () {
+                return chainedInstruction(reference, calls.map(function (call) { return call.params(); }), span).toStmt();
+            });
         };
         TemplateDefinitionBuilder.prototype.updateInstructionWithAdvance = function (nodeIndex, span, reference, paramsOrFn) {
             this.addAdvanceInstructionIfNecessary(nodeIndex, span);
@@ -16962,8 +17007,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var span = bindings.length ? bindings[0].sourceSpan : null;
             this._updateCodeFns.push(function () {
                 var calls = bindings.map(function (property) {
-                    var fnParams = __spread([property.value()], (property.params || []));
+                    var value = property.value();
+                    var fnParams = Array.isArray(value) ? value : [value];
+                    if (property.params) {
+                        fnParams.push.apply(fnParams, __spread(property.params));
+                    }
                     if (property.name) {
+                        // We want the property name to always be the first function parameter.
                         fnParams.unshift(literal(property.name));
                     }
                     return fnParams;
@@ -18142,19 +18192,25 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // collected earlier.
         var hostAttrs = convertAttributesToExpressions(hostBindingsMetadata.attributes);
         var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
-        if (hostInstruction) {
-            createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
+        if (hostInstruction && hostInstruction.calls.length > 0) {
+            createStatements.push(chainedInstruction(hostInstruction.reference, hostInstruction.calls.map(function (call) { return convertStylingCall(call, bindingContext, bindingFn); }))
+                .toStmt());
         }
         if (styleBuilder.hasBindings) {
             // finally each binding that was registered in the statement above will need to be added to
             // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
             // are evaluated and updated for the element.
             styleBuilder.buildUpdateLevelInstructions(getValueConverter()).forEach(function (instruction) {
-                // we subtract a value of `1` here because the binding slot was already
-                // allocated at the top of this method when all the input bindings were
-                // counted.
-                totalHostVarsCount += Math.max(instruction.allocateBindingSlots - 1, 0);
-                updateStatements.push(createStylingStmt(instruction, bindingContext, bindingFn));
+                if (instruction.calls.length > 0) {
+                    var calls_1 = [];
+                    instruction.calls.forEach(function (call) {
+                        // we subtract a value of `1` here because the binding slot was already allocated
+                        // at the top of this method when all the input bindings were counted.
+                        totalHostVarsCount += Math.max(call.allocateBindingSlots - 1, 0);
+                        calls_1.push(convertStylingCall(call, bindingContext, bindingFn));
+                    });
+                    updateStatements.push(chainedInstruction(instruction.reference, calls_1).toStmt());
+                }
             });
         }
         if (totalHostVarsCount) {
@@ -18179,11 +18235,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function bindingFn(implicit, value) {
         return convertPropertyBinding(null, implicit, value, 'b', BindingForm.TrySimple, function () { return error('Unexpected interpolation'); });
     }
-    function createStylingStmt(instruction, bindingContext, bindingFn) {
-        var params = instruction.params(function (value) { return bindingFn(bindingContext, value).currValExpr; });
-        return importExpr(instruction.reference, null, instruction.sourceSpan)
-            .callFn(params, instruction.sourceSpan)
-            .toStmt();
+    function convertStylingCall(call, bindingContext, bindingFn) {
+        return call.params(function (value) { return bindingFn(bindingContext, value).currValExpr; });
     }
     function getBindingNameAndInstruction(binding) {
         var bindingName = binding.name;
@@ -18209,16 +18262,30 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return { bindingName: bindingName, instruction: instruction, isAttribute: !!attrMatches };
     }
     function createHostListeners(eventBindings, name) {
-        return eventBindings.map(function (binding) {
+        var listeners = [];
+        var syntheticListeners = [];
+        var instructions = [];
+        eventBindings.forEach(function (binding) {
             var bindingName = binding.name && sanitizeIdentifier(binding.name);
             var bindingFnName = binding.type === 1 /* Animation */ ?
                 prepareSyntheticListenerFunctionName(bindingName, binding.targetOrPhase) :
                 bindingName;
             var handlerName = name && bindingName ? name + "_" + bindingFnName + "_HostBindingHandler" : null;
             var params = prepareEventListenerParameters(BoundEvent.fromParsedEvent(binding), handlerName);
-            var instruction = binding.type == 1 /* Animation */ ? Identifiers$1.componentHostSyntheticListener : Identifiers$1.listener;
-            return importExpr(instruction).callFn(params).toStmt();
+            if (binding.type == 1 /* Animation */) {
+                syntheticListeners.push(params);
+            }
+            else {
+                listeners.push(params);
+            }
         });
+        if (syntheticListeners.length > 0) {
+            instructions.push(chainedInstruction(Identifiers$1.componentHostSyntheticListener, syntheticListeners).toStmt());
+        }
+        if (listeners.length > 0) {
+            instructions.push(chainedInstruction(Identifiers$1.listener, listeners).toStmt());
+        }
+        return instructions;
     }
     function metadataAsSummary(meta) {
         // clang-format off
@@ -18605,7 +18672,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.5+51.sha-bbb9412.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.5+58.sha-ad82ed8.with-local-changes');
 
     /**
      * @license
@@ -29427,6 +29494,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         R3ResolvedDependencyType[R3ResolvedDependencyType["Token"] = 0] = "Token";
         R3ResolvedDependencyType[R3ResolvedDependencyType["Attribute"] = 1] = "Attribute";
         R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
+        R3ResolvedDependencyType[R3ResolvedDependencyType["Invalid"] = 3] = "Invalid";
     })(R3ResolvedDependencyType$1 || (R3ResolvedDependencyType$1 = {}));
     var R3FactoryTarget$1;
     (function (R3FactoryTarget) {
@@ -29464,6 +29532,91 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
     var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function ngDevModeResetPerfCounters() {
+        var locationString = typeof location !== 'undefined' ? location.toString() : '';
+        var newCounters = {
+            namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
+            firstCreatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererAppendChild: 0,
+            rendererInsertBefore: 0,
+            rendererCreateComment: 0,
+            styleMap: 0,
+            styleMapCacheMiss: 0,
+            classMap: 0,
+            classMapCacheMiss: 0,
+            styleProp: 0,
+            stylePropCacheMiss: 0,
+            classProp: 0,
+            classPropCacheMiss: 0,
+            flushStyling: 0,
+            classesApplied: 0,
+            stylesApplied: 0,
+        };
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+        var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
+        _global$1['ngDevMode'] = allowNgDevModeTrue && newCounters;
+        return newCounters;
+    }
+    /**
+     * This function checks to see if the `ngDevMode` has been set. If yes,
+     * then we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     *
+     * `ɵɵdefineComponent` is guaranteed to have been called before any component template functions
+     * (and thus Ivy instructions), so a single initialization there is sufficient to ensure ngDevMode
+     * is defined for the entire instruction set.
+     *
+     * When using checking `ngDevMode` on toplevel, always init it before referencing it
+     * (e.g. `((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode())`), otherwise you can
+     *  get a `ReferenceError` like in https://github.com/angular/angular/issues/31595.
+     *
+     * Details on possible values for `ngDevMode` can be found on its docstring.
+     *
+     * NOTE:
+     * - changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
+     */
+    function initNgDevMode() {
+        // The below checks are to ensure that calling `initNgDevMode` multiple times does not
+        // reset the counters.
+        // If the `ngDevMode` is not an object, then it means we have not created the perf counters
+        // yet.
+        if (typeof ngDevMode === 'undefined' || ngDevMode) {
+            if (typeof ngDevMode !== 'object') {
+                ngDevModeResetPerfCounters();
+            }
+            return !!ngDevMode;
+        }
+        return false;
+    }
 
     /**
      * @license
@@ -29965,91 +30118,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$2 || (ViewEncapsulation$2 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function ngDevModeResetPerfCounters() {
-        var locationString = typeof location !== 'undefined' ? location.toString() : '';
-        var newCounters = {
-            namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
-            firstCreatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererAppendChild: 0,
-            rendererInsertBefore: 0,
-            rendererCreateComment: 0,
-            styleMap: 0,
-            styleMapCacheMiss: 0,
-            classMap: 0,
-            classMapCacheMiss: 0,
-            styleProp: 0,
-            stylePropCacheMiss: 0,
-            classProp: 0,
-            classPropCacheMiss: 0,
-            flushStyling: 0,
-            classesApplied: 0,
-            stylesApplied: 0,
-        };
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-        var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
-        _global$1['ngDevMode'] = allowNgDevModeTrue && newCounters;
-        return newCounters;
-    }
-    /**
-     * This function checks to see if the `ngDevMode` has been set. If yes,
-     * then we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     *
-     * `ɵɵdefineComponent` is guaranteed to have been called before any component template functions
-     * (and thus Ivy instructions), so a single initialization there is sufficient to ensure ngDevMode
-     * is defined for the entire instruction set.
-     *
-     * When using checking `ngDevMode` on toplevel, always init it before referencing it
-     * (e.g. `((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode())`), otherwise you can
-     *  get a `ReferenceError` like in https://github.com/angular/angular/issues/31595.
-     *
-     * Details on possible values for `ngDevMode` can be found on its docstring.
-     *
-     * NOTE:
-     * - changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
-     */
-    function initNgDevMode() {
-        // The below checks are to ensure that calling `initNgDevMode` multiple times does not
-        // reset the counters.
-        // If the `ngDevMode` is not an object, then it means we have not created the perf counters
-        // yet.
-        if (typeof ngDevMode === 'undefined' || ngDevMode) {
-            if (typeof ngDevMode !== 'object') {
-                ngDevModeResetPerfCounters();
-            }
-            return !!ngDevMode;
-        }
-        return false;
-    }
 
     /**
     * @license
@@ -38890,7 +38958,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.5+51.sha-bbb9412.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.5+58.sha-ad82ed8.with-local-changes');
 
     /**
      * @license
@@ -50831,7 +50899,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.5+51.sha-bbb9412.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.5+58.sha-ad82ed8.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
