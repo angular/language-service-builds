@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+421.sha-c9df9af.with-local-changes
+ * @license Angular v9.0.0-rc.1+423.sha-0984fbc.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18668,7 +18668,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+421.sha-c9df9af.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+423.sha-0984fbc.with-local-changes');
 
     /**
      * @license
@@ -38954,7 +38954,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+421.sha-c9df9af.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+423.sha-0984fbc.with-local-changes');
 
     /**
      * @license
@@ -49350,7 +49350,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                                 var property = member;
                                 if (isStatic(property)) {
                                     var name_1 = evaluator.nameOf(property.name);
-                                    if (!isMetadataError$1(name_1)) {
+                                    if (!isMetadataError$1(name_1) && !shouldIgnoreStaticMember(name_1)) {
                                         if (property.initializer) {
                                             var value = evaluator.evaluateNode(property.initializer);
                                             recordStaticMember(name_1, value);
@@ -49899,6 +49899,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             finally { if (e_5) throw e_5.error; }
         }
         return result;
+    }
+    function shouldIgnoreStaticMember(memberName) {
+        return memberName.startsWith('ngAcceptInputType_') || memberName.startsWith('ngTemplateGuard_');
     }
     function expandedMessage$1(error) {
         switch (error.message) {
@@ -50893,7 +50896,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+421.sha-c9df9af.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+423.sha-0984fbc.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
