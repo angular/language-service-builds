@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.6+29.sha-fb4a11a.with-local-changes
+ * @license Angular v9.0.0-rc.6+31.sha-5e075ae.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18706,7 +18706,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.6+29.sha-fb4a11a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.6+31.sha-5e075ae.with-local-changes');
 
     /**
      * @license
@@ -32870,28 +32870,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
-     * provided handler.
-     *
-     * The reason why this function exists is because IE doesn't support
-     * the `Proxy` class. For this reason an error must be thrown.
-     */
-    function createProxy(handler) {
-        var g = _global$1;
-        if (!g.Proxy) {
-            throw new Error('Proxy is not supported in this browser');
-        }
-        return new g.Proxy({}, handler);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function attachDebugObject(obj, debug) {
         Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
     }
@@ -33204,13 +33182,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
 
     /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    /**
      * A human-readable debug summary of the styling data present within `TStylingContext`.
      *
      * This class is designed to be used within testing code or when an
@@ -33414,7 +33385,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             get: function () {
                 var entries = {};
                 var config = this.config;
-                var isClassBased = this._isClassBased;
                 var data = this._data;
                 // the direct pass code doesn't convert [style] or [class] values
                 // into StylingMapArray instances. For this reason, the values
@@ -33428,35 +33398,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this._mapValues(data, function (prop, value, bindingIndex) {
                     entries[prop] = { prop: prop, value: value, bindingIndex: bindingIndex };
                 });
-                // because the styling algorithm runs into two different
-                // modes: direct and context-resolution, the output of the entries
-                // object is different because the removed values are not
-                // saved between updates. For this reason a proxy is created
-                // so that the behavior is the same when examining values
-                // that are no longer active on the element.
-                return createProxy({
-                    get: function (target, prop) {
-                        var value = entries[prop];
-                        if (!value) {
-                            value = {
-                                prop: prop,
-                                value: isClassBased ? false : null,
-                                bindingIndex: null,
-                            };
-                        }
-                        return value;
-                    },
-                    set: function (target, prop, value) { return false; },
-                    ownKeys: function () { return Object.keys(entries); },
-                    getOwnPropertyDescriptor: function (k) {
-                        // we use a special property descriptor here so that enumeration operations
-                        // such as `Object.keys` will work on this proxy.
-                        return {
-                            enumerable: true,
-                            configurable: true,
-                        };
-                    },
-                });
+                return entries;
             },
             enumerable: true,
             configurable: true
@@ -38992,7 +38934,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.6+29.sha-fb4a11a.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.6+31.sha-5e075ae.with-local-changes');
 
     /**
      * @license
@@ -45678,6 +45620,28 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
+     * provided handler.
+     *
+     * The reason why this function exists is because IE doesn't support
+     * the `Proxy` class. For this reason an error must be thrown.
+     */
+    function createProxy(handler) {
+        var g = _global$1;
+        if (!g.Proxy) {
+            throw new Error('Proxy is not supported in this browser');
+        }
+        return new g.Proxy({}, handler);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * @publicApi
      */
     var DebugEventListener = /** @class */ (function () {
@@ -50933,7 +50897,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.6+29.sha-fb4a11a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.6+31.sha-5e075ae.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
