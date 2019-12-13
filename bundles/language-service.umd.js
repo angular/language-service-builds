@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+464.sha-17f7f06.with-local-changes
+ * @license Angular v9.0.0-rc.1+472.sha-f79110c.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18691,7 +18691,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+464.sha-17f7f06.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+472.sha-f79110c.with-local-changes');
 
     /**
      * @license
@@ -29389,17 +29389,34 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * `ɵprov` on an ancestor only.
      */
     function getInheritedInjectableDef(type) {
-        var def = type && (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF]);
+        // See `jit/injectable.ts#compileInjectable` for context on NG_PROV_DEF_FALLBACK.
+        var def = type && (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF] ||
+            (type[NG_PROV_DEF_FALLBACK] && type[NG_PROV_DEF_FALLBACK]()));
         if (def) {
+            var typeName = getTypeName(type);
             // TODO(FW-1307): Re-add ngDevMode when closure can handle it
             // ngDevMode &&
-            console.warn("DEPRECATED: DI is instantiating a token \"" + type.name + "\" that inherits its @Injectable decorator but does not provide one itself.\n" +
-                ("This will become an error in v10. Please add @Injectable() to the \"" + type.name + "\" class."));
+            console.warn("DEPRECATED: DI is instantiating a token \"" + typeName + "\" that inherits its @Injectable decorator but does not provide one itself.\n" +
+                ("This will become an error in v10. Please add @Injectable() to the \"" + typeName + "\" class."));
             return def;
         }
         else {
             return null;
         }
+    }
+    /** Gets the name of a type, accounting for some cross-browser differences. */
+    function getTypeName(type) {
+        // `Function.prototype.name` behaves differently between IE and other browsers. In most browsers
+        // it'll always return the name of the function itself, no matter how many other functions it
+        // inherits from. On IE the function doesn't have its own `name` property, but it takes it from
+        // the lowest level in the prototype chain. E.g. if we have `class Foo extends Parent` most
+        // browsers will evaluate `Foo.name` to `Foo` while IE will return `Parent`. We work around
+        // the issue by converting the function to a string and parsing its name out that way via a regex.
+        if (type.hasOwnProperty('name')) {
+            return type.name;
+        }
+        var match = ('' + type).match(/^function\s*([^\s(]+)/);
+        return match === null ? '' : match[1];
     }
     /**
      * Read the injector def type in a way which is immune to accidentally reading inherited value.
@@ -29413,6 +29430,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     var NG_PROV_DEF = getClosureSafeProperty({ ɵprov: getClosureSafeProperty });
     var NG_INJ_DEF = getClosureSafeProperty({ ɵinj: getClosureSafeProperty });
+    // On IE10 properties defined via `defineProperty` won't be inherited by child classes,
+    // which will break inheriting the injectable definition from a grandparent through an
+    // undecorated parent class. We work around it by defining a fallback method which will be
+    // used to retrieve the definition. This should only be a problem in JIT mode, because in
+    // AOT TypeScript seems to have a workaround for static properties. When inheriting from an
+    // undecorated parent is no longer supported in v10, this can safely be removed.
+    var NG_PROV_DEF_FALLBACK = getClosureSafeProperty({ ɵprovFallback: getClosureSafeProperty });
     // We need to keep these around so we can read off old defs if new defs are unavailable
     var NG_INJECTABLE_DEF = getClosureSafeProperty({ ngInjectableDef: getClosureSafeProperty });
     var NG_INJECTOR_DEF = getClosureSafeProperty({ ngInjectorDef: getClosureSafeProperty });
@@ -33064,25 +33088,24 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         function InertBodyHelper(defaultDoc) {
             this.defaultDoc = defaultDoc;
             this.inertDocument = this.defaultDoc.implementation.createHTMLDocument('sanitization-inert');
-            this.inertBodyElement = this.inertDocument.body;
-            if (this.inertBodyElement == null) {
+            var inertBodyElement = this.inertDocument.body;
+            if (inertBodyElement == null) {
                 // usually there should be only one body element in the document, but IE doesn't have any, so
                 // we need to create one.
                 var inertHtml = this.inertDocument.createElement('html');
                 this.inertDocument.appendChild(inertHtml);
-                this.inertBodyElement = this.inertDocument.createElement('body');
-                inertHtml.appendChild(this.inertBodyElement);
+                inertBodyElement = this.inertDocument.createElement('body');
+                inertHtml.appendChild(inertBodyElement);
             }
-            this.inertBodyElement.innerHTML = '<svg><g onload="this.parentNode.remove()"></g></svg>';
-            if (this.inertBodyElement.querySelector && !this.inertBodyElement.querySelector('svg')) {
+            inertBodyElement.innerHTML = '<svg><g onload="this.parentNode.remove()"></g></svg>';
+            if (inertBodyElement.querySelector && !inertBodyElement.querySelector('svg')) {
                 // We just hit the Safari 10.1 bug - which allows JS to run inside the SVG G element
                 // so use the XHR strategy.
                 this.getInertBodyElement = this.getInertBodyElement_XHR;
                 return;
             }
-            this.inertBodyElement.innerHTML =
-                '<svg><p><style><img src="</style><img src=x onerror=alert(1)//">';
-            if (this.inertBodyElement.querySelector && this.inertBodyElement.querySelector('svg img')) {
+            inertBodyElement.innerHTML = '<svg><p><style><img src="</style><img src=x onerror=alert(1)//">';
+            if (inertBodyElement.querySelector && inertBodyElement.querySelector('svg img')) {
                 // We just hit the Firefox bug - which prevents the inner img JS from being sanitized
                 // so use the DOMParser strategy, if it is available.
                 // If the DOMParser is not available then we are not in Firefox (Server/WebWorker?) so we
@@ -33154,13 +33177,21 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 templateEl.innerHTML = html;
                 return templateEl;
             }
-            this.inertBodyElement.innerHTML = html;
+            // Note that previously we used to do something like `this.inertDocument.body.innerHTML = html`
+            // and we returned the inert `body` node. This was changed, because IE seems to treat setting
+            // `innerHTML` on an inserted element differently, compared to one that hasn't been inserted
+            // yet. In particular, IE appears to split some of the text into multiple text nodes rather
+            // than keeping them in a single one which ends up messing with Ivy's i18n parsing further
+            // down the line. This has been worked around by creating a new inert `body` and using it as
+            // the root node in which we insert the HTML.
+            var inertBody = this.inertDocument.createElement('body');
+            inertBody.innerHTML = html;
             // Support: IE 9-11 only
             // strip custom-namespaced attributes on IE<=11
             if (this.defaultDoc.documentMode) {
-                this.stripCustomNsAttrs(this.inertBodyElement);
+                this.stripCustomNsAttrs(inertBody);
             }
-            return this.inertBodyElement;
+            return inertBody;
         };
         /**
          * When IE9-11 comes across an unknown namespaced attribute e.g. 'xlink:foo' it adds 'xmlns:ns1'
@@ -38055,8 +38086,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function validateProperty(hostView, element, propName, tNode) {
         // The property is considered valid if the element matches the schema, it exists on the element
         // or it is synthetic, and we are in a browser context (web worker nodes should be skipped).
-        return matchingSchemas(hostView, tNode.tagName) || propName in element ||
-            isAnimationProp(propName) || typeof Node !== 'function' || !(element instanceof Node);
+        if (matchingSchemas(hostView, tNode.tagName) || propName in element ||
+            isAnimationProp(propName)) {
+            return true;
+        }
+        // Note: `typeof Node` returns 'function' in most browsers, but on IE it is 'object' so we
+        // need to account for both here, while being careful for `typeof null` also returning 'object'.
+        return typeof Node === 'undefined' || Node === null || !(element instanceof Node);
     }
     function matchingSchemas(hostView, tagName) {
         var schemas = hostView[TVIEW].schemas;
@@ -40758,16 +40794,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     // param may be undefined if type of dep is not set by ngtsc
                     continue;
                 }
-                else if (param instanceof Optional || param.__proto__.ngMetadataName === 'Optional') {
+                var proto = Object.getPrototypeOf(param);
+                if (param instanceof Optional || proto.ngMetadataName === 'Optional') {
                     meta.optional = true;
                 }
-                else if (param instanceof SkipSelf || param.__proto__.ngMetadataName === 'SkipSelf') {
+                else if (param instanceof SkipSelf || proto.ngMetadataName === 'SkipSelf') {
                     meta.skipSelf = true;
                 }
-                else if (param instanceof Self || param.__proto__.ngMetadataName === 'Self') {
+                else if (param instanceof Self || proto.ngMetadataName === 'Self') {
                     meta.self = true;
                 }
-                else if (param instanceof Host || param.__proto__.ngMetadataName === 'Host') {
+                else if (param instanceof Host || proto.ngMetadataName === 'Host') {
                     meta.host = true;
                 }
                 else if (param instanceof Inject) {
@@ -40823,6 +40860,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return ngInjectableDef;
                 },
             });
+            // On IE10 properties defined via `defineProperty` won't be inherited by child classes,
+            // which will break inheriting the injectable definition from a grandparent through an
+            // undecorated parent class. We work around it by defining a method which should be used
+            // as a fallback. This should only be a problem in JIT mode, because in AOT TypeScript
+            // seems to have a workaround for static properties. When inheriting from an undecorated
+            // parent is no longer supported in v10, this can safely be removed.
+            if (!type.hasOwnProperty(NG_PROV_DEF_FALLBACK)) {
+                type[NG_PROV_DEF_FALLBACK] = function () { return type[NG_PROV_DEF]; };
+            }
         }
         // if NG_FACTORY_DEF is already defined on this class then don't overwrite it
         if (!type.hasOwnProperty(NG_FACTORY_DEF)) {
@@ -44271,7 +44317,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // The element is unknown if it's an instance of HTMLUnknownElement or it isn't registered
             // as a custom element. Note that unknown elements with a dash in their name won't be instances
             // of HTMLUnknownElement in browsers that support web components.
-            var isUnknown = (typeof HTMLUnknownElement === 'function' && element instanceof HTMLUnknownElement) ||
+            var isUnknown = 
+            // Note that we can't check for `typeof HTMLUnknownElement === 'function'`,
+            // because while most browsers return 'function', IE returns 'object'.
+            (typeof HTMLUnknownElement !== 'undefined' && HTMLUnknownElement &&
+                element instanceof HTMLUnknownElement) ||
                 (typeof customElements !== 'undefined' && tagName.indexOf('-') > -1 &&
                     !customElements.get(tagName));
             if (isUnknown && !matchingSchemas(hostView, tagName)) {
@@ -47751,7 +47801,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+464.sha-17f7f06.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+472.sha-f79110c.with-local-changes');
 
     /**
      * @license
@@ -55423,7 +55473,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function directiveMetadata(type, metadata) {
         // Reflect inputs and outputs.
-        var propMetadata = getReflect().ownPropMetadata(type);
+        var reflect = getReflect();
+        var propMetadata = reflect.ownPropMetadata(type);
         return {
             name: type.name,
             type: type,
@@ -55435,7 +55486,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             inputs: metadata.inputs || EMPTY_ARRAY$1,
             outputs: metadata.outputs || EMPTY_ARRAY$1,
             queries: extractQueriesMetadata(type, propMetadata, isContentQuery),
-            lifecycle: { usesOnChanges: usesLifecycleHook(type, 'ngOnChanges') },
+            lifecycle: { usesOnChanges: reflect.hasLifecycleHook(type, 'ngOnChanges') },
             typeSourceSpan: null,
             usesInheritance: !extendsDirectlyFromObject(type),
             exportAs: extractExportAs(metadata.exportAs),
@@ -55448,7 +55499,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function addDirectiveDefToUndecoratedParents(type) {
         var objPrototype = Object.prototype;
-        var parent = Object.getPrototypeOf(type);
+        var parent = Object.getPrototypeOf(type.prototype).constructor;
         // Go up the prototype until we hit `Object`.
         while (parent && parent !== objPrototype) {
             // Since inheritance works if the class was annotated already, we only need to add
@@ -55514,19 +55565,16 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function splitByComma(value) {
         return value.split(',').map(function (piece) { return piece.trim(); });
     }
-    function usesLifecycleHook(type, name) {
-        var prototype = type.prototype;
-        return prototype && prototype.hasOwnProperty(name);
-    }
     var LIFECYCLE_HOOKS = [
         'ngOnChanges', 'ngOnInit', 'ngOnDestroy', 'ngDoCheck', 'ngAfterViewInit', 'ngAfterViewChecked',
         'ngAfterContentInit', 'ngAfterContentChecked'
     ];
     function shouldAddAbstractDirective(type) {
-        if (LIFECYCLE_HOOKS.some(function (hookName) { return usesLifecycleHook(type, hookName); })) {
+        var reflect = getReflect();
+        if (LIFECYCLE_HOOKS.some(function (hookName) { return reflect.hasLifecycleHook(type, hookName); })) {
             return true;
         }
-        var propMetadata = getReflect().ownPropMetadata(type);
+        var propMetadata = reflect.propMetadata(type);
         for (var field in propMetadata) {
             var annotations = propMetadata[field];
             for (var i = 0; i < annotations.length; i++) {
@@ -57779,10 +57827,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var eAttrs = element.attributes;
                 for (var i = 0; i < eAttrs.length; i++) {
                     var attr = eAttrs[i];
+                    var lowercaseName = attr.name.toLowerCase();
                     // Make sure that we don't assign the same attribute both in its
                     // case-sensitive form and the lower-cased one from the browser.
-                    if (lowercaseTNodeAttrs.indexOf(attr.name) === -1) {
-                        attributes[attr.name] = attr.value;
+                    if (lowercaseTNodeAttrs.indexOf(lowercaseName) === -1) {
+                        // Save the lowercase name to align the behavior between browsers.
+                        // IE preserves the case, while all other browser convert it to lower case.
+                        attributes[lowercaseName] = attr.value;
                     }
                 }
                 return attributes;
@@ -62707,7 +62758,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+464.sha-17f7f06.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+472.sha-f79110c.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
