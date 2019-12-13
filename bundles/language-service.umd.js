@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+464.sha-17f7f06.with-local-changes
+ * @license Angular v9.0.0-rc.1+472.sha-f79110c.with-local-changes
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18706,7 +18706,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+464.sha-17f7f06.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.1+472.sha-f79110c.with-local-changes');
 
     /**
      * @license
@@ -29393,17 +29393,34 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * `ɵprov` on an ancestor only.
      */
     function getInheritedInjectableDef(type) {
-        var def = type && (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF]);
+        // See `jit/injectable.ts#compileInjectable` for context on NG_PROV_DEF_FALLBACK.
+        var def = type && (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF] ||
+            (type[NG_PROV_DEF_FALLBACK] && type[NG_PROV_DEF_FALLBACK]()));
         if (def) {
+            var typeName = getTypeName(type);
             // TODO(FW-1307): Re-add ngDevMode when closure can handle it
             // ngDevMode &&
-            console.warn("DEPRECATED: DI is instantiating a token \"" + type.name + "\" that inherits its @Injectable decorator but does not provide one itself.\n" +
-                ("This will become an error in v10. Please add @Injectable() to the \"" + type.name + "\" class."));
+            console.warn("DEPRECATED: DI is instantiating a token \"" + typeName + "\" that inherits its @Injectable decorator but does not provide one itself.\n" +
+                ("This will become an error in v10. Please add @Injectable() to the \"" + typeName + "\" class."));
             return def;
         }
         else {
             return null;
         }
+    }
+    /** Gets the name of a type, accounting for some cross-browser differences. */
+    function getTypeName(type) {
+        // `Function.prototype.name` behaves differently between IE and other browsers. In most browsers
+        // it'll always return the name of the function itself, no matter how many other functions it
+        // inherits from. On IE the function doesn't have its own `name` property, but it takes it from
+        // the lowest level in the prototype chain. E.g. if we have `class Foo extends Parent` most
+        // browsers will evaluate `Foo.name` to `Foo` while IE will return `Parent`. We work around
+        // the issue by converting the function to a string and parsing its name out that way via a regex.
+        if (type.hasOwnProperty('name')) {
+            return type.name;
+        }
+        var match = ('' + type).match(/^function\s*([^\s(]+)/);
+        return match === null ? '' : match[1];
     }
     /**
      * Read the injector def type in a way which is immune to accidentally reading inherited value.
@@ -29417,6 +29434,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     var NG_PROV_DEF = getClosureSafeProperty({ ɵprov: getClosureSafeProperty });
     var NG_INJ_DEF = getClosureSafeProperty({ ɵinj: getClosureSafeProperty });
+    // On IE10 properties defined via `defineProperty` won't be inherited by child classes,
+    // which will break inheriting the injectable definition from a grandparent through an
+    // undecorated parent class. We work around it by defining a fallback method which will be
+    // used to retrieve the definition. This should only be a problem in JIT mode, because in
+    // AOT TypeScript seems to have a workaround for static properties. When inheriting from an
+    // undecorated parent is no longer supported in v10, this can safely be removed.
+    var NG_PROV_DEF_FALLBACK = getClosureSafeProperty({ ɵprovFallback: getClosureSafeProperty });
     // We need to keep these around so we can read off old defs if new defs are unavailable
     var NG_INJECTABLE_DEF = getClosureSafeProperty({ ngInjectableDef: getClosureSafeProperty });
     var NG_INJECTOR_DEF = getClosureSafeProperty({ ngInjectorDef: getClosureSafeProperty });
@@ -38934,7 +38958,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+464.sha-17f7f06.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+472.sha-f79110c.with-local-changes');
 
     /**
      * @license
@@ -45926,10 +45950,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var eAttrs = element.attributes;
                 for (var i = 0; i < eAttrs.length; i++) {
                     var attr = eAttrs[i];
+                    var lowercaseName = attr.name.toLowerCase();
                     // Make sure that we don't assign the same attribute both in its
                     // case-sensitive form and the lower-cased one from the browser.
-                    if (lowercaseTNodeAttrs.indexOf(attr.name) === -1) {
-                        attributes[attr.name] = attr.value;
+                    if (lowercaseTNodeAttrs.indexOf(lowercaseName) === -1) {
+                        // Save the lowercase name to align the behavior between browsers.
+                        // IE preserves the case, while all other browser convert it to lower case.
+                        attributes[lowercaseName] = attr.value;
                     }
                 }
                 return attributes;
@@ -50855,7 +50882,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+464.sha-17f7f06.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+472.sha-f79110c.with-local-changes');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
