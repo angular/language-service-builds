@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+463.sha-ea57587
+ * @license Angular v9.0.0-rc.1+461.sha-b405942
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18706,7 +18706,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+463.sha-ea57587');
+    var VERSION$1 = new Version('9.0.0-rc.1+461.sha-b405942');
 
     /**
      * @license
@@ -38934,7 +38934,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+463.sha-ea57587');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+461.sha-b405942');
 
     /**
      * @license
@@ -45621,6 +45621,28 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Creates an instance of a `Proxy` and creates with an empty target object and binds it to the
+     * provided handler.
+     *
+     * The reason why this function exists is because IE doesn't support
+     * the `Proxy` class. For this reason an error must be thrown.
+     */
+    function createProxy(handler) {
+        var g = _global$1;
+        if (!g.Proxy) {
+            throw new Error('Proxy is not supported in this browser');
+        }
+        return new g.Proxy({}, handler);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * @publicApi
      */
     var DebugEventListener = /** @class */ (function () {
@@ -45949,11 +45971,32 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "classes", {
             get: function () {
-                var result = {};
-                var element = this.nativeElement;
-                var classNames = element.className.split(' ');
-                classNames.forEach(function (value) { return result[value] = true; });
-                return result;
+                if (!this._classesProxy) {
+                    var element_1 = this.nativeElement;
+                    // we use a proxy here because VE code expects `.classes` to keep
+                    // track of which classes have been added and removed. Because we
+                    // do not make use of a debug renderer anymore, the return value
+                    // must always be `false` in the event that a class does not exist
+                    // on the element (even if it wasn't added and removed beforehand).
+                    this._classesProxy = createProxy({
+                        get: function (target, prop) {
+                            return element_1 ? element_1.classList.contains(prop) : false;
+                        },
+                        set: function (target, prop, value) {
+                            return element_1 ? element_1.classList.toggle(prop, !!value) : false;
+                        },
+                        ownKeys: function () { return element_1 ? Array.from(element_1.classList).sort() : []; },
+                        getOwnPropertyDescriptor: function (k) {
+                            // we use a special property descriptor here so that enumeration operations
+                            // such as `Object.keys` will work on this proxy.
+                            return {
+                                enumerable: true,
+                                configurable: true,
+                            };
+                        },
+                    });
+                }
+                return this._classesProxy;
             },
             enumerable: true,
             configurable: true
@@ -50855,7 +50898,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+463.sha-ea57587');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+461.sha-b405942');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
