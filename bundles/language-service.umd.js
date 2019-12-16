@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.6+35.sha-4d99dfe.with-local-changes
+ * @license Angular v9.0.0-rc.6+60.sha-76e4870
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -9210,41 +9210,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return RecursiveVisitor;
     }());
-    function spanOf(ast) {
-        var start = ast.sourceSpan.start.offset;
-        var end = ast.sourceSpan.end.offset;
-        if (ast instanceof Element$1) {
-            if (ast.endSourceSpan) {
-                end = ast.endSourceSpan.end.offset;
-            }
-            else if (ast.children && ast.children.length) {
-                end = spanOf(ast.children[ast.children.length - 1]).end;
-            }
-        }
-        return { start: start, end: end };
-    }
-    function findNode(nodes, position) {
-        var path = [];
-        var visitor = new /** @class */ (function (_super) {
-            __extends(class_1, _super);
-            function class_1() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            class_1.prototype.visit = function (ast, context) {
-                var span = spanOf(ast);
-                if (span.start <= position && position < span.end) {
-                    path.push(ast);
-                }
-                else {
-                    // Returning a value here will result in the children being skipped.
-                    return true;
-                }
-            };
-            return class_1;
-        }(RecursiveVisitor));
-        visitAll$1(visitor, nodes);
-        return new AstPath(path, position);
-    }
 
     /**
      * @license
@@ -11540,9 +11505,19 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
             }
         };
-        // Parse an inline template binding. ie `<tag *tplKey="<tplValue>">`
-        BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps, targetVars) {
-            var bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteOffset);
+        /**
+         * Parses an inline template binding, e.g.
+         *    <tag *tplKey="<tplValue>">
+         * @param tplKey template binding name
+         * @param tplValue template binding value
+         * @param sourceSpan span of template binding relative to entire the template
+         * @param absoluteValueOffset start of the tplValue relative to the entire template
+         * @param targetMatchableAttrs potential attributes to match in the template
+         * @param targetProps target property bindings in the template
+         * @param targetVars target variables in the template
+         */
+        BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars) {
+            var bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteValueOffset);
             for (var i = 0; i < bindings.length; i++) {
                 var binding = bindings[i];
                 if (binding.keyIsVar) {
@@ -11553,15 +11528,23 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
                 else {
                     targetMatchableAttrs.push([binding.key, '']);
-                    this.parseLiteralAttr(binding.key, null, sourceSpan, absoluteOffset, undefined, targetMatchableAttrs, targetProps);
+                    this.parseLiteralAttr(binding.key, null, sourceSpan, absoluteValueOffset, undefined, targetMatchableAttrs, targetProps);
                 }
             }
         };
-        BindingParser.prototype._parseTemplateBindings = function (tplKey, tplValue, sourceSpan, absoluteOffset) {
+        /**
+         * Parses the bindings in an inline template binding, e.g.
+         *    <tag *tplKey="let value1 = prop; let value2 = localVar">
+         * @param tplKey template binding name
+         * @param tplValue template binding value
+         * @param sourceSpan span of template binding relative to entire the template
+         * @param absoluteValueOffset start of the tplValue relative to the entire template
+         */
+        BindingParser.prototype._parseTemplateBindings = function (tplKey, tplValue, sourceSpan, absoluteValueOffset) {
             var _this = this;
             var sourceInfo = sourceSpan.start.toString();
             try {
-                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, absoluteOffset);
+                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, absoluteValueOffset);
                 this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
                 bindingsResult.templateBindings.forEach(function (binding) {
                     if (binding.expression) {
@@ -14259,7 +14242,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     var ast = this.parsePipe();
                     var source = this.input.substring(start_1 - this.offset, this.inputIndex - this.offset);
                     expression =
-                        new ASTWithSource(ast, source, this.location, this.absoluteOffset, this.errors);
+                        new ASTWithSource(ast, source, this.location, this.absoluteOffset + start_1, this.errors);
                 }
                 bindings.push(new TemplateBinding(this.span(start), this.sourceSpan(start), key, isVar, name_2, expression));
                 if (this.peekKeywordAs() && !isVar) {
@@ -14957,9 +14940,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         var templateValue = attribute.value;
                         var templateKey = normalizedName.substring(TEMPLATE_ATTR_PREFIX$1.length);
                         var parsedVariables = [];
-                        var absoluteOffset = attribute.valueSpan ? attribute.valueSpan.start.offset :
-                            attribute.sourceSpan.start.offset;
-                        this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteOffset, [], templateParsedProperties, parsedVariables);
+                        var absoluteValueOffset = attribute.valueSpan ?
+                            attribute.valueSpan.start.offset :
+                            // If there is no value span the attribute does not have a value, like `attr` in
+                            //`<div attr></div>`. In this case, point to one character beyond the last character of
+                            // the attribute name.
+                            attribute.sourceSpan.start.offset + attribute.name.length;
+                        this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteValueOffset, [], templateParsedProperties, parsedVariables);
                         templateVariables.push.apply(templateVariables, __spread(parsedVariables.map(function (v) { return new Variable(v.name, v.value, v.sourceSpan); })));
                     }
                     else {
@@ -18706,7 +18693,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.6+35.sha-4d99dfe.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-rc.6+60.sha-76e4870');
 
     /**
      * @license
@@ -25206,6 +25193,267 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function isParseSourceSpan(value) {
+        return value && !!value.start;
+    }
+    function spanOf(span) {
+        if (!span)
+            return undefined;
+        if (isParseSourceSpan(span)) {
+            return { start: span.start.offset, end: span.end.offset };
+        }
+        else {
+            if (span.endSourceSpan) {
+                return { start: span.sourceSpan.start.offset, end: span.endSourceSpan.end.offset };
+            }
+            else if (span.children && span.children.length) {
+                return {
+                    start: span.sourceSpan.start.offset,
+                    end: spanOf(span.children[span.children.length - 1]).end
+                };
+            }
+            return { start: span.sourceSpan.start.offset, end: span.sourceSpan.end.offset };
+        }
+    }
+    function inSpan(position, span, exclusive) {
+        return span != null && (exclusive ? position >= span.start && position < span.end :
+            position >= span.start && position <= span.end);
+    }
+    function offsetSpan(span, amount) {
+        return { start: span.start + amount, end: span.end + amount };
+    }
+    function isNarrower(spanA, spanB) {
+        return spanA.start >= spanB.start && spanA.end <= spanB.end;
+    }
+    function hasTemplateReference(type) {
+        var e_1, _a;
+        if (type.diDeps) {
+            try {
+                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var diDep = _c.value;
+                    if (diDep.token && diDep.token.identifier &&
+                        identifierName(diDep.token.identifier) === 'TemplateRef')
+                        return true;
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        }
+        return false;
+    }
+    function getSelectors(info) {
+        var e_2, _a, e_3, _b;
+        var map = new Map();
+        var results = [];
+        try {
+            for (var _c = __values(info.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var directive = _d.value;
+                var selectors = CssSelector.parse(directive.selector);
+                try {
+                    for (var selectors_1 = (e_3 = void 0, __values(selectors)), selectors_1_1 = selectors_1.next(); !selectors_1_1.done; selectors_1_1 = selectors_1.next()) {
+                        var selector = selectors_1_1.value;
+                        results.push(selector);
+                        map.set(selector, directive);
+                    }
+                }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                finally {
+                    try {
+                        if (selectors_1_1 && !selectors_1_1.done && (_b = selectors_1.return)) _b.call(selectors_1);
+                    }
+                    finally { if (e_3) throw e_3.error; }
+                }
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        return { selectors: results, map: map };
+    }
+    function diagnosticInfoFromTemplateInfo(info) {
+        return {
+            fileName: info.template.fileName,
+            offset: info.template.span.start,
+            query: info.template.query,
+            members: info.template.members,
+            htmlAst: info.htmlAst,
+            templateAst: info.templateAst
+        };
+    }
+    function findTemplateAstAt(ast, position) {
+        var path = [];
+        var visitor = new /** @class */ (function (_super) {
+            __extends(class_1, _super);
+            function class_1() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            class_1.prototype.visit = function (ast, context) {
+                var span = spanOf(ast);
+                if (inSpan(position, span)) {
+                    var len = path.length;
+                    if (!len || isNarrower(span, spanOf(path[len - 1]))) {
+                        path.push(ast);
+                    }
+                }
+                else {
+                    // Returning a value here will result in the children being skipped.
+                    return true;
+                }
+            };
+            class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
+                return this.visitChildren(context, function (visit) {
+                    // Ignore reference, variable and providers
+                    visit(ast.attrs);
+                    visit(ast.directives);
+                    visit(ast.children);
+                });
+            };
+            class_1.prototype.visitElement = function (ast, context) {
+                return this.visitChildren(context, function (visit) {
+                    // Ingnore providers
+                    visit(ast.attrs);
+                    visit(ast.inputs);
+                    visit(ast.outputs);
+                    visit(ast.references);
+                    visit(ast.directives);
+                    visit(ast.children);
+                });
+            };
+            class_1.prototype.visitDirective = function (ast, context) {
+                // Ignore the host properties of a directive
+                var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
+                // We never care about the diretive itself, just its inputs.
+                if (path[path.length - 1] === ast) {
+                    path.pop();
+                }
+                return result;
+            };
+            return class_1;
+        }(RecursiveTemplateAstVisitor));
+        templateVisitAll(visitor, ast);
+        return new AstPath(path, position);
+    }
+    /**
+     * Return the node that most tightly encompass the specified `position`.
+     * @param node
+     * @param position
+     */
+    function findTightestNode(node, position) {
+        if (node.getStart() <= position && position < node.getEnd()) {
+            return node.forEachChild(function (c) { return findTightestNode(c, position); }) || node;
+        }
+    }
+    /**
+     * Return metadata about `node` if it looks like an Angular directive class.
+     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
+     * `@Pipe`, etc.
+     * These class declarations all share some common attributes, namely their
+     * decorator takes exactly one parameter and the parameter must be an object
+     * literal.
+     *
+     * For example,
+     *     v---------- `decoratorId`
+     * @NgModule({
+     *   declarations: [],
+     * })
+     * class AppModule {}
+     *          ^----- `classDecl`
+     *
+     * @param node Potential node that represents an Angular directive.
+     */
+    function getDirectiveClassLike(node) {
+        var e_4, _a;
+        if (!ts.isClassDeclaration(node) || !node.name || !node.decorators) {
+            return;
+        }
+        try {
+            for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var d = _c.value;
+                var expr = d.expression;
+                if (!ts.isCallExpression(expr) || expr.arguments.length !== 1 ||
+                    !ts.isIdentifier(expr.expression)) {
+                    continue;
+                }
+                var arg = expr.arguments[0];
+                if (ts.isObjectLiteralExpression(arg)) {
+                    return {
+                        decoratorId: expr.expression,
+                        classDecl: node,
+                    };
+                }
+            }
+        }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_4) throw e_4.error; }
+        }
+    }
+    /**
+     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
+     * type T.
+     *
+     * @param startNode node to start searching for nested property assignment from
+     * @param propName property assignment name
+     * @param predicate function to verify that a node is of type T.
+     * @return node property assignment value of type T, or undefined if none is found
+     */
+    function findPropertyValueOfType(startNode, propName, predicate) {
+        if (ts.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
+            var initializer = startNode.initializer;
+            if (predicate(initializer))
+                return initializer;
+        }
+        return startNode.forEachChild(function (c) { return findPropertyValueOfType(c, propName, predicate); });
+    }
+    /**
+     * Find the tightest node at the specified `position` from the AST `nodes`, and
+     * return the path to the node.
+     * @param nodes HTML AST nodes
+     * @param position
+     */
+    function getPathToNodeAtPosition(nodes, position) {
+        var path = [];
+        var visitor = new /** @class */ (function (_super) {
+            __extends(class_2, _super);
+            function class_2() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            class_2.prototype.visit = function (ast) {
+                var span = spanOf(ast);
+                if (inSpan(position, span)) {
+                    path.push(ast);
+                }
+                else {
+                    // Returning a truthy value here will skip all children and terminate
+                    // the visit.
+                    return true;
+                }
+            };
+            return class_2;
+        }(RecursiveVisitor));
+        visitAll$1(visitor, nodes);
+        return new AstPath(path, position);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function getTemplateExpressionDiagnostics(info) {
         var visitor = new ExpressionDiagnosticsVisitor(info, function (path, includeEvent) {
             return getExpressionScope(info, path, includeEvent);
@@ -25472,14 +25720,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.push(ast);
             // Find directive that references this template
             this.directiveSummary =
-                ast.directives.map(function (d) { return d.directive; }).find(function (d) { return hasTemplateReference(d.type); });
+                ast.directives.map(function (d) { return d.directive; }).find(function (d) { return hasTemplateReference$1(d.type); });
             // Process children
             _super.prototype.visitEmbeddedTemplate.call(this, ast, context);
             this.pop();
             this.directiveSummary = previousDirectiveSummary;
         };
         ExpressionDiagnosticsVisitor.prototype.attributeValueLocation = function (ast) {
-            var path = findNode(this.info.htmlAst, ast.sourceSpan.start.offset);
+            var path = getPathToNodeAtPosition(this.info.htmlAst, ast.sourceSpan.start.offset);
             var last = path.tail;
             if (last instanceof Attribute && last.valueSpan) {
                 return last.valueSpan.start.offset;
@@ -25493,7 +25741,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             (_a = this.diagnostics).push.apply(_a, __spread(getExpressionDiagnostics(scope, ast, this.info.query, {
                 event: includeEvent
             }).map(function (d) { return ({
-                span: offsetSpan(d.ast.span, offset + _this.info.offset),
+                span: offsetSpan$1(d.ast.span, offset + _this.info.offset),
                 kind: d.kind,
                 message: d.message
             }); })));
@@ -25502,15 +25750,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
         ExpressionDiagnosticsVisitor.prototype.reportError = function (message, span) {
             if (span) {
-                this.diagnostics.push({ span: offsetSpan(span, this.info.offset), kind: ts.DiagnosticCategory.Error, message: message });
+                this.diagnostics.push({ span: offsetSpan$1(span, this.info.offset), kind: ts.DiagnosticCategory.Error, message: message });
             }
         };
         ExpressionDiagnosticsVisitor.prototype.reportWarning = function (message, span) {
-            this.diagnostics.push({ span: offsetSpan(span, this.info.offset), kind: ts.DiagnosticCategory.Warning, message: message });
+            this.diagnostics.push({ span: offsetSpan$1(span, this.info.offset), kind: ts.DiagnosticCategory.Warning, message: message });
         };
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
-    function hasTemplateReference(type) {
+    function hasTemplateReference$1(type) {
         var e_3, _a;
         if (type.diDeps) {
             try {
@@ -25531,7 +25779,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         return false;
     }
-    function offsetSpan(span, amount) {
+    function offsetSpan$1(span, amount) {
         return { start: span.start + amount, end: span.end + amount };
     }
     function spanOf$1(sourceSpan) {
@@ -25574,239 +25822,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         CompletionKind["TYPE"] = "type";
         CompletionKind["VARIABLE"] = "variable";
     })(CompletionKind || (CompletionKind = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function isParseSourceSpan(value) {
-        return value && !!value.start;
-    }
-    function spanOf$2(span) {
-        if (!span)
-            return undefined;
-        if (isParseSourceSpan(span)) {
-            return { start: span.start.offset, end: span.end.offset };
-        }
-        else {
-            if (span.endSourceSpan) {
-                return { start: span.sourceSpan.start.offset, end: span.endSourceSpan.end.offset };
-            }
-            else if (span.children && span.children.length) {
-                return {
-                    start: span.sourceSpan.start.offset,
-                    end: spanOf$2(span.children[span.children.length - 1]).end
-                };
-            }
-            return { start: span.sourceSpan.start.offset, end: span.sourceSpan.end.offset };
-        }
-    }
-    function inSpan(position, span, exclusive) {
-        return span != null && (exclusive ? position >= span.start && position < span.end :
-            position >= span.start && position <= span.end);
-    }
-    function offsetSpan$1(span, amount) {
-        return { start: span.start + amount, end: span.end + amount };
-    }
-    function isNarrower(spanA, spanB) {
-        return spanA.start >= spanB.start && spanA.end <= spanB.end;
-    }
-    function hasTemplateReference$1(type) {
-        var e_1, _a;
-        if (type.diDeps) {
-            try {
-                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var diDep = _c.value;
-                    if (diDep.token && diDep.token.identifier &&
-                        identifierName(diDep.token.identifier) === 'TemplateRef')
-                        return true;
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-        }
-        return false;
-    }
-    function getSelectors(info) {
-        var e_2, _a, e_3, _b;
-        var map = new Map();
-        var results = [];
-        try {
-            for (var _c = __values(info.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
-                var directive = _d.value;
-                var selectors = CssSelector.parse(directive.selector);
-                try {
-                    for (var selectors_1 = (e_3 = void 0, __values(selectors)), selectors_1_1 = selectors_1.next(); !selectors_1_1.done; selectors_1_1 = selectors_1.next()) {
-                        var selector = selectors_1_1.value;
-                        results.push(selector);
-                        map.set(selector, directive);
-                    }
-                }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
-                finally {
-                    try {
-                        if (selectors_1_1 && !selectors_1_1.done && (_b = selectors_1.return)) _b.call(selectors_1);
-                    }
-                    finally { if (e_3) throw e_3.error; }
-                }
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-        return { selectors: results, map: map };
-    }
-    function diagnosticInfoFromTemplateInfo(info) {
-        return {
-            fileName: info.template.fileName,
-            offset: info.template.span.start,
-            query: info.template.query,
-            members: info.template.members,
-            htmlAst: info.htmlAst,
-            templateAst: info.templateAst
-        };
-    }
-    function findTemplateAstAt(ast, position, allowWidening) {
-        if (allowWidening === void 0) { allowWidening = false; }
-        var path = [];
-        var visitor = new /** @class */ (function (_super) {
-            __extends(class_1, _super);
-            function class_1() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            class_1.prototype.visit = function (ast, context) {
-                var span = spanOf$2(ast);
-                if (inSpan(position, span)) {
-                    var len = path.length;
-                    if (!len || allowWidening || isNarrower(span, spanOf$2(path[len - 1]))) {
-                        path.push(ast);
-                    }
-                }
-                else {
-                    // Returning a value here will result in the children being skipped.
-                    return true;
-                }
-            };
-            class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
-                return this.visitChildren(context, function (visit) {
-                    // Ignore reference, variable and providers
-                    visit(ast.attrs);
-                    visit(ast.directives);
-                    visit(ast.children);
-                });
-            };
-            class_1.prototype.visitElement = function (ast, context) {
-                return this.visitChildren(context, function (visit) {
-                    // Ingnore providers
-                    visit(ast.attrs);
-                    visit(ast.inputs);
-                    visit(ast.outputs);
-                    visit(ast.references);
-                    visit(ast.directives);
-                    visit(ast.children);
-                });
-            };
-            class_1.prototype.visitDirective = function (ast, context) {
-                // Ignore the host properties of a directive
-                var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
-                // We never care about the diretive itself, just its inputs.
-                if (path[path.length - 1] === ast) {
-                    path.pop();
-                }
-                return result;
-            };
-            return class_1;
-        }(RecursiveTemplateAstVisitor));
-        templateVisitAll(visitor, ast);
-        return new AstPath(path, position);
-    }
-    /**
-     * Return the node that most tightly encompass the specified `position`.
-     * @param node
-     * @param position
-     */
-    function findTightestNode(node, position) {
-        if (node.getStart() <= position && position < node.getEnd()) {
-            return node.forEachChild(function (c) { return findTightestNode(c, position); }) || node;
-        }
-    }
-    /**
-     * Return metadata about `node` if it looks like an Angular directive class.
-     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
-     * `@Pipe`, etc.
-     * These class declarations all share some common attributes, namely their
-     * decorator takes exactly one parameter and the parameter must be an object
-     * literal.
-     *
-     * For example,
-     *     v---------- `decoratorId`
-     * @NgModule({
-     *   declarations: [],
-     * })
-     * class AppModule {}
-     *          ^----- `classDecl`
-     *
-     * @param node Potential node that represents an Angular directive.
-     */
-    function getDirectiveClassLike(node) {
-        var e_4, _a;
-        if (!ts.isClassDeclaration(node) || !node.name || !node.decorators) {
-            return;
-        }
-        try {
-            for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var d = _c.value;
-                var expr = d.expression;
-                if (!ts.isCallExpression(expr) || expr.arguments.length !== 1 ||
-                    !ts.isIdentifier(expr.expression)) {
-                    continue;
-                }
-                var arg = expr.arguments[0];
-                if (ts.isObjectLiteralExpression(arg)) {
-                    return {
-                        decoratorId: expr.expression,
-                        classDecl: node,
-                    };
-                }
-            }
-        }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_4) throw e_4.error; }
-        }
-    }
-    /**
-     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
-     * type T.
-     *
-     * @param startNode node to start searching for nested property assignment from
-     * @param propName property assignment name
-     * @param predicate function to verify that a node is of type T.
-     * @return node property assignment value of type T, or undefined if none is found
-     */
-    function findPropertyValueOfType(startNode, propName, predicate) {
-        if (ts.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
-            var initializer = startNode.initializer;
-            if (predicate(initializer))
-                return initializer;
-        }
-        return startNode.forEachChild(function (c) { return findPropertyValueOfType(c, propName, predicate); });
-    }
 
     /**
      * @license
@@ -27637,7 +27652,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var htmlAst = templateInfo.htmlAst, template = templateInfo.template;
         // The templateNode starts at the delimiter character so we add 1 to skip it.
         var templatePosition = position - template.span.start;
-        var path = findNode(htmlAst, templatePosition);
+        var path = getPathToNodeAtPosition(htmlAst, templatePosition);
         var mostSpecific = path.tail;
         if (path.empty || !mostSpecific) {
             result = elementCompletions(templateInfo);
@@ -27646,7 +27661,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var astPosition_1 = templatePosition - mostSpecific.sourceSpan.start.offset;
             mostSpecific.visit({
                 visitElement: function (ast) {
-                    var startTagSpan = spanOf$2(ast.sourceSpan);
+                    var startTagSpan = spanOf(ast.sourceSpan);
                     var tagLen = ast.name.length;
                     // + 1 for the opening angle bracket
                     if (templatePosition <= startTagSpan.start + tagLen + 1) {
@@ -27660,17 +27675,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 },
                 visitAttribute: function (ast) {
-                    if (!ast.valueSpan || !inSpan(templatePosition, spanOf$2(ast.valueSpan))) {
+                    if (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan))) {
                         // We are in the name of an attribute. Show attribute completions.
                         result = attributeCompletions(templateInfo, path);
                     }
-                    else if (ast.valueSpan && inSpan(templatePosition, spanOf$2(ast.valueSpan))) {
+                    else if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
                         result = attributeValueCompletions(templateInfo, templatePosition, ast);
                     }
                 },
                 visitText: function (ast) {
                     // Check if we are in a entity.
-                    result = entityCompletions(getSourceText(template, spanOf$2(ast)), astPosition_1);
+                    result = entityCompletions(getSourceText(template, spanOf(ast)), astPosition_1);
                     if (result.length)
                         return result;
                     result = interpolationCompletions(templateInfo, templatePosition);
@@ -27783,18 +27798,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var dinfo = diagnosticInfoFromTemplateInfo(info);
         var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); }, attr);
         path.tail.visit(visitor, null);
-        var results = visitor.results;
-        if (results.length) {
-            return results;
-        }
-        // Try allowing widening the path
-        var widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
-        if (widerPath.tail) {
-            var widerVisitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, widerPath, false); }, attr);
-            widerPath.tail.visit(widerVisitor, null);
-            return widerVisitor.results;
-        }
-        return results;
+        return visitor.results;
     }
     function elementCompletions(info) {
         var e_4, _a;
@@ -27941,23 +27945,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.addSymbolsToCompletions(symbols);
             }
         };
-        ExpressionVisitor.prototype.addKeysToCompletions = function (selector, key) {
-            if (key !== 'ngFor') {
-                return;
-            }
-            this.completions.set('let', {
-                name: 'let',
-                kind: CompletionKind.KEY,
-                sortText: 'let',
-            });
-            if (selector.attrs.some(function (attr) { return attr === 'ngForOf'; })) {
-                this.completions.set('of', {
-                    name: 'of',
-                    kind: CompletionKind.KEY,
-                    sortText: 'of',
-                });
-            }
-        };
         ExpressionVisitor.prototype.addSymbolsToCompletions = function (symbols) {
             var e_5, _a;
             try {
@@ -28039,7 +28026,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.addAttributeValuesToCompletions(binding.expression.ast, this.position);
                 return;
             }
-            this.addKeysToCompletions(selector, key);
         };
         return ExpressionVisitor;
     }(NullTemplateVisitor));
@@ -28064,7 +28050,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     for (var _k = (e_7 = void 0, __values(selector.attrs)), _l = _k.next(); !_l.done; _l = _k.next()) {
                         var attr = _l.value;
                         if (attr) {
-                            if (hasTemplateReference$1(summary.type)) {
+                            if (hasTemplateReference(summary.type)) {
                                 templateRefs.add(attr);
                             }
                             else {
@@ -28219,7 +28205,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 if (inEvent === void 0) { inEvent = false; }
                 var attribute = findAttribute(info, position);
                 if (attribute) {
-                    if (inSpan(templatePosition, spanOf$2(attribute.valueSpan))) {
+                    if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path, inEvent);
                         if (attribute.valueSpan) {
@@ -28227,7 +28213,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             if (result) {
                                 symbol_1 = result.symbol;
                                 var expressionOffset = attribute.valueSpan.start.offset;
-                                span_1 = offsetSpan$1(result.span, expressionOffset);
+                                span_1 = offsetSpan(result.span, expressionOffset);
                             }
                         }
                         return true;
@@ -28244,7 +28230,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         compileTypeSummary = component.directive;
                         symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.COMPONENT);
-                        span_1 = spanOf$2(ast);
+                        span_1 = spanOf(ast);
                     }
                     else {
                         // Find a directive that matches the element name
@@ -28253,20 +28239,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             compileTypeSummary = directive.directive;
                             symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
                             symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.DIRECTIVE);
-                            span_1 = spanOf$2(ast);
+                            span_1 = spanOf(ast);
                         }
                     }
                 },
                 visitReference: function (ast) {
                     symbol_1 = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
-                    span_1 = spanOf$2(ast);
+                    span_1 = spanOf(ast);
                 },
                 visitVariable: function (ast) { },
                 visitEvent: function (ast) {
                     if (!attributeValueSymbol_1(ast.handler, /* inEvent */ true)) {
                         symbol_1 = findOutputBinding(info, path, ast);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.EVENT);
-                        span_1 = spanOf$2(ast);
+                        span_1 = spanOf(ast);
                     }
                 },
                 visitElementProperty: function (ast) { attributeValueSymbol_1(ast.value); },
@@ -28302,7 +28288,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     matcher.match(parsedAttribute[0], function (_, directive) {
                         symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.DIRECTIVE);
-                        span_1 = spanOf$2(ast);
+                        span_1 = spanOf(ast);
                     });
                 },
                 visitBoundText: function (ast) {
@@ -28313,7 +28299,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template.query);
                         if (result) {
                             symbol_1 = result.symbol;
-                            span_1 = offsetSpan$1(result.span, ast.sourceSpan.start.offset);
+                            span_1 = offsetSpan(result.span, ast.sourceSpan.start.offset);
                         }
                     }
                 },
@@ -28321,23 +28307,23 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 visitDirective: function (ast) {
                     compileTypeSummary = ast.directive;
                     symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
-                    span_1 = spanOf$2(ast);
+                    span_1 = spanOf(ast);
                 },
                 visitDirectiveProperty: function (ast) {
                     if (!attributeValueSymbol_1(ast.value)) {
                         symbol_1 = findInputBinding(info, path, ast);
-                        span_1 = spanOf$2(ast);
+                        span_1 = spanOf(ast);
                     }
                 }
             }, null);
             if (symbol_1 && span_1) {
-                return { symbol: symbol_1, span: offsetSpan$1(span_1, info.template.span.start), compileTypeSummary: compileTypeSummary };
+                return { symbol: symbol_1, span: offsetSpan(span_1, info.template.span.start), compileTypeSummary: compileTypeSummary };
             }
         }
     }
     function findAttribute(info, position) {
         var templatePosition = position - info.template.span.start;
-        var path = findNode(info.htmlAst, templatePosition);
+        var path = getPathToNodeAtPosition(info.htmlAst, templatePosition);
         return path.first(Attribute);
     }
     function findInputBinding(info, path, binding) {
@@ -28609,7 +28595,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return parseErrors.map(function (e) {
                 return {
                     kind: ts.DiagnosticCategory.Error,
-                    span: offsetSpan$1(spanOf$2(e.span), template.span.start),
+                    span: offsetSpan(spanOf(e.span), template.span.start),
                     message: e.msg,
                 };
             });
@@ -29393,17 +29379,34 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * `ɵprov` on an ancestor only.
      */
     function getInheritedInjectableDef(type) {
-        var def = type && (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF]);
+        // See `jit/injectable.ts#compileInjectable` for context on NG_PROV_DEF_FALLBACK.
+        var def = type && (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF] ||
+            (type[NG_PROV_DEF_FALLBACK] && type[NG_PROV_DEF_FALLBACK]()));
         if (def) {
+            var typeName = getTypeName(type);
             // TODO(FW-1307): Re-add ngDevMode when closure can handle it
             // ngDevMode &&
-            console.warn("DEPRECATED: DI is instantiating a token \"" + type.name + "\" that inherits its @Injectable decorator but does not provide one itself.\n" +
-                ("This will become an error in v10. Please add @Injectable() to the \"" + type.name + "\" class."));
+            console.warn("DEPRECATED: DI is instantiating a token \"" + typeName + "\" that inherits its @Injectable decorator but does not provide one itself.\n" +
+                ("This will become an error in v10. Please add @Injectable() to the \"" + typeName + "\" class."));
             return def;
         }
         else {
             return null;
         }
+    }
+    /** Gets the name of a type, accounting for some cross-browser differences. */
+    function getTypeName(type) {
+        // `Function.prototype.name` behaves differently between IE and other browsers. In most browsers
+        // it'll always return the name of the function itself, no matter how many other functions it
+        // inherits from. On IE the function doesn't have its own `name` property, but it takes it from
+        // the lowest level in the prototype chain. E.g. if we have `class Foo extends Parent` most
+        // browsers will evaluate `Foo.name` to `Foo` while IE will return `Parent`. We work around
+        // the issue by converting the function to a string and parsing its name out that way via a regex.
+        if (type.hasOwnProperty('name')) {
+            return type.name;
+        }
+        var match = ('' + type).match(/^function\s*([^\s(]+)/);
+        return match === null ? '' : match[1];
     }
     /**
      * Read the injector def type in a way which is immune to accidentally reading inherited value.
@@ -29417,6 +29420,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     var NG_PROV_DEF = getClosureSafeProperty({ ɵprov: getClosureSafeProperty });
     var NG_INJ_DEF = getClosureSafeProperty({ ɵinj: getClosureSafeProperty });
+    // On IE10 properties defined via `defineProperty` won't be inherited by child classes,
+    // which will break inheriting the injectable definition from a grandparent through an
+    // undecorated parent class. We work around it by defining a fallback method which will be
+    // used to retrieve the definition. This should only be a problem in JIT mode, because in
+    // AOT TypeScript seems to have a workaround for static properties. When inheriting from an
+    // undecorated parent is no longer supported in v10, this can safely be removed.
+    var NG_PROV_DEF_FALLBACK = getClosureSafeProperty({ ɵprovFallback: getClosureSafeProperty });
     // We need to keep these around so we can read off old defs if new defs are unavailable
     var NG_INJECTABLE_DEF = getClosureSafeProperty({ ngInjectableDef: getClosureSafeProperty });
     var NG_INJECTOR_DEF = getClosureSafeProperty({ ngInjectorDef: getClosureSafeProperty });
@@ -36823,11 +36833,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (isValueProvider(provider)) {
                 factory = function () { return resolveForwardRef$1(provider.useValue); };
             }
-            else if (isExistingProvider(provider)) {
-                factory = function () { return ɵɵinject(resolveForwardRef$1(provider.useExisting)); };
-            }
             else if (isFactoryProvider(provider)) {
                 factory = function () { return provider.useFactory.apply(provider, __spread(injectArgs(provider.deps || []))); };
+            }
+            else if (isExistingProvider(provider)) {
+                factory = function () { return ɵɵinject(resolveForwardRef$1(provider.useExisting)); };
             }
             else {
                 var classRef_1 = resolveForwardRef$1(provider &&
@@ -38934,7 +38944,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.6+35.sha-4d99dfe.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-rc.6+60.sha-76e4870');
 
     /**
      * @license
@@ -45925,10 +45935,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var eAttrs = element.attributes;
                 for (var i = 0; i < eAttrs.length; i++) {
                     var attr = eAttrs[i];
+                    var lowercaseName = attr.name.toLowerCase();
                     // Make sure that we don't assign the same attribute both in its
                     // case-sensitive form and the lower-cased one from the browser.
-                    if (lowercaseTNodeAttrs.indexOf(attr.name) === -1) {
-                        attributes[attr.name] = attr.value;
+                    if (lowercaseTNodeAttrs.indexOf(lowercaseName) === -1) {
+                        // Save the lowercase name to align the behavior between browsers.
+                        // IE preserves the case, while all other browser convert it to lower case.
+                        attributes[lowercaseName] = attr.value;
                     }
                 }
                 return attributes;
@@ -50427,7 +50440,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var candidate = getDirectiveClassLike(child);
                 if (candidate) {
                     var decoratorId = candidate.decoratorId, classDecl = candidate.classDecl;
-                    var declarationSpan = spanOf$3(decoratorId);
+                    var declarationSpan = spanOf$2(decoratorId);
                     var className = classDecl.name.text;
                     var classSymbol = _this.reflector.getStaticSymbol(sourceFile.fileName, className);
                     // Ask the resolver to check if candidate is actually Angular directive
@@ -50737,7 +50750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         return result;
     }
-    function spanOf$3(node) {
+    function spanOf$2(node) {
         return { start: node.getStart(), end: node.getEnd() };
     }
     function spanAt$1(sourceFile, line, column) {
@@ -50854,7 +50867,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.6+35.sha-4d99dfe.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-rc.6+60.sha-76e4870');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
