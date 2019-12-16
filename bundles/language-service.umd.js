@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+483.sha-23cf11a
+ * @license Angular v9.0.0-rc.1+488.sha-28b4f4a
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18728,7 +18728,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+483.sha-23cf11a');
+    var VERSION$1 = new Version('9.0.0-rc.1+488.sha-28b4f4a');
 
     /**
      * @license
@@ -25700,8 +25700,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             templateAst: info.templateAst
         };
     }
-    function findTemplateAstAt(ast, position, allowWidening) {
-        if (allowWidening === void 0) { allowWidening = false; }
+    function findTemplateAstAt(ast, position) {
         var path = [];
         var visitor = new /** @class */ (function (_super) {
             __extends(class_1, _super);
@@ -25712,7 +25711,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var span = spanOf$2(ast);
                 if (inSpan(position, span)) {
                     var len = path.length;
-                    if (!len || allowWidening || isNarrower(span, spanOf$2(path[len - 1]))) {
+                    if (!len || isNarrower(span, spanOf$2(path[len - 1]))) {
                         path.push(ast);
                     }
                 }
@@ -27805,18 +27804,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var dinfo = diagnosticInfoFromTemplateInfo(info);
         var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); }, attr);
         path.tail.visit(visitor, null);
-        var results = visitor.results;
-        if (results.length) {
-            return results;
-        }
-        // Try allowing widening the path
-        var widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
-        if (widerPath.tail) {
-            var widerVisitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, widerPath, false); }, attr);
-            widerPath.tail.visit(widerVisitor, null);
-            return widerVisitor.results;
-        }
-        return results;
+        return visitor.results;
     }
     function elementCompletions(info) {
         var e_4, _a;
@@ -27963,23 +27951,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.addSymbolsToCompletions(symbols);
             }
         };
-        ExpressionVisitor.prototype.addKeysToCompletions = function (selector, key) {
-            if (key !== 'ngFor') {
-                return;
-            }
-            this.completions.set('let', {
-                name: 'let',
-                kind: CompletionKind.KEY,
-                sortText: 'let',
-            });
-            if (selector.attrs.some(function (attr) { return attr === 'ngForOf'; })) {
-                this.completions.set('of', {
-                    name: 'of',
-                    kind: CompletionKind.KEY,
-                    sortText: 'of',
-                });
-            }
-        };
         ExpressionVisitor.prototype.addSymbolsToCompletions = function (symbols) {
             var e_5, _a;
             try {
@@ -28061,7 +28032,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.addAttributeValuesToCompletions(binding.expression.ast, this.position);
                 return;
             }
-            this.addKeysToCompletions(selector, key);
         };
         return ExpressionVisitor;
     }(NullTemplateVisitor));
@@ -36869,11 +36839,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (isValueProvider(provider)) {
                 factory = function () { return resolveForwardRef$1(provider.useValue); };
             }
-            else if (isExistingProvider(provider)) {
-                factory = function () { return ɵɵinject(resolveForwardRef$1(provider.useExisting)); };
-            }
             else if (isFactoryProvider(provider)) {
                 factory = function () { return provider.useFactory.apply(provider, __spread(injectArgs(provider.deps || []))); };
+            }
+            else if (isExistingProvider(provider)) {
+                factory = function () { return ɵɵinject(resolveForwardRef$1(provider.useExisting)); };
             }
             else {
                 var classRef_1 = resolveForwardRef$1(provider &&
@@ -38980,7 +38950,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+483.sha-23cf11a');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+488.sha-28b4f4a');
 
     /**
      * @license
@@ -50904,7 +50874,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+483.sha-23cf11a');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+488.sha-28b4f4a');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
