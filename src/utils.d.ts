@@ -27,7 +27,7 @@ export declare function hasTemplateReference(type: CompileTypeMetadata): boolean
 export declare function getSelectors(info: AstResult): SelectorInfo;
 export declare function isTypescriptVersion(low: string, high?: string): boolean;
 export declare function diagnosticInfoFromTemplateInfo(info: AstResult): DiagnosticTemplateInfo;
-export declare function findTemplateAstAt(ast: TemplateAst[], position: number, allowWidening?: boolean): TemplateAstPath;
+export declare function findTemplateAstAt(ast: TemplateAst[], position: number): TemplateAstPath;
 /**
  * Return the node that most tightly encompass the specified `position`.
  * @param node
