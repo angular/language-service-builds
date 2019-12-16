@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/utils" />
-import { CompileTypeMetadata, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
+import { CompileTypeMetadata, HtmlAstPath, Node, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult, SelectorInfo } from './common';
 import { DiagnosticTemplateInfo } from './expression_diagnostics';
@@ -67,4 +67,11 @@ export declare function getDirectiveClassLike(node: ts.Node): DirectiveClassLike
  * @return node property assignment value of type T, or undefined if none is found
  */
 export declare function findPropertyValueOfType<T extends ts.Node>(startNode: ts.Node, propName: string, predicate: (node: ts.Node) => node is T): T | undefined;
+/**
+ * Find the tightest node at the specified `position` from the AST `nodes`, and
+ * return the path to the node.
+ * @param nodes HTML AST nodes
+ * @param position
+ */
+export declare function getPathToNodeAtPosition(nodes: Node[], position: number): HtmlAstPath;
 export {};
