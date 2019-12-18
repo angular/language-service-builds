@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+499.sha-9d1175e
+ * @license Angular v9.0.0-rc.1+502.sha-dfecca2
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18693,7 +18693,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+499.sha-9d1175e');
+    var VERSION$1 = new Version('9.0.0-rc.1+502.sha-dfecca2');
 
     /**
      * @license
@@ -25227,22 +25227,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     function hasTemplateReference(type) {
         var e_1, _a;
-        if (type.diDeps) {
+        try {
+            for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var diDep = _c.value;
+                if (diDep.token && identifierName(diDep.token.identifier) === Identifiers.TemplateRef.name) {
+                    return true;
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
             try {
-                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var diDep = _c.value;
-                    if (diDep.token && diDep.token.identifier &&
-                        identifierName(diDep.token.identifier) === 'TemplateRef')
-                        return true;
-                }
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
+            finally { if (e_1) throw e_1.error; }
         }
         return false;
     }
@@ -27579,6 +27577,32 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             sortText: 'ng-template',
         },
     ];
+    // This is adapted from packages/compiler/src/render3/r3_template_transform.ts
+    // to allow empty binding names.
+    var BIND_NAME_REGEXP$2 = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.*))|\[\(([^\)]*)\)\]|\[([^\]]*)\]|\(([^\)]*)\))$/;
+    var ATTR;
+    (function (ATTR) {
+        // Group 1 = "bind-"
+        ATTR[ATTR["KW_BIND_IDX"] = 1] = "KW_BIND_IDX";
+        // Group 2 = "let-"
+        ATTR[ATTR["KW_LET_IDX"] = 2] = "KW_LET_IDX";
+        // Group 3 = "ref-/#"
+        ATTR[ATTR["KW_REF_IDX"] = 3] = "KW_REF_IDX";
+        // Group 4 = "on-"
+        ATTR[ATTR["KW_ON_IDX"] = 4] = "KW_ON_IDX";
+        // Group 5 = "bindon-"
+        ATTR[ATTR["KW_BINDON_IDX"] = 5] = "KW_BINDON_IDX";
+        // Group 6 = "@"
+        ATTR[ATTR["KW_AT_IDX"] = 6] = "KW_AT_IDX";
+        // Group 7 = the identifier after "bind-", "let-", "ref-/#", "on-", "bindon-" or "@"
+        ATTR[ATTR["IDENT_KW_IDX"] = 7] = "IDENT_KW_IDX";
+        // Group 8 = identifier inside [()]
+        ATTR[ATTR["IDENT_BANANA_BOX_IDX"] = 8] = "IDENT_BANANA_BOX_IDX";
+        // Group 9 = identifier inside []
+        ATTR[ATTR["IDENT_PROPERTY_IDX"] = 9] = "IDENT_PROPERTY_IDX";
+        // Group 10 = identifier inside ()
+        ATTR[ATTR["IDENT_EVENT_IDX"] = 10] = "IDENT_EVENT_IDX";
+    })(ATTR || (ATTR = {}));
     function isIdentifierPart$1(code) {
         // Identifiers consist of alphanumeric characters, '_', or '$'.
         return isAsciiLetter(code) || isDigit(code) || code == $$ || code == $_;
@@ -27671,7 +27695,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     else if (templatePosition < startTagSpan.end) {
                         // We are in the attribute section of the element (but not in an attribute).
                         // Return the attribute completions.
-                        result = attributeCompletions(templateInfo, path);
+                        result = attributeCompletionsForElement(templateInfo, ast.name);
                     }
                 },
                 visitAttribute: function (ast) {
@@ -27721,20 +27745,58 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
     }
     function attributeCompletions(info, path) {
-        var item = path.tail instanceof Element$1 ? path.tail : path.parentOf(path.tail);
-        if (item instanceof Element$1) {
-            return attributeCompletionsForElement(info, item.name);
+        var attr = path.tail;
+        var elem = path.parentOf(attr);
+        if (!(attr instanceof Attribute) || !(elem instanceof Element$1)) {
+            return [];
         }
-        return [];
+        // TODO: Consider parsing the attrinute name to a proper AST instead of
+        // matching using regex. This is because the regexp would incorrectly identify
+        // bind parts for cases like [()|]
+        //                              ^ cursor is here
+        var bindParts = attr.name.match(BIND_NAME_REGEXP$2);
+        // TemplateRef starts with '*'. See https://angular.io/api/core/TemplateRef
+        var isTemplateRef = attr.name.startsWith('*');
+        var isBinding = bindParts !== null || isTemplateRef;
+        if (!isBinding) {
+            return attributeCompletionsForElement(info, elem.name);
+        }
+        var results = [];
+        var ngAttrs = angularAttributes(info, elem.name);
+        if (!bindParts) {
+            // If bindParts is null then this must be a TemplateRef.
+            results.push.apply(results, __spread(ngAttrs.templateRefs));
+        }
+        else if (bindParts[ATTR.KW_BIND_IDX] !== undefined ||
+            bindParts[ATTR.IDENT_PROPERTY_IDX] !== undefined) {
+            // property binding via bind- or []
+            results.push.apply(results, __spread(propertyNames(elem.name), ngAttrs.inputs));
+        }
+        else if (bindParts[ATTR.KW_ON_IDX] !== undefined || bindParts[ATTR.IDENT_EVENT_IDX] !== undefined) {
+            // event binding via on- or ()
+            results.push.apply(results, __spread(eventNames(elem.name), ngAttrs.outputs));
+        }
+        else if (bindParts[ATTR.KW_BINDON_IDX] !== undefined ||
+            bindParts[ATTR.IDENT_BANANA_BOX_IDX] !== undefined) {
+            // banana-in-a-box binding via bindon- or [()]
+            results.push.apply(results, __spread(ngAttrs.bananas));
+        }
+        return results.map(function (name) {
+            return {
+                name: name,
+                kind: CompletionKind.ATTRIBUTE,
+                sortText: name,
+            };
+        });
     }
     function attributeCompletionsForElement(info, elementName) {
-        var e_1, _a, e_2, _b, e_3, _c;
+        var e_1, _a, e_2, _b;
         var results = [];
         if (info.template instanceof InlineTemplate) {
             try {
                 // Provide HTML attributes completion only for inline templates
-                for (var _d = __values(attributeNames(elementName)), _e = _d.next(); !_e.done; _e = _d.next()) {
-                    var name_1 = _e.value;
+                for (var _c = __values(attributeNames(elementName)), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var name_1 = _d.value;
                     results.push({
                         name: name_1,
                         kind: CompletionKind.HTML_ATTRIBUTE,
@@ -27745,17 +27807,18 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
         }
+        // Add Angular attributes
+        var ngAttrs = angularAttributes(info, elementName);
         try {
-            // Add html properties
-            for (var _f = __values(propertyNames(elementName)), _g = _f.next(); !_g.done; _g = _f.next()) {
-                var name_2 = _g.value;
+            for (var _e = __values(ngAttrs.others), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var name_2 = _f.value;
                 results.push({
-                    name: "[" + name_2 + "]",
+                    name: name_2,
                     kind: CompletionKind.ATTRIBUTE,
                     sortText: name_2,
                 });
@@ -27764,30 +27827,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
-                if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
+                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
             }
             finally { if (e_2) throw e_2.error; }
         }
-        try {
-            // Add html events
-            for (var _h = __values(eventNames(elementName)), _j = _h.next(); !_j.done; _j = _h.next()) {
-                var name_3 = _j.value;
-                results.push({
-                    name: "(" + name_3 + ")",
-                    kind: CompletionKind.ATTRIBUTE,
-                    sortText: name_3,
-                });
-            }
-        }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
-        finally {
-            try {
-                if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
-            }
-            finally { if (e_3) throw e_3.error; }
-        }
-        // Add Angular attributes
-        results.push.apply(results, __spread(angularAttributes(info, elementName)));
         return results;
     }
     function attributeValueCompletions(info, position, attr) {
@@ -27795,13 +27838,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (!path.tail) {
             return [];
         }
+        // HtmlAst contains the `Attribute` node, however the corresponding `AttrAst`
+        // node is missing from the TemplateAst. In this case, we have to manually
+        // append the `AttrAst` node to the path.
+        if (!(path.tail instanceof AttrAst)) {
+            // The sourceSpan of an AttrAst is the valueSpan of the HTML Attribute.
+            path.push(new AttrAst(attr.name, attr.value, attr.valueSpan));
+        }
         var dinfo = diagnosticInfoFromTemplateInfo(info);
-        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); }, attr);
+        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); });
         path.tail.visit(visitor, null);
         return visitor.results;
     }
     function elementCompletions(info) {
-        var e_4, _a;
+        var e_3, _a;
         var results = __spread(ANGULAR_ELEMENTS);
         if (info.template instanceof InlineTemplate) {
             // Provide HTML elements completion only for inline templates
@@ -27812,23 +27862,23 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         try {
             for (var _b = __values(getSelectors(info).selectors), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var selector = _c.value;
-                var name_4 = selector.element;
-                if (name_4 && !components.has(name_4)) {
-                    components.add(name_4);
+                var name_3 = selector.element;
+                if (name_3 && !components.has(name_3)) {
+                    components.add(name_3);
                     results.push({
-                        name: name_4,
+                        name: name_3,
                         kind: CompletionKind.COMPONENT,
-                        sortText: name_4,
+                        sortText: name_3,
                     });
                 }
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_3) throw e_3.error; }
         }
         return results;
     }
@@ -27883,12 +27933,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     var ExpressionVisitor = /** @class */ (function (_super) {
         __extends(ExpressionVisitor, _super);
-        function ExpressionVisitor(info, position, getExpressionScope, attr) {
+        function ExpressionVisitor(info, position, getExpressionScope) {
             var _this = _super.call(this) || this;
             _this.info = info;
             _this.position = position;
             _this.getExpressionScope = getExpressionScope;
-            _this.attr = attr;
             _this.completions = new Map();
             return _this;
         }
@@ -27905,30 +27954,30 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         ExpressionVisitor.prototype.visitEvent = function (ast) { this.addAttributeValuesToCompletions(ast.handler); };
         ExpressionVisitor.prototype.visitElement = function (ast) {
-            if (!this.attr || !this.attr.valueSpan) {
-                return;
-            }
+            // no-op for now
+        };
+        ExpressionVisitor.prototype.visitAttr = function (ast) {
             // The attribute value is a template expression but the expression AST
             // was not produced when the TemplateAst was produced so do that here.
-            var templateBindings = this.info.expressionParser.parseTemplateBindings(this.attr.name, this.attr.value, this.attr.sourceSpan.toString(), this.attr.sourceSpan.start.offset).templateBindings;
+            var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
             // Find where the cursor is relative to the start of the attribute value.
-            var valueRelativePosition = this.position - this.attr.valueSpan.start.offset;
+            var valueRelativePosition = this.position - ast.sourceSpan.start.offset;
             // Find the template binding that contains the position
             var binding = templateBindings.find(function (b) { return inSpan(valueRelativePosition, b.span); });
             if (!binding) {
                 return;
             }
-            if (this.attr.name.startsWith('*')) {
-                this.microSyntaxInAttributeValue(this.attr, binding);
+            if (ast.name.startsWith('*')) {
+                this.microSyntaxInAttributeValue(ast, binding);
             }
-            else if (valueRelativePosition >= 0) {
+            else {
                 // If the position is in the expression or after the key or there is no key,
                 // return the expression completions
-                var span = new ParseSpan(0, this.attr.value.length);
+                var span = new ParseSpan(0, ast.value.length);
                 var offset = ast.sourceSpan.start.offset;
                 var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
                 var expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
-                this.addAttributeValuesToCompletions(expressionAst, valueRelativePosition);
+                this.addAttributeValuesToCompletions(expressionAst);
             }
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
@@ -27939,14 +27988,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         };
-        ExpressionVisitor.prototype.addAttributeValuesToCompletions = function (value, position) {
-            var symbols = getExpressionCompletions(this.getExpressionScope(), value, position === undefined ? this.attributeValuePosition : position, this.info.template.query);
+        ExpressionVisitor.prototype.addAttributeValuesToCompletions = function (value) {
+            var symbols = getExpressionCompletions(this.getExpressionScope(), value, this.position, this.info.template.query);
             if (symbols) {
                 this.addSymbolsToCompletions(symbols);
             }
         };
         ExpressionVisitor.prototype.addSymbolsToCompletions = function (symbols) {
-            var e_5, _a;
+            var e_4, _a;
             try {
                 for (var symbols_1 = __values(symbols), symbols_1_1 = symbols_1.next(); !symbols_1_1.done; symbols_1_1 = symbols_1.next()) {
                     var s = symbols_1_1.value;
@@ -27961,24 +28010,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     });
                 }
             }
-            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (symbols_1_1 && !symbols_1_1.done && (_a = symbols_1.return)) _a.call(symbols_1);
                 }
-                finally { if (e_5) throw e_5.error; }
+                finally { if (e_4) throw e_4.error; }
             }
         };
-        Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
-            get: function () {
-                if (this.attr && this.attr.valueSpan) {
-                    return this.position;
-                }
-                return 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /**
          * This method handles the completions of attribute values for directives that
          * support the microsyntax format. Examples are *ngFor and *ngIf.
@@ -28005,7 +28044,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (!selector) {
                 return;
             }
-            var valueRelativePosition = this.position - attr.valueSpan.start.offset;
+            var valueRelativePosition = this.position - attr.sourceSpan.start.offset;
             if (binding.keyIsVar) {
                 var equalLocation = attr.value.indexOf('=');
                 if (equalLocation >= 0 && valueRelativePosition >= equalLocation) {
@@ -28023,7 +28062,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
             if (binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) {
-                this.addAttributeValuesToCompletions(binding.expression.ast, this.position);
+                this.addAttributeValuesToCompletions(binding.expression.ast);
                 return;
             }
         };
@@ -28032,12 +28071,18 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function getSourceText(template, span) {
         return template.source.substring(span.start, span.end);
     }
+    /**
+     * Return all Angular-specific attributes for the element with `elementName`.
+     * @param info
+     * @param elementName
+     */
     function angularAttributes(info, elementName) {
-        var e_6, _a, e_7, _b, e_8, _c, e_9, _d, e_10, _e, e_11, _f, e_12, _g, e_13, _h;
-        var _j = getSelectors(info), selectors = _j.selectors, selectorMap = _j.map;
+        var e_5, _a, e_6, _b, e_7, _c, e_8, _d;
+        var _e = getSelectors(info), selectors = _e.selectors, selectorMap = _e.map;
         var templateRefs = new Set();
         var inputs = new Set();
         var outputs = new Set();
+        var bananas = new Set();
         var others = new Set();
         try {
             for (var selectors_1 = __values(selectors), selectors_1_1 = selectors_1.next(); !selectors_1_1.done; selectors_1_1 = selectors_1.next()) {
@@ -28046,140 +28091,70 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     continue;
                 }
                 var summary = selectorMap.get(selector);
+                var isTemplateRef = hasTemplateReference(summary.type);
+                // attributes are listed in (attribute, value) pairs
+                for (var i = 0; i < selector.attrs.length; i += 2) {
+                    var attr = selector.attrs[i];
+                    if (isTemplateRef) {
+                        templateRefs.add(attr);
+                    }
+                    else {
+                        others.add(attr);
+                    }
+                }
                 try {
-                    for (var _k = (e_7 = void 0, __values(selector.attrs)), _l = _k.next(); !_l.done; _l = _k.next()) {
-                        var attr = _l.value;
-                        if (attr) {
-                            if (hasTemplateReference(summary.type)) {
-                                templateRefs.add(attr);
-                            }
-                            else {
-                                others.add(attr);
-                            }
-                        }
+                    for (var _f = (e_6 = void 0, __values(Object.values(summary.inputs))), _g = _f.next(); !_g.done; _g = _f.next()) {
+                        var input = _g.value;
+                        inputs.add(input);
+                    }
+                }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                finally {
+                    try {
+                        if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
+                    }
+                    finally { if (e_6) throw e_6.error; }
+                }
+                try {
+                    for (var _h = (e_7 = void 0, __values(Object.values(summary.outputs))), _j = _h.next(); !_j.done; _j = _h.next()) {
+                        var output = _j.value;
+                        outputs.add(output);
                     }
                 }
                 catch (e_7_1) { e_7 = { error: e_7_1 }; }
                 finally {
                     try {
-                        if (_l && !_l.done && (_b = _k.return)) _b.call(_k);
+                        if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
                     }
                     finally { if (e_7) throw e_7.error; }
                 }
-                try {
-                    for (var _m = (e_8 = void 0, __values(Object.values(summary.inputs))), _o = _m.next(); !_o.done; _o = _m.next()) {
-                        var input = _o.value;
-                        inputs.add(input);
-                    }
-                }
-                catch (e_8_1) { e_8 = { error: e_8_1 }; }
-                finally {
-                    try {
-                        if (_o && !_o.done && (_c = _m.return)) _c.call(_m);
-                    }
-                    finally { if (e_8) throw e_8.error; }
-                }
-                try {
-                    for (var _p = (e_9 = void 0, __values(Object.values(summary.outputs))), _q = _p.next(); !_q.done; _q = _p.next()) {
-                        var output = _q.value;
-                        outputs.add(output);
-                    }
-                }
-                catch (e_9_1) { e_9 = { error: e_9_1 }; }
-                finally {
-                    try {
-                        if (_q && !_q.done && (_d = _p.return)) _d.call(_p);
-                    }
-                    finally { if (e_9) throw e_9.error; }
-                }
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (selectors_1_1 && !selectors_1_1.done && (_a = selectors_1.return)) _a.call(selectors_1);
             }
-            finally { if (e_6) throw e_6.error; }
-        }
-        var results = [];
-        try {
-            for (var templateRefs_1 = __values(templateRefs), templateRefs_1_1 = templateRefs_1.next(); !templateRefs_1_1.done; templateRefs_1_1 = templateRefs_1.next()) {
-                var name_5 = templateRefs_1_1.value;
-                results.push({
-                    name: "*" + name_5,
-                    kind: CompletionKind.ATTRIBUTE,
-                    sortText: name_5,
-                });
-            }
-        }
-        catch (e_10_1) { e_10 = { error: e_10_1 }; }
-        finally {
-            try {
-                if (templateRefs_1_1 && !templateRefs_1_1.done && (_e = templateRefs_1.return)) _e.call(templateRefs_1);
-            }
-            finally { if (e_10) throw e_10.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         try {
             for (var inputs_1 = __values(inputs), inputs_1_1 = inputs_1.next(); !inputs_1_1.done; inputs_1_1 = inputs_1.next()) {
-                var name_6 = inputs_1_1.value;
-                results.push({
-                    name: "[" + name_6 + "]",
-                    kind: CompletionKind.ATTRIBUTE,
-                    sortText: name_6,
-                });
+                var name_4 = inputs_1_1.value;
                 // Add banana-in-a-box syntax
                 // https://angular.io/guide/template-syntax#two-way-binding-
-                if (outputs.has(name_6 + "Change")) {
-                    results.push({
-                        name: "[(" + name_6 + ")]",
-                        kind: CompletionKind.ATTRIBUTE,
-                        sortText: name_6,
-                    });
+                if (outputs.has(name_4 + "Change")) {
+                    bananas.add(name_4);
                 }
             }
         }
-        catch (e_11_1) { e_11 = { error: e_11_1 }; }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
         finally {
             try {
-                if (inputs_1_1 && !inputs_1_1.done && (_f = inputs_1.return)) _f.call(inputs_1);
+                if (inputs_1_1 && !inputs_1_1.done && (_d = inputs_1.return)) _d.call(inputs_1);
             }
-            finally { if (e_11) throw e_11.error; }
+            finally { if (e_8) throw e_8.error; }
         }
-        try {
-            for (var outputs_1 = __values(outputs), outputs_1_1 = outputs_1.next(); !outputs_1_1.done; outputs_1_1 = outputs_1.next()) {
-                var name_7 = outputs_1_1.value;
-                results.push({
-                    name: "(" + name_7 + ")",
-                    kind: CompletionKind.ATTRIBUTE,
-                    sortText: name_7,
-                });
-            }
-        }
-        catch (e_12_1) { e_12 = { error: e_12_1 }; }
-        finally {
-            try {
-                if (outputs_1_1 && !outputs_1_1.done && (_g = outputs_1.return)) _g.call(outputs_1);
-            }
-            finally { if (e_12) throw e_12.error; }
-        }
-        try {
-            for (var others_1 = __values(others), others_1_1 = others_1.next(); !others_1_1.done; others_1_1 = others_1.next()) {
-                var name_8 = others_1_1.value;
-                results.push({
-                    name: name_8,
-                    kind: CompletionKind.ATTRIBUTE,
-                    sortText: name_8,
-                });
-            }
-        }
-        catch (e_13_1) { e_13 = { error: e_13_1 }; }
-        finally {
-            try {
-                if (others_1_1 && !others_1_1.done && (_h = others_1.return)) _h.call(others_1);
-            }
-            finally { if (e_13) throw e_13.error; }
-        }
-        return results;
+        return { templateRefs: templateRefs, inputs: inputs, outputs: outputs, bananas: bananas, others: others };
     }
 
     /**
@@ -38944,7 +38919,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+499.sha-9d1175e');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+502.sha-dfecca2');
 
     /**
      * @license
@@ -50868,7 +50843,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+499.sha-9d1175e');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+502.sha-dfecca2');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
