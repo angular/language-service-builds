@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+501.sha-1eae7c8
+ * @license Angular v9.0.0-rc.1+500.sha-a04f7c0
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18693,7 +18693,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+501.sha-1eae7c8');
+    var VERSION$1 = new Version('9.0.0-rc.1+500.sha-a04f7c0');
 
     /**
      * @license
@@ -27838,15 +27838,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (!path.tail) {
             return [];
         }
-        // HtmlAst contains the `Attribute` node, however the corresponding `AttrAst`
-        // node is missing from the TemplateAst. In this case, we have to manually
-        // append the `AttrAst` node to the path.
-        if (!(path.tail instanceof AttrAst)) {
-            // The sourceSpan of an AttrAst is the valueSpan of the HTML Attribute.
-            path.push(new AttrAst(attr.name, attr.value, attr.valueSpan));
-        }
         var dinfo = diagnosticInfoFromTemplateInfo(info);
-        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); });
+        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); }, attr);
         path.tail.visit(visitor, null);
         return visitor.results;
     }
@@ -27933,11 +27926,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     var ExpressionVisitor = /** @class */ (function (_super) {
         __extends(ExpressionVisitor, _super);
-        function ExpressionVisitor(info, position, getExpressionScope) {
+        function ExpressionVisitor(info, position, getExpressionScope, attr) {
             var _this = _super.call(this) || this;
             _this.info = info;
             _this.position = position;
             _this.getExpressionScope = getExpressionScope;
+            _this.attr = attr;
             _this.completions = new Map();
             return _this;
         }
@@ -27954,30 +27948,30 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         ExpressionVisitor.prototype.visitEvent = function (ast) { this.addAttributeValuesToCompletions(ast.handler); };
         ExpressionVisitor.prototype.visitElement = function (ast) {
-            // no-op for now
-        };
-        ExpressionVisitor.prototype.visitAttr = function (ast) {
+            if (!this.attr || !this.attr.valueSpan) {
+                return;
+            }
             // The attribute value is a template expression but the expression AST
             // was not produced when the TemplateAst was produced so do that here.
-            var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
+            var templateBindings = this.info.expressionParser.parseTemplateBindings(this.attr.name, this.attr.value, this.attr.sourceSpan.toString(), this.attr.sourceSpan.start.offset).templateBindings;
             // Find where the cursor is relative to the start of the attribute value.
-            var valueRelativePosition = this.position - ast.sourceSpan.start.offset;
+            var valueRelativePosition = this.position - this.attr.valueSpan.start.offset;
             // Find the template binding that contains the position
             var binding = templateBindings.find(function (b) { return inSpan(valueRelativePosition, b.span); });
             if (!binding) {
                 return;
             }
-            if (ast.name.startsWith('*')) {
-                this.microSyntaxInAttributeValue(ast, binding);
+            if (this.attr.name.startsWith('*')) {
+                this.microSyntaxInAttributeValue(this.attr, binding);
             }
-            else {
+            else if (valueRelativePosition >= 0) {
                 // If the position is in the expression or after the key or there is no key,
                 // return the expression completions
-                var span = new ParseSpan(0, ast.value.length);
+                var span = new ParseSpan(0, this.attr.value.length);
                 var offset = ast.sourceSpan.start.offset;
                 var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
                 var expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
-                this.addAttributeValuesToCompletions(expressionAst);
+                this.addAttributeValuesToCompletions(expressionAst, valueRelativePosition);
             }
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
@@ -27988,8 +27982,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         };
-        ExpressionVisitor.prototype.addAttributeValuesToCompletions = function (value) {
-            var symbols = getExpressionCompletions(this.getExpressionScope(), value, this.position, this.info.template.query);
+        ExpressionVisitor.prototype.addAttributeValuesToCompletions = function (value, position) {
+            var symbols = getExpressionCompletions(this.getExpressionScope(), value, position === undefined ? this.attributeValuePosition : position, this.info.template.query);
             if (symbols) {
                 this.addSymbolsToCompletions(symbols);
             }
@@ -28018,6 +28012,16 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 finally { if (e_4) throw e_4.error; }
             }
         };
+        Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
+            get: function () {
+                if (this.attr && this.attr.valueSpan) {
+                    return this.position;
+                }
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
         /**
          * This method handles the completions of attribute values for directives that
          * support the microsyntax format. Examples are *ngFor and *ngIf.
@@ -28044,7 +28048,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (!selector) {
                 return;
             }
-            var valueRelativePosition = this.position - attr.sourceSpan.start.offset;
+            var valueRelativePosition = this.position - attr.valueSpan.start.offset;
             if (binding.keyIsVar) {
                 var equalLocation = attr.value.indexOf('=');
                 if (equalLocation >= 0 && valueRelativePosition >= equalLocation) {
@@ -28062,7 +28066,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
             if (binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) {
-                this.addAttributeValuesToCompletions(binding.expression.ast);
+                this.addAttributeValuesToCompletions(binding.expression.ast, this.position);
                 return;
             }
         };
@@ -38919,7 +38923,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+501.sha-1eae7c8');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+500.sha-a04f7c0');
 
     /**
      * @license
@@ -50843,7 +50847,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+501.sha-1eae7c8');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+500.sha-a04f7c0');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
