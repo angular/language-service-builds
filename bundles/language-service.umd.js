@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+519.sha-260a061
+ * @license Angular v9.0.0-rc.1+520.sha-2dffe65
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18693,7 +18693,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+519.sha-260a061');
+    var VERSION$1 = new Version('9.0.0-rc.1+520.sha-2dffe65');
 
     /**
      * @license
@@ -28047,7 +28047,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var valueRelativePosition = this.position - attr.sourceSpan.start.offset;
             if (binding.keyIsVar) {
                 var equalLocation = attr.value.indexOf('=');
-                if (equalLocation >= 0 && valueRelativePosition >= equalLocation) {
+                if (equalLocation > 0 && valueRelativePosition > equalLocation) {
                     // We are after the '=' in a let clause. The valid values here are the members of the
                     // template reference's type parameter.
                     var directiveMetadata = selectorInfo.map.get(selector);
@@ -28064,6 +28064,18 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) {
                 this.addAttributeValuesToCompletions(binding.expression.ast);
                 return;
+            }
+            // If the expression is incomplete, for example *ngFor="let x of |"
+            // binding.expression is null. We could still try to provide suggestions
+            // by looking for symbols that are in scope.
+            var KW_OF = ' of ';
+            var ofLocation = attr.value.indexOf(KW_OF);
+            if (ofLocation > 0 && valueRelativePosition >= ofLocation + KW_OF.length) {
+                var span = new ParseSpan(0, attr.value.length);
+                var offset = attr.sourceSpan.start.offset;
+                var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
+                var expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
+                this.addAttributeValuesToCompletions(expressionAst);
             }
         };
         return ExpressionVisitor;
@@ -38919,7 +38931,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+519.sha-260a061');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+520.sha-2dffe65');
 
     /**
      * @license
@@ -50843,7 +50855,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+519.sha-260a061');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+520.sha-2dffe65');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
