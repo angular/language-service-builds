@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+520.sha-2dffe65
+ * @license Angular v9.0.0-rc.1+521.sha-9b9116c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18693,7 +18693,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+520.sha-2dffe65');
+    var VERSION$1 = new Version('9.0.0-rc.1+521.sha-9b9116c');
 
     /**
      * @license
@@ -28853,6 +28853,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
     var SYMBOL_CLASS = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.className];
     var SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
+    var SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
     /**
      * Traverse the template AST and look for the symbol located at `position`, then
      * return the corresponding quick info.
@@ -28876,19 +28877,28 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 { text: '.', kind: SYMBOL_PUNC },
             ] :
             [];
+        var typeDisplayParts = symbol.type ?
+            [
+                { text: ':', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                { text: symbol.type.name, kind: SYMBOL_INTERFACE },
+            ] :
+            [];
         return {
             kind: symbol.kind,
             kindModifiers: '',
             textSpan: textSpan,
-            // this would generate a string like '(property) ClassX.propY'
+            // this would generate a string like '(property) ClassX.propY: type'
             // 'kind' in displayParts does not really matter because it's dropped when
             // displayParts get converted to string.
             displayParts: __spread([
-                { text: '(', kind: SYMBOL_PUNC }, { text: symbol.kind, kind: symbol.kind },
-                { text: ')', kind: SYMBOL_PUNC }, { text: ' ', kind: SYMBOL_SPACE }
+                { text: '(', kind: SYMBOL_PUNC },
+                { text: symbol.kind, kind: symbol.kind },
+                { text: ')', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE }
             ], containerDisplayParts, [
-                { text: symbol.name, kind: symbol.kind },
-            ]),
+                { text: symbol.name, kind: symbol.kind }
+            ], typeDisplayParts),
         };
     }
     /**
@@ -38931,7 +38941,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+520.sha-2dffe65');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+521.sha-9b9116c');
 
     /**
      * @license
@@ -50855,7 +50865,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+520.sha-2dffe65');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+521.sha-9b9116c');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
