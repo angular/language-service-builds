@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+529.sha-eab7f9f
+ * @license Angular v9.0.0-rc.1+530.sha-ba2fd31
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18694,7 +18694,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+529.sha-eab7f9f');
+    var VERSION$1 = new Version('9.0.0-rc.1+530.sha-ba2fd31');
 
     /**
      * @license
@@ -28003,11 +28003,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     if (s.name.startsWith('__') || !s.public || this.completions.has(s.name)) {
                         continue;
                     }
+                    // The pipe method should not include parentheses.
+                    // e.g. {{ value_expression | slice : start [ : end ] }}
+                    var shouldInsertParentheses = s.callable && s.kind !== CompletionKind.PIPE;
                     this.completions.set(s.name, {
                         name: s.name,
                         kind: s.kind,
                         sortText: s.name,
-                        insertText: s.callable ? s.name + "()" : s.name,
+                        insertText: shouldInsertParentheses ? s.name + "()" : s.name,
                     });
                 }
             }
@@ -38942,7 +38945,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+529.sha-eab7f9f');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+530.sha-ba2fd31');
 
     /**
      * @license
@@ -50866,7 +50869,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+529.sha-eab7f9f');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+530.sha-ba2fd31');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
