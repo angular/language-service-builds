@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+522.sha-8410278
+ * @license Angular v9.0.0-rc.1+523.sha-19944c2
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -13204,8 +13204,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return Lexer;
     }());
     var Token$1 = /** @class */ (function () {
-        function Token(index, type, numValue, strValue) {
+        function Token(index, end, type, numValue, strValue) {
             this.index = index;
+            this.end = end;
             this.type = type;
             this.numValue = numValue;
             this.strValue = strValue;
@@ -13248,28 +13249,28 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return Token;
     }());
-    function newCharacterToken(index, code) {
-        return new Token$1(index, TokenType$1.Character, code, String.fromCharCode(code));
+    function newCharacterToken(index, end, code) {
+        return new Token$1(index, end, TokenType$1.Character, code, String.fromCharCode(code));
     }
-    function newIdentifierToken(index, text) {
-        return new Token$1(index, TokenType$1.Identifier, 0, text);
+    function newIdentifierToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.Identifier, 0, text);
     }
-    function newKeywordToken(index, text) {
-        return new Token$1(index, TokenType$1.Keyword, 0, text);
+    function newKeywordToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.Keyword, 0, text);
     }
-    function newOperatorToken(index, text) {
-        return new Token$1(index, TokenType$1.Operator, 0, text);
+    function newOperatorToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.Operator, 0, text);
     }
-    function newStringToken(index, text) {
-        return new Token$1(index, TokenType$1.String, 0, text);
+    function newStringToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.String, 0, text);
     }
-    function newNumberToken(index, n) {
-        return new Token$1(index, TokenType$1.Number, n, '');
+    function newNumberToken(index, end, n) {
+        return new Token$1(index, end, TokenType$1.Number, n, '');
     }
-    function newErrorToken(index, message) {
-        return new Token$1(index, TokenType$1.Error, 0, message);
+    function newErrorToken(index, end, message) {
+        return new Token$1(index, end, TokenType$1.Error, 0, message);
     }
-    var EOF = new Token$1(-1, TokenType$1.Character, 0, '');
+    var EOF = new Token$1(-1, -1, TokenType$1.Character, 0, '');
     var _Scanner = /** @class */ (function () {
         function _Scanner(input) {
             this.input = input;
@@ -13309,7 +13310,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 case $PERIOD:
                     this.advance();
                     return isDigit(this.peek) ? this.scanNumber(start) :
-                        newCharacterToken(start, $PERIOD);
+                        newCharacterToken(start, this.index, $PERIOD);
                 case $LPAREN:
                 case $RPAREN:
                 case $LBRACE:
@@ -13353,11 +13354,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         _Scanner.prototype.scanCharacter = function (start, code) {
             this.advance();
-            return newCharacterToken(start, code);
+            return newCharacterToken(start, this.index, code);
         };
         _Scanner.prototype.scanOperator = function (start, str) {
             this.advance();
-            return newOperatorToken(start, str);
+            return newOperatorToken(start, this.index, str);
         };
         /**
          * Tokenize a 2/3 char long operator
@@ -13380,7 +13381,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.advance();
                 str += three;
             }
-            return newOperatorToken(start, str);
+            return newOperatorToken(start, this.index, str);
         };
         _Scanner.prototype.scanIdentifier = function () {
             var start = this.index;
@@ -13388,8 +13389,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             while (isIdentifierPart(this.peek))
                 this.advance();
             var str = this.input.substring(start, this.index);
-            return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, str) :
-                newIdentifierToken(start, str);
+            return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, this.index, str) :
+                newIdentifierToken(start, this.index, str);
         };
         _Scanner.prototype.scanNumber = function (start) {
             var simple = (this.index === start);
@@ -13414,7 +13415,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             var str = this.input.substring(start, this.index);
             var value = simple ? parseIntAutoRadix(str) : parseFloat(str);
-            return newNumberToken(start, value);
+            return newNumberToken(start, this.index, value);
         };
         _Scanner.prototype.scanString = function () {
             var start = this.index;
@@ -13459,11 +13460,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             var last = input.substring(marker, this.index);
             this.advance(); // Skip terminating quote.
-            return newStringToken(start, buffer + last);
+            return newStringToken(start, this.index, buffer + last);
         };
         _Scanner.prototype.error = function (message, offset) {
             var position = this.index + offset;
-            return newErrorToken(position, "Lexer Error: " + message + " at column " + position + " in expression [" + this.input + "]");
+            return newErrorToken(position, this.index, "Lexer Error: " + message + " at column " + position + " in expression [" + this.input + "]");
         };
         return _Scanner;
     }());
@@ -18678,7 +18679,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+522.sha-8410278');
+    var VERSION$1 = new Version('9.0.0-rc.1+523.sha-19944c2');
 
     /**
      * @license
@@ -47841,7 +47842,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+522.sha-8410278');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+523.sha-19944c2');
 
     /**
      * @license
@@ -62798,7 +62799,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+522.sha-8410278');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+523.sha-19944c2');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
