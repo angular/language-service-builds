@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+530.sha-ba2fd31
+ * @license Angular v9.0.0-rc.1+533.sha-5b864ed
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18679,7 +18679,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+530.sha-ba2fd31');
+    var VERSION$1 = new Version('9.0.0-rc.1+533.sha-5b864ed');
 
     /**
      * @license
@@ -24978,6 +24978,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 nullable: false,
                 public: true,
                 definition: undefined,
+                documentation: [],
                 members: function () { return _this.scope; },
                 signatures: function () { return []; },
                 selectSignature: function (types) { return undefined; },
@@ -26444,6 +26445,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         callable: true,
                         definition: undefined,
                         nullable: false,
+                        documentation: [{
+                                kind: 'text',
+                                text: 'function to cast an expression to the `any` type',
+                            }],
                         members: function () { return EMPTY_SYMBOL_TABLE; },
                         signatures: function () { return []; },
                         selectSignature: function (args) {
@@ -26689,6 +26694,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(TypeWrapper.prototype, "documentation", {
+            get: function () {
+                var symbol = this.tsType.getSymbol();
+                if (!symbol) {
+                    return [];
+                }
+                return symbol.getDocumentationComment(this.context.checker);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(TypeWrapper.prototype, "definition", {
             get: function () {
                 var symbol = this.tsType.getSymbol();
@@ -26796,6 +26812,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(SymbolWrapper.prototype, "documentation", {
+            get: function () {
+                return this.symbol.getDocumentationComment(this.context.checker);
+            },
+            enumerable: true,
+            configurable: true
+        });
         SymbolWrapper.prototype.members = function () {
             if (!this._members) {
                 if ((this.symbol.flags & (ts.SymbolFlags.Class | ts.SymbolFlags.Interface)) != 0) {
@@ -26862,6 +26885,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         Object.defineProperty(DeclaredSymbol.prototype, "definition", {
             get: function () { return this.declaration.definition; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DeclaredSymbol.prototype, "documentation", {
+            get: function () { return this.declaration.type.documentation; },
             enumerable: true,
             configurable: true
         });
@@ -27098,6 +27126,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             get: function () {
                 var symbol = this.tsType.getSymbol();
                 return symbol ? definitionFromTsSymbol(symbol) : undefined;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PipeSymbol.prototype, "documentation", {
+            get: function () {
+                var symbol = this.tsType.getSymbol();
+                if (!symbol) {
+                    return [];
+                }
+                return symbol.getDocumentationComment(this.context.checker);
             },
             enumerable: true,
             configurable: true
@@ -27943,8 +27982,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // no-op for now
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
-            // The attribute value is a template expression but the expression AST
-            // was not produced when the TemplateAst was produced so do that here.
+            // First, verify the attribute consists of some binding we can give completions for.
             var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
             // Find where the cursor is relative to the start of the attribute value.
             var valueRelativePosition = this.position - ast.sourceSpan.start.offset;
@@ -27957,12 +27995,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.microSyntaxInAttributeValue(ast, binding);
             }
             else {
-                // If the position is in the expression or after the key or there is no key,
-                // return the expression completions
-                var span = new ParseSpan(0, ast.value.length);
-                var offset = ast.sourceSpan.start.offset;
-                var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
-                var expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
+                // If the position is in the expression or after the key or there is no key, return the
+                // expression completions.
+                // The expression must be reparsed to get a valid AST rather than only template bindings.
+                var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
                 this.addAttributeValuesToCompletions(expressionAst);
             }
         };
@@ -28060,10 +28096,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var KW_OF = ' of ';
             var ofLocation = attr.value.indexOf(KW_OF);
             if (ofLocation > 0 && valueRelativePosition >= ofLocation + KW_OF.length) {
-                var span = new ParseSpan(0, attr.value.length);
-                var offset = attr.sourceSpan.start.offset;
-                var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
-                var expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
+                var expressionAst = this.info.expressionParser.parseBinding(attr.value, attr.sourceSpan.toString(), attr.sourceSpan.start.offset);
                 this.addAttributeValuesToCompletions(expressionAst);
             }
         };
@@ -28418,6 +28451,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "definition", {
             get: function () { return this.sym.definition; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(OverrideKindSymbol.prototype, "documentation", {
+            get: function () { return this.sym.documentation; },
             enumerable: true,
             configurable: true
         });
@@ -28858,7 +28896,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var symbol = symbolInfo.symbol, span = symbolInfo.span, compileTypeSummary = symbolInfo.compileTypeSummary;
         var textSpan = { start: span.start, length: span.end - span.start };
         if (compileTypeSummary && compileTypeSummary.summaryKind === CompileSummaryKind.Directive) {
-            return getDirectiveModule(compileTypeSummary.type.reference, textSpan, host);
+            return getDirectiveModule(compileTypeSummary.type.reference, textSpan, host, symbol);
         }
         var containerDisplayParts = symbol.container ?
             [
@@ -28877,6 +28915,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             kind: symbol.kind,
             kindModifiers: '',
             textSpan: textSpan,
+            documentation: symbol.documentation,
             // this would generate a string like '(property) ClassX.propY: type'
             // 'kind' in displayParts does not really matter because it's dropped when
             // displayParts get converted to string.
@@ -28917,9 +28956,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * Attempts to get quick info for the NgModule a Directive is declared in.
      * @param directive identifier on a potential Directive class declaration
+     * @param textSpan span of the symbol
      * @param host Language Service host to query
+     * @param symbol the internal symbol that represents the directive
      */
-    function getDirectiveModule(directive, textSpan, host) {
+    function getDirectiveModule(directive, textSpan, host, symbol) {
         var analyzedModules = host.getAnalyzedModules(false);
         var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(directive);
         if (!ngModule)
@@ -28931,6 +28972,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             kind: ts.ScriptElementKind.classElement,
             kindModifiers: ts.ScriptElementKindModifier.none,
             textSpan: textSpan,
+            documentation: symbol ? symbol.documentation : undefined,
             // This generates a string like '(directive) NgModule.Directive: class'
             // 'kind' in displayParts does not really matter because it's dropped when
             // displayParts get converted to string.
@@ -47845,7 +47887,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+530.sha-ba2fd31');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+533.sha-5b864ed');
 
     /**
      * @license
@@ -62802,7 +62844,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+530.sha-ba2fd31');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+533.sha-5b864ed');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
