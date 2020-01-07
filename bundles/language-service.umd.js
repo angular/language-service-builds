@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+535.sha-0254cba
+ * @license Angular v9.0.0-rc.1+537.sha-b9b8920
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -16438,7 +16438,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 bindings.forEach(function (binding) {
                     chainBindings_1.push({ sourceSpan: span, value: function () { return _this.convertPropertyBinding(binding); } });
                 });
-                this.updateInstructionChain(Identifiers$1.i18nExp, chainBindings_1);
+                // for i18n block, advance to the most recent element index (by taking the current number of
+                // elements and subtracting one) before invoking `i18nExp` instructions, to make sure the
+                // necessary lifecycle hooks of components/directives are properly flushed.
+                this.updateInstructionChainWithAdvance(this.getConstCount() - 1, Identifiers$1.i18nExp, chainBindings_1);
                 this.updateInstruction(span, Identifiers$1.i18nApply, [literal(index)]);
             }
             if (!selfClosing) {
@@ -16635,7 +16638,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         }
                     });
                     if (bindings_1.length) {
-                        this.updateInstructionChain(Identifiers$1.i18nExp, bindings_1);
+                        this.updateInstructionChainWithAdvance(elementIndex, Identifiers$1.i18nExp, bindings_1);
                     }
                     if (i18nAttrArgs_1.length) {
                         var index = literal(this.allocateDataSlot());
@@ -18679,7 +18682,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+535.sha-0254cba');
+    var VERSION$1 = new Version('9.0.0-rc.1+537.sha-b9b8920');
 
     /**
      * @license
@@ -47895,7 +47898,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+535.sha-0254cba');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+537.sha-b9b8920');
 
     /**
      * @license
@@ -62852,7 +62855,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+535.sha-0254cba');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+537.sha-b9b8920');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
