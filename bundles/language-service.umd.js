@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+524.sha-f004195
+ * @license Angular v9.0.0-rc.1+558.sha-d1c7ca7
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -13219,8 +13219,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return Lexer;
     }());
     var Token$1 = /** @class */ (function () {
-        function Token(index, type, numValue, strValue) {
+        function Token(index, end, type, numValue, strValue) {
             this.index = index;
+            this.end = end;
             this.type = type;
             this.numValue = numValue;
             this.strValue = strValue;
@@ -13263,28 +13264,28 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return Token;
     }());
-    function newCharacterToken(index, code) {
-        return new Token$1(index, TokenType$1.Character, code, String.fromCharCode(code));
+    function newCharacterToken(index, end, code) {
+        return new Token$1(index, end, TokenType$1.Character, code, String.fromCharCode(code));
     }
-    function newIdentifierToken(index, text) {
-        return new Token$1(index, TokenType$1.Identifier, 0, text);
+    function newIdentifierToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.Identifier, 0, text);
     }
-    function newKeywordToken(index, text) {
-        return new Token$1(index, TokenType$1.Keyword, 0, text);
+    function newKeywordToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.Keyword, 0, text);
     }
-    function newOperatorToken(index, text) {
-        return new Token$1(index, TokenType$1.Operator, 0, text);
+    function newOperatorToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.Operator, 0, text);
     }
-    function newStringToken(index, text) {
-        return new Token$1(index, TokenType$1.String, 0, text);
+    function newStringToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.String, 0, text);
     }
-    function newNumberToken(index, n) {
-        return new Token$1(index, TokenType$1.Number, n, '');
+    function newNumberToken(index, end, n) {
+        return new Token$1(index, end, TokenType$1.Number, n, '');
     }
-    function newErrorToken(index, message) {
-        return new Token$1(index, TokenType$1.Error, 0, message);
+    function newErrorToken(index, end, message) {
+        return new Token$1(index, end, TokenType$1.Error, 0, message);
     }
-    var EOF = new Token$1(-1, TokenType$1.Character, 0, '');
+    var EOF = new Token$1(-1, -1, TokenType$1.Character, 0, '');
     var _Scanner = /** @class */ (function () {
         function _Scanner(input) {
             this.input = input;
@@ -13324,7 +13325,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 case $PERIOD:
                     this.advance();
                     return isDigit(this.peek) ? this.scanNumber(start) :
-                        newCharacterToken(start, $PERIOD);
+                        newCharacterToken(start, this.index, $PERIOD);
                 case $LPAREN:
                 case $RPAREN:
                 case $LBRACE:
@@ -13368,11 +13369,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         _Scanner.prototype.scanCharacter = function (start, code) {
             this.advance();
-            return newCharacterToken(start, code);
+            return newCharacterToken(start, this.index, code);
         };
         _Scanner.prototype.scanOperator = function (start, str) {
             this.advance();
-            return newOperatorToken(start, str);
+            return newOperatorToken(start, this.index, str);
         };
         /**
          * Tokenize a 2/3 char long operator
@@ -13395,7 +13396,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.advance();
                 str += three;
             }
-            return newOperatorToken(start, str);
+            return newOperatorToken(start, this.index, str);
         };
         _Scanner.prototype.scanIdentifier = function () {
             var start = this.index;
@@ -13403,8 +13404,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             while (isIdentifierPart(this.peek))
                 this.advance();
             var str = this.input.substring(start, this.index);
-            return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, str) :
-                newIdentifierToken(start, str);
+            return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, this.index, str) :
+                newIdentifierToken(start, this.index, str);
         };
         _Scanner.prototype.scanNumber = function (start) {
             var simple = (this.index === start);
@@ -13429,7 +13430,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             var str = this.input.substring(start, this.index);
             var value = simple ? parseIntAutoRadix(str) : parseFloat(str);
-            return newNumberToken(start, value);
+            return newNumberToken(start, this.index, value);
         };
         _Scanner.prototype.scanString = function () {
             var start = this.index;
@@ -13474,11 +13475,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             var last = input.substring(marker, this.index);
             this.advance(); // Skip terminating quote.
-            return newStringToken(start, buffer + last);
+            return newStringToken(start, this.index, buffer + last);
         };
         _Scanner.prototype.error = function (message, offset) {
             var position = this.index + offset;
-            return newErrorToken(position, "Lexer Error: " + message + " at column " + position + " in expression [" + this.input + "]");
+            return newErrorToken(position, this.index, "Lexer Error: " + message + " at column " + position + " in expression [" + this.input + "]");
         };
         return _Scanner;
     }());
@@ -16452,7 +16453,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 bindings.forEach(function (binding) {
                     chainBindings_1.push({ sourceSpan: span, value: function () { return _this.convertPropertyBinding(binding); } });
                 });
-                this.updateInstructionChain(Identifiers$1.i18nExp, chainBindings_1);
+                // for i18n block, advance to the most recent element index (by taking the current number of
+                // elements and subtracting one) before invoking `i18nExp` instructions, to make sure the
+                // necessary lifecycle hooks of components/directives are properly flushed.
+                this.updateInstructionChainWithAdvance(this.getConstCount() - 1, Identifiers$1.i18nExp, chainBindings_1);
                 this.updateInstruction(span, Identifiers$1.i18nApply, [literal(index)]);
             }
             if (!selfClosing) {
@@ -16486,21 +16490,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var slot = this.allocateDataSlot();
             var projectionSlotIdx = this._ngContentSelectorsOffset + this._ngContentReservedSlots.length;
             var parameters = [literal(slot)];
-            var attributes = [];
-            var ngProjectAsAttr;
             this._ngContentReservedSlots.push(ngContent.selector);
-            ngContent.attributes.forEach(function (attribute) {
-                var name = attribute.name, value = attribute.value;
-                if (name === NG_PROJECT_AS_ATTR_NAME) {
-                    ngProjectAsAttr = attribute;
-                }
-                if (name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1) {
-                    attributes.push(literal(name), literal(value));
-                }
-            });
-            if (ngProjectAsAttr) {
-                attributes.push.apply(attributes, __spread(getNgProjectAsLiteral(ngProjectAsAttr)));
-            }
+            var nonContentSelectAttributes = ngContent.attributes.filter(function (attr) { return attr.name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1; });
+            var attributes = this.getAttributeExpressions(nonContentSelectAttributes, [], []);
             if (attributes.length > 0) {
                 parameters.push(literal(projectionSlotIdx), literalArr(attributes));
             }
@@ -16521,7 +16513,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var isI18nRootElement = isI18nRootNode(element.i18n) && !isSingleI18nIcu(element.i18n);
             var i18nAttrs = [];
             var outputAttrs = [];
-            var ngProjectAsAttr;
             var _b = __read(splitNsName(element.name), 2), namespaceKey = _b[0], elementName = _b[1];
             var isNgContainer$1 = isNgContainer(element.name);
             try {
@@ -16539,9 +16530,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         stylingBuilder.registerClassAttr(value);
                     }
                     else {
-                        if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
-                            ngProjectAsAttr = attr;
-                        }
                         if (attr.i18n) {
                             // Place attributes into a separate array for i18n processing, but also keep such
                             // attributes in the main list to make them available for directive matching at runtime.
@@ -16570,7 +16558,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 parameters.push(literal(elementName));
             }
             // Add the attributes
-            var attributes = [];
             var allOtherInputs = [];
             element.inputs.forEach(function (input) {
                 var stylingInputWasSet = stylingBuilder.registerBoundInput(input);
@@ -16587,11 +16574,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 }
             });
-            outputAttrs.forEach(function (attr) {
-                attributes.push.apply(attributes, __spread(getAttributeNameLiterals(attr.name), [literal(attr.value)]));
-            });
             // add attributes for directive and projection matching purposes
-            attributes.push.apply(attributes, __spread(this.prepareNonRenderAttrs(allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs, ngProjectAsAttr)));
+            var attributes = this.getAttributeExpressions(outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
             parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             var refs = this.prepareRefsArray(element.references);
@@ -16649,7 +16633,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         }
                     });
                     if (bindings_1.length) {
-                        this.updateInstructionChain(Identifiers$1.i18nExp, bindings_1);
+                        this.updateInstructionChainWithAdvance(elementIndex, Identifiers$1.i18nExp, bindings_1);
                     }
                     if (i18nAttrArgs_1.length) {
                         var index = literal(this.allocateDataSlot());
@@ -16806,7 +16790,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var _this = this;
             var NG_TEMPLATE_TAG_NAME = 'ng-template';
             var templateIndex = this.allocateDataSlot();
-            var ngProjectAsAttr;
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
@@ -16823,14 +16806,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
-            var attrsExprs = [];
-            template.attributes.forEach(function (attr) {
-                if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
-                    ngProjectAsAttr = attr;
-                }
-                attrsExprs.push(asLiteral(attr.name), asLiteral(attr.value));
-            });
-            attrsExprs.push.apply(attrsExprs, __spread(this.prepareNonRenderAttrs(template.inputs, template.outputs, undefined, template.templateAttrs, undefined, ngProjectAsAttr)));
+            var attrsExprs = this.getAttributeExpressions(template.attributes, template.inputs, template.outputs, undefined, template.templateAttrs, undefined);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -17113,22 +17089,34 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          *
          * ```
          * attrs = [prop, value, prop2, value2,
+         *   PROJECT_AS, selector,
          *   CLASSES, class1, class2,
          *   STYLES, style1, value1, style2, value2,
          *   BINDINGS, name1, name2, name3,
          *   TEMPLATE, name4, name5, name6,
-         *   PROJECT_AS, selector,
          *   I18N, name7, name8, ...]
          * ```
          *
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        TemplateDefinitionBuilder.prototype.prepareNonRenderAttrs = function (inputs, outputs, styles, templateAttrs, i18nAttrs, ngProjectAsAttr) {
+        TemplateDefinitionBuilder.prototype.getAttributeExpressions = function (renderAttributes, inputs, outputs, styles, templateAttrs, i18nAttrs) {
             if (templateAttrs === void 0) { templateAttrs = []; }
             if (i18nAttrs === void 0) { i18nAttrs = []; }
             var alreadySeen = new Set();
             var attrExprs = [];
+            var ngProjectAsAttr;
+            renderAttributes.forEach(function (attr) {
+                if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
+                    ngProjectAsAttr = attr;
+                }
+                attrExprs.push.apply(attrExprs, __spread(getAttributeNameLiterals(attr.name), [asLiteral(attr.value)]));
+            });
+            // Keep ngProjectAs next to the other name, value pairs so we can verify that we match
+            // ngProjectAs marker in the attribute name slot.
+            if (ngProjectAsAttr) {
+                attrExprs.push.apply(attrExprs, __spread(getNgProjectAsLiteral(ngProjectAsAttr)));
+            }
             function addAttrExpr(key, value) {
                 if (typeof key === 'string') {
                     if (!alreadySeen.has(key)) {
@@ -17174,9 +17162,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (templateAttrs.length) {
                 attrExprs.push(literal(4 /* Template */));
                 templateAttrs.forEach(function (attr) { return addAttrExpr(attr.name); });
-            }
-            if (ngProjectAsAttr) {
-                attrExprs.push.apply(attrExprs, __spread(getNgProjectAsLiteral(ngProjectAsAttr)));
             }
             if (i18nAttrs.length) {
                 attrExprs.push(literal(6 /* I18n */));
@@ -18693,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+524.sha-f004195');
+    var VERSION$1 = new Version('9.0.0-rc.1+558.sha-d1c7ca7');
 
     /**
      * @license
@@ -24992,6 +24977,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 nullable: false,
                 public: true,
                 definition: undefined,
+                documentation: [],
                 members: function () { return _this.scope; },
                 signatures: function () { return []; },
                 selectSignature: function (types) { return undefined; },
@@ -26458,6 +26444,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         callable: true,
                         definition: undefined,
                         nullable: false,
+                        documentation: [{
+                                kind: 'text',
+                                text: 'function to cast an expression to the `any` type',
+                            }],
                         members: function () { return EMPTY_SYMBOL_TABLE; },
                         signatures: function () { return []; },
                         selectSignature: function (args) {
@@ -26703,6 +26693,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(TypeWrapper.prototype, "documentation", {
+            get: function () {
+                var symbol = this.tsType.getSymbol();
+                if (!symbol) {
+                    return [];
+                }
+                return symbol.getDocumentationComment(this.context.checker);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(TypeWrapper.prototype, "definition", {
             get: function () {
                 var symbol = this.tsType.getSymbol();
@@ -26810,6 +26811,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(SymbolWrapper.prototype, "documentation", {
+            get: function () {
+                return this.symbol.getDocumentationComment(this.context.checker);
+            },
+            enumerable: true,
+            configurable: true
+        });
         SymbolWrapper.prototype.members = function () {
             if (!this._members) {
                 if ((this.symbol.flags & (ts.SymbolFlags.Class | ts.SymbolFlags.Interface)) != 0) {
@@ -26876,6 +26884,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         Object.defineProperty(DeclaredSymbol.prototype, "definition", {
             get: function () { return this.declaration.definition; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DeclaredSymbol.prototype, "documentation", {
+            get: function () { return this.declaration.type.documentation; },
             enumerable: true,
             configurable: true
         });
@@ -27112,6 +27125,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             get: function () {
                 var symbol = this.tsType.getSymbol();
                 return symbol ? definitionFromTsSymbol(symbol) : undefined;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PipeSymbol.prototype, "documentation", {
+            get: function () {
+                var symbol = this.tsType.getSymbol();
+                if (!symbol) {
+                    return [];
+                }
+                return symbol.getDocumentationComment(this.context.checker);
             },
             enumerable: true,
             configurable: true
@@ -27957,8 +27981,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // no-op for now
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
-            // The attribute value is a template expression but the expression AST
-            // was not produced when the TemplateAst was produced so do that here.
+            // First, verify the attribute consists of some binding we can give completions for.
             var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
             // Find where the cursor is relative to the start of the attribute value.
             var valueRelativePosition = this.position - ast.sourceSpan.start.offset;
@@ -27971,12 +27994,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 this.microSyntaxInAttributeValue(ast, binding);
             }
             else {
-                // If the position is in the expression or after the key or there is no key,
-                // return the expression completions
-                var span = new ParseSpan(0, ast.value.length);
-                var offset = ast.sourceSpan.start.offset;
-                var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
-                var expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
+                // If the position is in the expression or after the key or there is no key, return the
+                // expression completions.
+                // The expression must be reparsed to get a valid AST rather than only template bindings.
+                var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
                 this.addAttributeValuesToCompletions(expressionAst);
             }
         };
@@ -28002,11 +28023,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     if (s.name.startsWith('__') || !s.public || this.completions.has(s.name)) {
                         continue;
                     }
+                    // The pipe method should not include parentheses.
+                    // e.g. {{ value_expression | slice : start [ : end ] }}
+                    var shouldInsertParentheses = s.callable && s.kind !== CompletionKind.PIPE;
                     this.completions.set(s.name, {
                         name: s.name,
                         kind: s.kind,
                         sortText: s.name,
-                        insertText: s.callable ? s.name + "()" : s.name,
+                        insertText: shouldInsertParentheses ? s.name + "()" : s.name,
                     });
                 }
             }
@@ -28071,10 +28095,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var KW_OF = ' of ';
             var ofLocation = attr.value.indexOf(KW_OF);
             if (ofLocation > 0 && valueRelativePosition >= ofLocation + KW_OF.length) {
-                var span = new ParseSpan(0, attr.value.length);
-                var offset = attr.sourceSpan.start.offset;
-                var receiver = new ImplicitReceiver(span, span.toAbsolute(offset));
-                var expressionAst = new PropertyRead(span, span.toAbsolute(offset), receiver, '');
+                var expressionAst = this.info.expressionParser.parseBinding(attr.value, attr.sourceSpan.toString(), attr.sourceSpan.start.offset);
                 this.addAttributeValuesToCompletions(expressionAst);
             }
         };
@@ -28429,6 +28450,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "definition", {
             get: function () { return this.sym.definition; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(OverrideKindSymbol.prototype, "documentation", {
+            get: function () { return this.sym.documentation; },
             enumerable: true,
             configurable: true
         });
@@ -28869,7 +28895,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var symbol = symbolInfo.symbol, span = symbolInfo.span, compileTypeSummary = symbolInfo.compileTypeSummary;
         var textSpan = { start: span.start, length: span.end - span.start };
         if (compileTypeSummary && compileTypeSummary.summaryKind === CompileSummaryKind.Directive) {
-            return getDirectiveModule(compileTypeSummary.type.reference, textSpan, host);
+            return getDirectiveModule(compileTypeSummary.type.reference, textSpan, host, symbol);
         }
         var containerDisplayParts = symbol.container ?
             [
@@ -28888,6 +28914,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             kind: symbol.kind,
             kindModifiers: '',
             textSpan: textSpan,
+            documentation: symbol.documentation,
             // this would generate a string like '(property) ClassX.propY: type'
             // 'kind' in displayParts does not really matter because it's dropped when
             // displayParts get converted to string.
@@ -28928,9 +28955,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * Attempts to get quick info for the NgModule a Directive is declared in.
      * @param directive identifier on a potential Directive class declaration
+     * @param textSpan span of the symbol
      * @param host Language Service host to query
+     * @param symbol the internal symbol that represents the directive
      */
-    function getDirectiveModule(directive, textSpan, host) {
+    function getDirectiveModule(directive, textSpan, host, symbol) {
         var analyzedModules = host.getAnalyzedModules(false);
         var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(directive);
         if (!ngModule)
@@ -28942,6 +28971,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             kind: ts.ScriptElementKind.classElement,
             kindModifiers: ts.ScriptElementKindModifier.none,
             textSpan: textSpan,
+            documentation: symbol ? symbol.documentation : undefined,
             // This generates a string like '(directive) NgModule.Directive: class'
             // 'kind' in displayParts does not really matter because it's dropped when
             // displayParts get converted to string.
@@ -38950,7 +38980,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+524.sha-f004195');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+558.sha-d1c7ca7');
 
     /**
      * @license
@@ -50874,7 +50904,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+524.sha-f004195');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+558.sha-d1c7ca7');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;

@@ -7,6 +7,7 @@
  */
 /// <amd-module name="@angular/language-service/src/symbols" />
 import { StaticSymbol } from '@angular/compiler';
+import * as ts from 'typescript';
 /**
  * The range of a span of text in a source file.
  *
@@ -81,6 +82,10 @@ export interface Symbol {
      * `true` if the symbol is a type that is nullable (can be null or undefined).
      */
     readonly nullable: boolean;
+    /**
+     * Documentation comment on the Symbol, if any.
+     */
+    readonly documentation: ts.SymbolDisplayPart[];
     /**
      * A table of the members of the symbol; that is, the members that can appear
      * after a `.` in an Angular expression.
