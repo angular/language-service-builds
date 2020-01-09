@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+575.sha-0083443
+ * @license Angular v9.0.0-rc.1+583.sha-c3f14bb
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18663,7 +18663,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+575.sha-0083443');
+    var VERSION$1 = new Version('9.0.0-rc.1+583.sha-c3f14bb');
 
     /**
      * @license
@@ -27708,12 +27708,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 },
                 visitAttribute: function (ast) {
-                    if (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan))) {
+                    var bindParts = ast.name.match(BIND_NAME_REGEXP$2);
+                    var isReference = bindParts && bindParts[ATTR.KW_REF_IDX] !== undefined;
+                    if (!isReference &&
+                        (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan)))) {
                         // We are in the name of an attribute. Show attribute completions.
                         result = attributeCompletions(templateInfo, path);
                     }
                     else if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                        result = attributeValueCompletions(templateInfo, templatePosition, ast);
+                        if (isReference) {
+                            result = referenceAttributeValueCompletions(templateInfo, templatePosition, ast);
+                        }
+                        else {
+                            result = attributeValueCompletions(templateInfo, templatePosition, ast);
+                        }
                     }
                 },
                 visitText: function (ast) {
@@ -27859,6 +27867,22 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         path.tail.visit(visitor, null);
         return visitor.results;
     }
+    function referenceAttributeValueCompletions(info, position, attr) {
+        var path = findTemplateAstAt(info.templateAst, position);
+        if (!path.tail) {
+            return [];
+        }
+        // When the template parser does not find a directive with matching "exportAs",
+        // the ReferenceAst will be ignored.
+        if (!(path.tail instanceof ReferenceAst)) {
+            // The sourceSpan of an ReferenceAst is the valueSpan of the HTML Attribute.
+            path.push(new ReferenceAst(attr.name, null, attr.value, attr.valueSpan));
+        }
+        var dinfo = diagnosticInfoFromTemplateInfo(info);
+        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); });
+        path.tail.visit(visitor, path.parentOf(path.tail));
+        return visitor.results;
+    }
     function elementCompletions(info) {
         var e_3, _a;
         var results = __spread(ANGULAR_ELEMENTS);
@@ -27985,6 +28009,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
                 this.addAttributeValuesToCompletions(expressionAst);
             }
+        };
+        ExpressionVisitor.prototype.visitReference = function (ast, context) {
+            var _this = this;
+            context.directives.forEach(function (dir) {
+                var exportAs = dir.directive.exportAs;
+                if (exportAs) {
+                    _this.completions.set(exportAs, { name: exportAs, kind: CompletionKind.REFERENCE, sortText: exportAs });
+                }
+            });
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
             if (inSpan(this.position, ast.value.sourceSpan)) {
@@ -42893,8 +42926,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function ɵɵattribute(name, value, sanitizer, namespace) {
         var lView = getLView();
-        if (bindingUpdated(lView, nextBindingIndex(), value)) {
-            elementAttributeInternal(getSelectedIndex(), name, value, lView, sanitizer, namespace);
+        var bindingIndex = nextBindingIndex();
+        if (bindingUpdated(lView, bindingIndex, value)) {
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, name, value, lView, sanitizer, namespace);
+            ngDevMode &&
+                storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + name, bindingIndex);
         }
         return ɵɵattribute;
     }
@@ -43064,7 +43101,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation1(lView, prefix, v0, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 1, prefix, suffix);
         }
         return ɵɵattributeInterpolate1;
     }
@@ -43098,7 +43137,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation2(lView, prefix, v0, i0, v1, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 2, prefix, i0, suffix);
         }
         return ɵɵattributeInterpolate2;
     }
@@ -43135,7 +43176,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation3(lView, prefix, v0, i0, v1, i1, v2, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 3, prefix, i0, i1, suffix);
         }
         return ɵɵattributeInterpolate3;
     }
@@ -43174,7 +43217,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation4(lView, prefix, v0, i0, v1, i1, v2, i2, v3, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 4, prefix, i0, i1, i2, suffix);
         }
         return ɵɵattributeInterpolate4;
     }
@@ -43215,7 +43260,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation5(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 5, prefix, i0, i1, i2, i3, suffix);
         }
         return ɵɵattributeInterpolate5;
     }
@@ -43258,7 +43305,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation6(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 6, prefix, i0, i1, i2, i3, i4, suffix);
         }
         return ɵɵattributeInterpolate6;
     }
@@ -43300,11 +43349,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @codeGenApi
      */
     function ɵɵattributeInterpolate7(attrName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation7(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 7, prefix, i0, i1, i2, i3, i4, i5, suffix);
         }
         return ɵɵattributeInterpolate7;
     }
@@ -43351,7 +43401,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation8(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolatedValue, lView, sanitizer, namespace);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, 'attr.' + attrName, getBindingIndex() - 8, prefix, i0, i1, i2, i3, i4, i5, i6, suffix);
         }
         return ɵɵattributeInterpolate8;
     }
@@ -43385,7 +43437,16 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolated = interpolationV(lView, values);
         if (interpolated !== NO_CHANGE) {
-            elementAttributeInternal(getSelectedIndex(), attrName, interpolated, lView, sanitizer, namespace);
+            var nodeIndex = getSelectedIndex();
+            elementAttributeInternal(nodeIndex, attrName, interpolated, lView, sanitizer, namespace);
+            if (ngDevMode) {
+                var interpolationInBetween = [values[0]]; // prefix
+                for (var i = 2; i < values.length; i += 2) {
+                    interpolationInBetween.push(values[i]);
+                }
+                storePropertyBindingMetadata.apply(void 0, __spread([lView[TVIEW].data, nodeIndex, 'attr.' + attrName,
+                    getBindingIndex() - interpolationInBetween.length + 1], interpolationInBetween));
+            }
         }
         return ɵɵattributeInterpolateV;
     }
@@ -45149,9 +45210,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lView = getLView();
         var interpolatedValue = interpolation1(lView, prefix, v0, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(lView, getSelectedIndex(), propName, interpolatedValue, sanitizer);
-            ngDevMode &&
-                storePropertyBindingMetadata(lView[TVIEW].data, getSelectedIndex(), propName, getBindingIndex() - 1, prefix, suffix);
+            var nodeIndex = getSelectedIndex();
+            elementPropertyInternal(lView, nodeIndex, propName, interpolatedValue, sanitizer);
+            ngDevMode && storePropertyBindingMetadata(lView[TVIEW].data, nodeIndex, propName, getBindingIndex() - 1, prefix, suffix);
         }
         return ɵɵpropertyInterpolate1;
     }
@@ -47879,7 +47940,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+575.sha-0083443');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+583.sha-c3f14bb');
 
     /**
      * @license
@@ -62836,7 +62897,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+575.sha-0083443');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+583.sha-c3f14bb');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
