@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+557.sha-02e4921
+ * @license Angular v9.0.0-rc.1+574.sha-8815ace
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18663,7 +18663,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+557.sha-02e4921');
+    var VERSION$1 = new Version('9.0.0-rc.1+574.sha-8815ace');
 
     /**
      * @license
@@ -44191,7 +44191,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             registerInitialStylingOnTNode(tNode, attrs, 0);
         }
         var hasDirectives = resolveDirectives(tView, lView, tNode, getConstant(tViewConsts, localRefsIndex));
-        ngDevMode && validateElement(lView, native, tNode, hasDirectives);
+        ngDevMode && warnAboutUnknownElement(lView, native, tNode, hasDirectives);
         if (tView.queries !== null) {
             tView.queries.elementStart(tView, tNode);
         }
@@ -44373,7 +44373,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // be (Jira Issue = FW-1467).
         setInputsForProperty(lView, stylingInputs, propName, value);
     }
-    function validateElement(hostView, element, tNode, hasDirectives) {
+    function warnAboutUnknownElement(hostView, element, tNode, hasDirectives) {
         var schemas = hostView[TVIEW].schemas;
         // If `schemas` is set to `null`, that's an indication that this Component was compiled in AOT
         // mode where this check happens at compile time. In JIT mode, `schemas` is always present and
@@ -44395,18 +44395,18 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 (typeof customElements !== 'undefined' && tagName.indexOf('-') > -1 &&
                     !customElements.get(tagName));
             if (isUnknown && !matchingSchemas(hostView, tagName)) {
-                var errorMessage = "'" + tagName + "' is not a known element:\n";
-                errorMessage +=
+                var warning = "'" + tagName + "' is not a known element:\n";
+                warning +=
                     "1. If '" + tagName + "' is an Angular component, then verify that it is part of this module.\n";
                 if (tagName && tagName.indexOf('-') > -1) {
-                    errorMessage +=
+                    warning +=
                         "2. If '" + tagName + "' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.";
                 }
                 else {
-                    errorMessage +=
+                    warning +=
                         "2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.";
                 }
-                throw new Error(errorMessage);
+                console.warn(warning);
             }
         }
     }
@@ -47879,7 +47879,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+557.sha-02e4921');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+574.sha-8815ace');
 
     /**
      * @license
@@ -62836,7 +62836,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+557.sha-02e4921');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+574.sha-8815ace');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
