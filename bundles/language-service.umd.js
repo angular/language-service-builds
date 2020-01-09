@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+575.sha-0083443
+ * @license Angular v9.0.0-rc.1+583.sha-c3f14bb
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+575.sha-0083443');
+    var VERSION$1 = new Version('9.0.0-rc.1+583.sha-c3f14bb');
 
     /**
      * @license
@@ -27723,12 +27723,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 },
                 visitAttribute: function (ast) {
-                    if (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan))) {
+                    var bindParts = ast.name.match(BIND_NAME_REGEXP$2);
+                    var isReference = bindParts && bindParts[ATTR.KW_REF_IDX] !== undefined;
+                    if (!isReference &&
+                        (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan)))) {
                         // We are in the name of an attribute. Show attribute completions.
                         result = attributeCompletions(templateInfo, path);
                     }
                     else if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                        result = attributeValueCompletions(templateInfo, templatePosition, ast);
+                        if (isReference) {
+                            result = referenceAttributeValueCompletions(templateInfo, templatePosition, ast);
+                        }
+                        else {
+                            result = attributeValueCompletions(templateInfo, templatePosition, ast);
+                        }
                     }
                 },
                 visitText: function (ast) {
@@ -27874,6 +27882,22 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         path.tail.visit(visitor, null);
         return visitor.results;
     }
+    function referenceAttributeValueCompletions(info, position, attr) {
+        var path = findTemplateAstAt(info.templateAst, position);
+        if (!path.tail) {
+            return [];
+        }
+        // When the template parser does not find a directive with matching "exportAs",
+        // the ReferenceAst will be ignored.
+        if (!(path.tail instanceof ReferenceAst)) {
+            // The sourceSpan of an ReferenceAst is the valueSpan of the HTML Attribute.
+            path.push(new ReferenceAst(attr.name, null, attr.value, attr.valueSpan));
+        }
+        var dinfo = diagnosticInfoFromTemplateInfo(info);
+        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); });
+        path.tail.visit(visitor, path.parentOf(path.tail));
+        return visitor.results;
+    }
     function elementCompletions(info) {
         var e_3, _a;
         var results = __spread(ANGULAR_ELEMENTS);
@@ -28000,6 +28024,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
                 this.addAttributeValuesToCompletions(expressionAst);
             }
+        };
+        ExpressionVisitor.prototype.visitReference = function (ast, context) {
+            var _this = this;
+            context.directives.forEach(function (dir) {
+                var exportAs = dir.directive.exportAs;
+                if (exportAs) {
+                    _this.completions.set(exportAs, { name: exportAs, kind: CompletionKind.REFERENCE, sortText: exportAs });
+                }
+            });
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
             if (inSpan(this.position, ast.value.sourceSpan)) {
@@ -38971,7 +39004,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+575.sha-0083443');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+583.sha-c3f14bb');
 
     /**
      * @license
@@ -50895,7 +50928,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+575.sha-0083443');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+583.sha-c3f14bb');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
