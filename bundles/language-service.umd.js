@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.8+30.sha-f312848
+ * @license Angular v9.0.0-rc.8+55.sha-a5cdad5
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.8+30.sha-f312848');
+    var VERSION$1 = new Version('0.0.0');
 
     /**
      * @license
@@ -19120,10 +19120,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var MEANING_SEPARATOR = '|';
     var ID_SEPARATOR = '@@';
     var i18nCommentsWarned = false;
-    function mergeTranslations(nodes, translations, interpolationConfig, implicitTags, implicitAttrs) {
-        var visitor = new _Visitor$2(implicitTags, implicitAttrs);
-        return visitor.merge(nodes, translations, interpolationConfig);
-    }
     var ExtractionResult = /** @class */ (function () {
         function ExtractionResult(messages, errors) {
             this.messages = messages;
@@ -20293,215 +20289,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return XmlToI18n;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A container for translated messages
-     */
-    var TranslationBundle = /** @class */ (function () {
-        function TranslationBundle(_i18nNodesByMsgId, locale, digest, mapperFactory, missingTranslationStrategy, console) {
-            if (_i18nNodesByMsgId === void 0) { _i18nNodesByMsgId = {}; }
-            if (missingTranslationStrategy === void 0) { missingTranslationStrategy = MissingTranslationStrategy.Warning; }
-            this._i18nNodesByMsgId = _i18nNodesByMsgId;
-            this.digest = digest;
-            this.mapperFactory = mapperFactory;
-            this._i18nToHtml = new I18nToHtmlVisitor(_i18nNodesByMsgId, locale, digest, mapperFactory, missingTranslationStrategy, console);
-        }
-        // Creates a `TranslationBundle` by parsing the given `content` with the `serializer`.
-        TranslationBundle.load = function (content, url, serializer, missingTranslationStrategy, console) {
-            var _a = serializer.load(content, url), locale = _a.locale, i18nNodesByMsgId = _a.i18nNodesByMsgId;
-            var digestFn = function (m) { return serializer.digest(m); };
-            var mapperFactory = function (m) { return serializer.createNameMapper(m); };
-            return new TranslationBundle(i18nNodesByMsgId, locale, digestFn, mapperFactory, missingTranslationStrategy, console);
-        };
-        // Returns the translation as HTML nodes from the given source message.
-        TranslationBundle.prototype.get = function (srcMsg) {
-            var html = this._i18nToHtml.convert(srcMsg);
-            if (html.errors.length) {
-                throw new Error(html.errors.join('\n'));
-            }
-            return html.nodes;
-        };
-        TranslationBundle.prototype.has = function (srcMsg) { return this.digest(srcMsg) in this._i18nNodesByMsgId; };
-        return TranslationBundle;
-    }());
-    var I18nToHtmlVisitor = /** @class */ (function () {
-        function I18nToHtmlVisitor(_i18nNodesByMsgId, _locale, _digest, _mapperFactory, _missingTranslationStrategy, _console) {
-            if (_i18nNodesByMsgId === void 0) { _i18nNodesByMsgId = {}; }
-            this._i18nNodesByMsgId = _i18nNodesByMsgId;
-            this._locale = _locale;
-            this._digest = _digest;
-            this._mapperFactory = _mapperFactory;
-            this._missingTranslationStrategy = _missingTranslationStrategy;
-            this._console = _console;
-            this._contextStack = [];
-            this._errors = [];
-        }
-        I18nToHtmlVisitor.prototype.convert = function (srcMsg) {
-            this._contextStack.length = 0;
-            this._errors.length = 0;
-            // i18n to text
-            var text = this._convertToText(srcMsg);
-            // text to html
-            var url = srcMsg.nodes[0].sourceSpan.start.file.url;
-            var html = new HtmlParser().parse(text, url, { tokenizeExpansionForms: true });
-            return {
-                nodes: html.rootNodes,
-                errors: __spread(this._errors, html.errors),
-            };
-        };
-        I18nToHtmlVisitor.prototype.visitText = function (text, context) {
-            // `convert()` uses an `HtmlParser` to return `html.Node`s
-            // we should then make sure that any special characters are escaped
-            return escapeXml(text.value);
-        };
-        I18nToHtmlVisitor.prototype.visitContainer = function (container, context) {
-            var _this = this;
-            return container.children.map(function (n) { return n.visit(_this); }).join('');
-        };
-        I18nToHtmlVisitor.prototype.visitIcu = function (icu, context) {
-            var _this = this;
-            var cases = Object.keys(icu.cases).map(function (k) { return k + " {" + icu.cases[k].visit(_this) + "}"; });
-            // TODO(vicb): Once all format switch to using expression placeholders
-            // we should throw when the placeholder is not in the source message
-            var exp = this._srcMsg.placeholders.hasOwnProperty(icu.expression) ?
-                this._srcMsg.placeholders[icu.expression] :
-                icu.expression;
-            return "{" + exp + ", " + icu.type + ", " + cases.join(' ') + "}";
-        };
-        I18nToHtmlVisitor.prototype.visitPlaceholder = function (ph, context) {
-            var phName = this._mapper(ph.name);
-            if (this._srcMsg.placeholders.hasOwnProperty(phName)) {
-                return this._srcMsg.placeholders[phName];
-            }
-            if (this._srcMsg.placeholderToMessage.hasOwnProperty(phName)) {
-                return this._convertToText(this._srcMsg.placeholderToMessage[phName]);
-            }
-            this._addError(ph, "Unknown placeholder \"" + ph.name + "\"");
-            return '';
-        };
-        // Loaded message contains only placeholders (vs tag and icu placeholders).
-        // However when a translation can not be found, we need to serialize the source message
-        // which can contain tag placeholders
-        I18nToHtmlVisitor.prototype.visitTagPlaceholder = function (ph, context) {
-            var _this = this;
-            var tag = "" + ph.tag;
-            var attrs = Object.keys(ph.attrs).map(function (name) { return name + "=\"" + ph.attrs[name] + "\""; }).join(' ');
-            if (ph.isVoid) {
-                return "<" + tag + " " + attrs + "/>";
-            }
-            var children = ph.children.map(function (c) { return c.visit(_this); }).join('');
-            return "<" + tag + " " + attrs + ">" + children + "</" + tag + ">";
-        };
-        // Loaded message contains only placeholders (vs tag and icu placeholders).
-        // However when a translation can not be found, we need to serialize the source message
-        // which can contain tag placeholders
-        I18nToHtmlVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
-            // An ICU placeholder references the source message to be serialized
-            return this._convertToText(this._srcMsg.placeholderToMessage[ph.name]);
-        };
-        /**
-         * Convert a source message to a translated text string:
-         * - text nodes are replaced with their translation,
-         * - placeholders are replaced with their content,
-         * - ICU nodes are converted to ICU expressions.
-         */
-        I18nToHtmlVisitor.prototype._convertToText = function (srcMsg) {
-            var _this = this;
-            var id = this._digest(srcMsg);
-            var mapper = this._mapperFactory ? this._mapperFactory(srcMsg) : null;
-            var nodes;
-            this._contextStack.push({ msg: this._srcMsg, mapper: this._mapper });
-            this._srcMsg = srcMsg;
-            if (this._i18nNodesByMsgId.hasOwnProperty(id)) {
-                // When there is a translation use its nodes as the source
-                // And create a mapper to convert serialized placeholder names to internal names
-                nodes = this._i18nNodesByMsgId[id];
-                this._mapper = function (name) { return mapper ? mapper.toInternalName(name) : name; };
-            }
-            else {
-                // When no translation has been found
-                // - report an error / a warning / nothing,
-                // - use the nodes from the original message
-                // - placeholders are already internal and need no mapper
-                if (this._missingTranslationStrategy === MissingTranslationStrategy.Error) {
-                    var ctx = this._locale ? " for locale \"" + this._locale + "\"" : '';
-                    this._addError(srcMsg.nodes[0], "Missing translation for message \"" + id + "\"" + ctx);
-                }
-                else if (this._console &&
-                    this._missingTranslationStrategy === MissingTranslationStrategy.Warning) {
-                    var ctx = this._locale ? " for locale \"" + this._locale + "\"" : '';
-                    this._console.warn("Missing translation for message \"" + id + "\"" + ctx);
-                }
-                nodes = srcMsg.nodes;
-                this._mapper = function (name) { return name; };
-            }
-            var text = nodes.map(function (node) { return node.visit(_this); }).join('');
-            var context = this._contextStack.pop();
-            this._srcMsg = context.msg;
-            this._mapper = context.mapper;
-            return text;
-        };
-        I18nToHtmlVisitor.prototype._addError = function (el, msg) {
-            this._errors.push(new I18nError(el.sourceSpan, msg));
-        };
-        return I18nToHtmlVisitor;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var I18NHtmlParser = /** @class */ (function () {
-        function I18NHtmlParser(_htmlParser, translations, translationsFormat, missingTranslation, console) {
-            if (missingTranslation === void 0) { missingTranslation = MissingTranslationStrategy.Warning; }
-            this._htmlParser = _htmlParser;
-            if (translations) {
-                var serializer = createSerializer(translationsFormat);
-                this._translationBundle =
-                    TranslationBundle.load(translations, 'i18n', serializer, missingTranslation, console);
-            }
-            else {
-                this._translationBundle =
-                    new TranslationBundle({}, null, digest, undefined, missingTranslation, console);
-            }
-        }
-        I18NHtmlParser.prototype.parse = function (source, url, options) {
-            if (options === void 0) { options = {}; }
-            var interpolationConfig = options.interpolationConfig || DEFAULT_INTERPOLATION_CONFIG;
-            var parseResult = this._htmlParser.parse(source, url, __assign({ interpolationConfig: interpolationConfig }, options));
-            if (parseResult.errors.length) {
-                return new ParseTreeResult(parseResult.rootNodes, parseResult.errors);
-            }
-            return mergeTranslations(parseResult.rootNodes, this._translationBundle, interpolationConfig, [], {});
-        };
-        return I18NHtmlParser;
-    }());
-    function createSerializer(format) {
-        format = (format || 'xlf').toLowerCase();
-        switch (format) {
-            case 'xmb':
-                return new Xmb();
-            case 'xtb':
-                return new Xtb();
-            case 'xliff2':
-            case 'xlf2':
-                return new Xliff2();
-            case 'xliff':
-            case 'xlf':
-            default:
-                return new Xliff();
-        }
-    }
 
     /**
      * @license
@@ -27995,12 +27782,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             configurable: true
         });
         ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
-            this.addAttributeValuesToCompletions(ast.value);
+            this.processExpressionCompletions(ast.value);
         };
         ExpressionVisitor.prototype.visitElementProperty = function (ast) {
-            this.addAttributeValuesToCompletions(ast.value);
+            this.processExpressionCompletions(ast.value);
         };
-        ExpressionVisitor.prototype.visitEvent = function (ast) { this.addAttributeValuesToCompletions(ast.handler); };
+        ExpressionVisitor.prototype.visitEvent = function (ast) { this.processExpressionCompletions(ast.handler); };
         ExpressionVisitor.prototype.visitElement = function (ast) {
             // no-op for now
         };
@@ -28022,7 +27809,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 // expression completions.
                 // The expression must be reparsed to get a valid AST rather than only template bindings.
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
-                this.addAttributeValuesToCompletions(expressionAst);
+                this.processExpressionCompletions(expressionAst);
             }
         };
         ExpressionVisitor.prototype.visitReference = function (ast, context) {
@@ -28042,7 +27829,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         };
-        ExpressionVisitor.prototype.addAttributeValuesToCompletions = function (value) {
+        ExpressionVisitor.prototype.processExpressionCompletions = function (value) {
             var symbols = getExpressionCompletions(this.getExpressionScope(), value, this.position, this.info.template.query);
             if (symbols) {
                 this.addSymbolsToCompletions(symbols);
@@ -28119,7 +27906,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
             if (binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) {
-                this.addAttributeValuesToCompletions(binding.expression.ast);
+                this.processExpressionCompletions(binding.expression.ast);
                 return;
             }
             // If the expression is incomplete, for example *ngFor="let x of |"
@@ -28129,7 +27916,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var ofLocation = attr.value.indexOf(KW_OF);
             if (ofLocation > 0 && valueRelativePosition >= ofLocation + KW_OF.length) {
                 var expressionAst = this.info.expressionParser.parseBinding(attr.value, attr.sourceSpan.toString(), attr.sourceSpan.start.offset);
-                this.addAttributeValuesToCompletions(expressionAst);
+                this.processExpressionCompletions(expressionAst);
             }
         };
         return ExpressionVisitor;
@@ -39004,7 +38791,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.8+30.sha-f312848');
+    var VERSION$2 = new Version$1('0.0.0');
 
     /**
      * @license
@@ -50728,7 +50515,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (!data) {
                 return;
             }
-            var htmlParser = new I18NHtmlParser(new HtmlParser());
+            var htmlParser = new HtmlParser();
             var expressionParser = new Parser$1(new Lexer());
             var parser = new TemplateParser(new CompilerConfig(), this.reflector, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, // console
             [] // tranforms
@@ -50927,7 +50714,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.8+30.sha-f312848');
+    var VERSION$3 = new Version$1('0.0.0');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
