@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+558.sha-d1c7ca7
+ * @license Angular v9.0.0-rc.1+615.sha-82a41af
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -3542,14 +3542,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         Identifiers.stylePropInterpolate8 = { name: 'ɵɵstylePropInterpolate8', moduleName: CORE$1 };
         Identifiers.stylePropInterpolateV = { name: 'ɵɵstylePropInterpolateV', moduleName: CORE$1 };
         Identifiers.styleSanitizer = { name: 'ɵɵstyleSanitizer', moduleName: CORE$1 };
-        Identifiers.elementHostAttrs = { name: 'ɵɵelementHostAttrs', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵɵcontainer', moduleName: CORE$1 };
         Identifiers.nextContext = { name: 'ɵɵnextContext', moduleName: CORE$1 };
         Identifiers.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵɵtext', moduleName: CORE$1 };
         Identifiers.enableBindings = { name: 'ɵɵenableBindings', moduleName: CORE$1 };
         Identifiers.disableBindings = { name: 'ɵɵdisableBindings', moduleName: CORE$1 };
-        Identifiers.allocHostVars = { name: 'ɵɵallocHostVars', moduleName: CORE$1 };
         Identifiers.getCurrentView = { name: 'ɵɵgetCurrentView', moduleName: CORE$1 };
         Identifiers.textInterpolate = { name: 'ɵɵtextInterpolate', moduleName: CORE$1 };
         Identifiers.textInterpolate1 = { name: 'ɵɵtextInterpolate1', moduleName: CORE$1 };
@@ -12918,26 +12916,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          * responsible for registering initial styles (within a directive hostBindings' creation block),
          * as well as any of the provided attribute values, to the directive host element.
          */
-        StylingBuilder.prototype.buildHostAttrsInstruction = function (sourceSpan, attrs, constantPool) {
-            var _this = this;
+        StylingBuilder.prototype.assignHostAttrs = function (attrs, definitionMap) {
             if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
-                return {
-                    reference: Identifiers$1.elementHostAttrs,
-                    calls: [{
-                            sourceSpan: sourceSpan,
-                            allocateBindingSlots: 0,
-                            params: function () {
-                                // params => elementHostAttrs(attrs)
-                                _this.populateInitialStylingAttrs(attrs);
-                                var attrArray = !attrs.some(function (attr) { return attr instanceof WrappedNodeExpr; }) ?
-                                    getConstantLiteralFromArray(constantPool, attrs) :
-                                    literalArr(attrs);
-                                return [attrArray];
-                            }
-                        }]
-                };
+                this.populateInitialStylingAttrs(attrs);
+                definitionMap.set('hostAttrs', literalArr(attrs));
             }
-            return null;
         };
         /**
          * Builds an instruction with all the expressions and parameters for `classMap`.
@@ -13101,13 +13084,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             prop === 'border-image' || prop === 'borderImage' || prop === 'filter' ||
             prop === 'list-style' || prop === 'listStyle' || prop === 'list-style-image' ||
             prop === 'listStyleImage' || prop === 'clip-path' || prop === 'clipPath';
-    }
-    /**
-     * Simple helper function to either provide the constant literal that will house the value
-     * here or a null value if the provided values are empty.
-     */
-    function getConstantLiteralFromArray(constantPool, values) {
-        return values.length ? constantPool.getConstLiteral(literalArr(values), true) : NULL_EXPR;
     }
     function parseProperty(name) {
         var hasOverrideFlag = false;
@@ -17814,7 +17790,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             definitionMap.set('viewQuery', createViewQueriesFunction(meta.viewQueries, constantPool, meta.name));
         }
         // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
-        definitionMap.set('hostBindings', createHostBindingsFunction(meta.host, meta.typeSourceSpan, bindingParser, constantPool, meta.selector || '', meta.name));
+        definitionMap.set('hostBindings', createHostBindingsFunction(meta.host, meta.typeSourceSpan, bindingParser, constantPool, meta.selector || '', meta.name, definitionMap));
         // e.g 'inputs: {a: 'a'}`
         definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
         // e.g 'outputs: {a: 'a'}`
@@ -18094,7 +18070,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         ], INFERRED_TYPE, null, viewQueryFnName);
     }
     // Return a host binding function or null if one is not necessary.
-    function createHostBindingsFunction(hostBindingsMetadata, typeSourceSpan, bindingParser, constantPool, selector, name) {
+    function createHostBindingsFunction(hostBindingsMetadata, typeSourceSpan, bindingParser, constantPool, selector, name, definitionMap) {
         // Initialize hostVarsCount to number of bound host properties (interpolations illegal)
         var hostVarsCount = Object.keys(hostBindingsMetadata.properties).length;
         var elVarExp = variable('elIndex');
@@ -18197,11 +18173,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // to the host element alongside any of the provided host attributes that were
         // collected earlier.
         var hostAttrs = convertAttributesToExpressions(hostBindingsMetadata.attributes);
-        var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
-        if (hostInstruction && hostInstruction.calls.length > 0) {
-            createStatements.push(chainedInstruction(hostInstruction.reference, hostInstruction.calls.map(function (call) { return convertStylingCall(call, bindingContext, bindingFn); }))
-                .toStmt());
-        }
+        styleBuilder.assignHostAttrs(hostAttrs, definitionMap);
         if (styleBuilder.hasBindings) {
             // finally each binding that was registered in the statement above will need to be added to
             // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
@@ -18220,7 +18192,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             });
         }
         if (totalHostVarsCount) {
-            createStatements.unshift(importExpr(Identifiers$1.allocHostVars).callFn([literal(totalHostVarsCount)]).toStmt());
+            definitionMap.set('hostVars', literal(totalHostVarsCount));
         }
         if (createStatements.length > 0 || updateStatements.length > 0) {
             var hostBindingsFnName = name ? name + "_HostBindings" : null;
@@ -18678,7 +18650,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+558.sha-d1c7ca7');
+    var VERSION$1 = new Version('0.0.0');
 
     /**
      * @license
@@ -19120,10 +19092,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var MEANING_SEPARATOR = '|';
     var ID_SEPARATOR = '@@';
     var i18nCommentsWarned = false;
-    function mergeTranslations(nodes, translations, interpolationConfig, implicitTags, implicitAttrs) {
-        var visitor = new _Visitor$2(implicitTags, implicitAttrs);
-        return visitor.merge(nodes, translations, interpolationConfig);
-    }
     var ExtractionResult = /** @class */ (function () {
         function ExtractionResult(messages, errors) {
             this.messages = messages;
@@ -20293,215 +20261,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return XmlToI18n;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A container for translated messages
-     */
-    var TranslationBundle = /** @class */ (function () {
-        function TranslationBundle(_i18nNodesByMsgId, locale, digest, mapperFactory, missingTranslationStrategy, console) {
-            if (_i18nNodesByMsgId === void 0) { _i18nNodesByMsgId = {}; }
-            if (missingTranslationStrategy === void 0) { missingTranslationStrategy = MissingTranslationStrategy.Warning; }
-            this._i18nNodesByMsgId = _i18nNodesByMsgId;
-            this.digest = digest;
-            this.mapperFactory = mapperFactory;
-            this._i18nToHtml = new I18nToHtmlVisitor(_i18nNodesByMsgId, locale, digest, mapperFactory, missingTranslationStrategy, console);
-        }
-        // Creates a `TranslationBundle` by parsing the given `content` with the `serializer`.
-        TranslationBundle.load = function (content, url, serializer, missingTranslationStrategy, console) {
-            var _a = serializer.load(content, url), locale = _a.locale, i18nNodesByMsgId = _a.i18nNodesByMsgId;
-            var digestFn = function (m) { return serializer.digest(m); };
-            var mapperFactory = function (m) { return serializer.createNameMapper(m); };
-            return new TranslationBundle(i18nNodesByMsgId, locale, digestFn, mapperFactory, missingTranslationStrategy, console);
-        };
-        // Returns the translation as HTML nodes from the given source message.
-        TranslationBundle.prototype.get = function (srcMsg) {
-            var html = this._i18nToHtml.convert(srcMsg);
-            if (html.errors.length) {
-                throw new Error(html.errors.join('\n'));
-            }
-            return html.nodes;
-        };
-        TranslationBundle.prototype.has = function (srcMsg) { return this.digest(srcMsg) in this._i18nNodesByMsgId; };
-        return TranslationBundle;
-    }());
-    var I18nToHtmlVisitor = /** @class */ (function () {
-        function I18nToHtmlVisitor(_i18nNodesByMsgId, _locale, _digest, _mapperFactory, _missingTranslationStrategy, _console) {
-            if (_i18nNodesByMsgId === void 0) { _i18nNodesByMsgId = {}; }
-            this._i18nNodesByMsgId = _i18nNodesByMsgId;
-            this._locale = _locale;
-            this._digest = _digest;
-            this._mapperFactory = _mapperFactory;
-            this._missingTranslationStrategy = _missingTranslationStrategy;
-            this._console = _console;
-            this._contextStack = [];
-            this._errors = [];
-        }
-        I18nToHtmlVisitor.prototype.convert = function (srcMsg) {
-            this._contextStack.length = 0;
-            this._errors.length = 0;
-            // i18n to text
-            var text = this._convertToText(srcMsg);
-            // text to html
-            var url = srcMsg.nodes[0].sourceSpan.start.file.url;
-            var html = new HtmlParser().parse(text, url, { tokenizeExpansionForms: true });
-            return {
-                nodes: html.rootNodes,
-                errors: __spread(this._errors, html.errors),
-            };
-        };
-        I18nToHtmlVisitor.prototype.visitText = function (text, context) {
-            // `convert()` uses an `HtmlParser` to return `html.Node`s
-            // we should then make sure that any special characters are escaped
-            return escapeXml(text.value);
-        };
-        I18nToHtmlVisitor.prototype.visitContainer = function (container, context) {
-            var _this = this;
-            return container.children.map(function (n) { return n.visit(_this); }).join('');
-        };
-        I18nToHtmlVisitor.prototype.visitIcu = function (icu, context) {
-            var _this = this;
-            var cases = Object.keys(icu.cases).map(function (k) { return k + " {" + icu.cases[k].visit(_this) + "}"; });
-            // TODO(vicb): Once all format switch to using expression placeholders
-            // we should throw when the placeholder is not in the source message
-            var exp = this._srcMsg.placeholders.hasOwnProperty(icu.expression) ?
-                this._srcMsg.placeholders[icu.expression] :
-                icu.expression;
-            return "{" + exp + ", " + icu.type + ", " + cases.join(' ') + "}";
-        };
-        I18nToHtmlVisitor.prototype.visitPlaceholder = function (ph, context) {
-            var phName = this._mapper(ph.name);
-            if (this._srcMsg.placeholders.hasOwnProperty(phName)) {
-                return this._srcMsg.placeholders[phName];
-            }
-            if (this._srcMsg.placeholderToMessage.hasOwnProperty(phName)) {
-                return this._convertToText(this._srcMsg.placeholderToMessage[phName]);
-            }
-            this._addError(ph, "Unknown placeholder \"" + ph.name + "\"");
-            return '';
-        };
-        // Loaded message contains only placeholders (vs tag and icu placeholders).
-        // However when a translation can not be found, we need to serialize the source message
-        // which can contain tag placeholders
-        I18nToHtmlVisitor.prototype.visitTagPlaceholder = function (ph, context) {
-            var _this = this;
-            var tag = "" + ph.tag;
-            var attrs = Object.keys(ph.attrs).map(function (name) { return name + "=\"" + ph.attrs[name] + "\""; }).join(' ');
-            if (ph.isVoid) {
-                return "<" + tag + " " + attrs + "/>";
-            }
-            var children = ph.children.map(function (c) { return c.visit(_this); }).join('');
-            return "<" + tag + " " + attrs + ">" + children + "</" + tag + ">";
-        };
-        // Loaded message contains only placeholders (vs tag and icu placeholders).
-        // However when a translation can not be found, we need to serialize the source message
-        // which can contain tag placeholders
-        I18nToHtmlVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
-            // An ICU placeholder references the source message to be serialized
-            return this._convertToText(this._srcMsg.placeholderToMessage[ph.name]);
-        };
-        /**
-         * Convert a source message to a translated text string:
-         * - text nodes are replaced with their translation,
-         * - placeholders are replaced with their content,
-         * - ICU nodes are converted to ICU expressions.
-         */
-        I18nToHtmlVisitor.prototype._convertToText = function (srcMsg) {
-            var _this = this;
-            var id = this._digest(srcMsg);
-            var mapper = this._mapperFactory ? this._mapperFactory(srcMsg) : null;
-            var nodes;
-            this._contextStack.push({ msg: this._srcMsg, mapper: this._mapper });
-            this._srcMsg = srcMsg;
-            if (this._i18nNodesByMsgId.hasOwnProperty(id)) {
-                // When there is a translation use its nodes as the source
-                // And create a mapper to convert serialized placeholder names to internal names
-                nodes = this._i18nNodesByMsgId[id];
-                this._mapper = function (name) { return mapper ? mapper.toInternalName(name) : name; };
-            }
-            else {
-                // When no translation has been found
-                // - report an error / a warning / nothing,
-                // - use the nodes from the original message
-                // - placeholders are already internal and need no mapper
-                if (this._missingTranslationStrategy === MissingTranslationStrategy.Error) {
-                    var ctx = this._locale ? " for locale \"" + this._locale + "\"" : '';
-                    this._addError(srcMsg.nodes[0], "Missing translation for message \"" + id + "\"" + ctx);
-                }
-                else if (this._console &&
-                    this._missingTranslationStrategy === MissingTranslationStrategy.Warning) {
-                    var ctx = this._locale ? " for locale \"" + this._locale + "\"" : '';
-                    this._console.warn("Missing translation for message \"" + id + "\"" + ctx);
-                }
-                nodes = srcMsg.nodes;
-                this._mapper = function (name) { return name; };
-            }
-            var text = nodes.map(function (node) { return node.visit(_this); }).join('');
-            var context = this._contextStack.pop();
-            this._srcMsg = context.msg;
-            this._mapper = context.mapper;
-            return text;
-        };
-        I18nToHtmlVisitor.prototype._addError = function (el, msg) {
-            this._errors.push(new I18nError(el.sourceSpan, msg));
-        };
-        return I18nToHtmlVisitor;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var I18NHtmlParser = /** @class */ (function () {
-        function I18NHtmlParser(_htmlParser, translations, translationsFormat, missingTranslation, console) {
-            if (missingTranslation === void 0) { missingTranslation = MissingTranslationStrategy.Warning; }
-            this._htmlParser = _htmlParser;
-            if (translations) {
-                var serializer = createSerializer(translationsFormat);
-                this._translationBundle =
-                    TranslationBundle.load(translations, 'i18n', serializer, missingTranslation, console);
-            }
-            else {
-                this._translationBundle =
-                    new TranslationBundle({}, null, digest, undefined, missingTranslation, console);
-            }
-        }
-        I18NHtmlParser.prototype.parse = function (source, url, options) {
-            if (options === void 0) { options = {}; }
-            var interpolationConfig = options.interpolationConfig || DEFAULT_INTERPOLATION_CONFIG;
-            var parseResult = this._htmlParser.parse(source, url, __assign({ interpolationConfig: interpolationConfig }, options));
-            if (parseResult.errors.length) {
-                return new ParseTreeResult(parseResult.rootNodes, parseResult.errors);
-            }
-            return mergeTranslations(parseResult.rootNodes, this._translationBundle, interpolationConfig, [], {});
-        };
-        return I18NHtmlParser;
-    }());
-    function createSerializer(format) {
-        format = (format || 'xlf').toLowerCase();
-        switch (format) {
-            case 'xmb':
-                return new Xmb();
-            case 'xtb':
-                return new Xtb();
-            case 'xliff2':
-            case 'xlf2':
-                return new Xliff2();
-            case 'xliff':
-            case 'xlf':
-            default:
-                return new Xliff();
-        }
-    }
 
     /**
      * @license
@@ -27723,12 +27482,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 },
                 visitAttribute: function (ast) {
-                    if (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan))) {
+                    var bindParts = ast.name.match(BIND_NAME_REGEXP$2);
+                    var isReference = bindParts && bindParts[ATTR.KW_REF_IDX] !== undefined;
+                    if (!isReference &&
+                        (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan)))) {
                         // We are in the name of an attribute. Show attribute completions.
                         result = attributeCompletions(templateInfo, path);
                     }
                     else if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                        result = attributeValueCompletions(templateInfo, templatePosition, ast);
+                        if (isReference) {
+                            result = referenceAttributeValueCompletions(templateInfo, templatePosition, ast);
+                        }
+                        else {
+                            result = attributeValueCompletions(templateInfo, templatePosition, ast);
+                        }
                     }
                 },
                 visitText: function (ast) {
@@ -27874,6 +27641,22 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         path.tail.visit(visitor, null);
         return visitor.results;
     }
+    function referenceAttributeValueCompletions(info, position, attr) {
+        var path = findTemplateAstAt(info.templateAst, position);
+        if (!path.tail) {
+            return [];
+        }
+        // When the template parser does not find a directive with matching "exportAs",
+        // the ReferenceAst will be ignored.
+        if (!(path.tail instanceof ReferenceAst)) {
+            // The sourceSpan of an ReferenceAst is the valueSpan of the HTML Attribute.
+            path.push(new ReferenceAst(attr.name, null, attr.value, attr.valueSpan));
+        }
+        var dinfo = diagnosticInfoFromTemplateInfo(info);
+        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); });
+        path.tail.visit(visitor, path.parentOf(path.tail));
+        return visitor.results;
+    }
     function elementCompletions(info) {
         var e_3, _a;
         var results = __spread(ANGULAR_ELEMENTS);
@@ -27971,12 +27754,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             configurable: true
         });
         ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
-            this.addAttributeValuesToCompletions(ast.value);
+            this.processExpressionCompletions(ast.value);
         };
         ExpressionVisitor.prototype.visitElementProperty = function (ast) {
-            this.addAttributeValuesToCompletions(ast.value);
+            this.processExpressionCompletions(ast.value);
         };
-        ExpressionVisitor.prototype.visitEvent = function (ast) { this.addAttributeValuesToCompletions(ast.handler); };
+        ExpressionVisitor.prototype.visitEvent = function (ast) { this.processExpressionCompletions(ast.handler); };
         ExpressionVisitor.prototype.visitElement = function (ast) {
             // no-op for now
         };
@@ -27998,8 +27781,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 // expression completions.
                 // The expression must be reparsed to get a valid AST rather than only template bindings.
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
-                this.addAttributeValuesToCompletions(expressionAst);
+                this.processExpressionCompletions(expressionAst);
             }
+        };
+        ExpressionVisitor.prototype.visitReference = function (ast, context) {
+            var _this = this;
+            context.directives.forEach(function (dir) {
+                var exportAs = dir.directive.exportAs;
+                if (exportAs) {
+                    _this.completions.set(exportAs, { name: exportAs, kind: CompletionKind.REFERENCE, sortText: exportAs });
+                }
+            });
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
             if (inSpan(this.position, ast.value.sourceSpan)) {
@@ -28009,7 +27801,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         };
-        ExpressionVisitor.prototype.addAttributeValuesToCompletions = function (value) {
+        ExpressionVisitor.prototype.processExpressionCompletions = function (value) {
             var symbols = getExpressionCompletions(this.getExpressionScope(), value, this.position, this.info.template.query);
             if (symbols) {
                 this.addSymbolsToCompletions(symbols);
@@ -28086,7 +27878,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
             if (binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) {
-                this.addAttributeValuesToCompletions(binding.expression.ast);
+                this.processExpressionCompletions(binding.expression.ast);
                 return;
             }
             // If the expression is incomplete, for example *ngFor="let x of |"
@@ -28096,7 +27888,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var ofLocation = attr.value.indexOf(KW_OF);
             if (ofLocation > 0 && valueRelativePosition >= ofLocation + KW_OF.length) {
                 var expressionAst = this.info.expressionParser.parseBinding(attr.value, attr.sourceSpan.toString(), attr.sourceSpan.start.offset);
-                this.addAttributeValuesToCompletions(expressionAst);
+                this.processExpressionCompletions(expressionAst);
             }
         };
         return ExpressionVisitor;
@@ -30398,8 +30190,22 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         elementExitFn: null,
         checkNoChangesMode: false,
     };
+    function getCurrentDirectiveDef() {
+        return instructionState.lFrame.currentDirectiveDef;
+    }
     function setCurrentDirectiveDef(def) {
         instructionState.lFrame.currentDirectiveDef = def;
+    }
+    /**
+     * Return the current LView.
+     *
+     * The return value can be `null` if the method is called outside of template. This can happen if
+     * directive is instantiated by module injector (rather than by node injector.)
+     */
+    function getLView() {
+        // TODO(misko): the return value should be `LView|null` but doing so breaks a lot of code.
+        var lFrame = instructionState.lFrame;
+        return lFrame === null ? null : lFrame.lView;
     }
     /**
      * Determines whether or not a flag is currently set for the active element.
@@ -31063,6 +30869,87 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     };
 
     /**
+     * Assigns all attribute values to the provided element via the inferred renderer.
+     *
+     * This function accepts two forms of attribute entries:
+     *
+     * default: (key, value):
+     *  attrs = [key1, value1, key2, value2]
+     *
+     * namespaced: (NAMESPACE_MARKER, uri, name, value)
+     *  attrs = [NAMESPACE_MARKER, uri, name, value, NAMESPACE_MARKER, uri, name, value]
+     *
+     * The `attrs` array can contain a mix of both the default and namespaced entries.
+     * The "default" values are set without a marker, but if the function comes across
+     * a marker value then it will attempt to set a namespaced value. If the marker is
+     * not of a namespaced value then the function will quit and return the index value
+     * where it stopped during the iteration of the attrs array.
+     *
+     * See [AttributeMarker] to understand what the namespace marker value is.
+     *
+     * Note that this instruction does not support assigning style and class values to
+     * an element. See `elementStart` and `elementHostAttrs` to learn how styling values
+     * are applied to an element.
+     * @param renderer The renderer to be used
+     * @param native The element that the attributes will be assigned to
+     * @param attrs The attribute array of values that will be assigned to the element
+     * @returns the index value that was last accessed in the attributes array
+     */
+    function setUpAttributes(renderer, native, attrs) {
+        var isProc = isProceduralRenderer(renderer);
+        var i = 0;
+        while (i < attrs.length) {
+            var value = attrs[i];
+            if (typeof value === 'number') {
+                // only namespaces are supported. Other value types (such as style/class
+                // entries) are not supported in this function.
+                if (value !== 0 /* NamespaceURI */) {
+                    break;
+                }
+                // we just landed on the marker value ... therefore
+                // we should skip to the next entry
+                i++;
+                var namespaceURI = attrs[i++];
+                var attrName = attrs[i++];
+                var attrVal = attrs[i++];
+                ngDevMode && ngDevMode.rendererSetAttribute++;
+                isProc ?
+                    renderer.setAttribute(native, attrName, attrVal, namespaceURI) :
+                    native.setAttributeNS(namespaceURI, attrName, attrVal);
+            }
+            else {
+                // attrName is string;
+                var attrName = value;
+                var attrVal = attrs[++i];
+                // Standard attributes
+                ngDevMode && ngDevMode.rendererSetAttribute++;
+                if (isAnimationProp(attrName)) {
+                    if (isProc) {
+                        renderer.setProperty(native, attrName, attrVal);
+                    }
+                }
+                else {
+                    isProc ?
+                        renderer.setAttribute(native, attrName, attrVal) :
+                        native.setAttribute(attrName, attrVal);
+                }
+                i++;
+            }
+        }
+        // another piece of code may iterate over the same attributes array. Therefore
+        // it may be helpful to return the exact spot where the attributes array exited
+        // whether by running into an unsupported marker or if all the static values were
+        // iterated over.
+        return i;
+    }
+    function isAnimationProp(name) {
+        // Perf note: accessing charCodeAt to check for the first character of a string is faster as
+        // compared to accessing a character at index 0 (ex. name[0]). The main reason for this is that
+        // charCodeAt doesn't allocate memory to return a substring.
+        return name.charCodeAt(0) === 64 /* AT_SIGN */;
+    }
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -31341,14 +31228,35 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // set a value to an empty string to remove it.
         return value != null && value !== '';
     }
+    function concatString(a, b, separator) {
+        if (separator === void 0) { separator = ' '; }
+        return a + ((b.length && a.length) ? separator : '') + b;
+    }
     function hyphenate$1(value) {
         return value.replace(/[a-z][A-Z]/g, function (v) { return v.charAt(0) + '-' + v.charAt(1); }).toLowerCase();
+    }
+    /**
+     * Returns an instance of `StylingMapArray`.
+     *
+     * This function is designed to find an instance of `StylingMapArray` in case it is stored
+     * inside of an instance of `TStylingContext`. When a styling context is created it
+     * will copy over an initial styling values from the tNode (which are stored as a
+     * `StylingMapArray` on the `tNode.classes` or `tNode.styles` values).
+     */
+    function getStylingMapArray(value) {
+        return isStylingContext(value) ?
+            value[1 /* InitialStylingValuePosition */] :
+            value;
     }
     function isStylingContext(value) {
         // the StylingMapArray is in the format of [initial, prop, string, prop, string]
         // and this is the defining value to distinguish between arrays
         return Array.isArray(value) && value.length >= 2 /* ValuesStartPosition */ &&
             typeof value[1] !== 'string';
+    }
+    function getInitialStylingValue(context) {
+        var map = getStylingMapArray(context);
+        return map && map[0 /* RawValuePosition */] || '';
     }
     function getMapProp(map, index) {
         return map[index + 0 /* PropOffset */];
@@ -31359,6 +31267,39 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     function getMapValue(map, index) {
         return map[index + 1 /* ValueOffset */];
+    }
+    function forceStylesAsString(styles, hyphenateProps) {
+        if (typeof styles == 'string')
+            return styles;
+        var str = '';
+        if (styles) {
+            var props = Object.keys(styles);
+            for (var i = 0; i < props.length; i++) {
+                var prop = props[i];
+                var propLabel = hyphenateProps ? hyphenate$1(prop) : prop;
+                var value = styles[prop];
+                if (value !== null) {
+                    str = concatString(str, propLabel + ":" + value, ';');
+                }
+            }
+        }
+        return str;
+    }
+    /**
+     * Converts the provided styling map array into a string.
+     *
+     * Classes => `one two three`
+     * Styles => `prop:value; prop2:value2`
+     */
+    function stylingMapToString(map, isClassBased) {
+        var str = '';
+        for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
+            var prop = getMapProp(map, i);
+            var value = getMapValue(map, i);
+            var attrValue = concatString(prop, isClassBased ? '' : value, ':');
+            str = concatString(str, attrValue, isClassBased ? ' ' : '; ');
+        }
+        return str;
     }
     /**
      * Inserts the provided item into the provided styling array at the right spot.
@@ -32804,6 +32745,24 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             stylingMapsSyncFn(context, renderer, element, bindingData, 0, applyStylingFn, sanitizer, mapsMode);
         }
     }
+    function writeStylingValueDirectly(renderer, element, value, isClassBased, initialValue) {
+        var valueToApply;
+        if (isClassBased) {
+            valueToApply = typeof value === 'string' ? value : objectToClassName(value);
+            if (initialValue !== null) {
+                valueToApply = concatString(initialValue, valueToApply, ' ');
+            }
+            setClassName(renderer, element, valueToApply);
+        }
+        else {
+            valueToApply = forceStylesAsString(value, true);
+            if (initialValue !== null) {
+                valueToApply = initialValue + ';' + valueToApply;
+            }
+            setStyleAttr(renderer, element, valueToApply);
+        }
+        return valueToApply;
+    }
     function normalizeBitMaskValue(value) {
         // if pass => apply all values (-1 implies that all bits are flipped to true)
         if (value === true)
@@ -32820,6 +32779,137 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     function setStylingMapsSyncFn(fn) {
         _activeStylingMapApplyFn = fn;
+    }
+    /**
+     * Assigns a style value to a style property for the given element.
+     */
+    var setStyle = function (renderer, native, prop, value) {
+        if (renderer !== null) {
+            // Use `isStylingValueDefined` to account for falsy values that should be bound like 0.
+            if (isStylingValueDefined(value)) {
+                // opacity, z-index and flexbox all have number values
+                // and these need to be converted into strings so that
+                // they can be assigned properly.
+                value = value.toString();
+                ngDevMode && ngDevMode.rendererSetStyle++;
+                if (isProceduralRenderer(renderer)) {
+                    renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase);
+                }
+                else {
+                    // The reason why native style may be `null` is either because
+                    // it's a container element or it's a part of a test
+                    // environment that doesn't have styling. In either
+                    // case it's safe not to apply styling to the element.
+                    var nativeStyle = native.style;
+                    if (nativeStyle != null) {
+                        nativeStyle.setProperty(prop, value);
+                    }
+                }
+            }
+            else {
+                ngDevMode && ngDevMode.rendererRemoveStyle++;
+                if (isProceduralRenderer(renderer)) {
+                    renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase);
+                }
+                else {
+                    var nativeStyle = native.style;
+                    if (nativeStyle != null) {
+                        nativeStyle.removeProperty(prop);
+                    }
+                }
+            }
+        }
+    };
+    /**
+     * Adds/removes the provided className value to the provided element.
+     */
+    var setClass = function (renderer, native, className, value) {
+        if (renderer !== null && className !== '') {
+            if (value) {
+                ngDevMode && ngDevMode.rendererAddClass++;
+                if (isProceduralRenderer(renderer)) {
+                    renderer.addClass(native, className);
+                }
+                else {
+                    // the reason why classList may be `null` is either because
+                    // it's a container element or it's a part of a test
+                    // environment that doesn't have styling. In either
+                    // case it's safe not to apply styling to the element.
+                    var classList = native.classList;
+                    if (classList != null) {
+                        classList.add(className);
+                    }
+                }
+            }
+            else {
+                ngDevMode && ngDevMode.rendererRemoveClass++;
+                if (isProceduralRenderer(renderer)) {
+                    renderer.removeClass(native, className);
+                }
+                else {
+                    var classList = native.classList;
+                    if (classList != null) {
+                        classList.remove(className);
+                    }
+                }
+            }
+        }
+    };
+    var setClassName = function (renderer, native, className) {
+        if (renderer !== null) {
+            if (isProceduralRenderer(renderer)) {
+                renderer.setAttribute(native, 'class', className);
+            }
+            else {
+                native.className = className;
+            }
+        }
+    };
+    var setStyleAttr = function (renderer, native, value) {
+        if (renderer !== null) {
+            if (isProceduralRenderer(renderer)) {
+                renderer.setAttribute(native, 'style', value);
+            }
+            else {
+                native.setAttribute('style', value);
+            }
+        }
+    };
+    /**
+     * Iterates over all provided styling entries and renders them on the element.
+     *
+     * This function is used alongside a `StylingMapArray` entry. This entry is not
+     * the same as the `TStylingContext` and is only really used when an element contains
+     * initial styling values (e.g. `<div style="width:200px">`), but no style/class bindings
+     * are present. If and when that happens then this function will be called to render all
+     * initial styling values on an element.
+     */
+    function renderStylingMap(renderer, element, stylingValues, isClassBased) {
+        var stylingMapArr = getStylingMapArray(stylingValues);
+        if (stylingMapArr) {
+            for (var i = 1 /* ValuesStartPosition */; i < stylingMapArr.length; i += 2 /* TupleSize */) {
+                var prop = getMapProp(stylingMapArr, i);
+                var value = getMapValue(stylingMapArr, i);
+                if (isClassBased) {
+                    setClass(renderer, element, prop, value);
+                }
+                else {
+                    setStyle(renderer, element, prop, value);
+                }
+            }
+        }
+    }
+    function objectToClassName(obj) {
+        var str = '';
+        if (obj) {
+            for (var key in obj) {
+                var value = obj[key];
+                if (value) {
+                    str += (str.length ? ' ' : '') + key;
+                }
+            }
+        }
+        return str;
     }
 
     /**
@@ -32884,22 +32974,58 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // TODO(misko-next): delete alloc_host_vars.ts file.
+    // TODO(misko-next): delete `ɵɵallocHostVars`
     /**
-     * Marks that the next string is for element.
+     * Allocates the necessary amount of slots for host vars.
      *
-     * See `I18nMutateOpCodes` documentation.
+     * @param count Amount of vars to be allocated
+     *
+     * @codeGenApi
      */
-    var ELEMENT_MARKER = {
-        marker: 'element'
-    };
+    function ɵɵallocHostVars(count) {
+        var lView = getLView();
+        var tView = lView[TVIEW];
+        if (!tView.firstCreatePass)
+            return;
+        queueHostBindingForCheck(tView, getCurrentDirectiveDef(), count);
+        prefillHostVars(tView, lView, count);
+    }
     /**
-     * Marks that the next string is for comment.
-     *
-     * See `I18nMutateOpCodes` documentation.
+     * Stores host binding fn and number of host vars so it will be queued for binding refresh during
+     * CD.
      */
-    var COMMENT_MARKER = {
-        marker: 'comment'
-    };
+    function queueHostBindingForCheck(tView, def, hostVars) {
+        ngDevMode &&
+            assertEqual(tView.firstCreatePass, true, 'Should only be called in first create pass.');
+        var expando = tView.expandoInstructions;
+        var length = expando.length;
+        // Check whether a given `hostBindings` function already exists in expandoInstructions,
+        // which can happen in case directive definition was extended from base definition (as a part of
+        // the `InheritDefinitionFeature` logic). If we found the same `hostBindings` function in the
+        // list, we just increase the number of host vars associated with that function, but do not add it
+        // into the list again.
+        if (length >= 2 && expando[length - 2] === def.hostBindings) {
+            expando[length - 1] = expando[length - 1] + hostVars;
+        }
+        else {
+            expando.push(def.hostBindings, hostVars);
+        }
+    }
+    /**
+     * On the first template pass, we need to reserve space for host binding values
+     * after directives are matched (so all directives are saved, then bindings).
+     * Because we are updating the blueprint, we only need to do this once.
+     */
+    function prefillHostVars(tView, lView, totalHostVars) {
+        ngDevMode &&
+            assertEqual(tView.firstCreatePass, true, 'Should only be called in first create pass.');
+        for (var i = 0; i < totalHostVars; i++) {
+            lView.push(NO_CHANGE);
+            tView.blueprint.push(NO_CHANGE);
+            tView.data.push(null);
+        }
+    }
 
     /**
      * @license
@@ -32908,8 +33034,447 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function attachDebugObject(obj, debug) {
-        Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
+    function getLContainer(tNode, embeddedView) {
+        ngDevMode && assertLView(embeddedView);
+        var container = embeddedView[PARENT];
+        if (tNode.index === -1) {
+            // This is a dynamically created view inside a dynamic container.
+            // The parent isn't an LContainer if the embedded view hasn't been attached yet.
+            return isLContainer(container) ? container : null;
+        }
+        else {
+            ngDevMode && assertLContainer(container);
+            // This is a inline view node (e.g. embeddedViewStart)
+            return container;
+        }
+    }
+    /**
+     * NOTE: for performance reasons, the possible actions are inlined within the function instead of
+     * being passed as an argument.
+     */
+    function applyToElementOrContainer(action, renderer, parent, lNodeToHandle, beforeNode) {
+        // If this slot was allocated for a text node dynamically created by i18n, the text node itself
+        // won't be created until i18nApply() in the update block, so this node should be skipped.
+        // For more info, see "ICU expressions should work inside an ngTemplateOutlet inside an ngFor"
+        // in `i18n_spec.ts`.
+        if (lNodeToHandle != null) {
+            var lContainer = void 0;
+            var isComponent = false;
+            // We are expecting an RNode, but in the case of a component or LContainer the `RNode` is
+            // wrapped in an array which needs to be unwrapped. We need to know if it is a component and if
+            // it has LContainer so that we can process all of those cases appropriately.
+            if (isLContainer(lNodeToHandle)) {
+                lContainer = lNodeToHandle;
+            }
+            else if (isLView(lNodeToHandle)) {
+                isComponent = true;
+                ngDevMode && assertDefined(lNodeToHandle[HOST], 'HOST must be defined for a component LView');
+                lNodeToHandle = lNodeToHandle[HOST];
+            }
+            var rNode = unwrapRNode(lNodeToHandle);
+            ngDevMode && !isProceduralRenderer(renderer) && assertDomNode(rNode);
+            if (action === 0 /* Create */ && parent !== null) {
+                if (beforeNode == null) {
+                    nativeAppendChild(renderer, parent, rNode);
+                }
+                else {
+                    nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
+                }
+            }
+            else if (action === 1 /* Insert */ && parent !== null) {
+                nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
+            }
+            else if (action === 2 /* Detach */) {
+                nativeRemoveNode(renderer, rNode, isComponent);
+            }
+            else if (action === 3 /* Destroy */) {
+                ngDevMode && ngDevMode.rendererDestroyNode++;
+                renderer.destroyNode(rNode);
+            }
+            if (lContainer != null) {
+                applyContainer(renderer, action, lContainer, parent, beforeNode);
+            }
+        }
+    }
+    /**
+     * Detach a `LView` from the DOM by detaching its nodes.
+     *
+     * @param lView the `LView` to be detached.
+     */
+    function renderDetachView(lView) {
+        applyView(lView[RENDERER], 2 /* Detach */, lView, null, null);
+    }
+    /**
+     * Traverses down and up the tree of views and containers to remove listeners and
+     * call onDestroy callbacks.
+     *
+     * Notes:
+     *  - Because it's used for onDestroy calls, it needs to be bottom-up.
+     *  - Must process containers instead of their views to avoid splicing
+     *  when views are destroyed and re-added.
+     *  - Using a while loop because it's faster than recursion
+     *  - Destroy only called on movement to sibling or movement to parent (laterally or up)
+     *
+     *  @param rootView The view to destroy
+     */
+    function destroyViewTree(rootView) {
+        // If the view has no children, we can clean it up and return early.
+        var lViewOrLContainer = rootView[CHILD_HEAD];
+        if (!lViewOrLContainer) {
+            return cleanUpView(rootView);
+        }
+        while (lViewOrLContainer) {
+            var next = null;
+            if (isLView(lViewOrLContainer)) {
+                // If LView, traverse down to child.
+                next = lViewOrLContainer[CHILD_HEAD];
+            }
+            else {
+                ngDevMode && assertLContainer(lViewOrLContainer);
+                // If container, traverse down to its first LView.
+                var firstView = lViewOrLContainer[CONTAINER_HEADER_OFFSET];
+                if (firstView)
+                    next = firstView;
+            }
+            if (!next) {
+                // Only clean up view when moving to the side or up, as destroy hooks
+                // should be called in order from the bottom up.
+                while (lViewOrLContainer && !lViewOrLContainer[NEXT] && lViewOrLContainer !== rootView) {
+                    cleanUpView(lViewOrLContainer);
+                    lViewOrLContainer = getParentState(lViewOrLContainer, rootView);
+                }
+                cleanUpView(lViewOrLContainer || rootView);
+                next = lViewOrLContainer && lViewOrLContainer[NEXT];
+            }
+            lViewOrLContainer = next;
+        }
+    }
+    function detachMovedView(declarationContainer, lView) {
+        ngDevMode && assertLContainer(declarationContainer);
+        ngDevMode && assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
+        var movedViews = declarationContainer[MOVED_VIEWS];
+        var declaredViewIndex = movedViews.indexOf(lView);
+        movedViews.splice(declaredViewIndex, 1);
+    }
+    /**
+     * A standalone function which destroys an LView,
+     * conducting cleanup (e.g. removing listeners, calling onDestroys).
+     *
+     * @param lView The view to be destroyed.
+     */
+    function destroyLView(lView) {
+        if (!(lView[FLAGS] & 256 /* Destroyed */)) {
+            var renderer = lView[RENDERER];
+            if (isProceduralRenderer(renderer) && renderer.destroyNode) {
+                applyView(renderer, 3 /* Destroy */, lView, null, null);
+            }
+            destroyViewTree(lView);
+        }
+    }
+    /**
+     * Determines which LViewOrLContainer to jump to when traversing back up the
+     * tree in destroyViewTree.
+     *
+     * Normally, the view's parent LView should be checked, but in the case of
+     * embedded views, the container (which is the view node's parent, but not the
+     * LView's parent) needs to be checked for a possible next property.
+     *
+     * @param lViewOrLContainer The LViewOrLContainer for which we need a parent state
+     * @param rootView The rootView, so we don't propagate too far up the view tree
+     * @returns The correct parent LViewOrLContainer
+     */
+    function getParentState(lViewOrLContainer, rootView) {
+        var tNode;
+        if (isLView(lViewOrLContainer) && (tNode = lViewOrLContainer[T_HOST]) &&
+            tNode.type === 2 /* View */) {
+            // if it's an embedded view, the state needs to go up to the container, in case the
+            // container has a next
+            return getLContainer(tNode, lViewOrLContainer);
+        }
+        else {
+            // otherwise, use parent view for containers or component views
+            return lViewOrLContainer[PARENT] === rootView ? null : lViewOrLContainer[PARENT];
+        }
+    }
+    /**
+     * Calls onDestroys hooks for all directives and pipes in a given view and then removes all
+     * listeners. Listeners are removed as the last step so events delivered in the onDestroys hooks
+     * can be propagated to @Output listeners.
+     *
+     * @param view The LView to clean up
+     */
+    function cleanUpView(view) {
+        if (isLView(view) && !(view[FLAGS] & 256 /* Destroyed */)) {
+            // Usually the Attached flag is removed when the view is detached from its parent, however
+            // if it's a root view, the flag won't be unset hence why we're also removing on destroy.
+            view[FLAGS] &= ~128 /* Attached */;
+            // Mark the LView as destroyed *before* executing the onDestroy hooks. An onDestroy hook
+            // runs arbitrary user code, which could include its own `viewRef.destroy()` (or similar). If
+            // We don't flag the view as destroyed before the hooks, this could lead to an infinite loop.
+            // This also aligns with the ViewEngine behavior. It also means that the onDestroy hook is
+            // really more of an "afterDestroy" hook if you think about it.
+            view[FLAGS] |= 256 /* Destroyed */;
+            executeOnDestroys(view);
+            removeListeners(view);
+            var hostTNode = view[T_HOST];
+            // For component views only, the local renderer is destroyed as clean up time.
+            if (hostTNode && hostTNode.type === 3 /* Element */ && isProceduralRenderer(view[RENDERER])) {
+                ngDevMode && ngDevMode.rendererDestroy++;
+                view[RENDERER].destroy();
+            }
+            var declarationContainer = view[DECLARATION_LCONTAINER];
+            // we are dealing with an embedded view that is still inserted into a container
+            if (declarationContainer !== null && isLContainer(view[PARENT])) {
+                // and this is a projected view
+                if (declarationContainer !== view[PARENT]) {
+                    detachMovedView(declarationContainer, view);
+                }
+                // For embedded views still attached to a container: remove query result from this view.
+                var lQueries = view[QUERIES];
+                if (lQueries !== null) {
+                    lQueries.detachView(view[TVIEW]);
+                }
+            }
+        }
+    }
+    /** Removes listeners and unsubscribes from output subscriptions */
+    function removeListeners(lView) {
+        var tCleanup = lView[TVIEW].cleanup;
+        if (tCleanup !== null) {
+            var lCleanup = lView[CLEANUP];
+            for (var i = 0; i < tCleanup.length - 1; i += 2) {
+                if (typeof tCleanup[i] === 'string') {
+                    // This is a native DOM listener
+                    var idxOrTargetGetter = tCleanup[i + 1];
+                    var target = typeof idxOrTargetGetter === 'function' ?
+                        idxOrTargetGetter(lView) :
+                        unwrapRNode(lView[idxOrTargetGetter]);
+                    var listener = lCleanup[tCleanup[i + 2]];
+                    var useCaptureOrSubIdx = tCleanup[i + 3];
+                    if (typeof useCaptureOrSubIdx === 'boolean') {
+                        // native DOM listener registered with Renderer3
+                        target.removeEventListener(tCleanup[i], listener, useCaptureOrSubIdx);
+                    }
+                    else {
+                        if (useCaptureOrSubIdx >= 0) {
+                            // unregister
+                            lCleanup[useCaptureOrSubIdx]();
+                        }
+                        else {
+                            // Subscription
+                            lCleanup[-useCaptureOrSubIdx].unsubscribe();
+                        }
+                    }
+                    i += 2;
+                }
+                else {
+                    // This is a cleanup function that is grouped with the index of its context
+                    var context = lCleanup[tCleanup[i + 1]];
+                    tCleanup[i].call(context);
+                }
+            }
+            lView[CLEANUP] = null;
+        }
+    }
+    /** Calls onDestroy hooks for this view */
+    function executeOnDestroys(view) {
+        var tView = view[TVIEW];
+        var destroyHooks;
+        if (tView != null && (destroyHooks = tView.destroyHooks) != null) {
+            for (var i = 0; i < destroyHooks.length; i += 2) {
+                var context = view[destroyHooks[i]];
+                // Only call the destroy hook if the context has been requested.
+                if (!(context instanceof NodeInjectorFactory)) {
+                    destroyHooks[i + 1].call(context);
+                }
+            }
+        }
+    }
+    /**
+     * Inserts a native node before another native node for a given parent using {@link Renderer3}.
+     * This is a utility function that can be used when native nodes were determined - it abstracts an
+     * actual renderer being used.
+     */
+    function nativeInsertBefore(renderer, parent, child, beforeNode) {
+        ngDevMode && ngDevMode.rendererInsertBefore++;
+        if (isProceduralRenderer(renderer)) {
+            renderer.insertBefore(parent, child, beforeNode);
+        }
+        else {
+            parent.insertBefore(child, beforeNode, true);
+        }
+    }
+    function nativeAppendChild(renderer, parent, child) {
+        ngDevMode && ngDevMode.rendererAppendChild++;
+        ngDevMode && assertDefined(parent, 'parent node must be defined');
+        if (isProceduralRenderer(renderer)) {
+            renderer.appendChild(parent, child);
+        }
+        else {
+            parent.appendChild(child);
+        }
+    }
+    /** Removes a node from the DOM given its native parent. */
+    function nativeRemoveChild(renderer, parent, child, isHostElement) {
+        if (isProceduralRenderer(renderer)) {
+            renderer.removeChild(parent, child, isHostElement);
+        }
+        else {
+            parent.removeChild(child);
+        }
+    }
+    /**
+     * Returns a native parent of a given native node.
+     */
+    function nativeParentNode(renderer, node) {
+        return (isProceduralRenderer(renderer) ? renderer.parentNode(node) : node.parentNode);
+    }
+    /**
+     * Removes a native node itself using a given renderer. To remove the node we are looking up its
+     * parent from the native tree as not all platforms / browsers support the equivalent of
+     * node.remove().
+     *
+     * @param renderer A renderer to be used
+     * @param rNode The native node that should be removed
+     * @param isHostElement A flag indicating if a node to be removed is a host of a component.
+     */
+    function nativeRemoveNode(renderer, rNode, isHostElement) {
+        var nativeParent = nativeParentNode(renderer, rNode);
+        if (nativeParent) {
+            nativeRemoveChild(renderer, nativeParent, rNode, isHostElement);
+        }
+    }
+    /**
+     * Performs the operation of `action` on the node. Typically this involves inserting or removing
+     * nodes on the LView or projection boundary.
+     */
+    function applyNodes(renderer, action, tNode, lView, renderParent, beforeNode, isProjection) {
+        while (tNode != null) {
+            ngDevMode && assertTNodeForLView(tNode, lView);
+            ngDevMode && assertNodeOfPossibleTypes(tNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */, 1 /* Projection */, 5 /* IcuContainer */);
+            var rawSlotValue = lView[tNode.index];
+            var tNodeType = tNode.type;
+            if (isProjection) {
+                if (action === 0 /* Create */) {
+                    rawSlotValue && attachPatchData(unwrapRNode(rawSlotValue), lView);
+                    tNode.flags |= 4 /* isProjected */;
+                }
+            }
+            if ((tNode.flags & 64 /* isDetached */) !== 64 /* isDetached */) {
+                if (tNodeType === 4 /* ElementContainer */ || tNodeType === 5 /* IcuContainer */) {
+                    applyNodes(renderer, action, tNode.child, lView, renderParent, beforeNode, false);
+                    applyToElementOrContainer(action, renderer, renderParent, rawSlotValue, beforeNode);
+                }
+                else if (tNodeType === 1 /* Projection */) {
+                    applyProjectionRecursive(renderer, action, lView, tNode, renderParent, beforeNode);
+                }
+                else {
+                    ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */);
+                    applyToElementOrContainer(action, renderer, renderParent, rawSlotValue, beforeNode);
+                }
+            }
+            tNode = isProjection ? tNode.projectionNext : tNode.next;
+        }
+    }
+    /**
+     * `applyView` performs operation on the view as specified in `action` (insert, detach, destroy)
+     *
+     * Inserting a view without projection or containers at top level is simple. Just iterate over the
+     * root nodes of the View, and for each node perform the `action`.
+     *
+     * Things get more complicated with containers and projections. That is because coming across:
+     * - Container: implies that we have to insert/remove/destroy the views of that container as well
+     *              which in turn can have their own Containers at the View roots.
+     * - Projection: implies that we have to insert/remove/destroy the nodes of the projection. The
+     *               complication is that the nodes we are projecting can themselves have Containers
+     *               or other Projections.
+     *
+     * As you can see this is a very recursive problem. Yes recursion is not most efficient but the
+     * code is complicated enough that trying to implemented with recursion becomes unmaintainable.
+     *
+     * @param renderer Renderer to use
+     * @param action action to perform (insert, detach, destroy)
+     * @param lView The LView which needs to be inserted, detached, destroyed.
+     * @param renderParent parent DOM element for insertion/removal.
+     * @param beforeNode Before which node the insertions should happen.
+     */
+    function applyView(renderer, action, lView, renderParent, beforeNode) {
+        var tView = lView[TVIEW];
+        ngDevMode && assertNodeType(tView.node, 2 /* View */);
+        var viewRootTNode = tView.node.child;
+        applyNodes(renderer, action, viewRootTNode, lView, renderParent, beforeNode, false);
+    }
+    /**
+     * `applyProjectionRecursive` performs operation on the projection specified by `action` (insert,
+     * detach, destroy)
+     *
+     * Inserting a projection requires us to locate the projected nodes from the parent component. The
+     * complication is that those nodes themselves could be re-projected from their parent component.
+     *
+     * @param renderer Render to use
+     * @param action action to perform (insert, detach, destroy)
+     * @param lView The LView which needs to be inserted, detached, destroyed.
+     * @param tProjectionNode node to project
+     * @param renderParent parent DOM element for insertion/removal.
+     * @param beforeNode Before which node the insertions should happen.
+     */
+    function applyProjectionRecursive(renderer, action, lView, tProjectionNode, renderParent, beforeNode) {
+        var componentLView = lView[DECLARATION_COMPONENT_VIEW];
+        var componentNode = componentLView[T_HOST];
+        ngDevMode &&
+            assertEqual(typeof tProjectionNode.projection, 'number', 'expecting projection index');
+        var nodeToProjectOrRNodes = componentNode.projection[tProjectionNode.projection];
+        if (Array.isArray(nodeToProjectOrRNodes)) {
+            // This should not exist, it is a bit of a hack. When we bootstrap a top level node and we
+            // need to support passing projectable nodes, so we cheat and put them in the TNode
+            // of the Host TView. (Yes we put instance info at the T Level). We can get away with it
+            // because we know that that TView is not shared and therefore it will not be a problem.
+            // This should be refactored and cleaned up.
+            for (var i = 0; i < nodeToProjectOrRNodes.length; i++) {
+                var rNode = nodeToProjectOrRNodes[i];
+                applyToElementOrContainer(action, renderer, renderParent, rNode, beforeNode);
+            }
+        }
+        else {
+            var nodeToProject = nodeToProjectOrRNodes;
+            var projectedComponentLView = componentLView[PARENT];
+            applyNodes(renderer, action, nodeToProject, projectedComponentLView, renderParent, beforeNode, true);
+        }
+    }
+    /**
+     * `applyContainer` performs an operation on the container and its views as specified by
+     * `action` (insert, detach, destroy)
+     *
+     * Inserting a Container is complicated by the fact that the container may have Views which
+     * themselves have containers or projections.
+     *
+     * @param renderer Renderer to use
+     * @param action action to perform (insert, detach, destroy)
+     * @param lContainer The LContainer which needs to be inserted, detached, destroyed.
+     * @param renderParent parent DOM element for insertion/removal.
+     * @param beforeNode Before which node the insertions should happen.
+     */
+    function applyContainer(renderer, action, lContainer, renderParent, beforeNode) {
+        ngDevMode && assertLContainer(lContainer);
+        var anchor = lContainer[NATIVE]; // LContainer has its own before node.
+        var native = unwrapRNode(lContainer);
+        // An LContainer can be created dynamically on any node by injecting ViewContainerRef.
+        // Asking for a ViewContainerRef on an element will result in a creation of a separate anchor node
+        // (comment in the DOM) that will be different from the LContainer's host node. In this particular
+        // case we need to execute action on 2 nodes:
+        // - container's host node (this is done in the executeActionOnElementOrContainer)
+        // - container's host node (this is done here)
+        if (anchor !== native) {
+            // This is very strange to me (Misko). I would expect that the native is same as anchor. I don't
+            // see a reason why they should be different, but they are.
+            //
+            // If they are we need to process the second anchor as well.
+            applyToElementOrContainer(action, renderer, renderParent, anchor, beforeNode);
+        }
+        for (var i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
+            var lView = lContainer[i];
+            applyView(renderer, action, lView, renderParent, anchor);
+        }
     }
 
     /**
@@ -33220,6 +33785,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
 
     /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function attachDebugObject(obj, debug) {
+        Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
+    }
+
+    /**
      * A human-readable debug summary of the styling data present within `TStylingContext`.
      *
      * This class is designed to be used within testing code or when an
@@ -33519,6 +34095,155 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             allowDirectStyling: allowDirectStyling$1,
         };
     }
+
+    /**
+     * Searches and assigns provided all static style/class entries (found in the `attrs` value)
+     * and registers them in their respective styling contexts.
+     */
+    function registerInitialStylingOnTNode(tNode, attrs, startIndex) {
+        var hasAdditionalInitialStyling = false;
+        var styles = getStylingMapArray(tNode.styles);
+        var classes = getStylingMapArray(tNode.classes);
+        var mode = -1;
+        for (var i = startIndex; i < attrs.length; i++) {
+            var attr = attrs[i];
+            if (typeof attr == 'number') {
+                mode = attr;
+            }
+            else if (mode == 1 /* Classes */) {
+                classes = classes || allocStylingMapArray(null);
+                addItemToStylingMap(classes, attr, true);
+                hasAdditionalInitialStyling = true;
+            }
+            else if (mode == 2 /* Styles */) {
+                var value = attrs[++i];
+                styles = styles || allocStylingMapArray(null);
+                addItemToStylingMap(styles, attr, value);
+                hasAdditionalInitialStyling = true;
+            }
+        }
+        if (classes && classes.length > 1 /* ValuesStartPosition */) {
+            if (!tNode.classes) {
+                tNode.classes = classes;
+            }
+            updateRawValueOnContext(tNode.classes, stylingMapToString(classes, true));
+        }
+        if (styles && styles.length > 1 /* ValuesStartPosition */) {
+            if (!tNode.styles) {
+                tNode.styles = styles;
+            }
+            updateRawValueOnContext(tNode.styles, stylingMapToString(styles, false));
+        }
+        if (hasAdditionalInitialStyling) {
+            tNode.flags |= 256 /* hasInitialStyling */;
+        }
+        return hasAdditionalInitialStyling;
+    }
+    function updateRawValueOnContext(context, value) {
+        var stylingMapArr = getStylingMapArray(context);
+        stylingMapArr[0 /* RawValuePosition */] = value;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Assign static attribute values to a host element.
+     *
+     * This instruction will assign static attribute values as well as class and style
+     * values to an element within the host bindings function. Since attribute values
+     * can consist of different types of values, the `attrs` array must include the values in
+     * the following format:
+     *
+     * attrs = [
+     *   // static attributes (like `title`, `name`, `id`...)
+     *   attr1, value1, attr2, value,
+     *
+     *   // a single namespace value (like `x:id`)
+     *   NAMESPACE_MARKER, namespaceUri1, name1, value1,
+     *
+     *   // another single namespace value (like `x:name`)
+     *   NAMESPACE_MARKER, namespaceUri2, name2, value2,
+     *
+     *   // a series of CSS classes that will be applied to the element (no spaces)
+     *   CLASSES_MARKER, class1, class2, class3,
+     *
+     *   // a series of CSS styles (property + value) that will be applied to the element
+     *   STYLES_MARKER, prop1, value1, prop2, value2
+     * ]
+     *
+     * All non-class and non-style attributes must be defined at the start of the list
+     * first before all class and style values are set. When there is a change in value
+     * type (like when classes and styles are introduced) a marker must be used to separate
+     * the entries. The marker values themselves are set via entries found in the
+     * [AttributeMarker] enum.
+     *
+     * NOTE: This instruction is meant to used from `hostBindings` function only.
+     *
+     * @param directive A directive instance the styling is associated with.
+     * @param attrs An array of static values (attributes, classes and styles) with the correct marker
+     * values.
+     *
+     * @codeGenApi
+     */
+    function ɵɵelementHostAttrs(attrs) {
+        var hostElementIndex = getSelectedIndex();
+        var lView = getLView();
+        var tView = lView[TVIEW];
+        var tNode = getTNode(hostElementIndex, lView);
+        // non-element nodes (e.g. `<ng-container>`) are not rendered as actual
+        // element nodes and adding styles/classes on to them will cause runtime
+        // errors...
+        if (tNode.type === 3 /* Element */) {
+            var native = getNativeByTNode(tNode, lView);
+            // TODO(misko-next): setup attributes need to be moved out of `ɵɵelementHostAttrs`
+            var lastAttrIndex = setUpAttributes(lView[RENDERER], native, attrs);
+            if (tView.firstCreatePass) {
+                var stylingNeedsToBeRendered = registerInitialStylingOnTNode(tNode, attrs, lastAttrIndex);
+                // this is only called during the first template pass in the
+                // event that this current directive assigned initial style/class
+                // host attribute values to the element. Because initial styling
+                // values are applied before directives are first rendered (within
+                // `createElement`) this means that initial styling for any directives
+                // still needs to be applied. Note that this will only happen during
+                // the first template pass and not each time a directive applies its
+                // attribute values to the element.
+                if (stylingNeedsToBeRendered) {
+                    var renderer = lView[RENDERER];
+                    // TODO(misko-next): Styling initialization should move out of `ɵɵelementHostAttrs`
+                    renderInitialStyling(renderer, native, tNode, true);
+                }
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Marks that the next string is for element.
+     *
+     * See `I18nMutateOpCodes` documentation.
+     */
+    var ELEMENT_MARKER = {
+        marker: 'element'
+    };
+    /**
+     * Marks that the next string is for comment.
+     *
+     * See `I18nMutateOpCodes` documentation.
+     */
+    var COMMENT_MARKER = {
+        marker: 'comment'
+    };
 
     /**
      * @license
@@ -34904,7 +35629,18 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var previousExpandoLength = expando.length;
         setCurrentDirectiveDef(def);
         var elementIndex = tNode.index - HEADER_OFFSET;
-        def.hostBindings(1 /* Create */, directive, elementIndex);
+        // TODO(misko-next): This is a temporary work around for the fact that we moved the information
+        // from instruction to declaration. The workaround is to just call the instruction as if it was
+        // part of the `hostAttrs`.
+        if (def.hostVars !== 0) {
+            ɵɵallocHostVars(def.hostVars);
+        }
+        if (def.hostAttrs !== null) {
+            ɵɵelementHostAttrs(def.hostAttrs);
+        }
+        if (def.hostBindings !== null) {
+            def.hostBindings(1 /* Create */, directive, elementIndex);
+        }
         setCurrentDirectiveDef(null);
         // `hostBindings` function may or may not contain `allocHostVars` call
         // (e.g. it may not if it only contains host listeners), so we need to check whether
@@ -35221,454 +35957,33 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var errorHandler = injector ? injector.get(ErrorHandler, null) : null;
         errorHandler && errorHandler.handleError(error);
     }
-
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
+     * Renders all initial styling (class and style values) on to the element from the tNode.
      *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
+     * All initial styling data (i.e. any values extracted from the `style` or `class` attributes
+     * on an element) are collected into the `tNode.styles` and `tNode.classes` data structures.
+     * These values are populated during the creation phase of an element and are then later
+     * applied once the element is instantiated. This function applies each of the static
+     * style and class entries to the element.
      */
-    function getLContainer(tNode, embeddedView) {
-        ngDevMode && assertLView(embeddedView);
-        var container = embeddedView[PARENT];
-        if (tNode.index === -1) {
-            // This is a dynamically created view inside a dynamic container.
-            // The parent isn't an LContainer if the embedded view hasn't been attached yet.
-            return isLContainer(container) ? container : null;
-        }
-        else {
-            ngDevMode && assertLContainer(container);
-            // This is a inline view node (e.g. embeddedViewStart)
-            return container;
-        }
-    }
-    /**
-     * NOTE: for performance reasons, the possible actions are inlined within the function instead of
-     * being passed as an argument.
-     */
-    function applyToElementOrContainer(action, renderer, parent, lNodeToHandle, beforeNode) {
-        // If this slot was allocated for a text node dynamically created by i18n, the text node itself
-        // won't be created until i18nApply() in the update block, so this node should be skipped.
-        // For more info, see "ICU expressions should work inside an ngTemplateOutlet inside an ngFor"
-        // in `i18n_spec.ts`.
-        if (lNodeToHandle != null) {
-            var lContainer = void 0;
-            var isComponent = false;
-            // We are expecting an RNode, but in the case of a component or LContainer the `RNode` is
-            // wrapped in an array which needs to be unwrapped. We need to know if it is a component and if
-            // it has LContainer so that we can process all of those cases appropriately.
-            if (isLContainer(lNodeToHandle)) {
-                lContainer = lNodeToHandle;
-            }
-            else if (isLView(lNodeToHandle)) {
-                isComponent = true;
-                ngDevMode && assertDefined(lNodeToHandle[HOST], 'HOST must be defined for a component LView');
-                lNodeToHandle = lNodeToHandle[HOST];
-            }
-            var rNode = unwrapRNode(lNodeToHandle);
-            ngDevMode && !isProceduralRenderer(renderer) && assertDomNode(rNode);
-            if (action === 0 /* Create */ && parent !== null) {
-                if (beforeNode == null) {
-                    nativeAppendChild(renderer, parent, rNode);
-                }
-                else {
-                    nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
-                }
-            }
-            else if (action === 1 /* Insert */ && parent !== null) {
-                nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
-            }
-            else if (action === 2 /* Detach */) {
-                nativeRemoveNode(renderer, rNode, isComponent);
-            }
-            else if (action === 3 /* Destroy */) {
-                ngDevMode && ngDevMode.rendererDestroyNode++;
-                renderer.destroyNode(rNode);
-            }
-            if (lContainer != null) {
-                applyContainer(renderer, action, lContainer, parent, beforeNode);
-            }
-        }
-    }
-    /**
-     * Detach a `LView` from the DOM by detaching its nodes.
-     *
-     * @param lView the `LView` to be detached.
-     */
-    function renderDetachView(lView) {
-        applyView(lView[RENDERER], 2 /* Detach */, lView, null, null);
-    }
-    /**
-     * Traverses down and up the tree of views and containers to remove listeners and
-     * call onDestroy callbacks.
-     *
-     * Notes:
-     *  - Because it's used for onDestroy calls, it needs to be bottom-up.
-     *  - Must process containers instead of their views to avoid splicing
-     *  when views are destroyed and re-added.
-     *  - Using a while loop because it's faster than recursion
-     *  - Destroy only called on movement to sibling or movement to parent (laterally or up)
-     *
-     *  @param rootView The view to destroy
-     */
-    function destroyViewTree(rootView) {
-        // If the view has no children, we can clean it up and return early.
-        var lViewOrLContainer = rootView[CHILD_HEAD];
-        if (!lViewOrLContainer) {
-            return cleanUpView(rootView);
-        }
-        while (lViewOrLContainer) {
-            var next = null;
-            if (isLView(lViewOrLContainer)) {
-                // If LView, traverse down to child.
-                next = lViewOrLContainer[CHILD_HEAD];
+    function renderInitialStyling(renderer, native, tNode, append) {
+        if (tNode.classes !== null) {
+            if (append) {
+                renderStylingMap(renderer, native, tNode.classes, true);
             }
             else {
-                ngDevMode && assertLContainer(lViewOrLContainer);
-                // If container, traverse down to its first LView.
-                var firstView = lViewOrLContainer[CONTAINER_HEADER_OFFSET];
-                if (firstView)
-                    next = firstView;
-            }
-            if (!next) {
-                // Only clean up view when moving to the side or up, as destroy hooks
-                // should be called in order from the bottom up.
-                while (lViewOrLContainer && !lViewOrLContainer[NEXT] && lViewOrLContainer !== rootView) {
-                    cleanUpView(lViewOrLContainer);
-                    lViewOrLContainer = getParentState(lViewOrLContainer, rootView);
-                }
-                cleanUpView(lViewOrLContainer || rootView);
-                next = lViewOrLContainer && lViewOrLContainer[NEXT];
-            }
-            lViewOrLContainer = next;
-        }
-    }
-    function detachMovedView(declarationContainer, lView) {
-        ngDevMode && assertLContainer(declarationContainer);
-        ngDevMode && assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
-        var movedViews = declarationContainer[MOVED_VIEWS];
-        var declaredViewIndex = movedViews.indexOf(lView);
-        movedViews.splice(declaredViewIndex, 1);
-    }
-    /**
-     * A standalone function which destroys an LView,
-     * conducting cleanup (e.g. removing listeners, calling onDestroys).
-     *
-     * @param lView The view to be destroyed.
-     */
-    function destroyLView(lView) {
-        if (!(lView[FLAGS] & 256 /* Destroyed */)) {
-            var renderer = lView[RENDERER];
-            if (isProceduralRenderer(renderer) && renderer.destroyNode) {
-                applyView(renderer, 3 /* Destroy */, lView, null, null);
-            }
-            destroyViewTree(lView);
-        }
-    }
-    /**
-     * Determines which LViewOrLContainer to jump to when traversing back up the
-     * tree in destroyViewTree.
-     *
-     * Normally, the view's parent LView should be checked, but in the case of
-     * embedded views, the container (which is the view node's parent, but not the
-     * LView's parent) needs to be checked for a possible next property.
-     *
-     * @param lViewOrLContainer The LViewOrLContainer for which we need a parent state
-     * @param rootView The rootView, so we don't propagate too far up the view tree
-     * @returns The correct parent LViewOrLContainer
-     */
-    function getParentState(lViewOrLContainer, rootView) {
-        var tNode;
-        if (isLView(lViewOrLContainer) && (tNode = lViewOrLContainer[T_HOST]) &&
-            tNode.type === 2 /* View */) {
-            // if it's an embedded view, the state needs to go up to the container, in case the
-            // container has a next
-            return getLContainer(tNode, lViewOrLContainer);
-        }
-        else {
-            // otherwise, use parent view for containers or component views
-            return lViewOrLContainer[PARENT] === rootView ? null : lViewOrLContainer[PARENT];
-        }
-    }
-    /**
-     * Calls onDestroys hooks for all directives and pipes in a given view and then removes all
-     * listeners. Listeners are removed as the last step so events delivered in the onDestroys hooks
-     * can be propagated to @Output listeners.
-     *
-     * @param view The LView to clean up
-     */
-    function cleanUpView(view) {
-        if (isLView(view) && !(view[FLAGS] & 256 /* Destroyed */)) {
-            // Usually the Attached flag is removed when the view is detached from its parent, however
-            // if it's a root view, the flag won't be unset hence why we're also removing on destroy.
-            view[FLAGS] &= ~128 /* Attached */;
-            // Mark the LView as destroyed *before* executing the onDestroy hooks. An onDestroy hook
-            // runs arbitrary user code, which could include its own `viewRef.destroy()` (or similar). If
-            // We don't flag the view as destroyed before the hooks, this could lead to an infinite loop.
-            // This also aligns with the ViewEngine behavior. It also means that the onDestroy hook is
-            // really more of an "afterDestroy" hook if you think about it.
-            view[FLAGS] |= 256 /* Destroyed */;
-            executeOnDestroys(view);
-            removeListeners(view);
-            var hostTNode = view[T_HOST];
-            // For component views only, the local renderer is destroyed as clean up time.
-            if (hostTNode && hostTNode.type === 3 /* Element */ && isProceduralRenderer(view[RENDERER])) {
-                ngDevMode && ngDevMode.rendererDestroy++;
-                view[RENDERER].destroy();
-            }
-            var declarationContainer = view[DECLARATION_LCONTAINER];
-            // we are dealing with an embedded view that is still inserted into a container
-            if (declarationContainer !== null && isLContainer(view[PARENT])) {
-                // and this is a projected view
-                if (declarationContainer !== view[PARENT]) {
-                    detachMovedView(declarationContainer, view);
-                }
-                // For embedded views still attached to a container: remove query result from this view.
-                var lQueries = view[QUERIES];
-                if (lQueries !== null) {
-                    lQueries.detachView(view[TVIEW]);
-                }
+                var classes = getInitialStylingValue(tNode.classes);
+                writeStylingValueDirectly(renderer, native, classes, true, null);
             }
         }
-    }
-    /** Removes listeners and unsubscribes from output subscriptions */
-    function removeListeners(lView) {
-        var tCleanup = lView[TVIEW].cleanup;
-        if (tCleanup !== null) {
-            var lCleanup = lView[CLEANUP];
-            for (var i = 0; i < tCleanup.length - 1; i += 2) {
-                if (typeof tCleanup[i] === 'string') {
-                    // This is a native DOM listener
-                    var idxOrTargetGetter = tCleanup[i + 1];
-                    var target = typeof idxOrTargetGetter === 'function' ?
-                        idxOrTargetGetter(lView) :
-                        unwrapRNode(lView[idxOrTargetGetter]);
-                    var listener = lCleanup[tCleanup[i + 2]];
-                    var useCaptureOrSubIdx = tCleanup[i + 3];
-                    if (typeof useCaptureOrSubIdx === 'boolean') {
-                        // native DOM listener registered with Renderer3
-                        target.removeEventListener(tCleanup[i], listener, useCaptureOrSubIdx);
-                    }
-                    else {
-                        if (useCaptureOrSubIdx >= 0) {
-                            // unregister
-                            lCleanup[useCaptureOrSubIdx]();
-                        }
-                        else {
-                            // Subscription
-                            lCleanup[-useCaptureOrSubIdx].unsubscribe();
-                        }
-                    }
-                    i += 2;
-                }
-                else {
-                    // This is a cleanup function that is grouped with the index of its context
-                    var context = lCleanup[tCleanup[i + 1]];
-                    tCleanup[i].call(context);
-                }
+        if (tNode.styles !== null) {
+            if (append) {
+                renderStylingMap(renderer, native, tNode.styles, false);
             }
-            lView[CLEANUP] = null;
-        }
-    }
-    /** Calls onDestroy hooks for this view */
-    function executeOnDestroys(view) {
-        var tView = view[TVIEW];
-        var destroyHooks;
-        if (tView != null && (destroyHooks = tView.destroyHooks) != null) {
-            for (var i = 0; i < destroyHooks.length; i += 2) {
-                var context = view[destroyHooks[i]];
-                // Only call the destroy hook if the context has been requested.
-                if (!(context instanceof NodeInjectorFactory)) {
-                    destroyHooks[i + 1].call(context);
-                }
+            else {
+                var styles = getInitialStylingValue(tNode.styles);
+                writeStylingValueDirectly(renderer, native, styles, false, null);
             }
-        }
-    }
-    /**
-     * Inserts a native node before another native node for a given parent using {@link Renderer3}.
-     * This is a utility function that can be used when native nodes were determined - it abstracts an
-     * actual renderer being used.
-     */
-    function nativeInsertBefore(renderer, parent, child, beforeNode) {
-        ngDevMode && ngDevMode.rendererInsertBefore++;
-        if (isProceduralRenderer(renderer)) {
-            renderer.insertBefore(parent, child, beforeNode);
-        }
-        else {
-            parent.insertBefore(child, beforeNode, true);
-        }
-    }
-    function nativeAppendChild(renderer, parent, child) {
-        ngDevMode && ngDevMode.rendererAppendChild++;
-        ngDevMode && assertDefined(parent, 'parent node must be defined');
-        if (isProceduralRenderer(renderer)) {
-            renderer.appendChild(parent, child);
-        }
-        else {
-            parent.appendChild(child);
-        }
-    }
-    /** Removes a node from the DOM given its native parent. */
-    function nativeRemoveChild(renderer, parent, child, isHostElement) {
-        if (isProceduralRenderer(renderer)) {
-            renderer.removeChild(parent, child, isHostElement);
-        }
-        else {
-            parent.removeChild(child);
-        }
-    }
-    /**
-     * Returns a native parent of a given native node.
-     */
-    function nativeParentNode(renderer, node) {
-        return (isProceduralRenderer(renderer) ? renderer.parentNode(node) : node.parentNode);
-    }
-    /**
-     * Removes a native node itself using a given renderer. To remove the node we are looking up its
-     * parent from the native tree as not all platforms / browsers support the equivalent of
-     * node.remove().
-     *
-     * @param renderer A renderer to be used
-     * @param rNode The native node that should be removed
-     * @param isHostElement A flag indicating if a node to be removed is a host of a component.
-     */
-    function nativeRemoveNode(renderer, rNode, isHostElement) {
-        var nativeParent = nativeParentNode(renderer, rNode);
-        if (nativeParent) {
-            nativeRemoveChild(renderer, nativeParent, rNode, isHostElement);
-        }
-    }
-    /**
-     * Performs the operation of `action` on the node. Typically this involves inserting or removing
-     * nodes on the LView or projection boundary.
-     */
-    function applyNodes(renderer, action, tNode, lView, renderParent, beforeNode, isProjection) {
-        while (tNode != null) {
-            ngDevMode && assertTNodeForLView(tNode, lView);
-            ngDevMode && assertNodeOfPossibleTypes(tNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */, 1 /* Projection */, 5 /* IcuContainer */);
-            var rawSlotValue = lView[tNode.index];
-            var tNodeType = tNode.type;
-            if (isProjection) {
-                if (action === 0 /* Create */) {
-                    rawSlotValue && attachPatchData(unwrapRNode(rawSlotValue), lView);
-                    tNode.flags |= 4 /* isProjected */;
-                }
-            }
-            if ((tNode.flags & 64 /* isDetached */) !== 64 /* isDetached */) {
-                if (tNodeType === 4 /* ElementContainer */ || tNodeType === 5 /* IcuContainer */) {
-                    applyNodes(renderer, action, tNode.child, lView, renderParent, beforeNode, false);
-                    applyToElementOrContainer(action, renderer, renderParent, rawSlotValue, beforeNode);
-                }
-                else if (tNodeType === 1 /* Projection */) {
-                    applyProjectionRecursive(renderer, action, lView, tNode, renderParent, beforeNode);
-                }
-                else {
-                    ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */);
-                    applyToElementOrContainer(action, renderer, renderParent, rawSlotValue, beforeNode);
-                }
-            }
-            tNode = isProjection ? tNode.projectionNext : tNode.next;
-        }
-    }
-    /**
-     * `applyView` performs operation on the view as specified in `action` (insert, detach, destroy)
-     *
-     * Inserting a view without projection or containers at top level is simple. Just iterate over the
-     * root nodes of the View, and for each node perform the `action`.
-     *
-     * Things get more complicated with containers and projections. That is because coming across:
-     * - Container: implies that we have to insert/remove/destroy the views of that container as well
-     *              which in turn can have their own Containers at the View roots.
-     * - Projection: implies that we have to insert/remove/destroy the nodes of the projection. The
-     *               complication is that the nodes we are projecting can themselves have Containers
-     *               or other Projections.
-     *
-     * As you can see this is a very recursive problem. Yes recursion is not most efficient but the
-     * code is complicated enough that trying to implemented with recursion becomes unmaintainable.
-     *
-     * @param renderer Renderer to use
-     * @param action action to perform (insert, detach, destroy)
-     * @param lView The LView which needs to be inserted, detached, destroyed.
-     * @param renderParent parent DOM element for insertion/removal.
-     * @param beforeNode Before which node the insertions should happen.
-     */
-    function applyView(renderer, action, lView, renderParent, beforeNode) {
-        var tView = lView[TVIEW];
-        ngDevMode && assertNodeType(tView.node, 2 /* View */);
-        var viewRootTNode = tView.node.child;
-        applyNodes(renderer, action, viewRootTNode, lView, renderParent, beforeNode, false);
-    }
-    /**
-     * `applyProjectionRecursive` performs operation on the projection specified by `action` (insert,
-     * detach, destroy)
-     *
-     * Inserting a projection requires us to locate the projected nodes from the parent component. The
-     * complication is that those nodes themselves could be re-projected from their parent component.
-     *
-     * @param renderer Render to use
-     * @param action action to perform (insert, detach, destroy)
-     * @param lView The LView which needs to be inserted, detached, destroyed.
-     * @param tProjectionNode node to project
-     * @param renderParent parent DOM element for insertion/removal.
-     * @param beforeNode Before which node the insertions should happen.
-     */
-    function applyProjectionRecursive(renderer, action, lView, tProjectionNode, renderParent, beforeNode) {
-        var componentLView = lView[DECLARATION_COMPONENT_VIEW];
-        var componentNode = componentLView[T_HOST];
-        ngDevMode &&
-            assertEqual(typeof tProjectionNode.projection, 'number', 'expecting projection index');
-        var nodeToProjectOrRNodes = componentNode.projection[tProjectionNode.projection];
-        if (Array.isArray(nodeToProjectOrRNodes)) {
-            // This should not exist, it is a bit of a hack. When we bootstrap a top level node and we
-            // need to support passing projectable nodes, so we cheat and put them in the TNode
-            // of the Host TView. (Yes we put instance info at the T Level). We can get away with it
-            // because we know that that TView is not shared and therefore it will not be a problem.
-            // This should be refactored and cleaned up.
-            for (var i = 0; i < nodeToProjectOrRNodes.length; i++) {
-                var rNode = nodeToProjectOrRNodes[i];
-                applyToElementOrContainer(action, renderer, renderParent, rNode, beforeNode);
-            }
-        }
-        else {
-            var nodeToProject = nodeToProjectOrRNodes;
-            var projectedComponentLView = componentLView[PARENT];
-            applyNodes(renderer, action, nodeToProject, projectedComponentLView, renderParent, beforeNode, true);
-        }
-    }
-    /**
-     * `applyContainer` performs an operation on the container and its views as specified by
-     * `action` (insert, detach, destroy)
-     *
-     * Inserting a Container is complicated by the fact that the container may have Views which
-     * themselves have containers or projections.
-     *
-     * @param renderer Renderer to use
-     * @param action action to perform (insert, detach, destroy)
-     * @param lContainer The LContainer which needs to be inserted, detached, destroyed.
-     * @param renderParent parent DOM element for insertion/removal.
-     * @param beforeNode Before which node the insertions should happen.
-     */
-    function applyContainer(renderer, action, lContainer, renderParent, beforeNode) {
-        ngDevMode && assertLContainer(lContainer);
-        var anchor = lContainer[NATIVE]; // LContainer has its own before node.
-        var native = unwrapRNode(lContainer);
-        // An LContainer can be created dynamically on any node by injecting ViewContainerRef.
-        // Asking for a ViewContainerRef on an element will result in a creation of a separate anchor node
-        // (comment in the DOM) that will be different from the LContainer's host node. In this particular
-        // case we need to execute action on 2 nodes:
-        // - container's host node (this is done in the executeActionOnElementOrContainer)
-        // - container's host node (this is done here)
-        if (anchor !== native) {
-            // This is very strange to me (Misko). I would expect that the native is same as anchor. I don't
-            // see a reason why they should be different, but they are.
-            //
-            // If they are we need to process the second anchor as well.
-            applyToElementOrContainer(action, renderer, renderParent, anchor, beforeNode);
-        }
-        for (var i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
-            var lView = lContainer[i];
-            applyView(renderer, action, lView, renderParent, anchor);
         }
     }
 
@@ -38662,7 +38977,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             componentDef.contentQueries(1 /* Create */, component, rootView.length - 1);
         }
         var rootTNode = getPreviousOrParentTNode();
-        if (tView.firstCreatePass && componentDef.hostBindings) {
+        // TODO(misko-next): This is a temporary work around for the fact that we moved the information
+        // from instruction to declaration. The workaround is to just call the instruction as if it was
+        // part of the `hostAttrs`.
+        // The check for componentDef.hostBindings is wrong since now some directives may not
+        // have componentDef.hostBindings but they still need to process hostVars and hostAttrs
+        if (tView.firstCreatePass && (componentDef.hostBindings || componentDef.hostVars !== 0 ||
+            componentDef.hostAttrs !== null)) {
             var elementIndex = rootTNode.index - HEADER_OFFSET;
             setActiveHostElement(elementIndex);
             incrementActiveDirectiveId();
@@ -38980,7 +39301,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+558.sha-d1c7ca7');
+    var VERSION$2 = new Version$1('0.0.0');
 
     /**
      * @license
@@ -50705,7 +51026,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (!data) {
                 return;
             }
-            var htmlParser = new I18NHtmlParser(new HtmlParser());
+            var htmlParser = new HtmlParser();
             var expressionParser = new Parser$1(new Lexer());
             var parser = new TemplateParser(new CompilerConfig(), this.reflector, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, // console
             [] // tranforms
@@ -50904,7 +51225,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+558.sha-d1c7ca7');
+    var VERSION$3 = new Version$1('0.0.0');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
