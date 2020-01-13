@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+649.sha-58f1002
+ * @license Angular v9.0.0-rc.1+650.sha-7d40185
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+649.sha-58f1002');
+    var VERSION$1 = new Version('9.0.0-rc.1+650.sha-7d40185');
 
     /**
      * @license
@@ -38801,7 +38801,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+649.sha-58f1002');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+650.sha-7d40185');
 
     /**
      * @license
@@ -45967,9 +45967,16 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             value === null;
     }
     function _queryAllR3(parentElement, predicate, matches, elementsOnly) {
-        var context = loadLContext(parentElement.nativeNode);
-        var parentTNode = context.lView[TVIEW].data[context.nodeIndex];
-        _queryNodeChildrenR3(parentTNode, context.lView, predicate, matches, elementsOnly, parentElement.nativeNode);
+        var context = loadLContext(parentElement.nativeNode, false);
+        if (context !== null) {
+            var parentTNode = context.lView[TVIEW].data[context.nodeIndex];
+            _queryNodeChildrenR3(parentTNode, context.lView, predicate, matches, elementsOnly, parentElement.nativeNode);
+        }
+        else {
+            // If the context is null, then `parentElement` was either created with Renderer2 or native DOM
+            // APIs.
+            _queryNativeNodeDescendants(parentElement.nativeNode, predicate, matches, elementsOnly);
+        }
     }
     /**
      * Recursively match the current TNode against the predicate, and goes on with the next ones.
@@ -50772,7 +50779,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+649.sha-58f1002');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+650.sha-7d40185');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
