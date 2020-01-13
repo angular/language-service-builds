@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+644.sha-cfbb1a1
+ * @license Angular v9.0.0-rc.1+649.sha-58f1002
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18663,7 +18663,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+644.sha-cfbb1a1');
+    var VERSION$1 = new Version('9.0.0-rc.1+649.sha-58f1002');
 
     /**
      * @license
@@ -47737,7 +47737,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+644.sha-cfbb1a1');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+649.sha-58f1002');
 
     /**
      * @license
@@ -50631,6 +50631,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         ['{1}, {0}', u, '{1} \'at\' {0}', u],
         ['.', ',', ';', '%', '+', '-', 'E', '×', '‰', '∞', 'NaN', ':'],
         ['#,##0.###', '#,##0%', '¤#,##0.00', '#E0'],
+        'USD',
         '$',
         'US Dollar',
         {},
@@ -50716,12 +50717,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         LocaleDataIndex[LocaleDataIndex["DateTimeFormat"] = 12] = "DateTimeFormat";
         LocaleDataIndex[LocaleDataIndex["NumberSymbols"] = 13] = "NumberSymbols";
         LocaleDataIndex[LocaleDataIndex["NumberFormats"] = 14] = "NumberFormats";
-        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 15] = "CurrencySymbol";
-        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 16] = "CurrencyName";
-        LocaleDataIndex[LocaleDataIndex["Currencies"] = 17] = "Currencies";
-        LocaleDataIndex[LocaleDataIndex["Directionality"] = 18] = "Directionality";
-        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 19] = "PluralCase";
-        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 20] = "ExtraData";
+        LocaleDataIndex[LocaleDataIndex["CurrencyCode"] = 15] = "CurrencyCode";
+        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 16] = "CurrencySymbol";
+        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 17] = "CurrencyName";
+        LocaleDataIndex[LocaleDataIndex["Currencies"] = 18] = "Currencies";
+        LocaleDataIndex[LocaleDataIndex["Directionality"] = 19] = "Directionality";
+        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 20] = "PluralCase";
+        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 21] = "ExtraData";
     })(LocaleDataIndex || (LocaleDataIndex = {}));
     /**
      * Returns the canonical form of a locale name - lowercase with `_` replaced with `-`.
@@ -50761,6 +50763,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * The locale id that the application is using by default (for translations and ICU expressions).
      */
     var DEFAULT_LOCALE_ID = 'en-US';
+    /**
+     * USD currency code that the application uses by default for CurrencyPipe when no
+     * DEFAULT_CURRENCY_CODE is provided.
+     */
+    var USD_CURRENCY_CODE = 'USD';
 
     var MARKER = "\uFFFD";
     var ICU_BLOCK_REGEXP = /^\s*(�\d+:?\d*�)\s*,\s*(select|plural)\s*,/;
@@ -55978,6 +55985,45 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     var LOCALE_ID$1 = new InjectionToken('LocaleId');
     /**
+     * Provide this token to set the default currency code your application uses for
+     * CurrencyPipe when there is no currency code passed into it. This is only used by
+     * CurrencyPipe and has no relation to locale currency. Defaults to USD if not configured.
+     *
+     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
+     *
+     * <div class="alert is-helpful">
+     *
+     * **Deprecation notice:**
+     *
+     * The default currency code is currently always `USD` but this is deprecated from v9.
+     *
+     * **In v10 the default currency code will be taken from the current locale.**
+     *
+     * If you need the previous behavior then set it by creating a `DEFAULT_CURRENCY_CODE` provider in
+     * your application `NgModule`:
+     *
+     * ```ts
+     * {provide: DEFAULT_CURRENCY_CODE, useValue: 'USD'}
+     * ```
+     *
+     * </div>
+     *
+     * @usageNotes
+     * ### Example
+     *
+     * ```typescript
+     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+     * import { AppModule } from './app/app.module';
+     *
+     * platformBrowserDynamic().bootstrapModule(AppModule, {
+     *   providers: [{provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' }]
+     * });
+     * ```
+     *
+     * @publicApi
+     */
+    var DEFAULT_CURRENCY_CODE = new InjectionToken('DefaultCurrencyCode');
+    /**
      * Use this token at bootstrap to provide the content of your translation file (`xtb`,
      * `xlf` or `xlf2`) when you want to translate your application in another language.
      *
@@ -58276,6 +58322,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             useFactory: _localeFactory,
             deps: [[new Inject(LOCALE_ID$1), new Optional(), new SkipSelf()]]
         },
+        { provide: DEFAULT_CURRENCY_CODE, useValue: USD_CURRENCY_CODE },
     ];
     /**
      * Schedule work at next available slot.
@@ -62762,7 +62809,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+644.sha-cfbb1a1');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+649.sha-58f1002');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
