@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.8+89.sha-f1cdb8f
+ * @license Angular v9.0.0-rc.8+91.sha-7305b02
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.8+89.sha-f1cdb8f');
+    var VERSION$1 = new Version('9.0.0-rc.8+91.sha-7305b02');
 
     /**
      * @license
@@ -24768,7 +24768,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 members: function () { return _this.scope; },
                 signatures: function () { return []; },
                 selectSignature: function (types) { return undefined; },
-                indexed: function (argument) { return undefined; }
+                indexed: function (argument) { return undefined; },
+                typeArguments: function () { return undefined; },
             };
         };
         AstType.prototype.visitInterpolation = function (ast) {
@@ -26247,6 +26248,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             };
                         },
                         indexed: function () { return undefined; },
+                        typeArguments: function () { return undefined; },
                     },
                 },
             ]);
@@ -26328,10 +26330,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         TypeScriptSymbolQuery.prototype.getArrayType = function (type) { return this.getBuiltinType(BuiltinType$1.Any); };
         TypeScriptSymbolQuery.prototype.getElementType = function (type) {
             if (type instanceof TypeWrapper) {
-                var elementType = getTypeParameterOf(type.tsType, 'Array');
-                if (elementType) {
-                    return new TypeWrapper(elementType, type.context);
-                }
+                var tSymbol = type.tsType.symbol;
+                var tArgs = type.typeArguments();
+                if (!tSymbol || tSymbol.name !== 'Array' || !tArgs || tArgs.length != 1)
+                    return;
+                return tArgs[0];
             }
         };
         TypeScriptSymbolQuery.prototype.getNonNullableType = function (symbol) {
@@ -26423,21 +26426,21 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         };
         TypeScriptSymbolQuery.prototype.getTsTypeOf = function (symbol) {
-            var type = this.getTypeWrapper(symbol);
+            var type = getTypeWrapper(symbol);
             return type && type.tsType;
-        };
-        TypeScriptSymbolQuery.prototype.getTypeWrapper = function (symbol) {
-            var type = undefined;
-            if (symbol instanceof TypeWrapper) {
-                type = symbol;
-            }
-            else if (symbol.type instanceof TypeWrapper) {
-                type = symbol.type;
-            }
-            return type;
         };
         return TypeScriptSymbolQuery;
     }());
+    function getTypeWrapper(symbol) {
+        var type = undefined;
+        if (symbol instanceof TypeWrapper) {
+            type = symbol;
+        }
+        else if (symbol.type instanceof TypeWrapper) {
+            type = symbol.type;
+        }
+        return type;
+    }
     function typeCallable(type) {
         var signatures = type.getCallSignatures();
         return signatures && signatures.length != 0;
@@ -26511,8 +26514,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return selectSignature(this.tsType, this.context);
         };
         TypeWrapper.prototype.indexed = function (argument, value) {
-            var type = argument instanceof TypeWrapper ? argument : argument.type;
-            if (!(type instanceof TypeWrapper))
+            var type = getTypeWrapper(argument);
+            if (!type)
                 return;
             var typeKind = typeKindOf(type.tsType);
             switch (typeKind) {
@@ -26531,6 +26534,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     var sType = this.tsType.getStringIndexType();
                     return sType && new TypeWrapper(sType, this.context);
             }
+        };
+        TypeWrapper.prototype.typeArguments = function () {
+            var _this = this;
+            // TODO: use checker.getTypeArguments when TS 3.7 lands in the monorepo.
+            var typeArguments = this.tsType.typeArguments;
+            if (!typeArguments)
+                return undefined;
+            return typeArguments.map(function (ta) { return new TypeWrapper(ta, _this.context); });
         };
         return TypeWrapper;
     }());
@@ -26623,6 +26634,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return selectSignature(this.tsType, this.context);
         };
         SymbolWrapper.prototype.indexed = function (argument) { return undefined; };
+        SymbolWrapper.prototype.typeArguments = function () { return this.type.typeArguments(); };
         Object.defineProperty(SymbolWrapper.prototype, "tsType", {
             get: function () {
                 var type = this._tsType;
@@ -26665,7 +26677,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "callable", {
-            get: function () { return this.declaration.type.callable; },
+            get: function () { return this.type.callable; },
             enumerable: true,
             configurable: true
         });
@@ -26679,11 +26691,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
-        DeclaredSymbol.prototype.members = function () { return this.declaration.type.members(); };
-        DeclaredSymbol.prototype.signatures = function () { return this.declaration.type.signatures(); };
-        DeclaredSymbol.prototype.selectSignature = function (types) {
-            return this.declaration.type.selectSignature(types);
-        };
+        DeclaredSymbol.prototype.members = function () { return this.type.members(); };
+        DeclaredSymbol.prototype.signatures = function () { return this.type.signatures(); };
+        DeclaredSymbol.prototype.selectSignature = function (types) { return this.type.selectSignature(types); };
+        DeclaredSymbol.prototype.typeArguments = function () { return this.type.typeArguments(); };
         DeclaredSymbol.prototype.indexed = function (argument) { return undefined; };
         return DeclaredSymbol;
     }());
@@ -26740,10 +26751,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             finally { if (e_3) throw e_3.error; }
         }
-        // First, tell the compiler that `result` is of type `any`. Then, use a second type assertion
-        // to `ts.SymbolTable`.
-        // Otherwise, `Map<string, ts.Symbol>` and `ts.SymbolTable` will be considered as incompatible
-        // types by the compiler
         return result;
     }
     function toSymbols(symbolTable) {
@@ -26933,28 +26940,27 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var signature = selectSignature(this.tsType, this.context);
             if (types.length > 0) {
                 var parameterType = types[0];
-                if (parameterType instanceof TypeWrapper) {
-                    var resultType = undefined;
-                    switch (this.name) {
-                        case 'async':
-                            // Get symbol of 'Observable', 'Promise', or 'EventEmitter' type.
-                            var symbol = parameterType.tsType.symbol;
-                            if (symbol) {
-                                resultType = getTypeParameterOf(parameterType.tsType, symbol.name);
-                            }
-                            break;
-                        case 'slice':
-                            resultType = parameterType.tsType;
-                            break;
-                    }
-                    if (resultType) {
-                        signature = new SignatureResultOverride(signature, new TypeWrapper(resultType, parameterType.context));
-                    }
+                var resultType = undefined;
+                switch (this.name) {
+                    case 'async':
+                        // Get type argument of 'Observable', 'Promise', or 'EventEmitter'.
+                        var tArgs = parameterType.typeArguments();
+                        if (tArgs && tArgs.length === 1) {
+                            resultType = tArgs[0];
+                        }
+                        break;
+                    case 'slice':
+                        resultType = parameterType;
+                        break;
+                }
+                if (resultType) {
+                    signature = new SignatureResultOverride(signature, resultType);
                 }
             }
             return signature;
         };
         PipeSymbol.prototype.indexed = function (argument) { return undefined; };
+        PipeSymbol.prototype.typeArguments = function () { return this.type.typeArguments(); };
         Object.defineProperty(PipeSymbol.prototype, "tsType", {
             get: function () {
                 var type = this._tsType;
@@ -27106,14 +27112,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_5) throw e_5.error; }
-            }
-        }
-    }
-    function getTypeParameterOf(type, name) {
-        if (type && type.symbol && type.symbol.name == name) {
-            var typeArguments = type.typeArguments;
-            if (typeArguments && typeArguments.length <= 1) {
-                return typeArguments[0];
             }
         }
     }
@@ -27555,9 +27553,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         }
                     }
                 },
-                visitComment: function (ast) { },
-                visitExpansion: function (ast) { },
-                visitExpansionCase: function (ast) { }
+                visitComment: function () { },
+                visitExpansion: function () { },
+                visitExpansionCase: function () { }
             }, null);
         }
         var replacementSpan = getBoundedWordSpan(templateInfo, position);
@@ -27659,10 +27657,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (!path.tail) {
             return [];
         }
-        // HtmlAst contains the `Attribute` node, however the corresponding `AttrAst`
-        // node is missing from the TemplateAst. In this case, we have to manually
-        // append the `AttrAst` node to the path.
-        if (!(path.tail instanceof AttrAst)) {
+        // HtmlAst contains the `Attribute` node, however a corresponding attribute AST
+        // node may be missing from the TemplateAst if the compiler fails to parse it fully. In this case,
+        // manually append an `AttrAst` node to the path.
+        if (!(path.tail instanceof AttrAst) && !(path.tail instanceof BoundElementPropertyAst) &&
+            !(path.tail instanceof BoundEventAst)) {
             // The sourceSpan of an AttrAst is the valueSpan of the HTML Attribute.
             path.push(new AttrAst(attr.name, attr.value, attr.valueSpan));
         }
@@ -27790,31 +27789,29 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.processExpressionCompletions(ast.value);
         };
         ExpressionVisitor.prototype.visitEvent = function (ast) { this.processExpressionCompletions(ast.handler); };
-        ExpressionVisitor.prototype.visitElement = function (ast) {
+        ExpressionVisitor.prototype.visitElement = function () {
             // no-op for now
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
-            // First, verify the attribute consists of some binding we can give completions for.
-            var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
-            // Find where the cursor is relative to the start of the attribute value.
-            var valueRelativePosition = this.position - ast.sourceSpan.start.offset;
-            // Find the template binding that contains the position
-            var binding = templateBindings.find(function (b) { return inSpan(valueRelativePosition, b.span); });
-            if (!binding) {
-                return;
-            }
             if (ast.name.startsWith('*')) {
+                // This a template binding given by micro syntax expression.
+                // First, verify the attribute consists of some binding we can give completions for.
+                var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
+                // Find where the cursor is relative to the start of the attribute value.
+                var valueRelativePosition_1 = this.position - ast.sourceSpan.start.offset;
+                // Find the template binding that contains the position.
+                var binding = templateBindings.find(function (b) { return inSpan(valueRelativePosition_1, b.span); });
+                if (!binding) {
+                    return;
+                }
                 this.microSyntaxInAttributeValue(ast, binding);
             }
             else {
-                // If the position is in the expression or after the key or there is no key, return the
-                // expression completions.
-                // The expression must be reparsed to get a valid AST rather than only template bindings.
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
                 this.processExpressionCompletions(expressionAst);
             }
         };
-        ExpressionVisitor.prototype.visitReference = function (ast, context) {
+        ExpressionVisitor.prototype.visitReference = function (_ast, context) {
             var _this = this;
             context.directives.forEach(function (dir) {
                 var exportAs = dir.directive.exportAs;
@@ -28284,6 +28281,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         OverrideKindSymbol.prototype.signatures = function () { return this.sym.signatures(); };
         OverrideKindSymbol.prototype.selectSignature = function (types) { return this.sym.selectSignature(types); };
         OverrideKindSymbol.prototype.indexed = function (argument) { return this.sym.indexed(argument); };
+        OverrideKindSymbol.prototype.typeArguments = function () { return this.sym.typeArguments(); };
         return OverrideKindSymbol;
     }());
 
@@ -38801,7 +38799,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.8+89.sha-f1cdb8f');
+    var VERSION$2 = new Version$1('9.0.0-rc.8+91.sha-7305b02');
 
     /**
      * @license
@@ -50731,7 +50729,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.8+89.sha-f1cdb8f');
+    var VERSION$3 = new Version$1('9.0.0-rc.8+91.sha-7305b02');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
