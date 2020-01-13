@@ -14,4 +14,4 @@ export declare function getClassMembers(program: ts.Program, checker: ts.TypeChe
 export declare function getClassMembersFromDeclaration(program: ts.Program, checker: ts.TypeChecker, source: ts.SourceFile, declaration: ts.ClassDeclaration): SymbolTable;
 export declare function getClassFromStaticSymbol(program: ts.Program, type: StaticSymbol): ts.ClassDeclaration | undefined;
 export declare function getPipesTable(source: ts.SourceFile, program: ts.Program, checker: ts.TypeChecker, pipes: CompilePipeSummary[]): SymbolTable;
-export declare function toSymbolTableFactory(symbols: ts.Symbol[]): ts.UnderscoreEscapedMap<ts.Symbol>;
+export declare function toSymbolTableFactory(symbols: ts.Symbol[]): ts.SymbolTable;
