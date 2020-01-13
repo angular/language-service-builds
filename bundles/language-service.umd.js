@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.8+76.sha-08c2581
+ * @license Angular v9.0.0-rc.8+85.sha-a0eb57f
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.8+76.sha-08c2581');
+    var VERSION$1 = new Version('9.0.0-rc.8+85.sha-a0eb57f');
 
     /**
      * @license
@@ -27269,7 +27269,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 throw new Error("Inline template and component class should belong to the same source file");
             }
             _this.fileName = sourceFile.fileName;
-            _this.source = templateNode.text;
+            // node.text returns the TS internal representation of the normalized text,
+            // and all CR characters are stripped. node.getText() returns the raw text.
+            _this.source = templateNode.getText().slice(1, -1); // strip leading and trailing quotes
             _this.span = {
                 // TS string literal includes surrounding quotes in the start/end offsets.
                 start: templateNode.getStart() + 1,
@@ -38791,7 +38793,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.8+76.sha-08c2581');
+    var VERSION$2 = new Version$1('9.0.0-rc.8+85.sha-a0eb57f');
 
     /**
      * @license
@@ -50714,7 +50716,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.8+76.sha-08c2581');
+    var VERSION$3 = new Version$1('9.0.0-rc.8+85.sha-a0eb57f');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
