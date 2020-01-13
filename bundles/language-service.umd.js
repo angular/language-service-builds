@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+650.sha-7d40185
+ * @license Angular v9.0.0-rc.1+651.sha-15b4173
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+650.sha-7d40185');
+    var VERSION$1 = new Version('9.0.0-rc.1+651.sha-15b4173');
 
     /**
      * @license
@@ -27555,9 +27555,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         }
                     }
                 },
-                visitComment: function (ast) { },
-                visitExpansion: function (ast) { },
-                visitExpansionCase: function (ast) { }
+                visitComment: function () { },
+                visitExpansion: function () { },
+                visitExpansionCase: function () { }
             }, null);
         }
         var replacementSpan = getBoundedWordSpan(templateInfo, position);
@@ -27659,10 +27659,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (!path.tail) {
             return [];
         }
-        // HtmlAst contains the `Attribute` node, however the corresponding `AttrAst`
-        // node is missing from the TemplateAst. In this case, we have to manually
-        // append the `AttrAst` node to the path.
-        if (!(path.tail instanceof AttrAst)) {
+        // HtmlAst contains the `Attribute` node, however a corresponding attribute AST
+        // node may be missing from the TemplateAst if the compiler fails to parse it fully. In this case,
+        // manually append an `AttrAst` node to the path.
+        if (!(path.tail instanceof AttrAst) && !(path.tail instanceof BoundElementPropertyAst) &&
+            !(path.tail instanceof BoundEventAst)) {
             // The sourceSpan of an AttrAst is the valueSpan of the HTML Attribute.
             path.push(new AttrAst(attr.name, attr.value, attr.valueSpan));
         }
@@ -27790,31 +27791,29 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.processExpressionCompletions(ast.value);
         };
         ExpressionVisitor.prototype.visitEvent = function (ast) { this.processExpressionCompletions(ast.handler); };
-        ExpressionVisitor.prototype.visitElement = function (ast) {
+        ExpressionVisitor.prototype.visitElement = function () {
             // no-op for now
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
-            // First, verify the attribute consists of some binding we can give completions for.
-            var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
-            // Find where the cursor is relative to the start of the attribute value.
-            var valueRelativePosition = this.position - ast.sourceSpan.start.offset;
-            // Find the template binding that contains the position
-            var binding = templateBindings.find(function (b) { return inSpan(valueRelativePosition, b.span); });
-            if (!binding) {
-                return;
-            }
             if (ast.name.startsWith('*')) {
+                // This a template binding given by micro syntax expression.
+                // First, verify the attribute consists of some binding we can give completions for.
+                var templateBindings = this.info.expressionParser.parseTemplateBindings(ast.name, ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset).templateBindings;
+                // Find where the cursor is relative to the start of the attribute value.
+                var valueRelativePosition_1 = this.position - ast.sourceSpan.start.offset;
+                // Find the template binding that contains the position.
+                var binding = templateBindings.find(function (b) { return inSpan(valueRelativePosition_1, b.span); });
+                if (!binding) {
+                    return;
+                }
                 this.microSyntaxInAttributeValue(ast, binding);
             }
             else {
-                // If the position is in the expression or after the key or there is no key, return the
-                // expression completions.
-                // The expression must be reparsed to get a valid AST rather than only template bindings.
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
                 this.processExpressionCompletions(expressionAst);
             }
         };
-        ExpressionVisitor.prototype.visitReference = function (ast, context) {
+        ExpressionVisitor.prototype.visitReference = function (_ast, context) {
             var _this = this;
             context.directives.forEach(function (dir) {
                 var exportAs = dir.directive.exportAs;
@@ -38801,7 +38800,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+650.sha-7d40185');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+651.sha-15b4173');
 
     /**
      * @license
@@ -50779,7 +50778,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+650.sha-7d40185');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+651.sha-15b4173');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
