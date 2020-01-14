@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.8+91.sha-7305b02
+ * @license Angular v9.0.0-rc.8+112.sha-b1d213b
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.8+91.sha-7305b02');
+    var VERSION$1 = new Version('9.0.0-rc.8+112.sha-b1d213b');
 
     /**
      * @license
@@ -28138,7 +28138,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 },
                 visitDirectiveProperty: function (ast) {
                     if (!attributeValueSymbol_1(ast.value)) {
-                        symbol_1 = findInputBinding(info, path, ast);
+                        symbol_1 = findInputBinding(info, templatePosition, ast);
                         span_1 = spanOf(ast);
                     }
                 }
@@ -28153,15 +28153,71 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var path = getPathToNodeAtPosition(info.htmlAst, templatePosition);
         return path.first(Attribute);
     }
-    function findInputBinding(info, path, binding) {
+    // TODO: remove this function after the path includes 'DirectiveAst'.
+    // Find the directive that corresponds to the specified 'binding'
+    // at the specified 'position' in the 'ast'.
+    function findParentOfBinding(ast, binding, position) {
+        var res;
+        var visitor = new /** @class */ (function (_super) {
+            __extends(class_1, _super);
+            function class_1() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            class_1.prototype.visit = function (ast) {
+                var span = spanOf(ast);
+                if (!inSpan(position, span)) {
+                    // Returning a value here will result in the children being skipped.
+                    return true;
+                }
+            };
+            class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
+                return this.visitChildren(context, function (visit) {
+                    visit(ast.directives);
+                    visit(ast.children);
+                });
+            };
+            class_1.prototype.visitElement = function (ast, context) {
+                return this.visitChildren(context, function (visit) {
+                    visit(ast.directives);
+                    visit(ast.children);
+                });
+            };
+            class_1.prototype.visitDirective = function (ast) {
+                var result = this.visitChildren(ast, function (visit) { visit(ast.inputs); });
+                return result;
+            };
+            class_1.prototype.visitDirectiveProperty = function (ast, context) {
+                if (ast === binding) {
+                    res = context;
+                }
+            };
+            return class_1;
+        }(RecursiveTemplateAstVisitor));
+        templateVisitAll(visitor, ast);
+        return res;
+    }
+    function findInputBinding(info, position, binding) {
+        var directiveAst = findParentOfBinding(info.templateAst, binding, position);
+        if (directiveAst) {
+            var invertedInput = invertMap(directiveAst.directive.inputs);
+            var fieldName = invertedInput[binding.templateName];
+            if (fieldName) {
+                var classSymbol = info.template.query.getTypeSymbol(directiveAst.directive.type.reference);
+                if (classSymbol) {
+                    return classSymbol.members().get(fieldName);
+                }
+            }
+        }
+    }
+    function findOutputBinding(info, path, binding) {
         var e_2, _a;
         var element = path.first(ElementAst);
         if (element) {
             try {
                 for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var directive = _c.value;
-                    var invertedInput = invertMap(directive.directive.inputs);
-                    var fieldName = invertedInput[binding.templateName];
+                    var invertedOutputs = invertMap(directive.directive.outputs);
+                    var fieldName = invertedOutputs[binding.name];
                     if (fieldName) {
                         var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                         if (classSymbol) {
@@ -28179,34 +28235,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         }
     }
-    function findOutputBinding(info, path, binding) {
-        var e_3, _a;
-        var element = path.first(ElementAst);
-        if (element) {
-            try {
-                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var directive = _c.value;
-                    var invertedOutputs = invertMap(directive.directive.outputs);
-                    var fieldName = invertedOutputs[binding.name];
-                    if (fieldName) {
-                        var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                        if (classSymbol) {
-                            return classSymbol.members().get(fieldName);
-                        }
-                    }
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-        }
-    }
     function invertMap(obj) {
-        var e_4, _a;
+        var e_3, _a;
         var result = {};
         try {
             for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -28215,12 +28245,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 result[v] = name_1;
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_3) throw e_3.error; }
         }
         return result;
     }
@@ -32511,6 +32541,90 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
 
     /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function isPositive(mode) {
+        return (mode & 1 /* NOT */) === 0;
+    }
+    function maybeWrapInNotSelector(isNegativeMode, chunk) {
+        return isNegativeMode ? ':not(' + chunk.trim() + ')' : chunk;
+    }
+    function stringifyCSSSelector(selector) {
+        var result = selector[0];
+        var i = 1;
+        var mode = 2 /* ATTRIBUTE */;
+        var currentChunk = '';
+        var isNegativeMode = false;
+        while (i < selector.length) {
+            var valueOrMarker = selector[i];
+            if (typeof valueOrMarker === 'string') {
+                if (mode & 2 /* ATTRIBUTE */) {
+                    var attrValue = selector[++i];
+                    currentChunk +=
+                        '[' + valueOrMarker + (attrValue.length > 0 ? '="' + attrValue + '"' : '') + ']';
+                }
+                else if (mode & 8 /* CLASS */) {
+                    currentChunk += '.' + valueOrMarker;
+                }
+                else if (mode & 4 /* ELEMENT */) {
+                    currentChunk += ' ' + valueOrMarker;
+                }
+            }
+            else {
+                //
+                // Append current chunk to the final result in case we come across SelectorFlag, which
+                // indicates that the previous section of a selector is over. We need to accumulate content
+                // between flags to make sure we wrap the chunk later in :not() selector if needed, e.g.
+                // ```
+                //  ['', Flags.CLASS, '.classA', Flags.CLASS | Flags.NOT, '.classB', '.classC']
+                // ```
+                // should be transformed to `.classA :not(.classB .classC)`.
+                //
+                // Note: for negative selector part, we accumulate content between flags until we find the
+                // next negative flag. This is needed to support a case where `:not()` rule contains more than
+                // one chunk, e.g. the following selector:
+                // ```
+                //  ['', Flags.ELEMENT | Flags.NOT, 'p', Flags.CLASS, 'foo', Flags.CLASS | Flags.NOT, 'bar']
+                // ```
+                // should be stringified to `:not(p.foo) :not(.bar)`
+                //
+                if (currentChunk !== '' && !isPositive(valueOrMarker)) {
+                    result += maybeWrapInNotSelector(isNegativeMode, currentChunk);
+                    currentChunk = '';
+                }
+                mode = valueOrMarker;
+                // According to CssSelector spec, once we come across `SelectorFlags.NOT` flag, the negative
+                // mode is maintained for remaining chunks of a selector.
+                isNegativeMode = isNegativeMode || !isPositive(mode);
+            }
+            i++;
+        }
+        if (currentChunk !== '') {
+            result += maybeWrapInNotSelector(isNegativeMode, currentChunk);
+        }
+        return result;
+    }
+    /**
+     * Generates string representation of CSS selector in parsed form.
+     *
+     * ComponentDef and DirectiveDef are generated with the selector in parsed form to avoid doing
+     * additional parsing at runtime (for example, for directive matching). However in some cases (for
+     * example, while bootstrapping a component), a string version of the selector is required to query
+     * for the host element on the page. This function takes the parsed form of a selector and returns
+     * its string representation.
+     *
+     * @param selectorList selector in parsed form
+     * @returns string representation of a given selector
+     */
+    function stringifyCSSSelectorList(selectorList) {
+        return selectorList.map(stringifyCSSSelector).join(',');
+    }
+
+    /**
     * @license
     * Copyright Google Inc. All Rights Reserved.
     *
@@ -36754,12 +36868,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     var INJECTOR_IMPL = INJECTOR_IMPL__PRE_R3__;
     /**
-     * Concrete injectors implement this interface.
+     * Concrete injectors implement this interface. Injectors are configured
+     * with [providers](guide/glossary#provider) that associate
+     * dependencies of various types with [injection tokens](guide/glossary#di-token).
      *
-     * For more details, see the ["Dependency Injection Guide"](guide/dependency-injection).
+     * @see ["DI Providers"](guide/dependency-injection-providers).
+     * @see `StaticProvider`
      *
      * @usageNotes
-     * ### Example
+     *
+     *  The following example creates a service injector instance.
+     *
+     * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
+     *
+     * ### Usage example
      *
      * {@example core/di/ts/injector_spec.ts region='Injector'}
      *
@@ -36772,14 +36894,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var Injector = /** @class */ (function () {
         function Injector() {
         }
-        /**
-         * Create a new Injector which is configure using `StaticProvider`s.
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-         */
         Injector.create = function (options, parent) {
             if (Array.isArray(options)) {
                 return INJECTOR_IMPL(options, parent, '');
@@ -38799,7 +38913,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.8+91.sha-7305b02');
+    var VERSION$2 = new Version$1('9.0.0-rc.8+112.sha-b1d213b');
 
     /**
      * @license
@@ -41505,8 +41619,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             _this.componentDef = componentDef;
             _this.ngModule = ngModule;
             _this.componentType = componentDef.type;
-            // default to 'div' in case this component has an attribute selector
-            _this.selector = componentDef.selectors[0][0] || 'div';
+            _this.selector = stringifyCSSSelectorList(componentDef.selectors);
             _this.ngContentSelectors =
                 componentDef.ngContentSelectors ? componentDef.ngContentSelectors : [];
             _this.isBoundToModule = !!ngModule;
@@ -41533,7 +41646,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var sanitizer = rootViewInjector.get(Sanitizer, null);
             var hostRNode = rootSelectorOrNode ?
                 locateHostElement(rendererFactory, rootSelectorOrNode, this.componentDef.encapsulation) :
-                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef), null);
+                // Determine a tag name used for creating host elements when this component is created
+                // dynamically. Default to 'div' if this component did not specify any tag name in its
+                // selector.
+                elementCreate(this.componentDef.selectors[0][0] || 'div', rendererFactory.createRenderer(null, this.componentDef), null);
             var rootFlags = this.componentDef.onPush ? 64 /* Dirty */ | 512 /* IsRoot */ :
                 16 /* CheckAlways */ | 512 /* IsRoot */;
             // Check whether this Component needs to be isolated from other components, i.e. whether it
@@ -41684,11 +41800,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         LocaleDataIndex[LocaleDataIndex["DateTimeFormat"] = 12] = "DateTimeFormat";
         LocaleDataIndex[LocaleDataIndex["NumberSymbols"] = 13] = "NumberSymbols";
         LocaleDataIndex[LocaleDataIndex["NumberFormats"] = 14] = "NumberFormats";
-        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 15] = "CurrencySymbol";
-        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 16] = "CurrencyName";
-        LocaleDataIndex[LocaleDataIndex["Currencies"] = 17] = "Currencies";
-        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 18] = "PluralCase";
-        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 19] = "ExtraData";
+        LocaleDataIndex[LocaleDataIndex["CurrencyCode"] = 15] = "CurrencyCode";
+        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 16] = "CurrencySymbol";
+        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 17] = "CurrencyName";
+        LocaleDataIndex[LocaleDataIndex["Currencies"] = 18] = "Currencies";
+        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 19] = "PluralCase";
+        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 20] = "ExtraData";
     })(LocaleDataIndex || (LocaleDataIndex = {}));
 
     /**
@@ -41702,6 +41819,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * The locale id that the application is using by default (for translations and ICU expressions).
      */
     var DEFAULT_LOCALE_ID = 'en-US';
+    /**
+     * USD currency code that the application uses by default for CurrencyPipe when no
+     * DEFAULT_CURRENCY_CODE is provided.
+     */
+    var USD_CURRENCY_CODE = 'USD';
 
     /**
      * The locale id that the application is currently using (for translations and ICU expressions).
@@ -43947,6 +44069,45 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @publicApi
      */
     var LOCALE_ID$1 = new InjectionToken('LocaleId');
+    /**
+     * Provide this token to set the default currency code your application uses for
+     * CurrencyPipe when there is no currency code passed into it. This is only used by
+     * CurrencyPipe and has no relation to locale currency. Defaults to USD if not configured.
+     *
+     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
+     *
+     * <div class="alert is-helpful">
+     *
+     * **Deprecation notice:**
+     *
+     * The default currency code is currently always `USD` but this is deprecated from v9.
+     *
+     * **In v10 the default currency code will be taken from the current locale.**
+     *
+     * If you need the previous behavior then set it by creating a `DEFAULT_CURRENCY_CODE` provider in
+     * your application `NgModule`:
+     *
+     * ```ts
+     * {provide: DEFAULT_CURRENCY_CODE, useValue: 'USD'}
+     * ```
+     *
+     * </div>
+     *
+     * @usageNotes
+     * ### Example
+     *
+     * ```typescript
+     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+     * import { AppModule } from './app/app.module';
+     *
+     * platformBrowserDynamic().bootstrapModule(AppModule, {
+     *   providers: [{provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' }]
+     * });
+     * ```
+     *
+     * @publicApi
+     */
+    var DEFAULT_CURRENCY_CODE = new InjectionToken('DefaultCurrencyCode');
     /**
      * Use this token at bootstrap to provide the content of your translation file (`xtb`,
      * `xlf` or `xlf2`) when you want to translate your application in another language.
@@ -46216,6 +46377,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return             DEFAULT_LOCALE_ID;
         }
     }
+    var ɵ0$b = USD_CURRENCY_CODE;
     /**
      * A built-in [dependency injection token](guide/glossary#di-token)
      * that is used to configure the root injector for bootstrapping.
@@ -46241,6 +46403,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             useFactory: _localeFactory,
             deps: [[new Inject(LOCALE_ID$1), new Optional(), new SkipSelf()]]
         },
+        { provide: DEFAULT_CURRENCY_CODE, useValue: ɵ0$b },
     ];
     /**
      * Schedule work at next available slot.
@@ -50729,7 +50892,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.8+91.sha-7305b02');
+    var VERSION$3 = new Version$1('9.0.0-rc.8+112.sha-b1d213b');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
