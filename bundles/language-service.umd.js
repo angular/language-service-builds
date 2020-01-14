@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+652.sha-7325053
+ * @license Angular v9.0.0-rc.1+657.sha-1a45387
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+652.sha-7325053');
+    var VERSION$1 = new Version('9.0.0-rc.1+657.sha-1a45387');
 
     /**
      * @license
@@ -28138,7 +28138,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 },
                 visitDirectiveProperty: function (ast) {
                     if (!attributeValueSymbol_1(ast.value)) {
-                        symbol_1 = findInputBinding(info, path, ast);
+                        symbol_1 = findInputBinding(info, templatePosition, ast);
                         span_1 = spanOf(ast);
                     }
                 }
@@ -28153,15 +28153,71 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var path = getPathToNodeAtPosition(info.htmlAst, templatePosition);
         return path.first(Attribute);
     }
-    function findInputBinding(info, path, binding) {
+    // TODO: remove this function after the path includes 'DirectiveAst'.
+    // Find the directive that corresponds to the specified 'binding'
+    // at the specified 'position' in the 'ast'.
+    function findParentOfBinding(ast, binding, position) {
+        var res;
+        var visitor = new /** @class */ (function (_super) {
+            __extends(class_1, _super);
+            function class_1() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            class_1.prototype.visit = function (ast) {
+                var span = spanOf(ast);
+                if (!inSpan(position, span)) {
+                    // Returning a value here will result in the children being skipped.
+                    return true;
+                }
+            };
+            class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
+                return this.visitChildren(context, function (visit) {
+                    visit(ast.directives);
+                    visit(ast.children);
+                });
+            };
+            class_1.prototype.visitElement = function (ast, context) {
+                return this.visitChildren(context, function (visit) {
+                    visit(ast.directives);
+                    visit(ast.children);
+                });
+            };
+            class_1.prototype.visitDirective = function (ast) {
+                var result = this.visitChildren(ast, function (visit) { visit(ast.inputs); });
+                return result;
+            };
+            class_1.prototype.visitDirectiveProperty = function (ast, context) {
+                if (ast === binding) {
+                    res = context;
+                }
+            };
+            return class_1;
+        }(RecursiveTemplateAstVisitor));
+        templateVisitAll(visitor, ast);
+        return res;
+    }
+    function findInputBinding(info, position, binding) {
+        var directiveAst = findParentOfBinding(info.templateAst, binding, position);
+        if (directiveAst) {
+            var invertedInput = invertMap(directiveAst.directive.inputs);
+            var fieldName = invertedInput[binding.templateName];
+            if (fieldName) {
+                var classSymbol = info.template.query.getTypeSymbol(directiveAst.directive.type.reference);
+                if (classSymbol) {
+                    return classSymbol.members().get(fieldName);
+                }
+            }
+        }
+    }
+    function findOutputBinding(info, path, binding) {
         var e_2, _a;
         var element = path.first(ElementAst);
         if (element) {
             try {
                 for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var directive = _c.value;
-                    var invertedInput = invertMap(directive.directive.inputs);
-                    var fieldName = invertedInput[binding.templateName];
+                    var invertedOutputs = invertMap(directive.directive.outputs);
+                    var fieldName = invertedOutputs[binding.name];
                     if (fieldName) {
                         var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                         if (classSymbol) {
@@ -28179,34 +28235,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         }
     }
-    function findOutputBinding(info, path, binding) {
-        var e_3, _a;
-        var element = path.first(ElementAst);
-        if (element) {
-            try {
-                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var directive = _c.value;
-                    var invertedOutputs = invertMap(directive.directive.outputs);
-                    var fieldName = invertedOutputs[binding.name];
-                    if (fieldName) {
-                        var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                        if (classSymbol) {
-                            return classSymbol.members().get(fieldName);
-                        }
-                    }
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-        }
-    }
     function invertMap(obj) {
-        var e_4, _a;
+        var e_3, _a;
         var result = {};
         try {
             for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -28215,12 +28245,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 result[v] = name_1;
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_3) throw e_3.error; }
         }
         return result;
     }
@@ -38799,7 +38829,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+652.sha-7325053');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+657.sha-1a45387');
 
     /**
      * @license
@@ -50777,7 +50807,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+652.sha-7325053');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+657.sha-1a45387');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
