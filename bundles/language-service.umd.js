@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+658.sha-2776810
+ * @license Angular v9.0.0-rc.1+659.sha-280aae6
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+658.sha-2776810');
+    var VERSION$1 = new Version('9.0.0-rc.1+659.sha-280aae6');
 
     /**
      * @license
@@ -36868,12 +36868,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     var INJECTOR_IMPL = INJECTOR_IMPL__PRE_R3__;
     /**
-     * Concrete injectors implement this interface.
+     * Concrete injectors implement this interface. Injectors are configured
+     * with [providers](guide/glossary#provider) that associate
+     * dependencies of various types with [injection tokens](guide/glossary#di-token).
      *
-     * For more details, see the ["Dependency Injection Guide"](guide/dependency-injection).
+     * @see ["DI Providers"](guide/dependency-injection-providers).
+     * @see `StaticProvider`
      *
      * @usageNotes
-     * ### Example
+     *
+     *  The following example creates a service injector instance.
+     *
+     * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
+     *
+     * ### Usage example
      *
      * {@example core/di/ts/injector_spec.ts region='Injector'}
      *
@@ -36886,14 +36894,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var Injector = /** @class */ (function () {
         function Injector() {
         }
-        /**
-         * Create a new Injector which is configure using `StaticProvider`s.
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-         */
         Injector.create = function (options, parent) {
             if (Array.isArray(options)) {
                 return INJECTOR_IMPL(options, parent, '');
@@ -38913,7 +38913,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+658.sha-2776810');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+659.sha-280aae6');
 
     /**
      * @license
@@ -50893,7 +50893,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+658.sha-2776810');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+659.sha-280aae6');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
