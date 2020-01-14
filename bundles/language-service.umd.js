@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+669.sha-23cbfa7
+ * @license Angular v9.0.0-rc.1+671.sha-d863526
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18663,7 +18663,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+669.sha-23cbfa7');
+    var VERSION$1 = new Version('9.0.0-rc.1+671.sha-d863526');
 
     /**
      * @license
@@ -27495,20 +27495,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                 },
                 visitAttribute: function (ast) {
-                    var bindParts = ast.name.match(BIND_NAME_REGEXP$2);
-                    var isReference = bindParts && bindParts[ATTR.KW_REF_IDX] !== undefined;
-                    if (!isReference &&
-                        (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan)))) {
-                        // We are in the name of an attribute. Show attribute completions.
-                        result = attributeCompletions(templateInfo, path);
+                    // An attribute consists of two parts, LHS="RHS".
+                    // Determine if completions are requested for LHS or RHS
+                    if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
+                        // RHS completion
+                        result = attributeValueCompletions(templateInfo, path);
                     }
-                    else if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                        if (isReference) {
-                            result = referenceAttributeValueCompletions(templateInfo, templatePosition, ast);
-                        }
-                        else {
-                            result = attributeValueCompletions(templateInfo, templatePosition, ast);
-                        }
+                    else {
+                        // LHS completion
+                        result = attributeCompletions(templateInfo, path);
                     }
                 },
                 visitText: function (ast) {
@@ -27637,38 +27632,54 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         return results;
     }
-    function attributeValueCompletions(info, position, attr) {
-        var path = findTemplateAstAt(info.templateAst, position);
-        if (!path.tail) {
-            return [];
+    /**
+     * Provide completions to the RHS of an attribute, which is of the form
+     * LHS="RHS". The template path is computed from the specified `info` whereas
+     * the context is determined from the specified `htmlPath`.
+     * @param info Object that contains the template AST
+     * @param htmlPath Path to the HTML node
+     */
+    function attributeValueCompletions(info, htmlPath) {
+        // Find the corresponding Template AST path.
+        var templatePath = findTemplateAstAt(info.templateAst, htmlPath.position);
+        var visitor = new ExpressionVisitor(info, htmlPath.position, function () {
+            var dinfo = diagnosticInfoFromTemplateInfo(info);
+            return getExpressionScope(dinfo, templatePath, false);
+        });
+        if (templatePath.tail instanceof AttrAst ||
+            templatePath.tail instanceof BoundElementPropertyAst ||
+            templatePath.tail instanceof BoundEventAst) {
+            templatePath.tail.visit(visitor, null);
+            return visitor.results;
         }
-        // HtmlAst contains the `Attribute` node, however a corresponding attribute AST
-        // node may be missing from the TemplateAst if the compiler fails to parse it fully. In this case,
-        // manually append an `AttrAst` node to the path.
-        if (!(path.tail instanceof AttrAst) && !(path.tail instanceof BoundElementPropertyAst) &&
-            !(path.tail instanceof BoundEventAst)) {
-            // The sourceSpan of an AttrAst is the valueSpan of the HTML Attribute.
-            path.push(new AttrAst(attr.name, attr.value, attr.valueSpan));
+        // In order to provide accurate attribute value completion, we need to know
+        // what the LHS is, and construct the proper AST if it is missing.
+        var htmlAttr = htmlPath.tail;
+        var bindParts = htmlAttr.name.match(BIND_NAME_REGEXP$2);
+        if (bindParts && bindParts[ATTR.KW_REF_IDX] !== undefined) {
+            var refAst = void 0;
+            var elemAst = void 0;
+            if (templatePath.tail instanceof ReferenceAst) {
+                refAst = templatePath.tail;
+                var parent_1 = templatePath.parentOf(refAst);
+                if (parent_1 instanceof ElementAst) {
+                    elemAst = parent_1;
+                }
+            }
+            else if (templatePath.tail instanceof ElementAst) {
+                refAst = new ReferenceAst(htmlAttr.name, null, htmlAttr.value, htmlAttr.valueSpan);
+                elemAst = templatePath.tail;
+            }
+            if (refAst && elemAst) {
+                refAst.visit(visitor, elemAst);
+            }
         }
-        var dinfo = diagnosticInfoFromTemplateInfo(info);
-        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); });
-        path.tail.visit(visitor, null);
-        return visitor.results;
-    }
-    function referenceAttributeValueCompletions(info, position, attr) {
-        var path = findTemplateAstAt(info.templateAst, position);
-        if (!path.tail) {
-            return [];
+        else {
+            // HtmlAst contains the `Attribute` node, however the corresponding `AttrAst`
+            // node is missing from the TemplateAst.
+            var attrAst = new AttrAst(htmlAttr.name, htmlAttr.value, htmlAttr.valueSpan);
+            attrAst.visit(visitor, null);
         }
-        // When the template parser does not find a directive with matching "exportAs",
-        // the ReferenceAst will be ignored.
-        if (!(path.tail instanceof ReferenceAst)) {
-            // The sourceSpan of an ReferenceAst is the valueSpan of the HTML Attribute.
-            path.push(new ReferenceAst(attr.name, null, attr.value, attr.valueSpan));
-        }
-        var dinfo = diagnosticInfoFromTemplateInfo(info);
-        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(dinfo, path, false); });
-        path.tail.visit(visitor, path.parentOf(path.tail));
         return visitor.results;
     }
     function elementCompletions(info) {
@@ -47838,7 +47849,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+669.sha-23cbfa7');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+671.sha-d863526');
 
     /**
      * @license
@@ -62927,7 +62938,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+669.sha-23cbfa7');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+671.sha-d863526');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
