@@ -20,4 +20,4 @@ export interface DiagnosticTemplateInfo {
 }
 export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): Diagnostic[];
 export declare function getExpressionDiagnostics(scope: SymbolTable, ast: AST, query: SymbolQuery, context?: ExpressionDiagnosticsContext): TypeDiagnostic[];
-export declare function getExpressionScope(info: DiagnosticTemplateInfo, path: TemplateAstPath, includeEvent: boolean): SymbolTable;
+export declare function getExpressionScope(info: DiagnosticTemplateInfo, path: TemplateAstPath): SymbolTable;
