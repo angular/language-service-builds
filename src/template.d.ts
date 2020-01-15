@@ -23,23 +23,23 @@ declare abstract class BaseTemplate implements ng.TemplateSource {
     private membersTable;
     private queryCache;
     constructor(host: TypeScriptServiceHost, classDeclNode: ts.ClassDeclaration, classSymbol: ng.StaticSymbol);
-    abstract readonly span: ng.Span;
-    abstract readonly fileName: string;
-    abstract readonly source: string;
+    abstract get span(): ng.Span;
+    abstract get fileName(): string;
+    abstract get source(): string;
     /**
      * Return the Angular StaticSymbol for the class that contains this template.
      */
-    readonly type: ng.StaticSymbol;
+    get type(): ng.StaticSymbol;
     /**
      * Return a Map-like data structure that allows users to retrieve some or all
      * top-level declarations in the associated component class.
      */
-    readonly members: ng.SymbolTable;
+    get members(): ng.SymbolTable;
     /**
      * Return an engine that provides more information about symbols in the
      * template.
      */
-    readonly query: ng.SymbolQuery;
+    get query(): ng.SymbolQuery;
 }
 /**
  * An InlineTemplate represents template defined in a TS file through the

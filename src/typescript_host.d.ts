@@ -54,12 +54,12 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     /**
      * Return the singleton instance of the MetadataResolver.
      */
-    private readonly resolver;
+    private get resolver();
     /**
      * Return the singleton instance of the StaticReflector hosted in the
      * MetadataResolver.
      */
-    private readonly reflector;
+    private get reflector();
     /**
      * Checks whether the program has changed and returns all analyzed modules.
      * If program has changed, invalidate all caches and update fileToComponent
@@ -93,7 +93,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     getDeclarations(fileName: string): Declaration[];
     getSourceFile(fileName: string): tss.SourceFile | undefined;
-    readonly program: tss.Program;
+    get program(): tss.Program;
     /**
      * Return the TemplateSource if `node` is a template node.
      *
