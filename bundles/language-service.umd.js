@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.8+119.sha-fa39a8c
+ * @license Angular v9.0.0-rc.8+132.sha-76a84bf
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.8+119.sha-fa39a8c');
+    var VERSION$1 = new Version('9.0.0-rc.8+132.sha-76a84bf');
 
     /**
      * @license
@@ -26356,9 +26356,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var context = { node: this.source, program: this.program, checker: this.checker };
             var typeSymbol = findClassSymbolInContext(type, context);
             if (typeSymbol) {
-                var contextType = this.getTemplateRefContextType(typeSymbol);
+                var contextType = this.getTemplateRefContextType(typeSymbol, context);
                 if (contextType)
-                    return new SymbolWrapper(contextType, context).members();
+                    return contextType.members();
             }
         };
         TypeScriptSymbolQuery.prototype.getTypeSymbol = function (type) {
@@ -26392,7 +26392,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) {
             return spanAt(this.source, line, column);
         };
-        TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol) {
+        TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol, context) {
             var e_2, _a;
             var type = this.checker.getTypeOfSymbolAtLocation(typeSymbol, this.source);
             var constructor = type.symbol && type.symbol.members &&
@@ -26404,9 +26404,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         var parameter = _c.value;
                         var type_1 = this.checker.getTypeAtLocation(parameter.type);
                         if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
-                            var typeReference = type_1;
-                            if (typeReference.typeArguments && typeReference.typeArguments.length === 1) {
-                                return typeReference.typeArguments[0].symbol;
+                            var typeWrapper = new TypeWrapper(type_1, context);
+                            var typeArguments = typeWrapper.typeArguments();
+                            if (typeArguments && typeArguments.length === 1) {
+                                return typeArguments[0];
                             }
                         }
                     }
@@ -26532,8 +26533,16 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         TypeWrapper.prototype.typeArguments = function () {
             var _this = this;
-            // TODO: use checker.getTypeArguments when TS 3.7 lands in the monorepo.
-            var typeArguments = this.tsType.typeArguments;
+            if (!isReferenceType(this.tsType))
+                return;
+            var typeReference = this.tsType;
+            var typeArguments;
+            if (this.context.checker.getTypeArguments) {
+                typeArguments = this.context.checker.getTypeArguments(typeReference);
+            }
+            else {
+                typeArguments = typeReference.typeArguments;
+            }
             if (!typeArguments)
                 return undefined;
             return typeArguments.map(function (ta) { return new TypeWrapper(ta, _this.context); });
@@ -38918,7 +38927,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.8+119.sha-fa39a8c');
+    var VERSION$2 = new Version$1('9.0.0-rc.8+132.sha-76a84bf');
 
     /**
      * @license
@@ -50905,7 +50914,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.8+119.sha-fa39a8c');
+    var VERSION$3 = new Version$1('9.0.0-rc.8+132.sha-76a84bf');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
