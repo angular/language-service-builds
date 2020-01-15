@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+674.sha-cb142b6
+ * @license Angular v9.0.0-rc.1+675.sha-d7ea389
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18678,7 +18678,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+674.sha-cb142b6');
+    var VERSION$1 = new Version('9.0.0-rc.1+675.sha-d7ea389');
 
     /**
      * @license
@@ -25227,9 +25227,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     function getTemplateExpressionDiagnostics(info) {
-        var visitor = new ExpressionDiagnosticsVisitor(info, function (path, includeEvent) {
-            return getExpressionScope(info, path, includeEvent);
-        });
+        var visitor = new ExpressionDiagnosticsVisitor(info, function (path) { return getExpressionScope(info, path); });
         templateVisitAll(visitor, info.templateAst);
         return visitor.diagnostics;
     }
@@ -25410,20 +25408,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // We can't do better, return any
         return query.getBuiltinType(BuiltinType$1.Any);
     }
-    function getEventDeclaration(info, includeEvent) {
+    function getEventDeclaration(info, path) {
         var result = [];
-        if (includeEvent) {
+        if (path.tail instanceof BoundEventAst) {
             // TODO: Determine the type of the event parameter based on the Observable<T> or EventEmitter<T>
             // of the event.
             result = [{ name: '$event', kind: 'variable', type: info.query.getBuiltinType(BuiltinType$1.Any) }];
         }
         return result;
     }
-    function getExpressionScope(info, path, includeEvent) {
+    function getExpressionScope(info, path) {
         var result = info.members;
         var references = getReferences(info);
         var variables = getVarDeclarations(info, path);
-        var events = getEventDeclaration(info, includeEvent);
+        var events = getEventDeclaration(info, path);
         if (references.length || variables.length || events.length) {
             var referenceTable = info.query.createSymbolTable(references);
             var variableTable = info.query.createSymbolTable(variables);
@@ -25524,9 +25522,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (span) {
                 this.diagnostics.push({ span: offsetSpan$1(span, this.info.offset), kind: ts.DiagnosticCategory.Error, message: message });
             }
-        };
-        ExpressionDiagnosticsVisitor.prototype.reportWarning = function (message, span) {
-            this.diagnostics.push({ span: offsetSpan$1(span, this.info.offset), kind: ts.DiagnosticCategory.Warning, message: message });
         };
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
@@ -27659,7 +27654,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var templatePath = findTemplateAstAt(info.templateAst, htmlPath.position);
         var visitor = new ExpressionVisitor(info, htmlPath.position, function () {
             var dinfo = diagnosticInfoFromTemplateInfo(info);
-            return getExpressionScope(dinfo, templatePath, false);
+            return getExpressionScope(dinfo, templatePath);
         });
         if (templatePath.tail instanceof AttrAst ||
             templatePath.tail instanceof BoundElementPropertyAst ||
@@ -27755,7 +27750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (!templatePath.tail) {
             return [];
         }
-        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
+        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath); });
         templatePath.tail.visit(visitor, null);
         return visitor.results;
     }
@@ -28040,12 +28035,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var symbol_1 = undefined;
             var span_1 = undefined;
             var attributeValueSymbol_1 = function (ast, inEvent) {
-                if (inEvent === void 0) { inEvent = false; }
                 var attribute = findAttribute(info, position);
                 if (attribute) {
                     if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
-                        var scope = getExpressionScope(dinfo, path, inEvent);
+                        var scope = getExpressionScope(dinfo, path);
                         if (attribute.valueSpan) {
                             var result = getExpressionSymbol(scope, ast, templatePosition, info.template.query);
                             if (result) {
@@ -28133,7 +28127,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                     if (inSpan(expressionPosition, ast.value.span)) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
-                        var scope = getExpressionScope(dinfo, path, /* includeEvent */ false);
+                        var scope = getExpressionScope(dinfo, path);
                         var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template.query);
                         if (result) {
                             symbol_1 = result.symbol;
@@ -38924,7 +38918,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+674.sha-cb142b6');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+675.sha-d7ea389');
 
     /**
      * @license
@@ -50912,7 +50906,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+674.sha-cb142b6');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+675.sha-d7ea389');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
