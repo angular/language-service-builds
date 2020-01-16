@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+710.sha-436e738
+ * @license Angular v9.0.0-rc.1+715.sha-63c9c2d
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -5683,6 +5683,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return this;
         };
         Object.defineProperty(SourceMapGenerator.prototype, "currentLine", {
+            /**
+            * @internal strip this from published d.ts files due to
+            * https://github.com/microsoft/TypeScript/issues/36216
+            */
             get: function () { return this.lines.slice(-1)[0]; },
             enumerable: true,
             configurable: true
@@ -5810,6 +5814,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         EmitterVisitorContext.createRoot = function () { return new EmitterVisitorContext(0); };
         Object.defineProperty(EmitterVisitorContext.prototype, "_currentLine", {
+            /**
+             * @internal strip this from published d.ts files due to
+             * https://github.com/microsoft/TypeScript/issues/36216
+             */
             get: function () { return this._lines[this._lines.length - 1]; },
             enumerable: true,
             configurable: true
@@ -5932,6 +5940,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return null;
         };
         Object.defineProperty(EmitterVisitorContext.prototype, "sourceLines", {
+            /**
+             * @internal strip this from published d.ts files due to
+             * https://github.com/microsoft/TypeScript/issues/36216
+             */
             get: function () {
                 if (this._lines.length && this._lines[this._lines.length - 1].parts.length === 0) {
                     return this._lines.slice(0, -1);
