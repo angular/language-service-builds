@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+715.sha-63c9c2d
+ * @license Angular v9.0.0-rc.1+717.sha-f2df1c7
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -29908,33 +29908,34 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function assertEqual(actual, expected, msg) {
         if (actual != expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '==');
         }
     }
     function assertNotEqual(actual, expected, msg) {
         if (actual == expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '!=');
         }
     }
     function assertLessThan(actual, expected, msg) {
         if (actual >= expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '<');
         }
     }
     function assertGreaterThan(actual, expected, msg) {
         if (actual <= expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '>');
         }
     }
     function assertDefined(actual, msg) {
         if (actual == null) {
-            throwError(msg);
+            throwError(msg, actual, null, '!=');
         }
     }
-    function throwError(msg) {
+    function throwError(msg, actual, expected, comparison) {
         // tslint:disable-next-line
         debugger; // Left intentionally for better debugger experience.
-        throw new Error("ASSERTION ERROR: " + msg);
+        throw new Error("ASSERTION ERROR: " + msg +
+            (comparison == null ? '' : " [Expected=> " + expected + " " + comparison + " " + actual + " <=Actual]"));
     }
     function assertDomNode(node) {
         // If we're in a worker, `Node` will not be defined.
@@ -35971,13 +35972,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function createElementRef(ElementRefToken, tNode, view) {
         if (!R3ElementRef) {
-            // TODO: Fix class name, should be ElementRef, but there appears to be a rollup bug
             R3ElementRef = /** @class */ (function (_super) {
-                __extends(ElementRef_, _super);
-                function ElementRef_() {
+                __extends(ElementRef, _super);
+                function ElementRef() {
                     return _super !== null && _super.apply(this, arguments) || this;
                 }
-                return ElementRef_;
+                return ElementRef;
             }(ElementRefToken));
         }
         return new R3ElementRef(getNativeByTNode(tNode, view));
