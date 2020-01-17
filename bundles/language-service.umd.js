@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.9+31.sha-21a9a41
+ * @license Angular v9.0.0-rc.9+32.sha-7643913
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -44226,6 +44226,16 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
+    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function _throwError() {
         throw new Error("Runtime compiler is not loaded");
     }
@@ -45071,6 +45081,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     var initStatus = moduleRef.injector.get(ApplicationInitStatus);
                     initStatus.runInitializers();
                     return initStatus.donePromise.then(function () {
+                        if (ivyEnabled) {
+                            // If the `LOCALE_ID` provider is defined at bootstrap then we set the value for ivy
+                            var localeId = moduleRef.injector.get(LOCALE_ID$1, DEFAULT_LOCALE_ID);
+                            setLocaleId(localeId || DEFAULT_LOCALE_ID);
+                        }
                         _this._moduleDoBootstrap(moduleRef);
                         return moduleRef;
                     });
