@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.9+21.sha-762c531
+ * @license Angular v9.0.0-rc.9+31.sha-21a9a41
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -5683,6 +5683,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return this;
         };
         Object.defineProperty(SourceMapGenerator.prototype, "currentLine", {
+            /**
+            * @internal strip this from published d.ts files due to
+            * https://github.com/microsoft/TypeScript/issues/36216
+            */
             get: function () { return this.lines.slice(-1)[0]; },
             enumerable: true,
             configurable: true
@@ -5810,6 +5814,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         EmitterVisitorContext.createRoot = function () { return new EmitterVisitorContext(0); };
         Object.defineProperty(EmitterVisitorContext.prototype, "_currentLine", {
+            /**
+             * @internal strip this from published d.ts files due to
+             * https://github.com/microsoft/TypeScript/issues/36216
+             */
             get: function () { return this._lines[this._lines.length - 1]; },
             enumerable: true,
             configurable: true
@@ -5932,6 +5940,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return null;
         };
         Object.defineProperty(EmitterVisitorContext.prototype, "sourceLines", {
+            /**
+             * @internal strip this from published d.ts files due to
+             * https://github.com/microsoft/TypeScript/issues/36216
+             */
             get: function () {
                 if (this._lines.length && this._lines[this._lines.length - 1].parts.length === 0) {
                     return this._lines.slice(0, -1);
@@ -29896,33 +29908,34 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function assertEqual(actual, expected, msg) {
         if (actual != expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '==');
         }
     }
     function assertNotEqual(actual, expected, msg) {
         if (actual == expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '!=');
         }
     }
     function assertLessThan(actual, expected, msg) {
         if (actual >= expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '<');
         }
     }
     function assertGreaterThan(actual, expected, msg) {
         if (actual <= expected) {
-            throwError(msg);
+            throwError(msg, actual, expected, '>');
         }
     }
     function assertDefined(actual, msg) {
         if (actual == null) {
-            throwError(msg);
+            throwError(msg, actual, null, '!=');
         }
     }
-    function throwError(msg) {
+    function throwError(msg, actual, expected, comparison) {
         // tslint:disable-next-line
         debugger; // Left intentionally for better debugger experience.
-        throw new Error("ASSERTION ERROR: " + msg);
+        throw new Error("ASSERTION ERROR: " + msg +
+            (comparison == null ? '' : " [Expected=> " + expected + " " + comparison + " " + actual + " <=Actual]"));
     }
     function assertDomNode(node) {
         // If we're in a worker, `Node` will not be defined.
@@ -35959,13 +35972,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function createElementRef(ElementRefToken, tNode, view) {
         if (!R3ElementRef) {
-            // TODO: Fix class name, should be ElementRef, but there appears to be a rollup bug
             R3ElementRef = /** @class */ (function (_super) {
-                __extends(ElementRef_, _super);
-                function ElementRef_() {
+                __extends(ElementRef, _super);
+                function ElementRef() {
                     return _super !== null && _super.apply(this, arguments) || this;
                 }
-                return ElementRef_;
+                return ElementRef;
             }(ElementRefToken));
         }
         return new R3ElementRef(getNativeByTNode(tNode, view));
