@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+731.sha-697f6a5
+ * @license Angular v9.0.0-rc.1+735.sha-39ec188
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -13590,6 +13590,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         function Parser(_lexer) {
             this._lexer = _lexer;
             this.errors = [];
+            this.simpleExpressionChecker = SimpleExpressionChecker;
         }
         Parser.prototype.parseAction = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
@@ -13605,10 +13606,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
             return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
         };
+        Parser.prototype.checkSimpleExpression = function (ast) {
+            var checker = new this.simpleExpressionChecker();
+            ast.visit(checker);
+            return checker.errors;
+        };
         Parser.prototype.parseSimpleBinding = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
             var ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
-            var errors = SimpleExpressionChecker.check(ast);
+            var errors = this.checkSimpleExpression(ast);
             if (errors.length > 0) {
                 this._reportError("Host binding expression cannot contain " + errors.join(' '), input, location);
             }
@@ -13739,6 +13745,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return Parser;
     }());
+    var IvyParser = /** @class */ (function (_super) {
+        __extends(IvyParser, _super);
+        function IvyParser() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.simpleExpressionChecker = IvySimpleExpressionChecker; //
+            return _this;
+        }
+        return IvyParser;
+    }(Parser$1));
     var _ParseAST = /** @class */ (function () {
         function _ParseAST(input, location, absoluteOffset, tokens, inputLength, parseAction, errors, offset) {
             this.input = input;
@@ -14313,11 +14328,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         function SimpleExpressionChecker() {
             this.errors = [];
         }
-        SimpleExpressionChecker.check = function (ast) {
-            var s = new SimpleExpressionChecker();
-            ast.visit(s);
-            return s.errors;
-        };
         SimpleExpressionChecker.prototype.visitImplicitReceiver = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitInterpolation = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitLiteralPrimitive = function (ast, context) { };
@@ -14344,6 +14354,25 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         SimpleExpressionChecker.prototype.visitQuote = function (ast, context) { };
         return SimpleExpressionChecker;
     }());
+    /**
+     * This class extends SimpleExpressionChecker used in View Engine and performs more strict checks to
+     * make sure host bindings do not contain pipes. In View Engine, having pipes in host bindings is
+     * not supported as well, but in some cases (like `!(value | async)`) the error is not triggered at
+     * compile time. In order to preserve View Engine behavior, more strict checks are introduced for
+     * Ivy mode only.
+     */
+    var IvySimpleExpressionChecker = /** @class */ (function (_super) {
+        __extends(IvySimpleExpressionChecker, _super);
+        function IvySimpleExpressionChecker() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        IvySimpleExpressionChecker.prototype.visitBinary = function (ast, context) {
+            ast.left.visit(this);
+            ast.right.visit(this);
+        };
+        IvySimpleExpressionChecker.prototype.visitPrefixNot = function (ast, context) { ast.expression.visit(this); };
+        return IvySimpleExpressionChecker;
+    }(SimpleExpressionChecker));
 
     /**
      * @license
@@ -17715,7 +17744,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function makeBindingParser(interpolationConfig) {
         if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-        return new BindingParser(new Parser$1(new Lexer()), interpolationConfig, elementRegistry, null, []);
+        return new BindingParser(new IvyParser(new Lexer()), interpolationConfig, elementRegistry, null, []);
     }
     function resolveSanitizationFn(context, isAttribute) {
         switch (context) {
