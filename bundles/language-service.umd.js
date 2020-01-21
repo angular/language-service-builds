@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+726.sha-b04c3cc
+ * @license Angular v9.0.0-rc.1+730.sha-15ae924
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -24573,6 +24573,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.scope = scope;
             this.query = query;
             this.context = context;
+            this.diagnostics = [];
         }
         AstType.prototype.getType = function (ast) { return ast.visit(this); };
         AstType.prototype.getDiagnostics = function (ast) {
@@ -26286,7 +26287,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.fetchPipes = fetchPipes;
             this.typeCache = new Map();
         }
-        TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) { return typeKindOf(this.getTsTypeOf(symbol)); };
+        TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) {
+            var type = symbol instanceof TypeWrapper ? symbol.tsType : undefined;
+            return typeKindOf(type);
+        };
         TypeScriptSymbolQuery.prototype.getBuiltinType = function (kind) {
             var result = this.typeCache.get(kind);
             if (!result) {
@@ -26418,22 +26422,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         };
-        TypeScriptSymbolQuery.prototype.getTsTypeOf = function (symbol) {
-            var type = getTypeWrapper(symbol);
-            return type && type.tsType;
-        };
         return TypeScriptSymbolQuery;
     }());
-    function getTypeWrapper(symbol) {
-        var type = undefined;
-        if (symbol instanceof TypeWrapper) {
-            type = symbol;
-        }
-        else if (symbol.type instanceof TypeWrapper) {
-            type = symbol.type;
-        }
-        return type;
-    }
     function typeCallable(type) {
         var signatures = type.getCallSignatures();
         return signatures && signatures.length != 0;
@@ -26506,9 +26496,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         TypeWrapper.prototype.selectSignature = function (types) {
             return selectSignature(this.tsType, this.context);
         };
-        TypeWrapper.prototype.indexed = function (argument, value) {
-            var type = getTypeWrapper(argument);
-            if (!type)
+        TypeWrapper.prototype.indexed = function (type, value) {
+            if (!(type instanceof TypeWrapper))
                 return;
             var typeKind = typeKindOf(type.tsType);
             switch (typeKind) {
@@ -26534,12 +26523,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return;
             var typeReference = this.tsType;
             var typeArguments;
-            if (this.context.checker.getTypeArguments) {
-                typeArguments = this.context.checker.getTypeArguments(typeReference);
-            }
-            else {
-                typeArguments = typeReference.typeArguments;
-            }
+            typeArguments = this.context.checker.getTypeArguments(typeReference);
             if (!typeArguments)
                 return undefined;
             return typeArguments.map(function (ta) { return new TypeWrapper(ta, _this.context); });
@@ -28117,8 +28101,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         finally { if (e_1) throw e_1.error; }
                     }
                     // See if this attribute matches the selector of any directive on the element.
-                    // TODO(ayazhafiz): Consider caching selector matches (at the expense of potentially
-                    // very high memory usage).
                     var attributeSelector = "[" + ast.name + "=" + ast.value + "]";
                     var parsedAttribute = CssSelector.parse(attributeSelector);
                     if (!parsedAttribute.length)
