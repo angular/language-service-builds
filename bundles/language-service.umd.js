@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.9+48.sha-641c7cf
+ * @license Angular v9.0.0-rc.10+9.sha-20dc436
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18719,7 +18719,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('0.0.0');
+    var VERSION$1 = new Version('9.0.0-rc.10+9.sha-20dc436');
 
     /**
      * @license
@@ -28896,7 +28896,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         function LanguageServiceImpl(host) {
             this.host = host;
         }
-        LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
+        LanguageServiceImpl.prototype.getSemanticDiagnostics = function (fileName) {
             var e_1, _a;
             var analyzedModules = this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var results = [];
@@ -28924,7 +28924,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var sourceFile = fileName.endsWith('.ts') ? this.host.getSourceFile(fileName) : undefined;
             return uniqueBySpan(results).map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
         };
-        LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
+        LanguageServiceImpl.prototype.getCompletionsAtPosition = function (fileName, position, options) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var ast = this.host.getTemplateAstAtPosition(fileName, position);
             if (!ast) {
@@ -28942,7 +28942,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 entries: results,
             };
         };
-        LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
+        LanguageServiceImpl.prototype.getDefinitionAndBoundSpan = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
@@ -28957,7 +28957,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         };
-        LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
+        LanguageServiceImpl.prototype.getQuickInfoAtPosition = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
@@ -38950,7 +38950,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('0.0.0');
+    var VERSION$2 = new Version$1('9.0.0-rc.10+9.sha-20dc436');
 
     /**
      * @license
@@ -50889,7 +50889,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return results;
                 }
             }
-            return ngLS.getCompletionsAt(fileName, position);
+            return ngLS.getCompletionsAtPosition(fileName, position, options);
         }
         function getQuickInfoAtPosition(fileName, position) {
             if (!angularOnly) {
@@ -50899,7 +50899,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return result;
                 }
             }
-            return ngLS.getHoverAt(fileName, position);
+            return ngLS.getQuickInfoAtPosition(fileName, position);
         }
         function getSemanticDiagnostics(fileName) {
             var results = [];
@@ -50907,7 +50907,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 results.push.apply(results, __spread(tsLS.getSemanticDiagnostics(fileName)));
             }
             // For semantic diagnostics we need to combine both TS + Angular results
-            results.push.apply(results, __spread(ngLS.getDiagnostics(fileName)));
+            results.push.apply(results, __spread(ngLS.getSemanticDiagnostics(fileName)));
             return results;
         }
         function getDefinitionAtPosition(fileName, position) {
@@ -50918,7 +50918,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return results;
                 }
             }
-            var result = ngLS.getDefinitionAt(fileName, position);
+            var result = ngLS.getDefinitionAndBoundSpan(fileName, position);
             if (!result || !result.definitions || !result.definitions.length) {
                 return;
             }
@@ -50932,7 +50932,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return result;
                 }
             }
-            return ngLS.getDefinitionAt(fileName, position);
+            return ngLS.getDefinitionAndBoundSpan(fileName, position);
         }
         var proxy = Object.assign(
         // First clone the original TS language service
@@ -50952,7 +50952,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('0.0.0');
+    var VERSION$3 = new Version$1('9.0.0-rc.10+9.sha-20dc436');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
