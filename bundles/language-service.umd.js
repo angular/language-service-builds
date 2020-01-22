@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+750.sha-e1fc44f
+ * @license Angular v9.0.0-rc.1+755.sha-92c411f
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18719,7 +18719,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+750.sha-e1fc44f');
+    var VERSION$1 = new Version('9.0.0-rc.1+755.sha-92c411f');
 
     /**
      * @license
@@ -38950,7 +38950,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+750.sha-e1fc44f');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+755.sha-92c411f');
 
     /**
      * @license
@@ -46040,8 +46040,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             get: function () {
                 var result = {};
                 var element = this.nativeElement;
-                var classNames = element.className.split(' ');
-                classNames.forEach(function (value) { return result[value] = true; });
+                // SVG elements return an `SVGAnimatedString` instead of a plain string for the `className`.
+                var className = element.className;
+                var classes = className && typeof className !== 'string' ? className.baseVal.split(' ') :
+                    className.split(' ');
+                classes.forEach(function (value) { return result[value] = true; });
                 return result;
             },
             enumerable: true,
@@ -50953,7 +50956,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+750.sha-e1fc44f');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+755.sha-92c411f');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
