@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+747.sha-61ad50d
+ * @license Angular v9.0.0-rc.1+748.sha-32489c7
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -3541,6 +3541,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         Identifiers.stylePropInterpolate7 = { name: 'ɵɵstylePropInterpolate7', moduleName: CORE$1 };
         Identifiers.stylePropInterpolate8 = { name: 'ɵɵstylePropInterpolate8', moduleName: CORE$1 };
         Identifiers.stylePropInterpolateV = { name: 'ɵɵstylePropInterpolateV', moduleName: CORE$1 };
+        Identifiers.styleSanitizer = { name: 'ɵɵstyleSanitizer', moduleName: CORE$1 };
         Identifiers.elementHostAttrs = { name: 'ɵɵelementHostAttrs', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵɵcontainer', moduleName: CORE$1 };
         Identifiers.nextContext = { name: 'ɵɵnextContext', moduleName: CORE$1 };
@@ -12780,6 +12781,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this._classesIndex = new Map();
             this._initialStyleValues = [];
             this._initialClassValues = [];
+            // certain style properties ALWAYS need sanitization
+            // this is checked each time new styles are encountered
+            this._useDefaultSanitizer = false;
         }
         /**
          * Registers a given input to the styling builder to be later used when producing AOT code.
@@ -12835,14 +12839,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag, bindingUnit = _a.unit;
             var entry = {
                 name: property,
-                sanitize: property ? isStyleSanitizable(property) : true,
                 unit: unit || bindingUnit, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag
             };
             if (isMapBased) {
+                this._useDefaultSanitizer = true;
                 this._styleMapInput = entry;
             }
             else {
                 (this._singleStyleInputs = this._singleStyleInputs || []).push(entry);
+                this._useDefaultSanitizer = this._useDefaultSanitizer || isStyleSanitizable(name);
                 registerIntoMap(this._stylesIndex, property);
             }
             this._lastStylingInput = entry;
@@ -12856,7 +12861,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return null;
             }
             var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag;
-            var entry = { name: property, value: value, sourceSpan: sourceSpan, sanitize: false, hasOverrideFlag: hasOverrideFlag, unit: null };
+            var entry = { name: property, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag, unit: null };
             if (isMapBased) {
                 if (this._classMapInput) {
                     throw new Error('[class] and [className] bindings cannot be used on the same element simultaneously');
@@ -13001,7 +13006,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }]
             };
         };
-        StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, valueConverter, getInterpolationExpressionFn, isClassBased) {
+        StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter, getInterpolationExpressionFn) {
             var instructions = [];
             inputs.forEach(function (input) {
                 var previousInstruction = instructions[instructions.length - 1];
@@ -13019,7 +13024,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     allocateBindingSlots: totalBindingSlotsRequired,
                     supportsInterpolation: !!getInterpolationExpressionFn,
                     params: function (convertFn) {
-                        // params => stylingProp(propName, value, suffix|sanitizer)
+                        // params => stylingProp(propName, value)
                         var params = [];
                         params.push(literal(input.name));
                         var convertResult = convertFn(value);
@@ -13029,17 +13034,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         else {
                             params.push(convertResult);
                         }
-                        // [style.prop] bindings may use suffix values (e.g. px, em, etc...) and they
-                        // can also use a sanitizer. Sanitization occurs for url-based entries. Having
-                        // the suffix value and a sanitizer together into the instruction doesn't make
-                        // any sense (url-based entries cannot be sanitized).
-                        if (!isClassBased) {
-                            if (input.unit) {
-                                params.push(literal(input.unit));
-                            }
-                            else if (input.sanitize) {
-                                params.push(importExpr(Identifiers$1.defaultStyleSanitizer));
-                            }
+                        if (allowUnits && input.unit) {
+                            params.push(literal(input.unit));
                         }
                         return params;
                     }
@@ -13060,15 +13056,25 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         StylingBuilder.prototype._buildClassInputs = function (valueConverter) {
             if (this._singleClassInputs) {
-                return this._buildSingleInputs(Identifiers$1.classProp, this._singleClassInputs, valueConverter, null, true);
+                return this._buildSingleInputs(Identifiers$1.classProp, this._singleClassInputs, this._classesIndex, false, valueConverter);
             }
             return [];
         };
         StylingBuilder.prototype._buildStyleInputs = function (valueConverter) {
             if (this._singleStyleInputs) {
-                return this._buildSingleInputs(Identifiers$1.styleProp, this._singleStyleInputs, valueConverter, getStylePropInterpolationExpression, false);
+                return this._buildSingleInputs(Identifiers$1.styleProp, this._singleStyleInputs, this._stylesIndex, true, valueConverter, getStylePropInterpolationExpression);
             }
             return [];
+        };
+        StylingBuilder.prototype._buildSanitizerFn = function () {
+            return {
+                reference: Identifiers$1.styleSanitizer,
+                calls: [{
+                        sourceSpan: this._firstStylingInput ? this._firstStylingInput.sourceSpan : null,
+                        allocateBindingSlots: 0,
+                        params: function () { return [importExpr(Identifiers$1.defaultStyleSanitizer)]; }
+                    }]
+            };
         };
         /**
          * Constructs all instructions which contain the expressions that will be placed
@@ -13077,6 +13083,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         StylingBuilder.prototype.buildUpdateLevelInstructions = function (valueConverter) {
             var instructions = [];
             if (this.hasBindings) {
+                if (this._useDefaultSanitizer) {
+                    instructions.push(this._buildSanitizerFn());
+                }
                 var styleMapInstruction = this.buildStyleMapInstruction(valueConverter);
                 if (styleMapInstruction) {
                     instructions.push(styleMapInstruction);
@@ -18710,7 +18719,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+747.sha-61ad50d');
+    var VERSION$1 = new Version('9.0.0-rc.1+748.sha-32489c7');
 
     /**
      * @license
@@ -38941,7 +38950,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+747.sha-61ad50d');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+748.sha-32489c7');
 
     /**
      * @license
@@ -50944,7 +50953,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+747.sha-61ad50d');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+748.sha-32489c7');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
