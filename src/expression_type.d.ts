@@ -47,9 +47,9 @@ export declare class AstType implements AstVisitor {
     visitSafeMethodCall(ast: SafeMethodCall): Symbol;
     visitSafePropertyRead(ast: SafePropertyRead): Symbol | undefined;
     private _anyType;
-    private readonly anyType;
+    private get anyType();
     private _undefinedType;
-    private readonly undefinedType;
+    private get undefinedType();
     private resolveMethodCall;
     private resolvePropertyRead;
     private reportError;
