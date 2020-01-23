@@ -15,8 +15,8 @@ export interface SymbolInfo {
     compileTypeSummary: CompileTypeSummary | undefined;
 }
 /**
- * Traverse the template AST and locate the Symbol at the specified `position`.
- * @param info Ast and Template Source
- * @param position location to look for
+ * Traverses a template AST and locates symbol(s) at a specified position.
+ * @param info template AST information set
+ * @param position location to locate symbols at
  */
-export declare function locateSymbol(info: AstResult, position: number): SymbolInfo | undefined;
+export declare function locateSymbols(info: AstResult, position: number): SymbolInfo[];
