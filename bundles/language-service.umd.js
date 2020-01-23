@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+776.sha-eb4b7d2
+ * @license Angular v9.0.0-rc.1+777.sha-4ba4782
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18719,7 +18719,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+776.sha-eb4b7d2');
+    var VERSION$1 = new Version('9.0.0-rc.1+777.sha-4ba4782');
 
     /**
      * @license
@@ -25514,10 +25514,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var context = this.info.query.getTemplateContext(directive.type.reference);
                 if (context && !context.has(ast.value)) {
                     if (ast.value === '$implicit') {
-                        this.reportError('The template context does not have an implicit value', spanOf$1(ast.sourceSpan));
+                        this.reportError("The template context of '" + directive.type.reference.name + "' does not define an implicit value.\n" +
+                            "If the context type is a base type, consider refining it to a more specific type.", spanOf$1(ast.sourceSpan));
                     }
                     else {
-                        this.reportError("The template context does not define a member called '" + ast.value + "'", spanOf$1(ast.sourceSpan));
+                        this.reportError("The template context of '" + directive.type.reference.name + "' does not define a member called '" + ast.value + "'", spanOf$1(ast.sourceSpan));
                     }
                 }
             }
@@ -38991,7 +38992,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+776.sha-eb4b7d2');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+777.sha-4ba4782');
 
     /**
      * @license
@@ -51006,7 +51007,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+776.sha-eb4b7d2');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+777.sha-4ba4782');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
