@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+788.sha-b50ed5c
+ * @license Angular v9.0.0-rc.1+789.sha-0223aa6
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18719,7 +18719,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+788.sha-b50ed5c');
+    var VERSION$1 = new Version('9.0.0-rc.1+789.sha-0223aa6');
 
     /**
      * @license
@@ -25176,11 +25176,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      *
      * For example,
      *     v---------- `decoratorId`
-     * @NgModule({
-     *   declarations: [],
-     * })
-     * class AppModule {}
-     *          ^----- `classDecl`
+     * @NgModule({           <
+     *   declarations: [],   < classDecl
+     * })                    <
+     * class AppModule {}    <
+     *          ^----- `classId`
      *
      * @param node Potential node that represents an Angular directive.
      */
@@ -25201,7 +25201,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 if (ts.isObjectLiteralExpression(arg)) {
                     return {
                         decoratorId: expr.expression,
-                        classDecl: node,
+                        classId: node.name,
                     };
                 }
             }
@@ -38989,7 +38989,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+788.sha-b50ed5c');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+789.sha-0223aa6');
 
     /**
      * @license
@@ -50576,9 +50576,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var visit = function (child) {
                 var candidate = getDirectiveClassLike(child);
                 if (candidate) {
-                    var decoratorId = candidate.decoratorId, classDecl = candidate.classDecl;
-                    var declarationSpan = spanOf$2(decoratorId);
-                    var className = classDecl.name.text;
+                    var classId = candidate.classId;
+                    var declarationSpan = spanOf$2(classId);
+                    var className = classId.getText();
                     var classSymbol = _this.reflector.getStaticSymbol(sourceFile.fileName, className);
                     // Ask the resolver to check if candidate is actually Angular directive
                     if (!_this.resolver.isDirective(classSymbol)) {
@@ -51004,7 +51004,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+788.sha-b50ed5c');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+789.sha-0223aa6');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
