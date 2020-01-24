@@ -97,7 +97,7 @@ export interface Declaration {
     /**
      * Reference to the compiler directive metadata for the declaration.
      */
-    readonly metadata?: CompileDirectiveMetadata;
+    readonly metadata: CompileDirectiveMetadata;
     /**
      * Error reported trying to get the metadata.
      */
