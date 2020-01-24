@@ -36,7 +36,7 @@ export declare function findTemplateAstAt(ast: TemplateAst[], position: number):
 export declare function findTightestNode(node: ts.Node, position: number): ts.Node | undefined;
 interface DirectiveClassLike {
     decoratorId: ts.Identifier;
-    classDecl: ts.ClassDeclaration;
+    classId: ts.Identifier;
 }
 /**
  * Return metadata about `node` if it looks like an Angular directive class.
@@ -48,11 +48,11 @@ interface DirectiveClassLike {
  *
  * For example,
  *     v---------- `decoratorId`
- * @NgModule({
- *   declarations: [],
- * })
- * class AppModule {}
- *          ^----- `classDecl`
+ * @NgModule({           <
+ *   declarations: [],   < classDecl
+ * })                    <
+ * class AppModule {}    <
+ *          ^----- `classId`
  *
  * @param node Potential node that represents an Angular directive.
  */

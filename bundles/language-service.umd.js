@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+745.sha-ad68b61
+ * @license Angular v9.0.0-rc.1+804.sha-0eaf874
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -3541,7 +3541,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         Identifiers.stylePropInterpolate7 = { name: 'ɵɵstylePropInterpolate7', moduleName: CORE$1 };
         Identifiers.stylePropInterpolate8 = { name: 'ɵɵstylePropInterpolate8', moduleName: CORE$1 };
         Identifiers.stylePropInterpolateV = { name: 'ɵɵstylePropInterpolateV', moduleName: CORE$1 };
-        Identifiers.styleSanitizer = { name: 'ɵɵstyleSanitizer', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵɵcontainer', moduleName: CORE$1 };
         Identifiers.nextContext = { name: 'ɵɵnextContext', moduleName: CORE$1 };
         Identifiers.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE$1 };
@@ -12713,6 +12712,55 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
 
     var IMPORTANT_FLAG = '!important';
     /**
+     * Minimum amount of binding slots required in the runtime for style/class bindings.
+     *
+     * Styling in Angular uses up two slots in the runtime LView/TData data structures to
+     * record binding data, property information and metadata.
+     *
+     * When a binding is registered it will place the following information in the `LView`:
+     *
+     * slot 1) binding value
+     * slot 2) cached value (all other values collected before it in string form)
+     *
+     * When a binding is registered it will place the following information in the `TData`:
+     *
+     * slot 1) prop name
+     * slot 2) binding index that points to the previous style/class binding (and some extra config
+     * values)
+     *
+     * Let's imagine we have a binding that looks like so:
+     *
+     * ```
+     * <div [style.width]="x" [style.height]="y">
+     * ```
+     *
+     * Our `LView` and `TData` data-structures look like so:
+     *
+     * ```typescript
+     * LView = [
+     *   // ...
+     *   x, // value of x
+     *   "width: x",
+     *
+     *   y, // value of y
+     *   "width: x; height: y",
+     *   // ...
+     * ];
+     *
+     * TData = [
+     *   // ...
+     *   "width", // binding slot 20
+     *   0,
+     *
+     *   "height",
+     *   20,
+     *   // ...
+     * ];
+     * ```
+     *
+     * */
+    var MIN_STYLING_BINDING_SLOTS_REQUIRED = 2;
+    /**
      * Produces creation/update instructions for all styling bindings (class and style)
      *
      * It also produces the creation instruction to register all initial styling values
@@ -12779,9 +12827,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this._classesIndex = new Map();
             this._initialStyleValues = [];
             this._initialClassValues = [];
-            // certain style properties ALWAYS need sanitization
-            // this is checked each time new styles are encountered
-            this._useDefaultSanitizer = false;
         }
         /**
          * Registers a given input to the styling builder to be later used when producing AOT code.
@@ -12837,15 +12882,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag, bindingUnit = _a.unit;
             var entry = {
                 name: property,
+                sanitize: property ? isStyleSanitizable(property) : true,
                 unit: unit || bindingUnit, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag
             };
             if (isMapBased) {
-                this._useDefaultSanitizer = true;
                 this._styleMapInput = entry;
             }
             else {
                 (this._singleStyleInputs = this._singleStyleInputs || []).push(entry);
-                this._useDefaultSanitizer = this._useDefaultSanitizer || isStyleSanitizable(name);
                 registerIntoMap(this._stylesIndex, property);
             }
             this._lastStylingInput = entry;
@@ -12859,7 +12903,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return null;
             }
             var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag;
-            var entry = { name: property, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag, unit: null };
+            var entry = { name: property, value: value, sourceSpan: sourceSpan, sanitize: false, hasOverrideFlag: hasOverrideFlag, unit: null };
             if (isMapBased) {
                 if (this._classMapInput) {
                     throw new Error('[class] and [className] bindings cannot be used on the same element simultaneously');
@@ -12963,7 +13007,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // map-based bindings allocate two slots: one for the
             // previous binding value and another for the previous
             // className or style attribute value.
-            var totalBindingSlotsRequired = 2;
+            var totalBindingSlotsRequired = MIN_STYLING_BINDING_SLOTS_REQUIRED;
             // these values must be outside of the update block so that they can
             // be evaluated (the AST visit call) during creation time so that any
             // pipes can be picked up in time before the template is built
@@ -12984,18 +13028,30 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         allocateBindingSlots: totalBindingSlotsRequired,
                         params: function (convertFn) {
                             var convertResult = convertFn(mapValue);
-                            return Array.isArray(convertResult) ? convertResult : [convertResult];
+                            var params = Array.isArray(convertResult) ? convertResult : [convertResult];
+                            // [style] instructions will sanitize all their values. For this reason we
+                            // need to include the sanitizer as a param.
+                            if (!isClassBased) {
+                                params.push(importExpr(Identifiers$1.defaultStyleSanitizer));
+                            }
+                            return params;
                         }
                     }]
             };
         };
-        StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter, getInterpolationExpressionFn) {
+        StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, valueConverter, getInterpolationExpressionFn, isClassBased) {
             var instructions = [];
             inputs.forEach(function (input) {
                 var previousInstruction = instructions[instructions.length - 1];
                 var value = input.value.visit(valueConverter);
                 var referenceForCall = reference;
-                var totalBindingSlotsRequired = 1; // each styling binding value is stored in the LView
+                // each styling binding value is stored in the LView
+                // but there are two values stored for each binding:
+                //   1) the value itself
+                //   2) an intermediate value (concatenation of style up to this point).
+                //      We need to store the intermediate value so that we don't allocate
+                //      the strings on each CD.
+                var totalBindingSlotsRequired = MIN_STYLING_BINDING_SLOTS_REQUIRED;
                 if (value instanceof Interpolation) {
                     totalBindingSlotsRequired += value.expressions.length;
                     if (getInterpolationExpressionFn) {
@@ -13007,7 +13063,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     allocateBindingSlots: totalBindingSlotsRequired,
                     supportsInterpolation: !!getInterpolationExpressionFn,
                     params: function (convertFn) {
-                        // params => stylingProp(propName, value)
+                        // params => stylingProp(propName, value, suffix|sanitizer)
                         var params = [];
                         params.push(literal(input.name));
                         var convertResult = convertFn(value);
@@ -13017,8 +13073,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         else {
                             params.push(convertResult);
                         }
-                        if (allowUnits && input.unit) {
-                            params.push(literal(input.unit));
+                        // [style.prop] bindings may use suffix values (e.g. px, em, etc...) and they
+                        // can also use a sanitizer. Sanitization occurs for url-based entries. Having
+                        // the suffix value and a sanitizer together into the instruction doesn't make
+                        // any sense (url-based entries cannot be sanitized).
+                        if (!isClassBased) {
+                            if (input.unit) {
+                                params.push(literal(input.unit));
+                            }
+                            else if (input.sanitize) {
+                                params.push(importExpr(Identifiers$1.defaultStyleSanitizer));
+                            }
                         }
                         return params;
                     }
@@ -13039,25 +13104,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         StylingBuilder.prototype._buildClassInputs = function (valueConverter) {
             if (this._singleClassInputs) {
-                return this._buildSingleInputs(Identifiers$1.classProp, this._singleClassInputs, this._classesIndex, false, valueConverter);
+                return this._buildSingleInputs(Identifiers$1.classProp, this._singleClassInputs, valueConverter, null, true);
             }
             return [];
         };
         StylingBuilder.prototype._buildStyleInputs = function (valueConverter) {
             if (this._singleStyleInputs) {
-                return this._buildSingleInputs(Identifiers$1.styleProp, this._singleStyleInputs, this._stylesIndex, true, valueConverter, getStylePropInterpolationExpression);
+                return this._buildSingleInputs(Identifiers$1.styleProp, this._singleStyleInputs, valueConverter, getStylePropInterpolationExpression, false);
             }
             return [];
-        };
-        StylingBuilder.prototype._buildSanitizerFn = function () {
-            return {
-                reference: Identifiers$1.styleSanitizer,
-                calls: [{
-                        sourceSpan: this._firstStylingInput ? this._firstStylingInput.sourceSpan : null,
-                        allocateBindingSlots: 0,
-                        params: function () { return [importExpr(Identifiers$1.defaultStyleSanitizer)]; }
-                    }]
-            };
         };
         /**
          * Constructs all instructions which contain the expressions that will be placed
@@ -13066,9 +13121,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         StylingBuilder.prototype.buildUpdateLevelInstructions = function (valueConverter) {
             var instructions = [];
             if (this.hasBindings) {
-                if (this._useDefaultSanitizer) {
-                    instructions.push(this._buildSanitizerFn());
-                }
                 var styleMapInstruction = this.buildStyleMapInstruction(valueConverter);
                 if (styleMapInstruction) {
                     instructions.push(styleMapInstruction);
@@ -13093,9 +13145,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // Note that browsers support both the dash case and
         // camel case property names when setting through JS.
         return prop === 'background-image' || prop === 'backgroundImage' || prop === 'background' ||
-            prop === 'border-image' || prop === 'borderImage' || prop === 'filter' ||
-            prop === 'list-style' || prop === 'listStyle' || prop === 'list-style-image' ||
-            prop === 'listStyleImage' || prop === 'clip-path' || prop === 'clipPath';
+            prop === 'border-image' || prop === 'borderImage' || prop === 'border-image-source' ||
+            prop === 'borderImageSource' || prop === 'filter' || prop === 'list-style' ||
+            prop === 'listStyle' || prop === 'list-style-image' || prop === 'listStyleImage' ||
+            prop === 'clip-path' || prop === 'clipPath';
     }
     function parseProperty(name) {
         var hasOverrideFlag = false;
@@ -16677,7 +16730,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             // the code here will collect all update-level styling instructions and add them to the
             // update block of the template function AOT code. Instructions like `styleProp`,
-            // `styleMap`, `classMap`, `classProp` and `stylingApply`
+            // `styleMap`, `classMap`, `classProp`
             // are all generated and assigned in the code below.
             var stylingInstructions = stylingBuilder.buildUpdateLevelInstructions(this._valueConverter);
             var limit = stylingInstructions.length - 1;
@@ -18112,8 +18165,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     // Return a host binding function or null if one is not necessary.
     function createHostBindingsFunction(hostBindingsMetadata, typeSourceSpan, bindingParser, constantPool, selector, name, definitionMap) {
-        // Initialize hostVarsCount to number of bound host properties (interpolations illegal)
-        var hostVarsCount = Object.keys(hostBindingsMetadata.properties).length;
         var elVarExp = variable('elIndex');
         var bindingContext = variable(CONTEXT_NAME);
         var styleBuilder = new StylingBuilder(elVarExp, bindingContext);
@@ -18126,9 +18177,33 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         var createStatements = [];
         var updateStatements = [];
-        var totalHostVarsCount = hostVarsCount;
         var hostBindingSourceSpan = typeSourceSpan;
         var directiveSummary = metadataAsSummary(hostBindingsMetadata);
+        // Calculate host event bindings
+        var eventBindings = bindingParser.createDirectiveHostEventAsts(directiveSummary, hostBindingSourceSpan);
+        if (eventBindings && eventBindings.length) {
+            var listeners = createHostListeners(eventBindings, name);
+            createStatements.push.apply(createStatements, __spread(listeners));
+        }
+        // Calculate the host property bindings
+        var bindings = bindingParser.createBoundHostProperties(directiveSummary, hostBindingSourceSpan);
+        var allOtherBindings = [];
+        // We need to calculate the total amount of binding slots required by
+        // all the instructions together before any value conversions happen.
+        // Value conversions may require additional slots for interpolation and
+        // bindings with pipes. These calculates happen after this block.
+        var totalHostVarsCount = 0;
+        bindings && bindings.forEach(function (binding) {
+            var name = binding.name;
+            var stylingInputWasSet = styleBuilder.registerInputBasedOnName(name, binding.expression, binding.sourceSpan);
+            if (stylingInputWasSet) {
+                totalHostVarsCount += MIN_STYLING_BINDING_SLOTS_REQUIRED;
+            }
+            else {
+                allOtherBindings.push(binding);
+                totalHostVarsCount++;
+            }
+        });
         var valueConverter;
         var getValueConverter = function () {
             if (!valueConverter) {
@@ -18142,59 +18217,47 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             return valueConverter;
         };
-        // Calculate host event bindings
-        var eventBindings = bindingParser.createDirectiveHostEventAsts(directiveSummary, hostBindingSourceSpan);
-        if (eventBindings && eventBindings.length) {
-            var listeners = createHostListeners(eventBindings, name);
-            createStatements.push.apply(createStatements, __spread(listeners));
-        }
-        // Calculate the host property bindings
-        var bindings = bindingParser.createBoundHostProperties(directiveSummary, hostBindingSourceSpan);
         var propertyBindings = [];
         var attributeBindings = [];
         var syntheticHostBindings = [];
-        bindings && bindings.forEach(function (binding) {
-            var name = binding.name;
-            var stylingInputWasSet = styleBuilder.registerInputBasedOnName(name, binding.expression, binding.sourceSpan);
-            if (!stylingInputWasSet) {
-                // resolve literal arrays and literal objects
-                var value = binding.expression.visit(getValueConverter());
-                var bindingExpr = bindingFn(bindingContext, value);
-                var _a = getBindingNameAndInstruction(binding), bindingName = _a.bindingName, instruction = _a.instruction, isAttribute = _a.isAttribute;
-                var securityContexts = bindingParser.calcPossibleSecurityContexts(selector, bindingName, isAttribute)
-                    .filter(function (context) { return context !== SecurityContext.NONE; });
-                var sanitizerFn = null;
-                if (securityContexts.length) {
-                    if (securityContexts.length === 2 &&
-                        securityContexts.indexOf(SecurityContext.URL) > -1 &&
-                        securityContexts.indexOf(SecurityContext.RESOURCE_URL) > -1) {
-                        // Special case for some URL attributes (such as "src" and "href") that may be a part
-                        // of different security contexts. In this case we use special santitization function and
-                        // select the actual sanitizer at runtime based on a tag name that is provided while
-                        // invoking sanitization function.
-                        sanitizerFn = importExpr(Identifiers$1.sanitizeUrlOrResourceUrl);
-                    }
-                    else {
-                        sanitizerFn = resolveSanitizationFn(securityContexts[0], isAttribute);
-                    }
-                }
-                var instructionParams = [literal(bindingName), bindingExpr.currValExpr];
-                if (sanitizerFn) {
-                    instructionParams.push(sanitizerFn);
-                }
-                updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
-                if (instruction === Identifiers$1.hostProperty) {
-                    propertyBindings.push(instructionParams);
-                }
-                else if (instruction === Identifiers$1.attribute) {
-                    attributeBindings.push(instructionParams);
-                }
-                else if (instruction === Identifiers$1.updateSyntheticHostBinding) {
-                    syntheticHostBindings.push(instructionParams);
+        allOtherBindings.forEach(function (binding) {
+            // resolve literal arrays and literal objects
+            var value = binding.expression.visit(getValueConverter());
+            var bindingExpr = bindingFn(bindingContext, value);
+            var _a = getBindingNameAndInstruction(binding), bindingName = _a.bindingName, instruction = _a.instruction, isAttribute = _a.isAttribute;
+            var securityContexts = bindingParser.calcPossibleSecurityContexts(selector, bindingName, isAttribute)
+                .filter(function (context) { return context !== SecurityContext.NONE; });
+            var sanitizerFn = null;
+            if (securityContexts.length) {
+                if (securityContexts.length === 2 &&
+                    securityContexts.indexOf(SecurityContext.URL) > -1 &&
+                    securityContexts.indexOf(SecurityContext.RESOURCE_URL) > -1) {
+                    // Special case for some URL attributes (such as "src" and "href") that may be a part
+                    // of different security contexts. In this case we use special santitization function and
+                    // select the actual sanitizer at runtime based on a tag name that is provided while
+                    // invoking sanitization function.
+                    sanitizerFn = importExpr(Identifiers$1.sanitizeUrlOrResourceUrl);
                 }
                 else {
-                    updateStatements.push(importExpr(instruction).callFn(instructionParams).toStmt());
+                    sanitizerFn = resolveSanitizationFn(securityContexts[0], isAttribute);
                 }
+            }
+            var instructionParams = [literal(bindingName), bindingExpr.currValExpr];
+            if (sanitizerFn) {
+                instructionParams.push(sanitizerFn);
+            }
+            updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
+            if (instruction === Identifiers$1.hostProperty) {
+                propertyBindings.push(instructionParams);
+            }
+            else if (instruction === Identifiers$1.attribute) {
+                attributeBindings.push(instructionParams);
+            }
+            else if (instruction === Identifiers$1.updateSyntheticHostBinding) {
+                syntheticHostBindings.push(instructionParams);
+            }
+            else {
+                updateStatements.push(importExpr(instruction).callFn(instructionParams).toStmt());
             }
         });
         if (propertyBindings.length > 0) {
@@ -18225,7 +18288,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     instruction.calls.forEach(function (call) {
                         // we subtract a value of `1` here because the binding slot was already allocated
                         // at the top of this method when all the input bindings were counted.
-                        totalHostVarsCount += Math.max(call.allocateBindingSlots - 1, 0);
+                        totalHostVarsCount +=
+                            Math.max(call.allocateBindingSlots - MIN_STYLING_BINDING_SLOTS_REQUIRED, 0);
                         calls_1.push(convertStylingCall(call, bindingContext, bindingFn));
                     });
                     updateStatements.push(chainedInstruction(instruction.reference, calls_1).toStmt());
@@ -18691,7 +18755,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('0.0.0');
+    var VERSION$1 = new Version('9.0.0-rc.1+804.sha-0eaf874');
 
     /**
      * @license
@@ -25148,11 +25212,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      *
      * For example,
      *     v---------- `decoratorId`
-     * @NgModule({
-     *   declarations: [],
-     * })
-     * class AppModule {}
-     *          ^----- `classDecl`
+     * @NgModule({           <
+     *   declarations: [],   < classDecl
+     * })                    <
+     * class AppModule {}    <
+     *          ^----- `classId`
      *
      * @param node Potential node that represents an Angular directive.
      */
@@ -25173,7 +25237,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 if (ts.isObjectLiteralExpression(arg)) {
                     return {
                         decoratorId: expr.expression,
-                        classDecl: node,
+                        classId: node.name,
                     };
                 }
             }
@@ -25486,10 +25550,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var context = this.info.query.getTemplateContext(directive.type.reference);
                 if (context && !context.has(ast.value)) {
                     if (ast.value === '$implicit') {
-                        this.reportError('The template context does not have an implicit value', spanOf$1(ast.sourceSpan));
+                        this.reportError("The template context of '" + directive.type.reference.name + "' does not define an implicit value.\n" +
+                            "If the context type is a base type, consider refining it to a more specific type.", spanOf$1(ast.sourceSpan));
                     }
                     else {
-                        this.reportError("The template context does not define a member called '" + ast.value + "'", spanOf$1(ast.sourceSpan));
+                        this.reportError("The template context of '" + directive.type.reference.name + "' does not define a member called '" + ast.value + "'", spanOf$1(ast.sourceSpan));
                     }
                 }
             }
@@ -25739,8 +25804,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             },
             visitPropertyWrite: function (ast) {
                 var receiverType = getType(ast.receiver);
+                var start = ast.span.start;
                 symbol = receiverType && receiverType.members().get(ast.name);
-                span = ast.span;
+                // A PropertyWrite span includes both the LHS (name) and the RHS (value) of the write. In this
+                // visit, only the name is relevant.
+                //   prop=$event
+                //   ^^^^        name
+                //        ^^^^^^ value; visited separately as a nested AST
+                span = { start: start, end: start + ast.name.length };
             },
             visitQuote: function (ast) { },
             visitSafeMethodCall: function (ast) {
@@ -28029,132 +28100,150 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Traverse the template AST and locate the Symbol at the specified `position`.
-     * @param info Ast and Template Source
-     * @param position location to look for
+     * Traverses a template AST and locates symbol(s) at a specified position.
+     * @param info template AST information set
+     * @param position location to locate symbols at
      */
-    function locateSymbol(info, position) {
+    function locateSymbols(info, position) {
         var templatePosition = position - info.template.span.start;
+        // TODO: update `findTemplateAstAt` to use absolute positions.
         var path = findTemplateAstAt(info.templateAst, templatePosition);
+        if (!path.tail)
+            return [];
+        var narrowest = spanOf(path.tail);
+        var toVisit = [];
+        for (var node = path.tail; node && isNarrower(spanOf(node.sourceSpan), narrowest); node = path.parentOf(node)) {
+            toVisit.push(node);
+        }
+        return toVisit.map(function (ast) { return locateSymbol(ast, path, info); })
+            .filter(function (sym) { return sym !== undefined; });
+    }
+    /**
+     * Visits a template node and locates the symbol in that node at a path position.
+     * @param ast template AST node to visit
+     * @param path non-empty set of narrowing AST nodes at a position
+     * @param info template AST information set
+     */
+    function locateSymbol(ast, path, info) {
+        var templatePosition = path.position;
+        var position = templatePosition + info.template.span.start;
         var compileTypeSummary = undefined;
-        if (path.tail) {
-            var symbol_1 = undefined;
-            var span_1 = undefined;
-            var attributeValueSymbol_1 = function (ast, inEvent) {
-                var attribute = findAttribute(info, position);
-                if (attribute) {
-                    if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
-                        var dinfo = diagnosticInfoFromTemplateInfo(info);
-                        var scope = getExpressionScope(dinfo, path);
-                        if (attribute.valueSpan) {
-                            var result = getExpressionSymbol(scope, ast, templatePosition, info.template.query);
-                            if (result) {
-                                symbol_1 = result.symbol;
-                                var expressionOffset = attribute.valueSpan.start.offset;
-                                span_1 = offsetSpan(result.span, expressionOffset);
-                            }
-                        }
-                        return true;
-                    }
-                }
-                return false;
-            };
-            path.tail.visit({
-                visitNgContent: function (ast) { },
-                visitEmbeddedTemplate: function (ast) { },
-                visitElement: function (ast) {
-                    var component = ast.directives.find(function (d) { return d.directive.isComponent; });
-                    if (component) {
-                        compileTypeSummary = component.directive;
-                        symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
-                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.COMPONENT);
-                        span_1 = spanOf(ast);
-                    }
-                    else {
-                        // Find a directive that matches the element name
-                        var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
-                        if (directive) {
-                            compileTypeSummary = directive.directive;
-                            symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
-                            symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.DIRECTIVE);
-                            span_1 = spanOf(ast);
-                        }
-                    }
-                },
-                visitReference: function (ast) {
-                    symbol_1 = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
-                    span_1 = spanOf(ast);
-                },
-                visitVariable: function (ast) { },
-                visitEvent: function (ast) {
-                    if (!attributeValueSymbol_1(ast.handler, /* inEvent */ true)) {
-                        symbol_1 = findOutputBinding(info, path, ast);
-                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.EVENT);
-                        span_1 = spanOf(ast);
-                    }
-                },
-                visitElementProperty: function (ast) { attributeValueSymbol_1(ast.value); },
-                visitAttr: function (ast) {
-                    var e_1, _a;
-                    var element = path.head;
-                    if (!element || !(element instanceof ElementAst))
-                        return;
-                    // Create a mapping of all directives applied to the element from their selectors.
-                    var matcher = new SelectorMatcher();
-                    try {
-                        for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
-                            var dir = _c.value;
-                            if (!dir.directive.selector)
-                                continue;
-                            matcher.addSelectables(CssSelector.parse(dir.directive.selector), dir);
-                        }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                    }
-                    // See if this attribute matches the selector of any directive on the element.
-                    var attributeSelector = "[" + ast.name + "=" + ast.value + "]";
-                    var parsedAttribute = CssSelector.parse(attributeSelector);
-                    if (!parsedAttribute.length)
-                        return;
-                    matcher.match(parsedAttribute[0], function (_, directive) {
-                        symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, DirectiveKind.DIRECTIVE);
-                        span_1 = spanOf(ast);
-                    });
-                },
-                visitBoundText: function (ast) {
-                    var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
-                    if (inSpan(expressionPosition, ast.value.span)) {
-                        var dinfo = diagnosticInfoFromTemplateInfo(info);
-                        var scope = getExpressionScope(dinfo, path);
-                        var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template.query);
+        var symbol;
+        var span;
+        var attributeValueSymbol = function (ast) {
+            var attribute = findAttribute(info, position);
+            if (attribute) {
+                if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
+                    var dinfo = diagnosticInfoFromTemplateInfo(info);
+                    var scope = getExpressionScope(dinfo, path);
+                    if (attribute.valueSpan) {
+                        var result = getExpressionSymbol(scope, ast, templatePosition, info.template.query);
                         if (result) {
-                            symbol_1 = result.symbol;
-                            span_1 = offsetSpan(result.span, ast.sourceSpan.start.offset);
+                            symbol = result.symbol;
+                            var expressionOffset = attribute.valueSpan.start.offset;
+                            span = offsetSpan(result.span, expressionOffset);
                         }
                     }
-                },
-                visitText: function (ast) { },
-                visitDirective: function (ast) {
-                    compileTypeSummary = ast.directive;
-                    symbol_1 = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
-                    span_1 = spanOf(ast);
-                },
-                visitDirectiveProperty: function (ast) {
-                    if (!attributeValueSymbol_1(ast.value)) {
-                        symbol_1 = findInputBinding(info, templatePosition, ast);
-                        span_1 = spanOf(ast);
+                    return true;
+                }
+            }
+            return false;
+        };
+        ast.visit({
+            visitNgContent: function (ast) { },
+            visitEmbeddedTemplate: function (ast) { },
+            visitElement: function (ast) {
+                var component = ast.directives.find(function (d) { return d.directive.isComponent; });
+                if (component) {
+                    compileTypeSummary = component.directive;
+                    symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
+                    symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.COMPONENT);
+                    span = spanOf(ast);
+                }
+                else {
+                    // Find a directive that matches the element name
+                    var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
+                    if (directive) {
+                        compileTypeSummary = directive.directive;
+                        symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
+                        symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.DIRECTIVE);
+                        span = spanOf(ast);
                     }
                 }
-            }, null);
-            if (symbol_1 && span_1) {
-                return { symbol: symbol_1, span: offsetSpan(span_1, info.template.span.start), compileTypeSummary: compileTypeSummary };
+            },
+            visitReference: function (ast) {
+                symbol = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
+                span = spanOf(ast);
+            },
+            visitVariable: function (ast) { },
+            visitEvent: function (ast) {
+                if (!attributeValueSymbol(ast.handler)) {
+                    symbol = findOutputBinding(info, path, ast);
+                    symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.EVENT);
+                    span = spanOf(ast);
+                }
+            },
+            visitElementProperty: function (ast) { attributeValueSymbol(ast.value); },
+            visitAttr: function (ast) {
+                var e_1, _a;
+                var element = path.head;
+                if (!element || !(element instanceof ElementAst))
+                    return;
+                // Create a mapping of all directives applied to the element from their selectors.
+                var matcher = new SelectorMatcher();
+                try {
+                    for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var dir = _c.value;
+                        if (!dir.directive.selector)
+                            continue;
+                        matcher.addSelectables(CssSelector.parse(dir.directive.selector), dir);
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_1) throw e_1.error; }
+                }
+                // See if this attribute matches the selector of any directive on the element.
+                var attributeSelector = "[" + ast.name + "=" + ast.value + "]";
+                var parsedAttribute = CssSelector.parse(attributeSelector);
+                if (!parsedAttribute.length)
+                    return;
+                matcher.match(parsedAttribute[0], function (_, directive) {
+                    symbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                    symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.DIRECTIVE);
+                    span = spanOf(ast);
+                });
+            },
+            visitBoundText: function (ast) {
+                var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
+                if (inSpan(expressionPosition, ast.value.span)) {
+                    var dinfo = diagnosticInfoFromTemplateInfo(info);
+                    var scope = getExpressionScope(dinfo, path);
+                    var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template.query);
+                    if (result) {
+                        symbol = result.symbol;
+                        span = offsetSpan(result.span, ast.sourceSpan.start.offset);
+                    }
+                }
+            },
+            visitText: function (ast) { },
+            visitDirective: function (ast) {
+                compileTypeSummary = ast.directive;
+                symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
+                span = spanOf(ast);
+            },
+            visitDirectiveProperty: function (ast) {
+                if (!attributeValueSymbol(ast.value)) {
+                    symbol = findInputBinding(info, templatePosition, ast);
+                    span = spanOf(ast);
+                }
             }
+        }, null);
+        if (symbol && span) {
+            return { symbol: symbol, span: offsetSpan(span, info.template.span.start), compileTypeSummary: compileTypeSummary };
         }
     }
     function findAttribute(info, position) {
@@ -28349,30 +28438,47 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param position
      */
     function getDefinitionAndBoundSpan(info, position) {
-        var symbolInfo = locateSymbol(info, position);
-        if (!symbolInfo) {
+        var e_1, _a;
+        var symbols = locateSymbols(info, position);
+        if (!symbols.length) {
             return;
         }
-        var textSpan = ngSpanToTsTextSpan(symbolInfo.span);
-        var symbol = symbolInfo.symbol;
-        var container = symbol.container, locations = symbol.definition;
-        if (!locations || !locations.length) {
+        var textSpan = ngSpanToTsTextSpan(symbols[0].span);
+        var definitions = [];
+        var _loop_1 = function (symbolInfo) {
+            var symbol = symbolInfo.symbol;
             // symbol.definition is really the locations of the symbol. There could be
             // more than one. No meaningful info could be provided without any location.
-            return { textSpan: textSpan };
+            var kind = symbol.kind, name_1 = symbol.name, container = symbol.container, locations = symbol.definition;
+            if (!locations || !locations.length) {
+                return "continue";
+            }
+            var containerKind = container ? container.kind : ts.ScriptElementKind.unknown;
+            var containerName = container ? container.name : '';
+            definitions.push.apply(definitions, __spread(locations.map(function (location) {
+                return {
+                    kind: kind,
+                    name: name_1,
+                    containerKind: containerKind,
+                    containerName: containerName,
+                    textSpan: ngSpanToTsTextSpan(location.span),
+                    fileName: location.fileName,
+                };
+            })));
+        };
+        try {
+            for (var symbols_1 = __values(symbols), symbols_1_1 = symbols_1.next(); !symbols_1_1.done; symbols_1_1 = symbols_1.next()) {
+                var symbolInfo = symbols_1_1.value;
+                _loop_1(symbolInfo);
+            }
         }
-        var containerKind = container ? container.kind : ts.ScriptElementKind.unknown;
-        var containerName = container ? container.name : '';
-        var definitions = locations.map(function (location) {
-            return {
-                kind: symbol.kind,
-                name: symbol.name,
-                containerKind: containerKind,
-                containerName: containerName,
-                textSpan: ngSpanToTsTextSpan(location.span),
-                fileName: location.fileName,
-            };
-        });
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (symbols_1_1 && !symbols_1_1.done && (_a = symbols_1.return)) _a.call(symbols_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
         return {
             definitions: definitions, textSpan: textSpan,
         };
@@ -28561,9 +28667,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     }
                     finally { if (e_4) throw e_4.error; }
                 }
-                if (!metadata) {
-                    continue; // declaration is not an Angular directive
-                }
                 if (metadata.isComponent) {
                     if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
                         results.push({
@@ -28747,7 +28850,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param host Language Service host to query
      */
     function getHover(info, position, host) {
-        var symbolInfo = locateSymbol(info, position);
+        var symbolInfo = locateSymbols(info, position)[0];
         if (!symbolInfo) {
             return;
         }
@@ -28868,7 +28971,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         function LanguageServiceImpl(host) {
             this.host = host;
         }
-        LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
+        LanguageServiceImpl.prototype.getSemanticDiagnostics = function (fileName) {
             var e_1, _a;
             var analyzedModules = this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var results = [];
@@ -28896,7 +28999,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var sourceFile = fileName.endsWith('.ts') ? this.host.getSourceFile(fileName) : undefined;
             return uniqueBySpan(results).map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
         };
-        LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
+        LanguageServiceImpl.prototype.getCompletionsAtPosition = function (fileName, position, options) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var ast = this.host.getTemplateAstAtPosition(fileName, position);
             if (!ast) {
@@ -28914,7 +29017,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 entries: results,
             };
         };
-        LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
+        LanguageServiceImpl.prototype.getDefinitionAndBoundSpan = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
@@ -28929,7 +29032,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
             }
         };
-        LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
+        LanguageServiceImpl.prototype.getQuickInfoAtPosition = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
@@ -29347,6 +29450,19 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var newLineIndex = res.indexOf('\n');
         return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
     }
+    /**
+     * Concatenates two strings with separator, allocating new strings only when necessary.
+     *
+     * @param before before string.
+     * @param separator separator string.
+     * @param after after string.
+     * @returns concatenated string.
+     */
+    function concatStringsWithSpace(before, after) {
+        return (before == null || before === '') ?
+            (after === null ? '' : after) :
+            ((after == null || after === '') ? before : before + ' ' + after);
+    }
 
     /**
      * @license
@@ -29487,7 +29603,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             rendererSetClassName: 0,
             rendererAddClass: 0,
             rendererRemoveClass: 0,
-            rendererCssText: 0,
             rendererSetStyle: 0,
             rendererRemoveStyle: 0,
             rendererDestroy: 0,
@@ -29497,17 +29612,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             rendererAppendChild: 0,
             rendererInsertBefore: 0,
             rendererCreateComment: 0,
-            styleMap: 0,
-            styleMapCacheMiss: 0,
-            classMap: 0,
-            classMapCacheMiss: 0,
-            styleProp: 0,
-            stylePropCacheMiss: 0,
-            classProp: 0,
-            classPropCacheMiss: 0,
-            flushStyling: 0,
-            classesApplied: 0,
-            stylesApplied: 0,
         };
         // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
         var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
@@ -29831,6 +29935,65 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function assertString(actual, msg) {
+        if (typeof actual != 'string') {
+            throwError(msg, actual === null ? 'null' : typeof actual, 'string', '===');
+        }
+    }
+    function assertEqual(actual, expected, msg) {
+        if (actual != expected) {
+            throwError(msg, actual, expected, '==');
+        }
+    }
+    function assertNotEqual(actual, expected, msg) {
+        if (actual == expected) {
+            throwError(msg, actual, expected, '!=');
+        }
+    }
+    function assertSame(actual, expected, msg) {
+        if (actual !== expected) {
+            throwError(msg, actual, expected, '===');
+        }
+    }
+    function assertLessThan(actual, expected, msg) {
+        if (actual >= expected) {
+            throwError(msg, actual, expected, '<');
+        }
+    }
+    function assertGreaterThan(actual, expected, msg) {
+        if (actual <= expected) {
+            throwError(msg, actual, expected, '>');
+        }
+    }
+    function assertDefined(actual, msg) {
+        if (actual == null) {
+            throwError(msg, actual, null, '!=');
+        }
+    }
+    function throwError(msg, actual, expected, comparison) {
+        // tslint:disable-next-line
+        debugger; // Left intentionally for better debugger experience.
+        throw new Error("ASSERTION ERROR: " + msg +
+            (comparison == null ? '' : " [Expected=> " + expected + " " + comparison + " " + actual + " <=Actual]"));
+    }
+    function assertDomNode(node) {
+        // If we're in a worker, `Node` will not be defined.
+        assertEqual((typeof Node !== 'undefined' && node instanceof Node) ||
+            (typeof node === 'object' && node != null &&
+                node.constructor.name === 'WebWorkerRenderNode'), true, "The provided value must be an instance of a DOM Node but got " + stringify$1(node));
+    }
+    function assertDataInRange(arr, index) {
+        var maxLen = arr ? arr.length : 0;
+        assertLessThan(index, maxLen, "Index expected to be less than " + maxLen + " but got " + index);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Flattens an array.
      */
@@ -29881,60 +30044,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             list.push(value);
         }
         return list;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function assertEqual(actual, expected, msg) {
-        if (actual != expected) {
-            throwError(msg, actual, expected, '==');
-        }
-    }
-    function assertNotEqual(actual, expected, msg) {
-        if (actual == expected) {
-            throwError(msg, actual, expected, '!=');
-        }
-    }
-    function assertSame(actual, expected, msg) {
-        if (actual !== expected) {
-            throwError(msg, actual, expected, '===');
-        }
-    }
-    function assertLessThan(actual, expected, msg) {
-        if (actual >= expected) {
-            throwError(msg, actual, expected, '<');
-        }
-    }
-    function assertGreaterThan(actual, expected, msg) {
-        if (actual <= expected) {
-            throwError(msg, actual, expected, '>');
-        }
-    }
-    function assertDefined(actual, msg) {
-        if (actual == null) {
-            throwError(msg, actual, null, '!=');
-        }
-    }
-    function throwError(msg, actual, expected, comparison) {
-        // tslint:disable-next-line
-        debugger; // Left intentionally for better debugger experience.
-        throw new Error("ASSERTION ERROR: " + msg +
-            (comparison == null ? '' : " [Expected=> " + expected + " " + comparison + " " + actual + " <=Actual]"));
-    }
-    function assertDomNode(node) {
-        // If we're in a worker, `Node` will not be defined.
-        assertEqual((typeof Node !== 'undefined' && node instanceof Node) ||
-            (typeof node === 'object' && node != null &&
-                node.constructor.name === 'WebWorkerRenderNode'), true, "The provided value must be an instance of a DOM Node but got " + stringify$1(node));
-    }
-    function assertDataInRange(arr, index) {
-        var maxLen = arr ? arr.length : 0;
-        assertLessThan(index, maxLen, "Index expected to be less than " + maxLen + " but got " + index);
     }
 
     /**
@@ -30260,14 +30369,18 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var instructionState = {
         lFrame: createLFrame(null),
         bindingsEnabled: true,
-        elementExitFn: null,
         checkNoChangesMode: false,
     };
     /**
-     * Determines whether or not a flag is currently set for the active element.
+     * Return the current LView.
+     *
+     * The return value can be `null` if the method is called outside of template. This can happen if
+     * directive is instantiated by module injector (rather than by node injector.)
      */
-    function hasActiveElementFlag(flag) {
-        return (instructionState.lFrame.selectedIndex & flag) === flag;
+    function getLView() {
+        // TODO(misko): the return value should be `LView|null` but doing so breaks a lot of code.
+        var lFrame = instructionState.lFrame;
+        return lFrame === null ? null : lFrame.lView;
     }
     /**
      * Sets the active directive host element and resets the directive id value
@@ -30277,43 +30390,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      *                     the directive/component instance lives
      */
     function setActiveHostElement(elementIndex) {
-        if (hasActiveElementFlag(1 /* RunExitFn */)) {
-            executeElementExitFn();
-        }
-        setSelectedIndex(elementIndex === null ? -1 : elementIndex);
-        instructionState.lFrame.activeDirectiveId = 0;
+        setSelectedIndex(elementIndex);
     }
-    function executeElementExitFn() {
-        instructionState.elementExitFn();
-        instructionState.lFrame.selectedIndex &= ~1 /* RunExitFn */;
-    }
-    /**
-     * Increments the current directive id value.
-     *
-     * For example we have an element that has two directives on it:
-     * <div dir-one dir-two></div>
-     *
-     * dirOne->hostBindings() (index = 1)
-     * // increment
-     * dirTwo->hostBindings() (index = 2)
-     *
-     * Depending on whether or not a previous directive had any inherited
-     * directives present, that value will be incremented in addition
-     * to the id jumping up by one.
-     *
-     * Note that this is only active when `hostBinding` functions are being processed.
-     *
-     * Note that directive id values are specific to an element (this means that
-     * the same id value could be present on another element with a completely
-     * different set of directives).
-     */
-    function incrementActiveDirectiveId() {
-        // Each directive gets a uniqueId value that is the same for both
-        // create and update calls when the hostBindings function is called. The
-        // directive uniqueId is not set anywhere--it is just incremented between
-        // each hostBindings call and is useful for helping instruction code
-        // uniquely determine which directive is currently active when executed.
-        instructionState.lFrame.activeDirectiveId += 1;
+    function clearActiveHostElement() {
+        setSelectedIndex(-1);
     }
     function getPreviousOrParentTNode() {
         return instructionState.lFrame.previousOrParentTNode;
@@ -30326,6 +30406,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return instructionState.lFrame.isParent;
     }
     function getCheckNoChangesMode() {
+        // TODO(misko): remove this from the LView since it is ngDevMode=true mode only.
         return instructionState.checkNoChangesMode;
     }
     function setCheckNoChangesMode(mode) {
@@ -30342,8 +30423,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * 0 index and we just shift the root so that they match next available location in the LView.
      * @param value
      */
-    function setBindingRoot(value) {
-        instructionState.lFrame.bindingRootIndex = value;
+    function setBindingRootForHostBindings(value) {
+        var lframe = instructionState.lFrame;
+        lframe.bindingIndex = lframe.bindingRootIndex = value;
     }
     function setCurrentQueryIndex(value) {
         instructionState.lFrame.currentQueryIndex = value;
@@ -30367,8 +30449,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             newLFrame.elementDepthCount = DEV_MODE_VALUE;
             newLFrame.currentNamespace = DEV_MODE_VALUE;
             newLFrame.currentSanitizer = DEV_MODE_VALUE;
-            newLFrame.currentDirectiveDef = DEV_MODE_VALUE;
-            newLFrame.activeDirectiveId = DEV_MODE_VALUE;
             newLFrame.bindingRootIndex = DEV_MODE_VALUE;
             newLFrame.currentQueryIndex = DEV_MODE_VALUE;
         }
@@ -30404,8 +30484,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         newLFrame.elementDepthCount = 0;
         newLFrame.currentNamespace = null;
         newLFrame.currentSanitizer = null;
-        newLFrame.currentDirectiveDef = null;
-        newLFrame.activeDirectiveId = 0;
         newLFrame.bindingRootIndex = -1;
         newLFrame.bindingIndex = newView === null ? -1 : newView[TVIEW].bindingStartIndex;
         newLFrame.currentQueryIndex = 0;
@@ -30429,8 +30507,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             elementDepthCount: 0,
             currentNamespace: null,
             currentSanitizer: null,
-            currentDirectiveDef: null,
-            activeDirectiveId: 0,
             bindingRootIndex: -1,
             bindingIndex: -1,
             currentQueryIndex: 0,
@@ -30440,23 +30516,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         parent !== null && (parent.child = lFrame); // link the new LFrame for reuse.
         return lFrame;
     }
-    function leaveViewProcessExit() {
-        if (hasActiveElementFlag(1 /* RunExitFn */)) {
-            executeElementExitFn();
-        }
-        leaveView();
-    }
     function leaveView() {
         instructionState.lFrame = instructionState.lFrame.parent;
     }
     /**
-     * Gets the most recent index passed to {@link select}
+     * Gets the currently selected element index.
      *
      * Used with {@link property} instruction (and more in the future) to identify the index in the
      * current `LView` to act on.
      */
     function getSelectedIndex() {
-        return instructionState.lFrame.selectedIndex >> 1 /* Size */;
+        return instructionState.lFrame.selectedIndex;
     }
     /**
      * Sets the most recent index passed to {@link select}
@@ -30468,13 +30538,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * run if and when the provided `index` value is different from the current selected index value.)
      */
     function setSelectedIndex(index) {
-        instructionState.lFrame.selectedIndex = index << 1 /* Size */;
-    }
-    function getCurrentStyleSanitizer() {
-        // TODO(misko): This should throw when there is no LView, but it turns out we can get here from
-        // `NodeStyleDebug` hence we return `null`. This should be fixed
-        var lFrame = instructionState.lFrame;
-        return lFrame === null ? null : lFrame.currentSanitizer;
+        instructionState.lFrame.selectedIndex = index;
     }
 
     /**
@@ -31117,363 +31181,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SafeValueImpl = /** @class */ (function () {
-        function SafeValueImpl(changingThisBreaksApplicationSecurity) {
-            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
-        }
-        SafeValueImpl.prototype.toString = function () {
-            return "SafeValue must use [property]=binding: " + this.changingThisBreaksApplicationSecurity +
-                " (see http://g.co/ng/security#xss)";
-        };
-        return SafeValueImpl;
-    }());
-    var SafeHtmlImpl = /** @class */ (function (_super) {
-        __extends(SafeHtmlImpl, _super);
-        function SafeHtmlImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeHtmlImpl.prototype.getTypeName = function () { return "HTML" /* Html */; };
-        return SafeHtmlImpl;
-    }(SafeValueImpl));
-    var SafeStyleImpl = /** @class */ (function (_super) {
-        __extends(SafeStyleImpl, _super);
-        function SafeStyleImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeStyleImpl.prototype.getTypeName = function () { return "Style" /* Style */; };
-        return SafeStyleImpl;
-    }(SafeValueImpl));
-    var SafeScriptImpl = /** @class */ (function (_super) {
-        __extends(SafeScriptImpl, _super);
-        function SafeScriptImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeScriptImpl.prototype.getTypeName = function () { return "Script" /* Script */; };
-        return SafeScriptImpl;
-    }(SafeValueImpl));
-    var SafeUrlImpl = /** @class */ (function (_super) {
-        __extends(SafeUrlImpl, _super);
-        function SafeUrlImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeUrlImpl.prototype.getTypeName = function () { return "URL" /* Url */; };
-        return SafeUrlImpl;
-    }(SafeValueImpl));
-    var SafeResourceUrlImpl = /** @class */ (function (_super) {
-        __extends(SafeResourceUrlImpl, _super);
-        function SafeResourceUrlImpl() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
-        return SafeResourceUrlImpl;
-    }(SafeValueImpl));
-    function unwrapSafeValue(value) {
-        return value instanceof SafeValueImpl ? value.changingThisBreaksApplicationSecurity :
-            value;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /** A special value which designates that a value has not changed. */
-    var NO_CHANGE = {};
-
-    /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    var MAP_BASED_ENTRY_PROP_NAME = '[MAP]';
-    var TEMPLATE_DIRECTIVE_INDEX = 0;
-    function allocStylingMapArray(value) {
-        return [value];
-    }
-    function hasConfig(tNode, flag) {
-        return (tNode.flags & flag) !== 0;
-    }
-    /**
-     * Determines whether or not to apply styles/classes directly or via context resolution.
-     *
-     * There are three cases that are matched here:
-     * 1. there are no directives present AND `ngDevMode` is falsy
-     * 2. the `firstUpdatePass` has not already run (which means that
-     *    there are more bindings to register and, therefore, direct
-     *    style/class application is not yet possible)
-     * 3. There are no collisions (i.e. properties with more than one binding) across multiple
-     *    sources (i.e. template + directive, directive + directive, directive + component)
-     */
-    function allowDirectStyling(tNode, isClassBased, firstUpdatePass) {
-        var allow = false;
-        // if no directives are present then we do not need populate a context at all. This
-        // is because duplicate prop bindings cannot be registered through the template. If
-        // and when this happens we can safely apply the value directly without context
-        // resolution...
-        var hasDirectives = hasConfig(tNode, 128 /* hasHostBindings */);
-        if (!hasDirectives) {
-            // `ngDevMode` is required to be checked here because tests/debugging rely on the context being
-            // populated. If things are in production mode then there is no need to build a context
-            // therefore the direct apply can be allowed (even on the first update).
-            allow = ngDevMode ? !firstUpdatePass : true;
-        }
-        else if (!firstUpdatePass) {
-            var duplicateStylingFlag = isClassBased ? 8192 /* hasDuplicateClassBindings */ : 262144 /* hasDuplicateStyleBindings */;
-            var hasDuplicates = hasConfig(tNode, duplicateStylingFlag);
-            var hasOnlyMapOrPropsFlag = isClassBased ? 1536 /* hasClassPropAndMapBindings */ :
-                49152 /* hasStylePropAndMapBindings */;
-            var hasOnlyMapsOrOnlyProps = (tNode.flags & hasOnlyMapOrPropsFlag) !== hasOnlyMapOrPropsFlag;
-            allow = !hasDuplicates && hasOnlyMapsOrOnlyProps;
-        }
-        return allow;
-    }
-    function getProp(context, index) {
-        return context[index + 3 /* PropOffset */];
-    }
-    function getPropConfig(context, index) {
-        return context[index + 0 /* ConfigOffset */] &
-            1 /* Mask */;
-    }
-    function isSanitizationRequired(context, index) {
-        return (getPropConfig(context, index) & 1 /* SanitizationRequired */) !==
-            0;
-    }
-    function getGuardMask(context, index, isHostBinding) {
-        var position = index + (isHostBinding ? 2 /* HostBindingsBitGuardOffset */ :
-            1 /* TemplateBitGuardOffset */);
-        return context[position];
-    }
-    function getValuesCount(context) {
-        return getTotalSources(context) + 1;
-    }
-    function getTotalSources(context) {
-        return context[0 /* TotalSourcesPosition */];
-    }
-    function getBindingValue(context, index, offset) {
-        return context[index + 4 /* BindingsStartOffset */ + offset];
-    }
-    function getDefaultValue(context, index) {
-        return context[index + 4 /* BindingsStartOffset */ + getTotalSources(context)];
-    }
-    function setValue(data, bindingIndex, value) {
-        data[bindingIndex] = value;
-    }
-    function getValue(data, bindingIndex) {
-        return bindingIndex !== 0 ? data[bindingIndex] : null;
-    }
-    function getPropValuesStartPosition(context, tNode, isClassBased) {
-        var startPosition = 2 /* ValuesStartPosition */;
-        var flag = isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */;
-        if (hasConfig(tNode, flag)) {
-            startPosition += 4 /* BindingsStartOffset */ + getValuesCount(context);
-        }
-        return startPosition;
-    }
-    /**
-     * Determines whether the provided styling value is truthy or falsy.
-     */
-    function isStylingValueDefined(value) {
-        // the reason why null is compared against is because
-        // a CSS class value that is set to `false` must be
-        // respected (otherwise it would be treated as falsy).
-        // Empty string values are because developers usually
-        // set a value to an empty string to remove it.
-        return value != null && value !== '';
-    }
-    function concatString(a, b, separator) {
-        if (separator === void 0) { separator = ' '; }
-        return a + ((b.length && a.length) ? separator : '') + b;
-    }
-    function hyphenate$1(value) {
-        return value.replace(/[a-z][A-Z]/g, function (v) { return v.charAt(0) + '-' + v.charAt(1); }).toLowerCase();
-    }
-    /**
-     * Returns an instance of `StylingMapArray`.
-     *
-     * This function is designed to find an instance of `StylingMapArray` in case it is stored
-     * inside of an instance of `TStylingContext`. When a styling context is created it
-     * will copy over an initial styling values from the tNode (which are stored as a
-     * `StylingMapArray` on the `tNode.classes` or `tNode.styles` values).
-     */
-    function getStylingMapArray(value) {
-        // TODO(misko): remove after TNode.classes/styles becomes `string` only
-        if (typeof value === 'string')
-            return null;
-        return isStylingContext(value) ?
-            value[1 /* InitialStylingValuePosition */] :
-            value;
-    }
-    function isStylingContext(value) {
-        // the StylingMapArray is in the format of [initial, prop, string, prop, string]
-        // and this is the defining value to distinguish between arrays
-        return Array.isArray(value) && value.length >= 2 /* ValuesStartPosition */ &&
-            typeof value[1] !== 'string';
-    }
-    function getInitialStylingValue(context) {
-        // TODO(misko): remove after TNode.classes/styles becomes `string` only
-        if (typeof context === 'string')
-            return context;
-        var map = getStylingMapArray(context);
-        return map && map[0 /* RawValuePosition */] || '';
-    }
-    function getMapProp(map, index) {
-        return map[index + 0 /* PropOffset */];
-    }
-    var MAP_DIRTY_VALUE = typeof ngDevMode !== 'undefined' && ngDevMode ? {} : { MAP_DIRTY_VALUE: true };
-    function setMapValue(map, index, value) {
-        map[index + 1 /* ValueOffset */] = value;
-    }
-    function getMapValue(map, index) {
-        return map[index + 1 /* ValueOffset */];
-    }
-    function forceStylesAsString(styles, hyphenateProps) {
-        if (typeof styles == 'string')
-            return styles;
-        var str = '';
-        if (styles) {
-            var props = Object.keys(styles);
-            for (var i = 0; i < props.length; i++) {
-                var prop = props[i];
-                var propLabel = hyphenateProps ? hyphenate$1(prop) : prop;
-                var value = styles[prop];
-                if (value !== null) {
-                    str = concatString(str, propLabel + ":" + value, ';');
-                }
-            }
-        }
-        return str;
-    }
-    /**
-     * Converts the provided styling map array into a string.
-     *
-     * Classes => `one two three`
-     * Styles => `prop:value; prop2:value2`
-     */
-    function stylingMapToString(map, isClassBased) {
-        var str = '';
-        for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
-            var prop = getMapProp(map, i);
-            var value = getMapValue(map, i);
-            var attrValue = concatString(prop, isClassBased ? '' : value, ':');
-            str = concatString(str, attrValue, isClassBased ? ' ' : '; ');
-        }
-        return str;
-    }
-    /**
-     * Inserts the provided item into the provided styling array at the right spot.
-     *
-     * The `StylingMapArray` type is a sorted key/value array of entries. This means
-     * that when a new entry is inserted it must be placed at the right spot in the
-     * array. This function figures out exactly where to place it.
-     */
-    function addItemToStylingMap(stylingMapArr, prop, value, allowOverwrite) {
-        for (var j = 1 /* ValuesStartPosition */; j < stylingMapArr.length; j += 2 /* TupleSize */) {
-            var propAtIndex = getMapProp(stylingMapArr, j);
-            if (prop <= propAtIndex) {
-                var applied = false;
-                if (propAtIndex === prop) {
-                    var valueAtIndex = stylingMapArr[j];
-                    if (allowOverwrite || !isStylingValueDefined(valueAtIndex)) {
-                        applied = true;
-                        setMapValue(stylingMapArr, j, value);
-                    }
-                }
-                else {
-                    applied = true;
-                    stylingMapArr.splice(j, 0, prop, value);
-                }
-                return applied;
-            }
-        }
-        stylingMapArr.push(prop, value);
-        return true;
-    }
-    /**
-     * Used to convert a {key:value} map into a `StylingMapArray` array.
-     *
-     * This function will either generate a new `StylingMapArray` instance
-     * or it will patch the provided `newValues` map value into an
-     * existing `StylingMapArray` value (this only happens if `bindingValue`
-     * is an instance of `StylingMapArray`).
-     *
-     * If a new key/value map is provided with an old `StylingMapArray`
-     * value then all properties will be overwritten with their new
-     * values or with `null`. This means that the array will never
-     * shrink in size (but it will also not be created and thrown
-     * away whenever the `{key:value}` map entries change).
-     */
-    function normalizeIntoStylingMap(bindingValue, newValues, normalizeProps) {
-        var stylingMapArr = Array.isArray(bindingValue) ? bindingValue : allocStylingMapArray(null);
-        stylingMapArr[0 /* RawValuePosition */] = newValues;
-        // because the new values may not include all the properties
-        // that the old ones had, all values are set to `null` before
-        // the new values are applied. This way, when flushed, the
-        // styling algorithm knows exactly what style/class values
-        // to remove from the element (since they are `null`).
-        for (var j = 1 /* ValuesStartPosition */; j < stylingMapArr.length; j += 2 /* TupleSize */) {
-            setMapValue(stylingMapArr, j, null);
-        }
-        var props = null;
-        var map;
-        var allValuesTrue = false;
-        if (typeof newValues === 'string') { // [class] bindings allow string values
-            props = splitOnWhitespace(newValues);
-            allValuesTrue = props !== null;
-        }
-        else {
-            props = newValues ? Object.keys(newValues) : null;
-            map = newValues;
-        }
-        if (props) {
-            for (var i = 0; i < props.length; i++) {
-                var prop = props[i];
-                var newProp = normalizeProps ? hyphenate$1(prop) : prop;
-                var value = allValuesTrue ? true : map[prop];
-                addItemToStylingMap(stylingMapArr, newProp, value, true);
-            }
-        }
-        return stylingMapArr;
-    }
-    function splitOnWhitespace(text) {
-        var array = null;
-        var length = text.length;
-        var start = 0;
-        var foundChar = false;
-        for (var i = 0; i < length; i++) {
-            var char = text.charCodeAt(i);
-            if (char <= 32 /* SPACE */) {
-                if (foundChar) {
-                    if (array === null)
-                        array = [];
-                    array.push(text.substring(start, i));
-                    foundChar = false;
-                }
-                start = i + 1;
-            }
-            else {
-                foundChar = true;
-            }
-        }
-        if (foundChar) {
-            if (array === null)
-                array = [];
-            array.push(text.substring(start, length));
-            foundChar = false;
-        }
-        return array;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Defines if the call to `inject` should include `viewProviders` in its resolution.
      *
@@ -32062,6 +31769,64 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         return ErrorHandler;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var SafeValueImpl = /** @class */ (function () {
+        function SafeValueImpl(changingThisBreaksApplicationSecurity) {
+            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
+        }
+        SafeValueImpl.prototype.toString = function () {
+            return "SafeValue must use [property]=binding: " + this.changingThisBreaksApplicationSecurity +
+                " (see http://g.co/ng/security#xss)";
+        };
+        return SafeValueImpl;
+    }());
+    var SafeHtmlImpl = /** @class */ (function (_super) {
+        __extends(SafeHtmlImpl, _super);
+        function SafeHtmlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeHtmlImpl.prototype.getTypeName = function () { return "HTML" /* Html */; };
+        return SafeHtmlImpl;
+    }(SafeValueImpl));
+    var SafeStyleImpl = /** @class */ (function (_super) {
+        __extends(SafeStyleImpl, _super);
+        function SafeStyleImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeStyleImpl.prototype.getTypeName = function () { return "Style" /* Style */; };
+        return SafeStyleImpl;
+    }(SafeValueImpl));
+    var SafeScriptImpl = /** @class */ (function (_super) {
+        __extends(SafeScriptImpl, _super);
+        function SafeScriptImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeScriptImpl.prototype.getTypeName = function () { return "Script" /* Script */; };
+        return SafeScriptImpl;
+    }(SafeValueImpl));
+    var SafeUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeUrlImpl, _super);
+        function SafeUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeUrlImpl.prototype.getTypeName = function () { return "URL" /* Url */; };
+        return SafeUrlImpl;
+    }(SafeValueImpl));
+    var SafeResourceUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeResourceUrlImpl, _super);
+        function SafeResourceUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
+        return SafeResourceUrlImpl;
+    }(SafeValueImpl));
 
     /**
      * @license
@@ -32779,284 +32544,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
 
     /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    /**
-     * Runs through the provided styling context and applies each value to
-     * the provided element (via the renderer) if one or more values are present.
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
      *
-     * This function will iterate over all entries present in the provided
-     * `TStylingContext` array (both prop-based and map-based bindings).-
-     *
-     * Each entry, within the `TStylingContext` array, is stored alphabetically
-     * and this means that each prop/value entry will be applied in order
-     * (so long as it is marked dirty in the provided `bitMask` value).
-     *
-     * If there are any map-based entries present (which are applied to the
-     * element via the `[style]` and `[class]` bindings) then those entries
-     * will be applied as well. However, the code for that is not a part of
-     * this function. Instead, each time a property is visited, then the
-     * code below will call an external function called `stylingMapsSyncFn`
-     * and, if present, it will keep the application of styling values in
-     * map-based bindings up to sync with the application of prop-based
-     * bindings.
-     *
-     * Visit `styling/map_based_bindings.ts` to learn more about how the
-     * algorithm works for map-based styling bindings.
-     *
-     * Note that this function is not designed to be called in isolation (use
-     * the `flushStyling` function so that it can call this function for both
-     * the styles and classes contexts).
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
      */
-    function applyStylingViaContext(context, tNode, renderer, element, bindingData, bitMaskValue, applyStylingFn, sanitizer, hostBindingsMode, isClassBased) {
-        var bitMask = normalizeBitMaskValue(bitMaskValue);
-        var stylingMapsSyncFn = null;
-        var applyAllValues = false;
-        var mapBindingsFlag = isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */;
-        if (hasConfig(tNode, mapBindingsFlag)) {
-            stylingMapsSyncFn = getStylingMapsSyncFn();
-            var mapsGuardMask = getGuardMask(context, 2 /* ValuesStartPosition */, hostBindingsMode);
-            applyAllValues = (bitMask & mapsGuardMask) !== 0;
-        }
-        var valuesCount = getValuesCount(context);
-        var totalBindingsToVisit = 1;
-        var mapsMode = applyAllValues ? 1 /* ApplyAllValues */ : 0 /* TraverseValues */;
-        if (hostBindingsMode) {
-            mapsMode |= 8 /* RecurseInnerMaps */;
-            totalBindingsToVisit = valuesCount - 1;
-        }
-        var i = getPropValuesStartPosition(context, tNode, isClassBased);
-        while (i < context.length) {
-            var guardMask = getGuardMask(context, i, hostBindingsMode);
-            if (bitMask & guardMask) {
-                var valueApplied = false;
-                var prop = getProp(context, i);
-                var defaultValue = getDefaultValue(context, i);
-                // Part 1: Visit the `[styling.prop]` value
-                for (var j = 0; j < totalBindingsToVisit; j++) {
-                    var bindingIndex = getBindingValue(context, i, j);
-                    if (!valueApplied && bindingIndex !== 0) {
-                        var value = getValue(bindingData, bindingIndex);
-                        if (isStylingValueDefined(value)) {
-                            var checkValueOnly = hostBindingsMode && j === 0;
-                            if (!checkValueOnly) {
-                                var finalValue = sanitizer && isSanitizationRequired(context, i) ?
-                                    sanitizer(prop, value, 2 /* SanitizeOnly */) :
-                                    unwrapSafeValue(value);
-                                applyStylingFn(renderer, element, prop, finalValue, bindingIndex);
-                            }
-                            valueApplied = true;
-                        }
-                    }
-                    // Part 2: Visit the `[style]` or `[class]` map-based value
-                    if (stylingMapsSyncFn) {
-                        // determine whether or not to apply the target property or to skip it
-                        var mode = mapsMode | (valueApplied ? 4 /* SkipTargetProp */ :
-                            2 /* ApplyTargetProp */);
-                        // the first column in the context (when `j == 0`) is special-cased for
-                        // template bindings. If and when host bindings are being processed then
-                        // the first column will still be iterated over, but the values will only
-                        // be checked against (not applied). If and when this happens we need to
-                        // notify the map-based syncing code to know not to apply the values it
-                        // comes across in the very first map-based binding (which is also located
-                        // in column zero).
-                        if (hostBindingsMode && j === 0) {
-                            mode |= 16 /* CheckValuesOnly */;
-                        }
-                        var valueAppliedWithinMap = stylingMapsSyncFn(context, renderer, element, bindingData, j, applyStylingFn, sanitizer, mode, prop, defaultValue);
-                        valueApplied = valueApplied || valueAppliedWithinMap;
-                    }
-                }
-                // Part 3: apply the default value (e.g. `<div style="width:200">` => `200px` gets applied)
-                // if the value has not yet been applied then a truthy value does not exist in the
-                // prop-based or map-based bindings code. If and when this happens, just apply the
-                // default value (even if the default value is `null`).
-                if (!valueApplied) {
-                    applyStylingFn(renderer, element, prop, defaultValue);
-                }
-            }
-            i += 4 /* BindingsStartOffset */ + valuesCount;
-        }
-        // the map-based styling entries may have not applied all their
-        // values. For this reason, one more call to the sync function
-        // needs to be issued at the end.
-        if (stylingMapsSyncFn) {
-            if (hostBindingsMode) {
-                mapsMode |= 16 /* CheckValuesOnly */;
-            }
-            stylingMapsSyncFn(context, renderer, element, bindingData, 0, applyStylingFn, sanitizer, mapsMode);
-        }
-    }
-    function writeStylingValueDirectly(renderer, element, value, isClassBased, initialValue) {
-        var valueToApply;
-        if (isClassBased) {
-            valueToApply = typeof value === 'string' ? value : objectToClassName(value);
-            if (initialValue !== null) {
-                valueToApply = concatString(initialValue, valueToApply, ' ');
-            }
-            setClassName(renderer, element, valueToApply);
-        }
-        else {
-            valueToApply = forceStylesAsString(value, true);
-            if (initialValue !== null) {
-                valueToApply = initialValue + ';' + valueToApply;
-            }
-            setStyleAttr(renderer, element, valueToApply);
-        }
-        return valueToApply;
-    }
-    function normalizeBitMaskValue(value) {
-        // if pass => apply all values (-1 implies that all bits are flipped to true)
-        if (value === true)
-            return -1;
-        // if pass => skip all values
-        if (value === false)
-            return 0;
-        // return the bit mask value as is
-        return value;
-    }
-    var _activeStylingMapApplyFn = null;
-    function getStylingMapsSyncFn() {
-        return _activeStylingMapApplyFn;
-    }
-    function setStylingMapsSyncFn(fn) {
-        _activeStylingMapApplyFn = fn;
-    }
-    /**
-     * Assigns a style value to a style property for the given element.
-     */
-    var setStyle = function (renderer, native, prop, value) {
-        if (renderer !== null) {
-            // Use `isStylingValueDefined` to account for falsy values that should be bound like 0.
-            if (isStylingValueDefined(value)) {
-                // opacity, z-index and flexbox all have number values
-                // and these need to be converted into strings so that
-                // they can be assigned properly.
-                value = value.toString();
-                ngDevMode && ngDevMode.rendererSetStyle++;
-                if (isProceduralRenderer(renderer)) {
-                    renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase);
-                }
-                else {
-                    // The reason why native style may be `null` is either because
-                    // it's a container element or it's a part of a test
-                    // environment that doesn't have styling. In either
-                    // case it's safe not to apply styling to the element.
-                    var nativeStyle = native.style;
-                    if (nativeStyle != null) {
-                        nativeStyle.setProperty(prop, value);
-                    }
-                }
-            }
-            else {
-                ngDevMode && ngDevMode.rendererRemoveStyle++;
-                if (isProceduralRenderer(renderer)) {
-                    renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase);
-                }
-                else {
-                    var nativeStyle = native.style;
-                    if (nativeStyle != null) {
-                        nativeStyle.removeProperty(prop);
-                    }
-                }
-            }
-        }
-    };
-    /**
-     * Adds/removes the provided className value to the provided element.
-     */
-    var setClass = function (renderer, native, className, value) {
-        if (renderer !== null && className !== '') {
-            if (value) {
-                ngDevMode && ngDevMode.rendererAddClass++;
-                if (isProceduralRenderer(renderer)) {
-                    renderer.addClass(native, className);
-                }
-                else {
-                    // the reason why classList may be `null` is either because
-                    // it's a container element or it's a part of a test
-                    // environment that doesn't have styling. In either
-                    // case it's safe not to apply styling to the element.
-                    var classList = native.classList;
-                    if (classList != null) {
-                        classList.add(className);
-                    }
-                }
-            }
-            else {
-                ngDevMode && ngDevMode.rendererRemoveClass++;
-                if (isProceduralRenderer(renderer)) {
-                    renderer.removeClass(native, className);
-                }
-                else {
-                    var classList = native.classList;
-                    if (classList != null) {
-                        classList.remove(className);
-                    }
-                }
-            }
-        }
-    };
-    var setClassName = function (renderer, native, className) {
-        if (renderer !== null) {
-            if (isProceduralRenderer(renderer)) {
-                renderer.setAttribute(native, 'class', className);
-            }
-            else {
-                native.className = className;
-            }
-        }
-    };
-    var setStyleAttr = function (renderer, native, value) {
-        if (renderer !== null) {
-            if (isProceduralRenderer(renderer)) {
-                renderer.setAttribute(native, 'style', value);
-            }
-            else {
-                native.setAttribute('style', value);
-            }
-        }
-    };
-    /**
-     * Iterates over all provided styling entries and renders them on the element.
-     *
-     * This function is used alongside a `StylingMapArray` entry. This entry is not
-     * the same as the `TStylingContext` and is only really used when an element contains
-     * initial styling values (e.g. `<div style="width:200px">`), but no style/class bindings
-     * are present. If and when that happens then this function will be called to render all
-     * initial styling values on an element.
-     */
-    function renderStylingMap(renderer, element, stylingValues, isClassBased) {
-        var stylingMapArr = getStylingMapArray(stylingValues);
-        if (stylingMapArr) {
-            for (var i = 1 /* ValuesStartPosition */; i < stylingMapArr.length; i += 2 /* TupleSize */) {
-                var prop = getMapProp(stylingMapArr, i);
-                var value = getMapValue(stylingMapArr, i);
-                if (isClassBased) {
-                    setClass(renderer, element, prop, value);
-                }
-                else {
-                    setStyle(renderer, element, prop, value);
-                }
-            }
-        }
-    }
-    function objectToClassName(obj) {
-        var str = '';
-        if (obj) {
-            for (var key in obj) {
-                var value = obj[key];
-                if (value) {
-                    str += (str.length ? ' ' : '') + key;
-                }
-            }
-        }
-        return str;
-    }
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = (typeof ngDevMode === 'undefined' || ngDevMode) ? { __brand__: 'NO_CHANGE' } : {};
 
     /**
      * @license
@@ -33086,9 +32581,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function selectIndexInternal(lView, index, checkNoChangesMode) {
         ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
         ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
-        if (hasActiveElementFlag(1 /* RunExitFn */)) {
-            executeElementExitFn();
-        }
         // Flush the initial hooks for elements in the view that have been added up to this point.
         // PERF WARNING: do NOT extract this to a separate function without running benchmarks
         if (!checkNoChangesMode) {
@@ -33138,6 +32630,28 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     };
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    function getTStylingRangePrev(tStylingRange) {
+        return tStylingRange >> 18 /* PREV_SHIFT */;
+    }
+    function getTStylingRangePrevDuplicate(tStylingRange) {
+        return (tStylingRange & 2 /* PREV_DUPLICATE */) ==
+            2 /* PREV_DUPLICATE */;
+    }
+    function getTStylingRangeNext(tStylingRange) {
+        return (tStylingRange & 16380 /* NEXT_MASK */) >> 2 /* NEXT_SHIFT */;
+    }
+    function getTStylingRangeNextDuplicate(tStylingRange) {
+        return (tStylingRange & 1 /* NEXT_DUPLICATE */) ===
+            1 /* NEXT_DUPLICATE */;
+    }
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -33146,614 +32660,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function attachDebugObject(obj, debug) {
         Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
-    }
-
-    /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    /**
-     * --------
-     *
-     * This file contains the algorithm logic for applying map-based bindings
-     * such as `[style]` and `[class]`.
-     *
-     * --------
-     */
-    /**
-     * Enables support for map-based styling bindings (e.g. `[style]` and `[class]` bindings).
-     */
-    function activateStylingMapFeature() {
-        setStylingMapsSyncFn(syncStylingMap);
-    }
-    /**
-     * Used to apply styling values presently within any map-based bindings on an element.
-     *
-     * Angular supports map-based styling bindings which can be applied via the
-     * `[style]` and `[class]` bindings which can be placed on any HTML element.
-     * These bindings can work independently, together or alongside prop-based
-     * styling bindings (e.g. `<div [style]="x" [style.width]="w">`).
-     *
-     * If a map-based styling binding is detected by the compiler, the following
-     * AOT code is produced:
-     *
-     * ```typescript
-     * styleMap(ctx.styles); // styles = {key:value}
-     * classMap(ctx.classes); // classes = {key:value}|string
-     * ```
-     *
-     * If and when either of the instructions above are evaluated, then the code
-     * present in this file is included into the bundle. The mechanism used, to
-     * activate support for map-based bindings at runtime is possible via the
-     * `activeStylingMapFeature` function (which is also present in this file).
-     *
-     * # The Algorithm
-     * Whenever a map-based binding updates (which is when the identity of the
-     * map-value changes) then the map is iterated over and a `StylingMapArray` array
-     * is produced. The `StylingMapArray` instance is stored in the binding location
-     * where the `BINDING_INDEX` is situated when the `styleMap()` or `classMap()`
-     * instruction were called. Once the binding changes, then the internal `bitMask`
-     * value is marked as dirty.
-     *
-     * Styling values are applied once CD exits the element (which happens when
-     * the `advance(n)` instruction is called or the template function exits). When
-     * this occurs, all prop-based bindings are applied. If a map-based binding is
-     * present then a special flushing function (called a sync function) is made
-     * available and it will be called each time a styling property is flushed.
-     *
-     * The flushing algorithm is designed to apply styling for a property (which is
-     * a CSS property or a className value) one by one. If map-based bindings
-     * are present, then the flushing algorithm will keep calling the maps styling
-     * sync function each time a property is visited. This way, the flushing
-     * behavior of map-based bindings will always be at the same property level
-     * as the current prop-based property being iterated over (because everything
-     * is alphabetically sorted).
-     *
-     * Let's imagine we have the following HTML template code:
-     *
-     * ```html
-     * <div [style]="{width:'100px', height:'200px', 'z-index':'10'}"
-     *      [style.width.px]="200">...</div>
-     * ```
-     *
-     * When CD occurs, both the `[style]` and `[style.width]` bindings
-     * are evaluated. Then when the styles are flushed on screen, the
-     * following operations happen:
-     *
-     * 1. `[style.width]` is attempted to be written to the element.
-     *
-     * 2.  Once that happens, the algorithm instructs the map-based
-     *     entries (`[style]` in this case) to "catch up" and apply
-     *     all values up to the `width` value. When this happens the
-     *     `height` value is applied to the element (since it is
-     *     alphabetically situated before the `width` property).
-     *
-     * 3. Since there are no more prop-based entries anymore, the
-     *    loop exits and then, just before the flushing ends, it
-     *    instructs all map-based bindings to "finish up" applying
-     *    their values.
-     *
-     * 4. The only remaining value within the map-based entries is
-     *    the `z-index` value (`width` got skipped because it was
-     *    successfully applied via the prop-based `[style.width]`
-     *    binding). Since all map-based entries are told to "finish up",
-     *    the `z-index` value is iterated over and it is then applied
-     *    to the element.
-     *
-     * The most important thing to take note of here is that prop-based
-     * bindings are evaluated in order alongside map-based bindings.
-     * This allows all styling across an element to be applied in O(n)
-     * time (a similar algorithm is that of the array merge algorithm
-     * in merge sort).
-     */
-    var syncStylingMap = function (context, renderer, element, data, sourceIndex, applyStylingFn, sanitizer, mode, targetProp, defaultValue) {
-        var targetPropValueWasApplied = false;
-        // once the map-based styling code is activate it is never deactivated. For this reason a
-        // check to see if the current styling context has any map based bindings is required.
-        var totalMaps = getValuesCount(context);
-        if (totalMaps) {
-            var runTheSyncAlgorithm = true;
-            var loopUntilEnd = !targetProp;
-            // If the code is told to finish up (run until the end), but the mode
-            // hasn't been flagged to apply values (it only traverses values) then
-            // there is no point in iterating over the array because nothing will
-            // be applied to the element.
-            if (loopUntilEnd && (mode & 1 /* ApplyAllValues */) === 0) {
-                runTheSyncAlgorithm = false;
-                targetPropValueWasApplied = true;
-            }
-            if (runTheSyncAlgorithm) {
-                targetPropValueWasApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp || null, sourceIndex, defaultValue || null);
-            }
-            if (loopUntilEnd) {
-                resetSyncCursors();
-            }
-        }
-        return targetPropValueWasApplied;
-    };
-    /**
-     * Recursive function designed to apply map-based styling to an element one map at a time.
-     *
-     * This function is designed to be called from the `syncStylingMap` function and will
-     * apply map-based styling data one map at a time to the provided `element`.
-     *
-     * This function is recursive and it will call itself if a follow-up map value is to be
-     * processed. To learn more about how the algorithm works, see `syncStylingMap`.
-     */
-    function innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex, defaultValue) {
-        var totalMaps = getValuesCount(context) - 1; // maps have no default value
-        var mapsLimit = totalMaps - 1;
-        var recurseInnerMaps = currentMapIndex < mapsLimit && (mode & 8 /* RecurseInnerMaps */) !== 0;
-        var checkValuesOnly = (mode & 16 /* CheckValuesOnly */) !== 0;
-        if (checkValuesOnly) {
-            // inner modes do not check values ever (that can only happen
-            // when sourceIndex === 0)
-            mode &= ~16 /* CheckValuesOnly */;
-        }
-        var targetPropValueWasApplied = false;
-        if (currentMapIndex <= mapsLimit) {
-            var cursor = getCurrentSyncCursor(currentMapIndex);
-            var bindingIndex = getBindingValue(context, 2 /* ValuesStartPosition */, currentMapIndex);
-            var stylingMapArr = getValue(data, bindingIndex);
-            if (stylingMapArr) {
-                while (cursor < stylingMapArr.length) {
-                    var prop = getMapProp(stylingMapArr, cursor);
-                    var iteratedTooFar = targetProp && prop > targetProp;
-                    var isTargetPropMatched = !iteratedTooFar && prop === targetProp;
-                    var value = getMapValue(stylingMapArr, cursor);
-                    var valueIsDefined = isStylingValueDefined(value);
-                    // the recursive code is designed to keep applying until
-                    // it reaches or goes past the target prop. If and when
-                    // this happens then it will stop processing values, but
-                    // all other map values must also catch up to the same
-                    // point. This is why a recursive call is still issued
-                    // even if the code has iterated too far.
-                    var innerMode = iteratedTooFar ? mode : resolveInnerMapMode(mode, valueIsDefined, isTargetPropMatched);
-                    var innerProp = iteratedTooFar ? targetProp : prop;
-                    var valueApplied = recurseInnerMaps ?
-                        innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, innerMode, innerProp, currentMapIndex + 1, defaultValue) :
-                        false;
-                    if (iteratedTooFar) {
-                        if (!targetPropValueWasApplied) {
-                            targetPropValueWasApplied = valueApplied;
-                        }
-                        break;
-                    }
-                    if (!valueApplied && isValueAllowedToBeApplied(mode, isTargetPropMatched)) {
-                        valueApplied = true;
-                        if (!checkValuesOnly) {
-                            var useDefault = isTargetPropMatched && !valueIsDefined;
-                            var bindingIndexToApply = isTargetPropMatched ? bindingIndex : null;
-                            var finalValue = void 0;
-                            if (useDefault) {
-                                finalValue = defaultValue;
-                            }
-                            else {
-                                finalValue = sanitizer ?
-                                    sanitizer(prop, value, 3 /* ValidateAndSanitize */) :
-                                    (value ? unwrapSafeValue(value) : null);
-                            }
-                            applyStylingFn(renderer, element, prop, finalValue, bindingIndexToApply);
-                        }
-                    }
-                    targetPropValueWasApplied = valueApplied && isTargetPropMatched;
-                    cursor += 2 /* TupleSize */;
-                }
-                setCurrentSyncCursor(currentMapIndex, cursor);
-                // this is a fallback case in the event that the styling map is `null` for this
-                // binding but there are other map-based bindings that need to be evaluated
-                // afterwards. If the `prop` value is falsy then the intention is to cycle
-                // through all of the properties in the remaining maps as well. If the current
-                // styling map is too short then there are no values to iterate over. In either
-                // case the follow-up maps need to be iterated over.
-                if (recurseInnerMaps &&
-                    (stylingMapArr.length === 1 /* ValuesStartPosition */ || !targetProp)) {
-                    targetPropValueWasApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex + 1, defaultValue);
-                }
-            }
-            else if (recurseInnerMaps) {
-                targetPropValueWasApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex + 1, defaultValue);
-            }
-        }
-        return targetPropValueWasApplied;
-    }
-    /**
-     * Used to determine the mode for the inner recursive call.
-     *
-     * If an inner map is iterated on then this is done so for one
-     * of two reasons:
-     *
-     * - value is being applied:
-     *   if the value is being applied from this current styling
-     *   map then there is no need to apply it in a deeper map
-     *   (i.e. the `SkipTargetProp` flag is set)
-     *
-     * - value is being not applied:
-     *   apply the value if it is found in a deeper map.
-     *   (i.e. the `SkipTargetProp` flag is unset)
-     *
-     * When these reasons are encountered the flags will for the
-     * inner map mode will be configured.
-     */
-    function resolveInnerMapMode(currentMode, valueIsDefined, isTargetPropMatched) {
-        var innerMode = currentMode;
-        // the statements below figures out whether or not an inner styling map
-        // is allowed to apply its value or not. The main thing to keep note
-        // of is that if the target prop isn't matched then its expected that
-        // all values before it are allowed to be applied so long as "apply all values"
-        // is set to true.
-        var applyAllValues = currentMode & 1 /* ApplyAllValues */;
-        var applyTargetProp = currentMode & 2 /* ApplyTargetProp */;
-        var allowInnerApply = !valueIsDefined && (isTargetPropMatched ? applyTargetProp : applyAllValues);
-        if (allowInnerApply) {
-            // case 1: set the mode to apply the targeted prop value if it
-            // ends up being encountered in another map value
-            innerMode |= 2 /* ApplyTargetProp */;
-            innerMode &= ~4 /* SkipTargetProp */;
-        }
-        else {
-            // case 2: set the mode to skip the targeted prop value if it
-            // ends up being encountered in another map value
-            innerMode |= 4 /* SkipTargetProp */;
-            innerMode &= ~2 /* ApplyTargetProp */;
-        }
-        return innerMode;
-    }
-    /**
-     * Decides whether or not a prop/value entry will be applied to an element.
-     *
-     * To determine whether or not a value is to be applied,
-     * the following procedure is evaluated:
-     *
-     * First check to see the current `mode` status:
-     *  1. If the mode value permits all props to be applied then allow.
-     *    - But do not allow if the current prop is set to be skipped.
-     *  2. Otherwise if the current prop is permitted then allow.
-     */
-    function isValueAllowedToBeApplied(mode, isTargetPropMatched) {
-        var doApplyValue = (mode & 1 /* ApplyAllValues */) !== 0;
-        if (!doApplyValue) {
-            if (mode & 2 /* ApplyTargetProp */) {
-                doApplyValue = isTargetPropMatched;
-            }
-        }
-        else if ((mode & 4 /* SkipTargetProp */) && isTargetPropMatched) {
-            doApplyValue = false;
-        }
-        return doApplyValue;
-    }
-    /**
-     * Used to keep track of concurrent cursor values for multiple map-based styling bindings present on
-     * an element.
-     */
-    var MAP_CURSORS = [];
-    /**
-     * Used to reset the state of each cursor value being used to iterate over map-based styling
-     * bindings.
-     */
-    function resetSyncCursors() {
-        for (var i = 0; i < MAP_CURSORS.length; i++) {
-            MAP_CURSORS[i] = 1 /* ValuesStartPosition */;
-        }
-    }
-    /**
-     * Returns an active cursor value at a given mapIndex location.
-     */
-    function getCurrentSyncCursor(mapIndex) {
-        if (mapIndex >= MAP_CURSORS.length) {
-            MAP_CURSORS.push(1 /* ValuesStartPosition */);
-        }
-        return MAP_CURSORS[mapIndex];
-    }
-    /**
-     * Sets a cursor value at a given mapIndex location.
-     */
-    function setCurrentSyncCursor(mapIndex, indexValue) {
-        MAP_CURSORS[mapIndex] = indexValue;
-    }
-
-    /**
-     * A human-readable debug summary of the styling data present within `TStylingContext`.
-     *
-     * This class is designed to be used within testing code or when an
-     * application has `ngDevMode` activated.
-     */
-    var TStylingContextDebug = /** @class */ (function () {
-        function TStylingContextDebug(context, _tNode, _isClassBased) {
-            this.context = context;
-            this._tNode = _tNode;
-            this._isClassBased = _isClassBased;
-        }
-        Object.defineProperty(TStylingContextDebug.prototype, "config", {
-            get: function () { return buildConfig(this._tNode, this._isClassBased); },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TStylingContextDebug.prototype, "entries", {
-            /**
-             * Returns a detailed summary of each styling entry in the context.
-             *
-             * See `DebugStylingContextEntry`.
-             */
-            get: function () {
-                var context = this.context;
-                var totalColumns = getValuesCount(context);
-                var entries = {};
-                var start = getPropValuesStartPosition(context, this._tNode, this._isClassBased);
-                var i = start;
-                while (i < context.length) {
-                    var prop = getProp(context, i);
-                    var templateBitMask = getGuardMask(context, i, false);
-                    var hostBindingsBitMask = getGuardMask(context, i, true);
-                    var defaultValue = getDefaultValue(context, i);
-                    var sanitizationRequired = isSanitizationRequired(context, i);
-                    var bindingsStartPosition = i + 4 /* BindingsStartOffset */;
-                    var sources = [];
-                    for (var j = 0; j < totalColumns; j++) {
-                        var bindingIndex = context[bindingsStartPosition + j];
-                        if (bindingIndex !== 0) {
-                            sources.push(bindingIndex);
-                        }
-                    }
-                    entries[prop] = {
-                        prop: prop,
-                        templateBitMask: templateBitMask,
-                        hostBindingsBitMask: hostBindingsBitMask,
-                        sanitizationRequired: sanitizationRequired,
-                        valuesCount: sources.length, defaultValue: defaultValue, sources: sources,
-                    };
-                    i += 4 /* BindingsStartOffset */ + totalColumns;
-                }
-                return entries;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * Prints a detailed summary of each styling source grouped together with each binding index in
-         * the context.
-         */
-        TStylingContextDebug.prototype.printSources = function () {
-            var output = '\n';
-            var context = this.context;
-            var prefix = this._isClassBased ? 'class' : 'style';
-            var bindingsBySource = [];
-            var totalColumns = getValuesCount(context);
-            var itemsPerRow = 4 /* BindingsStartOffset */ + totalColumns;
-            for (var i = 0; i < totalColumns; i++) {
-                var isDefaultColumn = i === totalColumns - 1;
-                var hostBindingsMode = i !== TEMPLATE_DIRECTIVE_INDEX;
-                var type = getTypeFromColumn(i, totalColumns);
-                var entries = [];
-                var j = 2 /* ValuesStartPosition */;
-                while (j < context.length) {
-                    var value = getBindingValue(context, j, i);
-                    if (isDefaultColumn || value > 0) {
-                        var bitMask = getGuardMask(context, j, hostBindingsMode);
-                        var bindingIndex = isDefaultColumn ? -1 : value;
-                        var prop = getProp(context, j);
-                        var isMapBased = prop === MAP_BASED_ENTRY_PROP_NAME;
-                        var binding = "" + prefix + (isMapBased ? '' : '.' + prop);
-                        entries.push({ binding: binding, value: value, bindingIndex: bindingIndex, bitMask: bitMask });
-                    }
-                    j += itemsPerRow;
-                }
-                bindingsBySource.push({ type: type, entries: entries.sort(function (a, b) { return a.bindingIndex - b.bindingIndex; }) });
-            }
-            bindingsBySource.forEach(function (entry) {
-                output += "[" + entry.type.toUpperCase() + "]\n";
-                output += repeat('-', entry.type.length + 2) + '\n';
-                var tab = '  ';
-                entry.entries.forEach(function (entry) {
-                    var isDefault = typeof entry.value !== 'number';
-                    var value = entry.value;
-                    if (!isDefault || value !== null) {
-                        output += tab + "[" + entry.binding + "] = `" + value + "`";
-                        output += '\n';
-                    }
-                });
-                output += '\n';
-            });
-            /* tslint:disable */
-            console.log(output);
-        };
-        /**
-         * Prints a detailed table of the entire styling context.
-         */
-        TStylingContextDebug.prototype.printTable = function () {
-            // IE (not Edge) is the only browser that doesn't support this feature. Because
-            // these debugging tools are not apart of the core of Angular (they are just
-            // extra tools) we can skip-out on older browsers.
-            if (!console.table) {
-                throw new Error('This feature is not supported in your browser');
-            }
-            var context = this.context;
-            var table = [];
-            var totalColumns = getValuesCount(context);
-            var itemsPerRow = 4 /* BindingsStartOffset */ + totalColumns;
-            var totalProps = Math.floor(context.length / itemsPerRow);
-            var i = 2 /* ValuesStartPosition */;
-            while (i < context.length) {
-                var prop = getProp(context, i);
-                var isMapBased = prop === MAP_BASED_ENTRY_PROP_NAME;
-                var entry = {
-                    prop: prop,
-                    'tpl mask': generateBitString(getGuardMask(context, i, false), isMapBased, totalProps),
-                    'host mask': generateBitString(getGuardMask(context, i, true), isMapBased, totalProps),
-                };
-                for (var j = 0; j < totalColumns; j++) {
-                    var key = getTypeFromColumn(j, totalColumns);
-                    var value = getBindingValue(context, i, j);
-                    entry[key] = value;
-                }
-                i += itemsPerRow;
-                table.push(entry);
-            }
-            /* tslint:disable */
-            console.table(table);
-        };
-        return TStylingContextDebug;
-    }());
-    function generateBitString(value, isMapBased, totalProps) {
-        if (isMapBased || value > 1) {
-            return "0b" + leftPad(value.toString(2), totalProps, '0');
-        }
-        return null;
-    }
-    function leftPad(value, max, pad) {
-        return repeat(pad, max - value.length) + value;
-    }
-    function getTypeFromColumn(index, totalColumns) {
-        if (index === TEMPLATE_DIRECTIVE_INDEX) {
-            return 'template';
-        }
-        else if (index === totalColumns - 1) {
-            return 'defaults';
-        }
-        else {
-            return "dir #" + index;
-        }
-    }
-    function repeat(c, times) {
-        var s = '';
-        for (var i = 0; i < times; i++) {
-            s += c;
-        }
-        return s;
-    }
-    /**
-     * A human-readable debug summary of the styling data present for a `DebugNode` instance.
-     *
-     * This class is designed to be used within testing code or when an
-     * application has `ngDevMode` activated.
-     */
-    var NodeStylingDebug = /** @class */ (function () {
-        function NodeStylingDebug(context, _tNode, _data, _isClassBased) {
-            this._tNode = _tNode;
-            this._data = _data;
-            this._isClassBased = _isClassBased;
-            this._sanitizer = null;
-            this._debugContext = isStylingContext(context) ?
-                new TStylingContextDebug(context, _tNode, _isClassBased) :
-                context;
-        }
-        Object.defineProperty(NodeStylingDebug.prototype, "context", {
-            get: function () { return this._debugContext; },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * Overrides the sanitizer used to process styles.
-         */
-        NodeStylingDebug.prototype.overrideSanitizer = function (sanitizer) { this._sanitizer = sanitizer; };
-        Object.defineProperty(NodeStylingDebug.prototype, "summary", {
-            /**
-             * Returns a detailed summary of each styling entry in the context and
-             * what their runtime representation is.
-             *
-             * See `LStylingSummary`.
-             */
-            get: function () {
-                var entries = {};
-                var config = this.config;
-                var data = this._data;
-                // the direct pass code doesn't convert [style] or [class] values
-                // into StylingMapArray instances. For this reason, the values
-                // need to be converted ahead of time since the styling debug
-                // relies on context resolution to figure out what styling
-                // values have been added/removed on the element.
-                if (config.allowDirectStyling && config.hasMapBindings) {
-                    data = data.concat([]); // make a copy
-                    this._convertMapBindingsToStylingMapArrays(data);
-                }
-                this._mapValues(data, function (prop, value, bindingIndex) {
-                    entries[prop] = { prop: prop, value: value, bindingIndex: bindingIndex };
-                });
-                return entries;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(NodeStylingDebug.prototype, "config", {
-            get: function () { return buildConfig(this._tNode, this._isClassBased); },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(NodeStylingDebug.prototype, "values", {
-            /**
-             * Returns a key/value map of all the styles/classes that were last applied to the element.
-             */
-            get: function () {
-                var entries = {};
-                var config = this.config;
-                var data = this._data;
-                // the direct pass code doesn't convert [style] or [class] values
-                // into StylingMapArray instances. For this reason, the values
-                // need to be converted ahead of time since the styling debug
-                // relies on context resolution to figure out what styling
-                // values have been added/removed on the element.
-                if (config.allowDirectStyling && config.hasMapBindings) {
-                    data = data.concat([]); // make a copy
-                    this._convertMapBindingsToStylingMapArrays(data);
-                }
-                this._mapValues(data, function (prop, value) { entries[prop] = value; });
-                return entries;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        NodeStylingDebug.prototype._convertMapBindingsToStylingMapArrays = function (data) {
-            var context = this.context.context;
-            var limit = getPropValuesStartPosition(context, this._tNode, this._isClassBased);
-            for (var i = 2 /* ValuesStartPosition */ + 4 /* BindingsStartOffset */; i < limit; i++) {
-                var bindingIndex = context[i];
-                var bindingValue = bindingIndex !== 0 ? getValue(data, bindingIndex) : null;
-                if (bindingValue && !Array.isArray(bindingValue)) {
-                    var stylingMapArray = normalizeIntoStylingMap(null, bindingValue, !this._isClassBased);
-                    setValue(data, bindingIndex, stylingMapArray);
-                }
-            }
-        };
-        NodeStylingDebug.prototype._mapValues = function (data, fn) {
-            // there is no need to store/track an element instance. The
-            // element is only used when the styling algorithm attempts to
-            // style the value (and we mock out the stylingApplyFn anyway).
-            var mockElement = {};
-            var mapBindingsFlag = this._isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */;
-            var hasMaps = hasConfig(this._tNode, mapBindingsFlag);
-            if (hasMaps) {
-                activateStylingMapFeature();
-            }
-            var mapFn = function (renderer, element, prop, value, bindingIndex) { return fn(prop, value, bindingIndex || null); };
-            var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
-            // run the template bindings
-            applyStylingViaContext(this.context.context, this._tNode, null, mockElement, data, true, mapFn, sanitizer, false, this._isClassBased);
-            // and also the host bindings
-            applyStylingViaContext(this.context.context, this._tNode, null, mockElement, data, true, mapFn, sanitizer, true, this._isClassBased);
-        };
-        return NodeStylingDebug;
-    }());
-    function buildConfig(tNode, isClassBased) {
-        var hasMapBindings = hasConfig(tNode, isClassBased ? 512 /* hasClassMapBindings */ : 16384 /* hasStyleMapBindings */);
-        var hasPropBindings = hasConfig(tNode, isClassBased ? 1024 /* hasClassPropBindings */ : 32768 /* hasStylePropBindings */);
-        var hasCollisions = hasConfig(tNode, isClassBased ? 8192 /* hasDuplicateClassBindings */ : 262144 /* hasDuplicateStyleBindings */);
-        var hasTemplateBindings = hasConfig(tNode, isClassBased ? 2048 /* hasTemplateClassBindings */ : 65536 /* hasTemplateStyleBindings */);
-        var hasHostBindings = hasConfig(tNode, isClassBased ? 4096 /* hasHostClassBindings */ : 131072 /* hasHostStyleBindings */);
-        // `firstTemplatePass` here is false because the context has already been constructed
-        // directly within the behavior of the debugging tools (outside of style/class debugging,
-        // the context is constructed during the first template pass).
-        var allowDirectStyling$1 = allowDirectStyling(tNode, isClassBased, false);
-        return {
-            hasMapBindings: hasMapBindings,
-            hasPropBindings: hasPropBindings,
-            hasCollisions: hasCollisions,
-            hasTemplateBindings: hasTemplateBindings,
-            hasHostBindings: hasHostBindings,
-            allowDirectStyling: allowDirectStyling$1,
-        };
     }
 
     /**
@@ -33916,7 +32822,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         return TView;
     }());
-    var TNodeConstructor = /** @class */ (function () {
+    var TNode = /** @class */ (function () {
         function TNode(tView_, //
         type, //
         index, //
@@ -33940,7 +32846,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         parent, //
         projection, //
         styles, //
+        stylesMap, //
         classes, //
+        classesMap, //
         classBindings, //
         styleBindings) {
             this.tView_ = tView_;
@@ -33966,7 +32874,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.parent = parent;
             this.projection = projection;
             this.styles = styles;
+            this.stylesMap = stylesMap;
             this.classes = classes;
+            this.classesMap = classesMap;
             this.classBindings = classBindings;
             this.styleBindings = styleBindings;
         }
@@ -34001,8 +32911,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     flags.push('TNodeFlags.hasContentQuery');
                 if (this.flags & 32 /* hasStyleInput */)
                     flags.push('TNodeFlags.hasStyleInput');
-                if (this.flags & 256 /* hasInitialStyling */)
-                    flags.push('TNodeFlags.hasInitialStyling');
                 if (this.flags & 128 /* hasHostBindings */)
                     flags.push('TNodeFlags.hasHostBindings');
                 if (this.flags & 2 /* isComponentHost */)
@@ -34040,8 +32948,46 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(TNode.prototype, "styleBindings_", {
+            get: function () { return toDebugStyleBinding(this, false); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TNode.prototype, "classBindings_", {
+            get: function () { return toDebugStyleBinding(this, true); },
+            enumerable: true,
+            configurable: true
+        });
         return TNode;
     }());
+    var TNodeDebug = TNode;
+    function toDebugStyleBinding(tNode, isClassBased) {
+        var tData = tNode.tView_.data;
+        var bindings = [];
+        var range = isClassBased ? tNode.classBindings : tNode.styleBindings;
+        var prev = getTStylingRangePrev(range);
+        var next = getTStylingRangeNext(range);
+        var isTemplate = next !== 0;
+        var cursor = isTemplate ? next : prev;
+        while (cursor !== 0) {
+            var itemKey = tData[cursor];
+            var itemRange = tData[cursor + 1];
+            bindings.unshift({
+                key: itemKey,
+                index: cursor,
+                isTemplate: isTemplate,
+                prevDuplicate: getTStylingRangePrevDuplicate(itemRange),
+                nextDuplicate: getTStylingRangeNextDuplicate(itemRange),
+                nextIndex: getTStylingRangeNext(itemRange),
+                prevIndex: getTStylingRangePrev(itemRange),
+            });
+            if (cursor === prev)
+                isTemplate = false;
+            cursor = getTStylingRangePrev(itemRange);
+        }
+        bindings.unshift(isClassBased ? tNode.classes : tNode.styles);
+        return bindings;
+    }
     function processTNodeChildren(tNode, buf) {
         while (tNode) {
             buf.push(tNode.template_);
@@ -34273,15 +33219,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var rawValue = lView[nodeIndex];
         var native = unwrapRNode(rawValue);
         var componentLViewDebug = toDebug(readLViewValue(rawValue));
-        var styles = isStylingContext(tNode.styles) ?
-            new NodeStylingDebug(tNode.styles, tNode, lView, false) :
-            null;
-        var classes = isStylingContext(tNode.classes) ?
-            new NodeStylingDebug(tNode.classes, tNode, lView, true) :
-            null;
         return {
             html: toHtml(native),
-            native: native, styles: styles, classes: classes,
+            native: native,
             nodes: toDebugNodes(tNode.child, lView),
             component: componentLViewDebug,
         };
@@ -34546,12 +33486,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function setHostBindingsByExecutingExpandoInstructions(tView, lView) {
         ngDevMode && assertSame(tView, lView[TVIEW], '`LView` is not associated with the `TView`!');
-        var selectedIndex = getSelectedIndex();
         try {
             var expandoInstructions = tView.expandoInstructions;
             if (expandoInstructions !== null) {
-                var bindingRootIndex = setBindingIndex(tView.expandoStartIndex);
-                setBindingRoot(bindingRootIndex);
+                var bindingRootIndex = tView.expandoStartIndex;
                 var currentDirectiveIndex = -1;
                 var currentElementIndex = -1;
                 // TODO(misko): PERF It is possible to get here with `TVIew.expandoInstructions` containing no
@@ -34585,20 +33523,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             // (to get to the next set of host bindings on this node).
                             bindingRootIndex += instruction;
                         }
-                        setBindingRoot(bindingRootIndex);
                     }
                     else {
                         // If it's not a number, it's a host binding function that needs to be executed.
                         if (instruction !== null) {
-                            // Each directive gets a uniqueId value that is the same for both
-                            // create and update calls when the hostBindings function is called. The
-                            // directive uniqueId is not set anywhere--it is just incremented between
-                            // each hostBindings call and is useful for helping instruction code
-                            // uniquely determine which directive is currently active when executed.
-                            // It is important that this be called first before the actual instructions
-                            // are run because this way the first directive ID value is not zero.
-                            incrementActiveDirectiveId();
-                            setBindingIndex(bindingRootIndex);
+                            setBindingRootForHostBindings(bindingRootIndex);
                             var hostCtx = lView[currentDirectiveIndex];
                             instruction(2 /* Update */, hostCtx, currentElementIndex);
                         }
@@ -34614,7 +33543,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         }
         finally {
-            setActiveHostElement(selectedIndex);
+            clearActiveHostElement();
         }
     }
     /** Refreshes all content queries declared by directives in a given view */
@@ -34875,9 +33804,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     incrementInitPhaseFlags(lView, 2 /* AfterViewInitHooksToBeRun */);
                 }
             }
-        }
-        finally {
             if (tView.firstUpdatePass === true) {
+                // We need to make sure that we only flip the flag on successful `refreshView` only
+                // Don't do this in `finally` block.
+                // If we did this in `finally` block then an exception could block the execution of styling
+                // instructions which in turn would be unable to insert themselves into the styling linked
+                // list. The result of this would be that if the exception would not be throw on subsequent CD
+                // the styling would be unable to process it data and reflect to the DOM.
                 tView.firstUpdatePass = false;
             }
             // Do not reset the dirty state when running in check no changes mode. We don't want components
@@ -34889,7 +33822,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (!checkNoChangesMode) {
                 lView[FLAGS] &= ~(64 /* Dirty */ | 8 /* FirstLViewPass */);
             }
-            leaveViewProcessExit();
+        }
+        finally {
+            leaveView();
         }
     }
     function renderComponentOrTemplate(hostView, templateFn, context) {
@@ -34915,7 +33850,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function executeTemplate(lView, templateFn, rf, context) {
         var prevSelectedIndex = getSelectedIndex();
         try {
-            setActiveHostElement(null);
+            clearActiveHostElement();
             if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
@@ -34924,9 +33859,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             templateFn(rf, context);
         }
         finally {
-            if (hasActiveElementFlag(1 /* RunExitFn */)) {
-                executeElementExitFn();
-            }
             setSelectedIndex(prevSelectedIndex);
         }
     }
@@ -35053,8 +33985,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param elementOrSelector Render element or CSS selector to locate the element.
      * @param encapsulation View Encapsulation defined for component that requests host element.
      */
-    function locateHostElement(rendererFactory, elementOrSelector, encapsulation) {
-        var renderer = rendererFactory.createRenderer(null, null);
+    function locateHostElement(renderer, elementOrSelector, encapsulation) {
         if (isProceduralRenderer(renderer)) {
             // When using native Shadow DOM, do not clear host element to allow native slot projection
             var preserveContent = encapsulation === ViewEncapsulation$2.ShadowDom;
@@ -35099,7 +34030,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function createTNode(tView, tParent, type, adjustedIndex, tagName, attrs) {
         ngDevMode && ngDevMode.tNode++;
         var injectorIndex = tParent ? tParent.injectorIndex : -1;
-        return ngDevMode ? new TNodeConstructor(tView, // tView_: TView
+        return ngDevMode ? new TNodeDebug(tView, // tView_: TView
         type, // type: TNodeType
         adjustedIndex, // index: number
         injectorIndex, // injectorIndex: number
@@ -35121,8 +34052,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         null, // child: ITNode|null
         tParent, // parent: TElementNode|TContainerNode|null
         null, // projection: number|(ITNode|RNode[])[]|null
-        null, // styles: TStylingContext|null
-        null, // classes: TStylingContext|null
+        null, // styles: string|null
+        undefined, // stylesMap: string|null
+        null, // classes: string|null
+        undefined, // classesMap: string|null
         0, // classBindings: TStylingRange;
         0) :
             {
@@ -35148,7 +34081,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 parent: tParent,
                 projection: null,
                 styles: null,
+                stylesMap: undefined,
                 classes: null,
+                classesMap: undefined,
                 classBindings: 0,
                 styleBindings: 0,
             };
@@ -35215,7 +34150,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             tView.data.push(null);
         }
     }
-    // TODO(COMMIT): jsdoc
+    /**
+     * Invoke the host bindings in creation mode.
+     *
+     * @param def `DirectiveDef` which may contain the `hostBindings` function.
+     * @param directive Instance of directive.
+     * @param tNode Associated `TNode`.
+     */
     function invokeHostBindingsInCreationMode(def, directive, tNode) {
         if (def.hostBindings !== null) {
             var elementIndex = tNode.index - HEADER_OFFSET;
@@ -35223,11 +34164,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
     }
     /**
-    * Generates a new block in TView.expandoInstructions for this node.
-    *
-    * Each expando block starts with the element index (turned negative so we can distinguish
-    * it from the hostVar count) and the directive count. See more in VIEW_DATA.md.
-    */
+     * Generates a new block in TView.expandoInstructions for this node.
+     *
+     * Each expando block starts with the element index (turned negative so we can distinguish
+     * it from the hostVar count) and the directive count. See more in VIEW_DATA.md.
+     */
     function generateExpandoInstructionBlock(tView, tNode, directiveCount) {
         ngDevMode && assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
         // Important: In JS `-x` and `0-x` is not the same! If `x===0` then `-x` will produce `-0` which
@@ -35528,35 +34469,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var injector = lView[INJECTOR$1];
         var errorHandler = injector ? injector.get(ErrorHandler, null) : null;
         errorHandler && errorHandler.handleError(error);
-    }
-    /**
-     * Renders all initial styling (class and style values) on to the element from the tNode.
-     *
-     * All initial styling data (i.e. any values extracted from the `style` or `class` attributes
-     * on an element) are collected into the `tNode.styles` and `tNode.classes` data structures.
-     * These values are populated during the creation phase of an element and are then later
-     * applied once the element is instantiated. This function applies each of the static
-     * style and class entries to the element.
-     */
-    function renderInitialStyling(renderer, native, tNode, append) {
-        if (tNode.classes !== null) {
-            if (append) {
-                renderStylingMap(renderer, native, tNode.classes, true);
-            }
-            else {
-                var classes = getInitialStylingValue(tNode.classes);
-                writeStylingValueDirectly(renderer, native, classes, true, null);
-            }
-        }
-        if (tNode.styles !== null) {
-            if (append) {
-                renderStylingMap(renderer, native, tNode.styles, false);
-            }
-            else {
-                var styles = getInitialStylingValue(tNode.styles);
-                writeStylingValueDirectly(renderer, native, styles, false, null);
-            }
-        }
     }
 
     /**
@@ -36007,6 +34919,52 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var lView = lContainer[i];
             applyView(renderer, action, lView, renderParent, anchor);
         }
+    }
+    /**
+     * Write `cssText` to `RElement`.
+     *
+     * This function does direct write without any reconciliation. Used for writing initial values, so
+     * that static styling values do not pull in the style parser.
+     *
+     * @param renderer Renderer to use
+     * @param element The element which needs to be updated.
+     * @param newValue The new class list to write.
+     */
+    function writeDirectStyle(renderer, element, newValue) {
+        ngDevMode && assertString(newValue, '\'newValue\' should be a string');
+        if (isProceduralRenderer(renderer)) {
+            renderer.setAttribute(element, 'style', newValue);
+        }
+        else {
+            element.style.cssText = newValue;
+        }
+        ngDevMode && ngDevMode.rendererSetStyle++;
+    }
+    /**
+     * Write `className` to `RElement`.
+     *
+     * This function does direct write without any reconciliation. Used for writing initial values, so
+     * that static styling values do not pull in the style parser.
+     *
+     * @param renderer Renderer to use
+     * @param element The element which needs to be updated.
+     * @param newValue The new class list to write.
+     */
+    function writeDirectClass(renderer, element, newValue) {
+        ngDevMode && assertString(newValue, '\'newValue\' should be a string');
+        if (isProceduralRenderer(renderer)) {
+            if (newValue === '') {
+                // There are tests in `google3` which expect `element.getAttribute('class')` to be `null`.
+                renderer.removeAttribute(element, 'class');
+            }
+            else {
+                renderer.setAttribute(element, 'class', newValue);
+            }
+        }
+        else {
+            element.className = newValue;
+        }
+        ngDevMode && ngDevMode.rendererSetClassName++;
     }
 
     /**
@@ -38543,51 +37501,41 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     var ViewChild = makePropDecorator('ViewChild', ɵ3, Query);
 
     /**
-     * Searches and assigns provided all static style/class entries (found in the `attrs` value)
-     * and registers them in their respective styling contexts.
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
+     * Compute the static styling (class/style) from `TAttributes`.
+     *
+     * This function should be called during `firstCreatePass` only.
+     *
+     * @param tNode The `TNode` into which the styling information should be loaded.
+     * @param attrs `TAttributes` containing the styling information.
      */
-    function registerInitialStylingOnTNode(tNode, attrs, startIndex) {
-        var hasAdditionalInitialStyling = false;
-        var styles = getStylingMapArray(tNode.styles);
-        var classes = getStylingMapArray(tNode.classes);
-        var mode = -1;
-        for (var i = startIndex; i < attrs.length; i++) {
-            var attr = attrs[i];
-            if (typeof attr == 'number') {
-                mode = attr;
+    function computeStaticStyling(tNode, attrs) {
+        ngDevMode && assertFirstCreatePass(getLView()[TVIEW], 'Expecting to be called in first template pass only');
+        var styles = tNode.styles;
+        var classes = tNode.classes;
+        var mode = 0;
+        for (var i = 0; i < attrs.length; i++) {
+            var value = attrs[i];
+            if (typeof value === 'number') {
+                mode = value;
             }
             else if (mode == 1 /* Classes */) {
-                classes = classes || allocStylingMapArray(null);
-                addItemToStylingMap(classes, attr, true);
-                hasAdditionalInitialStyling = true;
+                classes = concatStringsWithSpace(classes, value);
             }
             else if (mode == 2 /* Styles */) {
-                var value = attrs[++i];
-                styles = styles || allocStylingMapArray(null);
-                addItemToStylingMap(styles, attr, value);
-                hasAdditionalInitialStyling = true;
+                var style = value;
+                var styleValue = attrs[++i];
+                styles = concatStringsWithSpace(styles, style + ': ' + styleValue + ';');
             }
         }
-        if (classes && classes.length > 1 /* ValuesStartPosition */) {
-            if (!tNode.classes) {
-                tNode.classes = classes;
-            }
-            updateRawValueOnContext(tNode.classes, stylingMapToString(classes, true));
-        }
-        if (styles && styles.length > 1 /* ValuesStartPosition */) {
-            if (!tNode.styles) {
-                tNode.styles = styles;
-            }
-            updateRawValueOnContext(tNode.styles, stylingMapToString(styles, false));
-        }
-        if (hasAdditionalInitialStyling) {
-            tNode.flags |= 256 /* hasInitialStyling */;
-        }
-        return hasAdditionalInitialStyling;
-    }
-    function updateRawValueOnContext(context, value) {
-        var stylingMapArr = getStylingMapArray(context);
-        stylingMapArr[0 /* RawValuePosition */] = value;
+        styles !== null && (tNode.styles = styles);
+        classes !== null && (tNode.classes = classes);
     }
 
     /**
@@ -38751,6 +37699,31 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         // TODO: use isObservable once we update pass rxjs 6.1
         // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
         return !!obj && typeof obj.subscribe === 'function';
+    }
+
+    /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
+     * This file contains reuseable "empty" symbols that can be used as default return values
+     * in different parts of the rendering code. Because the same symbols are returned, this
+     * allows for identity checks against these values to be consistently used by the framework
+     * code.
+     */
+    var EMPTY_OBJ$1 = {};
+    var EMPTY_ARRAY$4 = [];
+    // freezing the values prevents any code from accidentally inserting new values in
+    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
+        // These property accesses can be ignored because ngDevMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // tslint:disable-next-line:no-toplevel-property-access
+        Object.freeze(EMPTY_OBJ$1);
+        // tslint:disable-next-line:no-toplevel-property-access
+        Object.freeze(EMPTY_ARRAY$4);
     }
 
     /**
@@ -39009,25 +37982,37 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param rNode Render host element.
      * @param def ComponentDef
      * @param rootView The parent view where the host node is stored
-     * @param renderer The current renderer
+     * @param hostRenderer The current renderer
      * @param sanitizer The sanitizer, if provided
      *
      * @returns Component view created
      */
-    function createRootComponentView(rNode, def, rootView, rendererFactory, renderer, sanitizer) {
+    function createRootComponentView(rNode, def, rootView, rendererFactory, hostRenderer, addVersion, sanitizer) {
         var tView = rootView[TVIEW];
         ngDevMode && assertDataInRange(rootView, 0 + HEADER_OFFSET);
         rootView[0 + HEADER_OFFSET] = rNode;
         var tNode = getOrCreateTNode(tView, null, 0, 3 /* Element */, null, null);
         var mergedAttrs = tNode.mergedAttrs = def.hostAttrs;
         if (mergedAttrs !== null) {
-            registerInitialStylingOnTNode(tNode, mergedAttrs, 0);
+            computeStaticStyling(tNode, mergedAttrs);
             if (rNode !== null) {
-                setUpAttributes(renderer, rNode, mergedAttrs);
-                renderInitialStyling(renderer, rNode, tNode, false);
+                setUpAttributes(hostRenderer, rNode, mergedAttrs);
+                if (tNode.classes !== null) {
+                    writeDirectClass(hostRenderer, rNode, tNode.classes);
+                }
+                if (tNode.styles !== null) {
+                    writeDirectStyle(hostRenderer, rNode, tNode.styles);
+                }
             }
         }
-        var componentView = createLView(rootView, getOrCreateTComponentView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
+        var viewRenderer = rendererFactory.createRenderer(rNode, def);
+        if (rNode !== null && addVersion) {
+            ngDevMode && ngDevMode.rendererSetAttribute++;
+            isProceduralRenderer(hostRenderer) ?
+                hostRenderer.setAttribute(rNode, 'ng-version', addVersion) :
+                rNode.setAttribute('ng-version', addVersion);
+        }
+        var componentView = createLView(rootView, getOrCreateTComponentView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, viewRenderer, sanitizer);
         if (tView.firstCreatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), tView, def.type);
             markAsComponentHost(tView, tNode);
@@ -39054,21 +38039,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             componentDef.contentQueries(1 /* Create */, component, rootLView.length - 1);
         }
         var rootTNode = getPreviousOrParentTNode();
-        // TODO(misko-next): This is a temporary work around for the fact that we moved the information
-        // from instruction to declaration. The workaround is to just call the instruction as if it was
-        // part of the `hostAttrs`.
-        // The check for componentDef.hostBindings is wrong since now some directives may not
-        // have componentDef.hostBindings but they still need to process hostVars and hostAttrs
         if (tView.firstCreatePass &&
             (componentDef.hostBindings !== null || componentDef.hostAttrs !== null)) {
             var elementIndex = rootTNode.index - HEADER_OFFSET;
             setActiveHostElement(elementIndex);
-            incrementActiveDirectiveId();
             var rootTView = rootLView[TVIEW];
             addHostBindingsToExpandoInstructions(rootTView, componentDef);
             growHostVarsSpace(rootTView, rootLView, componentDef.hostVars);
             invokeHostBindingsInCreationMode(componentDef, component, rootTNode);
-            setActiveHostElement(null);
         }
         return component;
     }
@@ -39295,6 +38273,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     var RendererStyleFlags2;
     (function (RendererStyleFlags2) {
+        // TODO(misko): This needs to be refactored into a separate file so that it can be imported from
+        // `node_manipulation.ts` Currently doing the import cause resolution order to change and fails
+        // the tests. The work around is to have hard coded value in `node_manipulation.ts` for now.
         /**
          * Marks a style as important.
          */
@@ -39380,7 +38361,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('0.0.0');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+804.sha-0eaf874');
 
     /**
      * @license
@@ -42111,8 +41092,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
+            var hostRenderer = rendererFactory.createRenderer(null, this.componentDef);
             var hostRNode = rootSelectorOrNode ?
-                locateHostElement(rendererFactory, rootSelectorOrNode, this.componentDef.encapsulation) :
+                locateHostElement(hostRenderer, rootSelectorOrNode, this.componentDef.encapsulation) :
                 // Determine a tag name used for creating host elements when this component is created
                 // dynamically. Default to 'div' if this component did not specify any tag name in its
                 // selector.
@@ -42126,16 +41108,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var isIsolated = typeof rootSelectorOrNode === 'string' &&
                 /^#root-ng-internal-isolated-\d+/.test(rootSelectorOrNode);
             var rootContext = createRootContext();
-            var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
-            if (rootSelectorOrNode && hostRNode) {
-                ngDevMode && ngDevMode.rendererSetAttribute++;
-                isProceduralRenderer(renderer) ?
-                    renderer.setAttribute(hostRNode, 'ng-version', VERSION$2.full) :
-                    hostRNode.setAttribute('ng-version', VERSION$2.full);
-            }
             // Create the root view. Uses empty TView and ContentTemplate.
             var rootTView = createTView(0 /* Root */, -1, null, 1, 0, null, null, null, null, null);
-            var rootLView = createLView(null, rootTView, rootContext, rootFlags, null, null, rendererFactory, renderer, sanitizer, rootViewInjector);
+            var rootLView = createLView(null, rootTView, rootContext, rootFlags, null, null, rendererFactory, hostRenderer, sanitizer, rootViewInjector);
+            var addVersion = rootSelectorOrNode && hostRNode ? VERSION$2.full : null;
             // rootView is the parent when bootstrapping
             // TODO(misko): it looks like we are entering view here but we don't really need to as
             // `renderView` does that. However as the code is written it is needed because
@@ -42145,7 +41121,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var component;
             var tElementNode;
             try {
-                var componentView = createRootComponentView(hostRNode, this.componentDef, rootLView, rendererFactory, renderer);
+                var componentView = createRootComponentView(hostRNode, this.componentDef, rootLView, rendererFactory, hostRenderer, addVersion, null);
                 tElementNode = getTNode(0, rootLView);
                 if (projectableNodes) {
                     // projectable nodes can be passed as array of arrays or an array of iterables (ngUpgrade
@@ -46470,8 +45446,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             get: function () {
                 var result = {};
                 var element = this.nativeElement;
-                var classNames = element.className.split(' ');
-                classNames.forEach(function (value) { return result[value] = true; });
+                // SVG elements return an `SVGAnimatedString` instead of a plain string for the `className`.
+                var className = element.className;
+                var classes = className && typeof className !== 'string' ? className.baseVal.split(' ') :
+                    className.split(' ');
+                classes.forEach(function (value) { return result[value] = true; });
                 return result;
             },
             enumerable: true,
@@ -46526,7 +45505,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.listeners.forEach(function (listener) {
                 if (listener.name === eventName) {
                     var callback = listener.callback;
-                    callback(eventObj);
+                    callback.call(node, eventObj);
                     invokedListeners.push(callback);
                 }
             });
@@ -46534,11 +45513,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // that Zone.js only adds to `EventTarget` in browser environments.
             if (typeof node.eventListeners === 'function') {
                 // Note that in Ivy we wrap event listeners with a call to `event.preventDefault` in some
-                // cases. We use `Function` as a special token that gives us access to the actual event
+                // cases. We use '__ngUnwrap__' as a special token that gives us access to the actual event
                 // listener.
                 node.eventListeners(eventName).forEach(function (listener) {
-                    var unwrappedListener = listener(Function);
-                    return invokedListeners.indexOf(unwrappedListener) === -1 && unwrappedListener(eventObj);
+                    // In order to ensure that we can detect the special __ngUnwrap__ token described above, we
+                    // use `toString` on the listener and see if it contains the token. We use this approach to
+                    // ensure that it still worked with compiled code since it cannot remove or rename string
+                    // literals. We also considered using a special function name (i.e. if(listener.name ===
+                    // special)) but that was more cumbersome and we were also concerned the compiled code could
+                    // strip the name, turning the condition in to ("" === "") and always returning true.
+                    if (listener.toString().indexOf('__ngUnwrap__') !== -1) {
+                        var unwrappedListener = listener('__ngUnwrap__');
+                        return invokedListeners.indexOf(unwrappedListener) === -1 &&
+                            unwrappedListener.call(node, eventObj);
+                    }
                 });
             }
         };
@@ -50955,9 +49943,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var visit = function (child) {
                 var candidate = getDirectiveClassLike(child);
                 if (candidate) {
-                    var decoratorId = candidate.decoratorId, classDecl = candidate.classDecl;
-                    var declarationSpan = spanOf$2(decoratorId);
-                    var className = classDecl.name.text;
+                    var classId = candidate.classId;
+                    var declarationSpan = spanOf$2(classId);
+                    var className = classId.getText();
                     var classSymbol = _this.reflector.getStaticSymbol(sourceFile.fileName, className);
                     // Ask the resolver to check if candidate is actually Angular directive
                     if (!_this.resolver.isDirective(classSymbol)) {
@@ -51320,7 +50308,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return results;
                 }
             }
-            return ngLS.getCompletionsAt(fileName, position);
+            return ngLS.getCompletionsAtPosition(fileName, position, options);
         }
         function getQuickInfoAtPosition(fileName, position) {
             if (!angularOnly) {
@@ -51330,7 +50318,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return result;
                 }
             }
-            return ngLS.getHoverAt(fileName, position);
+            return ngLS.getQuickInfoAtPosition(fileName, position);
         }
         function getSemanticDiagnostics(fileName) {
             var results = [];
@@ -51338,7 +50326,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 results.push.apply(results, __spread(tsLS.getSemanticDiagnostics(fileName)));
             }
             // For semantic diagnostics we need to combine both TS + Angular results
-            results.push.apply(results, __spread(ngLS.getDiagnostics(fileName)));
+            results.push.apply(results, __spread(ngLS.getSemanticDiagnostics(fileName)));
             return results;
         }
         function getDefinitionAtPosition(fileName, position) {
@@ -51349,7 +50337,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return results;
                 }
             }
-            var result = ngLS.getDefinitionAt(fileName, position);
+            var result = ngLS.getDefinitionAndBoundSpan(fileName, position);
             if (!result || !result.definitions || !result.definitions.length) {
                 return;
             }
@@ -51363,7 +50351,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     return result;
                 }
             }
-            return ngLS.getDefinitionAt(fileName, position);
+            return ngLS.getDefinitionAndBoundSpan(fileName, position);
         }
         var proxy = Object.assign(
         // First clone the original TS language service
@@ -51383,7 +50371,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('0.0.0');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+804.sha-0eaf874');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
