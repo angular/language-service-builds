@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/typescript_host" />
-import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader, StaticSymbol } from '@angular/compiler';
+import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
 import * as tss from 'typescript/lib/tsserverlibrary';
 import { AstResult } from './common';
 import { Declaration, LanguageService, LanguageServiceHost, TemplateSource } from './types';
@@ -66,12 +66,8 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * and templateReferences.
      * In addition to returning information about NgModules, this method plays the
      * same role as 'synchronizeHostData' in tsserver.
-     * @param ensureSynchronized whether or not the Language Service should make sure analyzedModules
-     *   are synced to the last update of the project. If false, returns the set of analyzedModules
-     *   that is already cached. This is useful if the project must not be reanalyzed, even if its
-     *   file watchers (which are disjoint from the TypeScriptServiceHost) detect an update.
      */
-    getAnalyzedModules(ensureSynchronized?: boolean): NgAnalyzedModules;
+    getAnalyzedModules(): NgAnalyzedModules;
     /**
      * Checks whether the program has changed, and invalidate static symbols in
      * the source files that have changed.
@@ -121,11 +117,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * @param position Position of the template in the TS file, otherwise ignored.
      */
     getTemplateAstAtPosition(fileName: string, position: number): AstResult | undefined;
-    /**
-     * Gets a StaticSymbol from a file and symbol name.
-     * @return Angular StaticSymbol matching the file and name, if any
-     */
-    getStaticSymbol(file: string, name: string): StaticSymbol | undefined;
     /**
      * Find the NgModule which the directive associated with the `classSymbol`
      * belongs to, then return its schema and transitive directives and pipes.
