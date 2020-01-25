@@ -6,21 +6,22 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/hover" />
+import { NgAnalyzedModules } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult } from './common';
-import { TypeScriptServiceHost } from './typescript_host';
+import * as ng from './types';
 /**
  * Traverse the template AST and look for the symbol located at `position`, then
  * return the corresponding quick info.
  * @param info template AST
  * @param position location of the symbol
- * @param host Language Service host to query
+ * @param analyzedModules all NgModules in the program.
  */
-export declare function getHover(info: AstResult, position: number, host: Readonly<TypeScriptServiceHost>): ts.QuickInfo | undefined;
+export declare function getTemplateHover(info: AstResult, position: number, analyzedModules: NgAnalyzedModules): ts.QuickInfo | undefined;
 /**
  * Get quick info for Angular semantic entities in TypeScript files, like Directives.
- * @param sf TypeScript source file an Angular symbol is in
  * @param position location of the symbol in the source file
- * @param host Language Service host to query
+ * @param declarations All Directive-like declarations in the source file.
+ * @param analyzedModules all NgModules in the program.
  */
-export declare function getTsHover(sf: ts.SourceFile, position: number, host: Readonly<TypeScriptServiceHost>): ts.QuickInfo | undefined;
+export declare function getTsHover(position: number, declarations: ng.Declaration[], analyzedModules: NgAnalyzedModules): ts.QuickInfo | undefined;
