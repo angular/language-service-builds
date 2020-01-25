@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+807.sha-8926f76
+ * @license Angular v9.0.0-rc.1+808.sha-3414ef2
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18740,7 +18740,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+807.sha-8926f76');
+    var VERSION$1 = new Version('9.0.0-rc.1+808.sha-3414ef2');
 
     /**
      * @license
@@ -28112,9 +28112,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function locateSymbol(ast, path, info) {
         var templatePosition = path.position;
         var position = templatePosition + info.template.span.start;
-        var compileTypeSummary = undefined;
         var symbol;
         var span;
+        var staticSymbol;
         var attributeValueSymbol = function (ast) {
             var attribute = findAttribute(info, position);
             if (attribute) {
@@ -28140,8 +28140,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             visitElement: function (ast) {
                 var component = ast.directives.find(function (d) { return d.directive.isComponent; });
                 if (component) {
-                    compileTypeSummary = component.directive;
-                    symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
+                    // Need to cast because 'reference' is typed as any
+                    staticSymbol = component.directive.type.reference;
+                    symbol = info.template.query.getTypeSymbol(staticSymbol);
                     symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.COMPONENT);
                     span = spanOf(ast);
                 }
@@ -28149,8 +28150,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     // Find a directive that matches the element name
                     var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
                     if (directive) {
-                        compileTypeSummary = directive.directive;
-                        symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
+                        // Need to cast because 'reference' is typed as any
+                        staticSymbol = directive.directive.type.reference;
+                        symbol = info.template.query.getTypeSymbol(staticSymbol);
                         symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.DIRECTIVE);
                         span = spanOf(ast);
                     }
@@ -28196,8 +28198,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var parsedAttribute = CssSelector.parse(attributeSelector);
                 if (!parsedAttribute.length)
                     return;
-                matcher.match(parsedAttribute[0], function (_, directive) {
-                    symbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                matcher.match(parsedAttribute[0], function (_, _a) {
+                    var directive = _a.directive;
+                    // Need to cast because 'reference' is typed as any
+                    staticSymbol = directive.type.reference;
+                    symbol = info.template.query.getTypeSymbol(staticSymbol);
                     symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.DIRECTIVE);
                     span = spanOf(ast);
                 });
@@ -28216,8 +28221,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             },
             visitText: function (ast) { },
             visitDirective: function (ast) {
-                compileTypeSummary = ast.directive;
-                symbol = info.template.query.getTypeSymbol(compileTypeSummary.type.reference);
+                // Need to cast because 'reference' is typed as any
+                staticSymbol = ast.directive.type.reference;
+                symbol = info.template.query.getTypeSymbol(staticSymbol);
                 span = spanOf(ast);
             },
             visitDirectiveProperty: function (ast) {
@@ -28228,7 +28234,11 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         }, null);
         if (symbol && span) {
-            return { symbol: symbol, span: offsetSpan(span, info.template.span.start), compileTypeSummary: compileTypeSummary };
+            var _a = offsetSpan(span, info.template.span.start), start = _a.start, end = _a.end;
+            return {
+                symbol: symbol,
+                span: tss.createTextSpanFromBounds(start, end), staticSymbol: staticSymbol,
+            };
         }
     }
     function findAttribute(info, position) {
@@ -28428,7 +28438,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (!symbols.length) {
             return;
         }
-        var textSpan = ngSpanToTsTextSpan(symbols[0].span);
         var definitions = [];
         var _loop_1 = function (symbolInfo) {
             var symbol = symbolInfo.symbol;
@@ -28465,7 +28474,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             finally { if (e_1) throw e_1.error; }
         }
         return {
-            definitions: definitions, textSpan: textSpan,
+            definitions: definitions,
+            textSpan: symbols[0].span,
         };
     }
     /**
@@ -28824,7 +28834,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     // Reverse mappings of enum would generate strings
     var SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
     var SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
-    var SYMBOL_CLASS = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.className];
     var SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
     var SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
     /**
@@ -28832,108 +28841,93 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * return the corresponding quick info.
      * @param info template AST
      * @param position location of the symbol
-     * @param host Language Service host to query
+     * @param analyzedModules all NgModules in the program.
      */
-    function getHover(info, position, host) {
+    function getTemplateHover(info, position, analyzedModules) {
+        var _a, _b, _c;
         var symbolInfo = locateSymbols(info, position)[0];
         if (!symbolInfo) {
             return;
         }
-        var symbol = symbolInfo.symbol, span = symbolInfo.span, compileTypeSummary = symbolInfo.compileTypeSummary;
-        var textSpan = { start: span.start, length: span.end - span.start };
-        if (compileTypeSummary && compileTypeSummary.summaryKind === CompileSummaryKind.Directive) {
-            return getDirectiveModule(compileTypeSummary.type.reference, textSpan, host, symbol);
+        var symbol = symbolInfo.symbol, span = symbolInfo.span, staticSymbol = symbolInfo.staticSymbol;
+        // The container is either the symbol's container (for example, 'AppComponent'
+        // is the container of the symbol 'title' in its template) or the NgModule
+        // that the directive belongs to (the container of AppComponent is AppModule).
+        var containerName = (_a = symbol.container) === null || _a === void 0 ? void 0 : _a.name;
+        if (!containerName && staticSymbol) {
+            // If there is a static symbol then the target is a directive.
+            var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(staticSymbol);
+            containerName = (_b = ngModule) === null || _b === void 0 ? void 0 : _b.type.reference.name;
         }
-        var containerDisplayParts = symbol.container ?
-            [
-                { text: symbol.container.name, kind: symbol.container.kind },
-                { text: '.', kind: SYMBOL_PUNC },
-            ] :
-            [];
-        var typeDisplayParts = symbol.type ?
-            [
-                { text: ':', kind: SYMBOL_PUNC },
-                { text: ' ', kind: SYMBOL_SPACE },
-                { text: symbol.type.name, kind: SYMBOL_INTERFACE },
-            ] :
-            [];
-        return {
-            kind: symbol.kind,
-            kindModifiers: '',
-            textSpan: textSpan,
-            documentation: symbol.documentation,
-            // this would generate a string like '(property) ClassX.propY: type'
-            // 'kind' in displayParts does not really matter because it's dropped when
-            // displayParts get converted to string.
-            displayParts: __spread([
-                { text: '(', kind: SYMBOL_PUNC },
-                { text: symbol.kind, kind: symbol.kind },
-                { text: ')', kind: SYMBOL_PUNC },
-                { text: ' ', kind: SYMBOL_SPACE }
-            ], containerDisplayParts, [
-                { text: symbol.name, kind: symbol.kind }
-            ], typeDisplayParts),
-        };
+        return createQuickInfo(symbol.name, symbol.kind, span, containerName, (_c = symbol.type) === null || _c === void 0 ? void 0 : _c.name, symbol.documentation);
     }
     /**
      * Get quick info for Angular semantic entities in TypeScript files, like Directives.
-     * @param sf TypeScript source file an Angular symbol is in
      * @param position location of the symbol in the source file
-     * @param host Language Service host to query
+     * @param declarations All Directive-like declarations in the source file.
+     * @param analyzedModules all NgModules in the program.
      */
-    function getTsHover(sf, position, host) {
-        var node = findTightestNode(sf, position);
-        if (!node)
-            return;
-        switch (node.kind) {
-            case ts.SyntaxKind.Identifier:
-                var directiveId = node;
-                if (ts.isClassDeclaration(directiveId.parent)) {
-                    var directiveName = directiveId.text;
-                    var directiveSymbol = host.getStaticSymbol(node.getSourceFile().fileName, directiveName);
-                    if (!directiveSymbol)
-                        return;
-                    return getDirectiveModule(directiveSymbol, { start: directiveId.getStart(), length: directiveId.end - directiveId.getStart() }, host);
+    function getTsHover(position, declarations, analyzedModules) {
+        var e_1, _a;
+        var _b;
+        try {
+            for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
+                var _c = declarations_1_1.value, declarationSpan = _c.declarationSpan, metadata = _c.metadata;
+                if (inSpan(position, declarationSpan)) {
+                    var staticSymbol = metadata.type.reference;
+                    var directiveName = staticSymbol.name;
+                    var kind = metadata.isComponent ? 'component' : 'directive';
+                    var textSpan = ts.createTextSpanFromBounds(declarationSpan.start, declarationSpan.end);
+                    var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(staticSymbol);
+                    var moduleName = (_b = ngModule) === null || _b === void 0 ? void 0 : _b.type.reference.name;
+                    return createQuickInfo(directiveName, kind, textSpan, moduleName, ts.ScriptElementKind.classElement);
                 }
-                break;
+            }
         }
-        return undefined;
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (declarations_1_1 && !declarations_1_1.done && (_a = declarations_1.return)) _a.call(declarations_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
     }
     /**
-     * Attempts to get quick info for the NgModule a Directive is declared in.
-     * @param directive identifier on a potential Directive class declaration
-     * @param textSpan span of the symbol
-     * @param host Language Service host to query
-     * @param symbol the internal symbol that represents the directive
+     * Construct a QuickInfo object taking into account its container and type.
+     * @param name Name of the QuickInfo target
+     * @param kind component, directive, pipe, etc.
+     * @param textSpan span of the target
+     * @param containerName either the Symbol's container or the NgModule that contains the directive
+     * @param type user-friendly name of the type
+     * @param documentation docstring or comment
      */
-    function getDirectiveModule(directive, textSpan, host, symbol) {
-        var analyzedModules = host.getAnalyzedModules(false);
-        var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(directive);
-        if (!ngModule)
-            return;
-        var isComponent = host.getDeclarations(directive.filePath)
-            .find(function (decl) { return decl.type === directive && decl.metadata && decl.metadata.isComponent; });
-        var moduleName = ngModule.type.reference.name;
-        return {
-            kind: ts.ScriptElementKind.classElement,
-            kindModifiers: ts.ScriptElementKindModifier.none,
-            textSpan: textSpan,
-            documentation: symbol ? symbol.documentation : undefined,
-            // This generates a string like '(directive) NgModule.Directive: class'
-            // 'kind' in displayParts does not really matter because it's dropped when
-            // displayParts get converted to string.
-            displayParts: [
-                { text: '(', kind: SYMBOL_PUNC },
-                { text: isComponent ? 'component' : 'directive', kind: SYMBOL_TEXT },
-                { text: ')', kind: SYMBOL_PUNC },
-                { text: ' ', kind: SYMBOL_SPACE },
-                { text: moduleName, kind: SYMBOL_CLASS },
+    function createQuickInfo(name, kind, textSpan, containerName, type, documentation) {
+        var containerDisplayParts = containerName ?
+            [
+                { text: containerName, kind: SYMBOL_INTERFACE },
                 { text: '.', kind: SYMBOL_PUNC },
-                { text: directive.name, kind: SYMBOL_CLASS },
+            ] :
+            [];
+        var typeDisplayParts = type ?
+            [
                 { text: ':', kind: SYMBOL_PUNC },
                 { text: ' ', kind: SYMBOL_SPACE },
-                { text: ts.ScriptElementKind.classElement, kind: SYMBOL_TEXT },
-            ],
+                { text: type, kind: SYMBOL_INTERFACE },
+            ] :
+            [];
+        return {
+            kind: kind,
+            kindModifiers: ts.ScriptElementKindModifier.none,
+            textSpan: textSpan,
+            displayParts: __spread([
+                { text: '(', kind: SYMBOL_PUNC },
+                { text: kind, kind: SYMBOL_TEXT },
+                { text: ')', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE }
+            ], containerDisplayParts, [
+                { text: name, kind: SYMBOL_INTERFACE }
+            ], typeDisplayParts),
+            documentation: documentation,
         };
     }
 
@@ -29018,19 +29012,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         };
         LanguageServiceImpl.prototype.getQuickInfoAtPosition = function (fileName, position) {
-            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
+            var analyzedModules = this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
-                return getHover(templateInfo, position, this.host);
+                return getTemplateHover(templateInfo, position, analyzedModules);
             }
             // Attempt to get Angular-specific hover information in a TypeScript file, the NgModule a
             // directive belongs to.
-            if (fileName.endsWith('.ts')) {
-                var sf = this.host.getSourceFile(fileName);
-                if (sf) {
-                    return getTsHover(sf, position, this.host);
-                }
-            }
+            var declarations = this.host.getDeclarations(fileName);
+            return getTsHover(position, declarations, analyzedModules);
         };
         return LanguageServiceImpl;
     }());
@@ -46986,7 +46976,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+807.sha-8926f76');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+808.sha-3414ef2');
 
     /**
      * @license
@@ -61478,15 +61468,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
          * and templateReferences.
          * In addition to returning information about NgModules, this method plays the
          * same role as 'synchronizeHostData' in tsserver.
-         * @param ensureSynchronized whether or not the Language Service should make sure analyzedModules
-         *   are synced to the last update of the project. If false, returns the set of analyzedModules
-         *   that is already cached. This is useful if the project must not be reanalyzed, even if its
-         *   file watchers (which are disjoint from the TypeScriptServiceHost) detect an update.
          */
-        TypeScriptServiceHost.prototype.getAnalyzedModules = function (ensureSynchronized) {
+        TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
             var e_1, _a, e_2, _b;
-            if (ensureSynchronized === void 0) { ensureSynchronized = true; }
-            if (!ensureSynchronized || this.upToDate()) {
+            if (this.upToDate()) {
                 return this.analyzedModules;
             }
             // Invalidate caches
@@ -61822,13 +61807,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return this.getTemplateAst(template);
         };
         /**
-         * Gets a StaticSymbol from a file and symbol name.
-         * @return Angular StaticSymbol matching the file and name, if any
-         */
-        TypeScriptServiceHost.prototype.getStaticSymbol = function (file, name) {
-            return this.reflector.getStaticSymbol(file, name);
-        };
-        /**
          * Find the NgModule which the directive associated with the `classSymbol`
          * belongs to, then return its schema and transitive directives and pipes.
          * @param classSymbol Angular Symbol that defines a directive
@@ -62090,7 +62068,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+807.sha-8926f76');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+808.sha-3414ef2');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
