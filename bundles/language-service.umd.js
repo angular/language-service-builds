@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+828.sha-7069a83
+ * @license Angular v9.0.0-rc.1+829.sha-304584c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -12790,8 +12790,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * The creation/update methods within the builder class produce these instructions.
      */
     var StylingBuilder = /** @class */ (function () {
-        function StylingBuilder(_elementIndexExpr, _directiveExpr) {
-            this._elementIndexExpr = _elementIndexExpr;
+        function StylingBuilder(_directiveExpr) {
             this._directiveExpr = _directiveExpr;
             /** Whether or not there are any static styling values present */
             this._hasInitialValues = false;
@@ -16578,7 +16577,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var e_1, _a;
             var _this = this;
             var elementIndex = this.allocateDataSlot();
-            var stylingBuilder = new StylingBuilder(literal(elementIndex), null);
+            var stylingBuilder = new StylingBuilder(null);
             var isNonBindableMode = false;
             var isI18nRootElement = isI18nRootNode(element.i18n) && !isSingleI18nIcu(element.i18n);
             var i18nAttrs = [];
@@ -17883,7 +17882,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (meta.viewQueries.length) {
             definitionMap.set('viewQuery', createViewQueriesFunction(meta.viewQueries, constantPool, meta.name));
         }
-        // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
+        // e.g. `hostBindings: (rf, ctx) => { ... }
         definitionMap.set('hostBindings', createHostBindingsFunction(meta.host, meta.typeSourceSpan, bindingParser, constantPool, meta.selector || '', meta.name, definitionMap));
         // e.g 'inputs: {a: 'a'}`
         definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
@@ -18165,9 +18164,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     }
     // Return a host binding function or null if one is not necessary.
     function createHostBindingsFunction(hostBindingsMetadata, typeSourceSpan, bindingParser, constantPool, selector, name, definitionMap) {
-        var elVarExp = variable('elIndex');
         var bindingContext = variable(CONTEXT_NAME);
-        var styleBuilder = new StylingBuilder(elVarExp, bindingContext);
+        var styleBuilder = new StylingBuilder(bindingContext);
         var _a = hostBindingsMetadata.specialAttributes, styleAttr = _a.styleAttr, classAttr = _a.classAttr;
         if (styleAttr !== undefined) {
             styleBuilder.registerStyleAttr(styleAttr);
@@ -18308,10 +18306,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (updateStatements.length > 0) {
                 statements.push(renderFlagCheckIfStmt(2 /* Update */, updateStatements));
             }
-            return fn([
-                new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null),
-                new FnParam(elVarExp.name, NUMBER_TYPE)
-            ], statements, INFERRED_TYPE, null, hostBindingsFnName);
+            return fn([new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null)], statements, INFERRED_TYPE, null, hostBindingsFnName);
         }
         return null;
     }
@@ -18755,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+828.sha-7069a83');
+    var VERSION$1 = new Version('9.0.0-rc.1+829.sha-304584c');
 
     /**
      * @license
@@ -33565,7 +33560,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         if (instruction !== null) {
                             setBindingRootForHostBindings(bindingRootIndex);
                             var hostCtx = lView[currentDirectiveIndex];
-                            instruction(2 /* Update */, hostCtx, currentElementIndex);
+                            instruction(2 /* Update */, hostCtx);
                         }
                         // TODO(misko): PERF Relying on incrementing the `currentDirectiveIndex` here is
                         // sub-optimal. The implications are that if we have a lot of directives but none of them
@@ -34191,12 +34186,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      *
      * @param def `DirectiveDef` which may contain the `hostBindings` function.
      * @param directive Instance of directive.
-     * @param tNode Associated `TNode`.
      */
-    function invokeHostBindingsInCreationMode(def, directive, tNode) {
+    function invokeHostBindingsInCreationMode(def, directive) {
         if (def.hostBindings !== null) {
-            var elementIndex = tNode.index - HEADER_OFFSET;
-            def.hostBindings(1 /* Create */, directive, elementIndex);
+            def.hostBindings(1 /* Create */, directive);
         }
     }
     /**
@@ -38084,7 +38077,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             var rootTView = rootLView[TVIEW];
             addHostBindingsToExpandoInstructions(rootTView, componentDef);
             growHostVarsSpace(rootTView, rootLView, componentDef.hostVars);
-            invokeHostBindingsInCreationMode(componentDef, component, rootTNode);
+            invokeHostBindingsInCreationMode(componentDef, component);
         }
         return component;
     }
@@ -38399,7 +38392,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+828.sha-7069a83');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+829.sha-304584c');
 
     /**
      * @license
@@ -50397,7 +50390,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+828.sha-7069a83');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+829.sha-304584c');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
