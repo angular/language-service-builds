@@ -10,7 +10,7 @@ import { BoundEventAst, CompileTypeMetadata, HtmlAstPath, Node, ParseSourceSpan,
 import * as ts from 'typescript';
 import { AstResult, SelectorInfo } from './common';
 import { DiagnosticTemplateInfo } from './expression_diagnostics';
-import { Span, Symbol } from './types';
+import { Span, Symbol, SymbolQuery } from './types';
 export interface SpanHolder {
     sourceSpan: ParseSourceSpan;
     endSourceSpan?: ParseSourceSpan | null;
@@ -87,5 +87,5 @@ export declare function invertMap(obj: {
  * @param info aggregate template AST information
  * @param path narrowing
  */
-export declare function findOutputBinding(info: AstResult, path: TemplateAstPath, binding: BoundEventAst): Symbol | undefined;
+export declare function findOutputBinding(binding: BoundEventAst, path: TemplateAstPath, query: SymbolQuery): Symbol | undefined;
 export {};
