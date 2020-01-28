@@ -20,4 +20,10 @@ export interface DiagnosticTemplateInfo {
 }
 export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): Diagnostic[];
 export declare function getExpressionDiagnostics(scope: SymbolTable, ast: AST, query: SymbolQuery, context?: ExpressionDiagnosticsContext): TypeDiagnostic[];
+/**
+ * Returns the symbols available in a particular scope of a template.
+ * @param info parsed template information
+ * @param path path of template nodes narrowing to the context the expression scope should be
+ * derived for.
+ */
 export declare function getExpressionScope(info: DiagnosticTemplateInfo, path: TemplateAstPath): SymbolTable;
