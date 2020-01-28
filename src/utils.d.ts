@@ -6,11 +6,11 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/utils" />
-import { CompileTypeMetadata, HtmlAstPath, Node, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
+import { BoundEventAst, CompileTypeMetadata, HtmlAstPath, Node, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult, SelectorInfo } from './common';
 import { DiagnosticTemplateInfo } from './expression_diagnostics';
-import { Span } from './types';
+import { Span, Symbol } from './types';
 export interface SpanHolder {
     sourceSpan: ParseSourceSpan;
     endSourceSpan?: ParseSourceSpan | null;
@@ -74,4 +74,18 @@ export declare function findPropertyValueOfType<T extends ts.Node>(startNode: ts
  * @param position
  */
 export declare function getPathToNodeAtPosition(nodes: Node[], position: number): HtmlAstPath;
+/**
+ * Inverts an object's key-value pairs.
+ */
+export declare function invertMap(obj: {
+    [name: string]: string;
+}): {
+    [name: string]: string;
+};
+/**
+ * Finds the directive member providing a template output binding, if one exists.
+ * @param info aggregate template AST information
+ * @param path narrowing
+ */
+export declare function findOutputBinding(info: AstResult, path: TemplateAstPath, binding: BoundEventAst): Symbol | undefined;
 export {};
