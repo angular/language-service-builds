@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+829.sha-304584c
+ * @license Angular v9.0.0-rc.1+830.sha-90b303f
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+829.sha-304584c');
+    var VERSION$1 = new Version('9.0.0-rc.1+830.sha-90b303f');
 
     /**
      * @license
@@ -25141,7 +25141,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             function class_1() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
-            class_1.prototype.visit = function (ast, context) {
+            class_1.prototype.visit = function (ast) {
                 var span = spanOf(ast);
                 if (inSpan(position, span)) {
                     var len = path.length;
@@ -25290,6 +25290,59 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }(RecursiveVisitor));
         visitAll$1(visitor, nodes);
         return new AstPath(path, position);
+    }
+    /**
+     * Inverts an object's key-value pairs.
+     */
+    function invertMap(obj) {
+        var e_5, _a;
+        var result = {};
+        try {
+            for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var name_1 = _c.value;
+                var v = obj[name_1];
+                result[v] = name_1;
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_5) throw e_5.error; }
+        }
+        return result;
+    }
+    /**
+     * Finds the directive member providing a template output binding, if one exists.
+     * @param info aggregate template AST information
+     * @param path narrowing
+     */
+    function findOutputBinding(info, path, binding) {
+        var e_6, _a;
+        var element = path.first(ElementAst);
+        if (element) {
+            try {
+                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var directive = _c.value;
+                    var invertedOutputs = invertMap(directive.directive.outputs);
+                    var fieldName = invertedOutputs[binding.name];
+                    if (fieldName) {
+                        var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                        if (classSymbol) {
+                            return classSymbol.members().get(fieldName);
+                        }
+                    }
+                }
+            }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_6) throw e_6.error; }
+            }
+        }
     }
 
     /**
@@ -28357,51 +28410,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return classSymbol.members().get(fieldName);
             }
         }
-    }
-    function findOutputBinding(info, path, binding) {
-        var e_2, _a;
-        var element = path.first(ElementAst);
-        if (element) {
-            try {
-                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var directive = _c.value;
-                    var invertedOutputs = invertMap(directive.directive.outputs);
-                    var fieldName = invertedOutputs[binding.name];
-                    if (fieldName) {
-                        var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                        if (classSymbol) {
-                            return classSymbol.members().get(fieldName);
-                        }
-                    }
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-        }
-    }
-    function invertMap(obj) {
-        var e_3, _a;
-        var result = {};
-        try {
-            for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var name_1 = _c.value;
-                var v = obj[name_1];
-                result[v] = name_1;
-            }
-        }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_3) throw e_3.error; }
-        }
-        return result;
     }
     /**
      * Wrap a symbol and change its kind to component.
@@ -38392,7 +38400,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+829.sha-304584c');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+830.sha-90b303f');
 
     /**
      * @license
@@ -50390,7 +50398,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+829.sha-304584c');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+830.sha-90b303f');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
