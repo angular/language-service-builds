@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+830.sha-90b303f
+ * @license Angular v9.0.0-rc.1+832.sha-e7c74cb
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+830.sha-90b303f');
+    var VERSION$1 = new Version('9.0.0-rc.1+832.sha-e7c74cb');
 
     /**
      * @license
@@ -25318,7 +25318,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param info aggregate template AST information
      * @param path narrowing
      */
-    function findOutputBinding(info, path, binding) {
+    function findOutputBinding(binding, path, query) {
         var e_6, _a;
         var element = path.first(ElementAst);
         if (element) {
@@ -25328,7 +25328,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     var invertedOutputs = invertMap(directive.directive.outputs);
                     var fieldName = invertedOutputs[binding.name];
                     if (fieldName) {
-                        var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                        var classSymbol = query.getTypeSymbol(directive.directive.type.reference);
                         if (classSymbol) {
                             return classSymbol.members().get(fieldName);
                         }
@@ -25535,23 +25535,44 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return query.getBuiltinType(BuiltinType$1.Any);
     }
     function getEventDeclaration(info, path) {
-        var result = [];
-        if (path.tail instanceof BoundEventAst) {
-            // TODO: Determine the type of the event parameter based on the Observable<T> or EventEmitter<T>
-            // of the event.
-            result = [{ name: '$event', kind: 'variable', type: info.query.getBuiltinType(BuiltinType$1.Any) }];
+        var event = path.tail;
+        if (!(event instanceof BoundEventAst)) {
+            // No event available in this context.
+            return;
         }
-        return result;
+        var genericEvent = {
+            name: '$event',
+            kind: 'variable',
+            type: info.query.getBuiltinType(BuiltinType$1.Any),
+        };
+        var outputSymbol = findOutputBinding(event, path, info.query);
+        if (!outputSymbol) {
+            // The `$event` variable doesn't belong to an output, so its type can't be refined.
+            // TODO: type `$event` variables in bindings to DOM events.
+            return genericEvent;
+        }
+        // The raw event type is wrapped in a generic, like EventEmitter<T> or Observable<T>.
+        var ta = outputSymbol.typeArguments();
+        if (!ta || ta.length !== 1)
+            return genericEvent;
+        var eventType = ta[0];
+        return __assign(__assign({}, genericEvent), { type: eventType });
     }
+    /**
+     * Returns the symbols available in a particular scope of a template.
+     * @param info parsed template information
+     * @param path path of template nodes narrowing to the context the expression scope should be
+     * derived for.
+     */
     function getExpressionScope(info, path) {
         var result = info.members;
         var references = getReferences(info);
         var variables = getVarDeclarations(info, path);
-        var events = getEventDeclaration(info, path);
-        if (references.length || variables.length || events.length) {
+        var event = getEventDeclaration(info, path);
+        if (references.length || variables.length || event) {
             var referenceTable = info.query.createSymbolTable(references);
             var variableTable = info.query.createSymbolTable(variables);
-            var eventsTable = info.query.createSymbolTable(events);
+            var eventsTable = info.query.createSymbolTable(event ? [event] : []);
             result = info.query.mergeSymbolTable([result, referenceTable, variableTable, eventsTable]);
         }
         return result;
@@ -28229,7 +28250,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             visitVariable: function (ast) { },
             visitEvent: function (ast) {
                 if (!attributeValueSymbol()) {
-                    symbol = findOutputBinding(info, path, ast);
+                    symbol = findOutputBinding(ast, path, info.template.query);
                     symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.EVENT);
                     span = spanOf(ast);
                 }
@@ -38400,7 +38421,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+830.sha-90b303f');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+832.sha-e7c74cb');
 
     /**
      * @license
@@ -50398,7 +50419,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+830.sha-90b303f');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+832.sha-e7c74cb');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
