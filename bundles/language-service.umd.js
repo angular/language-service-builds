@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.11+47.sha-e554f2d
+ * @license Angular v9.0.0-rc.11+53.sha-eaa4a5a
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.11+47.sha-e554f2d');
+    var VERSION$1 = new Version('9.0.0-rc.11+53.sha-eaa4a5a');
 
     /**
      * @license
@@ -25618,13 +25618,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (directive && ast.value) {
                 var context = this.info.query.getTemplateContext(directive.type.reference);
                 if (context && !context.has(ast.value)) {
-                    if (ast.value === '$implicit') {
-                        this.reportError("The template context of '" + directive.type.reference.name + "' does not define an implicit value.\n" +
-                            "If the context type is a base type, consider refining it to a more specific type.", spanOf$1(ast.sourceSpan));
-                    }
-                    else {
-                        this.reportError("The template context of '" + directive.type.reference.name + "' does not define a member called '" + ast.value + "'", spanOf$1(ast.sourceSpan));
-                    }
+                    var missingMember = ast.value === '$implicit' ? 'an implicit value' : "a member called '" + ast.value + "'";
+                    this.reportDiagnostic("The template context of '" + directive.type.reference.name + "' does not define " + missingMember + ".\n" +
+                        "If the context type is a base type or 'any', consider refining it to a more specific type.", spanOf$1(ast.sourceSpan), ts.DiagnosticCategory.Suggestion);
                 }
             }
         };
@@ -25666,10 +25662,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
         ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
-        ExpressionDiagnosticsVisitor.prototype.reportError = function (message, span) {
-            if (span) {
-                this.diagnostics.push({ span: offsetSpan$1(span, this.info.offset), kind: ts.DiagnosticCategory.Error, message: message });
-            }
+        ExpressionDiagnosticsVisitor.prototype.reportDiagnostic = function (message, span, kind) {
+            if (kind === void 0) { kind = ts.DiagnosticCategory.Error; }
+            this.diagnostics.push({ span: offsetSpan$1(span, this.info.offset), kind: kind, message: message });
         };
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
@@ -28518,37 +28513,56 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param position
      */
     function getDefinitionAndBoundSpan(info, position) {
-        var e_1, _a;
+        var e_1, _a, e_2, _b;
         var symbols = locateSymbols(info, position);
         if (!symbols.length) {
             return;
         }
+        var seen = new Set();
         var definitions = [];
-        var _loop_1 = function (symbolInfo) {
-            var symbol = symbolInfo.symbol;
-            // symbol.definition is really the locations of the symbol. There could be
-            // more than one. No meaningful info could be provided without any location.
-            var kind = symbol.kind, name_1 = symbol.name, container = symbol.container, locations = symbol.definition;
-            if (!locations || !locations.length) {
-                return "continue";
-            }
-            var containerKind = container ? container.kind : ts.ScriptElementKind.unknown;
-            var containerName = container ? container.name : '';
-            definitions.push.apply(definitions, __spread(locations.map(function (location) {
-                return {
-                    kind: kind,
-                    name: name_1,
-                    containerKind: containerKind,
-                    containerName: containerName,
-                    textSpan: ngSpanToTsTextSpan(location.span),
-                    fileName: location.fileName,
-                };
-            })));
-        };
         try {
             for (var symbols_1 = __values(symbols), symbols_1_1 = symbols_1.next(); !symbols_1_1.done; symbols_1_1 = symbols_1.next()) {
                 var symbolInfo = symbols_1_1.value;
-                _loop_1(symbolInfo);
+                var symbol = symbolInfo.symbol;
+                // symbol.definition is really the locations of the symbol. There could be
+                // more than one. No meaningful info could be provided without any location.
+                var kind = symbol.kind, name_1 = symbol.name, container = symbol.container, locations = symbol.definition;
+                if (!locations || !locations.length) {
+                    continue;
+                }
+                var containerKind = container ? container.kind : ts.ScriptElementKind.unknown;
+                var containerName = container ? container.name : '';
+                try {
+                    for (var locations_1 = (e_2 = void 0, __values(locations)), locations_1_1 = locations_1.next(); !locations_1_1.done; locations_1_1 = locations_1.next()) {
+                        var _c = locations_1_1.value, fileName = _c.fileName, span = _c.span;
+                        var textSpan = ngSpanToTsTextSpan(span);
+                        // In cases like two-way bindings, a request for the definitions of an expression may return
+                        // two of the same definition:
+                        //    [(ngModel)]="prop"
+                        //                 ^^^^  -- one definition for the property binding, one for the event binding
+                        // To prune duplicate definitions, tag definitions with unique location signatures and ignore
+                        // definitions whose locations have already been seen.
+                        var signature = textSpan.start + ":" + textSpan.length + "@" + fileName;
+                        if (seen.has(signature))
+                            continue;
+                        definitions.push({
+                            kind: kind,
+                            name: name_1,
+                            containerKind: containerKind,
+                            containerName: containerName,
+                            textSpan: ngSpanToTsTextSpan(span),
+                            fileName: fileName,
+                        });
+                        seen.add(signature);
+                    }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (locations_1_1 && !locations_1_1.done && (_b = locations_1.return)) _b.call(locations_1);
+                    }
+                    finally { if (e_2) throw e_2.error; }
+                }
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -38421,7 +38435,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.11+47.sha-e554f2d');
+    var VERSION$2 = new Version$1('9.0.0-rc.11+53.sha-eaa4a5a');
 
     /**
      * @license
@@ -50418,7 +50432,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.11+47.sha-e554f2d');
+    var VERSION$3 = new Version$1('9.0.0-rc.11+53.sha-eaa4a5a');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
