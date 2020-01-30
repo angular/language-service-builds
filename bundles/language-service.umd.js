@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+867.sha-d72cfc9
+ * @license Angular v9.0.0-rc.1+869.sha-cd9ae66
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -4011,7 +4011,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         BoundEvent.prototype.visit = function (visitor) { return visitor.visitBoundEvent(this); };
         return BoundEvent;
     }());
-    var Element = /** @class */ (function () {
+    var Element$1 = /** @class */ (function () {
         function Element(name, attributes, inputs, outputs, children, references, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
             this.name = name;
             this.attributes = attributes;
@@ -9138,7 +9138,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         Attribute.prototype.visit = function (visitor, context) { return visitor.visitAttribute(this, context); };
         return Attribute;
     }(NodeWithI18n));
-    var Element$1 = /** @class */ (function (_super) {
+    var Element$2 = /** @class */ (function (_super) {
         __extends(Element, _super);
         function Element(name, attrs, children, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
             if (startSourceSpan === void 0) { startSourceSpan = null; }
@@ -10308,7 +10308,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             var end = this._peek.sourceSpan.start;
             var span = new ParseSourceSpan(startTagToken.sourceSpan.start, end);
-            var el = new Element$1(fullName, attrs, [], span, span, undefined);
+            var el = new Element$2(fullName, attrs, [], span, span, undefined);
             this._pushElement(el);
             if (selfClosing) {
                 this._popElement(fullName);
@@ -10502,9 +10502,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             if (SKIP_WS_TRIM_TAGS.has(element.name) || hasPreserveWhitespacesAttr(element.attrs)) {
                 // don't descent into elements where we need to preserve whitespaces
                 // but still visit all attributes to eliminate one used as a market to preserve WS
-                return new Element$1(element.name, visitAll$1(this, element.attrs), element.children, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                return new Element$2(element.name, visitAll$1(this, element.attrs), element.children, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
-            return new Element$1(element.name, element.attrs, visitAllWithSiblings(this, element.children), element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+            return new Element$2(element.name, element.attrs, visitAllWithSiblings(this, element.children), element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
         };
         WhitespaceVisitor.prototype.visitAttribute = function (attribute, context) {
             return attribute.name !== PRESERVE_WS_ATTR_NAME ? attribute : null;
@@ -10600,7 +10600,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.errors = [];
         }
         _Expander.prototype.visitElement = function (element, context) {
-            return new Element$1(element.name, element.attrs, visitAll$1(this, element.children), element.sourceSpan, element.startSourceSpan, element.endSourceSpan);
+            return new Element$2(element.name, element.attrs, visitAll$1(this, element.children), element.sourceSpan, element.startSourceSpan, element.endSourceSpan);
         };
         _Expander.prototype.visitAttribute = function (attribute, context) { return attribute; };
         _Expander.prototype.visitText = function (text, context) { return text; };
@@ -10623,10 +10623,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             var expansionResult = expandNodes(c.expression);
             errors.push.apply(errors, __spread(expansionResult.errors));
-            return new Element$1("ng-template", [new Attribute('ngPluralCase', "" + c.value, c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
+            return new Element$2("ng-template", [new Attribute('ngPluralCase', "" + c.value, c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
         });
         var switchAttr = new Attribute('[ngPlural]', ast.switchValue, ast.switchValueSourceSpan);
-        return new Element$1('ng-container', [switchAttr], children, ast.sourceSpan, ast.sourceSpan, ast.sourceSpan);
+        return new Element$2('ng-container', [switchAttr], children, ast.sourceSpan, ast.sourceSpan, ast.sourceSpan);
     }
     // ICU messages (excluding plural form) are expanded to `NgSwitch`  and `NgSwitchCase`s
     function _expandDefaultForm(ast, errors) {
@@ -10635,12 +10635,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             errors.push.apply(errors, __spread(expansionResult.errors));
             if (c.value === 'other') {
                 // other is the default case when no values match
-                return new Element$1("ng-template", [new Attribute('ngSwitchDefault', '', c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
+                return new Element$2("ng-template", [new Attribute('ngSwitchDefault', '', c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
             }
-            return new Element$1("ng-template", [new Attribute('ngSwitchCase', "" + c.value, c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
+            return new Element$2("ng-template", [new Attribute('ngSwitchCase', "" + c.value, c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
         });
         var switchAttr = new Attribute('[ngSwitch]', ast.switchValue, ast.switchValueSourceSpan);
-        return new Element$1('ng-container', [switchAttr], children, ast.sourceSpan, ast.sourceSpan, ast.sourceSpan);
+        return new Element$2('ng-container', [switchAttr], children, ast.sourceSpan, ast.sourceSpan, ast.sourceSpan);
     }
 
     /**
@@ -15040,7 +15040,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             else {
                 var attrs = this.extractAttributes(element.name, parsedProperties, i18nAttrsMeta);
-                parsedElement = new Element(element.name, attributes, attrs.bound, boundEvents, children, references, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                parsedElement = new Element$1(element.name, attributes, attrs.bound, boundEvents, children, references, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
             if (elementHasInlineTemplate) {
                 // If this node is an inline-template (e.g. has *ngFor) then we need to create a template
@@ -15051,7 +15051,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var templateAttrs_1 = [];
                 attrs.literal.forEach(function (attr) { return templateAttrs_1.push(attr); });
                 attrs.bound.forEach(function (attr) { return templateAttrs_1.push(attr); });
-                var hoistedAttrs = parsedElement instanceof Element ?
+                var hoistedAttrs = parsedElement instanceof Element$1 ?
                     {
                         attributes: parsedElement.attributes,
                         inputs: parsedElement.inputs,
@@ -15226,7 +15226,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 return null;
             }
             var children = visitAll$1(this, ast.children, null);
-            return new Element(ast.name, visitAll$1(this, ast.attrs), 
+            return new Element$1(ast.name, visitAll$1(this, ast.attrs), 
             /* inputs */ [], /* outputs */ [], children, /* references */ [], ast.sourceSpan, ast.startSourceSpan, ast.endSourceSpan);
         };
         NonBindableVisitor.prototype.visitComment = function (comment) { return null; };
@@ -17779,7 +17779,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
     }
     function isSingleElementTemplate(children) {
-        return children.length === 1 && children[0] instanceof Element;
+        return children.length === 1 && children[0] instanceof Element$1;
     }
     function isTextNode(node) {
         return node instanceof Text || node instanceof BoundText || node instanceof Icu;
@@ -18735,7 +18735,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+867.sha-d72cfc9');
+    var VERSION$1 = new Version('9.0.0-rc.1+869.sha-cd9ae66');
 
     /**
      * @license
@@ -19220,7 +19220,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this._init(_VisitorMode.Merge, interpolationConfig);
             this._translations = translations;
             // Construct a single fake root element
-            var wrapper = new Element$1('wrapper', [], nodes, undefined, undefined, undefined);
+            var wrapper = new Element$2('wrapper', [], nodes, undefined, undefined, undefined);
             var translatedNode = wrapper.visit(this, null);
             if (this._inI18nBlock) {
                 this._reportError(nodes[nodes.length - 1], 'Unclosed block');
@@ -19362,7 +19362,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this._inImplicitNode = wasInImplicitNode;
             if (this._mode === _VisitorMode.Merge) {
                 var translatedAttrs = this._translateAttributes(el);
-                return new Element$1(el.name, translatedAttrs, childNodes, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
+                return new Element$2(el.name, translatedAttrs, childNodes, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
             }
             return null;
         };
@@ -27650,7 +27650,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     result = interpolationCompletions(templateInfo, templatePosition);
                     if (result.length)
                         return result;
-                    var element = path.first(Element$1);
+                    var element = path.first(Element$2);
                     if (element) {
                         var definition = getHtmlTagDefinition(element.name);
                         if (definition.contentType === TagContentType.PARSABLE_DATA) {
@@ -27682,7 +27682,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function attributeCompletions(info, path) {
         var attr = path.tail;
         var elem = path.parentOf(attr);
-        if (!(attr instanceof Attribute) || !(elem instanceof Element$1)) {
+        if (!(attr instanceof Attribute) || !(elem instanceof Element$2)) {
             return [];
         }
         // TODO: Consider parsing the attrinute name to a proper AST instead of
@@ -42097,20 +42097,24 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Mark the component as dirty (needing change detection).
+     * Synchronously perform change detection on a component (and possibly its sub-components).
      *
-     * Marking a component dirty will schedule a change detection on this
-     * component at some point in the future. Marking an already dirty
-     * component as dirty is a noop. Only one outstanding change detection
-     * can be scheduled per component tree. (Two components bootstrapped with
-     * separate `renderComponent` will have separate schedulers)
+     * This function triggers change detection in a synchronous way on a component.
      *
-     * When the root component is bootstrapped with `renderComponent`, a scheduler
-     * can be provided.
+     * @param component The component which the change detection should be performed on.
+     */
+    function detectChanges(component) {
+        var view = getComponentViewByInstance(component);
+        detectChangesInternal(view, component);
+    }
+    /**
+     * Marks the component as dirty (needing change detection). Marking a component dirty will
+     * schedule a change detection on it at some point in the future.
+     *
+     * Marking an already dirty component as dirty won't do anything. Only one outstanding change
+     * detection can be scheduled per component tree.
      *
      * @param component Component to mark as dirty.
-     *
-     * @publicApi
      */
     function markDirty(component) {
         ngDevMode && assertDefined(component, 'component');
@@ -46001,28 +46005,32 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Returns the component instance associated with a given DOM host element.
-     * Elements which don't represent components return `null`.
+     * Retrieves the component instance associated with a given DOM element.
      *
-     * @param element Host DOM element from which the component should be retrieved.
-     *
-     * ```
+     * @usageNotes
+     * Given the following DOM structure:
+     * ```html
      * <my-app>
-     *   #VIEW
-     *     <div>
-     *       <child-comp></child-comp>
-     *     </div>
-     * </mp-app>
-     *
-     * expect(getComponent(<child-comp>) instanceof ChildComponent).toBeTruthy();
-     * expect(getComponent(<my-app>) instanceof MyApp).toBeTruthy();
+     *   <div>
+     *     <child-comp></child-comp>
+     *   </div>
+     * </my-app>
      * ```
+     * Calling `getComponent` on `<child-comp>` will return the instance of `ChildComponent`
+     * associated with this DOM element.
+     *
+     * Calling the function on `<my-app>` will return the `MyApp` instance.
+     *
+     *
+     * @param element DOM element from which the component should be retrieved.
+     * @returns Component instance associated with the element or `null` if there
+     *    is no component associated with it.
      *
      * @publicApi
+     * @globalApi ng
      */
     function getComponent(element) {
-        if (!(element instanceof Node))
-            throw new Error('Expecting instance of DOM Node');
+        assertDomElement(element);
         var context = loadLContext(element, false);
         if (context === null)
             return null;
@@ -46032,55 +46040,39 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return context.component;
     }
     /**
-     * Returns the component instance associated with a given DOM host element.
-     * Elements which don't represent components return `null`.
+     * If inside an embedded view (e.g. `*ngIf` or `*ngFor`), retrieves the context of the embedded
+     * view that the element is part of. Otherwise retrieves the instance of the component whose view
+     * owns the element (in this case, the result is the same as calling `getOwningComponent`).
      *
-     * @param element Host DOM element from which the component should be retrieved.
-     *
-     * ```
-     * <my-app>
-     *   #VIEW
-     *     <div>
-     *       <child-comp></child-comp>
-     *     </div>
-     * </mp-app>
-     *
-     * expect(getComponent(<child-comp>) instanceof ChildComponent).toBeTruthy();
-     * expect(getComponent(<my-app>) instanceof MyApp).toBeTruthy();
-     * ```
+     * @param element Element for which to get the surrounding component instance.
+     * @returns Instance of the component that is around the element or null if the element isn't
+     *    inside any component.
      *
      * @publicApi
+     * @globalApi ng
      */
     function getContext(element) {
-        if (!(element instanceof Node))
-            throw new Error('Expecting instance of DOM Node');
+        assertDomElement(element);
         var context = loadLContext(element, false);
-        if (context === null)
-            return null;
-        return context.lView[CONTEXT];
+        return context === null ? null : context.lView[CONTEXT];
     }
     /**
-     * Returns the component instance associated with view which owns the DOM element (`null`
-     * otherwise).
+     * Retrieves the component instance whose view contains the DOM element.
      *
-     * @param element DOM element which is owned by an existing component's view.
+     * For example, if `<child-comp>` is used in the template of `<app-comp>`
+     * (i.e. a `ViewChild` of `<app-comp>`), calling `getOwningComponent` on `<child-comp>`
+     * would return `<app-comp>`.
      *
-     * ```
-     * <my-app>
-     *   #VIEW
-     *     <div>
-     *       <child-comp></child-comp>
-     *     </div>
-     * </mp-app>
-     *
-     * expect(getViewComponent(<child-comp>) instanceof MyApp).toBeTruthy();
-     * expect(getViewComponent(<my-app>)).toEqual(null);
-     * ```
+     * @param elementOrDir DOM element, component or directive instance
+     *    for which to retrieve the root components.
+     * @returns Component instance whose view owns the DOM element or null if the element is not
+     *    part of a component view.
      *
      * @publicApi
+     * @globalApi ng
      */
-    function getViewComponent(element) {
-        var context = loadLContext(element, false);
+    function getOwningComponent(elementOrDir) {
+        var context = loadLContext(elementOrDir, false);
         if (context === null)
             return null;
         var lView = context.lView;
@@ -46093,26 +46085,31 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return lView[FLAGS] & 512 /* IsRoot */ ? null : lView[CONTEXT];
     }
     /**
-     * Retrieve all root components.
-     *
+     * Retrieves all root components associated with a DOM element, directive or component instance.
      * Root components are those which have been bootstrapped by Angular.
      *
-     * @param target A DOM element, component or directive instance.
+     * @param elementOrDir DOM element, component or directive instance
+     *    for which to retrieve the root components.
+     * @returns Root components associated with the target object.
      *
      * @publicApi
+     * @globalApi ng
      */
-    function getRootComponents(target) {
-        return __spread(getRootContext(target).components);
+    function getRootComponents(elementOrDir) {
+        return __spread(getRootContext(elementOrDir).components);
     }
     /**
-     * Retrieves an `Injector` associated with the element, component or directive.
+     * Retrieves an `Injector` associated with an element, component or directive instance.
      *
-     * @param target A DOM element, component or directive instance.
+     * @param elementOrDir DOM element, component or directive instance for which to
+     *    retrieve the injector.
+     * @returns Injector associated with the element, component or directive instance.
      *
      * @publicApi
+     * @globalApi ng
      */
-    function getInjector(target) {
-        var context = loadLContext(target, false);
+    function getInjector(elementOrDir) {
+        var context = loadLContext(elementOrDir, false);
         if (context === null)
             return Injector.NULL;
         var tNode = context.lView[TVIEW].data[context.nodeIndex];
@@ -46122,7 +46119,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Retrieve a set of injection tokens at a given DOM node.
      *
      * @param element Element for which the injection tokens should be retrieved.
-     * @publicApi
      */
     function getInjectionTokens(element) {
         var context = loadLContext(element, false);
@@ -46148,18 +46144,36 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return providerTokens;
     }
     /**
-     * Retrieves directives associated with a given DOM host element.
+     * Retrieves directive instances associated with a given DOM element. Does not include
+     * component instances.
      *
-     * @param target A DOM element, component or directive instance.
+     * @usageNotes
+     * Given the following DOM structure:
+     * ```
+     * <my-app>
+     *   <button my-button></button>
+     *   <my-comp></my-comp>
+     * </my-app>
+     * ```
+     * Calling `getDirectives` on `<button>` will return an array with an instance of the `MyButton`
+     * directive that is associated with the DOM element.
+     *
+     * Calling `getDirectives` on `<my-comp>` will return an empty array.
+     *
+     * @param element DOM element for which to get the directives.
+     * @returns Array of directives associated with the element.
      *
      * @publicApi
+     * @globalApi ng
      */
-    function getDirectives(target) {
-        var context = loadLContext(target);
+    function getDirectives(element) {
+        var context = loadLContext(element);
         if (context.directives === undefined) {
             context.directives = getDirectivesAtNodeIndex(context.nodeIndex, context.lView, false);
         }
-        return context.directives || [];
+        // The `directives` in this case are a named array called `LComponentView`. Clone the
+        // result so we don't expose an internal data structure in the user's console.
+        return context.directives === null ? [] : __spread(context.directives);
     }
     function loadLContext(target, throwOnNotFound) {
         if (throwOnNotFound === void 0) { throwOnNotFound = true; }
@@ -46175,9 +46189,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      *
      * The references are retrieved as a map of local reference name to element or directive instance.
      *
-     * @param target A DOM element, component or directive instance.
-     *
-     * @publicApi
+     * @param target DOM element, component or directive instance for which to retrieve
+     *    the local references.
      */
     function getLocalRefs(target) {
         var context = loadLContext(target, false);
@@ -46189,51 +46202,50 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         return context.localRefs || {};
     }
     /**
-     * Retrieve the host element of the component.
+     * Retrieves the host element of a component or directive instance.
+     * The host element is the DOM element that matched the selector of the directive.
      *
-     * Use this function to retrieve the host element of the component. The host
-     * element is the element which the component is associated with.
-     *
-     * @param directive Component or Directive for which the host element should be retrieved.
+     * @param componentOrDirective Component or directive instance for which the host
+     *     element should be retrieved.
+     * @returns Host element of the target.
      *
      * @publicApi
+     * @globalApi ng
      */
-    function getHostElement(directive) {
-        return getLContext(directive).native;
-    }
-    function loadLContextFromNode(node) {
-        if (!(node instanceof Node))
-            throw new Error('Expecting instance of DOM Node');
-        return loadLContext(node);
-    }
-    function isBrowserEvents(listener) {
-        // Browser events are those which don't have `useCapture` as boolean.
-        return typeof listener.useCapture === 'boolean';
+    function getHostElement(componentOrDirective) {
+        return getLContext(componentOrDirective).native;
     }
     /**
-     * Retrieves a list of DOM listeners.
+     * Retrieves a list of event listeners associated with a DOM element. The list does include host
+     * listeners, but it does not include event listeners defined outside of the Angular context
+     * (e.g. through `addEventListener`).
      *
+     * @usageNotes
+     * Given the following DOM structure:
      * ```
      * <my-app>
-     *   #VIEW
-     *     <div (click)="doSomething()">
-     *     </div>
-     * </mp-app>
+     *   <div (click)="doSomething()"></div>
+     * </my-app>
      *
-     * expect(getListeners(<div>)).toEqual({
+     * ```
+     * Calling `getListeners` on `<div>` will return an object that looks as follows:
+     * ```
+     * {
      *   name: 'click',
      *   element: <div>,
      *   callback: () => doSomething(),
      *   useCapture: false
-     * });
+     * }
      * ```
      *
      * @param element Element for which the DOM listeners should be retrieved.
+     * @returns Array of event listeners on the DOM element.
+     *
      * @publicApi
+     * @globalApi ng
      */
     function getListeners(element) {
-        if (!(element instanceof Node))
-            throw new Error('Expecting instance of DOM Node');
+        assertDomElement(element);
         var lContext = loadLContext(element, false);
         if (lContext === null)
             return [];
@@ -46254,11 +46266,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     // if useCaptureOrIndx is boolean then report it as is.
                     // if useCaptureOrIndx is positive number then it in unsubscribe method
                     // if useCaptureOrIndx is negative number then it is a Subscription
-                    var useCapture = typeof useCaptureOrIndx === 'boolean' ?
-                        useCaptureOrIndx :
-                        (useCaptureOrIndx >= 0 ? false : null);
+                    var type = (typeof useCaptureOrIndx === 'boolean' || useCaptureOrIndx >= 0) ? 'dom' : 'output';
+                    var useCapture = typeof useCaptureOrIndx === 'boolean' ? useCaptureOrIndx : false;
                     if (element == listenerElement) {
-                        listeners.push({ element: element, name: name_1, callback: callback, useCapture: useCapture });
+                        listeners.push({ element: element, name: name_1, callback: callback, useCapture: useCapture, type: type });
                     }
                 }
             }
@@ -46279,27 +46290,32 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function isDirectiveDefHack(obj) {
         return obj.type !== undefined && obj.template !== undefined && obj.declaredInputs !== undefined;
     }
+    /** Asserts that a value is a DOM Element. */
+    function assertDomElement(value) {
+        if (typeof Element !== 'undefined' && !(value instanceof Element)) {
+            throw new Error('Expecting instance of DOM Element');
+        }
+    }
+
     /**
-     * Returns the attached `DebugNode` instance for an element in the DOM.
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
      *
-     * @param element DOM element which is owned by an existing component's view.
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Marks a component for check (in case of OnPush components) and synchronously
+     * performs change detection on the application this component belongs to.
+     *
+     * @param component Component to {@link ChangeDetectorRef#markForCheck mark for check}.
      *
      * @publicApi
+     * @globalApi ng
      */
-    function getDebugNode(element) {
-        var debugNode = null;
-        var lContext = loadLContextFromNode(element);
-        var lView = lContext.lView;
-        var nodeIndex = lContext.nodeIndex;
-        if (nodeIndex !== -1) {
-            var valueInLView = lView[nodeIndex];
-            // this means that value in the lView is a component with its own
-            // data. In this situation the TNode is not accessed at the same spot.
-            var tNode = isLView(valueInLView) ? valueInLView[T_HOST] :
-                getTNode(nodeIndex - HEADER_OFFSET, lView);
-            debugNode = buildDebugNode(tNode, lView, nodeIndex);
-        }
-        return debugNode;
+    function applyChanges(component) {
+        markDirty(component);
+        getRootComponents(component).forEach(function (rootComponent) { return detectChanges(rootComponent); });
     }
 
     /**
@@ -46338,13 +46354,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             publishGlobalUtil('getComponent', getComponent);
             publishGlobalUtil('getContext', getContext);
             publishGlobalUtil('getListeners', getListeners);
-            publishGlobalUtil('getViewComponent', getViewComponent);
+            publishGlobalUtil('getOwningComponent', getOwningComponent);
             publishGlobalUtil('getHostElement', getHostElement);
             publishGlobalUtil('getInjector', getInjector);
             publishGlobalUtil('getRootComponents', getRootComponents);
             publishGlobalUtil('getDirectives', getDirectives);
-            publishGlobalUtil('getDebugNode', getDebugNode);
-            publishGlobalUtil('markDirty', markDirty);
+            publishGlobalUtil('applyChanges', applyChanges);
         }
     }
     /**
@@ -47340,7 +47355,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+867.sha-d72cfc9');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+869.sha-cd9ae66');
 
     /**
      * @license
@@ -52052,8 +52067,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * @param name Name of pipe to resolve
      * @param registry Full list of available pipes
      * @returns Matching PipeDef
-     *
-     * @publicApi
      */
     function getPipeDef$1(name, registry) {
         if (registry) {
@@ -57361,7 +57374,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             get: function () {
                 var nativeElement = this.nativeNode;
                 return nativeElement &&
-                    (getComponent(nativeElement) || getViewComponent(nativeElement));
+                    (getComponent(nativeElement) || getOwningComponent(nativeElement));
             },
             enumerable: true,
             configurable: true
@@ -57375,7 +57388,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "listeners", {
             get: function () {
-                return getListeners(this.nativeNode).filter(isBrowserEvents);
+                return getListeners(this.nativeNode).filter(function (listener) { return listener.type === 'dom'; });
             },
             enumerable: true,
             configurable: true
@@ -57768,7 +57781,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     function _addQueryMatchR3(nativeNode, predicate, matches, elementsOnly, rootNativeNode) {
         if (rootNativeNode !== nativeNode) {
-            var debugNode = getDebugNode$1(nativeNode);
+            var debugNode = getDebugNode(nativeNode);
             if (!debugNode) {
                 return;
             }
@@ -57798,7 +57811,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var length = nodes.length;
         for (var i = 0; i < length; i++) {
             var node = nodes[i];
-            var debugNode = getDebugNode$1(node);
+            var debugNode = getDebugNode(node);
             if (debugNode) {
                 if (elementsOnly && debugNode instanceof DebugElement__POST_R3__ && predicate(debugNode) &&
                     matches.indexOf(debugNode) === -1) {
@@ -57855,7 +57868,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var getDebugNode$1 = getDebugNode__POST_R3__;
+    var getDebugNode = getDebugNode__POST_R3__;
     function indexDebugNode(node) {
         _nativeNodeToDebugNode.set(node.nativeNode, node);
     }
@@ -59652,7 +59665,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         DebugRenderer2.prototype.createDebugContext = function (nativeElement) { return this.debugContextFactory(nativeElement); };
         DebugRenderer2.prototype.destroyNode = function (node) {
-            var debugNode = getDebugNode$1(node);
+            var debugNode = getDebugNode(node);
             removeDebugNodeFromIndex(debugNode);
             if (debugNode instanceof DebugNode__PRE_R3__) {
                 debugNode.listeners.length = 0;
@@ -59689,25 +59702,25 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return text;
         };
         DebugRenderer2.prototype.appendChild = function (parent, newChild) {
-            var debugEl = getDebugNode$1(parent);
-            var debugChildEl = getDebugNode$1(newChild);
+            var debugEl = getDebugNode(parent);
+            var debugChildEl = getDebugNode(newChild);
             if (debugEl && debugChildEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.addChild(debugChildEl);
             }
             this.delegate.appendChild(parent, newChild);
         };
         DebugRenderer2.prototype.insertBefore = function (parent, newChild, refChild) {
-            var debugEl = getDebugNode$1(parent);
-            var debugChildEl = getDebugNode$1(newChild);
-            var debugRefEl = getDebugNode$1(refChild);
+            var debugEl = getDebugNode(parent);
+            var debugChildEl = getDebugNode(newChild);
+            var debugRefEl = getDebugNode(refChild);
             if (debugEl && debugChildEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.insertBefore(debugRefEl, debugChildEl);
             }
             this.delegate.insertBefore(parent, newChild, refChild);
         };
         DebugRenderer2.prototype.removeChild = function (parent, oldChild) {
-            var debugEl = getDebugNode$1(parent);
-            var debugChildEl = getDebugNode$1(oldChild);
+            var debugEl = getDebugNode(parent);
+            var debugChildEl = getDebugNode(oldChild);
             if (debugEl && debugChildEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.removeChild(debugChildEl);
             }
@@ -59722,7 +59735,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             return el;
         };
         DebugRenderer2.prototype.setAttribute = function (el, name, value, namespace) {
-            var debugEl = getDebugNode$1(el);
+            var debugEl = getDebugNode(el);
             if (debugEl && debugEl instanceof DebugElement__PRE_R3__) {
                 var fullName = namespace ? namespace + ':' + name : name;
                 debugEl.attributes[fullName] = value;
@@ -59730,7 +59743,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.delegate.setAttribute(el, name, value, namespace);
         };
         DebugRenderer2.prototype.removeAttribute = function (el, name, namespace) {
-            var debugEl = getDebugNode$1(el);
+            var debugEl = getDebugNode(el);
             if (debugEl && debugEl instanceof DebugElement__PRE_R3__) {
                 var fullName = namespace ? namespace + ':' + name : name;
                 debugEl.attributes[fullName] = null;
@@ -59738,35 +59751,35 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.delegate.removeAttribute(el, name, namespace);
         };
         DebugRenderer2.prototype.addClass = function (el, name) {
-            var debugEl = getDebugNode$1(el);
+            var debugEl = getDebugNode(el);
             if (debugEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.classes[name] = true;
             }
             this.delegate.addClass(el, name);
         };
         DebugRenderer2.prototype.removeClass = function (el, name) {
-            var debugEl = getDebugNode$1(el);
+            var debugEl = getDebugNode(el);
             if (debugEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.classes[name] = false;
             }
             this.delegate.removeClass(el, name);
         };
         DebugRenderer2.prototype.setStyle = function (el, style, value, flags) {
-            var debugEl = getDebugNode$1(el);
+            var debugEl = getDebugNode(el);
             if (debugEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.styles[style] = value;
             }
             this.delegate.setStyle(el, style, value, flags);
         };
         DebugRenderer2.prototype.removeStyle = function (el, style, flags) {
-            var debugEl = getDebugNode$1(el);
+            var debugEl = getDebugNode(el);
             if (debugEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.styles[style] = null;
             }
             this.delegate.removeStyle(el, style, flags);
         };
         DebugRenderer2.prototype.setProperty = function (el, name, value) {
-            var debugEl = getDebugNode$1(el);
+            var debugEl = getDebugNode(el);
             if (debugEl && debugEl instanceof DebugElement__PRE_R3__) {
                 debugEl.properties[name] = value;
             }
@@ -59774,7 +59787,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         DebugRenderer2.prototype.listen = function (target, eventName, callback) {
             if (typeof target !== 'string') {
-                var debugEl = getDebugNode$1(target);
+                var debugEl = getDebugNode(target);
                 if (debugEl) {
                     debugEl.listeners.push(new DebugEventListener(eventName, callback));
                 }
@@ -62432,7 +62445,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+867.sha-d72cfc9');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+869.sha-cd9ae66');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
