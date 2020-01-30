@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.11+61.sha-19c4895
+ * @license Angular v9.0.0-rc.11+62.sha-36b8c03
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.11+61.sha-19c4895');
+    var VERSION$1 = new Version('9.0.0-rc.11+62.sha-36b8c03');
 
     /**
      * @license
@@ -30461,19 +30461,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         var lFrame = instructionState.lFrame;
         return lFrame === null ? null : lFrame.lView;
     }
-    /**
-     * Sets the active directive host element and resets the directive id value
-     * (when the provided elementIndex value has changed).
-     *
-     * @param elementIndex the element index value for the host element where
-     *                     the directive/component instance lives
-     */
-    function setActiveHostElement(elementIndex) {
-        setSelectedIndex(elementIndex);
-    }
-    function clearActiveHostElement() {
-        setSelectedIndex(-1);
-    }
     function getPreviousOrParentTNode() {
         return instructionState.lFrame.previousOrParentTNode;
     }
@@ -33570,7 +33557,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      */
     var _CLEAN_PROMISE = (ɵ0$4)();
     /**
-     * Process the `TVIew.expandoInstructions`. (Execute the `hostBindings`.)
+     * Process the `TView.expandoInstructions`. (Execute the `hostBindings`.)
      *
      * @param tView `TView` containing the `expandoInstructions`
      * @param lView `LView` associated with the `TView`
@@ -33583,7 +33570,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 var bindingRootIndex = tView.expandoStartIndex;
                 var currentDirectiveIndex = -1;
                 var currentElementIndex = -1;
-                // TODO(misko): PERF It is possible to get here with `TVIew.expandoInstructions` containing no
+                // TODO(misko): PERF It is possible to get here with `TView.expandoInstructions` containing no
                 // functions to execute. This is wasteful as there is no work to be done, but we still need
                 // to iterate over the instructions.
                 // In example of this is in this test: `host_binding_spec.ts`
@@ -33602,7 +33589,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             // TODO(misko): PERF This should be refactored to use `~instruction` as that does not
                             // suffer from `-0` and it is faster/more compact.
                             currentElementIndex = 0 - instruction;
-                            setActiveHostElement(currentElementIndex);
+                            setSelectedIndex(currentElementIndex);
                             // Injector block and providers are taken into account.
                             var providerCount = expandoInstructions[++i];
                             bindingRootIndex += INJECTOR_BLOOM_PARENT_SIZE + providerCount;
@@ -33634,7 +33621,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
         }
         finally {
-            clearActiveHostElement();
+            setSelectedIndex(-1);
         }
     }
     /** Refreshes all content queries declared by directives in a given view */
@@ -33941,7 +33928,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     function executeTemplate(lView, templateFn, rf, context) {
         var prevSelectedIndex = getSelectedIndex();
         try {
-            clearActiveHostElement();
+            setSelectedIndex(-1);
             if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
@@ -38135,7 +38122,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         if (tView.firstCreatePass &&
             (componentDef.hostBindings !== null || componentDef.hostAttrs !== null)) {
             var elementIndex = rootTNode.index - HEADER_OFFSET;
-            setActiveHostElement(elementIndex);
+            setSelectedIndex(elementIndex);
             var rootTView = rootLView[TVIEW];
             addHostBindingsToExpandoInstructions(rootTView, componentDef);
             growHostVarsSpace(rootTView, rootLView, componentDef.hostVars);
@@ -38454,7 +38441,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.11+61.sha-19c4895');
+    var VERSION$2 = new Version$1('9.0.0-rc.11+62.sha-36b8c03');
 
     /**
      * @license
@@ -50451,7 +50438,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.11+61.sha-19c4895');
+    var VERSION$3 = new Version$1('9.0.0-rc.11+62.sha-36b8c03');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
