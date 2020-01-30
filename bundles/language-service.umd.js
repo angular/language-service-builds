@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.11+59.sha-0390d20
+ * @license Angular v9.0.0-rc.11+61.sha-19c4895
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.11+59.sha-0390d20');
+    var VERSION$1 = new Version('9.0.0-rc.11+61.sha-19c4895');
 
     /**
      * @license
@@ -30009,33 +30009,38 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function assertNumber(actual, msg) {
+        if (!(typeof actual === 'number')) {
+            throwError(msg, typeof actual, 'number', '===');
+        }
+    }
     function assertString(actual, msg) {
-        if (typeof actual != 'string') {
+        if (!(typeof actual === 'string')) {
             throwError(msg, actual === null ? 'null' : typeof actual, 'string', '===');
         }
     }
     function assertEqual(actual, expected, msg) {
-        if (actual != expected) {
+        if (!(actual == expected)) {
             throwError(msg, actual, expected, '==');
         }
     }
     function assertNotEqual(actual, expected, msg) {
-        if (actual == expected) {
+        if (!(actual != expected)) {
             throwError(msg, actual, expected, '!=');
         }
     }
     function assertSame(actual, expected, msg) {
-        if (actual !== expected) {
+        if (!(actual === expected)) {
             throwError(msg, actual, expected, '===');
         }
     }
     function assertLessThan(actual, expected, msg) {
-        if (actual >= expected) {
+        if (!(actual < expected)) {
             throwError(msg, actual, expected, '<');
         }
     }
     function assertGreaterThan(actual, expected, msg) {
-        if (actual <= expected) {
+        if (!(actual > expected)) {
             throwError(msg, actual, expected, '>');
         }
     }
@@ -30495,11 +30500,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Bindings inside the host template are 0 index. But because we don't know ahead of time
      * how many host bindings we have we can't pre-compute them. For this reason they are all
      * 0 index and we just shift the root so that they match next available location in the LView.
-     * @param value
+     *
+     * @param bindingRootIndex Root index for `hostBindings`
+     * @param currentDirectiveIndex `TData[currentDirectiveIndex]` will point to the current directive
+     *        whose `hostBindings` are being processed.
      */
-    function setBindingRootForHostBindings(value) {
-        var lframe = instructionState.lFrame;
-        lframe.bindingIndex = lframe.bindingRootIndex = value;
+    function setBindingRootForHostBindings(bindingRootIndex, currentDirectiveIndex) {
+        var lFrame = instructionState.lFrame;
+        lFrame.bindingIndex = lFrame.bindingRootIndex = bindingRootIndex;
+        lFrame.currentDirectiveIndex = currentDirectiveIndex;
     }
     function setCurrentQueryIndex(value) {
         instructionState.lFrame.currentQueryIndex = value;
@@ -30556,6 +30565,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         newLFrame.selectedIndex = 0;
         newLFrame.contextLView = newView;
         newLFrame.elementDepthCount = 0;
+        newLFrame.currentDirectiveIndex = -1;
         newLFrame.currentNamespace = null;
         newLFrame.currentSanitizer = null;
         newLFrame.bindingRootIndex = -1;
@@ -30581,6 +30591,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             elementDepthCount: 0,
             currentNamespace: null,
             currentSanitizer: null,
+            currentDirectiveIndex: -1,
             bindingRootIndex: -1,
             bindingIndex: -1,
             currentQueryIndex: 0,
@@ -32711,16 +32722,20 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     * found in the LICENSE file at https://angular.io/license
     */
     function getTStylingRangePrev(tStylingRange) {
-        return tStylingRange >> 18 /* PREV_SHIFT */;
+        ngDevMode && assertNumber(tStylingRange, 'expected number');
+        return (tStylingRange >> 17 /* PREV_SHIFT */) & 32767 /* UNSIGNED_MASK */;
     }
     function getTStylingRangePrevDuplicate(tStylingRange) {
+        ngDevMode && assertNumber(tStylingRange, 'expected number');
         return (tStylingRange & 2 /* PREV_DUPLICATE */) ==
             2 /* PREV_DUPLICATE */;
     }
     function getTStylingRangeNext(tStylingRange) {
-        return (tStylingRange & 16380 /* NEXT_MASK */) >> 2 /* NEXT_SHIFT */;
+        ngDevMode && assertNumber(tStylingRange, 'expected number');
+        return (tStylingRange & 131068 /* NEXT_MASK */) >> 2 /* NEXT_SHIFT */;
     }
     function getTStylingRangeNextDuplicate(tStylingRange) {
+        ngDevMode && assertNumber(tStylingRange, 'expected number');
         return (tStylingRange & 1 /* NEXT_DUPLICATE */) ===
             1 /* NEXT_DUPLICATE */;
     }
@@ -32920,11 +32935,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         parent, //
         projection, //
         styles, //
-        stylesMap, //
+        residualStyles, //
         classes, //
-        classesMap, //
+        residualClasses, //
         classBindings, //
-        styleBindings) {
+        styleBindings, //
+        directives) {
             this.tView_ = tView_;
             this.type = type;
             this.index = index;
@@ -32948,11 +32964,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.parent = parent;
             this.projection = projection;
             this.styles = styles;
-            this.stylesMap = stylesMap;
+            this.residualStyles = residualStyles;
             this.classes = classes;
-            this.classesMap = classesMap;
+            this.residualClasses = residualClasses;
             this.classBindings = classBindings;
             this.styleBindings = styleBindings;
+            this.directives = directives;
         }
         Object.defineProperty(TNode.prototype, "type_", {
             get: function () {
@@ -33059,7 +33076,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 isTemplate = false;
             cursor = getTStylingRangePrev(itemRange);
         }
-        bindings.unshift(isClassBased ? tNode.classes : tNode.styles);
+        bindings.push((isClassBased ? tNode.residualClasses : tNode.residualStyles) || null);
         return bindings;
     }
     function processTNodeChildren(tNode, buf) {
@@ -33601,7 +33618,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                     else {
                         // If it's not a number, it's a host binding function that needs to be executed.
                         if (instruction !== null) {
-                            setBindingRootForHostBindings(bindingRootIndex);
+                            setBindingRootForHostBindings(bindingRootIndex, currentDirectiveIndex);
                             var hostCtx = lView[currentDirectiveIndex];
                             instruction(2 /* Update */, hostCtx);
                         }
@@ -34127,11 +34144,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         tParent, // parent: TElementNode|TContainerNode|null
         null, // projection: number|(ITNode|RNode[])[]|null
         null, // styles: string|null
-        undefined, // stylesMap: string|null
+        undefined, // residualStyles: string|null
         null, // classes: string|null
-        undefined, // classesMap: string|null
+        undefined, // residualClasses: string|null
         0, // classBindings: TStylingRange;
-        0) :
+        0, // styleBindings: TStylingRange;
+        null) :
             {
                 type: type,
                 index: adjustedIndex,
@@ -34155,11 +34173,12 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 parent: tParent,
                 projection: null,
                 styles: null,
-                stylesMap: undefined,
+                residualStyles: undefined,
                 classes: null,
-                classesMap: undefined,
+                residualClasses: undefined,
                 classBindings: 0,
                 styleBindings: 0,
+                directives: null
             };
     }
     /**
@@ -38435,7 +38454,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.11+59.sha-0390d20');
+    var VERSION$2 = new Version$1('9.0.0-rc.11+61.sha-19c4895');
 
     /**
      * @license
@@ -50432,7 +50451,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.11+59.sha-0390d20');
+    var VERSION$3 = new Version$1('9.0.0-rc.11+61.sha-19c4895');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
