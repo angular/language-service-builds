@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+899.sha-65dbd50
+ * @license Angular v9.0.0-rc.1+900.sha-01308e4
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+899.sha-65dbd50');
+    var VERSION$1 = new Version('9.0.0-rc.1+900.sha-01308e4');
 
     /**
      * @license
@@ -32905,6 +32905,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         injectorIndex, //
         directiveStart, //
         directiveEnd, //
+        directiveStylingLast, //
         propertyBindings, //
         flags, //
         providerIndexes, //
@@ -32926,14 +32927,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         classes, //
         residualClasses, //
         classBindings, //
-        styleBindings, //
-        directives) {
+        styleBindings) {
             this.tView_ = tView_;
             this.type = type;
             this.index = index;
             this.injectorIndex = injectorIndex;
             this.directiveStart = directiveStart;
             this.directiveEnd = directiveEnd;
+            this.directiveStylingLast = directiveStylingLast;
             this.propertyBindings = propertyBindings;
             this.flags = flags;
             this.providerIndexes = providerIndexes;
@@ -32956,7 +32957,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             this.residualClasses = residualClasses;
             this.classBindings = classBindings;
             this.styleBindings = styleBindings;
-            this.directives = directives;
         }
         Object.defineProperty(TNode.prototype, "type_", {
             get: function () {
@@ -34114,6 +34114,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         injectorIndex, // injectorIndex: number
         -1, // directiveStart: number
         -1, // directiveEnd: number
+        -1, // directiveStylingLast: number
         null, // propertyBindings: number[]|null
         0, // flags: TNodeFlags
         0, // providerIndexes: TNodeProviderIndexes
@@ -34135,14 +34136,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         null, // classes: string|null
         undefined, // residualClasses: string|null
         0, // classBindings: TStylingRange;
-        0, // styleBindings: TStylingRange;
-        null) :
+        0) :
             {
                 type: type,
                 index: adjustedIndex,
                 injectorIndex: injectorIndex,
                 directiveStart: -1,
                 directiveEnd: -1,
+                directiveStylingLast: -1,
                 propertyBindings: null,
                 flags: 0,
                 providerIndexes: 0,
@@ -34165,7 +34166,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 residualClasses: undefined,
                 classBindings: 0,
                 styleBindings: 0,
-                directives: null
             };
     }
     /**
@@ -38438,7 +38438,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+899.sha-65dbd50');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+900.sha-01308e4');
 
     /**
      * @license
@@ -50436,7 +50436,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+899.sha-65dbd50');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+900.sha-01308e4');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
