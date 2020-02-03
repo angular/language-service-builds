@@ -6,8 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/expression_diagnostics" />
-import { AST, Node, TemplateAst, TemplateAstPath } from '@angular/compiler';
-import { ExpressionDiagnosticsContext, TypeDiagnostic } from './expression_type';
+import { Node, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import { SymbolQuery, SymbolTable } from './symbols';
 import { Diagnostic } from './types';
 export interface DiagnosticTemplateInfo {
@@ -19,7 +18,6 @@ export interface DiagnosticTemplateInfo {
     templateAst: TemplateAst[];
 }
 export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): Diagnostic[];
-export declare function getExpressionDiagnostics(scope: SymbolTable, ast: AST, query: SymbolQuery, context?: ExpressionDiagnosticsContext): TypeDiagnostic[];
 /**
  * Returns the symbols available in a particular scope of a template.
  * @param info parsed template information
