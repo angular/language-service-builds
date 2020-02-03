@@ -31,10 +31,3 @@ export declare function getDeclarationDiagnostics(declarations: ng.Declaration[]
  * @param file
  */
 export declare function ngDiagnosticToTsDiagnostic(d: ng.Diagnostic, file: ts.SourceFile | undefined): ts.Diagnostic;
-/**
- * Return elements filtered by unique span.
- * @param elements
- */
-export declare function uniqueBySpan<T extends {
-    span: ng.Span;
-}>(elements: T[]): T[];

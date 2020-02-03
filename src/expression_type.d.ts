@@ -7,25 +7,19 @@
  */
 /// <amd-module name="@angular/language-service/src/expression_type" />
 import { AST, AstVisitor, Binary, BindingPipe, Chain, Conditional, FunctionCall, ImplicitReceiver, Interpolation, KeyedRead, KeyedWrite, LiteralArray, LiteralMap, LiteralPrimitive, MethodCall, NonNullAssert, PrefixNot, PropertyRead, PropertyWrite, Quote, SafeMethodCall, SafePropertyRead } from '@angular/compiler';
-import * as ts from 'typescript';
 import { Symbol, SymbolQuery, SymbolTable } from './symbols';
+import * as ng from './types';
 export interface ExpressionDiagnosticsContext {
     event?: boolean;
-}
-export declare class TypeDiagnostic {
-    kind: ts.DiagnosticCategory;
-    message: string;
-    ast: AST;
-    constructor(kind: ts.DiagnosticCategory, message: string, ast: AST);
 }
 export declare class AstType implements AstVisitor {
     private scope;
     private query;
     private context;
-    diagnostics: TypeDiagnostic[];
+    private readonly diagnostics;
     constructor(scope: SymbolTable, query: SymbolQuery, context: ExpressionDiagnosticsContext);
     getType(ast: AST): Symbol;
-    getDiagnostics(ast: AST): TypeDiagnostic[];
+    getDiagnostics(ast: AST): ng.Diagnostic[];
     visitBinary(ast: Binary): Symbol;
     visitChain(ast: Chain): Symbol;
     visitConditional(ast: Conditional): Symbol;
@@ -41,18 +35,17 @@ export declare class AstType implements AstVisitor {
     visitPipe(ast: BindingPipe): Symbol;
     visitPrefixNot(ast: PrefixNot): Symbol;
     visitNonNullAssert(ast: NonNullAssert): Symbol;
-    visitPropertyRead(ast: PropertyRead): Symbol | undefined;
+    visitPropertyRead(ast: PropertyRead): void | Symbol;
     visitPropertyWrite(ast: PropertyWrite): Symbol;
     visitQuote(ast: Quote): Symbol;
     visitSafeMethodCall(ast: SafeMethodCall): Symbol;
-    visitSafePropertyRead(ast: SafePropertyRead): Symbol | undefined;
+    visitSafePropertyRead(ast: SafePropertyRead): void | Symbol;
     private _anyType;
     private get anyType();
     private _undefinedType;
     private get undefinedType();
     private resolveMethodCall;
     private resolvePropertyRead;
-    private reportError;
-    private reportWarning;
+    private reportDiagnostic;
     private isAny;
 }

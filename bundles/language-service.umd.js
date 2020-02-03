@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+900.sha-01308e4
+ * @license Angular v9.0.0-rc.1+902.sha-a8609ba
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -27,7 +27,7 @@ module.exports = function(provided) {
   return results;
 };
 
-define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], function (exports, ts, path, tss) { 'use strict';
+define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], function (exports, tss, ts, path) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+900.sha-01308e4');
+    var VERSION$1 = new Version('9.0.0-rc.1+902.sha-a8609ba');
 
     /**
      * @license
@@ -24634,14 +24634,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var TypeDiagnostic = /** @class */ (function () {
-        function TypeDiagnostic(kind, message, ast) {
-            this.kind = kind;
-            this.message = message;
-            this.ast = ast;
-        }
-        return TypeDiagnostic;
-    }());
     // AstType calculatetype of the ast given AST element.
     var AstType = /** @class */ (function () {
         function AstType(scope, query, context) {
@@ -24652,10 +24644,9 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         }
         AstType.prototype.getType = function (ast) { return ast.visit(this); };
         AstType.prototype.getDiagnostics = function (ast) {
-            this.diagnostics = [];
             var type = ast.visit(this);
             if (this.context.event && type.callable) {
-                this.reportWarning('Unexpected callable expression. Expected a method call', ast);
+                this.reportDiagnostic('Unexpected callable expression. Expected a method call', ast, ts.DiagnosticCategory.Warning);
             }
             return this.diagnostics;
         };
@@ -24683,7 +24674,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             // Nullable allowed.
                             break;
                         default:
-                            _this_1.reportError("The expression might be null", ast);
+                            _this_1.reportDiagnostic("The expression might be null", ast);
                             break;
                     }
                     return _this_1.query.getNonNullableType(type);
@@ -24725,7 +24716,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                                     errorAst = ast.right;
                                     break;
                             }
-                            return this.reportError('Expected a numeric type', errorAst);
+                            this.reportDiagnostic('Expected a numeric type', errorAst);
+                            return this.anyType;
                     }
                 case '+':
                     switch (operKind) {
@@ -24751,12 +24743,15 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                             return this.query.getBuiltinType(BuiltinType$1.Number);
                         case BuiltinType$1.Boolean << 8 | BuiltinType$1.Number:
                         case BuiltinType$1.Other << 8 | BuiltinType$1.Number:
-                            return this.reportError('Expected a number type', ast.left);
+                            this.reportDiagnostic('Expected a number type', ast.left);
+                            return this.anyType;
                         case BuiltinType$1.Number << 8 | BuiltinType$1.Boolean:
                         case BuiltinType$1.Number << 8 | BuiltinType$1.Other:
-                            return this.reportError('Expected a number type', ast.right);
+                            this.reportDiagnostic('Expected a number type', ast.right);
+                            return this.anyType;
                         default:
-                            return this.reportError('Expected operands to be a string or number type', ast);
+                            this.reportDiagnostic('Expected operands to be a string or number type', ast);
+                            return this.anyType;
                     }
                 case '>':
                 case '<':
@@ -24782,28 +24777,26 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         case BuiltinType$1.Other << 8 | BuiltinType$1.Other:
                             return this.query.getBuiltinType(BuiltinType$1.Boolean);
                         default:
-                            return this.reportError('Expected the operants to be of similar type or any', ast);
+                            this.reportDiagnostic('Expected the operants to be of similar type or any', ast);
+                            return this.anyType;
                     }
                 case '&&':
                     return rightType;
                 case '||':
                     return this.query.getTypeUnion(leftType, rightType);
             }
-            return this.reportError("Unrecognized operator " + ast.operation, ast);
+            this.reportDiagnostic("Unrecognized operator " + ast.operation, ast);
+            return this.anyType;
         };
         AstType.prototype.visitChain = function (ast) {
-            if (this.diagnostics) {
-                // If we are producing diagnostics, visit the children
-                visitAstChildren(ast, this);
-            }
+            // If we are producing diagnostics, visit the children
+            visitAstChildren(ast, this);
             // The type of a chain is always undefined.
             return this.query.getBuiltinType(BuiltinType$1.Undefined);
         };
         AstType.prototype.visitConditional = function (ast) {
             // The type of a conditional is the union of the true and false conditions.
-            if (this.diagnostics) {
-                visitAstChildren(ast, this);
-            }
+            visitAstChildren(ast, this);
             return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
         };
         AstType.prototype.visitFunctionCall = function (ast) {
@@ -24814,13 +24807,17 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // version.
             var args = ast.args.map(function (arg) { return _this_1.getType(arg); });
             var target = this.getType(ast.target);
-            if (!target || !target.callable)
-                return this.reportError('Call target is not callable', ast);
+            if (!target || !target.callable) {
+                this.reportDiagnostic('Call target is not callable', ast);
+                return this.anyType;
+            }
             var signature = target.selectSignature(args);
-            if (signature)
+            if (signature) {
                 return signature.result;
+            }
             // TODO: Consider a better error message here.
-            return this.reportError('Unable no compatible signature found for call', ast);
+            this.reportDiagnostic('Unable no compatible signature found for call', ast);
+            return this.anyType;
         };
         AstType.prototype.visitImplicitReceiver = function (ast) {
             var _this = this;
@@ -24847,9 +24844,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         AstType.prototype.visitInterpolation = function (ast) {
             // If we are producing diagnostics, visit the children.
-            if (this.diagnostics) {
-                visitAstChildren(ast, this);
-            }
+            visitAstChildren(ast, this);
             return this.undefinedType;
         };
         AstType.prototype.visitKeyedRead = function (ast) {
@@ -24870,9 +24865,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         };
         AstType.prototype.visitLiteralMap = function (ast) {
             // If we are producing diagnostics, visit the children
-            if (this.diagnostics) {
-                visitAstChildren(ast, this);
-            }
+            visitAstChildren(ast, this);
             // TODO: Return a composite type.
             return this.anyType;
         };
@@ -24893,7 +24886,8 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         case 'number':
                             return this.query.getBuiltinType(BuiltinType$1.Number);
                         default:
-                            return this.reportError('Unrecognized primitive', ast);
+                            this.reportDiagnostic('Unrecognized primitive', ast);
+                            return this.anyType;
                     }
             }
         };
@@ -24905,19 +24899,21 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             // The type of a pipe node is the return type of the pipe's transform method. The table returned
             // by getPipes() is expected to contain symbols with the corresponding transform method type.
             var pipe = this.query.getPipes().get(ast.name);
-            if (!pipe)
-                return this.reportError("No pipe by the name " + ast.name + " found", ast);
+            if (!pipe) {
+                this.reportDiagnostic("No pipe by the name " + ast.name + " found", ast);
+                return this.anyType;
+            }
             var expType = this.getType(ast.exp);
             var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this_1.getType(arg); })));
-            if (!signature)
-                return this.reportError('Unable to resolve signature for pipe invocation', ast);
+            if (!signature) {
+                this.reportDiagnostic('Unable to resolve signature for pipe invocation', ast);
+                return this.anyType;
+            }
             return signature.result;
         };
         AstType.prototype.visitPrefixNot = function (ast) {
             // If we are producing diagnostics, visit the children
-            if (this.diagnostics) {
-                visitAstChildren(ast, this);
-            }
+            visitAstChildren(ast, this);
             // The type of a prefix ! is always boolean.
             return this.query.getBuiltinType(BuiltinType$1.Boolean);
         };
@@ -24971,15 +24967,23 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             // The type of a method is the selected methods result type.
             var method = receiverType.members().get(ast.name);
-            if (!method)
-                return this.reportError("Unknown method '" + ast.name + "'", ast);
-            if (!method.type)
-                return this.reportError("Could not find a type for '" + ast.name + "'", ast);
-            if (!method.type.callable)
-                return this.reportError("Member '" + ast.name + "' is not callable", ast);
+            if (!method) {
+                this.reportDiagnostic("Unknown method '" + ast.name + "'", ast);
+                return this.anyType;
+            }
+            if (!method.type) {
+                this.reportDiagnostic("Could not find a type for '" + ast.name + "'", ast);
+                return this.anyType;
+            }
+            if (!method.type.callable) {
+                this.reportDiagnostic("Member '" + ast.name + "' is not callable", ast);
+                return this.anyType;
+            }
             var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
-            if (!signature)
-                return this.reportError("Unable to resolve signature for call of method " + ast.name, ast);
+            if (!signature) {
+                this.reportDiagnostic("Unable to resolve signature for call of method " + ast.name, ast);
+                return this.anyType;
+            }
             return signature.result;
         };
         AstType.prototype.resolvePropertyRead = function (receiverType, ast) {
@@ -24995,12 +24999,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                         'The component declaration, template variable declarations, and element references do';
                 }
                 else if (receiverType.nullable) {
-                    return this.reportError("The expression might be null", ast.receiver);
+                    return this.reportDiagnostic("The expression might be null", ast.receiver);
                 }
                 else {
                     receiverInfo = "'" + receiverInfo + "' does";
                 }
-                return this.reportError("Identifier '" + ast.name + "' is not defined. " + receiverInfo + " not contain such a member", ast);
+                this.reportDiagnostic("Identifier '" + ast.name + "' is not defined. " + receiverInfo + " not contain such a member", ast);
+                return this.anyType;
             }
             if (!member.public) {
                 var receiverInfo = receiverType.name;
@@ -25010,21 +25015,13 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 else {
                     receiverInfo = "'" + receiverInfo + "'";
                 }
-                this.reportWarning("Identifier '" + ast.name + "' refers to a private member of " + receiverInfo, ast);
+                this.reportDiagnostic("Identifier '" + ast.name + "' refers to a private member of " + receiverInfo, ast, ts.DiagnosticCategory.Warning);
             }
             return member.type;
         };
-        AstType.prototype.reportError = function (message, ast) {
-            if (this.diagnostics) {
-                this.diagnostics.push(new TypeDiagnostic(ts.DiagnosticCategory.Error, message, ast));
-            }
-            return this.anyType;
-        };
-        AstType.prototype.reportWarning = function (message, ast) {
-            if (this.diagnostics) {
-                this.diagnostics.push(new TypeDiagnostic(ts.DiagnosticCategory.Warning, message, ast));
-            }
-            return this.anyType;
+        AstType.prototype.reportDiagnostic = function (message, ast, kind) {
+            if (kind === void 0) { kind = ts.DiagnosticCategory.Error; }
+            this.diagnostics.push({ kind: kind, span: ast.span, message: message });
         };
         AstType.prototype.isAny = function (symbol) {
             return !symbol || this.query.getTypeKind(symbol) == BuiltinType$1.Any ||
@@ -25357,12 +25354,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         templateVisitAll(visitor, info.templateAst);
         return visitor.diagnostics;
     }
-    function getExpressionDiagnostics(scope, ast, query, context) {
-        if (context === void 0) { context = {}; }
-        var analyzer = new AstType(scope, query, context);
-        analyzer.getDiagnostics(ast);
-        return analyzer.diagnostics;
-    }
     function getReferences(info) {
         var result = [];
         function processReferences(references) {
@@ -25648,35 +25639,16 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             }
             return ast.sourceSpan.start.offset;
         };
-        ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, includeEvent) {
-            var _a;
-            var _this = this;
-            var scope = this.getExpressionScope(this.path, includeEvent);
-            (_a = this.diagnostics).push.apply(_a, __spread(getExpressionDiagnostics(scope, ast, this.info.query, {
-                event: includeEvent
-            }).map(function (d) { return ({
-                span: offsetSpan$1(d.ast.span, offset + _this.info.offset),
-                kind: d.kind,
-                message: d.message
-            }); })));
-        };
-        ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
-        ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
-        ExpressionDiagnosticsVisitor.prototype.reportDiagnostic = function (message, span, kind) {
-            if (kind === void 0) { kind = ts.DiagnosticCategory.Error; }
-            this.diagnostics.push({ span: offsetSpan$1(span, this.info.offset), kind: kind, message: message });
-        };
-        return ExpressionDiagnosticsVisitor;
-    }(RecursiveTemplateAstVisitor));
-    function hasTemplateReference$1(type) {
-        var e_3, _a;
-        if (type.diDeps) {
+        ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, event) {
+            var e_3, _a;
+            var scope = this.getExpressionScope(this.path, event);
+            var analyzer = new AstType(scope, this.info.query, { event: event });
             try {
-                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var diDep = _c.value;
-                    if (diDep.token && diDep.token.identifier &&
-                        identifierName(diDep.token.identifier) == 'TemplateRef')
-                        return true;
+                for (var _b = __values(analyzer.getDiagnostics(ast)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var _d = _c.value, message = _d.message, span = _d.span, kind = _d.kind;
+                    span.start += offset;
+                    span.end += offset;
+                    this.reportDiagnostic(message, span, kind);
                 }
             }
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -25686,11 +25658,37 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 }
                 finally { if (e_3) throw e_3.error; }
             }
+        };
+        ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
+        ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
+        ExpressionDiagnosticsVisitor.prototype.reportDiagnostic = function (message, span, kind) {
+            if (kind === void 0) { kind = ts.DiagnosticCategory.Error; }
+            span.start += this.info.offset;
+            span.end += this.info.offset;
+            this.diagnostics.push({ kind: kind, span: span, message: message });
+        };
+        return ExpressionDiagnosticsVisitor;
+    }(RecursiveTemplateAstVisitor));
+    function hasTemplateReference$1(type) {
+        var e_4, _a;
+        if (type.diDeps) {
+            try {
+                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var diDep = _c.value;
+                    if (diDep.token && diDep.token.identifier &&
+                        identifierName(diDep.token.identifier) == 'TemplateRef')
+                        return true;
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_4) throw e_4.error; }
+            }
         }
         return false;
-    }
-    function offsetSpan$1(span, amount) {
-        return { start: span.start + amount, end: span.end + amount };
     }
     function spanOf$1(sourceSpan) {
         return { start: sourceSpan.start.offset, end: sourceSpan.end.offset };
@@ -28890,38 +28888,6 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
             source: 'ng',
         };
     }
-    /**
-     * Return elements filtered by unique span.
-     * @param elements
-     */
-    function uniqueBySpan(elements) {
-        var e_5, _a;
-        var result = [];
-        var map = new Map();
-        try {
-            for (var elements_1 = __values(elements), elements_1_1 = elements_1.next(); !elements_1_1.done; elements_1_1 = elements_1.next()) {
-                var element = elements_1_1.value;
-                var span = element.span;
-                var set = map.get(span.start);
-                if (!set) {
-                    set = new Set();
-                    map.set(span.start, set);
-                }
-                if (!set.has(span.end)) {
-                    set.add(span.end);
-                    result.push(element);
-                }
-            }
-        }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
-        finally {
-            try {
-                if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
-            }
-            finally { if (e_5) throw e_5.error; }
-        }
-        return result;
-    }
 
     /**
      * @license
@@ -29052,14 +29018,14 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
         LanguageServiceImpl.prototype.getSemanticDiagnostics = function (fileName) {
             var e_1, _a;
             var analyzedModules = this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
-            var results = [];
+            var ngDiagnostics = [];
             var templates = this.host.getTemplates(fileName);
             try {
                 for (var templates_1 = __values(templates), templates_1_1 = templates_1.next(); !templates_1_1.done; templates_1_1 = templates_1.next()) {
                     var template = templates_1_1.value;
                     var ast = this.host.getTemplateAst(template);
                     if (ast) {
-                        results.push.apply(results, __spread(getTemplateDiagnostics(ast)));
+                        ngDiagnostics.push.apply(ngDiagnostics, __spread(getTemplateDiagnostics(ast)));
                     }
                 }
             }
@@ -29071,11 +29037,10 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
                 finally { if (e_1) throw e_1.error; }
             }
             var declarations = this.host.getDeclarations(fileName);
-            if (declarations && declarations.length) {
-                results.push.apply(results, __spread(getDeclarationDiagnostics(declarations, analyzedModules, this.host)));
-            }
+            ngDiagnostics.push.apply(ngDiagnostics, __spread(getDeclarationDiagnostics(declarations, analyzedModules, this.host)));
             var sourceFile = fileName.endsWith('.ts') ? this.host.getSourceFile(fileName) : undefined;
-            return uniqueBySpan(results).map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
+            var tsDiagnostics = ngDiagnostics.map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
+            return __spread(tss.sortAndDeduplicateDiagnostics(tsDiagnostics));
         };
         LanguageServiceImpl.prototype.getCompletionsAtPosition = function (fileName, position, options) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
@@ -38438,7 +38403,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+900.sha-01308e4');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+902.sha-a8609ba');
 
     /**
      * @license
@@ -50436,7 +50401,7 @@ define(['exports', 'typescript', 'path', 'typescript/lib/tsserverlibrary'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+900.sha-01308e4');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+902.sha-a8609ba');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
