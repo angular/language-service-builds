@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0+19.sha-14fc181
+ * @license Angular v9.0.0+30.sha-dce230e
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0+19.sha-14fc181');
+    var VERSION$1 = new Version('9.0.0+30.sha-dce230e');
 
     /**
      * @license
@@ -36029,9 +36029,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (def == null) {
                 return false;
             }
-            // Track the InjectorType and add a provider for it.
-            this.injectorDefTypes.add(defType);
-            this.records.set(defType, makeRecord(def.factory, NOT_YET));
             // Add providers in the same way that @NgModule resolution did:
             // First, include providers from any imports.
             if (def.imports != null && !isDuplicate) {
@@ -36069,6 +36066,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
             }
+            // Track the InjectorType and add a provider for it. It's important that this is done after the
+            // def's imports.
+            this.injectorDefTypes.add(defType);
+            this.records.set(defType, makeRecord(def.factory, NOT_YET));
             // Next, include providers listed on the definition itself.
             var defProviders = def.providers;
             if (defProviders != null && !isDuplicate) {
@@ -38404,7 +38405,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0+19.sha-14fc181');
+    var VERSION$2 = new Version$1('9.0.0+30.sha-dce230e');
 
     /**
      * @license
@@ -50401,7 +50402,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0+19.sha-14fc181');
+    var VERSION$3 = new Version$1('9.0.0+30.sha-dce230e');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
