@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+977.sha-76b77ec
+ * @license Angular v9.0.0-rc.1+982.sha-a92d97c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -11567,6 +11567,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         };
         BindingParser.prototype.parsePropertyBinding = function (name, expression, isHost, sourceSpan, absoluteOffset, valueSpan, targetMatchableAttrs, targetProps) {
+            if (name.length === 0) {
+                this._reportError("Property name is missing in binding", sourceSpan);
+            }
             var isAnimationProp = false;
             if (name.startsWith(ANIMATE_PROP_PREFIX)) {
                 isAnimationProp = true;
@@ -11596,6 +11599,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.DEFAULT, sourceSpan, valueSpan));
         };
         BindingParser.prototype._parseAnimation = function (name, expression, sourceSpan, absoluteOffset, valueSpan, targetMatchableAttrs, targetProps) {
+            if (name.length === 0) {
+                this._reportError('Animation trigger is missing', sourceSpan);
+            }
             // This will occur when a @trigger is not paired with an expression.
             // For animations it is valid to not have an expression since */void
             // states will be applied by angular when the element is attached/detached
@@ -11671,6 +11677,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new BoundElementProperty(boundPropertyName, bindingType, securityContexts[0], boundProp.expression, unit, boundProp.sourceSpan, boundProp.valueSpan);
         };
         BindingParser.prototype.parseEvent = function (name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents) {
+            if (name.length === 0) {
+                this._reportError("Event name is missing in binding", sourceSpan);
+            }
             if (isAnimationLabel(name)) {
                 name = name.substr(1);
                 this._parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents);
@@ -11904,7 +11913,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var BIND_NAME_REGEXP = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.+))|\[\(([^\)]+)\)\]|\[([^\]]+)\]|\(([^\)]+)\))$/;
+    var BIND_NAME_REGEXP = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.*))|\[\(([^\)]+)\)\]|\[([^\]]+)\]|\(([^\)]+)\))$/;
     // Group 1 = "bind-"
     var KW_BIND_IDX = 1;
     // Group 2 = "let-"
@@ -12261,11 +12270,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (identifier.indexOf('-') > -1) {
                 this._reportError("\"-\" is not allowed in variable names", sourceSpan);
             }
+            else if (identifier.length === 0) {
+                this._reportError("Variable does not have a name", sourceSpan);
+            }
             targetVars.push(new VariableAst(identifier, value, sourceSpan));
         };
         TemplateParseVisitor.prototype._parseReference = function (identifier, value, sourceSpan, targetRefs) {
             if (identifier.indexOf('-') > -1) {
                 this._reportError("\"-\" is not allowed in reference names", sourceSpan);
+            }
+            else if (identifier.length === 0) {
+                this._reportError("Reference does not have a name", sourceSpan);
             }
             targetRefs.push(new ElementOrDirectiveRef(identifier, value, sourceSpan));
         };
@@ -14889,7 +14904,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var BIND_NAME_REGEXP$1 = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.+))|\[\(([^\)]+)\)\]|\[([^\]]+)\]|\(([^\)]+)\))$/;
+    var BIND_NAME_REGEXP$1 = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.*))|\[\(([^\)]+)\)\]|\[([^\]]+)\]|\(([^\)]+)\))$/;
     // Group 1 = "bind-"
     var KW_BIND_IDX$1 = 1;
     // Group 2 = "let-"
@@ -15193,11 +15208,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (identifier.indexOf('-') > -1) {
                 this.reportError("\"-\" is not allowed in variable names", sourceSpan);
             }
+            else if (identifier.length === 0) {
+                this.reportError("Variable does not have a name", sourceSpan);
+            }
             variables.push(new Variable(identifier, value, sourceSpan, valueSpan));
         };
         HtmlAstToIvyAst.prototype.parseReference = function (identifier, value, sourceSpan, valueSpan, references) {
             if (identifier.indexOf('-') > -1) {
                 this.reportError("\"-\" is not allowed in reference names", sourceSpan);
+            }
+            else if (identifier.length === 0) {
+                this.reportError("Reference does not have a name", sourceSpan);
             }
             references.push(new Reference(identifier, value, sourceSpan, valueSpan));
         };
@@ -18735,7 +18756,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+977.sha-76b77ec');
+    var VERSION$1 = new Version('9.0.0-rc.1+982.sha-a92d97c');
 
     /**
      * @license
@@ -47435,7 +47456,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+977.sha-76b77ec');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+982.sha-a92d97c');
 
     /**
      * @license
@@ -62530,7 +62551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+977.sha-76b77ec');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+982.sha-a92d97c');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
