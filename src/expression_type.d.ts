@@ -35,11 +35,11 @@ export declare class AstType implements AstVisitor {
     visitPipe(ast: BindingPipe): Symbol;
     visitPrefixNot(ast: PrefixNot): Symbol;
     visitNonNullAssert(ast: NonNullAssert): Symbol;
-    visitPropertyRead(ast: PropertyRead): void | Symbol;
+    visitPropertyRead(ast: PropertyRead): Symbol | undefined;
     visitPropertyWrite(ast: PropertyWrite): Symbol;
     visitQuote(ast: Quote): Symbol;
     visitSafeMethodCall(ast: SafeMethodCall): Symbol;
-    visitSafePropertyRead(ast: SafePropertyRead): void | Symbol;
+    visitSafePropertyRead(ast: SafePropertyRead): Symbol | undefined;
     private _anyType;
     private get anyType();
     private _undefinedType;
