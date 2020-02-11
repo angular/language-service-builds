@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-rc.1+982.sha-a92d97c
+ * @license Angular v9.0.0-rc.1+983.sha-81241af
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18771,7 +18771,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-rc.1+982.sha-a92d97c');
+    var VERSION$1 = new Version('9.0.0-rc.1+983.sha-81241af');
 
     /**
      * @license
@@ -24986,21 +24986,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this.isAny(receiverType)) {
                 return this.anyType;
             }
-            // The type of a method is the selected methods result type.
-            var method = receiverType.members().get(ast.name);
-            if (!method) {
-                this.reportDiagnostic("Unknown method '" + ast.name + "'", ast);
-                return this.anyType;
-            }
-            if (!method.type) {
+            var methodType = this.resolvePropertyRead(receiverType, ast);
+            if (!methodType) {
                 this.reportDiagnostic("Could not find a type for '" + ast.name + "'", ast);
                 return this.anyType;
             }
-            if (!method.type.callable) {
+            if (this.isAny(methodType)) {
+                return this.anyType;
+            }
+            if (!methodType.callable) {
                 this.reportDiagnostic("Member '" + ast.name + "' is not callable", ast);
                 return this.anyType;
             }
-            var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
+            var signature = methodType.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
             if (!signature) {
                 this.reportDiagnostic("Unable to resolve signature for call of method " + ast.name, ast);
                 return this.anyType;
@@ -25014,29 +25012,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // The type of a property read is the seelcted member's type.
             var member = receiverType.members().get(ast.name);
             if (!member) {
-                var receiverInfo = receiverType.name;
-                if (receiverInfo == '$implicit') {
-                    receiverInfo =
-                        'The component declaration, template variable declarations, and element references do';
+                if (receiverType.name === '$implicit') {
+                    this.reportDiagnostic("Identifier '" + ast.name + "' is not defined. " +
+                        "The component declaration, template variable declarations, and element references do not contain such a member", ast);
                 }
-                else if (receiverType.nullable) {
-                    return this.reportDiagnostic("The expression might be null", ast.receiver);
+                else if (receiverType.nullable && ast.receiver instanceof PropertyRead) {
+                    var receiver = ast.receiver.name;
+                    this.reportDiagnostic("'" + receiver + "' is possibly undefined. Consider using the safe navigation operator (" + receiver + "?." + ast.name + ") " +
+                        ("or non-null assertion operator (" + receiver + "!." + ast.name + ")."), ast, ts.DiagnosticCategory.Suggestion);
                 }
                 else {
-                    receiverInfo = "'" + receiverInfo + "' does";
+                    this.reportDiagnostic("Identifier '" + ast.name + "' is not defined. '" + receiverType.name + "' does not contain such a member", ast);
                 }
-                this.reportDiagnostic("Identifier '" + ast.name + "' is not defined. " + receiverInfo + " not contain such a member", ast);
                 return this.anyType;
             }
             if (!member.public) {
-                var receiverInfo = receiverType.name;
-                if (receiverInfo == '$implicit') {
-                    receiverInfo = 'the component';
-                }
-                else {
-                    receiverInfo = "'" + receiverInfo + "'";
-                }
-                this.reportDiagnostic("Identifier '" + ast.name + "' refers to a private member of " + receiverInfo, ast, ts.DiagnosticCategory.Warning);
+                this.reportDiagnostic("Identifier '" + ast.name + "' refers to a private member of " + (receiverType.name === '$implicit' ? 'the component' : "\n      '" + receiverType.name + "'\n          "), ast, ts.DiagnosticCategory.Warning);
             }
             return member.type;
         };
@@ -25045,7 +25036,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.diagnostics.push({ kind: kind, span: ast.span, message: message });
         };
         AstType.prototype.isAny = function (symbol) {
-            return !symbol || this.query.getTypeKind(symbol) == BuiltinType$1.Any ||
+            return !symbol || this.query.getTypeKind(symbol) === BuiltinType$1.Any ||
                 (!!symbol.type && this.isAny(symbol.type));
         };
         return AstType;
@@ -38436,7 +38427,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-rc.1+982.sha-a92d97c');
+    var VERSION$2 = new Version$1('9.0.0-rc.1+983.sha-81241af');
 
     /**
      * @license
@@ -50438,7 +50429,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-rc.1+982.sha-a92d97c');
+    var VERSION$3 = new Version$1('9.0.0-rc.1+983.sha-81241af');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
