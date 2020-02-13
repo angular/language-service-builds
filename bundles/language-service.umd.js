@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.0+5.sha-a6aa35e
+ * @license Angular v9.1.0-next.0+7.sha-d6bc63f
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18756,7 +18756,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.0+5.sha-a6aa35e');
+    var VERSION$1 = new Version('9.1.0-next.0+7.sha-d6bc63f');
 
     /**
      * @license
@@ -33838,6 +33838,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return value;
     }
     /**
+     * Returns `LView` or `null` if not found.
+     * @param value wrapped value of `RNode`, `LView`, `LContainer`
+     */
+    function unwrapLView(value) {
+        while (Array.isArray(value)) {
+            // This check is same as `isLView()` but we don't call at as we don't want to call
+            // `Array.isArray()` twice and give JITer more work for inlining.
+            if (typeof value[TYPE] === 'object')
+                return value;
+            value = value[HOST];
+        }
+        return null;
+    }
+    /**
      * Retrieves an element value from the provided `viewData`, by unwrapping
      * from any containers, component views, or style contexts.
      */
@@ -37483,7 +37497,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * instead of the current renderer (see the componentSyntheticHost* instructions).
      */
     function loadComponentRenderer(tNode, lView) {
-        var componentLView = lView[tNode.index];
+        var componentLView = unwrapLView(lView[tNode.index]);
         return componentLView[RENDERER];
     }
     /** Handles an error thrown in an LView. */
@@ -47447,7 +47461,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.0+5.sha-a6aa35e');
+    var VERSION$2 = new Version$1('9.1.0-next.0+7.sha-d6bc63f');
 
     /**
      * @license
@@ -62542,7 +62556,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.0+5.sha-a6aa35e');
+    var VERSION$3 = new Version$1('9.1.0-next.0+7.sha-d6bc63f');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
