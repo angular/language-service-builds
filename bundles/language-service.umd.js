@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.1+20.sha-4f8d303
+ * @license Angular v9.0.1+24.sha-eee8c7f
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18771,7 +18771,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.1+20.sha-4f8d303');
+    var VERSION$1 = new Version('9.0.1+24.sha-eee8c7f');
 
     /**
      * @license
@@ -30493,25 +30493,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         instructionState.lFrame = newLFrame;
         newLFrame.previousOrParentTNode = tNode;
         newLFrame.lView = newView;
-        if (ngDevMode) {
-            // resetting for safety in dev mode only.
-            newLFrame.isParent = DEV_MODE_VALUE;
-            newLFrame.selectedIndex = DEV_MODE_VALUE;
-            newLFrame.contextLView = DEV_MODE_VALUE;
-            newLFrame.elementDepthCount = DEV_MODE_VALUE;
-            newLFrame.currentNamespace = DEV_MODE_VALUE;
-            newLFrame.currentSanitizer = DEV_MODE_VALUE;
-            newLFrame.bindingRootIndex = DEV_MODE_VALUE;
-            newLFrame.currentQueryIndex = DEV_MODE_VALUE;
-        }
     }
-    var DEV_MODE_VALUE = 'Value indicating that DI is trying to read value which it should not need to know about.';
-    /**
-     * This is a light weight version of the `leaveView` which is needed by the DI system.
-     *
-     * Because the implementation is same it is only an alias
-     */
-    var leaveDI = leaveView;
     /**
      * Swap the current lView with a new lView.
      *
@@ -30527,21 +30509,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function enterView(newView, tNode) {
         ngDevMode && assertLViewOrUndefined(newView);
         var newLFrame = allocLFrame();
+        if (ngDevMode) {
+            assertEqual(newLFrame.isParent, true, 'Expected clean LFrame');
+            assertEqual(newLFrame.lView, null, 'Expected clean LFrame');
+            assertEqual(newLFrame.tView, null, 'Expected clean LFrame');
+            assertEqual(newLFrame.selectedIndex, 0, 'Expected clean LFrame');
+            assertEqual(newLFrame.elementDepthCount, 0, 'Expected clean LFrame');
+            assertEqual(newLFrame.currentDirectiveIndex, -1, 'Expected clean LFrame');
+            assertEqual(newLFrame.currentNamespace, null, 'Expected clean LFrame');
+            assertEqual(newLFrame.currentSanitizer, null, 'Expected clean LFrame');
+            assertEqual(newLFrame.bindingRootIndex, -1, 'Expected clean LFrame');
+            assertEqual(newLFrame.currentQueryIndex, 0, 'Expected clean LFrame');
+        }
         var tView = newView[TVIEW];
         instructionState.lFrame = newLFrame;
         newLFrame.previousOrParentTNode = tNode;
-        newLFrame.isParent = true;
         newLFrame.lView = newView;
         newLFrame.tView = tView;
-        newLFrame.selectedIndex = 0;
         newLFrame.contextLView = newView;
-        newLFrame.elementDepthCount = 0;
-        newLFrame.currentDirectiveIndex = -1;
-        newLFrame.currentNamespace = null;
-        newLFrame.currentSanitizer = null;
-        newLFrame.bindingRootIndex = -1;
         newLFrame.bindingIndex = tView.bindingStartIndex;
-        newLFrame.currentQueryIndex = 0;
     }
     /**
      * Allocates next free LFrame. This function tries to reuse the `LFrame`s to lower memory pressure.
@@ -30573,8 +30559,50 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         parent !== null && (parent.child = lFrame); // link the new LFrame for reuse.
         return lFrame;
     }
+    /**
+     * A lightweight version of leave which is used with DI.
+     *
+     * This function only resets `previousOrParentTNode` and `LView` as those are the only properties
+     * used with DI (`enterDI()`).
+     *
+     * NOTE: This function is reexported as `leaveDI`. However `leaveDI` has return type of `void` where
+     * as `leaveViewLight` has `LFrame`. This is so that `leaveViewLight` can be used in `leaveView`.
+     */
+    function leaveViewLight() {
+        var oldLFrame = instructionState.lFrame;
+        instructionState.lFrame = oldLFrame.parent;
+        oldLFrame.previousOrParentTNode = null;
+        oldLFrame.lView = null;
+        return oldLFrame;
+    }
+    /**
+     * This is a lightweight version of the `leaveView` which is needed by the DI system.
+     *
+     * NOTE: this function is an alias so that we can change the type of the function to have `void`
+     * return type.
+     */
+    var leaveDI = leaveViewLight;
+    /**
+     * Leave the current `LView`
+     *
+     * This pops the `LFrame` with the associated `LView` from the stack.
+     *
+     * IMPORTANT: We must zero out the `LFrame` values here otherwise they will be retained. This is
+     * because for performance reasons we don't release `LFrame` but rather keep it for next use.
+     */
     function leaveView() {
-        instructionState.lFrame = instructionState.lFrame.parent;
+        var oldLFrame = leaveViewLight();
+        oldLFrame.isParent = true;
+        oldLFrame.tView = null;
+        oldLFrame.selectedIndex = 0;
+        oldLFrame.contextLView = null;
+        oldLFrame.elementDepthCount = 0;
+        oldLFrame.currentDirectiveIndex = -1;
+        oldLFrame.currentNamespace = null;
+        oldLFrame.currentSanitizer = null;
+        oldLFrame.bindingRootIndex = -1;
+        oldLFrame.bindingIndex = -1;
+        oldLFrame.currentQueryIndex = 0;
     }
     /**
      * Gets the currently selected element index.
@@ -38427,7 +38455,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.1+20.sha-4f8d303');
+    var VERSION$2 = new Version$1('9.0.1+24.sha-eee8c7f');
 
     /**
      * @license
@@ -50428,7 +50456,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.1+20.sha-4f8d303');
+    var VERSION$3 = new Version$1('9.0.1+24.sha-eee8c7f');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
