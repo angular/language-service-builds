@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.0+21.sha-b9b512f
+ * @license Angular v9.1.0-next.0+23.sha-2ca7984
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18756,7 +18756,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.0+21.sha-b9b512f');
+    var VERSION$1 = new Version('9.1.0-next.0+23.sha-2ca7984');
 
     /**
      * @license
@@ -44811,17 +44811,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         else if (typeof value === 'object') {
-            if (value instanceof Map) {
-                value.forEach(function (v, k) { return keyValueArraySet(styleKeyValueArray, k, v); });
-            }
-            else if (value instanceof Set) {
-                value.forEach(function (k) { return keyValueArraySet(styleKeyValueArray, k, true); });
-            }
-            else {
-                for (var key in value) {
-                    if (value.hasOwnProperty(key)) {
-                        keyValueArraySet(styleKeyValueArray, key, value[key]);
-                    }
+            for (var key in value) {
+                if (value.hasOwnProperty(key)) {
+                    keyValueArraySet(styleKeyValueArray, key, value[key]);
                 }
             }
         }
@@ -44852,11 +44844,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Update map based styling.
      *
      * Map based styling could be anything which contains more than one binding. For example `string`,
-     * `Map`, `Set` or object literal. Dealing with all of these types would complicate the logic so
+     * or object literal. Dealing with all of these types would complicate the logic so
      * instead this function expects that the complex input is first converted into normalized
      * `KeyValueArray`. The advantage of normalization is that we get the values sorted, which makes it
-     * very
-     * cheap to compute deltas between the previous and current value.
+     * very cheap to compute deltas between the previous and current value.
      *
      * @param tView Associated `TView.data` contains the linked list of binding priorities.
      * @param tNode `TNode` where the binding is located.
@@ -47489,7 +47480,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.0+21.sha-b9b512f');
+    var VERSION$2 = new Version$1('9.1.0-next.0+23.sha-2ca7984');
 
     /**
      * @license
@@ -62584,7 +62575,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.0+21.sha-b9b512f');
+    var VERSION$3 = new Version$1('9.1.0-next.0+23.sha-2ca7984');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
