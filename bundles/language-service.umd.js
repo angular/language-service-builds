@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.0+24.sha-be5e75c
+ * @license Angular v9.1.0-next.0+25.sha-8c75f21
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18756,7 +18756,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.0+24.sha-be5e75c');
+    var VERSION$1 = new Version('9.1.0-next.0+25.sha-8c75f21');
 
     /**
      * @license
@@ -44466,8 +44466,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var staticPrefix = isClassBased ? tNode.classes : tNode.styles;
                 ngDevMode && isClassBased === false && staticPrefix !== null &&
                     assertEqual(staticPrefix.endsWith(';'), true, 'Expecting static portion to end with \';\'');
-                if (typeof value === 'string') {
-                    value = concatStringsWithSpace(staticPrefix, value);
+                if (staticPrefix !== null) {
+                    // We want to make sure that falsy values of `value` become empty strings.
+                    value = concatStringsWithSpace(staticPrefix, value ? value : '');
                 }
                 // Given `<div [style] my-dir>` such that `my-dir` has `@Input('style')`.
                 // This takes over the `[style]` binding. (Same for `[class]`)
@@ -47480,7 +47481,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.0+24.sha-be5e75c');
+    var VERSION$2 = new Version$1('9.1.0-next.0+25.sha-8c75f21');
 
     /**
      * @license
@@ -62575,7 +62576,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.0+24.sha-be5e75c');
+    var VERSION$3 = new Version$1('9.1.0-next.0+25.sha-8c75f21');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
