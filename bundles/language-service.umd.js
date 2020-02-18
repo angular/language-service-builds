@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.0+32.sha-1939676
+ * @license Angular v9.1.0-next.0+34.sha-c013dd4
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18771,7 +18771,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.0+32.sha-1939676');
+    var VERSION$1 = new Version('9.1.0-next.0+34.sha-c013dd4');
 
     /**
      * @license
@@ -30446,9 +30446,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function getPreviousOrParentTNode() {
         return instructionState.lFrame.previousOrParentTNode;
     }
-    function setPreviousOrParentTNode(tNode, _isParent) {
+    function setPreviousOrParentTNode(tNode, isParent) {
         instructionState.lFrame.previousOrParentTNode = tNode;
-        instructionState.lFrame.isParent = _isParent;
+        instructionState.lFrame.isParent = isParent;
     }
     function getIsParent() {
         return instructionState.lFrame.isParent;
@@ -38455,7 +38455,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.0+32.sha-1939676');
+    var VERSION$2 = new Version$1('9.1.0-next.0+34.sha-c013dd4');
 
     /**
      * @license
@@ -50457,7 +50457,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.0+32.sha-1939676');
+    var VERSION$3 = new Version$1('9.1.0-next.0+34.sha-c013dd4');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
