@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.1+37.sha-45c7b23
+ * @license Angular v9.0.1+43.sha-c305b5c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18771,7 +18771,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.1+37.sha-45c7b23');
+    var VERSION$1 = new Version('9.0.1+43.sha-c305b5c');
 
     /**
      * @license
@@ -32627,6 +32627,45 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function stringifyCSSSelectorList(selectorList) {
         return selectorList.map(stringifyCSSSelector).join(',');
     }
+    /**
+     * Extracts attributes and classes information from a given CSS selector.
+     *
+     * This function is used while creating a component dynamically. In this case, the host element
+     * (that is created dynamically) should contain attributes and classes specified in component's CSS
+     * selector.
+     *
+     * @param selector CSS selector in parsed form (in a form of array)
+     * @returns object with `attrs` and `classes` fields that contain extracted information
+     */
+    function extractAttrsAndClassesFromSelector(selector) {
+        var attrs = [];
+        var classes = [];
+        var i = 1;
+        var mode = 2 /* ATTRIBUTE */;
+        while (i < selector.length) {
+            var valueOrMarker = selector[i];
+            if (typeof valueOrMarker === 'string') {
+                if (mode === 2 /* ATTRIBUTE */) {
+                    if (valueOrMarker !== '') {
+                        attrs.push(valueOrMarker, selector[++i]);
+                    }
+                }
+                else if (mode === 8 /* CLASS */) {
+                    classes.push(valueOrMarker);
+                }
+            }
+            else {
+                // According to CssSelector spec, once we come across `SelectorFlags.NOT` flag, the negative
+                // mode is maintained for remaining chunks of a selector. Since attributes and classes are
+                // extracted only for "positive" part of the selector, we can stop here.
+                if (!isPositive(mode))
+                    break;
+                mode = valueOrMarker;
+            }
+            i++;
+        }
+        return { attrs: attrs, classes: classes };
+    }
 
     /**
      * @license
@@ -38081,7 +38120,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * @returns Component view created
      */
-    function createRootComponentView(rNode, def, rootView, rendererFactory, hostRenderer, addVersion, sanitizer) {
+    function createRootComponentView(rNode, def, rootView, rendererFactory, hostRenderer, sanitizer) {
         var tView = rootView[TVIEW];
         ngDevMode && assertDataInRange(rootView, 0 + HEADER_OFFSET);
         rootView[0 + HEADER_OFFSET] = rNode;
@@ -38100,12 +38139,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         var viewRenderer = rendererFactory.createRenderer(rNode, def);
-        if (rNode !== null && addVersion) {
-            ngDevMode && ngDevMode.rendererSetAttribute++;
-            isProceduralRenderer(hostRenderer) ?
-                hostRenderer.setAttribute(rNode, 'ng-version', addVersion) :
-                rNode.setAttribute('ng-version', addVersion);
-        }
         var componentView = createLView(rootView, getOrCreateTComponentView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, viewRenderer, sanitizer);
         if (tView.firstCreatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), tView, def.type);
@@ -38455,7 +38488,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.1+37.sha-45c7b23');
+    var VERSION$2 = new Version$1('9.0.1+43.sha-c305b5c');
 
     /**
      * @license
@@ -41209,7 +41242,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Create the root view. Uses empty TView and ContentTemplate.
             var rootTView = createTView(0 /* Root */, -1, null, 1, 0, null, null, null, null, null);
             var rootLView = createLView(null, rootTView, rootContext, rootFlags, null, null, rendererFactory, hostRenderer, sanitizer, rootViewInjector);
-            var addVersion = rootSelectorOrNode && hostRNode ? VERSION$2.full : null;
             // rootView is the parent when bootstrapping
             // TODO(misko): it looks like we are entering view here but we don't really need to as
             // `renderView` does that. However as the code is written it is needed because
@@ -41219,7 +41251,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var component;
             var tElementNode;
             try {
-                var componentView = createRootComponentView(hostRNode, this.componentDef, rootLView, rendererFactory, hostRenderer, addVersion, null);
+                var componentView = createRootComponentView(hostRNode, this.componentDef, rootLView, rendererFactory, hostRenderer);
+                if (hostRNode) {
+                    if (rootSelectorOrNode) {
+                        setUpAttributes(hostRenderer, hostRNode, ['ng-version', VERSION$2.full]);
+                    }
+                    else {
+                        // If host element is created as a part of this function call (i.e. `rootSelectorOrNode`
+                        // is not defined), also apply attributes and classes extracted from component selector.
+                        // Extract attributes and classes from the first selector only to match VE behavior.
+                        var _a = extractAttrsAndClassesFromSelector(this.componentDef.selectors[0]), attrs = _a.attrs, classes = _a.classes;
+                        if (attrs) {
+                            setUpAttributes(hostRenderer, hostRNode, attrs);
+                        }
+                        if (classes && classes.length > 0) {
+                            writeDirectClass(hostRenderer, hostRNode, classes.join(' '));
+                        }
+                    }
+                }
                 tElementNode = getTNode(rootLView[TVIEW], 0);
                 if (projectableNodes) {
                     // projectable nodes can be passed as array of arrays or an array of iterables (ngUpgrade
@@ -50456,7 +50505,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.1+37.sha-45c7b23');
+    var VERSION$3 = new Version$1('9.0.1+43.sha-c305b5c');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
