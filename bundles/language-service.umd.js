@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.1+3.sha-1997b86
+ * @license Angular v9.1.0-next.1+1.sha-8e12707
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18756,7 +18756,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.1+3.sha-1997b86');
+    var VERSION$1 = new Version('9.1.0-next.1+1.sha-8e12707');
 
     /**
      * @license
@@ -46709,14 +46709,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     fillProperties(definition.inputs, superDef.inputs);
                     fillProperties(definition.declaredInputs, superDef.declaredInputs);
                     fillProperties(definition.outputs, superDef.outputs);
-                    // Merge animations metadata.
-                    // If `superDef` is a Component, the `data` field is present (defaults to an empty object).
-                    if (isComponentDef(superDef) && superDef.data.animation) {
-                        // If super def is a Component, the `definition` is also a Component, since Directives can
-                        // not inherit Components (we throw an error above and cannot reach this code).
-                        var defData = definition.data;
-                        defData.animation = (defData.animation || []).concat(superDef.data.animation);
-                    }
                     // Inherit hooks
                     // Assume super class inheritance feature has already run.
                     writeableDef.afterContentChecked =
@@ -47536,7 +47528,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.1+3.sha-1997b86');
+    var VERSION$2 = new Version$1('9.1.0-next.1+1.sha-8e12707');
 
     /**
      * @license
@@ -62679,7 +62671,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.1+3.sha-1997b86');
+    var VERSION$3 = new Version$1('9.1.0-next.1+1.sha-8e12707');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
