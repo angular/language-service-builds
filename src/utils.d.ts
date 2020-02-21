@@ -23,7 +23,7 @@ export declare function spanOf(span: SpanHolder | ParseSourceSpan | undefined): 
 export declare function inSpan(position: number, span?: Span, exclusive?: boolean): boolean;
 export declare function offsetSpan(span: Span, amount: number): Span;
 export declare function isNarrower(spanA: Span, spanB: Span): boolean;
-export declare function hasTemplateReference(type: CompileTypeMetadata): boolean;
+export declare function isStructuralDirective(type: CompileTypeMetadata): boolean;
 export declare function getSelectors(info: AstResult): SelectorInfo;
 export declare function isTypescriptVersion(low: string, high?: string): boolean;
 export declare function diagnosticInfoFromTemplateInfo(info: AstResult): DiagnosticTemplateInfo;
