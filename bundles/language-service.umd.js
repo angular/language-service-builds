@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.2+19.sha-824d9a8
+ * @license Angular v9.0.2+23.sha-a491f7e
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18828,7 +18828,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.2+19.sha-824d9a8');
+    var VERSION$1 = new Version('9.0.2+23.sha-a491f7e');
 
     /**
      * @license
@@ -25497,7 +25497,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 continue;
             }
             var _loop_2 = function (variable) {
-                var symbol = info.members.get(variable.value) || info.query.getBuiltinType(BuiltinType$1.Any);
+                var symbol = info.members.get(variable.value);
+                if (!symbol) {
+                    symbol = getVariableTypeFromDirectiveContext(variable.value, info.query, current);
+                }
                 var kind = info.query.getTypeKind(symbol);
                 if (kind === BuiltinType$1.Any || kind === BuiltinType$1.Unbound) {
                     // For special cases such as ngFor and ngIf, the any type is not very useful.
@@ -25533,22 +25536,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return results;
     }
     /**
-     * Gets the type of an ngFor exported value, as enumerated in
-     * https://angular.io/api/common/NgForOfContext
-     * @param value exported value name
+     * Resolve the type for the variable in `templateElement` by finding the structural
+     * directive which has the context member. Returns any when not found.
+     * @param value variable value name
      * @param query type symbol query
+     * @param templateElement
      */
-    function getNgForExportedValueType(value, query) {
-        switch (value) {
-            case 'index':
-            case 'count':
-                return query.getBuiltinType(BuiltinType$1.Number);
-            case 'first':
-            case 'last':
-            case 'even':
-            case 'odd':
-                return query.getBuiltinType(BuiltinType$1.Boolean);
+    function getVariableTypeFromDirectiveContext(value, query, templateElement) {
+        var e_3, _a;
+        try {
+            for (var _b = __values(templateElement.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var directive = _c.value.directive;
+                var context = query.getTemplateContext(directive.type.reference);
+                if (context) {
+                    var member = context.get(value);
+                    if (member && member.type) {
+                        return member.type;
+                    }
+                }
+            }
         }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
+        return query.getBuiltinType(BuiltinType$1.Any);
     }
     /**
      * Resolve a more specific type for the variable in `templateElement` by inspecting
@@ -25560,34 +25575,36 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param templateElement
      */
     function refinedVariableType(value, mergedTable, query, templateElement) {
-        // Special case the ngFor directive
-        var ngForDirective = templateElement.directives.find(function (d) {
-            var name = identifierName(d.directive.type);
-            return name == 'NgFor' || name == 'NgForOf';
-        });
-        if (ngForDirective) {
-            var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
-            if (ngForOfBinding) {
-                // Check if the variable value is a type exported by the ngFor statement.
-                var result = getNgForExportedValueType(value, query);
-                // Otherwise, check if there is a known type for the ngFor binding.
-                var bindingType = new AstType(mergedTable, query, {}).getType(ngForOfBinding.value);
-                if (!result && bindingType) {
-                    result = query.getElementType(bindingType);
-                }
-                if (result) {
-                    return result;
+        if (value === '$implicit') {
+            // Special case the ngFor directive
+            var ngForDirective = templateElement.directives.find(function (d) {
+                var name = identifierName(d.directive.type);
+                return name == 'NgFor' || name == 'NgForOf';
+            });
+            if (ngForDirective) {
+                var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
+                if (ngForOfBinding) {
+                    // Check if there is a known type for the ngFor binding.
+                    var bindingType = new AstType(mergedTable, query, {}).getType(ngForOfBinding.value);
+                    if (bindingType) {
+                        var result = query.getElementType(bindingType);
+                        if (result) {
+                            return result;
+                        }
+                    }
                 }
             }
         }
         // Special case the ngIf directive ( *ngIf="data$ | async as variable" )
-        var ngIfDirective = templateElement.directives.find(function (d) { return identifierName(d.directive.type) === 'NgIf'; });
-        if (ngIfDirective) {
-            var ngIfBinding = ngIfDirective.inputs.find(function (i) { return i.directiveName === 'ngIf'; });
-            if (ngIfBinding) {
-                var bindingType = new AstType(mergedTable, query, {}).getType(ngIfBinding.value);
-                if (bindingType) {
-                    return bindingType;
+        if (value === 'ngIf') {
+            var ngIfDirective = templateElement.directives.find(function (d) { return identifierName(d.directive.type) === 'NgIf'; });
+            if (ngIfDirective) {
+                var ngIfBinding = ngIfDirective.inputs.find(function (i) { return i.directiveName === 'ngIf'; });
+                if (ngIfBinding) {
+                    var bindingType = new AstType(mergedTable, query, {}).getType(ngIfBinding.value);
+                    if (bindingType) {
+                        return bindingType;
+                    }
                 }
             }
         }
@@ -25709,7 +25726,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return ast.sourceSpan.start.offset;
         };
         ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, event) {
-            var e_3, _a;
+            var e_4, _a;
             var scope = this.getExpressionScope(this.path, event);
             var analyzer = new AstType(scope, this.info.query, { event: event });
             try {
@@ -25720,12 +25737,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     this.reportDiagnostic(message, span, kind);
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
         };
         ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
@@ -25739,7 +25756,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
     function hasTemplateReference$1(type) {
-        var e_4, _a;
+        var e_5, _a;
         if (type.diDeps) {
             try {
                 for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -25749,12 +25766,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         return true;
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_5) throw e_5.error; }
             }
         }
         return false;
@@ -38545,7 +38562,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.2+19.sha-824d9a8');
+    var VERSION$2 = new Version$1('9.0.2+23.sha-a491f7e');
 
     /**
      * @license
@@ -50562,7 +50579,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.2+19.sha-824d9a8');
+    var VERSION$3 = new Version$1('9.0.2+23.sha-a491f7e');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
