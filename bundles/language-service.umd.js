@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.2+23.sha-a491f7e
+ * @license Angular v9.0.2+27.sha-bb09cd0
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18828,7 +18828,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.2+23.sha-a491f7e');
+    var VERSION$1 = new Version('9.0.2+27.sha-bb09cd0');
 
     /**
      * @license
@@ -28284,11 +28284,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var symbol;
         var span;
         var staticSymbol;
-        var attributeValueSymbol = function () {
+        var attributeValueSymbol = function (ast) {
             var attribute = findAttribute(info, position);
             if (attribute) {
                 if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
-                    var result = getSymbolInAttributeValue(info, path, attribute);
+                    var result = void 0;
+                    if (attribute.name.startsWith('*')) {
+                        result = getSymbolInMicrosyntax(info, path, attribute);
+                    }
+                    else {
+                        var dinfo = diagnosticInfoFromTemplateInfo(info);
+                        var scope = getExpressionScope(dinfo, path);
+                        result = getExpressionSymbol(scope, ast, templatePosition, info.template.query);
+                    }
                     if (result) {
                         symbol = result.symbol;
                         span = offsetSpan(result.span, attribute.valueSpan.start.offset);
@@ -28328,13 +28336,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             },
             visitVariable: function (ast) { },
             visitEvent: function (ast) {
-                if (!attributeValueSymbol()) {
+                if (!attributeValueSymbol(ast.handler)) {
                     symbol = findOutputBinding(ast, path, info.template.query);
                     symbol = symbol && new OverrideKindSymbol(symbol, DirectiveKind.EVENT);
                     span = spanOf(ast);
                 }
             },
-            visitElementProperty: function (ast) { attributeValueSymbol(); },
+            visitElementProperty: function (ast) { attributeValueSymbol(ast.value); },
             visitAttr: function (ast) {
                 var e_1, _a;
                 var element = path.head;
@@ -28391,7 +28399,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 span = spanOf(ast);
             },
             visitDirectiveProperty: function (ast) {
-                if (!attributeValueSymbol()) {
+                if (!attributeValueSymbol(ast.value)) {
                     var directive = findParentOfBinding(info.templateAst, ast, templatePosition);
                     var attribute = findAttribute(info, position);
                     if (directive && attribute) {
@@ -28419,8 +28427,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             };
         }
     }
-    // Get the symbol in attribute value at template position.
-    function getSymbolInAttributeValue(info, path, attribute) {
+    // Get the symbol in microsyntax at template position.
+    function getSymbolInMicrosyntax(info, path, attribute) {
         if (!attribute.valueSpan) {
             return;
         }
@@ -38562,7 +38570,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.2+23.sha-a491f7e');
+    var VERSION$2 = new Version$1('9.0.2+27.sha-bb09cd0');
 
     /**
      * @license
@@ -50579,7 +50587,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.2+23.sha-a491f7e');
+    var VERSION$3 = new Version$1('9.0.2+27.sha-bb09cd0');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
