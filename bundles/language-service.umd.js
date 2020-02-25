@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.1+57.sha-c414f45
+ * @license Angular v9.1.0-next.1+60.sha-294e56d
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18813,7 +18813,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.1+57.sha-c414f45');
+    var VERSION$1 = new Version('9.1.0-next.1+60.sha-294e56d');
 
     /**
      * @license
@@ -28333,8 +28333,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitElementProperty: function (ast) { attributeValueSymbol(ast.value); },
             visitAttr: function (ast) {
                 var e_1, _a;
-                var element = path.head;
-                if (!element || !(element instanceof ElementAst))
+                var element = path.first(ElementAst);
+                if (!element)
                     return;
                 // Create a mapping of all directives applied to the element from their selectors.
                 var matcher = new SelectorMatcher();
@@ -47934,7 +47934,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.1+57.sha-c414f45');
+    var VERSION$2 = new Version$1('9.1.0-next.1+60.sha-294e56d');
 
     /**
      * @license
@@ -55509,24 +55509,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * Compute the pair of transitive scopes (compilation scope and exported scope) for a given module.
      *
-     * By default this operation is memoized and the result is cached on the module's definition. You
-     * can avoid memoization and previously stored results (if available) by providing the second
-     * argument with the `true` value (forcing transitive scopes recalculation).
-     *
-     * This function can be called on modules with components that have not fully compiled yet, but the
-     * result should not be used until they have.
+     * This operation is memoized and the result is cached on the module's definition. This function can
+     * be called on modules with components that have not fully compiled yet, but the result should not
+     * be used until they have.
      *
      * @param moduleType module that transitive scope should be calculated for.
-     * @param forceRecalc flag that indicates whether previously calculated and memoized values should
-     * be ignored and transitive scope to be fully recalculated.
      */
-    function transitiveScopesFor(moduleType, forceRecalc) {
-        if (forceRecalc === void 0) { forceRecalc = false; }
+    function transitiveScopesFor(moduleType) {
         if (!isNgModule(moduleType)) {
             throw new Error(moduleType.name + " does not have a module def (\u0275mod property)");
         }
         var def = getNgModuleDef(moduleType);
-        if (!forceRecalc && def.transitiveCompileScopes !== null) {
+        if (def.transitiveCompileScopes !== null) {
             return def.transitiveCompileScopes;
         }
         var scopes = {
@@ -55559,7 +55553,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             // When this module imports another, the imported module's exported directives and pipes are
             // added to the compilation scope of this module.
-            var importedScope = transitiveScopesFor(importedType, forceRecalc);
+            var importedScope = transitiveScopesFor(importedType);
             importedScope.exported.directives.forEach(function (entry) { return scopes.compilation.directives.add(entry); });
             importedScope.exported.pipes.forEach(function (entry) { return scopes.compilation.pipes.add(entry); });
         });
@@ -55570,7 +55564,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (isNgModule(exportedType)) {
                 // When this module exports another, the exported module's exported directives and pipes are
                 // added to both the compilation and exported scopes of this module.
-                var exportedScope = transitiveScopesFor(exportedType, forceRecalc);
+                var exportedScope = transitiveScopesFor(exportedType);
                 exportedScope.exported.directives.forEach(function (entry) {
                     scopes.compilation.directives.add(entry);
                     scopes.exported.directives.add(entry);
@@ -55587,9 +55581,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 scopes.exported.directives.add(exportedType);
             }
         });
-        if (!forceRecalc) {
-            def.transitiveCompileScopes = scopes;
-        }
+        def.transitiveCompileScopes = scopes;
         return scopes;
     }
     function expandModuleWithProviders(value) {
@@ -63088,7 +63080,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.1+57.sha-c414f45');
+    var VERSION$3 = new Version$1('9.1.0-next.1+60.sha-294e56d');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
