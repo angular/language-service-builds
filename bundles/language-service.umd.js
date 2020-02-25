@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.1+59.sha-8e354da
+ * @license Angular v9.1.0-next.1+62.sha-835618c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18813,7 +18813,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.1+59.sha-8e354da');
+    var VERSION$1 = new Version('9.1.0-next.1+62.sha-835618c');
 
     /**
      * @license
@@ -47934,7 +47934,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.1+59.sha-8e354da');
+    var VERSION$2 = new Version$1('9.1.0-next.1+62.sha-835618c');
 
     /**
      * @license
@@ -52201,11 +52201,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var COMPONENT_FACTORY_RESOLVER = {
-        provide: ComponentFactoryResolver,
-        useClass: ComponentFactoryResolver$1,
-        deps: [NgModuleRef],
-    };
     var NgModuleRef$1 = /** @class */ (function (_super) {
         __extends(NgModuleRef$1, _super);
         function NgModuleRef$1(ngModuleType, _parent) {
@@ -52215,21 +52210,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this._bootstrapComponents = [];
             _this.injector = _this;
             _this.destroyCbs = [];
+            // When bootstrapping a module we have a dependency graph that looks like this:
+            // ApplicationRef -> ComponentFactoryResolver -> NgModuleRef. The problem is that if the
+            // module being resolved tries to inject the ComponentFactoryResolver, it'll create a
+            // circular dependency which will result in a runtime error, because the injector doesn't
+            // exist yet. We work around the issue by creating the ComponentFactoryResolver ourselves
+            // and providing it, rather than letting the injector resolve it.
+            _this.componentFactoryResolver = new ComponentFactoryResolver$1(_this);
             var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
             var ngLocaleIdDef = getNgLocaleIdDef(ngModuleType);
-            if (ngLocaleIdDef) {
-                setLocaleId(ngLocaleIdDef);
-            }
+            ngLocaleIdDef && setLocaleId(ngLocaleIdDef);
             _this._bootstrapComponents = maybeUnwrapFn(ngModuleDef.bootstrap);
-            var additionalProviders = [
-                {
-                    provide: NgModuleRef,
-                    useValue: _this,
-                },
-                COMPONENT_FACTORY_RESOLVER
-            ];
-            _this._r3Injector = createInjector(ngModuleType, _parent, additionalProviders, stringify$1(ngModuleType));
+            _this._r3Injector = createInjector(ngModuleType, _parent, [
+                { provide: NgModuleRef, useValue: _this },
+                { provide: ComponentFactoryResolver, useValue: _this.componentFactoryResolver }
+            ], stringify$1(ngModuleType));
             _this.instance = _this.get(ngModuleType);
             return _this;
         }
@@ -52241,13 +52237,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this._r3Injector.get(token, notFoundValue, injectFlags);
         };
-        Object.defineProperty(NgModuleRef$1.prototype, "componentFactoryResolver", {
-            get: function () {
-                return this.get(ComponentFactoryResolver);
-            },
-            enumerable: true,
-            configurable: true
-        });
         NgModuleRef$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             var injector = this._r3Injector;
@@ -63080,7 +63069,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.1+59.sha-8e354da');
+    var VERSION$3 = new Version$1('9.1.0-next.1+62.sha-835618c');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
