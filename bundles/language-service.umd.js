@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.1+60.sha-294e56d
+ * @license Angular v9.1.0-next.1+58.sha-0a1a989
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18828,7 +18828,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.1+60.sha-294e56d');
+    var VERSION$1 = new Version('9.1.0-next.1+58.sha-0a1a989');
 
     /**
      * @license
@@ -28348,8 +28348,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitElementProperty: function (ast) { attributeValueSymbol(ast.value); },
             visitAttr: function (ast) {
                 var e_1, _a;
-                var element = path.first(ElementAst);
-                if (!element)
+                var element = path.head;
+                if (!element || !(element instanceof ElementAst))
                     return;
                 // Create a mapping of all directives applied to the element from their selectors.
                 var matcher = new SelectorMatcher();
@@ -38573,7 +38573,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.1+60.sha-294e56d');
+    var VERSION$2 = new Version$1('9.1.0-next.1+58.sha-0a1a989');
 
     /**
      * @license
@@ -50591,7 +50591,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.1+60.sha-294e56d');
+    var VERSION$3 = new Version$1('9.1.0-next.1+58.sha-0a1a989');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
