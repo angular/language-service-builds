@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.2+55.sha-406ce8c
+ * @license Angular v9.0.2+73.sha-79aaaa3
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18828,7 +18828,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.2+55.sha-406ce8c');
+    var VERSION$1 = new Version('9.0.2+73.sha-79aaaa3');
 
     /**
      * @license
@@ -36374,7 +36374,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function providerToFactory(provider, ngModuleType, providers) {
         var factory = undefined;
         if (isTypeProvider(provider)) {
-            return injectableDefOrInjectorDefFactory(resolveForwardRef$1(provider));
+            var unwrappedProvider = resolveForwardRef$1(provider);
+            return getFactoryDef(unwrappedProvider) || injectableDefOrInjectorDefFactory(unwrappedProvider);
         }
         else {
             if (isValueProvider(provider)) {
@@ -36396,7 +36397,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     factory = function () { return new ((classRef_1).bind.apply((classRef_1), __spread([void 0], injectArgs(provider.deps))))(); };
                 }
                 else {
-                    return injectableDefOrInjectorDefFactory(classRef_1);
+                    return getFactoryDef(classRef_1) || injectableDefOrInjectorDefFactory(classRef_1);
                 }
             }
         }
@@ -38570,7 +38571,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.2+55.sha-406ce8c');
+    var VERSION$2 = new Version$1('9.0.2+73.sha-79aaaa3');
 
     /**
      * @license
@@ -50576,7 +50577,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.2+55.sha-406ce8c');
+    var VERSION$3 = new Version$1('9.0.2+73.sha-79aaaa3');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
