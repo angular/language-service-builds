@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.4+10.sha-fcad075
+ * @license Angular v9.0.4+14.sha-e13fcba
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18747,7 +18747,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.4+10.sha-fcad075');
+    var VERSION$1 = new Version('9.0.4+14.sha-e13fcba');
 
     /**
      * @license
@@ -30080,8 +30080,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function throwError(msg, actual, expected, comparison) {
-        // tslint:disable-next-line
-        debugger; // Left intentionally for better debugger experience.
         throw new Error("ASSERTION ERROR: " + msg +
             (comparison == null ? '' : " [Expected=> " + expected + " " + comparison + " " + actual + " <=Actual]"));
     }
@@ -38542,7 +38540,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.4+10.sha-fcad075');
+    var VERSION$2 = new Version$1('9.0.4+14.sha-e13fcba');
 
     /**
      * @license
@@ -50548,7 +50546,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.4+10.sha-fcad075');
+    var VERSION$3 = new Version$1('9.0.4+14.sha-e13fcba');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
