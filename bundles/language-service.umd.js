@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+36.sha-44e47da
+ * @license Angular v9.1.0-next.2+37.sha-5652fb1
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18736,7 +18736,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+36.sha-44e47da');
+    var VERSION$1 = new Version('9.1.0-next.2+37.sha-5652fb1');
 
     /**
      * @license
@@ -47907,7 +47907,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+36.sha-44e47da');
+    var VERSION$2 = new Version$1('9.1.0-next.2+37.sha-5652fb1');
 
     /**
      * @license
@@ -54745,9 +54745,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             for (var i = 0; i < tQueryMatches.length; i += 2) {
                 var tNodeIdx = tQueryMatches[i];
                 if (tNodeIdx > 0) {
-                    var viewResult = lViewResults[i / 2];
-                    ngDevMode && assertDefined(viewResult, 'materialized query result should be defined');
-                    result.push(viewResult);
+                    result.push(lViewResults[i / 2]);
                 }
                 else {
                     var childQueryIndex = tQueryMatches[i + 1];
@@ -63043,7 +63041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+36.sha-44e47da');
+    var VERSION$3 = new Version$1('9.1.0-next.2+37.sha-5652fb1');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
