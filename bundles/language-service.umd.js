@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+33.sha-40da51f
+ * @license Angular v9.1.0-next.2+35.sha-a153b61
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -12821,8 +12821,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var binding = null;
             var prefix = name.substring(0, 6);
             var isStyle = name === 'style' || prefix === 'style.' || prefix === 'style!';
-            var isClass = !isStyle &&
-                (name === 'class' || name === 'className' || prefix === 'class.' || prefix === 'class!');
+            var isClass = !isStyle && (name === 'class' || prefix === 'class.' || prefix === 'class!');
             if (isStyle || isClass) {
                 var isMapBased = name.charAt(5) !== '.'; // style.prop or class.prop makes this a no
                 var property = name.substr(isMapBased ? 5 : 6); // the dot explains why there's a +1
@@ -18752,7 +18751,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+33.sha-40da51f');
+    var VERSION$1 = new Version('9.1.0-next.2+35.sha-a153b61');
 
     /**
      * @license
@@ -38548,7 +38547,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+33.sha-40da51f');
+    var VERSION$2 = new Version$1('9.1.0-next.2+35.sha-a153b61');
 
     /**
      * @license
@@ -50555,7 +50554,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+33.sha-40da51f');
+    var VERSION$3 = new Version$1('9.1.0-next.2+35.sha-a153b61');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
