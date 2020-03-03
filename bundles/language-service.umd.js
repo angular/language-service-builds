@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+56.sha-17cf04e
+ * @license Angular v9.1.0-next.2+57.sha-1f8a243
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18750,7 +18750,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+56.sha-17cf04e');
+    var VERSION$1 = new Version('9.1.0-next.2+57.sha-1f8a243');
 
     /**
      * @license
@@ -36094,15 +36094,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return NULL_INJECTOR;
     }
     /**
-     * Create a new `Injector` which is configured using a `defType` of `InjectorType<any>`s.
-     *
-     * @publicApi
+     * Creates a new injector without eagerly resolving its injector types. Can be used in places
+     * where resolving the injector types immediately can lead to an infinite loop. The injector types
+     * should be resolved at a later point by calling `_resolveInjectorDefTypes`.
      */
-    function createInjector(defType, parent, additionalProviders, name) {
+    function createInjectorWithoutInjectorInstances(defType, parent, additionalProviders, name) {
         if (parent === void 0) { parent = null; }
         if (additionalProviders === void 0) { additionalProviders = null; }
-        parent = parent || getNullInjector();
-        return new R3Injector(defType, additionalProviders, parent, name);
+        return new R3Injector(defType, additionalProviders, parent || getNullInjector(), name);
     }
     var R3Injector = /** @class */ (function () {
         function R3Injector(def, additionalProviders, parent, source) {
@@ -36136,8 +36135,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // any injectable scoped to APP_ROOT_SCOPE.
             var record = this.records.get(INJECTOR_SCOPE);
             this.scope = record != null ? record.value : null;
-            // Eagerly instantiate the InjectorType classes themselves.
-            this.injectorDefTypes.forEach(function (defType) { return _this.get(defType); });
             // Source name, used for debugging
             this.source = source || (typeof def === 'object' ? null : stringify$1(def));
         }
@@ -36231,6 +36228,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Lastly, clean up the state by restoring the previous injector.
                 setCurrentInjector(previousInjector);
             }
+        };
+        /** @internal */
+        R3Injector.prototype._resolveInjectorDefTypes = function () {
+            var _this = this;
+            this.injectorDefTypes.forEach(function (defType) { return _this.get(defType); });
         };
         R3Injector.prototype.toString = function () {
             var tokens = [], records = this.records;
@@ -38654,7 +38656,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+56.sha-17cf04e');
+    var VERSION$2 = new Version$1('9.1.0-next.2+57.sha-1f8a243');
 
     /**
      * @license
@@ -40799,7 +40801,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         });
         return TemplateRef_;
     }(TemplateRef));
-    function createInjector$1(view, elDef) {
+    function createInjector(view, elDef) {
         return new Injector_(view, elDef);
     }
     var Injector_ = /** @class */ (function () {
@@ -41108,7 +41110,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                     case InjectorRefTokenKey$1:
                     case INJECTORRefTokenKey$1:
-                        return createInjector$1(searchView, elDef);
+                        return createInjector(searchView, elDef);
                     default:
                         var providerDef_1 = (allowPrivateServices ? elDef.element.allProviders :
                             elDef.element.publicProviders)[tokenKey];
@@ -41664,10 +41666,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var ngLocaleIdDef = getNgLocaleIdDef(ngModuleType);
             ngLocaleIdDef && setLocaleId(ngLocaleIdDef);
             _this._bootstrapComponents = maybeUnwrapFn(ngModuleDef.bootstrap);
-            _this._r3Injector = createInjector(ngModuleType, _parent, [
+            _this._r3Injector = createInjectorWithoutInjectorInstances(ngModuleType, _parent, [
                 { provide: NgModuleRef, useValue: _this },
                 { provide: ComponentFactoryResolver, useValue: _this.componentFactoryResolver }
             ], stringify$1(ngModuleType));
+            // We need to resolve the injector types separately from the injector creation, because
+            // the module might be trying to use this ref in its contructor for DI which will cause a
+            // circular error that will eventually error out, because the injector isn't created yet.
+            _this._r3Injector._resolveInjectorDefTypes();
             _this.instance = _this.get(ngModuleType);
             return _this;
         }
@@ -47692,7 +47698,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "injector", {
-            get: function () { return createInjector$1(this.elView, this.elDef); },
+            get: function () { return createInjector(this.elView, this.elDef); },
             enumerable: true,
             configurable: true
         });
@@ -50661,7 +50667,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+56.sha-17cf04e');
+    var VERSION$3 = new Version$1('9.1.0-next.2+57.sha-1f8a243');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
