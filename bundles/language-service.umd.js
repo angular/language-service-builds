@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+41.sha-47a1811
+ * @license Angular v9.1.0-next.2+46.sha-c195d22
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -17863,7 +17863,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_ARRAY = [];
     // This regex matches any binding names that contain the "attr." prefix, e.g. "attr.required"
     // If there is a match, the first matching group will contain the attribute name to bind.
     var ATTR_REGEX = /attr\.([^\]]+)/;
@@ -17898,7 +17897,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Add features to the definition map.
      */
     function addFeatures(definitionMap, meta) {
-        // e.g. `features: [NgOnChangesFeature()]`
+        // e.g. `features: [NgOnChangesFeature]`
         var features = [];
         var providers = meta.providers;
         var viewProviders = meta.viewProviders;
@@ -17916,7 +17915,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             features.push(importExpr(Identifiers$1.CopyDefinitionFeature));
         }
         if (meta.lifecycle.usesOnChanges) {
-            features.push(importExpr(Identifiers$1.NgOnChangesFeature).callFn(EMPTY_ARRAY));
+            features.push(importExpr(Identifiers$1.NgOnChangesFeature));
         }
         if (features.length) {
             definitionMap.set('features', literalArr(features));
@@ -18751,7 +18750,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+41.sha-47a1811');
+    var VERSION$1 = new Version('9.1.0-next.2+46.sha-c195d22');
 
     /**
      * @license
@@ -29250,6 +29249,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Convince closure compiler that the wrapped function has no side-effects.
+     *
+     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
+     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
+     * It is important that the return value for the `noSideEffects` function be assigned
+     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
+     * compiler.
+     */
+    function noSideEffects(fn) {
+        return { toString: fn }.toString();
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var ANNOTATIONS = '__annotations__';
     var PARAMETERS = '__parameters__';
     var PROP_METADATA = '__prop__metadata__';
@@ -29257,38 +29276,40 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @suppress {globalThis}
      */
     function makeDecorator(name, props, parentClass, additionalProcessing, typeFn) {
-        var metaCtor = makeMetadataCtor(props);
-        function DecoratorFactory() {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
+        return noSideEffects(function () {
+            var metaCtor = makeMetadataCtor(props);
+            function DecoratorFactory() {
+                var _a;
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                if (this instanceof DecoratorFactory) {
+                    metaCtor.call.apply(metaCtor, __spread([this], args));
+                    return this;
+                }
+                var annotationInstance = new ((_a = DecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
+                return function TypeDecorator(cls) {
+                    if (typeFn)
+                        typeFn.apply(void 0, __spread([cls], args));
+                    // Use of Object.defineProperty is important since it creates non-enumerable property which
+                    // prevents the property is copied during subclassing.
+                    var annotations = cls.hasOwnProperty(ANNOTATIONS) ?
+                        cls[ANNOTATIONS] :
+                        Object.defineProperty(cls, ANNOTATIONS, { value: [] })[ANNOTATIONS];
+                    annotations.push(annotationInstance);
+                    if (additionalProcessing)
+                        additionalProcessing(cls);
+                    return cls;
+                };
             }
-            if (this instanceof DecoratorFactory) {
-                metaCtor.call.apply(metaCtor, __spread([this], args));
-                return this;
+            if (parentClass) {
+                DecoratorFactory.prototype = Object.create(parentClass.prototype);
             }
-            var annotationInstance = new ((_a = DecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            return function TypeDecorator(cls) {
-                if (typeFn)
-                    typeFn.apply(void 0, __spread([cls], args));
-                // Use of Object.defineProperty is important since it creates non-enumerable property which
-                // prevents the property is copied during subclassing.
-                var annotations = cls.hasOwnProperty(ANNOTATIONS) ?
-                    cls[ANNOTATIONS] :
-                    Object.defineProperty(cls, ANNOTATIONS, { value: [] })[ANNOTATIONS];
-                annotations.push(annotationInstance);
-                if (additionalProcessing)
-                    additionalProcessing(cls);
-                return cls;
-            };
-        }
-        if (parentClass) {
-            DecoratorFactory.prototype = Object.create(parentClass.prototype);
-        }
-        DecoratorFactory.prototype.ngMetadataName = name;
-        DecoratorFactory.annotationCls = DecoratorFactory;
-        return DecoratorFactory;
+            DecoratorFactory.prototype.ngMetadataName = name;
+            DecoratorFactory.annotationCls = DecoratorFactory;
+            return DecoratorFactory;
+        });
     }
     function makeMetadataCtor(props) {
         return function ctor() {
@@ -29305,75 +29326,79 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
     }
     function makeParamDecorator(name, props, parentClass) {
-        var metaCtor = makeMetadataCtor(props);
-        function ParamDecoratorFactory() {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            if (this instanceof ParamDecoratorFactory) {
-                metaCtor.apply(this, args);
-                return this;
-            }
-            var annotationInstance = new ((_a = ParamDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            ParamDecorator.annotation = annotationInstance;
-            return ParamDecorator;
-            function ParamDecorator(cls, unusedKey, index) {
-                // Use of Object.defineProperty is important since it creates non-enumerable property which
-                // prevents the property is copied during subclassing.
-                var parameters = cls.hasOwnProperty(PARAMETERS) ?
-                    cls[PARAMETERS] :
-                    Object.defineProperty(cls, PARAMETERS, { value: [] })[PARAMETERS];
-                // there might be gaps if some in between parameters do not have annotations.
-                // we pad with nulls.
-                while (parameters.length <= index) {
-                    parameters.push(null);
+        return noSideEffects(function () {
+            var metaCtor = makeMetadataCtor(props);
+            function ParamDecoratorFactory() {
+                var _a;
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
                 }
-                (parameters[index] = parameters[index] || []).push(annotationInstance);
-                return cls;
+                if (this instanceof ParamDecoratorFactory) {
+                    metaCtor.apply(this, args);
+                    return this;
+                }
+                var annotationInstance = new ((_a = ParamDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
+                ParamDecorator.annotation = annotationInstance;
+                return ParamDecorator;
+                function ParamDecorator(cls, unusedKey, index) {
+                    // Use of Object.defineProperty is important since it creates non-enumerable property which
+                    // prevents the property is copied during subclassing.
+                    var parameters = cls.hasOwnProperty(PARAMETERS) ?
+                        cls[PARAMETERS] :
+                        Object.defineProperty(cls, PARAMETERS, { value: [] })[PARAMETERS];
+                    // there might be gaps if some in between parameters do not have annotations.
+                    // we pad with nulls.
+                    while (parameters.length <= index) {
+                        parameters.push(null);
+                    }
+                    (parameters[index] = parameters[index] || []).push(annotationInstance);
+                    return cls;
+                }
             }
-        }
-        if (parentClass) {
-            ParamDecoratorFactory.prototype = Object.create(parentClass.prototype);
-        }
-        ParamDecoratorFactory.prototype.ngMetadataName = name;
-        ParamDecoratorFactory.annotationCls = ParamDecoratorFactory;
-        return ParamDecoratorFactory;
+            if (parentClass) {
+                ParamDecoratorFactory.prototype = Object.create(parentClass.prototype);
+            }
+            ParamDecoratorFactory.prototype.ngMetadataName = name;
+            ParamDecoratorFactory.annotationCls = ParamDecoratorFactory;
+            return ParamDecoratorFactory;
+        });
     }
     function makePropDecorator(name, props, parentClass, additionalProcessing) {
-        var metaCtor = makeMetadataCtor(props);
-        function PropDecoratorFactory() {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
+        return noSideEffects(function () {
+            var metaCtor = makeMetadataCtor(props);
+            function PropDecoratorFactory() {
+                var _a;
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                if (this instanceof PropDecoratorFactory) {
+                    metaCtor.apply(this, args);
+                    return this;
+                }
+                var decoratorInstance = new ((_a = PropDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
+                function PropDecorator(target, name) {
+                    var constructor = target.constructor;
+                    // Use of Object.defineProperty is important since it creates non-enumerable property which
+                    // prevents the property is copied during subclassing.
+                    var meta = constructor.hasOwnProperty(PROP_METADATA) ?
+                        constructor[PROP_METADATA] :
+                        Object.defineProperty(constructor, PROP_METADATA, { value: {} })[PROP_METADATA];
+                    meta[name] = meta.hasOwnProperty(name) && meta[name] || [];
+                    meta[name].unshift(decoratorInstance);
+                    if (additionalProcessing)
+                        additionalProcessing.apply(void 0, __spread([target, name], args));
+                }
+                return PropDecorator;
             }
-            if (this instanceof PropDecoratorFactory) {
-                metaCtor.apply(this, args);
-                return this;
+            if (parentClass) {
+                PropDecoratorFactory.prototype = Object.create(parentClass.prototype);
             }
-            var decoratorInstance = new ((_a = PropDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            function PropDecorator(target, name) {
-                var constructor = target.constructor;
-                // Use of Object.defineProperty is important since it creates non-enumerable property which
-                // prevents the property is copied during subclassing.
-                var meta = constructor.hasOwnProperty(PROP_METADATA) ?
-                    constructor[PROP_METADATA] :
-                    Object.defineProperty(constructor, PROP_METADATA, { value: {} })[PROP_METADATA];
-                meta[name] = meta.hasOwnProperty(name) && meta[name] || [];
-                meta[name].unshift(decoratorInstance);
-                if (additionalProcessing)
-                    additionalProcessing.apply(void 0, __spread([target, name], args));
-            }
-            return PropDecorator;
-        }
-        if (parentClass) {
-            PropDecoratorFactory.prototype = Object.create(parentClass.prototype);
-        }
-        PropDecoratorFactory.prototype.ngMetadataName = name;
-        PropDecoratorFactory.annotationCls = PropDecoratorFactory;
-        return PropDecoratorFactory;
+            PropDecoratorFactory.prototype.ngMetadataName = name;
+            PropDecoratorFactory.annotationCls = PropDecoratorFactory;
+            return PropDecoratorFactory;
+        });
     }
 
     /**
@@ -30375,7 +30400,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * code.
      */
     var EMPTY_OBJ = {};
-    var EMPTY_ARRAY$1 = [];
+    var EMPTY_ARRAY = [];
     // freezing the values prevents any code from accidentally inserting new values in
     if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
         // These property accesses can be ignored because ngDevMode will be set to false
@@ -30383,7 +30408,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_OBJ);
         // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$1);
+        Object.freeze(EMPTY_ARRAY);
     }
 
     /**
@@ -32638,7 +32663,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var tNode = lView[TVIEW].data[nodeIndex];
         var directiveStartIndex = tNode.directiveStart;
         if (directiveStartIndex == 0)
-            return EMPTY_ARRAY$1;
+            return EMPTY_ARRAY;
         var directiveEndIndex = tNode.directiveEnd;
         if (!includeComponents && tNode.flags & 2 /* isComponentHost */)
             directiveStartIndex++;
@@ -35952,7 +35977,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     var ɵ0$6 = getClosureSafeProperty;
     var USE_VALUE$4 = getClosureSafeProperty({ provide: String, useValue: ɵ0$6 });
-    var EMPTY_ARRAY$2 = [];
+    var EMPTY_ARRAY$1 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
             var reflectionCapabilities = new ReflectionCapabilities();
@@ -35970,7 +35995,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         else if (provider.useFactory) {
             var factoryProvider_1 = provider;
-            return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$2))); };
+            return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$1))); };
         }
         else if (provider.useClass) {
             var classProvider_1 = provider;
@@ -36057,7 +36082,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * a circular dependency among the providers.
      */
     var CIRCULAR = {};
-    var EMPTY_ARRAY$3 = [];
+    var EMPTY_ARRAY$2 = [];
     /**
      * A lazily initialized NullInjector.
      */
@@ -36288,7 +36313,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (importTypesWithProviders_1 !== undefined) {
                     var _loop_1 = function (i) {
                         var _a = importTypesWithProviders_1[i], ngModule_1 = _a.ngModule, providers = _a.providers;
-                        deepForEach(providers, function (provider) { return _this.processProvider(provider, ngModule_1, providers || EMPTY_ARRAY$3); });
+                        deepForEach(providers, function (provider) { return _this.processProvider(provider, ngModule_1, providers || EMPTY_ARRAY$2); });
                     };
                     for (var i = 0; i < importTypesWithProviders_1.length; i++) {
                         _loop_1(i);
@@ -37992,7 +38017,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * code.
      */
     var EMPTY_OBJ$1 = {};
-    var EMPTY_ARRAY$4 = [];
+    var EMPTY_ARRAY$3 = [];
     // freezing the values prevents any code from accidentally inserting new values in
     if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
         // These property accesses can be ignored because ngDevMode will be set to false
@@ -38000,7 +38025,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_OBJ$1);
         // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$4);
+        Object.freeze(EMPTY_ARRAY$3);
     }
 
     /**
@@ -38629,7 +38654,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+41.sha-47a1811');
+    var VERSION$2 = new Version$1('9.1.0-next.2+46.sha-c195d22');
 
     /**
      * @license
@@ -50636,7 +50661,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+41.sha-47a1811');
+    var VERSION$3 = new Version$1('9.1.0-next.2+46.sha-c195d22');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
