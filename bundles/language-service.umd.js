@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+39.sha-ef2721b
+ * @license Angular v9.1.0-next.2+41.sha-47a1811
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18736,7 +18736,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+39.sha-ef2721b');
+    var VERSION$1 = new Version('9.1.0-next.2+41.sha-47a1811');
 
     /**
      * @license
@@ -24583,6 +24583,126 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var Diagnostic = {
+        directive_not_in_module: {
+            message: "%1 '%2' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration.",
+            kind: 'Suggestion',
+        },
+        missing_template_and_templateurl: {
+            message: "Component '%1' must have a template or templateUrl",
+            kind: 'Error',
+        },
+        both_template_and_templateurl: {
+            message: "Component '%1' must not have both template and templateUrl",
+            kind: 'Error',
+        },
+        invalid_templateurl: {
+            message: "URL does not point to a valid file",
+            kind: 'Error',
+        },
+        template_context_missing_member: {
+            message: "The template context of '%1' does not define %2.\n" +
+                "If the context type is a base type or 'any', consider refining it to a more specific type.",
+            kind: 'Suggestion',
+        },
+        callable_expression_expected_method_call: {
+            message: 'Unexpected callable expression. Expected a method call',
+            kind: 'Warning',
+        },
+        call_target_not_callable: {
+            message: 'Call target is not callable',
+            kind: 'Error',
+        },
+        expression_might_be_null: {
+            message: 'The expression might be null',
+            kind: 'Error',
+        },
+        expected_a_number_type: {
+            message: 'Expected a number type',
+            kind: 'Error',
+        },
+        expected_a_string_or_number_type: {
+            message: 'Expected operands to be a string or number type',
+            kind: 'Error',
+        },
+        expected_operands_of_similar_type_or_any: {
+            message: 'Expected operands to be of similar type or any',
+            kind: 'Error',
+        },
+        unrecognized_operator: {
+            message: 'Unrecognized operator %1',
+            kind: 'Error',
+        },
+        unrecognized_primitive: {
+            message: 'Unrecognized primitive %1',
+            kind: 'Error',
+        },
+        no_pipe_found: {
+            message: 'No pipe of name %1 found',
+            kind: 'Error',
+        },
+        // TODO: Consider a better error message here.
+        unable_to_resolve_compatible_call_signature: {
+            message: 'Unable to resolve compatible call signature',
+            kind: 'Error',
+        },
+        unable_to_resolve_signature: {
+            message: 'Unable to resolve signature for call of %1',
+            kind: 'Error',
+        },
+        could_not_resolve_type: {
+            message: "Could not resolve the type of '%1'",
+            kind: 'Error',
+        },
+        identifier_not_callable: {
+            message: "'%1' is not callable",
+            kind: 'Error',
+        },
+        identifier_possibly_undefined: {
+            message: "'%1' is possibly undefined. Consider using the safe navigation operator (%2) or non-null assertion operator (%3).",
+            kind: 'Suggestion',
+        },
+        identifier_not_defined_in_app_context: {
+            message: "Identifier '%1' is not defined. The component declaration, template variable declarations, and element references do not contain such a member",
+            kind: 'Error',
+        },
+        identifier_not_defined_on_receiver: {
+            message: "Identifier '%1' is not defined. '%2' does not contain such a member",
+            kind: 'Error',
+        },
+        identifier_is_private: {
+            message: "Identifier '%1' refers to a private member of %2",
+            kind: 'Warning',
+        },
+    };
+    /**
+     * Creates a language service diagnostic.
+     * @param span location the diagnostic for
+     * @param dm diagnostic message
+     * @param formatArgs run-time arguments to format the diagnostic message with (see the messages in
+     *        the `Diagnostic` object for an example).
+     * @returns a created diagnostic
+     */
+    function createDiagnostic(span, dm) {
+        var formatArgs = [];
+        for (var _i = 2; _i < arguments.length; _i++) {
+            formatArgs[_i - 2] = arguments[_i];
+        }
+        // Formats "%1 %2" with formatArgs ['a', 'b'] as "a b"
+        var formattedMessage = dm.message.replace(/%(\d+)/g, function (_, index) { return formatArgs[+index - 1]; });
+        return {
+            kind: ts.DiagnosticCategory[dm.kind],
+            message: formattedMessage, span: span,
+        };
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * An enumeration of basic types.
      *
@@ -24643,7 +24763,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         AstType.prototype.getDiagnostics = function (ast) {
             var type = ast.visit(this);
             if (this.context.event && type.callable) {
-                this.reportDiagnostic('Unexpected callable expression. Expected a method call', ast, ts.DiagnosticCategory.Warning);
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.callable_expression_expected_method_call));
             }
             return this.diagnostics;
         };
@@ -24671,7 +24791,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             // Nullable allowed.
                             break;
                         default:
-                            _this_1.reportDiagnostic("The expression might be null", ast);
+                            _this_1.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expression_might_be_null));
                             break;
                     }
                     return _this_1.query.getNonNullableType(type);
@@ -24713,7 +24833,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                     errorAst = ast.right;
                                     break;
                             }
-                            this.reportDiagnostic('Expected a numeric type', errorAst);
+                            this.diagnostics.push(createDiagnostic(errorAst.span, Diagnostic.expected_a_number_type));
                             return this.anyType;
                     }
                 case '+':
@@ -24740,14 +24860,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             return this.query.getBuiltinType(BuiltinType$1.Number);
                         case BuiltinType$1.Boolean << 8 | BuiltinType$1.Number:
                         case BuiltinType$1.Other << 8 | BuiltinType$1.Number:
-                            this.reportDiagnostic('Expected a number type', ast.left);
+                            this.diagnostics.push(createDiagnostic(ast.left.span, Diagnostic.expected_a_number_type));
                             return this.anyType;
                         case BuiltinType$1.Number << 8 | BuiltinType$1.Boolean:
                         case BuiltinType$1.Number << 8 | BuiltinType$1.Other:
-                            this.reportDiagnostic('Expected a number type', ast.right);
+                            this.diagnostics.push(createDiagnostic(ast.right.span, Diagnostic.expected_a_number_type));
                             return this.anyType;
                         default:
-                            this.reportDiagnostic('Expected operands to be a string or number type', ast);
+                            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expected_a_string_or_number_type));
                             return this.anyType;
                     }
                 case '>':
@@ -24774,7 +24894,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         case BuiltinType$1.Other << 8 | BuiltinType$1.Other:
                             return this.query.getBuiltinType(BuiltinType$1.Boolean);
                         default:
-                            this.reportDiagnostic('Expected the operants to be of similar type or any', ast);
+                            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expected_operands_of_similar_type_or_any));
                             return this.anyType;
                     }
                 case '&&':
@@ -24782,7 +24902,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case '||':
                     return this.query.getTypeUnion(leftType, rightType);
             }
-            this.reportDiagnostic("Unrecognized operator " + ast.operation, ast);
+            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unrecognized_operator, ast.operation));
             return this.anyType;
         };
         AstType.prototype.visitChain = function (ast) {
@@ -24820,7 +24940,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var args = ast.args.map(function (arg) { return _this_1.getType(arg); });
             var target = this.getType(ast.target);
             if (!target || !target.callable) {
-                this.reportDiagnostic('Call target is not callable', ast);
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.call_target_not_callable));
                 return this.anyType;
             }
             var signature = target.selectSignature(args);
@@ -24828,7 +24948,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return signature.result;
             }
             // TODO: Consider a better error message here.
-            this.reportDiagnostic('Unable no compatible signature found for call', ast);
+            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_compatible_call_signature));
             return this.anyType;
         };
         AstType.prototype.visitImplicitReceiver = function (ast) {
@@ -24924,7 +25044,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         case 'number':
                             return this.query.getBuiltinType(BuiltinType$1.Number);
                         default:
-                            this.reportDiagnostic('Unrecognized primitive', ast);
+                            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unrecognized_primitive, typeof ast.value));
                             return this.anyType;
                     }
             }
@@ -24938,13 +25058,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // by getPipes() is expected to contain symbols with the corresponding transform method type.
             var pipe = this.query.getPipes().get(ast.name);
             if (!pipe) {
-                this.reportDiagnostic("No pipe by the name " + ast.name + " found", ast);
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.no_pipe_found, ast.name));
                 return this.anyType;
             }
             var expType = this.getType(ast.exp);
             var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this_1.getType(arg); })));
             if (!signature) {
-                this.reportDiagnostic('Unable to resolve signature for pipe invocation', ast);
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_signature, ast.name));
                 return this.anyType;
             }
             return signature.result;
@@ -25005,19 +25125,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             var methodType = this.resolvePropertyRead(receiverType, ast);
             if (!methodType) {
-                this.reportDiagnostic("Could not find a type for '" + ast.name + "'", ast);
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.could_not_resolve_type, ast.name));
                 return this.anyType;
             }
             if (this.isAny(methodType)) {
                 return this.anyType;
             }
             if (!methodType.callable) {
-                this.reportDiagnostic("Member '" + ast.name + "' is not callable", ast);
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_not_callable, ast.name));
                 return this.anyType;
             }
             var signature = methodType.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
             if (!signature) {
-                this.reportDiagnostic("Unable to resolve signature for call of method " + ast.name, ast);
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_signature, ast.name));
                 return this.anyType;
             }
             return signature.result;
@@ -25030,27 +25150,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var member = receiverType.members().get(ast.name);
             if (!member) {
                 if (receiverType.name === '$implicit') {
-                    this.reportDiagnostic("Identifier '" + ast.name + "' is not defined. " +
-                        "The component declaration, template variable declarations, and element references do not contain such a member", ast);
+                    this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_not_defined_in_app_context, ast.name));
                 }
                 else if (receiverType.nullable && ast.receiver instanceof PropertyRead) {
                     var receiver = ast.receiver.name;
-                    this.reportDiagnostic("'" + receiver + "' is possibly undefined. Consider using the safe navigation operator (" + receiver + "?." + ast.name + ") " +
-                        ("or non-null assertion operator (" + receiver + "!." + ast.name + ")."), ast, ts.DiagnosticCategory.Suggestion);
+                    this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_possibly_undefined, receiver, receiver + "?." + ast.name, receiver + "!." + ast.name));
                 }
                 else {
-                    this.reportDiagnostic("Identifier '" + ast.name + "' is not defined. '" + receiverType.name + "' does not contain such a member", ast);
+                    this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_not_defined_on_receiver, ast.name, receiverType.name));
                 }
                 return this.anyType;
             }
             if (!member.public) {
-                this.reportDiagnostic("Identifier '" + ast.name + "' refers to a private member of " + (receiverType.name === '$implicit' ? 'the component' : "\n      '" + receiverType.name + "'\n          "), ast, ts.DiagnosticCategory.Warning);
+                var container = receiverType.name === '$implicit' ? 'the component' : "'" + receiverType.name + "'";
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_is_private, ast.name, container));
             }
             return member.type;
-        };
-        AstType.prototype.reportDiagnostic = function (message, ast, kind) {
-            if (kind === void 0) { kind = ts.DiagnosticCategory.Error; }
-            this.diagnostics.push({ kind: kind, span: ast.span, message: message });
         };
         AstType.prototype.isAny = function (symbol) {
             return !symbol || this.query.getTypeKind(symbol) === BuiltinType$1.Any ||
@@ -25659,8 +25774,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var context = this.info.query.getTemplateContext(directive.type.reference);
                 if (context && !context.has(ast.value)) {
                     var missingMember = ast.value === '$implicit' ? 'an implicit value' : "a member called '" + ast.value + "'";
-                    this.reportDiagnostic("The template context of '" + directive.type.reference.name + "' does not define " + missingMember + ".\n" +
-                        "If the context type is a base type or 'any', consider refining it to a more specific type.", spanOf$1(ast.sourceSpan), ts.DiagnosticCategory.Suggestion);
+                    var span = this.absSpan(spanOf$1(ast.sourceSpan));
+                    this.diagnostics.push(createDiagnostic(span, Diagnostic.template_context_missing_member, directive.type.reference.name, missingMember));
                 }
             }
         };
@@ -25694,10 +25809,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var analyzer = new AstType(scope, this.info.query, { event: event });
             try {
                 for (var _b = __values(analyzer.getDiagnostics(ast)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var _d = _c.value, message = _d.message, span = _d.span, kind = _d.kind;
-                    span.start += offset;
-                    span.end += offset;
-                    this.reportDiagnostic(message, span, kind);
+                    var diagnostic = _c.value;
+                    diagnostic.span = this.absSpan(diagnostic.span, offset);
+                    this.diagnostics.push(diagnostic);
                 }
             }
             catch (e_4_1) { e_4 = { error: e_4_1 }; }
@@ -25710,11 +25824,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
         ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
-        ExpressionDiagnosticsVisitor.prototype.reportDiagnostic = function (message, span, kind) {
-            if (kind === void 0) { kind = ts.DiagnosticCategory.Error; }
-            span.start += this.info.offset;
-            span.end += this.info.offset;
-            this.diagnostics.push({ kind: kind, span: span, message: message });
+        ExpressionDiagnosticsVisitor.prototype.absSpan = function (span, additionalOffset) {
+            if (additionalOffset === void 0) { additionalOffset = 0; }
+            return {
+                start: span.start + this.info.offset + additionalOffset,
+                end: span.end + this.info.offset + additionalOffset,
+            };
         };
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
@@ -28736,17 +28851,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         });
     }
     /**
-     * Generate an error message that indicates a directive is not part of any
-     * NgModule.
-     * @param name class name
-     * @param isComponent true if directive is an Angular Component
-     */
-    function missingDirective(name, isComponent) {
-        var type = isComponent ? 'Component' : 'Directive';
-        return type + " '" + name + "' is not included in a module and will not be " +
-            'available inside a template. Consider adding it to a NgModule declaration.';
-    }
-    /**
      * Performs a variety diagnostics on directive declarations.
      *
      * @param declarations Angular directive declarations
@@ -28816,29 +28920,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                     finally { if (e_4) throw e_4.error; }
                 }
+                if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
+                    results.push(createDiagnostic(declarationSpan, Diagnostic.directive_not_in_module, metadata.isComponent ? 'Component' : 'Directive', type.name));
+                }
                 if (metadata.isComponent) {
-                    if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
-                        results.push({
-                            kind: ts.DiagnosticCategory.Suggestion,
-                            message: missingDirective(type.name, metadata.isComponent),
-                            span: declarationSpan,
-                        });
-                    }
                     var _j = metadata.template, template = _j.template, templateUrl = _j.templateUrl, styleUrls = _j.styleUrls;
                     if (template === null && !templateUrl) {
-                        results.push({
-                            kind: ts.DiagnosticCategory.Error,
-                            message: "Component '" + type.name + "' must have a template or templateUrl",
-                            span: declarationSpan,
-                        });
+                        results.push(createDiagnostic(declarationSpan, Diagnostic.missing_template_and_templateurl, type.name));
                     }
                     else if (templateUrl) {
                         if (template) {
-                            results.push({
-                                kind: ts.DiagnosticCategory.Error,
-                                message: "Component '" + type.name + "' must not have both template and templateUrl",
-                                span: declarationSpan,
-                            });
+                            results.push(createDiagnostic(declarationSpan, Diagnostic.both_template_and_templateurl, type.name));
                         }
                         // Find templateUrl value from the directive call expression, which is the parent of the
                         // directive identifier.
@@ -28862,13 +28954,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         }
                         results.push.apply(results, __spread(validateUrls(styleUrlsNode.elements, host.tsLsHost)));
                     }
-                }
-                else if (!directives.has(declaration.type)) {
-                    results.push({
-                        kind: ts.DiagnosticCategory.Suggestion,
-                        message: missingDirective(type.name, metadata.isComponent),
-                        span: declarationSpan,
-                    });
                 }
             }
         }
@@ -28908,12 +28993,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var url = path.join(path.dirname(curPath), urlNode.text);
             if (tsLsHost.fileExists(url))
                 continue;
-            allErrors.push({
-                kind: ts.DiagnosticCategory.Error,
-                message: "URL does not point to a valid file",
-                // Exclude opening and closing quotes in the url span.
-                span: { start: urlNode.getStart() + 1, end: urlNode.end - 1 },
-            });
+            // Exclude opening and closing quotes in the url span.
+            var urlSpan = { start: urlNode.getStart() + 1, end: urlNode.end - 1 };
+            allErrors.push(createDiagnostic(urlSpan, Diagnostic.invalid_templateurl));
         }
         return allErrors;
     }
@@ -47907,7 +47989,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+39.sha-ef2721b');
+    var VERSION$2 = new Version$1('9.1.0-next.2+41.sha-47a1811');
 
     /**
      * @license
@@ -63041,7 +63123,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+39.sha-ef2721b');
+    var VERSION$3 = new Version$1('9.1.0-next.2+41.sha-47a1811');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
