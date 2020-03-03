@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+41.sha-47a1811
+ * @license Angular v9.1.0-next.2+46.sha-c195d22
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -17848,7 +17848,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_ARRAY = [];
     // This regex matches any binding names that contain the "attr." prefix, e.g. "attr.required"
     // If there is a match, the first matching group will contain the attribute name to bind.
     var ATTR_REGEX = /attr\.([^\]]+)/;
@@ -17883,7 +17882,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Add features to the definition map.
      */
     function addFeatures(definitionMap, meta) {
-        // e.g. `features: [NgOnChangesFeature()]`
+        // e.g. `features: [NgOnChangesFeature]`
         var features = [];
         var providers = meta.providers;
         var viewProviders = meta.viewProviders;
@@ -17901,7 +17900,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             features.push(importExpr(Identifiers$1.CopyDefinitionFeature));
         }
         if (meta.lifecycle.usesOnChanges) {
-            features.push(importExpr(Identifiers$1.NgOnChangesFeature).callFn(EMPTY_ARRAY));
+            features.push(importExpr(Identifiers$1.NgOnChangesFeature));
         }
         if (features.length) {
             definitionMap.set('features', literalArr(features));
@@ -18736,7 +18735,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+41.sha-47a1811');
+    var VERSION$1 = new Version('9.1.0-next.2+46.sha-c195d22');
 
     /**
      * @license
@@ -29235,6 +29234,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Convince closure compiler that the wrapped function has no side-effects.
+     *
+     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
+     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
+     * It is important that the return value for the `noSideEffects` function be assigned
+     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
+     * compiler.
+     */
+    function noSideEffects(fn) {
+        return { toString: fn }.toString();
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var ANNOTATIONS = '__annotations__';
     var PARAMETERS = '__parameters__';
     var PROP_METADATA = '__prop__metadata__';
@@ -29242,38 +29261,40 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @suppress {globalThis}
      */
     function makeDecorator(name, props, parentClass, additionalProcessing, typeFn) {
-        var metaCtor = makeMetadataCtor(props);
-        function DecoratorFactory() {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
+        return noSideEffects(function () {
+            var metaCtor = makeMetadataCtor(props);
+            function DecoratorFactory() {
+                var _a;
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                if (this instanceof DecoratorFactory) {
+                    metaCtor.call.apply(metaCtor, __spread([this], args));
+                    return this;
+                }
+                var annotationInstance = new ((_a = DecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
+                return function TypeDecorator(cls) {
+                    if (typeFn)
+                        typeFn.apply(void 0, __spread([cls], args));
+                    // Use of Object.defineProperty is important since it creates non-enumerable property which
+                    // prevents the property is copied during subclassing.
+                    var annotations = cls.hasOwnProperty(ANNOTATIONS) ?
+                        cls[ANNOTATIONS] :
+                        Object.defineProperty(cls, ANNOTATIONS, { value: [] })[ANNOTATIONS];
+                    annotations.push(annotationInstance);
+                    if (additionalProcessing)
+                        additionalProcessing(cls);
+                    return cls;
+                };
             }
-            if (this instanceof DecoratorFactory) {
-                metaCtor.call.apply(metaCtor, __spread([this], args));
-                return this;
+            if (parentClass) {
+                DecoratorFactory.prototype = Object.create(parentClass.prototype);
             }
-            var annotationInstance = new ((_a = DecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            return function TypeDecorator(cls) {
-                if (typeFn)
-                    typeFn.apply(void 0, __spread([cls], args));
-                // Use of Object.defineProperty is important since it creates non-enumerable property which
-                // prevents the property is copied during subclassing.
-                var annotations = cls.hasOwnProperty(ANNOTATIONS) ?
-                    cls[ANNOTATIONS] :
-                    Object.defineProperty(cls, ANNOTATIONS, { value: [] })[ANNOTATIONS];
-                annotations.push(annotationInstance);
-                if (additionalProcessing)
-                    additionalProcessing(cls);
-                return cls;
-            };
-        }
-        if (parentClass) {
-            DecoratorFactory.prototype = Object.create(parentClass.prototype);
-        }
-        DecoratorFactory.prototype.ngMetadataName = name;
-        DecoratorFactory.annotationCls = DecoratorFactory;
-        return DecoratorFactory;
+            DecoratorFactory.prototype.ngMetadataName = name;
+            DecoratorFactory.annotationCls = DecoratorFactory;
+            return DecoratorFactory;
+        });
     }
     function makeMetadataCtor(props) {
         return function ctor() {
@@ -29290,75 +29311,79 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
     }
     function makeParamDecorator(name, props, parentClass) {
-        var metaCtor = makeMetadataCtor(props);
-        function ParamDecoratorFactory() {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            if (this instanceof ParamDecoratorFactory) {
-                metaCtor.apply(this, args);
-                return this;
-            }
-            var annotationInstance = new ((_a = ParamDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            ParamDecorator.annotation = annotationInstance;
-            return ParamDecorator;
-            function ParamDecorator(cls, unusedKey, index) {
-                // Use of Object.defineProperty is important since it creates non-enumerable property which
-                // prevents the property is copied during subclassing.
-                var parameters = cls.hasOwnProperty(PARAMETERS) ?
-                    cls[PARAMETERS] :
-                    Object.defineProperty(cls, PARAMETERS, { value: [] })[PARAMETERS];
-                // there might be gaps if some in between parameters do not have annotations.
-                // we pad with nulls.
-                while (parameters.length <= index) {
-                    parameters.push(null);
+        return noSideEffects(function () {
+            var metaCtor = makeMetadataCtor(props);
+            function ParamDecoratorFactory() {
+                var _a;
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
                 }
-                (parameters[index] = parameters[index] || []).push(annotationInstance);
-                return cls;
+                if (this instanceof ParamDecoratorFactory) {
+                    metaCtor.apply(this, args);
+                    return this;
+                }
+                var annotationInstance = new ((_a = ParamDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
+                ParamDecorator.annotation = annotationInstance;
+                return ParamDecorator;
+                function ParamDecorator(cls, unusedKey, index) {
+                    // Use of Object.defineProperty is important since it creates non-enumerable property which
+                    // prevents the property is copied during subclassing.
+                    var parameters = cls.hasOwnProperty(PARAMETERS) ?
+                        cls[PARAMETERS] :
+                        Object.defineProperty(cls, PARAMETERS, { value: [] })[PARAMETERS];
+                    // there might be gaps if some in between parameters do not have annotations.
+                    // we pad with nulls.
+                    while (parameters.length <= index) {
+                        parameters.push(null);
+                    }
+                    (parameters[index] = parameters[index] || []).push(annotationInstance);
+                    return cls;
+                }
             }
-        }
-        if (parentClass) {
-            ParamDecoratorFactory.prototype = Object.create(parentClass.prototype);
-        }
-        ParamDecoratorFactory.prototype.ngMetadataName = name;
-        ParamDecoratorFactory.annotationCls = ParamDecoratorFactory;
-        return ParamDecoratorFactory;
+            if (parentClass) {
+                ParamDecoratorFactory.prototype = Object.create(parentClass.prototype);
+            }
+            ParamDecoratorFactory.prototype.ngMetadataName = name;
+            ParamDecoratorFactory.annotationCls = ParamDecoratorFactory;
+            return ParamDecoratorFactory;
+        });
     }
     function makePropDecorator(name, props, parentClass, additionalProcessing) {
-        var metaCtor = makeMetadataCtor(props);
-        function PropDecoratorFactory() {
-            var _a;
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
+        return noSideEffects(function () {
+            var metaCtor = makeMetadataCtor(props);
+            function PropDecoratorFactory() {
+                var _a;
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                if (this instanceof PropDecoratorFactory) {
+                    metaCtor.apply(this, args);
+                    return this;
+                }
+                var decoratorInstance = new ((_a = PropDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
+                function PropDecorator(target, name) {
+                    var constructor = target.constructor;
+                    // Use of Object.defineProperty is important since it creates non-enumerable property which
+                    // prevents the property is copied during subclassing.
+                    var meta = constructor.hasOwnProperty(PROP_METADATA) ?
+                        constructor[PROP_METADATA] :
+                        Object.defineProperty(constructor, PROP_METADATA, { value: {} })[PROP_METADATA];
+                    meta[name] = meta.hasOwnProperty(name) && meta[name] || [];
+                    meta[name].unshift(decoratorInstance);
+                    if (additionalProcessing)
+                        additionalProcessing.apply(void 0, __spread([target, name], args));
+                }
+                return PropDecorator;
             }
-            if (this instanceof PropDecoratorFactory) {
-                metaCtor.apply(this, args);
-                return this;
+            if (parentClass) {
+                PropDecoratorFactory.prototype = Object.create(parentClass.prototype);
             }
-            var decoratorInstance = new ((_a = PropDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            function PropDecorator(target, name) {
-                var constructor = target.constructor;
-                // Use of Object.defineProperty is important since it creates non-enumerable property which
-                // prevents the property is copied during subclassing.
-                var meta = constructor.hasOwnProperty(PROP_METADATA) ?
-                    constructor[PROP_METADATA] :
-                    Object.defineProperty(constructor, PROP_METADATA, { value: {} })[PROP_METADATA];
-                meta[name] = meta.hasOwnProperty(name) && meta[name] || [];
-                meta[name].unshift(decoratorInstance);
-                if (additionalProcessing)
-                    additionalProcessing.apply(void 0, __spread([target, name], args));
-            }
-            return PropDecorator;
-        }
-        if (parentClass) {
-            PropDecoratorFactory.prototype = Object.create(parentClass.prototype);
-        }
-        PropDecoratorFactory.prototype.ngMetadataName = name;
-        PropDecoratorFactory.annotationCls = PropDecoratorFactory;
-        return PropDecoratorFactory;
+            PropDecoratorFactory.prototype.ngMetadataName = name;
+            PropDecoratorFactory.annotationCls = PropDecoratorFactory;
+            return PropDecoratorFactory;
+        });
     }
 
     /**
@@ -30578,26 +30603,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     })(ViewEncapsulation$2 || (ViewEncapsulation$2 = {}));
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Convince closure compiler that the wrapped function has no side-effects.
-     *
-     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
-     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
-     * It is important that the return value for the `noSideEffects` function be assigned
-     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
-     * compiler.
-     */
-    function noSideEffects(fn) {
-        return '' + { toString: fn };
-    }
-
-    /**
     * @license
     * Copyright Google Inc. All Rights Reserved.
     *
@@ -30611,7 +30616,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * code.
      */
     var EMPTY_OBJ = {};
-    var EMPTY_ARRAY$1 = [];
+    var EMPTY_ARRAY = [];
     // freezing the values prevents any code from accidentally inserting new values in
     if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
         // These property accesses can be ignored because ngDevMode will be set to false
@@ -30619,7 +30624,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_OBJ);
         // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$1);
+        Object.freeze(EMPTY_ARRAY);
     }
 
     /**
@@ -30647,55 +30652,55 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @codeGenApi
      */
     function ɵɵdefineComponent(componentDefinition) {
-        // Initialize ngDevMode. This must be the first statement in ɵɵdefineComponent.
-        // See the `initNgDevMode` docstring for more information.
-        (typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode();
-        var type = componentDefinition.type;
-        var typePrototype = type.prototype;
-        var declaredInputs = {};
-        var def = {
-            type: type,
-            providersResolver: null,
-            decls: componentDefinition.decls,
-            vars: componentDefinition.vars,
-            factory: null,
-            template: componentDefinition.template || null,
-            consts: componentDefinition.consts || null,
-            ngContentSelectors: componentDefinition.ngContentSelectors,
-            hostBindings: componentDefinition.hostBindings || null,
-            hostVars: componentDefinition.hostVars || 0,
-            hostAttrs: componentDefinition.hostAttrs || null,
-            contentQueries: componentDefinition.contentQueries || null,
-            declaredInputs: declaredInputs,
-            inputs: null,
-            outputs: null,
-            exportAs: componentDefinition.exportAs || null,
-            onChanges: null,
-            onInit: typePrototype.ngOnInit || null,
-            doCheck: typePrototype.ngDoCheck || null,
-            afterContentInit: typePrototype.ngAfterContentInit || null,
-            afterContentChecked: typePrototype.ngAfterContentChecked || null,
-            afterViewInit: typePrototype.ngAfterViewInit || null,
-            afterViewChecked: typePrototype.ngAfterViewChecked || null,
-            onDestroy: typePrototype.ngOnDestroy || null,
-            onPush: componentDefinition.changeDetection === ChangeDetectionStrategy$1.OnPush,
-            directiveDefs: null,
-            pipeDefs: null,
-            selectors: componentDefinition.selectors || EMPTY_ARRAY$1,
-            viewQuery: componentDefinition.viewQuery || null,
-            features: componentDefinition.features || null,
-            data: componentDefinition.data || {},
-            // TODO(misko): convert ViewEncapsulation into const enum so that it can be used directly in the
-            // next line. Also `None` should be 0 not 2.
-            encapsulation: componentDefinition.encapsulation || ViewEncapsulation$2.Emulated,
-            id: 'c',
-            styles: componentDefinition.styles || EMPTY_ARRAY$1,
-            _: null,
-            setInput: null,
-            schemas: componentDefinition.schemas || null,
-            tView: null,
-        };
-        def._ = noSideEffects(function () {
+        return noSideEffects(function () {
+            // Initialize ngDevMode. This must be the first statement in ɵɵdefineComponent.
+            // See the `initNgDevMode` docstring for more information.
+            (typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode();
+            var type = componentDefinition.type;
+            var typePrototype = type.prototype;
+            var declaredInputs = {};
+            var def = {
+                type: type,
+                providersResolver: null,
+                decls: componentDefinition.decls,
+                vars: componentDefinition.vars,
+                factory: null,
+                template: componentDefinition.template || null,
+                consts: componentDefinition.consts || null,
+                ngContentSelectors: componentDefinition.ngContentSelectors,
+                hostBindings: componentDefinition.hostBindings || null,
+                hostVars: componentDefinition.hostVars || 0,
+                hostAttrs: componentDefinition.hostAttrs || null,
+                contentQueries: componentDefinition.contentQueries || null,
+                declaredInputs: declaredInputs,
+                inputs: null,
+                outputs: null,
+                exportAs: componentDefinition.exportAs || null,
+                onChanges: null,
+                onInit: typePrototype.ngOnInit || null,
+                doCheck: typePrototype.ngDoCheck || null,
+                afterContentInit: typePrototype.ngAfterContentInit || null,
+                afterContentChecked: typePrototype.ngAfterContentChecked || null,
+                afterViewInit: typePrototype.ngAfterViewInit || null,
+                afterViewChecked: typePrototype.ngAfterViewChecked || null,
+                onDestroy: typePrototype.ngOnDestroy || null,
+                onPush: componentDefinition.changeDetection === ChangeDetectionStrategy$1.OnPush,
+                directiveDefs: null,
+                pipeDefs: null,
+                selectors: componentDefinition.selectors || EMPTY_ARRAY,
+                viewQuery: componentDefinition.viewQuery || null,
+                features: componentDefinition.features || null,
+                data: componentDefinition.data || {},
+                // TODO(misko): convert ViewEncapsulation into const enum so that it can be used directly in
+                // the next line. Also `None` should be 0 not 2.
+                encapsulation: componentDefinition.encapsulation || ViewEncapsulation$2.Emulated,
+                id: 'c',
+                styles: componentDefinition.styles || EMPTY_ARRAY,
+                _: null,
+                setInput: null,
+                schemas: componentDefinition.schemas || null,
+                tView: null,
+            };
             var directiveTypes = componentDefinition.directives;
             var feature = componentDefinition.features;
             var pipeTypes = componentDefinition.pipes;
@@ -30710,8 +30715,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             def.pipeDefs = pipeTypes ?
                 function () { return (typeof pipeTypes === 'function' ? pipeTypes() : pipeTypes).map(extractPipeDef); } :
                 null;
+            return def;
         });
-        return def;
     }
     /**
      * @codeGenApi
@@ -30735,21 +30740,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return def;
     }
+    var autoRegisterModuleById = {};
     /**
      * @codeGenApi
      */
     function ɵɵdefineNgModule(def) {
         var res = {
             type: def.type,
-            bootstrap: def.bootstrap || EMPTY_ARRAY$1,
-            declarations: def.declarations || EMPTY_ARRAY$1,
-            imports: def.imports || EMPTY_ARRAY$1,
-            exports: def.exports || EMPTY_ARRAY$1,
+            bootstrap: def.bootstrap || EMPTY_ARRAY,
+            declarations: def.declarations || EMPTY_ARRAY,
+            imports: def.imports || EMPTY_ARRAY,
+            exports: def.exports || EMPTY_ARRAY,
             transitiveCompileScopes: null,
             schemas: def.schemas || null,
             id: def.id || null,
         };
-        if (def.id != null) ;
+        if (def.id != null) {
+            noSideEffects(function () { autoRegisterModuleById[def.id] = def.type; });
+        }
         return res;
     }
     /**
@@ -30765,9 +30773,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function ɵɵsetNgModuleScope(type, scope) {
         return noSideEffects(function () {
             var ngModuleDef = getNgModuleDef(type, true);
-            ngModuleDef.declarations = scope.declarations || EMPTY_ARRAY$1;
-            ngModuleDef.imports = scope.imports || EMPTY_ARRAY$1;
-            ngModuleDef.exports = scope.exports || EMPTY_ARRAY$1;
+            ngModuleDef.declarations = scope.declarations || EMPTY_ARRAY;
+            ngModuleDef.imports = scope.imports || EMPTY_ARRAY;
+            ngModuleDef.exports = scope.exports || EMPTY_ARRAY;
         });
     }
     /**
@@ -32815,18 +32823,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @codeGenApi
      */
     function ɵɵgetInheritedFactory(type) {
-        var proto = Object.getPrototypeOf(type.prototype).constructor;
-        var factory = proto[NG_FACTORY_DEF] || ɵɵgetFactoryOf(proto);
-        if (factory !== null) {
-            return factory;
-        }
-        else {
-            // There is no factory defined. Either this was improper usage of inheritance
-            // (no Angular decorator on the superclass) or there is no constructor at all
-            // in the inheritance chain. Since the two cases cannot be distinguished, the
-            // latter has to be assumed.
-            return function (t) { return new t(); };
-        }
+        return noSideEffects(function () {
+            var proto = Object.getPrototypeOf(type.prototype).constructor;
+            var factory = proto[NG_FACTORY_DEF] || ɵɵgetFactoryOf(proto);
+            if (factory !== null) {
+                return factory;
+            }
+            else {
+                // There is no factory defined. Either this was improper usage of inheritance
+                // (no Angular decorator on the superclass) or there is no constructor at all
+                // in the inheritance chain. Since the two cases cannot be distinguished, the
+                // latter has to be assumed.
+                return function (t) { return new t(); };
+            }
+        });
     }
 
     /**
@@ -34383,7 +34393,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var tNode = lView[TVIEW].data[nodeIndex];
         var directiveStartIndex = tNode.directiveStart;
         if (directiveStartIndex == 0)
-            return EMPTY_ARRAY$1;
+            return EMPTY_ARRAY;
         var directiveEndIndex = tNode.directiveEnd;
         if (!includeComponents && tNode.flags & 2 /* isComponentHost */)
             directiveStartIndex++;
@@ -39942,7 +39952,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * a circular dependency among the providers.
      */
     var CIRCULAR = {};
-    var EMPTY_ARRAY$2 = [];
+    var EMPTY_ARRAY$1 = [];
     /**
      * A lazily initialized NullInjector.
      */
@@ -40173,7 +40183,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (importTypesWithProviders_1 !== undefined) {
                     var _loop_1 = function (i) {
                         var _a = importTypesWithProviders_1[i], ngModule_1 = _a.ngModule, providers = _a.providers;
-                        deepForEach(providers, function (provider) { return _this.processProvider(provider, ngModule_1, providers || EMPTY_ARRAY$2); });
+                        deepForEach(providers, function (provider) { return _this.processProvider(provider, ngModule_1, providers || EMPTY_ARRAY$1); });
                     };
                     for (var i = 0; i < importTypesWithProviders_1.length; i++) {
                         _loop_1(i);
@@ -43904,7 +43914,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * code.
      */
     var EMPTY_OBJ$1 = {};
-    var EMPTY_ARRAY$3 = [];
+    var EMPTY_ARRAY$2 = [];
     // freezing the values prevents any code from accidentally inserting new values in
     if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
         // These property accesses can be ignored because ngDevMode will be set to false
@@ -43912,7 +43922,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_OBJ$1);
         // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$3);
+        Object.freeze(EMPTY_ARRAY$2);
     }
 
     /**
@@ -44981,7 +44991,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function toStylingKeyValueArray(keyValueArraySet, stringParser, value) {
         if (value == null /*|| value === undefined */ || value === '')
-            return EMPTY_ARRAY$3;
+            return EMPTY_ARRAY$2;
         var styleKeyValueArray = [];
         var unwrappedValue = unwrapSafeValue(value);
         if (Array.isArray(unwrappedValue)) {
@@ -45041,7 +45051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function updateStylingMap(tView, tNode, lView, renderer, oldKeyValueArray, newKeyValueArray, isClassBased, bindingIndex) {
         if (oldKeyValueArray === NO_CHANGE) {
             // On first execution the oldKeyValueArray is NO_CHANGE => treat it as empty KeyValueArray.
-            oldKeyValueArray = EMPTY_ARRAY$3;
+            oldKeyValueArray = EMPTY_ARRAY$2;
         }
         var oldIndex = 0;
         var newIndex = 0;
@@ -45182,7 +45192,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // we have `undefined` (or empty array in case of styling-map instruction) instead. This
                 // allows the resolution to apply the value (which may later be overwritten when the
                 // binding actually executes.)
-                valueAtLViewIndex = isStylingMap ? EMPTY_ARRAY$3 : undefined;
+                valueAtLViewIndex = isStylingMap ? EMPTY_ARRAY$2 : undefined;
             }
             var currentValue = isStylingMap ? keyValueArrayGet(valueAtLViewIndex, prop) :
                 key === prop ? valueAtLViewIndex : undefined;
@@ -47230,7 +47240,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (value === EMPTY_OBJ) {
             return {};
         }
-        else if (value === EMPTY_ARRAY$1) {
+        else if (value === EMPTY_ARRAY) {
             return [];
         }
         else {
@@ -47425,24 +47435,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * static ɵcmp = defineComponent({
      *   ...
      *   inputs: {name: 'publicName'},
-     *   features: [NgOnChangesFeature()]
+     *   features: [NgOnChangesFeature]
      * });
      * ```
      *
      * @codeGenApi
      */
-    function ɵɵNgOnChangesFeature() {
-        // This option ensures that the ngOnChanges lifecycle hook will be inherited
-        // from superclasses (in InheritDefinitionFeature).
-        NgOnChangesFeatureImpl.ngInherit = true;
-        return NgOnChangesFeatureImpl;
-    }
-    function NgOnChangesFeatureImpl(definition) {
+    function ɵɵNgOnChangesFeature(definition) {
         if (definition.type.prototype.ngOnChanges) {
             definition.setInput = ngOnChangesSetInput;
             definition.onChanges = wrapOnChanges();
         }
     }
+    // This option ensures that the ngOnChanges lifecycle hook will be inherited
+    // from superclasses (in InheritDefinitionFeature).
+    /** @nocollapse */
+    // tslint:disable-next-line:no-toplevel-property-access
+    ɵɵNgOnChangesFeature.ngInherit = true;
     function wrapOnChanges() {
         return function wrapOnChangesHook_inPreviousChangesStorage() {
             var simpleChangesStore = getSimpleChangesStore(this);
@@ -47989,7 +47998,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+41.sha-47a1811');
+    var VERSION$2 = new Version$1('9.1.0-next.2+46.sha-c195d22');
 
     /**
      * @license
@@ -55202,7 +55211,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_ARRAY$4 = [];
+    var EMPTY_ARRAY$3 = [];
     var moduleQueue = [];
     /**
      * Enqueues moduleDef to be checked later to see if scope can be set on its
@@ -55270,7 +55279,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (allowDuplicateDeclarationsInRoot === void 0) { allowDuplicateDeclarationsInRoot = false; }
         ngDevMode && assertDefined(moduleType, 'Required value moduleType');
         ngDevMode && assertDefined(ngModule, 'Required value ngModule');
-        var declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$4);
+        var declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$3);
         var ngModuleDef = null;
         Object.defineProperty(moduleType, NG_MOD_DEF, {
             configurable: true,
@@ -55283,12 +55292,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng:///" + moduleType.name + "/\u0275mod.js", {
                         type: moduleType,
-                        bootstrap: flatten$1(ngModule.bootstrap || EMPTY_ARRAY$4).map(resolveForwardRef$1),
+                        bootstrap: flatten$1(ngModule.bootstrap || EMPTY_ARRAY$3).map(resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
-                        imports: flatten$1(ngModule.imports || EMPTY_ARRAY$4)
+                        imports: flatten$1(ngModule.imports || EMPTY_ARRAY$3)
                             .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
-                        exports: flatten$1(ngModule.exports || EMPTY_ARRAY$4)
+                        exports: flatten$1(ngModule.exports || EMPTY_ARRAY$3)
                             .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
                         schemas: ngModule.schemas ? flatten$1(ngModule.schemas) : null,
@@ -55314,10 +55323,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         name: moduleType.name,
                         type: moduleType,
                         deps: reflectDependencies(moduleType),
-                        providers: ngModule.providers || EMPTY_ARRAY$4,
+                        providers: ngModule.providers || EMPTY_ARRAY$3,
                         imports: [
-                            (ngModule.imports || EMPTY_ARRAY$4).map(resolveForwardRef$1),
-                            (ngModule.exports || EMPTY_ARRAY$4).map(resolveForwardRef$1),
+                            (ngModule.imports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
+                            (ngModule.exports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
                         ],
                     };
                     ngInjectorDef = getCompilerFacade().compileInjector(angularCoreEnv, "ng:///" + moduleType.name + "/\u0275inj.js", meta);
@@ -55512,7 +55521,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * the `ngSelectorScope` property of the declared type.
      */
     function setScopeOnDeclaredComponents(moduleType, ngModule) {
-        var declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$4);
+        var declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$3);
         var transitiveScopes = transitiveScopesFor(moduleType);
         declarations.forEach(function (declaration) {
             if (declaration.hasOwnProperty(NG_COMP_DEF)) {
@@ -55683,7 +55692,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         throw new Error(error.join('\n'));
                     }
                     var templateUrl = metadata.templateUrl || "ng:///" + type.name + "/template.html";
-                    var meta = __assign(__assign({}, directiveMetadata(type, metadata)), { typeSourceSpan: compiler.createParseSourceSpan('Component', type.name, templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$2.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
+                    var meta = __assign(__assign({}, directiveMetadata(type, metadata)), { typeSourceSpan: compiler.createParseSourceSpan('Component', type.name, templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$2.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
                     if (meta.usesInheritance) {
                         addDirectiveDefToUndecoratedParents(type);
                     }
@@ -55783,8 +55792,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             deps: reflectDependencies(type),
             host: metadata.host || EMPTY_OBJ,
             propMetadata: propMetadata,
-            inputs: metadata.inputs || EMPTY_ARRAY$1,
-            outputs: metadata.outputs || EMPTY_ARRAY$1,
+            inputs: metadata.inputs || EMPTY_ARRAY,
+            outputs: metadata.outputs || EMPTY_ARRAY,
             queries: extractQueriesMetadata(type, propMetadata, isContentQuery),
             lifecycle: { usesOnChanges: reflect.hasLifecycleHook(type, 'ngOnChanges') },
             typeSourceSpan: null,
@@ -63123,7 +63132,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+41.sha-47a1811');
+    var VERSION$3 = new Version$1('9.1.0-next.2+46.sha-c195d22');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
