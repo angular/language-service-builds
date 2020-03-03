@@ -8,7 +8,7 @@
 /// <amd-module name="@angular/language-service/src/expression_diagnostics" />
 import { Node, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import { SymbolQuery, SymbolTable } from './symbols';
-import { Diagnostic } from './types';
+import * as ng from './types';
 export interface DiagnosticTemplateInfo {
     fileName?: string;
     offset: number;
@@ -17,7 +17,7 @@ export interface DiagnosticTemplateInfo {
     htmlAst: Node[];
     templateAst: TemplateAst[];
 }
-export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): Diagnostic[];
+export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): ng.Diagnostic[];
 /**
  * Returns the symbols available in a particular scope of a template.
  * @param info parsed template information

@@ -46,6 +46,5 @@ export declare class AstType implements AstVisitor {
     private get undefinedType();
     private resolveMethodCall;
     private resolvePropertyRead;
-    private reportDiagnostic;
     private isAny;
 }
