@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+91.sha-59607dc
+ * @license Angular v9.1.0-next.2+89.sha-59078c4
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -7263,12 +7263,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return ASTWithSource;
     }(AST));
     var TemplateBinding = /** @class */ (function () {
-        function TemplateBinding(span, sourceSpan, key, keyIsVar, name, value) {
+        function TemplateBinding(span, sourceSpan, key, keyIsVar, name, expression) {
             this.span = span;
             this.key = key;
             this.keyIsVar = keyIsVar;
             this.name = name;
-            this.value = value;
+            this.expression = expression;
         }
         return TemplateBinding;
     }());
@@ -11479,8 +11479,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (binding.keyIsVar) {
                     targetVars.push(new ParsedVariable(binding.key, binding.name, sourceSpan));
                 }
-                else if (binding.value) {
-                    this._parsePropertyAst(binding.key, binding.value, sourceSpan, undefined, targetMatchableAttrs, targetProps);
+                else if (binding.expression) {
+                    this._parsePropertyAst(binding.key, binding.expression, sourceSpan, undefined, targetMatchableAttrs, targetProps);
                 }
                 else {
                     targetMatchableAttrs.push([binding.key, '']);
@@ -11503,8 +11503,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, absoluteValueOffset);
                 this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
                 bindingsResult.templateBindings.forEach(function (binding) {
-                    if (binding.value) {
-                        _this._checkPipes(binding.value, sourceSpan);
+                    if (binding.expression) {
+                        _this._checkPipes(binding.expression, sourceSpan);
                     }
                 });
                 bindingsResult.warnings.forEach(function (warning) { _this._reportError(warning, sourceSpan, ParseErrorLevel.WARNING); });
@@ -13837,7 +13837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this.sourceSpanCache.get(serial);
         };
         _ParseAST.prototype.advance = function () { this.index++; };
-        _ParseAST.prototype.consumeOptionalCharacter = function (code) {
+        _ParseAST.prototype.optionalCharacter = function (code) {
             if (this.next.isCharacter(code)) {
                 this.advance();
                 return true;
@@ -13849,7 +13849,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ParseAST.prototype.peekKeywordLet = function () { return this.next.isKeywordLet(); };
         _ParseAST.prototype.peekKeywordAs = function () { return this.next.isKeywordAs(); };
         _ParseAST.prototype.expectCharacter = function (code) {
-            if (this.consumeOptionalCharacter(code))
+            if (this.optionalCharacter(code))
                 return;
             this.error("Missing expected " + String.fromCharCode(code));
         };
@@ -13891,11 +13891,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             while (this.index < this.tokens.length) {
                 var expr = this.parsePipe();
                 exprs.push(expr);
-                if (this.consumeOptionalCharacter($SEMICOLON)) {
+                if (this.optionalCharacter($SEMICOLON)) {
                     if (!this.parseAction) {
                         this.error('Binding expression cannot contain chained expression');
                     }
-                    while (this.consumeOptionalCharacter($SEMICOLON)) {
+                    while (this.optionalCharacter($SEMICOLON)) {
                     } // read all semicolons
                 }
                 else if (this.index < this.tokens.length) {
@@ -13919,7 +13919,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     var name_1 = this.expectIdentifierOrKeyword();
                     var nameSpan = this.sourceSpan(nameStart);
                     var args = [];
-                    while (this.consumeOptionalCharacter($COLON)) {
+                    while (this.optionalCharacter($COLON)) {
                         args.push(this.parseExpression());
                     }
                     var start = result.span.start;
@@ -13936,7 +13936,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this.optionalOperator('?')) {
                 var yes = this.parsePipe();
                 var no = void 0;
-                if (!this.consumeOptionalCharacter($COLON)) {
+                if (!this.optionalCharacter($COLON)) {
                     var end = this.inputIndex;
                     var expression = this.input.substring(start, end);
                     this.error("Conditional expression " + expression + " requires all 3 expressions");
@@ -14076,13 +14076,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var result = this.parsePrimary();
             var resultStart = result.span.start;
             while (true) {
-                if (this.consumeOptionalCharacter($PERIOD)) {
+                if (this.optionalCharacter($PERIOD)) {
                     result = this.parseAccessMemberOrMethodCall(result, false);
                 }
                 else if (this.optionalOperator('?.')) {
                     result = this.parseAccessMemberOrMethodCall(result, true);
                 }
-                else if (this.consumeOptionalCharacter($LBRACKET)) {
+                else if (this.optionalCharacter($LBRACKET)) {
                     this.rbracketsExpected++;
                     var key = this.parsePipe();
                     this.rbracketsExpected--;
@@ -14095,7 +14095,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         result = new KeyedRead(this.span(resultStart), this.sourceSpan(resultStart), result, key);
                     }
                 }
-                else if (this.consumeOptionalCharacter($LPAREN)) {
+                else if (this.optionalCharacter($LPAREN)) {
                     this.rparensExpected++;
                     var args = this.parseCallArguments();
                     this.rparensExpected--;
@@ -14113,7 +14113,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         _ParseAST.prototype.parsePrimary = function () {
             var start = this.inputIndex;
-            if (this.consumeOptionalCharacter($LPAREN)) {
+            if (this.optionalCharacter($LPAREN)) {
                 this.rparensExpected++;
                 var result = this.parsePipe();
                 this.rparensExpected--;
@@ -14140,7 +14140,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.advance();
                 return new ImplicitReceiver(this.span(start), this.sourceSpan(start));
             }
-            else if (this.consumeOptionalCharacter($LBRACKET)) {
+            else if (this.optionalCharacter($LBRACKET)) {
                 this.rbracketsExpected++;
                 var elements = this.parseExpressionList($RBRACKET);
                 this.rbracketsExpected--;
@@ -14177,7 +14177,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!this.next.isCharacter(terminator)) {
                 do {
                     result.push(this.parsePipe());
-                } while (this.consumeOptionalCharacter($COMMA));
+                } while (this.optionalCharacter($COMMA));
             }
             return result;
         };
@@ -14186,7 +14186,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var values = [];
             var start = this.inputIndex;
             this.expectCharacter($LBRACE);
-            if (!this.consumeOptionalCharacter($RBRACE)) {
+            if (!this.optionalCharacter($RBRACE)) {
                 this.rbracesExpected++;
                 do {
                     var quoted = this.next.isString();
@@ -14194,7 +14194,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     keys.push({ key: key, quoted: quoted });
                     this.expectCharacter($COLON);
                     values.push(this.parsePipe());
-                } while (this.consumeOptionalCharacter($COMMA));
+                } while (this.optionalCharacter($COMMA));
                 this.rbracesExpected--;
                 this.expectCharacter($RBRACE);
             }
@@ -14204,7 +14204,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (isSafe === void 0) { isSafe = false; }
             var start = receiver.span.start;
             var id = this.expectIdentifierOrKeyword();
-            if (this.consumeOptionalCharacter($LPAREN)) {
+            if (this.optionalCharacter($LPAREN)) {
                 this.rparensExpected++;
                 var args = this.parseCallArguments();
                 this.expectCharacter($RPAREN);
@@ -14246,7 +14246,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var positionals = [];
             do {
                 positionals.push(this.parsePipe());
-            } while (this.consumeOptionalCharacter($COMMA));
+            } while (this.optionalCharacter($COMMA));
             return positionals;
         };
         /**
@@ -14343,7 +14343,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ParseAST.prototype.parseDirectiveKeywordBindings = function (key, keySpan, absoluteOffset) {
             var _a;
             var bindings = [];
-            this.consumeOptionalCharacter($COLON); // trackBy: trackByFunction
+            this.optionalCharacter($COLON); // trackBy: trackByFunction
             var valueExpr = this.getDirectiveBoundTarget();
             var span = new ParseSpan(keySpan.start, this.inputIndex);
             bindings.push(new TemplateBinding(span, span.toAbsolute(absoluteOffset), key, false /* keyIsVar */, ((_a = valueExpr) === null || _a === void 0 ? void 0 : _a.source) || '', valueExpr));
@@ -14432,7 +14432,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Consume the optional statement terminator: semicolon or comma.
          */
         _ParseAST.prototype.consumeStatementTerminator = function () {
-            this.consumeOptionalCharacter($SEMICOLON) || this.consumeOptionalCharacter($COMMA);
+            this.optionalCharacter($SEMICOLON) || this.optionalCharacter($COMMA);
         };
         _ParseAST.prototype.error = function (message, index) {
             if (index === void 0) { index = null; }
@@ -18886,7 +18886,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+91.sha-59607dc');
+    var VERSION$1 = new Version('9.1.0-next.2+89.sha-59078c4');
 
     /**
      * @license
@@ -28363,8 +28363,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
             }
-            if (binding.value && inSpan(valueRelativePosition, binding.value.ast.span)) {
-                this.processExpressionCompletions(binding.value.ast);
+            if (binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) {
+                this.processExpressionCompletions(binding.expression.ast);
                 return;
             }
             // If the expression is incomplete, for example *ngFor="let x of |"
@@ -28667,10 +28667,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // Find the symbol that contains the position.
         templateBindings.filter(function (tb) { return !tb.keyIsVar; }).forEach(function (tb) {
             var _a;
-            if (inSpan(valueRelativePosition, (_a = tb.value) === null || _a === void 0 ? void 0 : _a.ast.span)) {
+            if (inSpan(valueRelativePosition, (_a = tb.expression) === null || _a === void 0 ? void 0 : _a.ast.span)) {
                 var dinfo = diagnosticInfoFromTemplateInfo(info);
                 var scope = getExpressionScope(dinfo, path);
-                result = getExpressionSymbol(scope, tb.value, path.position, info.template.query);
+                result = getExpressionSymbol(scope, tb.expression, path.position, info.template.query);
             }
             else if (inSpan(valueRelativePosition, tb.span)) {
                 var template = path.first(EmbeddedTemplateAst);
@@ -38792,7 +38792,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+91.sha-59607dc');
+    var VERSION$2 = new Version$1('9.1.0-next.2+89.sha-59078c4');
 
     /**
      * @license
@@ -50806,7 +50806,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+91.sha-59607dc');
+    var VERSION$3 = new Version$1('9.1.0-next.2+89.sha-59078c4');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
