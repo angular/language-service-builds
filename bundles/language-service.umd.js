@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+114.sha-a73e125
+ * @license Angular v9.1.0-next.2+117.sha-81cb54f
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -13838,7 +13838,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return;
             this.error("Missing expected " + String.fromCharCode(code));
         };
-        _ParseAST.prototype.optionalOperator = function (op) {
+        _ParseAST.prototype.consumeOptionalOperator = function (op) {
             if (this.next.isOperator(op)) {
                 this.advance();
                 return true;
@@ -13848,7 +13848,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         };
         _ParseAST.prototype.expectOperator = function (operator) {
-            if (this.optionalOperator(operator))
+            if (this.consumeOptionalOperator(operator))
                 return;
             this.error("Missing expected operator " + operator);
         };
@@ -13895,7 +13895,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         _ParseAST.prototype.parsePipe = function () {
             var result = this.parseExpression();
-            if (this.optionalOperator('|')) {
+            if (this.consumeOptionalOperator('|')) {
                 if (this.parseAction) {
                     this.error('Cannot have a pipe in an action expression');
                 }
@@ -13910,7 +13910,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     var start = result.span.start;
                     result =
                         new BindingPipe(this.span(start), this.sourceSpan(start), result, name_1, args, nameSpan);
-                } while (this.optionalOperator('|'));
+                } while (this.consumeOptionalOperator('|'));
             }
             return result;
         };
@@ -13918,7 +13918,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ParseAST.prototype.parseConditional = function () {
             var start = this.inputIndex;
             var result = this.parseLogicalOr();
-            if (this.optionalOperator('?')) {
+            if (this.consumeOptionalOperator('?')) {
                 var yes = this.parsePipe();
                 var no = void 0;
                 if (!this.consumeOptionalCharacter($COLON)) {
@@ -13939,7 +13939,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ParseAST.prototype.parseLogicalOr = function () {
             // '||'
             var result = this.parseLogicalAnd();
-            while (this.optionalOperator('||')) {
+            while (this.consumeOptionalOperator('||')) {
                 var right = this.parseLogicalAnd();
                 var start = result.span.start;
                 result = new Binary(this.span(start), this.sourceSpan(start), '||', result, right);
@@ -13949,7 +13949,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ParseAST.prototype.parseLogicalAnd = function () {
             // '&&'
             var result = this.parseEquality();
-            while (this.optionalOperator('&&')) {
+            while (this.consumeOptionalOperator('&&')) {
                 var right = this.parseEquality();
                 var start = result.span.start;
                 result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
@@ -14064,7 +14064,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (this.consumeOptionalCharacter($PERIOD)) {
                     result = this.parseAccessMemberOrMethodCall(result, false);
                 }
-                else if (this.optionalOperator('?.')) {
+                else if (this.consumeOptionalOperator('?.')) {
                     result = this.parseAccessMemberOrMethodCall(result, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
@@ -14072,7 +14072,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     var key = this.parsePipe();
                     this.rbracketsExpected--;
                     this.expectCharacter($RBRACKET);
-                    if (this.optionalOperator('=')) {
+                    if (this.consumeOptionalOperator('=')) {
                         var value = this.parseConditional();
                         result = new KeyedWrite(this.span(resultStart), this.sourceSpan(resultStart), result, key, value);
                     }
@@ -14088,7 +14088,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     result =
                         new FunctionCall(this.span(resultStart), this.sourceSpan(resultStart), result, args);
                 }
-                else if (this.optionalOperator('!')) {
+                else if (this.consumeOptionalOperator('!')) {
                     result = new NonNullAssert(this.span(resultStart), this.sourceSpan(resultStart), result);
                 }
                 else {
@@ -14201,7 +14201,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             else {
                 if (isSafe) {
-                    if (this.optionalOperator('=')) {
+                    if (this.consumeOptionalOperator('=')) {
                         this.error('The \'?.\' operator cannot be used in the assignment');
                         return new EmptyExpr(this.span(start), this.sourceSpan(start));
                     }
@@ -14210,7 +14210,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
                 else {
-                    if (this.optionalOperator('=')) {
+                    if (this.consumeOptionalOperator('=')) {
                         if (!this.parseAction) {
                             this.error('Bindings cannot contain assignments');
                             return new EmptyExpr(this.span(start), this.sourceSpan(start));
@@ -14243,7 +14243,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var start = this.inputIndex;
             do {
                 result += this.expectIdentifierOrKeywordOrString();
-                operatorFound = this.optionalOperator('-');
+                operatorFound = this.consumeOptionalOperator('-');
                 if (operatorFound) {
                     result += '-';
                 }
@@ -14404,7 +14404,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.advance(); // consume the 'let' keyword
             var key = this.expectTemplateBindingKey().key;
             var valueExpr = null;
-            if (this.optionalOperator('=')) {
+            if (this.consumeOptionalOperator('=')) {
                 var _b = this.expectTemplateBindingKey(), value = _b.key, valueSpan = _b.keySpan;
                 var ast = new AST(valueSpan, valueSpan.toAbsolute(this.absoluteOffset));
                 valueExpr = new ASTWithSource(ast, value, this.location, this.absoluteOffset + valueSpan.start, this.errors);
@@ -18871,7 +18871,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+114.sha-a73e125');
+    var VERSION$1 = new Version('9.1.0-next.2+117.sha-81cb54f');
 
     /**
      * @license
@@ -25710,10 +25710,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 continue;
             }
             var _loop_2 = function (variable) {
-                var symbol = info.members.get(variable.value);
-                if (!symbol) {
-                    symbol = getVariableTypeFromDirectiveContext(variable.value, info.query, current);
-                }
+                var symbol = getVariableTypeFromDirectiveContext(variable.value, info.query, current);
                 var kind = info.query.getTypeKind(symbol);
                 if (kind === BuiltinType$1.Any || kind === BuiltinType$1.Unbound) {
                     // For special cases such as ngFor and ngIf, the any type is not very useful.
@@ -26117,6 +26114,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         });
         return result && result.values();
     }
+    /**
+     * Retrieves the expression symbol at a particular position in a template.
+     *
+     * @param scope symbols in scope of the template
+     * @param ast template AST
+     * @param position absolute location in template to retrieve symbol at
+     * @param query type symbol query for the template scope
+     */
     function getExpressionSymbol(scope, ast, position, query) {
         var path = findAstAt(ast, position, /* excludeEmpty */ true);
         if (path.empty)
@@ -26146,14 +26151,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 span = ast.span;
             },
             visitPipe: function (ast) {
-                if (position >= ast.exp.span.end &&
-                    (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
+                if (inSpan(position, ast.nameSpan, /* exclusive */ true)) {
                     // We are in a position a pipe name is expected.
                     var pipes = query.getPipes();
-                    if (pipes) {
-                        symbol = pipes.get(ast.name);
-                        span = ast.span;
-                    }
+                    symbol = pipes.get(ast.name);
+                    // `nameSpan` is an absolute span, but the span expected by the result of this method is
+                    // relative to the start of the expression.
+                    // TODO(ayazhafiz): migrate to only using absolute spans
+                    var offset = ast.sourceSpan.start - ast.span.start;
+                    span = {
+                        start: ast.nameSpan.start - offset,
+                        end: ast.nameSpan.end - offset,
+                    };
                 }
             },
             visitPrefixNot: function (ast) { },
@@ -48148,7 +48157,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+114.sha-a73e125');
+    var VERSION$2 = new Version$1('9.1.0-next.2+117.sha-81cb54f');
 
     /**
      * @license
@@ -63289,7 +63298,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+114.sha-a73e125');
+    var VERSION$3 = new Version$1('9.1.0-next.2+117.sha-81cb54f');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
