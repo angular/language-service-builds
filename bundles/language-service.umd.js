@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+128.sha-c98c6e8
+ * @license Angular v9.1.0-next.2+129.sha-95c729f
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -14326,12 +14326,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * @param absoluteOffset absolute offset of the attribute value
          */
         _ParseAST.prototype.parseDirectiveKeywordBindings = function (key, keySpan, absoluteOffset) {
-            var _a;
             var bindings = [];
             this.consumeOptionalCharacter($COLON); // trackBy: trackByFunction
             var valueExpr = this.getDirectiveBoundTarget();
             var span = new ParseSpan(keySpan.start, this.inputIndex);
-            bindings.push(new TemplateBinding(span, span.toAbsolute(absoluteOffset), key, false /* keyIsVar */, ((_a = valueExpr) === null || _a === void 0 ? void 0 : _a.source) || '', valueExpr));
+            bindings.push(new TemplateBinding(span, span.toAbsolute(absoluteOffset), key, false /* keyIsVar */, (valueExpr === null || valueExpr === void 0 ? void 0 : valueExpr.source) || '', valueExpr));
             // The binding could optionally be followed by "as". For example,
             // *ngIf="cond | pipe as x". In this case, the key in the "as" binding
             // is "x" and the value is the template key itself ("ngIf"). Note that the
@@ -14396,7 +14395,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * In the second binding, `i` is bound to `NgForOfContext.index`.
          */
         _ParseAST.prototype.parseLetBinding = function () {
-            var _a;
             if (!this.peekKeywordLet()) {
                 return null;
             }
@@ -14405,13 +14403,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var key = this.expectTemplateBindingKey().key;
             var valueExpr = null;
             if (this.consumeOptionalOperator('=')) {
-                var _b = this.expectTemplateBindingKey(), value = _b.key, valueSpan = _b.keySpan;
+                var _a = this.expectTemplateBindingKey(), value = _a.key, valueSpan = _a.keySpan;
                 var ast = new AST(valueSpan, valueSpan.toAbsolute(this.absoluteOffset));
                 valueExpr = new ASTWithSource(ast, value, this.location, this.absoluteOffset + valueSpan.start, this.errors);
             }
             var spanEnd = this.inputIndex;
             var span = new ParseSpan(spanStart, spanEnd);
-            return new TemplateBinding(span, span.toAbsolute(this.absoluteOffset), key, true /* keyIsVar */, ((_a = valueExpr) === null || _a === void 0 ? void 0 : _a.source) || '$implicit', valueExpr);
+            return new TemplateBinding(span, span.toAbsolute(this.absoluteOffset), key, true /* keyIsVar */, (valueExpr === null || valueExpr === void 0 ? void 0 : valueExpr.source) || '$implicit', valueExpr);
         };
         /**
          * Consume the optional statement terminator: semicolon or comma.
@@ -18871,7 +18869,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+128.sha-c98c6e8');
+    var VERSION$1 = new Version('9.1.0-next.2+129.sha-95c729f');
 
     /**
      * @license
@@ -28475,7 +28473,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param position location to locate symbols at
      */
     function locateSymbols(info, position) {
-        var _a;
         var templatePosition = position - info.template.span.start;
         // TODO: update `findTemplateAstAt` to use absolute positions.
         var path = findTemplateAstAt(info.templateAst, templatePosition);
@@ -28488,7 +28485,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             toVisit.push(node);
         }
         // For the structural directive, only care about the last template AST.
-        if ((_a = attribute) === null || _a === void 0 ? void 0 : _a.name.startsWith('*')) {
+        if (attribute === null || attribute === void 0 ? void 0 : attribute.name.startsWith('*')) {
             toVisit.splice(0, toVisit.length - 1);
         }
         return toVisit.map(function (ast) { return locateSymbol(ast, path, info); })
@@ -29192,7 +29189,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param analyzedModules all NgModules in the program.
      */
     function getTemplateHover(info, position, analyzedModules) {
-        var _a, _b, _c;
+        var _a, _b;
         var symbolInfo = locateSymbols(info, position)[0];
         if (!symbolInfo) {
             return;
@@ -29205,9 +29202,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (!containerName && staticSymbol) {
             // If there is a static symbol then the target is a directive.
             var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(staticSymbol);
-            containerName = (_b = ngModule) === null || _b === void 0 ? void 0 : _b.type.reference.name;
+            containerName = ngModule === null || ngModule === void 0 ? void 0 : ngModule.type.reference.name;
         }
-        return createQuickInfo(symbol.name, symbol.kind, span, containerName, (_c = symbol.type) === null || _c === void 0 ? void 0 : _c.name, symbol.documentation);
+        return createQuickInfo(symbol.name, symbol.kind, span, containerName, (_b = symbol.type) === null || _b === void 0 ? void 0 : _b.name, symbol.documentation);
     }
     /**
      * Get quick info for Angular semantic entities in TypeScript files, like Directives.
@@ -29217,17 +29214,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function getTsHover(position, declarations, analyzedModules) {
         var e_1, _a;
-        var _b;
         try {
             for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
-                var _c = declarations_1_1.value, declarationSpan = _c.declarationSpan, metadata = _c.metadata;
+                var _b = declarations_1_1.value, declarationSpan = _b.declarationSpan, metadata = _b.metadata;
                 if (inSpan(position, declarationSpan)) {
                     var staticSymbol = metadata.type.reference;
                     var directiveName = staticSymbol.name;
                     var kind = metadata.isComponent ? 'component' : 'directive';
                     var textSpan = ts.createTextSpanFromBounds(declarationSpan.start, declarationSpan.end);
                     var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(staticSymbol);
-                    var moduleName = (_b = ngModule) === null || _b === void 0 ? void 0 : _b.type.reference.name;
+                    var moduleName = ngModule === null || ngModule === void 0 ? void 0 : ngModule.type.reference.name;
                     return createQuickInfo(directiveName, kind, textSpan, moduleName, ts.ScriptElementKind.classElement);
                 }
             }
@@ -48157,7 +48153,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+128.sha-c98c6e8');
+    var VERSION$2 = new Version$1('9.1.0-next.2+129.sha-95c729f');
 
     /**
      * @license
@@ -61804,7 +61800,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case ts.SyntaxKind.ExportDeclaration:
                         var exportDeclaration = node;
                         var moduleSpecifier = exportDeclaration.moduleSpecifier, exportClause = exportDeclaration.exportClause;
-                        if (!moduleSpecifier) {
+                        if (!moduleSpecifier && exportClause && ts.isNamedExports(exportClause)) {
                             // If there is a module specifier there is also an exportClause
                             exportClause.elements.forEach(function (spec) {
                                 var exportedAs = spec.name.text;
@@ -61870,7 +61866,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         var moduleSpecifier = exportDeclaration.moduleSpecifier, exportClause = exportDeclaration.exportClause;
                         if (!moduleSpecifier) {
                             // no module specifier -> export {propName as name};
-                            if (exportClause) {
+                            if (exportClause && ts.isNamedExports(exportClause)) {
                                 exportClause.elements.forEach(function (spec) {
                                     var name = spec.name.text;
                                     // If the symbol was not already exported, export a reference since it is a
@@ -61890,7 +61886,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             // This is allowed by the syntax but will be flagged as an error by the type checker.
                             var from = moduleSpecifier.text;
                             var moduleExport = { from: from };
-                            if (exportClause) {
+                            if (exportClause && ts.isNamedExports(exportClause)) {
                                 moduleExport.export = exportClause.elements.map(function (spec) { return spec.propertyName ? { name: spec.propertyName.text, as: spec.name.text } :
                                     spec.name.text; });
                             }
@@ -63298,7 +63294,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+128.sha-c98c6e8');
+    var VERSION$3 = new Version$1('9.1.0-next.2+129.sha-95c729f');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
