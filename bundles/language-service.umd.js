@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.2+115.sha-406419b
+ * @license Angular v9.1.0-next.2+114.sha-a73e125
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18886,7 +18886,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.2+115.sha-406419b');
+    var VERSION$1 = new Version('9.1.0-next.2+114.sha-a73e125');
 
     /**
      * @license
@@ -26132,14 +26132,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         });
         return result && result.values();
     }
-    /**
-     * Retrieves the expression symbol at a particular position in a template.
-     *
-     * @param scope symbols in scope of the template
-     * @param ast template AST
-     * @param position absolute location in template to retrieve symbol at
-     * @param query type symbol query for the template scope
-     */
     function getExpressionSymbol(scope, ast, position, query) {
         var path = findAstAt(ast, position, /* excludeEmpty */ true);
         if (path.empty)
@@ -26169,18 +26161,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 span = ast.span;
             },
             visitPipe: function (ast) {
-                if (inSpan(position, ast.nameSpan, /* exclusive */ true)) {
+                if (position >= ast.exp.span.end &&
+                    (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                     // We are in a position a pipe name is expected.
                     var pipes = query.getPipes();
-                    symbol = pipes.get(ast.name);
-                    // `nameSpan` is an absolute span, but the span expected by the result of this method is
-                    // relative to the start of the expression.
-                    // TODO(ayazhafiz): migrate to only using absolute spans
-                    var offset = ast.sourceSpan.start - ast.span.start;
-                    span = {
-                        start: ast.nameSpan.start - offset,
-                        end: ast.nameSpan.end - offset,
-                    };
+                    if (pipes) {
+                        symbol = pipes.get(ast.name);
+                        span = ast.span;
+                    }
                 }
             },
             visitPrefixNot: function (ast) { },
@@ -38804,7 +38792,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.2+115.sha-406419b');
+    var VERSION$2 = new Version$1('9.1.0-next.2+114.sha-a73e125');
 
     /**
      * @license
@@ -50818,7 +50806,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.2+115.sha-406419b');
+    var VERSION$3 = new Version$1('9.1.0-next.2+114.sha-a73e125');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
