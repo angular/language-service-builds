@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.4+3.sha-6f95bc9
+ * @license Angular v9.1.0-next.4+7.sha-13495c6
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18884,7 +18884,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.4+3.sha-6f95bc9');
+    var VERSION$1 = new Version('9.1.0-next.4+7.sha-13495c6');
 
     /**
      * @license
@@ -30688,6 +30688,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // [Assert functions do not constraint type when they are guarded by a truthy
+    // expression.](https://github.com/microsoft/TypeScript/issues/37295)
     function assertTNodeForLView(tNode, lView) {
         tNode.hasOwnProperty('tView_') && assertEqual(tNode.tView_, lView[TVIEW], 'This TNode does not belong to this LView.');
     }
@@ -38797,7 +38799,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.4+3.sha-6f95bc9');
+    var VERSION$2 = new Version$1('9.1.0-next.4+7.sha-13495c6');
 
     /**
      * @license
@@ -50811,7 +50813,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.4+3.sha-6f95bc9');
+    var VERSION$3 = new Version$1('9.1.0-next.4+7.sha-13495c6');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
