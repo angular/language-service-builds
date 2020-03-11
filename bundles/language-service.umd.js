@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.4+26.sha-06779cf
+ * @license Angular v9.1.0-next.4+27.sha-18b1bd4
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18930,7 +18930,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.4+26.sha-06779cf');
+    var VERSION$1 = new Version('9.1.0-next.4+27.sha-18b1bd4');
 
     /**
      * @license
@@ -25845,7 +25845,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function refinedVariableType(value, mergedTable, query, templateElement) {
         if (value === '$implicit') {
-            // Special case the ngFor directive
+            // Special case: ngFor directive
             var ngForDirective = templateElement.directives.find(function (d) {
                 var name = identifierName(d.directive.type);
                 return name == 'NgFor' || name == 'NgForOf';
@@ -25864,12 +25864,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
         }
-        // Special case the ngIf directive ( *ngIf="data$ | async as variable" )
-        if (value === 'ngIf') {
+        if (value === 'ngIf' || value === '$implicit') {
             var ngIfDirective = templateElement.directives.find(function (d) { return identifierName(d.directive.type) === 'NgIf'; });
             if (ngIfDirective) {
+                // Special case: ngIf directive. The NgIf structural directive owns a template context with
+                // "$implicit" and "ngIf" members. These properties are typed as generics. Until the language
+                // service uses an Ivy and TypecheckBlock backend, we cannot bind these values to a concrete
+                // type without manual inference. To get the concrete type, look up the type of the "ngIf"
+                // import on the NgIf directive bound to the template.
+                //
+                // See @angular/common/ng_if.ts for more information.
                 var ngIfBinding = ngIfDirective.inputs.find(function (i) { return i.directiveName === 'ngIf'; });
                 if (ngIfBinding) {
+                    // Check if there is a known type bound to the ngIf input.
                     var bindingType = new AstType(mergedTable, query, {}).getType(ngIfBinding.value);
                     if (bindingType) {
                         return bindingType;
@@ -38879,7 +38886,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.4+26.sha-06779cf');
+    var VERSION$2 = new Version$1('9.1.0-next.4+27.sha-18b1bd4');
 
     /**
      * @license
@@ -50893,7 +50900,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.4+26.sha-06779cf');
+    var VERSION$3 = new Version$1('9.1.0-next.4+27.sha-18b1bd4');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
