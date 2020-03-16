@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.4+57.sha-79659ee
+ * @license Angular v9.1.0-next.4+58.sha-e179c58
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18940,7 +18940,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.4+57.sha-79659ee');
+    var VERSION$1 = new Version('9.1.0-next.4+58.sha-e179c58');
 
     /**
      * @license
@@ -22506,9 +22506,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         });
                     }
                     else {
-                        // handle the symbols via export * directives.
+                        // Handle the symbols loaded by 'export *' directives.
                         var resolvedModule = this_1.resolveModule(moduleExport.from, filePath);
-                        if (resolvedModule) {
+                        if (resolvedModule && resolvedModule !== filePath) {
                             var nestedExports = this_1.getSymbolsOf(resolvedModule);
                             nestedExports.forEach(function (targetSymbol) {
                                 var sourceSymbol = _this.getStaticSymbol(filePath, targetSymbol.name);
@@ -38896,7 +38896,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.4+57.sha-79659ee');
+    var VERSION$2 = new Version$1('9.1.0-next.4+58.sha-e179c58');
 
     /**
      * @license
@@ -50910,7 +50910,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.4+57.sha-79659ee');
+    var VERSION$3 = new Version$1('9.1.0-next.4+58.sha-e179c58');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
