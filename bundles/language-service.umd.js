@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.4+58.sha-e179c58
+ * @license Angular v9.1.0-next.4+59.sha-31bec8c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -7630,11 +7630,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return ParsedEvent;
     }());
+    /**
+     * ParsedVariable represents a variable declaration in a microsyntax expression.
+     */
     var ParsedVariable = /** @class */ (function () {
-        function ParsedVariable(name, value, sourceSpan) {
+        function ParsedVariable(name, value, sourceSpan, keySpan, valueSpan) {
             this.name = name;
             this.value = value;
             this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
+            this.valueSpan = valueSpan;
         }
         return ParsedVariable;
     }());
@@ -10755,13 +10760,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * A variable declaration on a <ng-template> (e.g. `var-someName="someLocalName"`).
      */
     var VariableAst = /** @class */ (function () {
-        function VariableAst(name, value, sourceSpan) {
+        function VariableAst(name, value, sourceSpan, valueSpan) {
             this.name = name;
             this.value = value;
             this.sourceSpan = sourceSpan;
+            this.valueSpan = valueSpan;
         }
         VariableAst.fromParsedVariable = function (v) {
-            return new VariableAst(v.name, v.value, v.sourceSpan);
+            return new VariableAst(v.name, v.value, v.sourceSpan, v.valueSpan);
         };
         VariableAst.prototype.visit = function (visitor, context) {
             return visitor.visitVariable(this, context);
@@ -11401,6 +11407,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ATTRIBUTE_PREFIX = 'attr';
     var CLASS_PREFIX = 'class';
     var STYLE_PREFIX = 'style';
+    var TEMPLATE_ATTR_PREFIX = '*';
     var ANIMATE_PROP_PREFIX = 'animate-';
     /**
      * Parses bindings in templates and in the directive host area.
@@ -11495,22 +11502,37 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * @param targetVars target variables in the template
          */
         BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars) {
-            var absoluteKeyOffset = sourceSpan.start.offset;
+            var e_1, _a;
+            var absoluteKeyOffset = sourceSpan.start.offset + TEMPLATE_ATTR_PREFIX.length;
             var bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteKeyOffset, absoluteValueOffset);
-            for (var i = 0; i < bindings.length; i++) {
-                var binding = bindings[i];
-                var key = binding.key.source;
-                if (binding instanceof VariableBinding) {
-                    var value = binding.value ? binding.value.source : '$implicit';
-                    targetVars.push(new ParsedVariable(key, value, sourceSpan));
+            try {
+                for (var bindings_1 = __values(bindings), bindings_1_1 = bindings_1.next(); !bindings_1_1.done; bindings_1_1 = bindings_1.next()) {
+                    var binding = bindings_1_1.value;
+                    // sourceSpan is for the entire HTML attribute. bindingSpan is for a particular
+                    // binding within the microsyntax expression so it's more narrow than sourceSpan.
+                    var bindingSpan = moveParseSourceSpan(sourceSpan, binding.sourceSpan);
+                    var key = binding.key.source;
+                    var keySpan = moveParseSourceSpan(sourceSpan, binding.key.span);
+                    if (binding instanceof VariableBinding) {
+                        var value = binding.value ? binding.value.source : '$implicit';
+                        var valueSpan = binding.value ? moveParseSourceSpan(sourceSpan, binding.value.span) : undefined;
+                        targetVars.push(new ParsedVariable(key, value, bindingSpan, keySpan, valueSpan));
+                    }
+                    else if (binding.value) {
+                        this._parsePropertyAst(key, binding.value, sourceSpan, undefined, targetMatchableAttrs, targetProps);
+                    }
+                    else {
+                        targetMatchableAttrs.push([key, '']);
+                        this.parseLiteralAttr(key, null, sourceSpan, absoluteValueOffset, undefined, targetMatchableAttrs, targetProps);
+                    }
                 }
-                else if (binding.value) {
-                    this._parsePropertyAst(key, binding.value, sourceSpan, undefined, targetMatchableAttrs, targetProps);
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (bindings_1_1 && !bindings_1_1.done && (_a = bindings_1.return)) _a.call(bindings_1);
                 }
-                else {
-                    targetMatchableAttrs.push([key, '']);
-                    this.parseLiteralAttr(key, null, sourceSpan, absoluteValueOffset, undefined, targetMatchableAttrs, targetProps);
-                }
+                finally { if (e_1) throw e_1.error; }
             }
         };
         /**
@@ -11737,19 +11759,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.errors.push(new ParseError(sourceSpan, message, level));
         };
         BindingParser.prototype._reportExpressionParserErrors = function (errors, sourceSpan) {
-            var e_1, _a;
+            var e_2, _a;
             try {
                 for (var errors_1 = __values(errors), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
                     var error = errors_1_1.value;
                     this._reportError(error.message, sourceSpan);
                 }
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
                     if (errors_1_1 && !errors_1_1.done && (_a = errors_1.return)) _a.call(errors_1);
                 }
-                finally { if (e_1) throw e_1.error; }
+                finally { if (e_2) throw e_2.error; }
             }
         };
         // Make sure all the used pipes are known in `this.pipesByName`
@@ -11811,6 +11833,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             ctxs.push.apply(ctxs, __spread(possibleElementNames.map(function (elementName) { return registry.securityContext(elementName, propName, isAttribute); })));
         });
         return ctxs.length === 0 ? [SecurityContext.NONE] : Array.from(new Set(ctxs)).sort();
+    }
+    /**
+     * Compute a new ParseSourceSpan based off an original `sourceSpan` by using
+     * absolute offsets from the specified `absoluteSpan`.
+     *
+     * @param sourceSpan original source span
+     * @param absoluteSpan absolute source span to move to
+     */
+    function moveParseSourceSpan(sourceSpan, absoluteSpan) {
+        // The difference of two absolute offsets provide the relative offset
+        var startDiff = absoluteSpan.start - sourceSpan.start.offset;
+        var endDiff = absoluteSpan.end - sourceSpan.end.offset;
+        return new ParseSourceSpan(sourceSpan.start.moveBy(startDiff), sourceSpan.end.moveBy(endDiff));
     }
 
     /**
@@ -11925,7 +11960,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var IDENT_PROPERTY_IDX = 9;
     // Group 10 = identifier inside ()
     var IDENT_EVENT_IDX = 10;
-    var TEMPLATE_ATTR_PREFIX = '*';
+    var TEMPLATE_ATTR_PREFIX$1 = '*';
     var CLASS_ATTR = 'class';
     var _TEXT_CSS_SELECTOR;
     function TEXT_CSS_SELECTOR() {
@@ -12126,9 +12161,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var templateValue;
                 var templateKey;
                 var normalizedName = _this._normalizeAttributeName(attr.name);
-                if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX)) {
+                if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX$1)) {
                     templateValue = attr.value;
-                    templateKey = normalizedName.substring(TEMPLATE_ATTR_PREFIX.length);
+                    templateKey = normalizedName.substring(TEMPLATE_ATTR_PREFIX$1.length);
                 }
                 var hasTemplateBinding = templateValue != null;
                 if (hasTemplateBinding) {
@@ -15090,7 +15125,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var IDENT_PROPERTY_IDX$1 = 9;
     // Group 10 = identifier inside ()
     var IDENT_EVENT_IDX$1 = 10;
-    var TEMPLATE_ATTR_PREFIX$1 = '*';
+    var TEMPLATE_ATTR_PREFIX$2 = '*';
     function htmlAstToRender3Ast(htmlNodes, bindingParser) {
         var transformer = new HtmlAstToIvyAst(bindingParser);
         var ivyNodes = visitAll$1(transformer, htmlNodes);
@@ -15165,7 +15200,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     if (attribute.i18n) {
                         i18nAttrsMeta[attribute.name] = attribute.i18n;
                     }
-                    if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX$1)) {
+                    if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX$2)) {
                         // *-attributes
                         if (elementHasInlineTemplate) {
                             this.reportError("Can't have multiple template bindings on one element. Use only one attribute prefixed with *", attribute.sourceSpan);
@@ -15173,7 +15208,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         isTemplateBinding = true;
                         elementHasInlineTemplate = true;
                         var templateValue = attribute.value;
-                        var templateKey = normalizedName.substring(TEMPLATE_ATTR_PREFIX$1.length);
+                        var templateKey = normalizedName.substring(TEMPLATE_ATTR_PREFIX$2.length);
                         var parsedVariables = [];
                         var absoluteValueOffset = attribute.valueSpan ?
                             attribute.valueSpan.start.offset :
@@ -15182,7 +15217,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             // the attribute name.
                             attribute.sourceSpan.start.offset + attribute.name.length;
                         this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteValueOffset, [], templateParsedProperties, parsedVariables);
-                        templateVariables.push.apply(templateVariables, __spread(parsedVariables.map(function (v) { return new Variable(v.name, v.value, v.sourceSpan); })));
+                        templateVariables.push.apply(templateVariables, __spread(parsedVariables.map(function (v) { return new Variable(v.name, v.value, v.sourceSpan, v.valueSpan); })));
                     }
                     else {
                         // Check for variables, events, property bindings, interpolation
@@ -18940,7 +18975,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.4+58.sha-e179c58');
+    var VERSION$1 = new Version('9.1.0-next.4+59.sha-31bec8c');
 
     /**
      * @license
@@ -27933,7 +27968,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ATTR[ATTR["IDENT_EVENT_IDX"] = 10] = "IDENT_EVENT_IDX";
     })(ATTR || (ATTR = {}));
     // Microsyntax template starts with '*'. See https://angular.io/api/core/TemplateRef
-    var TEMPLATE_ATTR_PREFIX$2 = '*';
+    var TEMPLATE_ATTR_PREFIX$3 = '*';
     function isIdentifierPart$1(code) {
         // Identifiers consist of alphanumeric characters, '_', or '$'.
         return isAsciiLetter(code) || isDigit(code) || code == $$ || code == $_;
@@ -28089,7 +28124,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // bind parts for cases like [()|]
         //                              ^ cursor is here
         var bindParts = attr.name.match(BIND_NAME_REGEXP$2);
-        var isTemplateRef = attr.name.startsWith(TEMPLATE_ATTR_PREFIX$2);
+        var isTemplateRef = attr.name.startsWith(TEMPLATE_ATTR_PREFIX$3);
         var isBinding = bindParts !== null || isTemplateRef;
         if (!isBinding) {
             return attributeCompletionsForElement(info, elem.name);
@@ -28324,11 +28359,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
             var _this = this;
-            if (ast.name.startsWith(TEMPLATE_ATTR_PREFIX$2)) {
+            if (ast.name.startsWith(TEMPLATE_ATTR_PREFIX$3)) {
                 // This a template binding given by micro syntax expression.
                 // First, verify the attribute consists of some binding we can give completions for.
                 // The sourceSpan of AttrAst points to the RHS of the attribute
-                var templateKey = ast.name.substring(TEMPLATE_ATTR_PREFIX$2.length);
+                var templateKey = ast.name.substring(TEMPLATE_ATTR_PREFIX$3.length);
                 var templateValue = ast.sourceSpan.toString();
                 var templateUrl = ast.sourceSpan.start.file.url;
                 // TODO(kyliau): We are unable to determine the absolute offset of the key
@@ -38896,7 +38931,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.4+58.sha-e179c58');
+    var VERSION$2 = new Version$1('9.1.0-next.4+59.sha-31bec8c');
 
     /**
      * @license
@@ -50910,7 +50945,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.4+58.sha-e179c58');
+    var VERSION$3 = new Version$1('9.1.0-next.4+59.sha-31bec8c');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
