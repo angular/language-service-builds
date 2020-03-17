@@ -10,14 +10,15 @@ import { AST, AstVisitor, Binary, BindingPipe, Chain, Conditional, FunctionCall,
 import { Symbol, SymbolQuery, SymbolTable } from './symbols';
 import * as ng from './types';
 export interface ExpressionDiagnosticsContext {
-    event?: boolean;
+    inEvent?: boolean;
 }
 export declare class AstType implements AstVisitor {
     private scope;
     private query;
     private context;
+    private source;
     private readonly diagnostics;
-    constructor(scope: SymbolTable, query: SymbolQuery, context: ExpressionDiagnosticsContext);
+    constructor(scope: SymbolTable, query: SymbolQuery, context: ExpressionDiagnosticsContext, source: string);
     getType(ast: AST): Symbol;
     getDiagnostics(ast: AST): ng.Diagnostic[];
     visitBinary(ast: Binary): Symbol;
@@ -40,6 +41,12 @@ export declare class AstType implements AstVisitor {
     visitQuote(ast: Quote): Symbol;
     visitSafeMethodCall(ast: SafeMethodCall): Symbol;
     visitSafePropertyRead(ast: SafePropertyRead): Symbol | undefined;
+    /**
+     * Gets the source of an expession AST.
+     * The AST's sourceSpan is relative to the start of the template source code, which is contained
+     * at this.source.
+     */
+    private sourceOf;
     private _anyType;
     private get anyType();
     private _undefinedType;
