@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.4+62.sha-168a393
+ * @license Angular v9.1.0-next.4+64.sha-61c3795
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18975,7 +18975,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.4+62.sha-168a393');
+    var VERSION$1 = new Version('9.1.0-next.4+64.sha-61c3795');
 
     /**
      * @license
@@ -24849,7 +24849,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             kind: 'Warning',
         },
         call_target_not_callable: {
-            message: 'Call target is not callable',
+            message: "Call target '%1' has non-callable type '%2'.",
             kind: 'Error',
         },
         expression_might_be_null: {
@@ -24992,16 +24992,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     // AstType calculatetype of the ast given AST element.
     var AstType = /** @class */ (function () {
-        function AstType(scope, query, context) {
+        function AstType(scope, query, context, source) {
             this.scope = scope;
             this.query = query;
             this.context = context;
+            this.source = source;
             this.diagnostics = [];
         }
         AstType.prototype.getType = function (ast) { return ast.visit(this); };
         AstType.prototype.getDiagnostics = function (ast) {
             var type = ast.visit(this);
-            if (this.context.event && type.callable) {
+            if (this.context.inEvent && type.callable) {
                 this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.callable_expression_expected_method_call));
             }
             return this.diagnostics;
@@ -25179,14 +25180,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var args = ast.args.map(function (arg) { return _this_1.getType(arg); });
             var target = this.getType(ast.target);
             if (!target || !target.callable) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.call_target_not_callable));
+                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.call_target_not_callable, this.sourceOf(ast.target), target.name));
                 return this.anyType;
             }
             var signature = target.selectSignature(args);
             if (signature) {
                 return signature.result;
             }
-            // TODO: Consider a better error message here.
+            // TODO: Consider a better error message here. See `typescript_symbols#selectSignature` for more
+            // details.
             this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_compatible_call_signature));
             return this.anyType;
         };
@@ -25334,6 +25336,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         AstType.prototype.visitSafePropertyRead = function (ast) {
             return this.resolvePropertyRead(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
+        };
+        /**
+         * Gets the source of an expession AST.
+         * The AST's sourceSpan is relative to the start of the template source code, which is contained
+         * at this.source.
+         */
+        AstType.prototype.sourceOf = function (ast) {
+            return this.source.substring(ast.sourceSpan.start, ast.sourceSpan.end);
         };
         Object.defineProperty(AstType.prototype, "anyType", {
             get: function () {
@@ -25514,7 +25524,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             query: info.template.query,
             members: info.template.members,
             htmlAst: info.htmlAst,
-            templateAst: info.templateAst
+            templateAst: info.templateAst,
+            source: info.template.source,
         };
     }
     function findTemplateAstAt(ast, position) {
@@ -25825,7 +25836,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         // that have been declared so far are also in scope.
                         info.query.createSymbolTable(results),
                     ]);
-                    symbol = refinedVariableType(variable.value, symbolsInScope, info.query, current);
+                    symbol = refinedVariableType(variable.value, symbolsInScope, info, current);
                 }
                 results.push({
                     name: variable.name,
@@ -25885,10 +25896,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * case for `ngFor` and `ngIf`. If resolution fails, return the `any` type.
      * @param value variable value name
      * @param mergedTable symbol table for all variables in scope
-     * @param query
+     * @param info available template information
      * @param templateElement
      */
-    function refinedVariableType(value, mergedTable, query, templateElement) {
+    function refinedVariableType(value, mergedTable, info, templateElement) {
         if (value === '$implicit') {
             // Special case: ngFor directive
             var ngForDirective = templateElement.directives.find(function (d) {
@@ -25899,9 +25910,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
                 if (ngForOfBinding) {
                     // Check if there is a known type for the ngFor binding.
-                    var bindingType = new AstType(mergedTable, query, {}).getType(ngForOfBinding.value);
+                    var bindingType = new AstType(mergedTable, info.query, {}, info.source).getType(ngForOfBinding.value);
                     if (bindingType) {
-                        var result = query.getElementType(bindingType);
+                        var result = info.query.getElementType(bindingType);
                         if (result) {
                             return result;
                         }
@@ -25922,7 +25933,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var ngIfBinding = ngIfDirective.inputs.find(function (i) { return i.directiveName === 'ngIf'; });
                 if (ngIfBinding) {
                     // Check if there is a known type bound to the ngIf input.
-                    var bindingType = new AstType(mergedTable, query, {}).getType(ngIfBinding.value);
+                    var bindingType = new AstType(mergedTable, info.query, {}, info.source).getType(ngIfBinding.value);
                     if (bindingType) {
                         return bindingType;
                     }
@@ -25930,7 +25941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         // We can't do better, return any
-        return query.getBuiltinType(BuiltinType$1.Any);
+        return info.query.getBuiltinType(BuiltinType$1.Any);
     }
     function getEventDeclaration(info, path) {
         var event = path.tail;
@@ -26046,10 +26057,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return ast.sourceSpan.start.offset;
         };
-        ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, event) {
+        ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, inEvent) {
             var e_4, _a;
-            var scope = this.getExpressionScope(this.path, event);
-            var analyzer = new AstType(scope, this.info.query, { event: event });
+            var scope = this.getExpressionScope(this.path, inEvent);
+            var analyzer = new AstType(scope, this.info.query, { inEvent: inEvent }, this.info.source);
             try {
                 for (var _b = __values(analyzer.getDiagnostics(ast)), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var diagnostic = _c.value;
@@ -26170,13 +26181,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitor.visit(ast);
         return new AstPath(path, position);
     }
-    function getExpressionCompletions(scope, ast, position, query) {
+    function getExpressionCompletions(scope, ast, position, templateInfo) {
         var path = findAstAt(ast, position);
         if (path.empty)
             return undefined;
         var tail = path.tail;
         var result = scope;
-        function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
+        function getType(ast) {
+            return new AstType(scope, templateInfo.query, {}, templateInfo.source).getType(ast);
+        }
         // If the completion request is in a not in a pipe or property access then the global scope
         // (that is the scope of the implicit receiver) is the right scope as the user is typing the
         // beginning of an expression.
@@ -26197,7 +26210,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (position >= ast.exp.span.end &&
                     (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                     // We are in a position a pipe name is expected.
-                    result = query.getPipes();
+                    result = templateInfo.query.getPipes();
                 }
             },
             visitPrefixNot: function (ast) { },
@@ -26212,7 +26225,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             },
             visitQuote: function (ast) {
                 // For a quote, return the members of any (if there are any).
-                result = query.getBuiltinType(BuiltinType$1.Any).members();
+                result = templateInfo.query.getBuiltinType(BuiltinType$1.Any).members();
             },
             visitSafeMethodCall: function (ast) {
                 var receiverType = getType(ast.receiver);
@@ -26233,12 +26246,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param position absolute location in template to retrieve symbol at
      * @param query type symbol query for the template scope
      */
-    function getExpressionSymbol(scope, ast, position, query) {
+    function getExpressionSymbol(scope, ast, position, templateInfo) {
         var path = findAstAt(ast, position, /* excludeEmpty */ true);
         if (path.empty)
             return undefined;
         var tail = path.tail;
-        function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
+        function getType(ast) {
+            return new AstType(scope, templateInfo.query, {}, templateInfo.source).getType(ast);
+        }
         var symbol = undefined;
         var span = undefined;
         // If the completion request is in a not in a pipe or property access then the global scope
@@ -26264,7 +26279,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitPipe: function (ast) {
                 if (inSpan(position, ast.nameSpan, /* exclusive */ true)) {
                     // We are in a position a pipe name is expected.
-                    var pipes = query.getPipes();
+                    var pipes = templateInfo.query.getPipes();
                     symbol = pipes.get(ast.name);
                     // `nameSpan` is an absolute span, but the span expected by the result of this method is
                     // relative to the start of the expression.
@@ -27000,7 +27015,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return type.getCallSignatures().map(function (s) { return new SignatureWrapper(s, context); });
     }
     function selectSignature(type, context, types) {
-        // TODO: Do a better job of selecting the right signature.
+        // TODO: Do a better job of selecting the right signature. TypeScript does not currently support a
+        // Type Relationship API (see https://github.com/angular/vscode-ng-language-service/issues/143).
+        // Consider creating a TypeCheckBlock host in the language service that may also act as a
+        // scratchpad for type comparisons.
         var signatures = type.getCallSignatures();
         return signatures.length ? new SignatureWrapper(signatures[0], context) : undefined;
     }
@@ -28394,14 +28412,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         ExpressionVisitor.prototype.visitBoundText = function (ast) {
             if (inSpan(this.position, ast.value.sourceSpan)) {
-                var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, this.position, this.info.template.query);
+                var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, this.position, this.info.template);
                 if (completions) {
                     this.addSymbolsToCompletions(completions);
                 }
             }
         };
         ExpressionVisitor.prototype.processExpressionCompletions = function (value) {
-            var symbols = getExpressionCompletions(this.getExpressionScope(), value, this.position, this.info.template.query);
+            var symbols = getExpressionCompletions(this.getExpressionScope(), value, this.position, this.info.template);
             if (symbols) {
                 this.addSymbolsToCompletions(symbols);
             }
@@ -28639,7 +28657,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     else {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path);
-                        result = getExpressionSymbol(scope, ast, templatePosition, info.template.query);
+                        result = getExpressionSymbol(scope, ast, templatePosition, info.template);
                     }
                     if (result) {
                         symbol = result.symbol;
@@ -28728,7 +28746,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (inSpan(expressionPosition, ast.value.span)) {
                     var dinfo = diagnosticInfoFromTemplateInfo(info);
                     var scope = getExpressionScope(dinfo, path);
-                    var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template.query);
+                    var result = getExpressionSymbol(scope, ast.value, templatePosition, info.template);
                     if (result) {
                         symbol = result.symbol;
                         span = offsetSpan(result.span, ast.sourceSpan.start.offset);
@@ -28794,7 +28812,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (inSpan(path.position, (_b = tb.value) === null || _b === void 0 ? void 0 : _b.ast.sourceSpan)) {
                     var dinfo = diagnosticInfoFromTemplateInfo(info);
                     var scope = getExpressionScope(dinfo, path);
-                    result = getExpressionSymbol(scope, tb.value, path.position, info.template.query);
+                    result = getExpressionSymbol(scope, tb.value, path.position, info.template);
                 }
                 else if (inSpan(path.position, tb.sourceSpan)) {
                     var template = path.first(EmbeddedTemplateAst);
@@ -29136,6 +29154,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             offset: template.span.start,
             query: template.query,
             members: template.members,
+            source: ast.template.source,
         });
     }
     /**
@@ -38931,7 +38950,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.4+62.sha-168a393');
+    var VERSION$2 = new Version$1('9.1.0-next.4+64.sha-61c3795');
 
     /**
      * @license
@@ -50945,7 +50964,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.4+62.sha-168a393');
+    var VERSION$3 = new Version$1('9.1.0-next.4+64.sha-61c3795');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;

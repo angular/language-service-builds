@@ -16,6 +16,7 @@ export interface DiagnosticTemplateInfo {
     members: SymbolTable;
     htmlAst: Node[];
     templateAst: TemplateAst[];
+    source: string;
 }
 export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): ng.Diagnostic[];
 /**

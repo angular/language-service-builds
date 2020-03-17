@@ -7,8 +7,8 @@
  */
 /// <amd-module name="@angular/language-service/src/expressions" />
 import { AST } from '@angular/compiler';
-import { Span, Symbol, SymbolQuery, SymbolTable } from './types';
-export declare function getExpressionCompletions(scope: SymbolTable, ast: AST, position: number, query: SymbolQuery): Symbol[] | undefined;
+import { Span, Symbol, SymbolTable, TemplateSource } from './types';
+export declare function getExpressionCompletions(scope: SymbolTable, ast: AST, position: number, templateInfo: TemplateSource): Symbol[] | undefined;
 /**
  * Retrieves the expression symbol at a particular position in a template.
  *
@@ -17,7 +17,7 @@ export declare function getExpressionCompletions(scope: SymbolTable, ast: AST, p
  * @param position absolute location in template to retrieve symbol at
  * @param query type symbol query for the template scope
  */
-export declare function getExpressionSymbol(scope: SymbolTable, ast: AST, position: number, query: SymbolQuery): {
+export declare function getExpressionSymbol(scope: SymbolTable, ast: AST, position: number, templateInfo: TemplateSource): {
     symbol: Symbol;
     span: Span;
 } | undefined;
