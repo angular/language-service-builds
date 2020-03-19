@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-next.5+7.sha-c0143cb
+ * @license Angular v9.1.0-next.5+9.sha-fb92f5d
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18960,7 +18960,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-next.5+7.sha-c0143cb');
+    var VERSION$1 = new Version('9.1.0-next.5+9.sha-fb92f5d');
 
     /**
      * @license
@@ -48301,7 +48301,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-next.5+7.sha-c0143cb');
+    var VERSION$2 = new Version$1('9.1.0-next.5+9.sha-fb92f5d');
 
     /**
      * @license
@@ -55529,6 +55529,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         'ɵɵsanitizeUrlOrResourceUrl': ɵɵsanitizeUrlOrResourceUrl,
     }); })();
 
+    var jitOptions = null;
+    function setJitOptions(options) {
+        if (jitOptions !== null) {
+            if (options.defaultEncapsulation !== jitOptions.defaultEncapsulation) {
+                ngDevMode &&
+                    console.error('Provided value for `defaultEncapsulation` can not be changed once it has been set.');
+                return;
+            }
+            if (options.preserveWhitespaces !== jitOptions.preserveWhitespaces) {
+                ngDevMode &&
+                    console.error('Provided value for `preserveWhitespaces` can not be changed once it has been set.');
+                return;
+            }
+        }
+        jitOptions = options;
+    }
+    function getJitOptions() {
+        return jitOptions;
+    }
+
     /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
@@ -56016,8 +56036,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         error.push("Did you run and wait for 'resolveComponentResources()'?");
                         throw new Error(error.join('\n'));
                     }
+                    var jitOptions = getJitOptions();
+                    var preserveWhitespaces = metadata.preserveWhitespaces;
+                    if (preserveWhitespaces === undefined) {
+                        if (jitOptions !== null && jitOptions.preserveWhitespaces !== undefined) {
+                            preserveWhitespaces = jitOptions.preserveWhitespaces;
+                        }
+                        else {
+                            preserveWhitespaces = false;
+                        }
+                    }
+                    var encapsulation = metadata.encapsulation;
+                    if (encapsulation === undefined) {
+                        if (jitOptions !== null && jitOptions.defaultEncapsulation !== undefined) {
+                            encapsulation = jitOptions.defaultEncapsulation;
+                        }
+                        else {
+                            encapsulation = ViewEncapsulation$2.Emulated;
+                        }
+                    }
                     var templateUrl = metadata.templateUrl || "ng:///" + type.name + "/template.html";
-                    var meta = __assign(__assign({}, directiveMetadata(type, metadata)), { typeSourceSpan: compiler.createParseSourceSpan('Component', type.name, templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$2.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
+                    var meta = __assign(__assign({}, directiveMetadata(type, metadata)), { typeSourceSpan: compiler.createParseSourceSpan('Component', type.name, templateUrl), template: metadata.template || '', preserveWhitespaces: preserveWhitespaces, styles: metadata.styles || EMPTY_ARRAY, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: encapsulation, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
                     if (meta.usesInheritance) {
                         addDirectiveDefToUndecoratedParents(type);
                     }
@@ -57456,11 +57495,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var compileNgModuleFactory = compileNgModuleFactory__POST_R3__;
     function compileNgModuleFactory__POST_R3__(injector, options, moduleType) {
         ngDevMode && assertNgModuleType(moduleType);
+        var compilerOptions = injector.get(COMPILER_OPTIONS, []).concat(options);
+        if (typeof ngJitMode === 'undefined' || ngJitMode) {
+            // Configure the compiler to use the provided options. This call may fail when multiple modules
+            // are bootstrapped with incompatible options, as a component can only be compiled according to
+            // a single set of options.
+            setJitOptions({
+                defaultEncapsulation: _lastDefined(compilerOptions.map(function (options) { return options.defaultEncapsulation; })),
+                preserveWhitespaces: _lastDefined(compilerOptions.map(function (options) { return options.preserveWhitespaces; })),
+            });
+        }
         var moduleFactory = new NgModuleFactory$1(moduleType);
         if (isComponentResourceResolutionQueueEmpty()) {
             return Promise.resolve(moduleFactory);
         }
-        var compilerOptions = injector.get(COMPILER_OPTIONS, []).concat(options);
         var compilerProviders = _mergeArrays(compilerOptions.map(function (o) { return o.providers; }));
         // In case there are no compiler providers, we just return the module factory as
         // there won't be any resource loader. This can happen with Ivy, because AOT compiled
@@ -58054,6 +58102,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (index > -1) {
             list.splice(index, 1);
         }
+    }
+    function _lastDefined(args) {
+        for (var i = args.length - 1; i >= 0; i--) {
+            if (args[i] !== undefined) {
+                return args[i];
+            }
+        }
+        return undefined;
     }
     function _mergeArrays(parts) {
         var result = [];
@@ -63460,7 +63516,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-next.5+7.sha-c0143cb');
+    var VERSION$3 = new Version$1('9.1.0-next.5+9.sha-fb92f5d');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
