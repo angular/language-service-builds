@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+6.sha-9126921
+ * @license Angular v9.1.0-rc.0+8.sha-ae3eaf8
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -11504,7 +11504,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         targetVars.push(new ParsedVariable(key, value, bindingSpan, keySpan, valueSpan));
                     }
                     else if (binding.value) {
-                        this._parsePropertyAst(key, binding.value, sourceSpan, undefined, targetMatchableAttrs, targetProps);
+                        var valueSpan = moveParseSourceSpan(sourceSpan, binding.value.ast.sourceSpan);
+                        this._parsePropertyAst(key, binding.value, sourceSpan, valueSpan, targetMatchableAttrs, targetProps);
                     }
                     else {
                         targetMatchableAttrs.push([key, '']);
@@ -18962,7 +18963,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+6.sha-9126921');
+    var VERSION$1 = new Version('9.1.0-rc.0+8.sha-ae3eaf8');
 
     /**
      * @license
@@ -48305,7 +48306,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+6.sha-9126921');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+8.sha-ae3eaf8');
 
     /**
      * @license
@@ -63520,7 +63521,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+6.sha-9126921');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+8.sha-ae3eaf8');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
