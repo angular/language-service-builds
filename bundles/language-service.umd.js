@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+1.sha-47bfec4
+ * @license Angular v9.1.0-rc.0+3.sha-8968b20
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -13890,7 +13890,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             enumerable: true,
             configurable: true
         });
-        _ParseAST.prototype.span = function (start) { return new ParseSpan(start, this.inputIndex); };
+        _ParseAST.prototype.span = function (start) {
+            // `end` is either the
+            //   - end index of the current token
+            //   - start of the first token (this can happen e.g. when creating an implicit receiver)
+            var curToken = this.peek(-1);
+            var end = this.index > 0 ? curToken.end + this.offset : this.inputIndex;
+            return new ParseSpan(start, end);
+        };
         _ParseAST.prototype.sourceSpan = function (start) {
             var serial = start + "@" + this.inputIndex;
             if (!this.sourceSpanCache.has(serial)) {
@@ -14296,7 +14303,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         return new PropertyWrite(this.span(start), this.sourceSpan(start), receiver, id, value);
                     }
                     else {
-                        var span = this.span(start);
                         return new PropertyRead(this.span(start), this.sourceSpan(start), receiver, id);
                     }
                 }
@@ -14438,11 +14444,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return null;
             }
             var ast = this.parsePipe(); // example: "condition | async"
-            var start = ast.span.start;
-            // Getting the end of the last token removes trailing whitespace.
-            // If ast has the correct end span then no need to peek at last token.
-            // TODO(ayazhafiz): Remove this in https://github.com/angular/angular/pull/34690
-            var end = this.peek(-1).end;
+            var _a = ast.span, start = _a.start, end = _a.end;
             var value = this.input.substring(start, end);
             return new ASTWithSource(ast, value, this.location, this.absoluteOffset + start, this.errors);
         };
@@ -18960,7 +18962,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+1.sha-47bfec4');
+    var VERSION$1 = new Version('9.1.0-rc.0+3.sha-8968b20');
 
     /**
      * @license
@@ -28483,18 +28485,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
             }
-            else if (inSpan(valueRelativePosition, (_a = binding.value) === null || _a === void 0 ? void 0 : _a.ast.span)) {
-                this.processExpressionCompletions(binding.value.ast);
-                return;
-            }
-            // If the expression is incomplete, for example *ngFor="let x of |"
-            // binding.expression is null. We could still try to provide suggestions
-            // by looking for symbols that are in scope.
-            var KW_OF = ' of ';
-            var ofLocation = attr.value.indexOf(KW_OF);
-            if (ofLocation > 0 && valueRelativePosition >= ofLocation + KW_OF.length) {
-                var expressionAst = this.info.expressionParser.parseBinding(attr.value, attr.sourceSpan.toString(), attr.sourceSpan.start.offset);
-                this.processExpressionCompletions(expressionAst);
+            else if (binding instanceof ExpressionBinding) {
+                if (inSpan(this.position, (_a = binding.value) === null || _a === void 0 ? void 0 : _a.ast.sourceSpan)) {
+                    this.processExpressionCompletions(binding.value.ast);
+                    return;
+                }
+                else if (!binding.value && this.position > binding.key.span.end) {
+                    // No expression is defined for the value of the key expression binding, but the cursor is
+                    // in a location where the expression would be defined. This can happen in a case like
+                    //   let i of |
+                    //            ^-- cursor
+                    // In this case, backfill the value to be an empty expression and retrieve completions.
+                    this.processExpressionCompletions(new EmptyExpr(new ParseSpan(valueRelativePosition, valueRelativePosition), new AbsoluteSourceSpan(this.position, this.position)));
+                    return;
+                }
             }
         };
         return ExpressionVisitor;
@@ -48301,7 +48305,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+1.sha-47bfec4');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+3.sha-8968b20');
 
     /**
      * @license
@@ -63516,7 +63520,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+1.sha-47bfec4');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+3.sha-8968b20');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
