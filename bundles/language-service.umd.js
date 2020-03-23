@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+16.sha-e81ad3a
+ * @license Angular v9.1.0-rc.0+19.sha-fced8ee
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -9807,7 +9807,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return code == $SEMICOLON || code == $EOF || !isAsciiLetter(code);
     }
     function isExpansionCaseStart(peek) {
-        return peek === $EQ || isAsciiLetter(peek) || isDigit(peek);
+        return peek !== $RBRACE;
     }
     function compareCharCodeCaseInsensitive(code1, code2) {
         return toUpperCaseCharCode(code1) == toUpperCaseCharCode(code2);
@@ -18963,7 +18963,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+16.sha-e81ad3a');
+    var VERSION$1 = new Version('9.1.0-rc.0+19.sha-fced8ee');
 
     /**
      * @license
@@ -48306,7 +48306,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+16.sha-e81ad3a');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+19.sha-fced8ee');
 
     /**
      * @license
@@ -63525,7 +63525,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+16.sha-e81ad3a');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+19.sha-fced8ee');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
