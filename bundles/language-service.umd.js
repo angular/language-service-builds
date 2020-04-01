@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+66.sha-08348fc
+ * @license Angular v9.1.0-rc.0+67.sha-ec8bae1
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19018,7 +19018,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+66.sha-08348fc');
+    var VERSION$1 = new Version('9.1.0-rc.0+67.sha-ec8bae1');
 
     /**
      * @license
@@ -48361,7 +48361,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+66.sha-08348fc');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+67.sha-ec8bae1');
 
     /**
      * @license
@@ -63580,7 +63580,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+66.sha-08348fc');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+67.sha-ec8bae1');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
