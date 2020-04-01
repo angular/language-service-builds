@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0+27.sha-beb3f19
+ * @license Angular v9.1.0+43.sha-cb0a2a0
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19033,7 +19033,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0+27.sha-beb3f19');
+    var VERSION$1 = new Version('9.1.0+43.sha-cb0a2a0');
 
     /**
      * @license
@@ -26967,11 +26967,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         TypeScriptSymbolQuery.prototype.getArrayType = function (type) { return this.getBuiltinType(BuiltinType$1.Any); };
         TypeScriptSymbolQuery.prototype.getElementType = function (type) {
             if (type instanceof TypeWrapper) {
-                var tSymbol = type.tsType.symbol;
-                var tArgs = type.typeArguments();
-                if (!tSymbol || tSymbol.name !== 'Array' || !tArgs || tArgs.length != 1)
+                var ty = type.tsType;
+                var tyArgs = type.typeArguments();
+                // TODO(ayazhafiz): Track https://github.com/microsoft/TypeScript/issues/37711 to expose
+                // `isArrayLikeType` as a public method.
+                if (!this.checker.isArrayLikeType(ty) || (tyArgs === null || tyArgs === void 0 ? void 0 : tyArgs.length) !== 1)
                     return;
-                return tArgs[0];
+                return tyArgs[0];
             }
         };
         TypeScriptSymbolQuery.prototype.getNonNullableType = function (symbol) {
@@ -39010,7 +39012,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0+27.sha-beb3f19');
+    var VERSION$2 = new Version$1('9.1.0+43.sha-cb0a2a0');
 
     /**
      * @license
@@ -51024,7 +51026,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0+27.sha-beb3f19');
+    var VERSION$3 = new Version$1('9.1.0+43.sha-cb0a2a0');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
