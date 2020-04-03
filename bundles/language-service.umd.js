@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+105.sha-ca25c95
+ * @license Angular v9.1.0-rc.0+109.sha-568e9df
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -85,14 +85,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
 
     function __values(o) {
-        var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+        var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
         if (m) return m.call(o);
-        return {
+        if (o && typeof o.length === "number") return {
             next: function () {
                 if (o && i >= o.length) o = void 0;
                 return { value: o && o[i++], done: !o };
             }
         };
+        throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
     }
 
     function __read(o, n) {
@@ -19033,7 +19034,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+105.sha-ca25c95');
+    var VERSION$1 = new Version('9.1.0-rc.0+109.sha-568e9df');
 
     /**
      * @license
@@ -39012,7 +39013,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+105.sha-ca25c95');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+109.sha-568e9df');
 
     /**
      * @license
@@ -43241,17 +43242,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     };
 
     /** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
-    function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
-        if (destination === void 0) {
-            destination = new InnerSubscriber(outerSubscriber, outerValue, outerIndex);
+    function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, innerSubscriber) {
+        if (innerSubscriber === void 0) {
+            innerSubscriber = new InnerSubscriber(outerSubscriber, outerValue, outerIndex);
         }
-        if (destination.closed) {
+        if (innerSubscriber.closed) {
             return undefined;
         }
         if (result instanceof Observable) {
-            return result.subscribe(destination);
+            return result.subscribe(innerSubscriber);
         }
-        return subscribeTo(result)(destination);
+        return subscribeTo(result)(innerSubscriber);
     }
 
     /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
@@ -43436,10 +43437,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._innerSub(result, value, index);
         };
         MergeMapSubscriber.prototype._innerSub = function (ish, value, index) {
-            var innerSubscriber = new InnerSubscriber(this, undefined, undefined);
+            var innerSubscriber = new InnerSubscriber(this, value, index);
             var destination = this.destination;
             destination.add(innerSubscriber);
-            subscribeToResult(this, ish, value, index, innerSubscriber);
+            var innerSubscription = subscribeToResult(this, ish, undefined, undefined, innerSubscriber);
+            if (innerSubscription !== innerSubscriber) {
+                destination.add(innerSubscription);
+            }
         };
         MergeMapSubscriber.prototype._complete = function () {
             this.hasCompleted = true;
@@ -51026,7 +51030,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+105.sha-ca25c95');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+109.sha-568e9df');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
