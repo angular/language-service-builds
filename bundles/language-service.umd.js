@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+115.sha-1140bbc
+ * @license Angular v9.1.0-rc.0+114.sha-1b4df64
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19017,7 +19017,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+115.sha-1140bbc');
+    var VERSION$1 = new Version('9.1.0-rc.0+114.sha-1b4df64');
 
     /**
      * @license
@@ -24973,8 +24973,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var formattedMessage = dm.message.replace(/%(\d+)/g, function (_, index) { return formatArgs[+index - 1]; });
         return {
             kind: ts.DiagnosticCategory[dm.kind],
-            message: formattedMessage,
-            span: span,
+            message: formattedMessage, span: span,
         };
     }
 
@@ -25042,9 +25041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.source = source;
             this.diagnostics = [];
         }
-        AstType.prototype.getType = function (ast) {
-            return ast.visit(this);
-        };
+        AstType.prototype.getType = function (ast) { return ast.visit(this); };
         AstType.prototype.getDiagnostics = function (ast) {
             var type = ast.visit(this);
             if (this.context.inEvent && type.callable) {
@@ -25253,21 +25250,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 public: true,
                 definition: undefined,
                 documentation: [],
-                members: function () {
-                    return _this.scope;
-                },
-                signatures: function () {
-                    return [];
-                },
-                selectSignature: function (types) {
-                    return undefined;
-                },
-                indexed: function (argument) {
-                    return undefined;
-                },
-                typeArguments: function () {
-                    return undefined;
-                },
+                members: function () { return _this.scope; },
+                signatures: function () { return []; },
+                selectSignature: function (types) { return undefined; },
+                indexed: function (argument) { return undefined; },
+                typeArguments: function () { return undefined; },
             };
         };
         AstType.prototype.visitInterpolation = function (ast) {
@@ -25508,9 +25495,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function inSpan(position, span, exclusive) {
-        return span != null &&
-            (exclusive ? position >= span.start && position < span.end :
-                position >= span.start && position <= span.end);
+        return span != null && (exclusive ? position >= span.start && position < span.end :
+            position >= span.start && position <= span.end);
     }
     function offsetSpan(span, amount) {
         return { start: span.start + amount, end: span.end + amount };
@@ -25625,9 +25611,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             };
             class_1.prototype.visitDirective = function (ast, context) {
                 // Ignore the host properties of a directive
-                var result = this.visitChildren(context, function (visit) {
-                    visit(ast.inputs);
-                });
+                var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
                 // We never care about the diretive itself, just its inputs.
                 if (path[path.length - 1] === ast) {
                     path.pop();
@@ -25822,9 +25806,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     name: reference.name,
                     kind: 'reference',
                     type: type || info.query.getBuiltinType(BuiltinType$1.Any),
-                    get definition() {
-                        return getDefinitionOf(info, reference);
-                    }
+                    get definition() { return getDefinitionOf(info, reference); }
                 });
             };
             try {
@@ -25901,10 +25883,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 results.push({
                     name: variable.name,
                     kind: 'variable',
-                    type: symbol,
-                    get definition() {
-                        return getDefinitionOf(info, variable);
-                    },
+                    type: symbol, get definition() { return getDefinitionOf(info, variable); },
                 });
             };
             try {
@@ -26139,12 +26118,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 finally { if (e_4) throw e_4.error; }
             }
         };
-        ExpressionDiagnosticsVisitor.prototype.push = function (ast) {
-            this.path.push(ast);
-        };
-        ExpressionDiagnosticsVisitor.prototype.pop = function () {
-            this.path.pop();
-        };
+        ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
+        ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
         ExpressionDiagnosticsVisitor.prototype.absSpan = function (span, additionalOffset) {
             if (additionalOffset === void 0) { additionalOffset = 0; }
             return {
@@ -26266,9 +26241,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitConditional: function (ast) { },
             visitFunctionCall: function (ast) { },
             visitImplicitReceiver: function (ast) { },
-            visitInterpolation: function (ast) {
-                result = undefined;
-            },
+            visitInterpolation: function (ast) { result = undefined; },
             visitKeyedRead: function (ast) { },
             visitKeyedWrite: function (ast) { },
             visitLiteralArray: function (ast) { },
@@ -26490,9 +26463,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         { class: 1, style: 1 },
         { hreflang: 2, rel: 1, rev: 1 },
         { ismap: 7 },
-        {
-            defer: 25, event: 1, for: 1
-        }
+        { defer: 25, event: 1, for: 1 }
     ];
     var elements = {
         TT: [0, 1, 2, 16, 44],
@@ -26806,9 +26777,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 });
             });
         }
-        SchemaInformation.prototype.allKnownElements = function () {
-            return Object.keys(this.schema);
-        };
+        SchemaInformation.prototype.allKnownElements = function () { return Object.keys(this.schema); };
         SchemaInformation.prototype.eventsOf = function (elementName) {
             var elementType = this.schema[elementName.toLowerCase()] || {};
             return Object.keys(elementType).filter(function (property) { return elementType[property] === EVENT; });
@@ -26979,9 +26948,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return result || this.getBuiltinType(BuiltinType$1.Any);
         };
-        TypeScriptSymbolQuery.prototype.getArrayType = function (type) {
-            return this.getBuiltinType(BuiltinType$1.Any);
-        };
+        TypeScriptSymbolQuery.prototype.getArrayType = function (type) { return this.getBuiltinType(BuiltinType$1.Any); };
         TypeScriptSymbolQuery.prototype.getElementType = function (type) {
             if (type instanceof TypeWrapper) {
                 var ty = type.tsType;
@@ -27113,16 +27080,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         Object.defineProperty(TypeWrapper.prototype, "name", {
-            get: function () {
-                return this.context.checker.typeToString(this.tsType);
-            },
+            get: function () { return this.context.checker.typeToString(this.tsType); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(TypeWrapper.prototype, "callable", {
-            get: function () {
-                return typeCallable(this.tsType);
-            },
+            get: function () { return typeCallable(this.tsType); },
             enumerable: true,
             configurable: true
         });
@@ -27159,9 +27122,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // functions.
             return new SymbolTableWrapper(this.tsType.getApparentProperties(), this.context, this.tsType);
         };
-        TypeWrapper.prototype.signatures = function () {
-            return signaturesOf(this.tsType, this.context);
-        };
+        TypeWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
         TypeWrapper.prototype.selectSignature = function (types) {
             return selectSignature(this.tsType, this.context);
         };
@@ -27214,10 +27175,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function SymbolWrapper(symbol, 
         /** TypeScript type context of the symbol. */
         context, 
-        /**
-         * Type of the TypeScript symbol, if known. If not provided, the type of the symbol
-         * will be determined dynamically; see `SymbolWrapper#tsType`.
-         */
+        /** Type of the TypeScript symbol, if known. If not provided, the type of the symbol
+        * will be determined dynamically; see `SymbolWrapper#tsType`. */
         _tsType) {
             this.context = context;
             this._tsType = _tsType;
@@ -27228,30 +27187,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 symbol;
         }
         Object.defineProperty(SymbolWrapper.prototype, "name", {
-            get: function () {
-                return this.symbol.name;
-            },
+            get: function () { return this.symbol.name; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "kind", {
-            get: function () {
-                return this.callable ? 'method' : 'property';
-            },
+            get: function () { return this.callable ? 'method' : 'property'; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "type", {
-            get: function () {
-                return new TypeWrapper(this.tsType, this.context);
-            },
+            get: function () { return new TypeWrapper(this.tsType, this.context); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "container", {
-            get: function () {
-                return getContainerOf(this.symbol, this.context);
-            },
+            get: function () { return getContainerOf(this.symbol, this.context); },
             enumerable: true,
             configurable: true
         });
@@ -27264,16 +27215,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "callable", {
-            get: function () {
-                return typeCallable(this.tsType);
-            },
+            get: function () { return typeCallable(this.tsType); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "definition", {
-            get: function () {
-                return definitionFromTsSymbol(this.symbol);
-            },
+            get: function () { return definitionFromTsSymbol(this.symbol); },
             enumerable: true,
             configurable: true
         });
@@ -27297,18 +27244,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this._members;
         };
-        SymbolWrapper.prototype.signatures = function () {
-            return signaturesOf(this.tsType, this.context);
-        };
+        SymbolWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
         SymbolWrapper.prototype.selectSignature = function (types) {
             return selectSignature(this.tsType, this.context);
         };
-        SymbolWrapper.prototype.indexed = function (argument) {
-            return undefined;
-        };
-        SymbolWrapper.prototype.typeArguments = function () {
-            return this.type.typeArguments();
-        };
+        SymbolWrapper.prototype.indexed = function (argument) { return undefined; };
+        SymbolWrapper.prototype.typeArguments = function () { return this.type.typeArguments(); };
         Object.defineProperty(SymbolWrapper.prototype, "tsType", {
             get: function () {
                 var type = this._tsType;
@@ -27331,69 +27272,45 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.public = true;
         }
         Object.defineProperty(DeclaredSymbol.prototype, "name", {
-            get: function () {
-                return this.declaration.name;
-            },
+            get: function () { return this.declaration.name; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "kind", {
-            get: function () {
-                return this.declaration.kind;
-            },
+            get: function () { return this.declaration.kind; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "container", {
-            get: function () {
-                return undefined;
-            },
+            get: function () { return undefined; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "type", {
-            get: function () {
-                return this.declaration.type;
-            },
+            get: function () { return this.declaration.type; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "callable", {
-            get: function () {
-                return this.type.callable;
-            },
+            get: function () { return this.type.callable; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "definition", {
-            get: function () {
-                return this.declaration.definition;
-            },
+            get: function () { return this.declaration.definition; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "documentation", {
-            get: function () {
-                return this.declaration.type.documentation;
-            },
+            get: function () { return this.declaration.type.documentation; },
             enumerable: true,
             configurable: true
         });
-        DeclaredSymbol.prototype.members = function () {
-            return this.type.members();
-        };
-        DeclaredSymbol.prototype.signatures = function () {
-            return this.type.signatures();
-        };
-        DeclaredSymbol.prototype.selectSignature = function (types) {
-            return this.type.selectSignature(types);
-        };
-        DeclaredSymbol.prototype.typeArguments = function () {
-            return this.type.typeArguments();
-        };
-        DeclaredSymbol.prototype.indexed = function (argument) {
-            return undefined;
-        };
+        DeclaredSymbol.prototype.members = function () { return this.type.members(); };
+        DeclaredSymbol.prototype.signatures = function () { return this.type.signatures(); };
+        DeclaredSymbol.prototype.selectSignature = function (types) { return this.type.selectSignature(types); };
+        DeclaredSymbol.prototype.typeArguments = function () { return this.type.typeArguments(); };
+        DeclaredSymbol.prototype.indexed = function (argument) { return undefined; };
         return DeclaredSymbol;
     }());
     var SignatureWrapper = /** @class */ (function () {
@@ -27409,9 +27326,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(SignatureWrapper.prototype, "result", {
-            get: function () {
-                return new TypeWrapper(this.signature.getReturnType(), this.context);
-            },
+            get: function () { return new TypeWrapper(this.signature.getReturnType(), this.context); },
             enumerable: true,
             configurable: true
         });
@@ -27423,16 +27338,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.resultType = resultType;
         }
         Object.defineProperty(SignatureResultOverride.prototype, "arguments", {
-            get: function () {
-                return this.signature.arguments;
-            },
+            get: function () { return this.signature.arguments; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(SignatureResultOverride.prototype, "result", {
-            get: function () {
-                return this.resultType;
-            },
+            get: function () { return this.resultType; },
             enumerable: true,
             configurable: true
         });
@@ -27499,9 +27410,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         Object.defineProperty(SymbolTableWrapper.prototype, "size", {
-            get: function () {
-                return this.symbols.length;
-            },
+            get: function () { return this.symbols.length; },
             enumerable: true,
             configurable: true
         });
@@ -27539,15 +27448,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._values = [];
         }
         Object.defineProperty(MapSymbolTable.prototype, "size", {
-            get: function () {
-                return this.map.size;
-            },
+            get: function () { return this.map.size; },
             enumerable: true,
             configurable: true
         });
-        MapSymbolTable.prototype.get = function (key) {
-            return this.map.get(key);
-        };
+        MapSymbolTable.prototype.get = function (key) { return this.map.get(key); };
         MapSymbolTable.prototype.add = function (symbol) {
             if (this.map.has(symbol.name)) {
                 var previous = this.map.get(symbol.name);
@@ -27572,9 +27477,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 finally { if (e_4) throw e_4.error; }
             }
         };
-        MapSymbolTable.prototype.has = function (key) {
-            return this.map.has(key);
-        };
+        MapSymbolTable.prototype.has = function (key) { return this.map.has(key); };
         MapSymbolTable.prototype.values = function () {
             // Switch to this.map.values once iterables are supported by the target language.
             return this._values;
@@ -27587,9 +27490,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.context = context;
         }
         Object.defineProperty(PipesTable.prototype, "size", {
-            get: function () {
-                return this.pipes.length;
-            },
+            get: function () { return this.pipes.length; },
             enumerable: true,
             configurable: true
         });
@@ -27599,9 +27500,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return new PipeSymbol(pipe, this.context);
             }
         };
-        PipesTable.prototype.has = function (key) {
-            return this.pipes.find(function (pipe) { return pipe.name == key; }) != null;
-        };
+        PipesTable.prototype.has = function (key) { return this.pipes.find(function (pipe) { return pipe.name == key; }) != null; };
         PipesTable.prototype.values = function () {
             var _this = this;
             return this.pipes.map(function (pipe) { return new PipeSymbol(pipe, _this.context); });
@@ -27622,16 +27521,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.public = true;
         }
         Object.defineProperty(PipeSymbol.prototype, "name", {
-            get: function () {
-                return this.pipe.name;
-            },
+            get: function () { return this.pipe.name; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(PipeSymbol.prototype, "type", {
-            get: function () {
-                return new TypeWrapper(this.tsType, this.context);
-            },
+            get: function () { return new TypeWrapper(this.tsType, this.context); },
             enumerable: true,
             configurable: true
         });
@@ -27654,12 +27549,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             enumerable: true,
             configurable: true
         });
-        PipeSymbol.prototype.members = function () {
-            return EmptyTable.instance;
-        };
-        PipeSymbol.prototype.signatures = function () {
-            return signaturesOf(this.tsType, this.context);
-        };
+        PipeSymbol.prototype.members = function () { return EmptyTable.instance; };
+        PipeSymbol.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
         PipeSymbol.prototype.selectSignature = function (types) {
             var signature = selectSignature(this.tsType, this.context);
             if (types.length > 0) {
@@ -27683,12 +27574,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return signature;
         };
-        PipeSymbol.prototype.indexed = function (argument) {
-            return undefined;
-        };
-        PipeSymbol.prototype.typeArguments = function () {
-            return this.type.typeArguments();
-        };
+        PipeSymbol.prototype.indexed = function (argument) { return undefined; };
+        PipeSymbol.prototype.typeArguments = function () { return this.type.typeArguments(); };
         Object.defineProperty(PipeSymbol.prototype, "tsType", {
             get: function () {
                 var type = this._tsType;
@@ -27743,15 +27630,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function EmptyTable() {
             this.size = 0;
         }
-        EmptyTable.prototype.get = function (key) {
-            return undefined;
-        };
-        EmptyTable.prototype.has = function (key) {
-            return false;
-        };
-        EmptyTable.prototype.values = function () {
-            return [];
-        };
+        EmptyTable.prototype.get = function (key) { return undefined; };
+        EmptyTable.prototype.has = function (key) { return false; };
+        EmptyTable.prototype.values = function () { return []; };
         EmptyTable.instance = new EmptyTable();
         return EmptyTable;
     }());
@@ -27937,9 +27818,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             /**
              * Return the Angular StaticSymbol for the class that contains this template.
              */
-            get: function () {
-                return this.classSymbol;
-            },
+            get: function () { return this.classSymbol; },
             enumerable: true,
             configurable: true
         });
@@ -28526,9 +28405,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return _this;
         }
         Object.defineProperty(ExpressionVisitor.prototype, "results", {
-            get: function () {
-                return Array.from(this.completions.values());
-            },
+            get: function () { return Array.from(this.completions.values()); },
             enumerable: true,
             configurable: true
         });
@@ -28538,9 +28415,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ExpressionVisitor.prototype.visitElementProperty = function (ast) {
             this.processExpressionCompletions(ast.value);
         };
-        ExpressionVisitor.prototype.visitEvent = function (ast) {
-            this.processExpressionCompletions(ast.handler);
-        };
+        ExpressionVisitor.prototype.visitEvent = function (ast) { this.processExpressionCompletions(ast.handler); };
         ExpressionVisitor.prototype.visitElement = function () {
             // no-op for now
         };
@@ -28875,9 +28750,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     span = spanOf(ast);
                 }
             },
-            visitElementProperty: function (ast) {
-                attributeValueSymbol(ast.value);
-            },
+            visitElementProperty: function (ast) { attributeValueSymbol(ast.value); },
             visitAttr: function (ast) {
                 var e_1, _a;
                 var element = path.first(ElementAst);
@@ -28958,8 +28831,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var _a = offsetSpan(span, info.template.span.start), start = _a.start, end = _a.end;
             return {
                 symbol: symbol,
-                span: tss.createTextSpanFromBounds(start, end),
-                staticSymbol: staticSymbol,
+                span: tss.createTextSpanFromBounds(start, end), staticSymbol: staticSymbol,
             };
         }
     }
@@ -29053,9 +28925,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 });
             };
             class_1.prototype.visitDirective = function (ast) {
-                var result = this.visitChildren(ast, function (visit) {
-                    visit(ast.inputs);
-                });
+                var result = this.visitChildren(ast, function (visit) { visit(ast.inputs); });
                 return result;
             };
             class_1.prototype.visitDirectiveProperty = function (ast, context) {
@@ -29088,83 +28958,55 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.kind = kindOverride;
         }
         Object.defineProperty(OverrideKindSymbol.prototype, "name", {
-            get: function () {
-                return this.sym.name;
-            },
+            get: function () { return this.sym.name; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "language", {
-            get: function () {
-                return this.sym.language;
-            },
+            get: function () { return this.sym.language; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "type", {
-            get: function () {
-                return this.sym.type;
-            },
+            get: function () { return this.sym.type; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "container", {
-            get: function () {
-                return this.sym.container;
-            },
+            get: function () { return this.sym.container; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "public", {
-            get: function () {
-                return this.sym.public;
-            },
+            get: function () { return this.sym.public; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "callable", {
-            get: function () {
-                return this.sym.callable;
-            },
+            get: function () { return this.sym.callable; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "nullable", {
-            get: function () {
-                return this.sym.nullable;
-            },
+            get: function () { return this.sym.nullable; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "definition", {
-            get: function () {
-                return this.sym.definition;
-            },
+            get: function () { return this.sym.definition; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "documentation", {
-            get: function () {
-                return this.sym.documentation;
-            },
+            get: function () { return this.sym.documentation; },
             enumerable: true,
             configurable: true
         });
-        OverrideKindSymbol.prototype.members = function () {
-            return this.sym.members();
-        };
-        OverrideKindSymbol.prototype.signatures = function () {
-            return this.sym.signatures();
-        };
-        OverrideKindSymbol.prototype.selectSignature = function (types) {
-            return this.sym.selectSignature(types);
-        };
-        OverrideKindSymbol.prototype.indexed = function (argument) {
-            return this.sym.indexed(argument);
-        };
-        OverrideKindSymbol.prototype.typeArguments = function () {
-            return this.sym.typeArguments();
-        };
+        OverrideKindSymbol.prototype.members = function () { return this.sym.members(); };
+        OverrideKindSymbol.prototype.signatures = function () { return this.sym.signatures(); };
+        OverrideKindSymbol.prototype.selectSignature = function (types) { return this.sym.selectSignature(types); };
+        OverrideKindSymbol.prototype.indexed = function (argument) { return this.sym.indexed(argument); };
+        OverrideKindSymbol.prototype.typeArguments = function () { return this.sym.typeArguments(); };
         return OverrideKindSymbol;
     }());
 
@@ -48520,7 +48362,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+115.sha-1140bbc');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+114.sha-1b4df64');
 
     /**
      * @license
@@ -63012,9 +62854,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 .resolvedModule;
             return resolved ? resolved.resolvedFileName : null;
         };
-        ReflectorHost.prototype.getOutputName = function (filePath) {
-            return filePath;
-        };
+        ReflectorHost.prototype.getOutputName = function (filePath) { return filePath; };
         return ReflectorHost;
     }());
 
@@ -63044,9 +62884,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function DummyHtmlParser() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        DummyHtmlParser.prototype.parse = function () {
-            return new ParseTreeResult([], []);
-        };
+        DummyHtmlParser.prototype.parse = function () { return new ParseTreeResult([], []); };
         return DummyHtmlParser;
     }(HtmlParser));
     /**
@@ -63057,9 +62895,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function DummyResourceLoader() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        DummyResourceLoader.prototype.get = function (url) {
-            return Promise.resolve('');
-        };
+        DummyResourceLoader.prototype.get = function (url) { return Promise.resolve(''); };
         return DummyResourceLoader;
     }(ResourceLoader));
     /**
@@ -63086,18 +62922,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 ngModules: [],
             };
             this.summaryResolver = new AotSummaryResolver({
-                loadSummary: function (filePath) {
-                    return null;
-                },
-                isSourceFile: function (sourceFilePath) {
-                    return true;
-                },
-                toSummaryFileName: function (sourceFilePath) {
-                    return sourceFilePath;
-                },
-                fromSummaryFileName: function (filePath) {
-                    return filePath;
-                },
+                loadSummary: function (filePath) { return null; },
+                isSourceFile: function (sourceFilePath) { return true; },
+                toSummaryFileName: function (sourceFilePath) { return sourceFilePath; },
+                fromSummaryFileName: function (filePath) { return filePath; },
             }, this.staticSymbolCache);
             this.reflectorHost = new ReflectorHost(function () { return _this.program; }, tsLsHost);
             this.staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this.staticSymbolCache, this.summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
@@ -63166,11 +62994,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.fileToComponent.clear();
             this.collectedErrors.clear();
             this.resolver.clearCache();
-            var analyzeHost = {
-                isSourceFile: function (filePath) {
-                    return true;
-                }
-            };
+            var analyzeHost = { isSourceFile: function (filePath) { return true; } };
             var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
             this.analyzedModules =
                 analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
@@ -63578,12 +63402,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return {
                 htmlAst: htmlResult.rootNodes,
                 templateAst: parseResult.templateAst,
-                directive: data.metadata,
-                directives: directives,
-                pipes: pipes,
-                parseErrors: parseResult.errors,
-                expressionParser: expressionParser,
-                template: template,
+                directive: data.metadata, directives: directives, pipes: pipes,
+                parseErrors: parseResult.errors, expressionParser: expressionParser, template: template,
             };
         };
         /**
@@ -63751,11 +63571,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         {}, tsLS, 
         // Then override the methods supported by Angular language service
         {
-            getCompletionsAtPosition: getCompletionsAtPosition,
-            getQuickInfoAtPosition: getQuickInfoAtPosition,
-            getSemanticDiagnostics: getSemanticDiagnostics,
-            getDefinitionAtPosition: getDefinitionAtPosition,
-            getDefinitionAndBoundSpan: getDefinitionAndBoundSpan,
+            getCompletionsAtPosition: getCompletionsAtPosition, getQuickInfoAtPosition: getQuickInfoAtPosition, getSemanticDiagnostics: getSemanticDiagnostics,
+            getDefinitionAtPosition: getDefinitionAtPosition, getDefinitionAndBoundSpan: getDefinitionAndBoundSpan,
         });
         return proxy;
     }
@@ -63767,7 +63584,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+115.sha-1140bbc');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+114.sha-1b4df64');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
