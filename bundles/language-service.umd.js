@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+141.sha-4a18428
+ * @license Angular v9.1.0-rc.0+144.sha-81195a2
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19017,7 +19017,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+141.sha-4a18428');
+    var VERSION$1 = new Version('9.1.0-rc.0+144.sha-81195a2');
 
     /**
      * @license
@@ -28197,11 +28197,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Gets the span of word in a template that surrounds `position`. If there is no word around
      * `position`, nothing is returned.
      */
-    function getBoundedWordSpan(templateInfo, position) {
+    function getBoundedWordSpan(templateInfo, position, ast) {
         var template = templateInfo.template;
         var templateSrc = template.source;
         if (!templateSrc)
             return;
+        if (ast instanceof Element$2) {
+            // The HTML tag may include `-` (e.g. `app-root`),
+            // so use the HtmlAst to get the span before ayazhafiz refactor the code.
+            return {
+                start: templateInfo.template.span.start + ast.startSourceSpan.start.offset + 1,
+                length: ast.name.length
+            };
+        }
         // TODO(ayazhafiz): A solution based on word expansion will always be expensive compared to one
         // based on ASTs. Whatever penalty we incur is probably manageable for small-length (i.e. the
         // majority of) identifiers, but the current solution involes a number of branchings and we can't
@@ -28328,7 +28336,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 visitExpansionCase: function () { }
             }, null);
         }
-        var replacementSpan = getBoundedWordSpan(templateInfo, position);
+        var replacementSpan = getBoundedWordSpan(templateInfo, position, mostSpecific);
         return result.map(function (entry) {
             return __assign(__assign({}, entry), { replacementSpan: replacementSpan });
         });
@@ -48651,7 +48659,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+141.sha-4a18428');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+144.sha-81195a2');
 
     /**
      * @license
@@ -63898,7 +63906,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+141.sha-4a18428');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+144.sha-81195a2');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
