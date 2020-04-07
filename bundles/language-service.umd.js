@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0+89.sha-f48a065
+ * @license Angular v9.1.0+95.sha-af42694
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0+89.sha-f48a065');
+    var VERSION$1 = new Version('9.1.0+95.sha-af42694');
 
     /**
      * @license
@@ -24879,6 +24879,71 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Matches an Angular attribute to a binding type. See `ATTR` for more details.
+     *
+     * This is adapted from packages/compiler/src/render3/r3_template_transform.ts
+     * to allow empty binding names and match template attributes.
+     */
+    var BIND_NAME_REGEXP$2 = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@)|(\*))(.*))|\[\(([^\)]*)\)\]|\[([^\]]*)\]|\(([^\)]*)\))$/;
+    /**
+     * Represents possible Angular attribute bindings, as indices on a match of `BIND_NAME_REGEXP`.
+     */
+    var ATTR;
+    (function (ATTR) {
+        /** "bind-" */
+        ATTR[ATTR["KW_BIND"] = 1] = "KW_BIND";
+        /** "let-" */
+        ATTR[ATTR["KW_LET"] = 2] = "KW_LET";
+        /** "ref-/#" */
+        ATTR[ATTR["KW_REF"] = 3] = "KW_REF";
+        /** "on-" */
+        ATTR[ATTR["KW_ON"] = 4] = "KW_ON";
+        /** "bindon-" */
+        ATTR[ATTR["KW_BINDON"] = 5] = "KW_BINDON";
+        /** "@" */
+        ATTR[ATTR["KW_AT"] = 6] = "KW_AT";
+        /**
+         * "*"
+         * Microsyntax template starts with '*'. See https://angular.io/api/core/TemplateRef
+         */
+        ATTR[ATTR["KW_MICROSYNTAX"] = 7] = "KW_MICROSYNTAX";
+        /** The identifier after "bind-", "let-", "ref-/#", "on-", "bindon-", "@", or "*" */
+        ATTR[ATTR["IDENT_KW"] = 8] = "IDENT_KW";
+        /** Identifier inside [()] */
+        ATTR[ATTR["IDENT_BANANA_BOX"] = 9] = "IDENT_BANANA_BOX";
+        /** Identifier inside [] */
+        ATTR[ATTR["IDENT_PROPERTY"] = 10] = "IDENT_PROPERTY";
+        /** Identifier inside () */
+        ATTR[ATTR["IDENT_EVENT"] = 11] = "IDENT_EVENT";
+    })(ATTR || (ATTR = {}));
+    /**
+     * Returns a descriptor for a given Angular attribute, or undefined if the attribute is
+     * not an Angular attribute.
+     */
+    function getBindingDescriptor(attribute) {
+        var bindParts = attribute.match(BIND_NAME_REGEXP$2);
+        if (!bindParts)
+            return;
+        // The first match element is skipped because it matches the entire attribute text, including the
+        // binding part.
+        var kind = bindParts.findIndex(function (val, i) { return i > 0 && val !== undefined; });
+        if (!(kind in ATTR)) {
+            throw TypeError("\"" + kind + "\" is not a valid Angular binding kind for \"" + attribute + "\"");
+        }
+        return {
+            kind: kind,
+            name: bindParts[ATTR.IDENT_KW],
+        };
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var Diagnostic = {
         directive_not_in_module: {
             message: "%1 '%2' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration.",
@@ -28139,34 +28204,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             sortText: 'ng-template',
         },
     ];
-    // This is adapted from packages/compiler/src/render3/r3_template_transform.ts
-    // to allow empty binding names.
-    var BIND_NAME_REGEXP$2 = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.*))|\[\(([^\)]*)\)\]|\[([^\]]*)\]|\(([^\)]*)\))$/;
-    var ATTR;
-    (function (ATTR) {
-        // Group 1 = "bind-"
-        ATTR[ATTR["KW_BIND_IDX"] = 1] = "KW_BIND_IDX";
-        // Group 2 = "let-"
-        ATTR[ATTR["KW_LET_IDX"] = 2] = "KW_LET_IDX";
-        // Group 3 = "ref-/#"
-        ATTR[ATTR["KW_REF_IDX"] = 3] = "KW_REF_IDX";
-        // Group 4 = "on-"
-        ATTR[ATTR["KW_ON_IDX"] = 4] = "KW_ON_IDX";
-        // Group 5 = "bindon-"
-        ATTR[ATTR["KW_BINDON_IDX"] = 5] = "KW_BINDON_IDX";
-        // Group 6 = "@"
-        ATTR[ATTR["KW_AT_IDX"] = 6] = "KW_AT_IDX";
-        // Group 7 = the identifier after "bind-", "let-", "ref-/#", "on-", "bindon-" or "@"
-        ATTR[ATTR["IDENT_KW_IDX"] = 7] = "IDENT_KW_IDX";
-        // Group 8 = identifier inside [()]
-        ATTR[ATTR["IDENT_BANANA_BOX_IDX"] = 8] = "IDENT_BANANA_BOX_IDX";
-        // Group 9 = identifier inside []
-        ATTR[ATTR["IDENT_PROPERTY_IDX"] = 9] = "IDENT_PROPERTY_IDX";
-        // Group 10 = identifier inside ()
-        ATTR[ATTR["IDENT_EVENT_IDX"] = 10] = "IDENT_EVENT_IDX";
-    })(ATTR || (ATTR = {}));
-    // Microsyntax template starts with '*'. See https://angular.io/api/core/TemplateRef
-    var TEMPLATE_ATTR_PREFIX$3 = '*';
     function isIdentifierPart$1(code) {
         // Identifiers consist of alphanumeric characters, '_', or '$'.
         return isAsciiLetter(code) || isDigit(code) || code == $$ || code == $_;
@@ -28321,31 +28358,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // matching using regex. This is because the regexp would incorrectly identify
         // bind parts for cases like [()|]
         //                              ^ cursor is here
-        var bindParts = attr.name.match(BIND_NAME_REGEXP$2);
-        var isTemplateRef = attr.name.startsWith(TEMPLATE_ATTR_PREFIX$3);
-        var isBinding = bindParts !== null || isTemplateRef;
-        if (!isBinding) {
+        var binding = getBindingDescriptor(attr.name);
+        if (!binding) {
+            // This is a normal HTML attribute, not an Angular attribute.
             return attributeCompletionsForElement(info, elem.name);
         }
         var results = [];
         var ngAttrs = angularAttributes(info, elem.name);
-        if (!bindParts) {
-            // If bindParts is null then this must be a TemplateRef.
-            results.push.apply(results, __spread(ngAttrs.templateRefs));
-        }
-        else if (bindParts[ATTR.KW_BIND_IDX] !== undefined ||
-            bindParts[ATTR.IDENT_PROPERTY_IDX] !== undefined) {
-            // property binding via bind- or []
-            results.push.apply(results, __spread(propertyNames(elem.name), ngAttrs.inputs));
-        }
-        else if (bindParts[ATTR.KW_ON_IDX] !== undefined || bindParts[ATTR.IDENT_EVENT_IDX] !== undefined) {
-            // event binding via on- or ()
-            results.push.apply(results, __spread(eventNames(elem.name), ngAttrs.outputs));
-        }
-        else if (bindParts[ATTR.KW_BINDON_IDX] !== undefined ||
-            bindParts[ATTR.IDENT_BANANA_BOX_IDX] !== undefined) {
-            // banana-in-a-box binding via bindon- or [()]
-            results.push.apply(results, __spread(ngAttrs.bananas));
+        switch (binding.kind) {
+            case ATTR.KW_MICROSYNTAX:
+                // template reference attribute: *attrName
+                results.push.apply(results, __spread(ngAttrs.templateRefs));
+                break;
+            case ATTR.KW_BIND:
+            case ATTR.IDENT_PROPERTY:
+                // property binding via bind- or []
+                results.push.apply(results, __spread(propertyNames(elem.name), ngAttrs.inputs));
+                break;
+            case ATTR.KW_ON:
+            case ATTR.IDENT_EVENT:
+                // event binding via on- or ()
+                results.push.apply(results, __spread(eventNames(elem.name), ngAttrs.outputs));
+                break;
+            case ATTR.KW_BINDON:
+            case ATTR.IDENT_BANANA_BOX:
+                // banana-in-a-box binding via bindon- or [()]
+                results.push.apply(results, __spread(ngAttrs.bananas));
+                break;
         }
         return results.map(function (name) {
             return {
@@ -28422,8 +28461,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // In order to provide accurate attribute value completion, we need to know
         // what the LHS is, and construct the proper AST if it is missing.
         var htmlAttr = htmlPath.tail;
-        var bindParts = htmlAttr.name.match(BIND_NAME_REGEXP$2);
-        if (bindParts && bindParts[ATTR.KW_REF_IDX] !== undefined) {
+        var binding = getBindingDescriptor(htmlAttr.name);
+        if (binding && binding.kind === ATTR.KW_REF) {
             var refAst = void 0;
             var elemAst = void 0;
             if (templatePath.tail instanceof ReferenceAst) {
@@ -28561,11 +28600,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
             var _this = this;
-            if (ast.name.startsWith(TEMPLATE_ATTR_PREFIX$3)) {
+            var binding = getBindingDescriptor(ast.name);
+            if (binding && binding.kind === ATTR.KW_MICROSYNTAX) {
                 // This a template binding given by micro syntax expression.
                 // First, verify the attribute consists of some binding we can give completions for.
                 // The sourceSpan of AttrAst points to the RHS of the attribute
-                var templateKey = ast.name.substring(TEMPLATE_ATTR_PREFIX$3.length);
+                var templateKey = binding.name;
                 var templateValue = ast.sourceSpan.toString();
                 var templateUrl = ast.sourceSpan.start.file.url;
                 // TODO(kyliau): We are unable to determine the absolute offset of the key
@@ -28574,11 +28614,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var absValueOffset = ast.sourceSpan.start.offset;
                 var templateBindings = this.info.expressionParser.parseTemplateBindings(templateKey, templateValue, templateUrl, absKeyOffset, absValueOffset).templateBindings;
                 // Find the template binding that contains the position.
-                var binding = templateBindings.find(function (b) { return inSpan(_this.position, b.sourceSpan); });
-                if (!binding) {
+                var templateBinding = templateBindings.find(function (b) { return inSpan(_this.position, b.sourceSpan); });
+                if (!templateBinding) {
                     return;
                 }
-                this.microSyntaxInAttributeValue(ast, binding);
+                this.microSyntaxInAttributeValue(ast, templateBinding);
             }
             else {
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
@@ -33757,12 +33797,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "styleBindings_", {
-            get: function () { return toDebugStyleBinding(this, false); },
+            get: function () {
+                return toDebugStyleBinding(this, false);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "classBindings_", {
-            get: function () { return toDebugStyleBinding(this, true); },
+            get: function () {
+                return toDebugStyleBinding(this, true);
+            },
             enumerable: true,
             configurable: true
         });
@@ -33803,8 +33847,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     var TViewData = NG_DEV_MODE && createNamedArrayType('TViewData') || null;
-    var TVIEWDATA_EMPTY; // can't initialize here or it will not be tree shaken, because `LView`
-    // constructor could have side-effects.
+    var TVIEWDATA_EMPTY; // can't initialize here or it will not be tree shaken, because
+    // `LView` constructor could have side-effects.
     /**
      * This function clones a blueprint and creates TData.
      *
@@ -33892,22 +33936,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "parent", {
-            get: function () { return toDebug(this._raw_lView[PARENT]); },
+            get: function () {
+                return toDebug(this._raw_lView[PARENT]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "host", {
-            get: function () { return toHtml(this._raw_lView[HOST], true); },
+            get: function () {
+                return toHtml(this._raw_lView[HOST], true);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "html", {
-            get: function () { return (this.nodes || []).map(function (node) { return toHtml(node.native, true); }).join(''); },
+            get: function () {
+                return (this.nodes || []).map(function (node) { return toHtml(node.native, true); }).join('');
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "context", {
-            get: function () { return this._raw_lView[CONTEXT]; },
+            get: function () {
+                return this._raw_lView[CONTEXT];
+            },
             enumerable: true,
             configurable: true
         });
@@ -33926,62 +33978,86 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "tView", {
-            get: function () { return this._raw_lView[TVIEW]; },
+            get: function () {
+                return this._raw_lView[TVIEW];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "cleanup", {
-            get: function () { return this._raw_lView[CLEANUP]; },
+            get: function () {
+                return this._raw_lView[CLEANUP];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "injector", {
-            get: function () { return this._raw_lView[INJECTOR$1]; },
+            get: function () {
+                return this._raw_lView[INJECTOR$1];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "rendererFactory", {
-            get: function () { return this._raw_lView[RENDERER_FACTORY]; },
+            get: function () {
+                return this._raw_lView[RENDERER_FACTORY];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "renderer", {
-            get: function () { return this._raw_lView[RENDERER]; },
+            get: function () {
+                return this._raw_lView[RENDERER];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "sanitizer", {
-            get: function () { return this._raw_lView[SANITIZER]; },
+            get: function () {
+                return this._raw_lView[SANITIZER];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "childHead", {
-            get: function () { return toDebug(this._raw_lView[CHILD_HEAD]); },
+            get: function () {
+                return toDebug(this._raw_lView[CHILD_HEAD]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "next", {
-            get: function () { return toDebug(this._raw_lView[NEXT]); },
+            get: function () {
+                return toDebug(this._raw_lView[NEXT]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "childTail", {
-            get: function () { return toDebug(this._raw_lView[CHILD_TAIL]); },
+            get: function () {
+                return toDebug(this._raw_lView[CHILD_TAIL]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "declarationView", {
-            get: function () { return toDebug(this._raw_lView[DECLARATION_VIEW]); },
+            get: function () {
+                return toDebug(this._raw_lView[DECLARATION_VIEW]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "queries", {
-            get: function () { return this._raw_lView[QUERIES]; },
+            get: function () {
+                return this._raw_lView[QUERIES];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "tHost", {
-            get: function () { return this._raw_lView[T_HOST]; },
+            get: function () {
+                return this._raw_lView[T_HOST];
+            },
             enumerable: true,
             configurable: true
         });
@@ -34039,7 +34115,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._raw_lContainer = _raw_lContainer;
         }
         Object.defineProperty(LContainerDebug.prototype, "activeIndex", {
-            get: function () { return getLContainerActiveIndex(this._raw_lContainer); },
+            get: function () {
+                return getLContainerActiveIndex(this._raw_lContainer);
+            },
             enumerable: true,
             configurable: true
         });
@@ -34060,27 +34138,37 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "parent", {
-            get: function () { return toDebug(this._raw_lContainer[PARENT]); },
+            get: function () {
+                return toDebug(this._raw_lContainer[PARENT]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "movedViews", {
-            get: function () { return this._raw_lContainer[MOVED_VIEWS]; },
+            get: function () {
+                return this._raw_lContainer[MOVED_VIEWS];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "host", {
-            get: function () { return this._raw_lContainer[HOST]; },
+            get: function () {
+                return this._raw_lContainer[HOST];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "native", {
-            get: function () { return this._raw_lContainer[NATIVE]; },
+            get: function () {
+                return this._raw_lContainer[NATIVE];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "next", {
-            get: function () { return toDebug(this._raw_lContainer[NEXT]); },
+            get: function () {
+                return toDebug(this._raw_lContainer[NEXT]);
+            },
             enumerable: true,
             configurable: true
         });
@@ -34109,7 +34197,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.type = type;
         }
         Object.defineProperty(I18NDebugItem.prototype, "tNode", {
-            get: function () { return getTNode(this._lView[TVIEW], this.nodeIndex); },
+            get: function () {
+                return getTNode(this._lView[TVIEW], this.nodeIndex);
+            },
             enumerable: true,
             configurable: true
         });
@@ -34236,14 +34326,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                             __raw_opCode: opCode,
                                             checkBit: checkBit,
                                             type: 'Attr',
-                                            attrValue: value, attrName: attrName, sanitizeFn: sanitizeFn,
+                                            attrValue: value,
+                                            attrName: attrName,
+                                            sanitizeFn: sanitizeFn,
                                         });
                                         break;
                                     case 0 /* Text */:
                                         results.push({
                                             __raw_opCode: opCode,
                                             checkBit: checkBit,
-                                            type: 'Text', nodeIndex: nodeIndex,
+                                            type: 'Text',
+                                            nodeIndex: nodeIndex,
                                             text: value,
                                         });
                                         break;
@@ -34412,7 +34505,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         lView[SANITIZER] = sanitizer || parentLView && parentLView[SANITIZER] || null;
         lView[INJECTOR$1] = injector || parentLView && parentLView[INJECTOR$1] || null;
         lView[T_HOST] = tHostNode;
-        ngDevMode && assertEqual(tView.type == 2 /* Embedded */ ? parentLView !== null : true, true, 'Embedded views must have parentLView');
+        ngDevMode &&
+            assertEqual(tView.type == 2 /* Embedded */ ? parentLView !== null : true, true, 'Embedded views must have parentLView');
         lView[DECLARATION_COMPONENT_VIEW] =
             tView.type == 2 /* Embedded */ ? parentLView[DECLARATION_COMPONENT_VIEW] : lView;
         ngDevMode && attachLViewDebug(lView);
@@ -34721,7 +34815,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             null, // contentCheckHooks: HookData|null,
             null, // viewHooks: HookData|null,
             null, // viewCheckHooks: HookData|null,
-            null, // destroyHooks: HookData|null,
+            null, // destroyHooks: DestroyHookData|null,
             null, // cleanup: any[]|null,
             null, // contentQueries: number[]|null,
             null, // components: number[]|null,
@@ -34977,24 +35071,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * it from the hostVar count) and the directive count. See more in VIEW_DATA.md.
      */
     function generateExpandoInstructionBlock(tView, tNode, directiveCount) {
-        ngDevMode && assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
+        ngDevMode &&
+            assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
         // Important: In JS `-x` and `0-x` is not the same! If `x===0` then `-x` will produce `-0` which
         // requires non standard math arithmetic and it can prevent VM optimizations.
         // `0-0` will always produce `0` and will not cause a potential deoptimization in VM.
         var elementIndex = HEADER_OFFSET - tNode.index;
         var providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
         var providerCount = tView.data.length - providerStartIndex;
-        (tView.expandoInstructions || (tView.expandoInstructions = [])).push(elementIndex, providerCount, directiveCount);
+        (tView.expandoInstructions || (tView.expandoInstructions = []))
+            .push(elementIndex, providerCount, directiveCount);
     }
     /**
      * Marks a given TNode as a component's host. This consists of:
      * - setting appropriate TNode flags;
      * - storing index of component's host element so it will be queued for view refresh during CD.
-    */
+     */
     function markAsComponentHost(tView, hostTNode) {
         ngDevMode && assertFirstCreatePass(tView);
         hostTNode.flags |= 2 /* isComponentHost */;
-        (tView.components || (tView.components = ngDevMode ? new TViewComponents() : [])).push(hostTNode.index);
+        (tView.components || (tView.components = ngDevMode ? new TViewComponents() : []))
+            .push(hostTNode.index);
     }
     /**
      * Initializes the flags on the current node, setting all indices to the initial index,
@@ -35002,7 +35099,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param index the initial index
      */
     function initTNodeFlags(tNode, index, numberOfDirectives) {
-        ngDevMode && assertNotEqual(numberOfDirectives, tNode.directiveEnd - tNode.directiveStart, 'Reached the max number of directives');
+        ngDevMode &&
+            assertNotEqual(numberOfDirectives, tNode.directiveEnd - tNode.directiveStart, 'Reached the max number of directives');
         tNode.flags |= 1 /* isDirectiveHost */;
         // When the first directive is created on a node, save the index
         tNode.directiveStart = index;
@@ -35404,7 +35502,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function detachMovedView(declarationContainer, lView) {
         ngDevMode && assertLContainer(declarationContainer);
-        ngDevMode && assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
+        ngDevMode &&
+            assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
         var movedViews = declarationContainer[MOVED_VIEWS];
         var declaredViewIndex = movedViews.indexOf(lView);
         movedViews.splice(declaredViewIndex, 1);
@@ -35540,7 +35639,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var context = lView[destroyHooks[i]];
                 // Only call the destroy hook if the context has been requested.
                 if (!(context instanceof NodeInjectorFactory)) {
-                    destroyHooks[i + 1].call(context);
+                    var toCall = destroyHooks[i + 1];
+                    if (Array.isArray(toCall)) {
+                        for (var j = 0; j < toCall.length; j += 2) {
+                            toCall[j + 1].call(context[toCall[j]]);
+                        }
+                    }
+                    else {
+                        toCall.call(context);
+                    }
                 }
             }
         }
@@ -35606,7 +35713,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function applyNodes(renderer, action, tNode, lView, renderParent, beforeNode, isProjection) {
         while (tNode != null) {
             ngDevMode && assertTNodeForLView(tNode, lView);
-            ngDevMode && assertNodeOfPossibleTypes(tNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */, 1 /* Projection */, 5 /* IcuContainer */);
+            ngDevMode &&
+                assertNodeOfPossibleTypes(tNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */, 1 /* Projection */, 5 /* IcuContainer */);
             var rawSlotValue = lView[tNode.index];
             var tNodeType = tNode.type;
             if (isProjection) {
@@ -39169,7 +39277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0+89.sha-f48a065');
+    var VERSION$2 = new Version$1('9.1.0+95.sha-af42694');
 
     /**
      * @license
@@ -51211,7 +51319,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0+89.sha-f48a065');
+    var VERSION$3 = new Version$1('9.1.0+95.sha-af42694');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
