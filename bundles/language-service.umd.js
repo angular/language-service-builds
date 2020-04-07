@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+136.sha-e145fa1
+ * @license Angular v9.1.0-rc.0+137.sha-95fc3d4
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19032,7 +19032,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+136.sha-e145fa1');
+    var VERSION$1 = new Version('9.1.0-rc.0+137.sha-95fc3d4');
 
     /**
      * @license
@@ -33797,12 +33797,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "styleBindings_", {
-            get: function () { return toDebugStyleBinding(this, false); },
+            get: function () {
+                return toDebugStyleBinding(this, false);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "classBindings_", {
-            get: function () { return toDebugStyleBinding(this, true); },
+            get: function () {
+                return toDebugStyleBinding(this, true);
+            },
             enumerable: true,
             configurable: true
         });
@@ -33843,8 +33847,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     var TViewData = NG_DEV_MODE && createNamedArrayType('TViewData') || null;
-    var TVIEWDATA_EMPTY; // can't initialize here or it will not be tree shaken, because `LView`
-    // constructor could have side-effects.
+    var TVIEWDATA_EMPTY; // can't initialize here or it will not be tree shaken, because
+    // `LView` constructor could have side-effects.
     /**
      * This function clones a blueprint and creates TData.
      *
@@ -33932,22 +33936,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "parent", {
-            get: function () { return toDebug(this._raw_lView[PARENT]); },
+            get: function () {
+                return toDebug(this._raw_lView[PARENT]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "host", {
-            get: function () { return toHtml(this._raw_lView[HOST], true); },
+            get: function () {
+                return toHtml(this._raw_lView[HOST], true);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "html", {
-            get: function () { return (this.nodes || []).map(function (node) { return toHtml(node.native, true); }).join(''); },
+            get: function () {
+                return (this.nodes || []).map(function (node) { return toHtml(node.native, true); }).join('');
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "context", {
-            get: function () { return this._raw_lView[CONTEXT]; },
+            get: function () {
+                return this._raw_lView[CONTEXT];
+            },
             enumerable: true,
             configurable: true
         });
@@ -33966,62 +33978,86 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "tView", {
-            get: function () { return this._raw_lView[TVIEW]; },
+            get: function () {
+                return this._raw_lView[TVIEW];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "cleanup", {
-            get: function () { return this._raw_lView[CLEANUP]; },
+            get: function () {
+                return this._raw_lView[CLEANUP];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "injector", {
-            get: function () { return this._raw_lView[INJECTOR$1]; },
+            get: function () {
+                return this._raw_lView[INJECTOR$1];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "rendererFactory", {
-            get: function () { return this._raw_lView[RENDERER_FACTORY]; },
+            get: function () {
+                return this._raw_lView[RENDERER_FACTORY];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "renderer", {
-            get: function () { return this._raw_lView[RENDERER]; },
+            get: function () {
+                return this._raw_lView[RENDERER];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "sanitizer", {
-            get: function () { return this._raw_lView[SANITIZER]; },
+            get: function () {
+                return this._raw_lView[SANITIZER];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "childHead", {
-            get: function () { return toDebug(this._raw_lView[CHILD_HEAD]); },
+            get: function () {
+                return toDebug(this._raw_lView[CHILD_HEAD]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "next", {
-            get: function () { return toDebug(this._raw_lView[NEXT]); },
+            get: function () {
+                return toDebug(this._raw_lView[NEXT]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "childTail", {
-            get: function () { return toDebug(this._raw_lView[CHILD_TAIL]); },
+            get: function () {
+                return toDebug(this._raw_lView[CHILD_TAIL]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "declarationView", {
-            get: function () { return toDebug(this._raw_lView[DECLARATION_VIEW]); },
+            get: function () {
+                return toDebug(this._raw_lView[DECLARATION_VIEW]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "queries", {
-            get: function () { return this._raw_lView[QUERIES]; },
+            get: function () {
+                return this._raw_lView[QUERIES];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "tHost", {
-            get: function () { return this._raw_lView[T_HOST]; },
+            get: function () {
+                return this._raw_lView[T_HOST];
+            },
             enumerable: true,
             configurable: true
         });
@@ -34079,7 +34115,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._raw_lContainer = _raw_lContainer;
         }
         Object.defineProperty(LContainerDebug.prototype, "activeIndex", {
-            get: function () { return getLContainerActiveIndex(this._raw_lContainer); },
+            get: function () {
+                return getLContainerActiveIndex(this._raw_lContainer);
+            },
             enumerable: true,
             configurable: true
         });
@@ -34100,27 +34138,37 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "parent", {
-            get: function () { return toDebug(this._raw_lContainer[PARENT]); },
+            get: function () {
+                return toDebug(this._raw_lContainer[PARENT]);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "movedViews", {
-            get: function () { return this._raw_lContainer[MOVED_VIEWS]; },
+            get: function () {
+                return this._raw_lContainer[MOVED_VIEWS];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "host", {
-            get: function () { return this._raw_lContainer[HOST]; },
+            get: function () {
+                return this._raw_lContainer[HOST];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "native", {
-            get: function () { return this._raw_lContainer[NATIVE]; },
+            get: function () {
+                return this._raw_lContainer[NATIVE];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "next", {
-            get: function () { return toDebug(this._raw_lContainer[NEXT]); },
+            get: function () {
+                return toDebug(this._raw_lContainer[NEXT]);
+            },
             enumerable: true,
             configurable: true
         });
@@ -34149,7 +34197,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.type = type;
         }
         Object.defineProperty(I18NDebugItem.prototype, "tNode", {
-            get: function () { return getTNode(this._lView[TVIEW], this.nodeIndex); },
+            get: function () {
+                return getTNode(this._lView[TVIEW], this.nodeIndex);
+            },
             enumerable: true,
             configurable: true
         });
@@ -34276,14 +34326,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                             __raw_opCode: opCode,
                                             checkBit: checkBit,
                                             type: 'Attr',
-                                            attrValue: value, attrName: attrName, sanitizeFn: sanitizeFn,
+                                            attrValue: value,
+                                            attrName: attrName,
+                                            sanitizeFn: sanitizeFn,
                                         });
                                         break;
                                     case 0 /* Text */:
                                         results.push({
                                             __raw_opCode: opCode,
                                             checkBit: checkBit,
-                                            type: 'Text', nodeIndex: nodeIndex,
+                                            type: 'Text',
+                                            nodeIndex: nodeIndex,
                                             text: value,
                                         });
                                         break;
@@ -34452,7 +34505,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         lView[SANITIZER] = sanitizer || parentLView && parentLView[SANITIZER] || null;
         lView[INJECTOR$1] = injector || parentLView && parentLView[INJECTOR$1] || null;
         lView[T_HOST] = tHostNode;
-        ngDevMode && assertEqual(tView.type == 2 /* Embedded */ ? parentLView !== null : true, true, 'Embedded views must have parentLView');
+        ngDevMode &&
+            assertEqual(tView.type == 2 /* Embedded */ ? parentLView !== null : true, true, 'Embedded views must have parentLView');
         lView[DECLARATION_COMPONENT_VIEW] =
             tView.type == 2 /* Embedded */ ? parentLView[DECLARATION_COMPONENT_VIEW] : lView;
         ngDevMode && attachLViewDebug(lView);
@@ -34761,7 +34815,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             null, // contentCheckHooks: HookData|null,
             null, // viewHooks: HookData|null,
             null, // viewCheckHooks: HookData|null,
-            null, // destroyHooks: HookData|null,
+            null, // destroyHooks: DestroyHookData|null,
             null, // cleanup: any[]|null,
             null, // contentQueries: number[]|null,
             null, // components: number[]|null,
@@ -35017,24 +35071,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * it from the hostVar count) and the directive count. See more in VIEW_DATA.md.
      */
     function generateExpandoInstructionBlock(tView, tNode, directiveCount) {
-        ngDevMode && assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
+        ngDevMode &&
+            assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
         // Important: In JS `-x` and `0-x` is not the same! If `x===0` then `-x` will produce `-0` which
         // requires non standard math arithmetic and it can prevent VM optimizations.
         // `0-0` will always produce `0` and will not cause a potential deoptimization in VM.
         var elementIndex = HEADER_OFFSET - tNode.index;
         var providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
         var providerCount = tView.data.length - providerStartIndex;
-        (tView.expandoInstructions || (tView.expandoInstructions = [])).push(elementIndex, providerCount, directiveCount);
+        (tView.expandoInstructions || (tView.expandoInstructions = []))
+            .push(elementIndex, providerCount, directiveCount);
     }
     /**
      * Marks a given TNode as a component's host. This consists of:
      * - setting appropriate TNode flags;
      * - storing index of component's host element so it will be queued for view refresh during CD.
-    */
+     */
     function markAsComponentHost(tView, hostTNode) {
         ngDevMode && assertFirstCreatePass(tView);
         hostTNode.flags |= 2 /* isComponentHost */;
-        (tView.components || (tView.components = ngDevMode ? new TViewComponents() : [])).push(hostTNode.index);
+        (tView.components || (tView.components = ngDevMode ? new TViewComponents() : []))
+            .push(hostTNode.index);
     }
     /**
      * Initializes the flags on the current node, setting all indices to the initial index,
@@ -35042,7 +35099,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param index the initial index
      */
     function initTNodeFlags(tNode, index, numberOfDirectives) {
-        ngDevMode && assertNotEqual(numberOfDirectives, tNode.directiveEnd - tNode.directiveStart, 'Reached the max number of directives');
+        ngDevMode &&
+            assertNotEqual(numberOfDirectives, tNode.directiveEnd - tNode.directiveStart, 'Reached the max number of directives');
         tNode.flags |= 1 /* isDirectiveHost */;
         // When the first directive is created on a node, save the index
         tNode.directiveStart = index;
@@ -35444,7 +35502,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function detachMovedView(declarationContainer, lView) {
         ngDevMode && assertLContainer(declarationContainer);
-        ngDevMode && assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
+        ngDevMode &&
+            assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
         var movedViews = declarationContainer[MOVED_VIEWS];
         var declaredViewIndex = movedViews.indexOf(lView);
         movedViews.splice(declaredViewIndex, 1);
@@ -35580,7 +35639,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var context = lView[destroyHooks[i]];
                 // Only call the destroy hook if the context has been requested.
                 if (!(context instanceof NodeInjectorFactory)) {
-                    destroyHooks[i + 1].call(context);
+                    var toCall = destroyHooks[i + 1];
+                    if (Array.isArray(toCall)) {
+                        for (var j = 0; j < toCall.length; j += 2) {
+                            toCall[j + 1].call(context[toCall[j]]);
+                        }
+                    }
+                    else {
+                        toCall.call(context);
+                    }
                 }
             }
         }
@@ -35646,7 +35713,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function applyNodes(renderer, action, tNode, lView, renderParent, beforeNode, isProjection) {
         while (tNode != null) {
             ngDevMode && assertTNodeForLView(tNode, lView);
-            ngDevMode && assertNodeOfPossibleTypes(tNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */, 1 /* Projection */, 5 /* IcuContainer */);
+            ngDevMode &&
+                assertNodeOfPossibleTypes(tNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */, 1 /* Projection */, 5 /* IcuContainer */);
             var rawSlotValue = lView[tNode.index];
             var tNodeType = tNode.type;
             if (isProjection) {
@@ -39209,7 +39277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+136.sha-e145fa1');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+137.sha-95fc3d4');
 
     /**
      * @license
@@ -51251,7 +51319,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+136.sha-e145fa1');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+137.sha-95fc3d4');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
