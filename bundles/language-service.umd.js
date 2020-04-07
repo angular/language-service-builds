@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.0-rc.0+131.sha-7d0af17
+ * @license Angular v9.1.0-rc.0+136.sha-e145fa1
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19017,7 +19017,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.0-rc.0+131.sha-7d0af17');
+    var VERSION$1 = new Version('9.1.0-rc.0+136.sha-e145fa1');
 
     /**
      * @license
@@ -24864,6 +24864,71 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Matches an Angular attribute to a binding type. See `ATTR` for more details.
+     *
+     * This is adapted from packages/compiler/src/render3/r3_template_transform.ts
+     * to allow empty binding names and match template attributes.
+     */
+    var BIND_NAME_REGEXP$2 = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@)|(\*))(.*))|\[\(([^\)]*)\)\]|\[([^\]]*)\]|\(([^\)]*)\))$/;
+    /**
+     * Represents possible Angular attribute bindings, as indices on a match of `BIND_NAME_REGEXP`.
+     */
+    var ATTR;
+    (function (ATTR) {
+        /** "bind-" */
+        ATTR[ATTR["KW_BIND"] = 1] = "KW_BIND";
+        /** "let-" */
+        ATTR[ATTR["KW_LET"] = 2] = "KW_LET";
+        /** "ref-/#" */
+        ATTR[ATTR["KW_REF"] = 3] = "KW_REF";
+        /** "on-" */
+        ATTR[ATTR["KW_ON"] = 4] = "KW_ON";
+        /** "bindon-" */
+        ATTR[ATTR["KW_BINDON"] = 5] = "KW_BINDON";
+        /** "@" */
+        ATTR[ATTR["KW_AT"] = 6] = "KW_AT";
+        /**
+         * "*"
+         * Microsyntax template starts with '*'. See https://angular.io/api/core/TemplateRef
+         */
+        ATTR[ATTR["KW_MICROSYNTAX"] = 7] = "KW_MICROSYNTAX";
+        /** The identifier after "bind-", "let-", "ref-/#", "on-", "bindon-", "@", or "*" */
+        ATTR[ATTR["IDENT_KW"] = 8] = "IDENT_KW";
+        /** Identifier inside [()] */
+        ATTR[ATTR["IDENT_BANANA_BOX"] = 9] = "IDENT_BANANA_BOX";
+        /** Identifier inside [] */
+        ATTR[ATTR["IDENT_PROPERTY"] = 10] = "IDENT_PROPERTY";
+        /** Identifier inside () */
+        ATTR[ATTR["IDENT_EVENT"] = 11] = "IDENT_EVENT";
+    })(ATTR || (ATTR = {}));
+    /**
+     * Returns a descriptor for a given Angular attribute, or undefined if the attribute is
+     * not an Angular attribute.
+     */
+    function getBindingDescriptor(attribute) {
+        var bindParts = attribute.match(BIND_NAME_REGEXP$2);
+        if (!bindParts)
+            return;
+        // The first match element is skipped because it matches the entire attribute text, including the
+        // binding part.
+        var kind = bindParts.findIndex(function (val, i) { return i > 0 && val !== undefined; });
+        if (!(kind in ATTR)) {
+            throw TypeError("\"" + kind + "\" is not a valid Angular binding kind for \"" + attribute + "\"");
+        }
+        return {
+            kind: kind,
+            name: bindParts[ATTR.IDENT_KW],
+        };
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var Diagnostic = {
         directive_not_in_module: {
             message: "%1 '%2' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration.",
@@ -28124,34 +28189,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             sortText: 'ng-template',
         },
     ];
-    // This is adapted from packages/compiler/src/render3/r3_template_transform.ts
-    // to allow empty binding names.
-    var BIND_NAME_REGEXP$2 = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.*))|\[\(([^\)]*)\)\]|\[([^\]]*)\]|\(([^\)]*)\))$/;
-    var ATTR;
-    (function (ATTR) {
-        // Group 1 = "bind-"
-        ATTR[ATTR["KW_BIND_IDX"] = 1] = "KW_BIND_IDX";
-        // Group 2 = "let-"
-        ATTR[ATTR["KW_LET_IDX"] = 2] = "KW_LET_IDX";
-        // Group 3 = "ref-/#"
-        ATTR[ATTR["KW_REF_IDX"] = 3] = "KW_REF_IDX";
-        // Group 4 = "on-"
-        ATTR[ATTR["KW_ON_IDX"] = 4] = "KW_ON_IDX";
-        // Group 5 = "bindon-"
-        ATTR[ATTR["KW_BINDON_IDX"] = 5] = "KW_BINDON_IDX";
-        // Group 6 = "@"
-        ATTR[ATTR["KW_AT_IDX"] = 6] = "KW_AT_IDX";
-        // Group 7 = the identifier after "bind-", "let-", "ref-/#", "on-", "bindon-" or "@"
-        ATTR[ATTR["IDENT_KW_IDX"] = 7] = "IDENT_KW_IDX";
-        // Group 8 = identifier inside [()]
-        ATTR[ATTR["IDENT_BANANA_BOX_IDX"] = 8] = "IDENT_BANANA_BOX_IDX";
-        // Group 9 = identifier inside []
-        ATTR[ATTR["IDENT_PROPERTY_IDX"] = 9] = "IDENT_PROPERTY_IDX";
-        // Group 10 = identifier inside ()
-        ATTR[ATTR["IDENT_EVENT_IDX"] = 10] = "IDENT_EVENT_IDX";
-    })(ATTR || (ATTR = {}));
-    // Microsyntax template starts with '*'. See https://angular.io/api/core/TemplateRef
-    var TEMPLATE_ATTR_PREFIX$3 = '*';
     function isIdentifierPart$1(code) {
         // Identifiers consist of alphanumeric characters, '_', or '$'.
         return isAsciiLetter(code) || isDigit(code) || code == $$ || code == $_;
@@ -28306,31 +28343,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // matching using regex. This is because the regexp would incorrectly identify
         // bind parts for cases like [()|]
         //                              ^ cursor is here
-        var bindParts = attr.name.match(BIND_NAME_REGEXP$2);
-        var isTemplateRef = attr.name.startsWith(TEMPLATE_ATTR_PREFIX$3);
-        var isBinding = bindParts !== null || isTemplateRef;
-        if (!isBinding) {
+        var binding = getBindingDescriptor(attr.name);
+        if (!binding) {
+            // This is a normal HTML attribute, not an Angular attribute.
             return attributeCompletionsForElement(info, elem.name);
         }
         var results = [];
         var ngAttrs = angularAttributes(info, elem.name);
-        if (!bindParts) {
-            // If bindParts is null then this must be a TemplateRef.
-            results.push.apply(results, __spread(ngAttrs.templateRefs));
-        }
-        else if (bindParts[ATTR.KW_BIND_IDX] !== undefined ||
-            bindParts[ATTR.IDENT_PROPERTY_IDX] !== undefined) {
-            // property binding via bind- or []
-            results.push.apply(results, __spread(propertyNames(elem.name), ngAttrs.inputs));
-        }
-        else if (bindParts[ATTR.KW_ON_IDX] !== undefined || bindParts[ATTR.IDENT_EVENT_IDX] !== undefined) {
-            // event binding via on- or ()
-            results.push.apply(results, __spread(eventNames(elem.name), ngAttrs.outputs));
-        }
-        else if (bindParts[ATTR.KW_BINDON_IDX] !== undefined ||
-            bindParts[ATTR.IDENT_BANANA_BOX_IDX] !== undefined) {
-            // banana-in-a-box binding via bindon- or [()]
-            results.push.apply(results, __spread(ngAttrs.bananas));
+        switch (binding.kind) {
+            case ATTR.KW_MICROSYNTAX:
+                // template reference attribute: *attrName
+                results.push.apply(results, __spread(ngAttrs.templateRefs));
+                break;
+            case ATTR.KW_BIND:
+            case ATTR.IDENT_PROPERTY:
+                // property binding via bind- or []
+                results.push.apply(results, __spread(propertyNames(elem.name), ngAttrs.inputs));
+                break;
+            case ATTR.KW_ON:
+            case ATTR.IDENT_EVENT:
+                // event binding via on- or ()
+                results.push.apply(results, __spread(eventNames(elem.name), ngAttrs.outputs));
+                break;
+            case ATTR.KW_BINDON:
+            case ATTR.IDENT_BANANA_BOX:
+                // banana-in-a-box binding via bindon- or [()]
+                results.push.apply(results, __spread(ngAttrs.bananas));
+                break;
         }
         return results.map(function (name) {
             return {
@@ -28407,8 +28446,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // In order to provide accurate attribute value completion, we need to know
         // what the LHS is, and construct the proper AST if it is missing.
         var htmlAttr = htmlPath.tail;
-        var bindParts = htmlAttr.name.match(BIND_NAME_REGEXP$2);
-        if (bindParts && bindParts[ATTR.KW_REF_IDX] !== undefined) {
+        var binding = getBindingDescriptor(htmlAttr.name);
+        if (binding && binding.kind === ATTR.KW_REF) {
             var refAst = void 0;
             var elemAst = void 0;
             if (templatePath.tail instanceof ReferenceAst) {
@@ -28546,11 +28585,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
             var _this = this;
-            if (ast.name.startsWith(TEMPLATE_ATTR_PREFIX$3)) {
+            var binding = getBindingDescriptor(ast.name);
+            if (binding && binding.kind === ATTR.KW_MICROSYNTAX) {
                 // This a template binding given by micro syntax expression.
                 // First, verify the attribute consists of some binding we can give completions for.
                 // The sourceSpan of AttrAst points to the RHS of the attribute
-                var templateKey = ast.name.substring(TEMPLATE_ATTR_PREFIX$3.length);
+                var templateKey = binding.name;
                 var templateValue = ast.sourceSpan.toString();
                 var templateUrl = ast.sourceSpan.start.file.url;
                 // TODO(kyliau): We are unable to determine the absolute offset of the key
@@ -28559,11 +28599,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var absValueOffset = ast.sourceSpan.start.offset;
                 var templateBindings = this.info.expressionParser.parseTemplateBindings(templateKey, templateValue, templateUrl, absKeyOffset, absValueOffset).templateBindings;
                 // Find the template binding that contains the position.
-                var binding = templateBindings.find(function (b) { return inSpan(_this.position, b.sourceSpan); });
-                if (!binding) {
+                var templateBinding = templateBindings.find(function (b) { return inSpan(_this.position, b.sourceSpan); });
+                if (!templateBinding) {
                     return;
                 }
-                this.microSyntaxInAttributeValue(ast, binding);
+                this.microSyntaxInAttributeValue(ast, templateBinding);
             }
             else {
                 var expressionAst = this.info.expressionParser.parseBinding(ast.value, ast.sourceSpan.toString(), ast.sourceSpan.start.offset);
@@ -48520,7 +48560,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.0-rc.0+131.sha-7d0af17');
+    var VERSION$2 = new Version$1('9.1.0-rc.0+136.sha-e145fa1');
 
     /**
      * @license
@@ -63767,7 +63807,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.0-rc.0+131.sha-7d0af17');
+    var VERSION$3 = new Version$1('9.1.0-rc.0+136.sha-e145fa1');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
