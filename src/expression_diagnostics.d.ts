@@ -7,6 +7,7 @@
  */
 /// <amd-module name="@angular/language-service/src/expression_diagnostics" />
 import { Node, TemplateAst, TemplateAstPath } from '@angular/compiler';
+import { AstResult } from './common';
 import { SymbolQuery, SymbolTable } from './symbols';
 import * as ng from './types';
 export interface DiagnosticTemplateInfo {
@@ -26,3 +27,4 @@ export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplat
  * derived for.
  */
 export declare function getExpressionScope(info: DiagnosticTemplateInfo, path: TemplateAstPath): SymbolTable;
+export declare function diagnosticInfoFromTemplateInfo(info: AstResult): DiagnosticTemplateInfo;
