@@ -9,7 +9,6 @@
 import { BoundEventAst, CompileTypeMetadata, HtmlAstPath, Node, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult, SelectorInfo } from './common';
-import { DiagnosticTemplateInfo } from './expression_diagnostics';
 import { Span, Symbol, SymbolQuery } from './types';
 export interface SpanHolder {
     sourceSpan: ParseSourceSpan;
@@ -26,7 +25,6 @@ export declare function isNarrower(spanA: Span, spanB: Span): boolean;
 export declare function isStructuralDirective(type: CompileTypeMetadata): boolean;
 export declare function getSelectors(info: AstResult): SelectorInfo;
 export declare function isTypescriptVersion(low: string, high?: string): boolean;
-export declare function diagnosticInfoFromTemplateInfo(info: AstResult): DiagnosticTemplateInfo;
 export declare function findTemplateAstAt(ast: TemplateAst[], position: number): TemplateAstPath;
 /**
  * Return the node that most tightly encompass the specified `position`.

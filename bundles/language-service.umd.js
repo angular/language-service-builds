@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.1+3.sha-83a9159
+ * @license Angular v10.0.0-next.1+4.sha-e92fce1
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19541,7 +19541,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.1+3.sha-83a9159');
+    var VERSION$1 = new Version('10.0.0-next.1+4.sha-e92fce1');
 
     /**
      * @license
@@ -26248,17 +26248,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return { selectors: results, map: map };
     }
-    function diagnosticInfoFromTemplateInfo(info) {
-        return {
-            fileName: info.template.fileName,
-            offset: info.template.span.start,
-            query: info.template.query,
-            members: info.template.members,
-            htmlAst: info.htmlAst,
-            templateAst: info.templateAst,
-            source: info.template.source,
-        };
-    }
     function findTemplateAstAt(ast, position) {
         var path = [];
         var visitor = new /** @class */ (function (_super) {
@@ -26852,6 +26841,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function spanOf$1(sourceSpan) {
         return { start: sourceSpan.start.offset, end: sourceSpan.end.offset };
+    }
+    function diagnosticInfoFromTemplateInfo(info) {
+        return {
+            fileName: info.template.fileName,
+            offset: info.template.span.start,
+            query: info.template.query,
+            members: info.template.members,
+            htmlAst: info.htmlAst,
+            templateAst: info.templateAst,
+            source: info.template.source,
+        };
     }
 
     /**
@@ -49269,7 +49269,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.1+3.sha-83a9159');
+    var VERSION$2 = new Version$1('10.0.0-next.1+4.sha-e92fce1');
 
     /**
      * @license
@@ -64525,7 +64525,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('10.0.0-next.1+3.sha-83a9159');
+    var VERSION$3 = new Version$1('10.0.0-next.1+4.sha-e92fce1');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
