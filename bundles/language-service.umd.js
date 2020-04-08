@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.1+1.sha-717df13
+ * @license Angular v10.0.0-next.1+3.sha-83a9159
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -613,7 +613,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this.hasElementSelector() && this.classNames.length == 0 && this.attrs.length == 0 &&
                 this.notSelectors.length === 0;
         };
-        CssSelector.prototype.hasElementSelector = function () { return !!this.element; };
+        CssSelector.prototype.hasElementSelector = function () {
+            return !!this.element;
+        };
         CssSelector.prototype.setElement = function (element) {
             if (element === void 0) { element = null; }
             this.element = element;
@@ -642,7 +644,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (value === void 0) { value = ''; }
             this.attrs.push(name, value && value.toLowerCase() || '');
         };
-        CssSelector.prototype.addClassName = function (name) { this.classNames.push(name.toLowerCase()); };
+        CssSelector.prototype.addClassName = function (name) {
+            this.classNames.push(name.toLowerCase());
+        };
         CssSelector.prototype.toString = function () {
             var res = this.element || '';
             if (this.classNames) {
@@ -769,7 +773,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * @param cssSelector A css selector
          * @param matchedCallback This callback will be called with the object handed into `addSelectable`
          * @return boolean true if a match was found
-        */
+         */
         SelectorMatcher.prototype.match = function (cssSelector, matchedCallback) {
             var result = false;
             var element = cssSelector.element;
@@ -1032,7 +1036,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.modifiers = [];
             }
         }
-        Type.prototype.hasModifier = function (modifier) { return this.modifiers.indexOf(modifier) !== -1; };
+        Type.prototype.hasModifier = function (modifier) {
+            return this.modifiers.indexOf(modifier) !== -1;
+        };
         return Type;
     }());
     var BuiltinTypeName;
@@ -1095,7 +1101,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.valueType = valueType || null;
             return _this;
         }
-        MapType.prototype.visitType = function (visitor, context) { return visitor.visitMapType(this, context); };
+        MapType.prototype.visitType = function (visitor, context) {
+            return visitor.visitMapType(this, context);
+        };
         return MapType;
     }(Type$1));
     var DYNAMIC_TYPE = new BuiltinType(BuiltinTypeName.Dynamic);
@@ -1225,7 +1233,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Expression.prototype.cast = function (type, sourceSpan) {
             return new CastExpr(this, type, sourceSpan);
         };
-        Expression.prototype.toStmt = function () { return new ExpressionStatement(this, null); };
+        Expression.prototype.toStmt = function () {
+            return new ExpressionStatement(this, null);
+        };
         return Expression;
     }());
     var BuiltinVar;
@@ -1252,7 +1262,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ReadVarExpr.prototype.isEquivalent = function (e) {
             return e instanceof ReadVarExpr && this.name === e.name && this.builtin === e.builtin;
         };
-        ReadVarExpr.prototype.isConstant = function () { return false; };
+        ReadVarExpr.prototype.isConstant = function () {
+            return false;
+        };
         ReadVarExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitReadVarExpr(this, context);
         };
@@ -1277,7 +1289,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         TypeofExpr.prototype.isEquivalent = function (e) {
             return e instanceof TypeofExpr && e.expr.isEquivalent(this.expr);
         };
-        TypeofExpr.prototype.isConstant = function () { return this.expr.isConstant(); };
+        TypeofExpr.prototype.isConstant = function () {
+            return this.expr.isConstant();
+        };
         return TypeofExpr;
     }(Expression));
     var WrappedNodeExpr = /** @class */ (function (_super) {
@@ -1290,7 +1304,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         WrappedNodeExpr.prototype.isEquivalent = function (e) {
             return e instanceof WrappedNodeExpr && this.node === e.node;
         };
-        WrappedNodeExpr.prototype.isConstant = function () { return false; };
+        WrappedNodeExpr.prototype.isConstant = function () {
+            return false;
+        };
         WrappedNodeExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitWrappedNodeExpr(this, context);
         };
@@ -1307,14 +1323,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         WriteVarExpr.prototype.isEquivalent = function (e) {
             return e instanceof WriteVarExpr && this.name === e.name && this.value.isEquivalent(e.value);
         };
-        WriteVarExpr.prototype.isConstant = function () { return false; };
+        WriteVarExpr.prototype.isConstant = function () {
+            return false;
+        };
         WriteVarExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitWriteVarExpr(this, context);
         };
         WriteVarExpr.prototype.toDeclStmt = function (type, modifiers) {
             return new DeclareVarStmt(this.name, this.value, type, modifiers, this.sourceSpan);
         };
-        WriteVarExpr.prototype.toConstDecl = function () { return this.toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]); };
+        WriteVarExpr.prototype.toConstDecl = function () {
+            return this.toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]);
+        };
         return WriteVarExpr;
     }(Expression));
     var WriteKeyExpr = /** @class */ (function (_super) {
@@ -1330,7 +1350,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof WriteKeyExpr && this.receiver.isEquivalent(e.receiver) &&
                 this.index.isEquivalent(e.index) && this.value.isEquivalent(e.value);
         };
-        WriteKeyExpr.prototype.isConstant = function () { return false; };
+        WriteKeyExpr.prototype.isConstant = function () {
+            return false;
+        };
         WriteKeyExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitWriteKeyExpr(this, context);
         };
@@ -1349,7 +1371,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof WritePropExpr && this.receiver.isEquivalent(e.receiver) &&
                 this.name === e.name && this.value.isEquivalent(e.value);
         };
-        WritePropExpr.prototype.isConstant = function () { return false; };
+        WritePropExpr.prototype.isConstant = function () {
+            return false;
+        };
         WritePropExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitWritePropExpr(this, context);
         };
@@ -1381,7 +1405,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof InvokeMethodExpr && this.receiver.isEquivalent(e.receiver) &&
                 this.name === e.name && this.builtin === e.builtin && areAllEquivalent(this.args, e.args);
         };
-        InvokeMethodExpr.prototype.isConstant = function () { return false; };
+        InvokeMethodExpr.prototype.isConstant = function () {
+            return false;
+        };
         InvokeMethodExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitInvokeMethodExpr(this, context);
         };
@@ -1401,7 +1427,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof InvokeFunctionExpr && this.fn.isEquivalent(e.fn) &&
                 areAllEquivalent(this.args, e.args) && this.pure === e.pure;
         };
-        InvokeFunctionExpr.prototype.isConstant = function () { return false; };
+        InvokeFunctionExpr.prototype.isConstant = function () {
+            return false;
+        };
         InvokeFunctionExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitInvokeFunctionExpr(this, context);
         };
@@ -1419,7 +1447,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof InstantiateExpr && this.classExpr.isEquivalent(e.classExpr) &&
                 areAllEquivalent(this.args, e.args);
         };
-        InstantiateExpr.prototype.isConstant = function () { return false; };
+        InstantiateExpr.prototype.isConstant = function () {
+            return false;
+        };
         InstantiateExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitInstantiateExpr(this, context);
         };
@@ -1435,7 +1465,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         LiteralExpr.prototype.isEquivalent = function (e) {
             return e instanceof LiteralExpr && this.value === e.value;
         };
-        LiteralExpr.prototype.isConstant = function () { return true; };
+        LiteralExpr.prototype.isConstant = function () {
+            return true;
+        };
         LiteralExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitLiteralExpr(this, context);
         };
@@ -1455,7 +1487,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // return e instanceof LocalizedString && this.message === e.message;
             return false;
         };
-        LocalizedString.prototype.isConstant = function () { return false; };
+        LocalizedString.prototype.isConstant = function () {
+            return false;
+        };
         LocalizedString.prototype.visitExpression = function (visitor, context) {
             return visitor.visitLocalizedString(this, context);
         };
@@ -1479,7 +1513,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 metaBlock = "" + metaBlock + ID_SEPARATOR + this.metaBlock.customId;
             }
             if (this.metaBlock.legacyIds) {
-                this.metaBlock.legacyIds.forEach(function (legacyId) { metaBlock = "" + metaBlock + LEGACY_ID_INDICATOR + legacyId; });
+                this.metaBlock.legacyIds.forEach(function (legacyId) {
+                    metaBlock = "" + metaBlock + LEGACY_ID_INDICATOR + legacyId;
+                });
             }
             return createCookedRawString(metaBlock, this.messageParts[0]);
         };
@@ -1544,7 +1580,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof ExternalExpr && this.value.name === e.value.name &&
                 this.value.moduleName === e.value.moduleName && this.value.runtime === e.value.runtime;
         };
-        ExternalExpr.prototype.isConstant = function () { return false; };
+        ExternalExpr.prototype.isConstant = function () {
+            return false;
+        };
         ExternalExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitExternalExpr(this, context);
         };
@@ -1564,7 +1602,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof ConditionalExpr && this.condition.isEquivalent(e.condition) &&
                 this.trueCase.isEquivalent(e.trueCase) && nullSafeIsEquivalent(this.falseCase, e.falseCase);
         };
-        ConditionalExpr.prototype.isConstant = function () { return false; };
+        ConditionalExpr.prototype.isConstant = function () {
+            return false;
+        };
         ConditionalExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitConditionalExpr(this, context);
         };
@@ -1580,7 +1620,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         NotExpr.prototype.isEquivalent = function (e) {
             return e instanceof NotExpr && this.condition.isEquivalent(e.condition);
         };
-        NotExpr.prototype.isConstant = function () { return false; };
+        NotExpr.prototype.isConstant = function () {
+            return false;
+        };
         NotExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitNotExpr(this, context);
         };
@@ -1596,7 +1638,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         AssertNotNull.prototype.isEquivalent = function (e) {
             return e instanceof AssertNotNull && this.condition.isEquivalent(e.condition);
         };
-        AssertNotNull.prototype.isConstant = function () { return false; };
+        AssertNotNull.prototype.isConstant = function () {
+            return false;
+        };
         AssertNotNull.prototype.visitExpression = function (visitor, context) {
             return visitor.visitAssertNotNullExpr(this, context);
         };
@@ -1612,7 +1656,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         CastExpr.prototype.isEquivalent = function (e) {
             return e instanceof CastExpr && this.value.isEquivalent(e.value);
         };
-        CastExpr.prototype.isConstant = function () { return false; };
+        CastExpr.prototype.isConstant = function () {
+            return false;
+        };
         CastExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitCastExpr(this, context);
         };
@@ -1624,7 +1670,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.name = name;
             this.type = type;
         }
-        FnParam.prototype.isEquivalent = function (param) { return this.name === param.name; };
+        FnParam.prototype.isEquivalent = function (param) {
+            return this.name === param.name;
+        };
         return FnParam;
     }());
     var FunctionExpr = /** @class */ (function (_super) {
@@ -1640,7 +1688,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof FunctionExpr && areAllEquivalent(this.params, e.params) &&
                 areAllEquivalent(this.statements, e.statements);
         };
-        FunctionExpr.prototype.isConstant = function () { return false; };
+        FunctionExpr.prototype.isConstant = function () {
+            return false;
+        };
         FunctionExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitFunctionExpr(this, context);
         };
@@ -1665,7 +1715,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof BinaryOperatorExpr && this.operator === e.operator &&
                 this.lhs.isEquivalent(e.lhs) && this.rhs.isEquivalent(e.rhs);
         };
-        BinaryOperatorExpr.prototype.isConstant = function () { return false; };
+        BinaryOperatorExpr.prototype.isConstant = function () {
+            return false;
+        };
         BinaryOperatorExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitBinaryOperatorExpr(this, context);
         };
@@ -1683,7 +1735,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof ReadPropExpr && this.receiver.isEquivalent(e.receiver) &&
                 this.name === e.name;
         };
-        ReadPropExpr.prototype.isConstant = function () { return false; };
+        ReadPropExpr.prototype.isConstant = function () {
+            return false;
+        };
         ReadPropExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitReadPropExpr(this, context);
         };
@@ -1704,7 +1758,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return e instanceof ReadKeyExpr && this.receiver.isEquivalent(e.receiver) &&
                 this.index.isEquivalent(e.index);
         };
-        ReadKeyExpr.prototype.isConstant = function () { return false; };
+        ReadKeyExpr.prototype.isConstant = function () {
+            return false;
+        };
         ReadKeyExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitReadKeyExpr(this, context);
         };
@@ -1720,7 +1776,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.entries = entries;
             return _this;
         }
-        LiteralArrayExpr.prototype.isConstant = function () { return this.entries.every(function (e) { return e.isConstant(); }); };
+        LiteralArrayExpr.prototype.isConstant = function () {
+            return this.entries.every(function (e) { return e.isConstant(); });
+        };
         LiteralArrayExpr.prototype.isEquivalent = function (e) {
             return e instanceof LiteralArrayExpr && areAllEquivalent(this.entries, e.entries);
         };
@@ -1754,7 +1812,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         LiteralMapExpr.prototype.isEquivalent = function (e) {
             return e instanceof LiteralMapExpr && areAllEquivalent(this.entries, e.entries);
         };
-        LiteralMapExpr.prototype.isConstant = function () { return this.entries.every(function (e) { return e.value.isConstant(); }); };
+        LiteralMapExpr.prototype.isConstant = function () {
+            return this.entries.every(function (e) { return e.value.isConstant(); });
+        };
         LiteralMapExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitLiteralMapExpr(this, context);
         };
@@ -1770,7 +1830,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         CommaExpr.prototype.isEquivalent = function (e) {
             return e instanceof CommaExpr && areAllEquivalent(this.parts, e.parts);
         };
-        CommaExpr.prototype.isConstant = function () { return false; };
+        CommaExpr.prototype.isConstant = function () {
+            return false;
+        };
         CommaExpr.prototype.visitExpression = function (visitor, context) {
             return visitor.visitCommaExpr(this, context);
         };
@@ -1795,7 +1857,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.modifiers = modifiers || [];
             this.sourceSpan = sourceSpan || null;
         }
-        Statement.prototype.hasModifier = function (modifier) { return this.modifiers.indexOf(modifier) !== -1; };
+        Statement.prototype.hasModifier = function (modifier) {
+            return this.modifiers.indexOf(modifier) !== -1;
+        };
         return Statement;
     }());
     var DeclareVarStmt = /** @class */ (function (_super) {
@@ -1875,7 +1939,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             this.type = type || null;
         }
-        AbstractClassPart.prototype.hasModifier = function (modifier) { return this.modifiers.indexOf(modifier) !== -1; };
+        AbstractClassPart.prototype.hasModifier = function (modifier) {
+            return this.modifiers.indexOf(modifier) !== -1;
+        };
         return AbstractClassPart;
     }());
     var ClassField = /** @class */ (function (_super) {
@@ -1887,7 +1953,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.initializer = initializer;
             return _this;
         }
-        ClassField.prototype.isEquivalent = function (f) { return this.name === f.name; };
+        ClassField.prototype.isEquivalent = function (f) {
+            return this.name === f.name;
+        };
         return ClassField;
     }(AbstractClassPart));
     var ClassMethod = /** @class */ (function (_super) {
@@ -1974,7 +2042,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.multiline = multiline;
             return _this;
         }
-        CommentStmt.prototype.isEquivalent = function (stmt) { return stmt instanceof CommentStmt; };
+        CommentStmt.prototype.isEquivalent = function (stmt) {
+            return stmt instanceof CommentStmt;
+        };
         CommentStmt.prototype.visitStatement = function (visitor, context) {
             return visitor.visitCommentStmt(this, context);
         };
@@ -1994,7 +2064,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         JSDocCommentStmt.prototype.visitStatement = function (visitor, context) {
             return visitor.visitJSDocCommentStmt(this, context);
         };
-        JSDocCommentStmt.prototype.toString = function () { return serializeTags(this.tags); };
+        JSDocCommentStmt.prototype.toString = function () {
+            return serializeTags(this.tags);
+        };
         return JSDocCommentStmt;
     }(Statement));
     var TryCatchStmt = /** @class */ (function (_super) {
@@ -2032,9 +2104,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var AstTransformer = /** @class */ (function () {
         function AstTransformer() {
         }
-        AstTransformer.prototype.transformExpr = function (expr, context) { return expr; };
-        AstTransformer.prototype.transformStmt = function (stmt, context) { return stmt; };
-        AstTransformer.prototype.visitReadVarExpr = function (ast, context) { return this.transformExpr(ast, context); };
+        AstTransformer.prototype.transformExpr = function (expr, context) {
+            return expr;
+        };
+        AstTransformer.prototype.transformStmt = function (stmt, context) {
+            return stmt;
+        };
+        AstTransformer.prototype.visitReadVarExpr = function (ast, context) {
+            return this.transformExpr(ast, context);
+        };
         AstTransformer.prototype.visitWrappedNodeExpr = function (ast, context) {
             return this.transformExpr(ast, context);
         };
@@ -2060,7 +2138,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         AstTransformer.prototype.visitInstantiateExpr = function (ast, context) {
             return this.transformExpr(new InstantiateExpr(ast.classExpr.visitExpression(this, context), this.visitAllExpressions(ast.args, context), ast.type, ast.sourceSpan), context);
         };
-        AstTransformer.prototype.visitLiteralExpr = function (ast, context) { return this.transformExpr(ast, context); };
+        AstTransformer.prototype.visitLiteralExpr = function (ast, context) {
+            return this.transformExpr(ast, context);
+        };
         AstTransformer.prototype.visitLocalizedString = function (ast, context) {
             return this.transformExpr(new LocalizedString(ast.metaBlock, ast.messageParts, ast.placeHolderNames, this.visitAllExpressions(ast.expressions, context), ast.sourceSpan), context);
         };
@@ -2153,14 +2233,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var RecursiveAstVisitor = /** @class */ (function () {
         function RecursiveAstVisitor() {
         }
-        RecursiveAstVisitor.prototype.visitType = function (ast, context) { return ast; };
+        RecursiveAstVisitor.prototype.visitType = function (ast, context) {
+            return ast;
+        };
         RecursiveAstVisitor.prototype.visitExpression = function (ast, context) {
             if (ast.type) {
                 ast.type.visitType(this, context);
             }
             return ast;
         };
-        RecursiveAstVisitor.prototype.visitBuiltinType = function (type, context) { return this.visitType(type, context); };
+        RecursiveAstVisitor.prototype.visitBuiltinType = function (type, context) {
+            return this.visitType(type, context);
+        };
         RecursiveAstVisitor.prototype.visitExpressionType = function (type, context) {
             var _this = this;
             type.value.visitExpression(this, context);
@@ -2169,10 +2253,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this.visitType(type, context);
         };
-        RecursiveAstVisitor.prototype.visitArrayType = function (type, context) { return this.visitType(type, context); };
-        RecursiveAstVisitor.prototype.visitMapType = function (type, context) { return this.visitType(type, context); };
-        RecursiveAstVisitor.prototype.visitWrappedNodeExpr = function (ast, context) { return ast; };
-        RecursiveAstVisitor.prototype.visitTypeofExpr = function (ast, context) { return this.visitExpression(ast, context); };
+        RecursiveAstVisitor.prototype.visitArrayType = function (type, context) {
+            return this.visitType(type, context);
+        };
+        RecursiveAstVisitor.prototype.visitMapType = function (type, context) {
+            return this.visitType(type, context);
+        };
+        RecursiveAstVisitor.prototype.visitWrappedNodeExpr = function (ast, context) {
+            return ast;
+        };
+        RecursiveAstVisitor.prototype.visitTypeofExpr = function (ast, context) {
+            return this.visitExpression(ast, context);
+        };
         RecursiveAstVisitor.prototype.visitReadVarExpr = function (ast, context) {
             return this.visitExpression(ast, context);
         };
@@ -2321,8 +2413,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             stmt.error.visitExpression(this, context);
             return stmt;
         };
-        RecursiveAstVisitor.prototype.visitCommentStmt = function (stmt, context) { return stmt; };
-        RecursiveAstVisitor.prototype.visitJSDocCommentStmt = function (stmt, context) { return stmt; };
+        RecursiveAstVisitor.prototype.visitCommentStmt = function (stmt, context) {
+            return stmt;
+        };
+        RecursiveAstVisitor.prototype.visitJSDocCommentStmt = function (stmt, context) {
+            return stmt;
+        };
         RecursiveAstVisitor.prototype.visitAllStatements = function (stmts, context) {
             var _this = this;
             stmts.forEach(function (stmt) { return stmt.visitStatement(_this, context); });
@@ -2549,11 +2645,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ValueTransformer.prototype.visitStringMap = function (map, context) {
             var _this = this;
             var result = {};
-            Object.keys(map).forEach(function (key) { result[key] = visitValue(map[key], _this, context); });
+            Object.keys(map).forEach(function (key) {
+                result[key] = visitValue(map[key], _this, context);
+            });
             return result;
         };
-        ValueTransformer.prototype.visitPrimitive = function (value, context) { return value; };
-        ValueTransformer.prototype.visitOther = function (value, context) { return value; };
+        ValueTransformer.prototype.visitPrimitive = function (value, context) {
+            return value;
+        };
+        ValueTransformer.prototype.visitOther = function (value, context) {
+            return value;
+        };
         return ValueTransformer;
     }());
     var SyncAsync = {
@@ -2563,7 +2665,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return value;
         },
-        then: function (value, cb) { return isPromise(value) ? value.then(cb) : cb(value); },
+        then: function (value, cb) {
+            return isPromise(value) ? value.then(cb) : cb(value);
+        },
         all: function (syncAsyncValues) {
             return syncAsyncValues.some(isPromise) ? Promise.all(syncAsyncValues) : syncAsyncValues;
         }
@@ -2741,7 +2845,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         FixupExpression.prototype.isEquivalent = function (e) {
             return e instanceof FixupExpression && this.resolved.isEquivalent(e.resolved);
         };
-        FixupExpression.prototype.isConstant = function () { return true; };
+        FixupExpression.prototype.isConstant = function () {
+            return true;
+        };
         FixupExpression.prototype.fixup = function (expression) {
             this.resolved = expression;
             this.shared = true;
@@ -2849,7 +2955,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * a digit so the prefix should be a constant string (not based on user input) and
          * must not end in a digit.
          */
-        ConstantPool.prototype.uniqueName = function (prefix) { return "" + prefix + this.nextNameIndex++; };
+        ConstantPool.prototype.uniqueName = function (prefix) {
+            return "" + prefix + this.nextNameIndex++;
+        };
         ConstantPool.prototype.definitionsOf = function (kind) {
             switch (kind) {
                 case 2 /* Component */:
@@ -2878,7 +2986,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             error("Unknown definition kind " + kind);
             return '<unknown>';
         };
-        ConstantPool.prototype.freshName = function () { return this.uniqueName(CONSTANT_PREFIX); };
+        ConstantPool.prototype.freshName = function () {
+            return this.uniqueName(CONSTANT_PREFIX);
+        };
         ConstantPool.prototype.keyOf = function (expression) {
             return expression.visitExpression(new KeyVisitor(), KEY_CONTEXT);
         };
@@ -2932,7 +3042,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return ast.value.moduleName ? "EX:" + ast.value.moduleName + ":" + ast.value.name :
                 "EX:" + ast.value.runtime.name;
         };
-        KeyVisitor.prototype.visitReadVarExpr = function (node) { return "VAR:" + node.name; };
+        KeyVisitor.prototype.visitReadVarExpr = function (node) {
+            return "VAR:" + node.name;
+        };
         KeyVisitor.prototype.visitTypeofExpr = function (node, context) {
             return "TYPEOF:" + node.expr.visitExpression(this, context);
         };
@@ -3292,7 +3404,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new CompileDirectiveMetadata({
                 isHost: isHost,
                 type: type,
-                isComponent: !!isComponent, selector: selector, exportAs: exportAs, changeDetection: changeDetection,
+                isComponent: !!isComponent,
+                selector: selector,
+                exportAs: exportAs,
+                changeDetection: changeDetection,
                 inputs: inputsMap,
                 outputs: outputsMap,
                 hostListeners: hostListeners,
@@ -3985,7 +4100,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.value = value;
             this.sourceSpan = sourceSpan;
         }
-        Text.prototype.visit = function (visitor) { return visitor.visitText(this); };
+        Text.prototype.visit = function (visitor) {
+            return visitor.visitText(this);
+        };
         return Text;
     }());
     var BoundText = /** @class */ (function () {
@@ -3994,7 +4111,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.sourceSpan = sourceSpan;
             this.i18n = i18n;
         }
-        BoundText.prototype.visit = function (visitor) { return visitor.visitBoundText(this); };
+        BoundText.prototype.visit = function (visitor) {
+            return visitor.visitBoundText(this);
+        };
         return BoundText;
     }());
     var TextAttribute = /** @class */ (function () {
@@ -4005,7 +4124,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.valueSpan = valueSpan;
             this.i18n = i18n;
         }
-        TextAttribute.prototype.visit = function (visitor) { return visitor.visitTextAttribute(this); };
+        TextAttribute.prototype.visit = function (visitor) {
+            return visitor.visitTextAttribute(this);
+        };
         return TextAttribute;
     }());
     var BoundAttribute = /** @class */ (function () {
@@ -4022,7 +4143,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         BoundAttribute.fromBoundElementProperty = function (prop, i18n) {
             return new BoundAttribute(prop.name, prop.type, prop.securityContext, prop.value, prop.unit, prop.sourceSpan, prop.valueSpan, i18n);
         };
-        BoundAttribute.prototype.visit = function (visitor) { return visitor.visitBoundAttribute(this); };
+        BoundAttribute.prototype.visit = function (visitor) {
+            return visitor.visitBoundAttribute(this);
+        };
         return BoundAttribute;
     }());
     var BoundEvent = /** @class */ (function () {
@@ -4040,7 +4163,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var phase = event.type === 1 /* Animation */ ? event.targetOrPhase : null;
             return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan, event.handlerSpan);
         };
-        BoundEvent.prototype.visit = function (visitor) { return visitor.visitBoundEvent(this); };
+        BoundEvent.prototype.visit = function (visitor) {
+            return visitor.visitBoundEvent(this);
+        };
         return BoundEvent;
     }());
     var Element$1 = /** @class */ (function () {
@@ -4060,7 +4185,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.sourceSpan = new ParseSourceSpan(sourceSpan.start, endSourceSpan.end);
             }
         }
-        Element.prototype.visit = function (visitor) { return visitor.visitElement(this); };
+        Element.prototype.visit = function (visitor) {
+            return visitor.visitElement(this);
+        };
         return Element;
     }());
     var Template = /** @class */ (function () {
@@ -4078,7 +4205,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.endSourceSpan = endSourceSpan;
             this.i18n = i18n;
         }
-        Template.prototype.visit = function (visitor) { return visitor.visitTemplate(this); };
+        Template.prototype.visit = function (visitor) {
+            return visitor.visitTemplate(this);
+        };
         return Template;
     }());
     var Content = /** @class */ (function () {
@@ -4088,7 +4217,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.sourceSpan = sourceSpan;
             this.i18n = i18n;
         }
-        Content.prototype.visit = function (visitor) { return visitor.visitContent(this); };
+        Content.prototype.visit = function (visitor) {
+            return visitor.visitContent(this);
+        };
         return Content;
     }());
     var Variable = /** @class */ (function () {
@@ -4098,7 +4229,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.sourceSpan = sourceSpan;
             this.valueSpan = valueSpan;
         }
-        Variable.prototype.visit = function (visitor) { return visitor.visitVariable(this); };
+        Variable.prototype.visit = function (visitor) {
+            return visitor.visitVariable(this);
+        };
         return Variable;
     }());
     var Reference = /** @class */ (function () {
@@ -4108,7 +4241,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.sourceSpan = sourceSpan;
             this.valueSpan = valueSpan;
         }
-        Reference.prototype.visit = function (visitor) { return visitor.visitReference(this); };
+        Reference.prototype.visit = function (visitor) {
+            return visitor.visitReference(this);
+        };
         return Reference;
     }());
     var Icu = /** @class */ (function () {
@@ -4118,7 +4253,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.sourceSpan = sourceSpan;
             this.i18n = i18n;
         }
-        Icu.prototype.visit = function (visitor) { return visitor.visitIcu(this); };
+        Icu.prototype.visit = function (visitor) {
+            return visitor.visitIcu(this);
+        };
         return Icu;
     }());
     function visitAll(visitor, nodes) {
@@ -4206,7 +4343,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.value = value;
             this.sourceSpan = sourceSpan;
         }
-        Text.prototype.visit = function (visitor, context) { return visitor.visitText(this, context); };
+        Text.prototype.visit = function (visitor, context) {
+            return visitor.visitText(this, context);
+        };
         return Text;
     }());
     // TODO(vicb): do we really need this node (vs an array) ?
@@ -4215,7 +4354,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.children = children;
             this.sourceSpan = sourceSpan;
         }
-        Container.prototype.visit = function (visitor, context) { return visitor.visitContainer(this, context); };
+        Container.prototype.visit = function (visitor, context) {
+            return visitor.visitContainer(this, context);
+        };
         return Container;
     }());
     var Icu$1 = /** @class */ (function () {
@@ -4225,7 +4366,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.cases = cases;
             this.sourceSpan = sourceSpan;
         }
-        Icu.prototype.visit = function (visitor, context) { return visitor.visitIcu(this, context); };
+        Icu.prototype.visit = function (visitor, context) {
+            return visitor.visitIcu(this, context);
+        };
         return Icu;
     }());
     var TagPlaceholder = /** @class */ (function () {
@@ -4238,7 +4381,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.isVoid = isVoid;
             this.sourceSpan = sourceSpan;
         }
-        TagPlaceholder.prototype.visit = function (visitor, context) { return visitor.visitTagPlaceholder(this, context); };
+        TagPlaceholder.prototype.visit = function (visitor, context) {
+            return visitor.visitTagPlaceholder(this, context);
+        };
         return TagPlaceholder;
     }());
     var Placeholder = /** @class */ (function () {
@@ -4247,7 +4392,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.name = name;
             this.sourceSpan = sourceSpan;
         }
-        Placeholder.prototype.visit = function (visitor, context) { return visitor.visitPlaceholder(this, context); };
+        Placeholder.prototype.visit = function (visitor, context) {
+            return visitor.visitPlaceholder(this, context);
+        };
         return Placeholder;
     }());
     var IcuPlaceholder = /** @class */ (function () {
@@ -4256,14 +4403,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.name = name;
             this.sourceSpan = sourceSpan;
         }
-        IcuPlaceholder.prototype.visit = function (visitor, context) { return visitor.visitIcuPlaceholder(this, context); };
+        IcuPlaceholder.prototype.visit = function (visitor, context) {
+            return visitor.visitIcuPlaceholder(this, context);
+        };
         return IcuPlaceholder;
     }());
     // Clone the AST
     var CloneVisitor = /** @class */ (function () {
         function CloneVisitor() {
         }
-        CloneVisitor.prototype.visitText = function (text, context) { return new Text$1(text.value, text.sourceSpan); };
+        CloneVisitor.prototype.visitText = function (text, context) {
+            return new Text$1(text.value, text.sourceSpan);
+        };
         CloneVisitor.prototype.visitContainer = function (container, context) {
             var _this = this;
             var children = container.children.map(function (n) { return n.visit(_this, context); });
@@ -4301,7 +4452,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         RecurseVisitor.prototype.visitIcu = function (icu, context) {
             var _this = this;
-            Object.keys(icu.cases).forEach(function (k) { icu.cases[k].visit(_this); });
+            Object.keys(icu.cases).forEach(function (k) {
+                icu.cases[k].visit(_this);
+            });
         };
         RecurseVisitor.prototype.visitTagPlaceholder = function (ph, context) {
             var _this = this;
@@ -4355,7 +4508,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var _SerializerVisitor = /** @class */ (function () {
         function _SerializerVisitor() {
         }
-        _SerializerVisitor.prototype.visitText = function (text, context) { return text.value; };
+        _SerializerVisitor.prototype.visitText = function (text, context) {
+            return text.value;
+        };
         _SerializerVisitor.prototype.visitContainer = function (container, context) {
             var _this = this;
             return "[" + container.children.map(function (child) { return child.visit(_this); }).join(', ') + "]";
@@ -4669,7 +4824,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         // Creates a name mapper, see `PlaceholderMapper`
         // Returning `null` means that no name mapping is used.
-        Serializer.prototype.createNameMapper = function (message) { return null; };
+        Serializer.prototype.createNameMapper = function (message) {
+            return null;
+        };
         return Serializer;
     }());
     /**
@@ -4696,13 +4853,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this.publicToInternal.hasOwnProperty(publicName) ? this.publicToInternal[publicName] :
                 null;
         };
-        SimplePlaceholderMapper.prototype.visitText = function (text, context) { return null; };
+        SimplePlaceholderMapper.prototype.visitText = function (text, context) {
+            return null;
+        };
         SimplePlaceholderMapper.prototype.visitTagPlaceholder = function (ph, context) {
             this.visitPlaceholderName(ph.startName);
             _super.prototype.visitTagPlaceholder.call(this, ph, context);
             this.visitPlaceholderName(ph.closeName);
         };
-        SimplePlaceholderMapper.prototype.visitPlaceholder = function (ph, context) { this.visitPlaceholderName(ph.name); };
+        SimplePlaceholderMapper.prototype.visitPlaceholder = function (ph, context) {
+            this.visitPlaceholderName(ph.name);
+        };
         SimplePlaceholderMapper.prototype.visitIcuPlaceholder = function (ph, context) {
             this.visitPlaceholderName(ph.name);
         };
@@ -4746,7 +4907,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var strChildren = tag.children.map(function (node) { return node.visit(_this); });
             return "<" + tag.name + strAttrs + ">" + strChildren.join('') + "</" + tag.name + ">";
         };
-        _Visitor.prototype.visitText = function (text) { return text.value; };
+        _Visitor.prototype.visitText = function (text) {
+            return text.value;
+        };
         _Visitor.prototype.visitDeclaration = function (decl) {
             return "<?xml" + this._serializeAttributes(decl.attrs) + " ?>";
         };
@@ -4771,7 +4934,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 _this.attrs[k] = escapeXml(unescapedAttrs[k]);
             });
         }
-        Declaration.prototype.visit = function (visitor) { return visitor.visitDeclaration(this); };
+        Declaration.prototype.visit = function (visitor) {
+            return visitor.visitDeclaration(this);
+        };
         return Declaration;
     }());
     var Doctype = /** @class */ (function () {
@@ -4779,7 +4944,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.rootTag = rootTag;
             this.dtd = dtd;
         }
-        Doctype.prototype.visit = function (visitor) { return visitor.visitDoctype(this); };
+        Doctype.prototype.visit = function (visitor) {
+            return visitor.visitDoctype(this);
+        };
         return Doctype;
     }());
     var Tag = /** @class */ (function () {
@@ -4794,14 +4961,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 _this.attrs[k] = escapeXml(unescapedAttrs[k]);
             });
         }
-        Tag.prototype.visit = function (visitor) { return visitor.visitTag(this); };
+        Tag.prototype.visit = function (visitor) {
+            return visitor.visitTag(this);
+        };
         return Tag;
     }());
     var Text$2 = /** @class */ (function () {
         function Text(unescapedValue) {
             this.value = escapeXml(unescapedValue);
         }
-        Text.prototype.visit = function (visitor) { return visitor.visitText(this); };
+        Text.prototype.visit = function (visitor) {
+            return visitor.visitText(this);
+        };
         return Text;
     }());
     var CR = /** @class */ (function (_super) {
@@ -4856,9 +5027,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 var sourceTags = [];
                 message.sources.forEach(function (source) {
-                    sourceTags.push(new Tag(_SOURCE_TAG, {}, [
-                        new Text$2(source.filePath + ":" + source.startLine + (source.endLine !== source.startLine ? ',' + source.endLine : ''))
-                    ]));
+                    sourceTags.push(new Tag(_SOURCE_TAG, {}, [new Text$2(source.filePath + ":" + source.startLine + (source.endLine !== source.startLine ? ',' + source.endLine : ''))]));
                 });
                 rootNode.children.push(new CR(2), new Tag(_MESSAGE_TAG, attrs, __spread(sourceTags, visitor.serialize(message.nodes))));
             });
@@ -4875,7 +5044,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Xmb.prototype.load = function (content, url) {
             throw new Error('Unsupported');
         };
-        Xmb.prototype.digest = function (message) { return digest$1(message); };
+        Xmb.prototype.digest = function (message) {
+            return digest$1(message);
+        };
         Xmb.prototype.createNameMapper = function (message) {
             return new SimplePlaceholderMapper(message, toPublicName);
         };
@@ -4884,7 +5055,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var _Visitor$1 = /** @class */ (function () {
         function _Visitor() {
         }
-        _Visitor.prototype.visitText = function (text, context) { return [new Text$2(text.value)]; };
+        _Visitor.prototype.visitText = function (text, context) {
+            return [new Text$2(text.value)];
+        };
         _Visitor.prototype.visitContainer = function (container, context) {
             var _this = this;
             var nodes = [];
@@ -5247,7 +5420,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.values.push({ key: key, value: value, quoted: false });
             }
         };
-        DefinitionMap.prototype.toLiteralMap = function () { return literalMap(this.values); };
+        DefinitionMap.prototype.toLiteralMap = function () {
+            return literalMap(this.values);
+        };
         return DefinitionMap;
     }());
     /**
@@ -5270,8 +5445,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     attributesMap[a.name] = a.value;
                 }
             });
-            elOrTpl.inputs.forEach(function (i) { attributesMap[i.name] = ''; });
-            elOrTpl.outputs.forEach(function (o) { attributesMap[o.name] = ''; });
+            elOrTpl.inputs.forEach(function (i) {
+                attributesMap[i.name] = '';
+            });
+            elOrTpl.outputs.forEach(function (o) {
+                attributesMap[o.name] = '';
+            });
         }
         return attributesMap;
     }
@@ -5740,10 +5919,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         Object.defineProperty(SourceMapGenerator.prototype, "currentLine", {
             /**
-            * @internal strip this from published d.ts files due to
-            * https://github.com/microsoft/TypeScript/issues/36216
-            */
-            get: function () { return this.lines.slice(-1)[0]; },
+             * @internal strip this from published d.ts files due to
+             * https://github.com/microsoft/TypeScript/issues/36216
+             */
+            get: function () {
+                return this.lines.slice(-1)[0];
+            },
             enumerable: true,
             configurable: true
         });
@@ -5868,13 +6049,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._preambleLineCount = 0;
             this._lines = [new _EmittedLine(_indent)];
         }
-        EmitterVisitorContext.createRoot = function () { return new EmitterVisitorContext(0); };
+        EmitterVisitorContext.createRoot = function () {
+            return new EmitterVisitorContext(0);
+        };
         Object.defineProperty(EmitterVisitorContext.prototype, "_currentLine", {
             /**
              * @internal strip this from published d.ts files due to
              * https://github.com/microsoft/TypeScript/issues/36216
              */
-            get: function () { return this._lines[this._lines.length - 1]; },
+            get: function () {
+                return this._lines[this._lines.length - 1];
+            },
             enumerable: true,
             configurable: true
         });
@@ -5882,7 +6067,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (lastPart === void 0) { lastPart = ''; }
             this.print(from || null, lastPart, true);
         };
-        EmitterVisitorContext.prototype.lineIsEmpty = function () { return this._currentLine.parts.length === 0; };
+        EmitterVisitorContext.prototype.lineIsEmpty = function () {
+            return this._currentLine.parts.length === 0;
+        };
         EmitterVisitorContext.prototype.lineLength = function () {
             return this._currentLine.indent * _INDENT_WITH.length + this._currentLine.partsLength;
         };
@@ -5914,8 +6101,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this._currentLine.indent = this._indent;
             }
         };
-        EmitterVisitorContext.prototype.pushClass = function (clazz) { this._classes.push(clazz); };
-        EmitterVisitorContext.prototype.popClass = function () { return this._classes.pop(); };
+        EmitterVisitorContext.prototype.pushClass = function (clazz) {
+            this._classes.push(clazz);
+        };
+        EmitterVisitorContext.prototype.popClass = function () {
+            return this._classes.pop();
+        };
         Object.defineProperty(EmitterVisitorContext.prototype, "currentClass", {
             get: function () {
                 return this._classes.length > 0 ? this._classes[this._classes.length - 1] : null;
@@ -5980,7 +6171,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             return map;
         };
-        EmitterVisitorContext.prototype.setPreambleLineCount = function (count) { return this._preambleLineCount = count; };
+        EmitterVisitorContext.prototype.setPreambleLineCount = function (count) {
+            return this._preambleLineCount = count;
+        };
         EmitterVisitorContext.prototype.spanOf = function (line, column) {
             var emittedLine = this._lines[line - this._preambleLineCount];
             if (emittedLine) {
@@ -6063,7 +6256,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 ctx.println(stmt, "/* " + stmt.comment + " */");
             }
             else {
-                stmt.comment.split('\n').forEach(function (line) { ctx.println(stmt, "// " + line); });
+                stmt.comment.split('\n').forEach(function (line) {
+                    ctx.println(stmt, "// " + line);
+                });
             }
             return null;
         };
@@ -6654,7 +6849,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * @param args The arguments to pass to the function being executed.
          * @returns The return value of the executed function.
          */
-        JitEvaluator.prototype.executeFunction = function (fn, args) { return fn.apply(void 0, __spread(args)); };
+        JitEvaluator.prototype.executeFunction = function (fn, args) {
+            return fn.apply(void 0, __spread(args));
+        };
         return JitEvaluator;
     }());
     /**
@@ -6750,14 +6947,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this.context[ref.name];
         };
-        R3JitReflector.prototype.parameters = function (typeOrFunc) { throw new Error('Not implemented.'); };
-        R3JitReflector.prototype.annotations = function (typeOrFunc) { throw new Error('Not implemented.'); };
-        R3JitReflector.prototype.shallowAnnotations = function (typeOrFunc) { throw new Error('Not implemented.'); };
-        R3JitReflector.prototype.tryAnnotations = function (typeOrFunc) { throw new Error('Not implemented.'); };
-        R3JitReflector.prototype.propMetadata = function (typeOrFunc) { throw new Error('Not implemented.'); };
-        R3JitReflector.prototype.hasLifecycleHook = function (type, lcProperty) { throw new Error('Not implemented.'); };
-        R3JitReflector.prototype.guards = function (typeOrFunc) { throw new Error('Not implemented.'); };
-        R3JitReflector.prototype.componentModuleUrl = function (type, cmpMetadata) { throw new Error('Not implemented.'); };
+        R3JitReflector.prototype.parameters = function (typeOrFunc) {
+            throw new Error('Not implemented.');
+        };
+        R3JitReflector.prototype.annotations = function (typeOrFunc) {
+            throw new Error('Not implemented.');
+        };
+        R3JitReflector.prototype.shallowAnnotations = function (typeOrFunc) {
+            throw new Error('Not implemented.');
+        };
+        R3JitReflector.prototype.tryAnnotations = function (typeOrFunc) {
+            throw new Error('Not implemented.');
+        };
+        R3JitReflector.prototype.propMetadata = function (typeOrFunc) {
+            throw new Error('Not implemented.');
+        };
+        R3JitReflector.prototype.hasLifecycleHook = function (type, lcProperty) {
+            throw new Error('Not implemented.');
+        };
+        R3JitReflector.prototype.guards = function (typeOrFunc) {
+            throw new Error('Not implemented.');
+        };
+        R3JitReflector.prototype.componentModuleUrl = function (type, cmpMetadata) {
+            throw new Error('Not implemented.');
+        };
         return R3JitReflector;
     }());
 
@@ -6790,9 +7003,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function compileNgModule(meta) {
         var internalType = meta.internalType, moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls, emitInline = meta.emitInline, id = meta.id;
         var additionalStatements = [];
-        var definitionMap = {
-            type: internalType
-        };
+        var definitionMap = { type: internalType };
         // Only generate the keys in the metadata if the arrays have values.
         if (bootstrap.length) {
             definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
@@ -6961,7 +7172,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         AST.prototype.visit = function (visitor, context) {
             return null;
         };
-        AST.prototype.toString = function () { return 'AST'; };
+        AST.prototype.toString = function () {
+            return 'AST';
+        };
         return AST;
     }());
     /**
@@ -6990,7 +7203,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (context === void 0) { context = null; }
             return visitor.visitQuote(this, context);
         };
-        Quote.prototype.toString = function () { return 'Quote'; };
+        Quote.prototype.toString = function () {
+            return 'Quote';
+        };
         return Quote;
     }(AST));
     var EmptyExpr = /** @class */ (function (_super) {
@@ -7300,7 +7515,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this.ast.visit(visitor, context);
         };
-        ASTWithSource.prototype.toString = function () { return this.source + " in " + this.location; };
+        ASTWithSource.prototype.toString = function () {
+            return this.source + " in " + this.location;
+        };
         return ASTWithSource;
     }(AST));
     var VariableBinding = /** @class */ (function () {
@@ -7347,7 +7564,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.visit(ast.left, context);
             this.visit(ast.right, context);
         };
-        RecursiveAstVisitor.prototype.visitChain = function (ast, context) { this.visitAll(ast.expressions, context); };
+        RecursiveAstVisitor.prototype.visitChain = function (ast, context) {
+            this.visitAll(ast.expressions, context);
+        };
         RecursiveAstVisitor.prototype.visitConditional = function (ast, context) {
             this.visit(ast.condition, context);
             this.visit(ast.trueExp, context);
@@ -7379,15 +7598,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         RecursiveAstVisitor.prototype.visitLiteralArray = function (ast, context) {
             this.visitAll(ast.expressions, context);
         };
-        RecursiveAstVisitor.prototype.visitLiteralMap = function (ast, context) { this.visitAll(ast.values, context); };
+        RecursiveAstVisitor.prototype.visitLiteralMap = function (ast, context) {
+            this.visitAll(ast.values, context);
+        };
         RecursiveAstVisitor.prototype.visitLiteralPrimitive = function (ast, context) { };
         RecursiveAstVisitor.prototype.visitMethodCall = function (ast, context) {
             this.visit(ast.receiver, context);
             this.visitAll(ast.args, context);
         };
-        RecursiveAstVisitor.prototype.visitPrefixNot = function (ast, context) { this.visit(ast.expression, context); };
-        RecursiveAstVisitor.prototype.visitNonNullAssert = function (ast, context) { this.visit(ast.expression, context); };
-        RecursiveAstVisitor.prototype.visitPropertyRead = function (ast, context) { this.visit(ast.receiver, context); };
+        RecursiveAstVisitor.prototype.visitPrefixNot = function (ast, context) {
+            this.visit(ast.expression, context);
+        };
+        RecursiveAstVisitor.prototype.visitNonNullAssert = function (ast, context) {
+            this.visit(ast.expression, context);
+        };
+        RecursiveAstVisitor.prototype.visitPropertyRead = function (ast, context) {
+            this.visit(ast.receiver, context);
+        };
         RecursiveAstVisitor.prototype.visitPropertyWrite = function (ast, context) {
             this.visit(ast.receiver, context);
             this.visit(ast.value, context);
@@ -7422,7 +7649,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var AstTransformer$1 = /** @class */ (function () {
         function AstTransformer() {
         }
-        AstTransformer.prototype.visitImplicitReceiver = function (ast, context) { return ast; };
+        AstTransformer.prototype.visitImplicitReceiver = function (ast, context) {
+            return ast;
+        };
         AstTransformer.prototype.visitInterpolation = function (ast, context) {
             return new Interpolation(ast.span, ast.sourceSpan, ast.strings, this.visitAll(ast.expressions));
         };
@@ -7494,14 +7723,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var AstMemoryEfficientTransformer = /** @class */ (function () {
         function AstMemoryEfficientTransformer() {
         }
-        AstMemoryEfficientTransformer.prototype.visitImplicitReceiver = function (ast, context) { return ast; };
+        AstMemoryEfficientTransformer.prototype.visitImplicitReceiver = function (ast, context) {
+            return ast;
+        };
         AstMemoryEfficientTransformer.prototype.visitInterpolation = function (ast, context) {
             var expressions = this.visitAll(ast.expressions);
             if (expressions !== ast.expressions)
                 return new Interpolation(ast.span, ast.sourceSpan, ast.strings, expressions);
             return ast;
         };
-        AstMemoryEfficientTransformer.prototype.visitLiteralPrimitive = function (ast, context) { return ast; };
+        AstMemoryEfficientTransformer.prototype.visitLiteralPrimitive = function (ast, context) {
+            return ast;
+        };
         AstMemoryEfficientTransformer.prototype.visitPropertyRead = function (ast, context) {
             var receiver = ast.receiver.visit(this);
             if (receiver !== ast.receiver) {
@@ -7636,7 +7869,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return ast;
         };
-        AstMemoryEfficientTransformer.prototype.visitQuote = function (ast, context) { return ast; };
+        AstMemoryEfficientTransformer.prototype.visitQuote = function (ast, context) {
+            return ast;
+        };
         return AstMemoryEfficientTransformer;
     }());
     // Bindings
@@ -8093,7 +8328,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 undefined;
             return convertToStatementIfNeeded(mode, literal(ast.value, type, this.convertSourceSpan(ast.span)));
         };
-        _AstToIrVisitor.prototype._getLocal = function (name) { return this._localResolver.getLocal(name); };
+        _AstToIrVisitor.prototype._getLocal = function (name) {
+            return this._localResolver.getLocal(name);
+        };
         _AstToIrVisitor.prototype.visitMethodCall = function (ast, mode) {
             if (ast.receiver instanceof ImplicitReceiver && ast.name == '$any') {
                 var args = this.visitAll(ast.args, _Mode.Expression);
@@ -8289,25 +8526,63 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return (_this._nodeMap.get(ast) || ast).visit(visitor);
             };
             return ast.visit({
-                visitBinary: function (ast) { return null; },
-                visitChain: function (ast) { return null; },
-                visitConditional: function (ast) { return null; },
-                visitFunctionCall: function (ast) { return null; },
-                visitImplicitReceiver: function (ast) { return null; },
-                visitInterpolation: function (ast) { return null; },
-                visitKeyedRead: function (ast) { return visit(this, ast.obj); },
-                visitKeyedWrite: function (ast) { return null; },
-                visitLiteralArray: function (ast) { return null; },
-                visitLiteralMap: function (ast) { return null; },
-                visitLiteralPrimitive: function (ast) { return null; },
-                visitMethodCall: function (ast) { return visit(this, ast.receiver); },
-                visitPipe: function (ast) { return null; },
-                visitPrefixNot: function (ast) { return null; },
-                visitNonNullAssert: function (ast) { return null; },
-                visitPropertyRead: function (ast) { return visit(this, ast.receiver); },
-                visitPropertyWrite: function (ast) { return null; },
-                visitQuote: function (ast) { return null; },
-                visitSafeMethodCall: function (ast) { return visit(this, ast.receiver) || ast; },
+                visitBinary: function (ast) {
+                    return null;
+                },
+                visitChain: function (ast) {
+                    return null;
+                },
+                visitConditional: function (ast) {
+                    return null;
+                },
+                visitFunctionCall: function (ast) {
+                    return null;
+                },
+                visitImplicitReceiver: function (ast) {
+                    return null;
+                },
+                visitInterpolation: function (ast) {
+                    return null;
+                },
+                visitKeyedRead: function (ast) {
+                    return visit(this, ast.obj);
+                },
+                visitKeyedWrite: function (ast) {
+                    return null;
+                },
+                visitLiteralArray: function (ast) {
+                    return null;
+                },
+                visitLiteralMap: function (ast) {
+                    return null;
+                },
+                visitLiteralPrimitive: function (ast) {
+                    return null;
+                },
+                visitMethodCall: function (ast) {
+                    return visit(this, ast.receiver);
+                },
+                visitPipe: function (ast) {
+                    return null;
+                },
+                visitPrefixNot: function (ast) {
+                    return null;
+                },
+                visitNonNullAssert: function (ast) {
+                    return null;
+                },
+                visitPropertyRead: function (ast) {
+                    return visit(this, ast.receiver);
+                },
+                visitPropertyWrite: function (ast) {
+                    return null;
+                },
+                visitQuote: function (ast) {
+                    return null;
+                },
+                visitSafeMethodCall: function (ast) {
+                    return visit(this, ast.receiver) || ast;
+                },
                 visitSafePropertyRead: function (ast) {
                     return visit(this, ast.receiver) || ast;
                 }
@@ -8325,29 +8600,66 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return ast.some(function (ast) { return visit(visitor, ast); });
             };
             return ast.visit({
-                visitBinary: function (ast) { return visit(this, ast.left) || visit(this, ast.right); },
-                visitChain: function (ast) { return false; },
-                visitConditional: function (ast) {
-                    return visit(this, ast.condition) || visit(this, ast.trueExp) ||
-                        visit(this, ast.falseExp);
+                visitBinary: function (ast) {
+                    return visit(this, ast.left) || visit(this, ast.right);
                 },
-                visitFunctionCall: function (ast) { return true; },
-                visitImplicitReceiver: function (ast) { return false; },
-                visitInterpolation: function (ast) { return visitSome(this, ast.expressions); },
-                visitKeyedRead: function (ast) { return false; },
-                visitKeyedWrite: function (ast) { return false; },
-                visitLiteralArray: function (ast) { return true; },
-                visitLiteralMap: function (ast) { return true; },
-                visitLiteralPrimitive: function (ast) { return false; },
-                visitMethodCall: function (ast) { return true; },
-                visitPipe: function (ast) { return true; },
-                visitPrefixNot: function (ast) { return visit(this, ast.expression); },
-                visitNonNullAssert: function (ast) { return visit(this, ast.expression); },
-                visitPropertyRead: function (ast) { return false; },
-                visitPropertyWrite: function (ast) { return false; },
-                visitQuote: function (ast) { return false; },
-                visitSafeMethodCall: function (ast) { return true; },
-                visitSafePropertyRead: function (ast) { return false; }
+                visitChain: function (ast) {
+                    return false;
+                },
+                visitConditional: function (ast) {
+                    return visit(this, ast.condition) || visit(this, ast.trueExp) || visit(this, ast.falseExp);
+                },
+                visitFunctionCall: function (ast) {
+                    return true;
+                },
+                visitImplicitReceiver: function (ast) {
+                    return false;
+                },
+                visitInterpolation: function (ast) {
+                    return visitSome(this, ast.expressions);
+                },
+                visitKeyedRead: function (ast) {
+                    return false;
+                },
+                visitKeyedWrite: function (ast) {
+                    return false;
+                },
+                visitLiteralArray: function (ast) {
+                    return true;
+                },
+                visitLiteralMap: function (ast) {
+                    return true;
+                },
+                visitLiteralPrimitive: function (ast) {
+                    return false;
+                },
+                visitMethodCall: function (ast) {
+                    return true;
+                },
+                visitPipe: function (ast) {
+                    return true;
+                },
+                visitPrefixNot: function (ast) {
+                    return visit(this, ast.expression);
+                },
+                visitNonNullAssert: function (ast) {
+                    return visit(this, ast.expression);
+                },
+                visitPropertyRead: function (ast) {
+                    return false;
+                },
+                visitPropertyWrite: function (ast) {
+                    return false;
+                },
+                visitQuote: function (ast) {
+                    return false;
+                },
+                visitSafeMethodCall: function (ast) {
+                    return true;
+                },
+                visitSafePropertyRead: function (ast) {
+                    return false;
+                }
             });
         };
         _AstToIrVisitor.prototype.allocateTemporary = function () {
@@ -8572,13 +8884,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.strictStyling = true;
         }
         /*
-        * Shim some cssText with the given selector. Returns cssText that can
-        * be included in the document via WebComponents.ShadowCSS.addCssToDocument(css).
-        *
-        * When strictStyling is true:
-        * - selector is the attribute added to all elements inside the host,
-        * - hostSelector is the attribute added to the host itself.
-        */
+         * Shim some cssText with the given selector. Returns cssText that can
+         * be included in the document via WebComponents.ShadowCSS.addCssToDocument(css).
+         *
+         * When strictStyling is true:
+         * - selector is the attribute added to all elements inside the host,
+         * - hostSelector is the attribute added to the host itself.
+         */
         ShadowCss.prototype.shimCssText = function (cssText, selector, hostSelector) {
             if (hostSelector === void 0) { hostSelector = ''; }
             var commentsWithHash = extractCommentsWithHash(cssText);
@@ -8604,7 +8916,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          *
          * scopeName menu-item {
          *
-        **/
+         **/
         ShadowCss.prototype._insertPolyfillDirectivesInCssText = function (cssText) {
             // Difference with webcomponents.js: does not handle comments
             return cssText.replace(_cssContentNextSelectorRe, function () {
@@ -8629,7 +8941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          *
          * scopeName menu-item {...}
          *
-        **/
+         **/
         ShadowCss.prototype._insertPolyfillRulesInCssText = function (cssText) {
             // Difference with webcomponents.js: does not handle comments
             return cssText.replace(_cssContentRuleRe, function () {
@@ -8648,7 +8960,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          *  and converts this to
          *
          *  scopeName .foo { ... }
-        */
+         */
         ShadowCss.prototype._scopeCssText = function (cssText, scopeSelector, hostSelector) {
             var unscopedRules = this._extractUnscopedRulesFromCssText(cssText);
             // replace :host and :host-context -shadowcsshost and -shadowcsshost respectively
@@ -8676,7 +8988,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          *
          * menu-item {...}
          *
-        **/
+         **/
         ShadowCss.prototype._extractUnscopedRulesFromCssText = function (cssText) {
             // Difference with webcomponents.js: does not handle comments
             var r = '';
@@ -8694,7 +9006,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * to
          *
          * .foo<scopeName> > .bar
-        */
+         */
         ShadowCss.prototype._convertColonHost = function (cssText) {
             return this._convertColonRule(cssText, _cssColonHostRe, this._colonHostPartReplacer);
         };
@@ -8712,7 +9024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * to
          *
          * .foo<scopeName> .bar { ... }
-        */
+         */
         ShadowCss.prototype._convertColonHostContext = function (cssText) {
             return this._convertColonRule(cssText, _cssColonHostContextRe, this._colonHostContextPartReplacer);
         };
@@ -8753,7 +9065,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /*
          * Convert combinators like ::shadow and pseudo-elements like ::content
          * by replacing with space.
-        */
+         */
         ShadowCss.prototype._convertShadowDOMSelectors = function (cssText) {
             return _shadowDOMSelectorsRe.reduce(function (result, pattern) { return result.replace(pattern, ' '); }, cssText);
         };
@@ -8923,7 +9235,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var _this = this;
             return content.replace(/__ph-(\d+)__/g, function (ph, index) { return _this.placeholders[+index]; });
         };
-        SafeSelector.prototype.content = function () { return this._content; };
+        SafeSelector.prototype.content = function () {
+            return this._content;
+        };
         return SafeSelector;
     }());
     var _cssContentNextSelectorRe = /polyfill-next-selector[^}]*content:[\s]*?(['"])(.*?)\1[;\s]*}([^{]*?){/gim;
@@ -9077,24 +9391,32 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.position = position;
         }
         Object.defineProperty(AstPath.prototype, "empty", {
-            get: function () { return !this.path || !this.path.length; },
+            get: function () {
+                return !this.path || !this.path.length;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(AstPath.prototype, "head", {
-            get: function () { return this.path[0]; },
+            get: function () {
+                return this.path[0];
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(AstPath.prototype, "tail", {
-            get: function () { return this.path[this.path.length - 1]; },
+            get: function () {
+                return this.path[this.path.length - 1];
+            },
             enumerable: true,
             configurable: true
         });
         AstPath.prototype.parentOf = function (node) {
             return node && this.path[this.path.indexOf(node) - 1];
         };
-        AstPath.prototype.childOf = function (node) { return this.path[this.path.indexOf(node) + 1]; };
+        AstPath.prototype.childOf = function (node) {
+            return this.path[this.path.indexOf(node) + 1];
+        };
         AstPath.prototype.first = function (ctor) {
             for (var i = this.path.length - 1; i >= 0; i--) {
                 var item = this.path[i];
@@ -9102,8 +9424,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     return item;
             }
         };
-        AstPath.prototype.push = function (node) { this.path.push(node); };
-        AstPath.prototype.pop = function () { return this.path.pop(); };
+        AstPath.prototype.push = function (node) {
+            this.path.push(node);
+        };
+        AstPath.prototype.pop = function () {
+            return this.path.pop();
+        };
         return AstPath;
     }());
 
@@ -9128,7 +9454,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.value = value;
             return _this;
         }
-        Text.prototype.visit = function (visitor, context) { return visitor.visitText(this, context); };
+        Text.prototype.visit = function (visitor, context) {
+            return visitor.visitText(this, context);
+        };
         return Text;
     }(NodeWithI18n));
     var Expansion = /** @class */ (function (_super) {
@@ -9141,7 +9469,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.switchValueSourceSpan = switchValueSourceSpan;
             return _this;
         }
-        Expansion.prototype.visit = function (visitor, context) { return visitor.visitExpansion(this, context); };
+        Expansion.prototype.visit = function (visitor, context) {
+            return visitor.visitExpansion(this, context);
+        };
         return Expansion;
     }(NodeWithI18n));
     var ExpansionCase = /** @class */ (function () {
@@ -9152,7 +9482,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.valueSourceSpan = valueSourceSpan;
             this.expSourceSpan = expSourceSpan;
         }
-        ExpansionCase.prototype.visit = function (visitor, context) { return visitor.visitExpansionCase(this, context); };
+        ExpansionCase.prototype.visit = function (visitor, context) {
+            return visitor.visitExpansionCase(this, context);
+        };
         return ExpansionCase;
     }());
     var Attribute = /** @class */ (function (_super) {
@@ -9164,7 +9496,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.valueSpan = valueSpan;
             return _this;
         }
-        Attribute.prototype.visit = function (visitor, context) { return visitor.visitAttribute(this, context); };
+        Attribute.prototype.visit = function (visitor, context) {
+            return visitor.visitAttribute(this, context);
+        };
         return Attribute;
     }(NodeWithI18n));
     var Element$2 = /** @class */ (function (_super) {
@@ -9180,7 +9514,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.endSourceSpan = endSourceSpan;
             return _this;
         }
-        Element.prototype.visit = function (visitor, context) { return visitor.visitElement(this, context); };
+        Element.prototype.visit = function (visitor, context) {
+            return visitor.visitElement(this, context);
+        };
         return Element;
     }(NodeWithI18n));
     var Comment = /** @class */ (function () {
@@ -9188,7 +9524,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.value = value;
             this.sourceSpan = sourceSpan;
         }
-        Comment.prototype.visit = function (visitor, context) { return visitor.visitComment(this, context); };
+        Comment.prototype.visit = function (visitor, context) {
+            return visitor.visitComment(this, context);
+        };
         return Comment;
     }());
     function visitAll$1(visitor, nodes, context) {
@@ -9218,7 +9556,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         RecursiveVisitor.prototype.visitText = function (ast, context) { };
         RecursiveVisitor.prototype.visitComment = function (ast, context) { };
         RecursiveVisitor.prototype.visitExpansion = function (ast, context) {
-            return this.visitChildren(context, function (visit) { visit(ast.cases); });
+            return this.visitChildren(context, function (visit) {
+                visit(ast.cases);
+            });
         };
         RecursiveVisitor.prototype.visitExpansionCase = function (ast, context) { };
         RecursiveVisitor.prototype.visitChildren = function (context, cb) {
@@ -9920,12 +10260,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 };
             }
         }
-        PlainCharacterCursor.prototype.clone = function () { return new PlainCharacterCursor(this); };
-        PlainCharacterCursor.prototype.peek = function () { return this.state.peek; };
-        PlainCharacterCursor.prototype.charsLeft = function () { return this.end - this.state.offset; };
-        PlainCharacterCursor.prototype.diff = function (other) { return this.state.offset - other.state.offset; };
-        PlainCharacterCursor.prototype.advance = function () { this.advanceState(this.state); };
-        PlainCharacterCursor.prototype.init = function () { this.updatePeek(this.state); };
+        PlainCharacterCursor.prototype.clone = function () {
+            return new PlainCharacterCursor(this);
+        };
+        PlainCharacterCursor.prototype.peek = function () {
+            return this.state.peek;
+        };
+        PlainCharacterCursor.prototype.charsLeft = function () {
+            return this.end - this.state.offset;
+        };
+        PlainCharacterCursor.prototype.diff = function (other) {
+            return this.state.offset - other.state.offset;
+        };
+        PlainCharacterCursor.prototype.advance = function () {
+            this.advanceState(this.state);
+        };
+        PlainCharacterCursor.prototype.init = function () {
+            this.updatePeek(this.state);
+        };
         PlainCharacterCursor.prototype.getSpan = function (start, leadingTriviaCodePoints) {
             start = start || this;
             var cloned = false;
@@ -9943,7 +10295,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         PlainCharacterCursor.prototype.getChars = function (start) {
             return this.input.substring(start.state.offset, this.state.offset);
         };
-        PlainCharacterCursor.prototype.charAt = function (pos) { return this.input.charCodeAt(pos); };
+        PlainCharacterCursor.prototype.charAt = function (pos) {
+            return this.input.charCodeAt(pos);
+        };
         PlainCharacterCursor.prototype.advanceState = function (state) {
             if (state.offset >= this.end) {
                 this.state = state;
@@ -9988,7 +10342,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _super.prototype.init.call(this);
             this.processEscapeSequence();
         };
-        EscapedCharacterCursor.prototype.clone = function () { return new EscapedCharacterCursor(this); };
+        EscapedCharacterCursor.prototype.clone = function () {
+            return new EscapedCharacterCursor(this);
+        };
         EscapedCharacterCursor.prototype.getChars = function (start) {
             var cursor = start.clone();
             var chars = '';
@@ -10547,9 +10903,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return null;
         };
-        WhitespaceVisitor.prototype.visitComment = function (comment, context) { return comment; };
-        WhitespaceVisitor.prototype.visitExpansion = function (expansion, context) { return expansion; };
-        WhitespaceVisitor.prototype.visitExpansionCase = function (expansionCase, context) { return expansionCase; };
+        WhitespaceVisitor.prototype.visitComment = function (comment, context) {
+            return comment;
+        };
+        WhitespaceVisitor.prototype.visitExpansion = function (expansion, context) {
+            return expansion;
+        };
+        WhitespaceVisitor.prototype.visitExpansionCase = function (expansionCase, context) {
+            return expansionCase;
+        };
         return WhitespaceVisitor;
     }());
     function removeWhitespaces(htmlAstWithErrors) {
@@ -10631,9 +10993,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _Expander.prototype.visitElement = function (element, context) {
             return new Element$2(element.name, element.attrs, visitAll$1(this, element.children), element.sourceSpan, element.startSourceSpan, element.endSourceSpan);
         };
-        _Expander.prototype.visitAttribute = function (attribute, context) { return attribute; };
-        _Expander.prototype.visitText = function (text, context) { return text; };
-        _Expander.prototype.visitComment = function (comment, context) { return comment; };
+        _Expander.prototype.visitAttribute = function (attribute, context) {
+            return attribute;
+        };
+        _Expander.prototype.visitText = function (text, context) {
+            return text;
+        };
+        _Expander.prototype.visitComment = function (comment, context) {
+            return comment;
+        };
         _Expander.prototype.visitExpansion = function (icu, context) {
             this.isExpanded = true;
             return icu.type == 'plural' ? _expandPluralForm(icu, this.errors) :
@@ -10648,7 +11016,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function _expandPluralForm(ast, errors) {
         var children = ast.cases.map(function (c) {
             if (PLURAL_CASES.indexOf(c.value) == -1 && !c.value.match(/^=\d+$/)) {
-                errors.push(new ExpansionError(c.valueSourceSpan, "Plural cases should be \"=<number>\" or one of " + PLURAL_CASES.join(", ")));
+                errors.push(new ExpansionError(c.valueSourceSpan, "Plural cases should be \"=<number>\" or one of " + PLURAL_CASES.join(', ')));
             }
             var expansionResult = expandNodes(c.expression);
             errors.push.apply(errors, __spread(expansionResult.errors));
@@ -10689,7 +11057,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.ngContentIndex = ngContentIndex;
             this.sourceSpan = sourceSpan;
         }
-        TextAst.prototype.visit = function (visitor, context) { return visitor.visitText(this, context); };
+        TextAst.prototype.visit = function (visitor, context) {
+            return visitor.visitText(this, context);
+        };
         return TextAst;
     }());
     /**
@@ -10715,7 +11085,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.value = value;
             this.sourceSpan = sourceSpan;
         }
-        AttrAst.prototype.visit = function (visitor, context) { return visitor.visitAttr(this, context); };
+        AttrAst.prototype.visit = function (visitor, context) {
+            return visitor.visitAttr(this, context);
+        };
         return AttrAst;
     }());
     var BoundPropertyMapping = (_a = {},
@@ -11134,7 +11506,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Object.defineProperty(ProviderElementContext.prototype, "queryMatches", {
             get: function () {
                 var allMatches = [];
-                this._queriedTokens.forEach(function (matches) { allMatches.push.apply(allMatches, __spread(matches)); });
+                this._queriedTokens.forEach(function (matches) {
+                    allMatches.push.apply(allMatches, __spread(matches));
+                });
                 return allMatches;
             },
             enumerable: true,
@@ -11176,9 +11550,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ProviderElementContext.prototype._getOrCreateLocalProvider = function (requestingProviderType, token, eager) {
             var _this = this;
             var resolvedProvider = this._allProviders.get(tokenReference(token));
-            if (!resolvedProvider || ((requestingProviderType === ProviderAstType.Directive ||
-                requestingProviderType === ProviderAstType.PublicService) &&
-                resolvedProvider.providerType === ProviderAstType.PrivateService) ||
+            if (!resolvedProvider ||
+                ((requestingProviderType === ProviderAstType.Directive ||
+                    requestingProviderType === ProviderAstType.PublicService) &&
+                    resolvedProvider.providerType === ProviderAstType.PrivateService) ||
                 ((requestingProviderType === ProviderAstType.PrivateService ||
                     requestingProviderType === ProviderAstType.PublicService) &&
                     resolvedProvider.providerType === ProviderAstType.Builtin)) {
@@ -11470,11 +11845,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         Object.defineProperty(BindingParser.prototype, "interpolationConfig", {
-            get: function () { return this._interpolationConfig; },
+            get: function () {
+                return this._interpolationConfig;
+            },
             enumerable: true,
             configurable: true
         });
-        BindingParser.prototype.getUsedPipes = function () { return Array.from(this._usedPipes.values()); };
+        BindingParser.prototype.getUsedPipes = function () {
+            return Array.from(this._usedPipes.values());
+        };
         BindingParser.prototype.createBoundHostProperties = function (dirMeta, sourceSpan) {
             var _this = this;
             if (dirMeta.hostProperties) {
@@ -11600,7 +11979,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         _this._checkPipes(binding.value, sourceSpan);
                     }
                 });
-                bindingsResult.warnings.forEach(function (warning) { _this._reportError(warning, sourceSpan, ParseErrorLevel.WARNING); });
+                bindingsResult.warnings.forEach(function (warning) {
+                    _this._reportError(warning, sourceSpan, ParseErrorLevel.WARNING);
+                });
                 return bindingsResult.templateBindings;
             }
             catch (e) {
@@ -12037,7 +12418,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.transforms = transforms;
         }
         Object.defineProperty(TemplateParser.prototype, "expressionParser", {
-            get: function () { return this._exprParser; },
+            get: function () {
+                return this._exprParser;
+            },
             enumerable: true,
             configurable: true
         });
@@ -12095,7 +12478,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return new TemplateParseResult(result, usedPipes, errors);
             }
             if (this.transforms) {
-                this.transforms.forEach(function (transform) { result = templateVisitAll(transform, result); });
+                this.transforms.forEach(function (transform) {
+                    result = templateVisitAll(transform, result);
+                });
             }
             return new TemplateParseResult(result, usedPipes, errors);
         };
@@ -12154,8 +12539,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 _this.directivesIndex.set(directive, index);
             });
         }
-        TemplateParseVisitor.prototype.visitExpansion = function (expansion, context) { return null; };
-        TemplateParseVisitor.prototype.visitExpansionCase = function (expansionCase, context) { return null; };
+        TemplateParseVisitor.prototype.visitExpansion = function (expansion, context) {
+            return null;
+        };
+        TemplateParseVisitor.prototype.visitExpansionCase = function (expansionCase, context) {
+            return null;
+        };
         TemplateParseVisitor.prototype.visitText = function (text, parent) {
             var ngContentIndex = parent.findNgContentIndex(TEXT_CSS_SELECTOR());
             var valueNoNgsp = replaceNgsp(text.value);
@@ -12166,7 +12555,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         TemplateParseVisitor.prototype.visitAttribute = function (attribute, context) {
             return new AttrAst(attribute.name, attribute.value, attribute.sourceSpan);
         };
-        TemplateParseVisitor.prototype.visitComment = function (comment, context) { return null; };
+        TemplateParseVisitor.prototype.visitComment = function (comment, context) {
+            return null;
+        };
         TemplateParseVisitor.prototype.visitElement = function (element, parent) {
             var _this = this;
             var queryStartIndex = this.contentQueryStartId;
@@ -12479,11 +12870,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var elName = element.name.replace(/^:xhtml:/, '');
             if (!matchElement && !this._schemaRegistry.hasElement(elName, this._schemas)) {
                 var errorMsg = "'" + elName + "' is not a known element:\n";
-                errorMsg +=
-                    "1. If '" + elName + "' is an Angular component, then verify that it is part of this module.\n";
+                errorMsg += "1. If '" + elName + "' is an Angular component, then verify that it is part of this module.\n";
                 if (elName.indexOf('-') > -1) {
-                    errorMsg +=
-                        "2. If '" + elName + "' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.";
+                    errorMsg += "2. If '" + elName + "' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.";
                 }
                 else {
                     errorMsg +=
@@ -12513,7 +12902,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             events.forEach(function (event) {
                 if (event.target != null || !allDirectiveEvents.has(event.name)) {
-                    _this._reportError("Event binding " + event.fullName + " not emitted by any directive on an embedded template. Make sure that the event name is spelled correctly and all directives are listed in the \"@NgModule.declarations\".", event.sourceSpan);
+                    _this._reportError("Event binding " + event
+                        .fullName + " not emitted by any directive on an embedded template. Make sure that the event name is spelled correctly and all directives are listed in the \"@NgModule.declarations\".", event.sourceSpan);
                 }
             });
         };
@@ -12527,7 +12917,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     var errorMsg = "Can't bind to '" + boundProp.name + "' since it isn't a known property of '" + elementName + "'.";
                     if (elementName.startsWith('ng-')) {
                         errorMsg +=
-                            "\n1. If '" + boundProp.name + "' is an Angular directive, then add 'CommonModule' to the '@NgModule.imports' of this component." +
+                            "\n1. If '" + boundProp
+                                .name + "' is an Angular directive, then add 'CommonModule' to the '@NgModule.imports' of this component." +
                                 "\n2. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.";
                     }
                     else if (elementName.indexOf('-') > -1) {
@@ -12566,7 +12957,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var children = visitAll$1(this, ast.children, EMPTY_ELEMENT_CONTEXT);
             return new ElementAst(ast.name, visitAll$1(this, ast.attrs), [], [], [], [], [], false, [], children, ngContentIndex, ast.sourceSpan, ast.endSourceSpan);
         };
-        NonBindableVisitor.prototype.visitComment = function (comment, context) { return null; };
+        NonBindableVisitor.prototype.visitComment = function (comment, context) {
+            return null;
+        };
         NonBindableVisitor.prototype.visitAttribute = function (attribute, context) {
             return new AttrAst(attribute.name, attribute.value, attribute.sourceSpan);
         };
@@ -12574,8 +12967,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var ngContentIndex = parent.findNgContentIndex(TEXT_CSS_SELECTOR());
             return new TextAst(text.value, ngContentIndex, text.sourceSpan);
         };
-        NonBindableVisitor.prototype.visitExpansion = function (expansion, context) { return expansion; };
-        NonBindableVisitor.prototype.visitExpansionCase = function (expansionCase, context) { return expansionCase; };
+        NonBindableVisitor.prototype.visitExpansion = function (expansion, context) {
+            return expansion;
+        };
+        NonBindableVisitor.prototype.visitExpansionCase = function (expansionCase, context) {
+            return expansionCase;
+        };
         return NonBindableVisitor;
     }());
     /**
@@ -12631,7 +13028,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         ElementContext.prototype.findNgContentIndex = function (selector) {
             var ngContentIndices = [];
-            this._ngContentIndexMatcher.match(selector, function (selector, ngContentIndex) { ngContentIndices.push(ngContentIndex); });
+            this._ngContentIndexMatcher.match(selector, function (selector, ngContentIndex) {
+                ngContentIndices.push(ngContentIndex);
+            });
             ngContentIndices.sort();
             if (this._wildcardNgContentIndex != null) {
                 ngContentIndices.push(this._wildcardNgContentIndex);
@@ -12773,9 +13172,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return value;
     }
     function hyphenate(value) {
-        return value.replace(/[a-z][A-Z]/g, function (v) {
+        return value
+            .replace(/[a-z][A-Z]/g, function (v) {
             return v.charAt(0) + '-' + v.charAt(1);
-        }).toLowerCase();
+        })
+            .toLowerCase();
     }
 
     var IMPORTANT_FLAG = '!important';
@@ -12949,7 +13350,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var entry = {
                 name: property,
                 sanitize: property ? isStyleSanitizable(property) : true,
-                unit: unit || bindingUnit, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag
+                unit: unit || bindingUnit,
+                value: value,
+                sourceSpan: sourceSpan,
+                hasOverrideFlag: hasOverrideFlag
             };
             if (isMapBased) {
                 this._styleMapInput = entry;
@@ -13360,24 +13764,48 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Token.prototype.isCharacter = function (code) {
             return this.type == TokenType$1.Character && this.numValue == code;
         };
-        Token.prototype.isNumber = function () { return this.type == TokenType$1.Number; };
-        Token.prototype.isString = function () { return this.type == TokenType$1.String; };
+        Token.prototype.isNumber = function () {
+            return this.type == TokenType$1.Number;
+        };
+        Token.prototype.isString = function () {
+            return this.type == TokenType$1.String;
+        };
         Token.prototype.isOperator = function (operator) {
             return this.type == TokenType$1.Operator && this.strValue == operator;
         };
-        Token.prototype.isIdentifier = function () { return this.type == TokenType$1.Identifier; };
-        Token.prototype.isKeyword = function () { return this.type == TokenType$1.Keyword; };
-        Token.prototype.isKeywordLet = function () { return this.type == TokenType$1.Keyword && this.strValue == 'let'; };
-        Token.prototype.isKeywordAs = function () { return this.type == TokenType$1.Keyword && this.strValue == 'as'; };
-        Token.prototype.isKeywordNull = function () { return this.type == TokenType$1.Keyword && this.strValue == 'null'; };
+        Token.prototype.isIdentifier = function () {
+            return this.type == TokenType$1.Identifier;
+        };
+        Token.prototype.isKeyword = function () {
+            return this.type == TokenType$1.Keyword;
+        };
+        Token.prototype.isKeywordLet = function () {
+            return this.type == TokenType$1.Keyword && this.strValue == 'let';
+        };
+        Token.prototype.isKeywordAs = function () {
+            return this.type == TokenType$1.Keyword && this.strValue == 'as';
+        };
+        Token.prototype.isKeywordNull = function () {
+            return this.type == TokenType$1.Keyword && this.strValue == 'null';
+        };
         Token.prototype.isKeywordUndefined = function () {
             return this.type == TokenType$1.Keyword && this.strValue == 'undefined';
         };
-        Token.prototype.isKeywordTrue = function () { return this.type == TokenType$1.Keyword && this.strValue == 'true'; };
-        Token.prototype.isKeywordFalse = function () { return this.type == TokenType$1.Keyword && this.strValue == 'false'; };
-        Token.prototype.isKeywordThis = function () { return this.type == TokenType$1.Keyword && this.strValue == 'this'; };
-        Token.prototype.isError = function () { return this.type == TokenType$1.Error; };
-        Token.prototype.toNumber = function () { return this.type == TokenType$1.Number ? this.numValue : -1; };
+        Token.prototype.isKeywordTrue = function () {
+            return this.type == TokenType$1.Keyword && this.strValue == 'true';
+        };
+        Token.prototype.isKeywordFalse = function () {
+            return this.type == TokenType$1.Keyword && this.strValue == 'false';
+        };
+        Token.prototype.isKeywordThis = function () {
+            return this.type == TokenType$1.Keyword && this.strValue == 'this';
+        };
+        Token.prototype.isError = function () {
+            return this.type == TokenType$1.Error;
+        };
+        Token.prototype.toNumber = function () {
+            return this.type == TokenType$1.Number ? this.numValue : -1;
+        };
         Token.prototype.toString = function () {
             switch (this.type) {
                 case TokenType$1.Character:
@@ -13927,7 +14355,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return i < this.tokens.length ? this.tokens[i] : EOF;
         };
         Object.defineProperty(_ParseAST.prototype, "next", {
-            get: function () { return this.peek(0); },
+            get: function () {
+                return this.peek(0);
+            },
             enumerable: true,
             configurable: true
         });
@@ -13943,7 +14373,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             /**
              * Returns the absolute offset of the start of the current token.
              */
-            get: function () { return this.absoluteOffset + this.inputIndex; },
+            get: function () {
+                return this.absoluteOffset + this.inputIndex;
+            },
             enumerable: true,
             configurable: true
         });
@@ -13962,7 +14394,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this.sourceSpanCache.get(serial);
         };
-        _ParseAST.prototype.advance = function () { this.index++; };
+        _ParseAST.prototype.advance = function () {
+            this.index++;
+        };
         _ParseAST.prototype.consumeOptionalCharacter = function (code) {
             if (this.next.isCharacter(code)) {
                 this.advance();
@@ -13972,8 +14406,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return false;
             }
         };
-        _ParseAST.prototype.peekKeywordLet = function () { return this.next.isKeywordLet(); };
-        _ParseAST.prototype.peekKeywordAs = function () { return this.next.isKeywordAs(); };
+        _ParseAST.prototype.peekKeywordLet = function () {
+            return this.next.isKeywordLet();
+        };
+        _ParseAST.prototype.peekKeywordAs = function () {
+            return this.next.isKeywordAs();
+        };
         _ParseAST.prototype.expectCharacter = function (code) {
             if (this.consumeOptionalCharacter(code))
                 return;
@@ -14055,7 +14493,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return result;
         };
-        _ParseAST.prototype.parseExpression = function () { return this.parseConditional(); };
+        _ParseAST.prototype.parseExpression = function () {
+            return this.parseConditional();
+        };
         _ParseAST.prototype.parseConditional = function () {
             var start = this.inputIndex;
             var result = this.parseLogicalOr();
@@ -14609,13 +15049,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         SimpleExpressionChecker.prototype.visitMethodCall = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitSafeMethodCall = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitFunctionCall = function (ast, context) { };
-        SimpleExpressionChecker.prototype.visitLiteralArray = function (ast, context) { this.visitAll(ast.expressions); };
-        SimpleExpressionChecker.prototype.visitLiteralMap = function (ast, context) { this.visitAll(ast.values); };
+        SimpleExpressionChecker.prototype.visitLiteralArray = function (ast, context) {
+            this.visitAll(ast.expressions);
+        };
+        SimpleExpressionChecker.prototype.visitLiteralMap = function (ast, context) {
+            this.visitAll(ast.values);
+        };
         SimpleExpressionChecker.prototype.visitBinary = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitPrefixNot = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitNonNullAssert = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitConditional = function (ast, context) { };
-        SimpleExpressionChecker.prototype.visitPipe = function (ast, context) { this.errors.push('pipes'); };
+        SimpleExpressionChecker.prototype.visitPipe = function (ast, context) {
+            this.errors.push('pipes');
+        };
         SimpleExpressionChecker.prototype.visitKeyedRead = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitKeyedWrite = function (ast, context) { };
         SimpleExpressionChecker.prototype.visitAll = function (asts) {
@@ -14642,7 +15088,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             ast.left.visit(this);
             ast.right.visit(this);
         };
-        IvySimpleExpressionChecker.prototype.visitPrefixNot = function (ast, context) { ast.expression.visit(this); };
+        IvySimpleExpressionChecker.prototype.visitPrefixNot = function (ast, context) {
+            ast.expression.visit(this);
+        };
         return IvySimpleExpressionChecker;
     }(SimpleExpressionChecker));
 
@@ -14971,7 +15419,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 typeNames.split(',').forEach(function (tag) { return _this._schema[tag.toLowerCase()] = type; });
                 var superType = superName && _this._schema[superName.toLowerCase()];
                 if (superType) {
-                    Object.keys(superType).forEach(function (prop) { type[prop] = superType[prop]; });
+                    Object.keys(superType).forEach(function (prop) {
+                        type[prop] = superType[prop];
+                    });
                 }
                 properties.forEach(function (property) {
                     if (property.length > 0) {
@@ -15058,8 +15508,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             ctx = SECURITY_SCHEMA()['*|' + propName];
             return ctx ? ctx : SecurityContext.NONE;
         };
-        DomElementSchemaRegistry.prototype.getMappedPropName = function (propName) { return _ATTR_TO_PROP[propName] || propName; };
-        DomElementSchemaRegistry.prototype.getDefaultComponentElementName = function () { return 'ng-component'; };
+        DomElementSchemaRegistry.prototype.getMappedPropName = function (propName) {
+            return _ATTR_TO_PROP[propName] || propName;
+        };
+        DomElementSchemaRegistry.prototype.getDefaultComponentElementName = function () {
+            return 'ng-component';
+        };
         DomElementSchemaRegistry.prototype.validateProperty = function (name) {
             if (name.toLowerCase().startsWith('on')) {
                 var msg = "Binding to event property '" + name + "' is disallowed for security reasons, " +
@@ -15082,7 +15536,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return { error: false };
             }
         };
-        DomElementSchemaRegistry.prototype.allKnownElementNames = function () { return Object.keys(this._schema); };
+        DomElementSchemaRegistry.prototype.allKnownElementNames = function () {
+            return Object.keys(this._schema);
+        };
         DomElementSchemaRegistry.prototype.normalizeAnimationStyleProperty = function (propName) {
             return dashCaseToCamelCase(propName);
         };
@@ -15369,8 +15825,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             return new Icu(vars, placeholders, expansion.sourceSpan, message);
         };
-        HtmlAstToIvyAst.prototype.visitExpansionCase = function (expansionCase) { return null; };
-        HtmlAstToIvyAst.prototype.visitComment = function (comment) { return null; };
+        HtmlAstToIvyAst.prototype.visitExpansionCase = function (expansionCase) {
+            return null;
+        };
+        HtmlAstToIvyAst.prototype.visitComment = function (comment) {
+            return null;
+        };
         // convert view engine `ParsedProperty` to a format suitable for IVY
         HtmlAstToIvyAst.prototype.extractAttributes = function (elementName, properties, i18nPropsMeta) {
             var _this = this;
@@ -15497,13 +15957,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new Element$1(ast.name, visitAll$1(this, ast.attrs), 
             /* inputs */ [], /* outputs */ [], children, /* references */ [], ast.sourceSpan, ast.startSourceSpan, ast.endSourceSpan);
         };
-        NonBindableVisitor.prototype.visitComment = function (comment) { return null; };
+        NonBindableVisitor.prototype.visitComment = function (comment) {
+            return null;
+        };
         NonBindableVisitor.prototype.visitAttribute = function (attribute) {
             return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, undefined, attribute.i18n);
         };
-        NonBindableVisitor.prototype.visitText = function (text) { return new Text(text.value, text.sourceSpan); };
-        NonBindableVisitor.prototype.visitExpansion = function (expansion) { return null; };
-        NonBindableVisitor.prototype.visitExpansionCase = function (expansionCase) { return null; };
+        NonBindableVisitor.prototype.visitText = function (text) {
+            return new Text(text.value, text.sourceSpan);
+        };
+        NonBindableVisitor.prototype.visitExpansion = function (expansion) {
+            return null;
+        };
+        NonBindableVisitor.prototype.visitExpansionCase = function (expansionCase) {
+            return null;
+        };
         return NonBindableVisitor;
     }());
     var NON_BINDABLE_VISITOR$1 = new NonBindableVisitor$1();
@@ -15588,17 +16056,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             updatePlaceholderMap(this.placeholders, ph, content);
         };
         Object.defineProperty(I18nContext.prototype, "icus", {
-            get: function () { return this._registry.icus; },
+            get: function () {
+                return this._registry.icus;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(I18nContext.prototype, "isRoot", {
-            get: function () { return this.level === 0; },
+            get: function () {
+                return this.level === 0;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(I18nContext.prototype, "isResolved", {
-            get: function () { return this._unresolvedCtxCount === 0; },
+            get: function () {
+                return this._unresolvedCtxCount === 0;
+            },
             enumerable: true,
             configurable: true
         });
@@ -15608,7 +16082,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return result;
         };
         // public API to accumulate i18n-related content
-        I18nContext.prototype.appendBinding = function (binding) { this.bindings.add(binding); };
+        I18nContext.prototype.appendBinding = function (binding) {
+            this.bindings.add(binding);
+        };
         I18nContext.prototype.appendIcu = function (name, ref) {
             updatePlaceholderMap(this._registry.icus, name, ref);
         };
@@ -15749,7 +16225,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var IcuSerializerVisitor = /** @class */ (function () {
         function IcuSerializerVisitor() {
         }
-        IcuSerializerVisitor.prototype.visitText = function (text) { return text.value; };
+        IcuSerializerVisitor.prototype.visitText = function (text) {
+            return text.value;
+        };
         IcuSerializerVisitor.prototype.visitContainer = function (container) {
             var _this = this;
             return container.children.map(function (child) { return child.visit(_this); }).join('');
@@ -15766,7 +16244,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.formatPh(ph.startName) :
                 "" + this.formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + this.formatPh(ph.closeName);
         };
-        IcuSerializerVisitor.prototype.visitPlaceholder = function (ph) { return this.formatPh(ph.name); };
+        IcuSerializerVisitor.prototype.visitPlaceholder = function (ph) {
+            return this.formatPh(ph.name);
+        };
         IcuSerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
             return this.formatPh(ph.name);
         };
@@ -15873,7 +16353,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var end = isVoid ? '/>' : "></" + tag + ">";
             return start + strAttrs + end;
         };
-        PlaceholderRegistry.prototype._hashClosingTag = function (tag) { return this._hashTag("/" + tag, {}, false); };
+        PlaceholderRegistry.prototype._hashClosingTag = function (tag) {
+            return this._hashTag("/" + tag, {}, false);
+        };
         PlaceholderRegistry.prototype._generateUniqueName = function (base) {
             var seen = this._placeHolderNameCounts.hasOwnProperty(base);
             if (!seen) {
@@ -16154,10 +16636,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             expansion.i18n = message;
             return expansion;
         };
-        I18nMetaVisitor.prototype.visitText = function (text) { return text; };
-        I18nMetaVisitor.prototype.visitAttribute = function (attribute) { return attribute; };
-        I18nMetaVisitor.prototype.visitComment = function (comment) { return comment; };
-        I18nMetaVisitor.prototype.visitExpansionCase = function (expansionCase) { return expansionCase; };
+        I18nMetaVisitor.prototype.visitText = function (text) {
+            return text;
+        };
+        I18nMetaVisitor.prototype.visitAttribute = function (attribute) {
+            return attribute;
+        };
+        I18nMetaVisitor.prototype.visitComment = function (comment) {
+            return comment;
+        };
+        I18nMetaVisitor.prototype.visitExpansionCase = function (expansionCase) {
+            return expansionCase;
+        };
         /**
          * Parse the general form `meta` passed into extract the explicit metadata needed to create a
          * `Message`.
@@ -16279,20 +16769,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var GetMsgSerializerVisitor = /** @class */ (function () {
         function GetMsgSerializerVisitor() {
         }
-        GetMsgSerializerVisitor.prototype.formatPh = function (value) { return "{$" + formatI18nPlaceholderName(value) + "}"; };
-        GetMsgSerializerVisitor.prototype.visitText = function (text) { return text.value; };
+        GetMsgSerializerVisitor.prototype.formatPh = function (value) {
+            return "{$" + formatI18nPlaceholderName(value) + "}";
+        };
+        GetMsgSerializerVisitor.prototype.visitText = function (text) {
+            return text.value;
+        };
         GetMsgSerializerVisitor.prototype.visitContainer = function (container) {
             var _this = this;
             return container.children.map(function (child) { return child.visit(_this); }).join('');
         };
-        GetMsgSerializerVisitor.prototype.visitIcu = function (icu) { return serializeIcuNode(icu); };
+        GetMsgSerializerVisitor.prototype.visitIcu = function (icu) {
+            return serializeIcuNode(icu);
+        };
         GetMsgSerializerVisitor.prototype.visitTagPlaceholder = function (ph) {
             var _this = this;
             return ph.isVoid ?
                 this.formatPh(ph.startName) :
                 "" + this.formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + this.formatPh(ph.closeName);
         };
-        GetMsgSerializerVisitor.prototype.visitPlaceholder = function (ph) { return this.formatPh(ph.name); };
+        GetMsgSerializerVisitor.prototype.visitPlaceholder = function (ph) {
+            return this.formatPh(ph.name);
+        };
         GetMsgSerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
             return this.formatPh(ph.name);
         };
@@ -16563,8 +17061,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // - this template has parent i18n context
             // - or the template has i18n meta associated with it,
             //   but it's not initiated by the Element (e.g. <ng-template i18n>)
-            var initI18nContext = this.i18nContext || (isI18nRootNode(i18n) && !isSingleI18nIcu(i18n) &&
-                !(isSingleElementTemplate(nodes) && nodes[0].i18n === i18n));
+            var initI18nContext = this.i18nContext ||
+                (isI18nRootNode(i18n) && !isSingleI18nIcu(i18n) &&
+                    !(isSingleElementTemplate(nodes) && nodes[0].i18n === i18n));
             var selfClosingI18nInstruction = hasTextChildrenOnly(nodes);
             if (initI18nContext) {
                 this.i18nStart(null, i18n, selfClosingI18nInstruction);
@@ -16624,9 +17123,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             [new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null)], __spread(this._prefixCode, creationBlock, updateBlock), INFERRED_TYPE, null, this.templateName);
         };
         // LocalResolver
-        TemplateDefinitionBuilder.prototype.getLocal = function (name) { return this._bindingScope.get(name); };
+        TemplateDefinitionBuilder.prototype.getLocal = function (name) {
+            return this._bindingScope.get(name);
+        };
         // LocalResolver
-        TemplateDefinitionBuilder.prototype.notifyImplicitReceiverUse = function () { this._bindingScope.notifyImplicitReceiverUse(); };
+        TemplateDefinitionBuilder.prototype.notifyImplicitReceiverUse = function () {
+            this._bindingScope.notifyImplicitReceiverUse();
+        };
         TemplateDefinitionBuilder.prototype.i18nTranslate = function (message, params, ref, transformFn) {
             var _a;
             if (params === void 0) { params = {}; }
@@ -17049,7 +17552,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                 propertyBindings.push({
                                     name: attrName_1,
                                     sourceSpan: input.sourceSpan,
-                                    value: function () { return _this.convertPropertyBinding(value_2); }, params: params_2
+                                    value: function () { return _this.convertPropertyBinding(value_2); },
+                                    params: params_2
                                 });
                             }
                         }
@@ -17065,7 +17569,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                 attributeBindings.push({
                                     name: attrName_1,
                                     sourceSpan: input.sourceSpan,
-                                    value: function () { return _this.convertPropertyBinding(boundValue_1); }, params: params_2
+                                    value: function () { return _this.convertPropertyBinding(boundValue_1); },
+                                    params: params_2
                                 });
                             }
                         }
@@ -17252,16 +17757,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return null;
         };
-        TemplateDefinitionBuilder.prototype.allocateDataSlot = function () { return this._dataIndex++; };
-        TemplateDefinitionBuilder.prototype.getConstCount = function () { return this._dataIndex; };
-        TemplateDefinitionBuilder.prototype.getVarCount = function () { return this._pureFunctionSlots; };
-        TemplateDefinitionBuilder.prototype.getConsts = function () { return this._constants; };
+        TemplateDefinitionBuilder.prototype.allocateDataSlot = function () {
+            return this._dataIndex++;
+        };
+        TemplateDefinitionBuilder.prototype.getConstCount = function () {
+            return this._dataIndex;
+        };
+        TemplateDefinitionBuilder.prototype.getVarCount = function () {
+            return this._pureFunctionSlots;
+        };
+        TemplateDefinitionBuilder.prototype.getConsts = function () {
+            return this._constants;
+        };
         TemplateDefinitionBuilder.prototype.getNgContentSelectors = function () {
             return this._ngContentReservedSlots.length ?
                 this.constantPool.getConstLiteral(asLiteral(this._ngContentReservedSlots), true) :
                 null;
         };
-        TemplateDefinitionBuilder.prototype.bindingContext = function () { return "" + this._bindingContext++; };
+        TemplateDefinitionBuilder.prototype.bindingContext = function () {
+            return "" + this._bindingContext++;
+        };
         TemplateDefinitionBuilder.prototype.templatePropertyBindings = function (templateIndex, attrs) {
             var _this = this;
             var propertyBindings = [];
@@ -17314,8 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     calls_1.push({
                         sourceSpan: call.sourceSpan,
                         value: function () {
-                            return call
-                                .params(function (value) { return (call.supportsInterpolation && value instanceof Interpolation) ?
+                            return call.params(function (value) { return (call.supportsInterpolation && value instanceof Interpolation) ?
                                 _this.getUpdateInstructionArguments(value) :
                                 _this.convertPropertyBinding(value); });
                         }
@@ -17416,7 +17930,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var _this = this;
             if (this.directiveMatcher) {
                 var selector = createCssSelector(elementName, getAttrsForDirectiveMatching(elOrTpl));
-                this.directiveMatcher.match(selector, function (cssSelector, staticType) { _this.directives.add(staticType); });
+                this.directiveMatcher.match(selector, function (cssSelector, staticType) {
+                    _this.directives.add(staticType);
+                });
             }
         };
         /**
@@ -17773,7 +18289,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this;
         };
         // Implemented as part of LocalResolver.
-        BindingScope.prototype.getLocal = function (name) { return this.get(name); };
+        BindingScope.prototype.getLocal = function (name) {
+            return this.get(name);
+        };
         // Implemented as part of LocalResolver.
         BindingScope.prototype.notifyImplicitReceiverUse = function () {
             if (this.bindingLevel !== 0) {
@@ -17866,7 +18384,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 [this.restoreViewVariable.set(getCurrentViewInstruction).toConstDecl()] :
                 [];
         };
-        BindingScope.prototype.isListenerScope = function () { return this.parent && this.parent.bindingLevel === this.bindingLevel; };
+        BindingScope.prototype.isListenerScope = function () {
+            return this.parent && this.parent.bindingLevel === this.bindingLevel;
+        };
         BindingScope.prototype.variableDeclarations = function () {
             var _this = this;
             var currentContextLevel = 0;
@@ -18741,7 +19261,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function compileStyles(styles, selector, hostSelector) {
         var shadowCss = new ShadowCss();
-        return styles.map(function (style) { return shadowCss.shimCssText(style, selector, hostSelector); });
+        return styles.map(function (style) {
+            return shadowCss.shimCssText(style, selector, hostSelector);
+        });
     }
 
     /**
@@ -18758,7 +19280,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ResourceLoader = /** @class */ (function () {
         function ResourceLoader() {
         }
-        ResourceLoader.prototype.get = function (url) { return ''; };
+        ResourceLoader.prototype.get = function (url) {
+            return '';
+        };
         return ResourceLoader;
     }());
 
@@ -19032,7 +19556,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.1+1.sha-717df13');
+    var VERSION$1 = new Version('10.0.0-next.1+3.sha-83a9159');
 
     /**
      * @license
@@ -19073,7 +19597,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._config = _config;
             this._resourceLoaderCache = new Map();
         }
-        DirectiveNormalizer.prototype.clearCache = function () { this._resourceLoaderCache.clear(); };
+        DirectiveNormalizer.prototype.clearCache = function () {
+            this._resourceLoaderCache.clear();
+        };
         DirectiveNormalizer.prototype.clearCacheFor = function (normalizedDirective) {
             var _this = this;
             if (!normalizedDirective.isComponent) {
@@ -19081,7 +19607,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             var template = normalizedDirective.template;
             this._resourceLoaderCache.delete(template.templateUrl);
-            template.externalStylesheets.forEach(function (stylesheet) { _this._resourceLoaderCache.delete(stylesheet.moduleUrl); });
+            template.externalStylesheets.forEach(function (stylesheet) {
+                _this._resourceLoaderCache.delete(stylesheet.moduleUrl);
+            });
         };
         DirectiveNormalizer.prototype._fetch = function (url) {
             var result = this._resourceLoaderCache.get(url);
@@ -19095,7 +19623,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var _this = this;
             if (isDefined(prenormData.template)) {
                 if (isDefined(prenormData.templateUrl)) {
-                    throw syntaxError("'" + stringify(prenormData.componentType) + "' component cannot define both template and templateUrl");
+                    throw syntaxError("'" + stringify(prenormData
+                        .componentType) + "' component cannot define both template and templateUrl");
                 }
                 if (typeof prenormData.template !== 'string') {
                     throw syntaxError("The template specified for component " + stringify(prenormData.componentType) + " is not a string");
@@ -19149,8 +19678,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 .styleUrls;
             return {
                 template: template,
-                templateUrl: templateAbsUrl, isInline: isInline,
-                htmlAst: rootNodesAndErrors, styles: styles, inlineStyleUrls: inlineStyleUrls, styleUrls: styleUrls,
+                templateUrl: templateAbsUrl,
+                isInline: isInline,
+                htmlAst: rootNodesAndErrors,
+                styles: styles,
+                inlineStyleUrls: inlineStyleUrls,
+                styleUrls: styleUrls,
                 ngContentSelectors: visitor.ngContentSelectors,
             };
         };
@@ -19188,11 +19721,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 encapsulation: encapsulation,
                 template: preparsedTemplate.template,
                 templateUrl: preparsedTemplate.templateUrl,
-                htmlAst: preparsedTemplate.htmlAst, styles: styles, styleUrls: styleUrls,
+                htmlAst: preparsedTemplate.htmlAst,
+                styles: styles,
+                styleUrls: styleUrls,
                 ngContentSelectors: preparsedTemplate.ngContentSelectors,
                 animations: prenormData.animations,
                 interpolation: prenormData.interpolation,
-                isInline: preparsedTemplate.isInline, externalStylesheets: externalStylesheets,
+                isInline: preparsedTemplate.isInline,
+                externalStylesheets: externalStylesheets,
                 preserveWhitespaces: preserveWhitespacesDefault(prenormData.preserveWhitespaces, this._config.preserveWhitespaces),
             });
         };
@@ -19265,13 +19801,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return null;
         };
-        TemplatePreparseVisitor.prototype.visitExpansion = function (ast, context) { visitAll$1(this, ast.cases); };
+        TemplatePreparseVisitor.prototype.visitExpansion = function (ast, context) {
+            visitAll$1(this, ast.cases);
+        };
         TemplatePreparseVisitor.prototype.visitExpansionCase = function (ast, context) {
             visitAll$1(this, ast.expression);
         };
-        TemplatePreparseVisitor.prototype.visitComment = function (ast, context) { return null; };
-        TemplatePreparseVisitor.prototype.visitAttribute = function (ast, context) { return null; };
-        TemplatePreparseVisitor.prototype.visitText = function (ast, context) { return null; };
+        TemplatePreparseVisitor.prototype.visitComment = function (ast, context) {
+            return null;
+        };
+        TemplatePreparseVisitor.prototype.visitAttribute = function (ast, context) {
+            return null;
+        };
+        TemplatePreparseVisitor.prototype.visitText = function (ast, context) {
+            return null;
+        };
         return TemplatePreparseVisitor;
     }());
 
@@ -19371,7 +19915,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             return this._merge(dm, inputs, outputs, host, queries, guards, directiveType);
         };
-        DirectiveResolver.prototype._extractPublicName = function (def) { return splitAtColon(def, [null, def])[1].trim(); };
+        DirectiveResolver.prototype._extractPublicName = function (def) {
+            return splitAtColon(def, [null, def])[1].trim();
+        };
         DirectiveResolver.prototype._dedupeBindings = function (bindings) {
             var names = new Set();
             var publicNames = new Set();
@@ -19425,7 +19971,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     host: mergedHost,
                     exportAs: directive.exportAs,
                     queries: mergedQueries,
-                    providers: directive.providers, guards: guards
+                    providers: directive.providers,
+                    guards: guards
                 });
             }
         };
@@ -19872,8 +20419,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.ignoreFirstLf = false;
             this.canSelfClose = true;
         }
-        XmlTagDefinition.prototype.requireExtraParent = function (currentParent) { return false; };
-        XmlTagDefinition.prototype.isClosedByChild = function (name) { return false; };
+        XmlTagDefinition.prototype.requireExtraParent = function (currentParent) {
+            return false;
+        };
+        XmlTagDefinition.prototype.isClosedByChild = function (name) {
+            return false;
+        };
         return XmlTagDefinition;
     }());
     var _TAG_DEFINITION = new XmlTagDefinition();
@@ -19977,13 +20528,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return { locale: locale, i18nNodesByMsgId: i18nNodesByMsgId };
         };
-        Xliff.prototype.digest = function (message) { return digest(message); };
+        Xliff.prototype.digest = function (message) {
+            return digest(message);
+        };
         return Xliff;
     }(Serializer));
     var _WriteVisitor = /** @class */ (function () {
         function _WriteVisitor() {
         }
-        _WriteVisitor.prototype.visitText = function (text, context) { return [new Text$2(text.value)]; };
+        _WriteVisitor.prototype.visitText = function (text, context) {
+            return [new Text$2(text.value)];
+        };
         _WriteVisitor.prototype.visitContainer = function (container, context) {
             var _this = this;
             var nodes = [];
@@ -20113,7 +20668,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 errors: this._errors,
             };
         };
-        XmlToI18n.prototype.visitText = function (text, context) { return new Text$1(text.value, text.sourceSpan); };
+        XmlToI18n.prototype.visitText = function (text, context) {
+            return new Text$1(text.value, text.sourceSpan);
+        };
         XmlToI18n.prototype.visitElement = function (el, context) {
             if (el.name === _PLACEHOLDER_TAG$1) {
                 var nameAttr = el.attrs.find(function (attr) { return attr.name === 'id'; });
@@ -20233,13 +20790,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return { locale: locale, i18nNodesByMsgId: i18nNodesByMsgId };
         };
-        Xliff2.prototype.digest = function (message) { return decimalDigest(message); };
+        Xliff2.prototype.digest = function (message) {
+            return decimalDigest(message);
+        };
         return Xliff2;
     }(Serializer));
     var _WriteVisitor$1 = /** @class */ (function () {
         function _WriteVisitor() {
         }
-        _WriteVisitor.prototype.visitText = function (text, context) { return [new Text$2(text.value)]; };
+        _WriteVisitor.prototype.visitText = function (text, context) {
+            return [new Text$2(text.value)];
+        };
         _WriteVisitor.prototype.visitContainer = function (container, context) {
             var _this = this;
             var nodes = [];
@@ -20399,7 +20960,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 errors: this._errors,
             };
         };
-        XmlToI18n.prototype.visitText = function (text, context) { return new Text$1(text.value, text.sourceSpan); };
+        XmlToI18n.prototype.visitText = function (text, context) {
+            return new Text$1(text.value, text.sourceSpan);
+        };
         XmlToI18n.prototype.visitElement = function (el, context) {
             var _this = this;
             switch (el.name) {
@@ -20484,7 +21047,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function Xtb() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        Xtb.prototype.write = function (messages, locale) { throw new Error('Unsupported'); };
+        Xtb.prototype.write = function (messages, locale) {
+            throw new Error('Unsupported');
+        };
         Xtb.prototype.load = function (content, url) {
             // xtb to xml nodes
             var xtbParser = new XtbParser();
@@ -20510,7 +21075,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return { locale: locale, i18nNodesByMsgId: i18nNodesByMsgId };
         };
-        Xtb.prototype.digest = function (message) { return digest$1(message); };
+        Xtb.prototype.digest = function (message) {
+            return digest$1(message);
+        };
         Xtb.prototype.createNameMapper = function (message) {
             return new SimplePlaceholderMapper(message, toPublicName);
         };
@@ -20525,7 +21092,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 Object.defineProperty(messages, id, { enumerable: true, value: value });
                 return value;
             },
-            set: function (_) { throw new Error('Could not overwrite an XTB translation'); },
+            set: function (_) {
+                throw new Error('Could not overwrite an XTB translation');
+            },
         });
     }
     // Extract messages as xml nodes from the xtb file
@@ -20609,7 +21178,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 errors: this._errors,
             };
         };
-        XmlToI18n.prototype.visitText = function (text, context) { return new Text$1(text.value, text.sourceSpan); };
+        XmlToI18n.prototype.visitText = function (text, context) {
+            return new Text$1(text.value, text.sourceSpan);
+        };
         XmlToI18n.prototype.visitExpansion = function (icu, context) {
             var caseMap = {};
             visitAll$1(this, icu.cases).forEach(function (c) {
@@ -20797,7 +21368,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._ngModuleOfTypes = new Map();
             this._shallowModuleCache = new Map();
         }
-        CompileMetadataResolver.prototype.getReflector = function () { return this._reflector; };
+        CompileMetadataResolver.prototype.getReflector = function () {
+            return this._reflector;
+        };
         CompileMetadataResolver.prototype.clearCacheFor = function (type) {
             var dirMeta = this._directiveCache.get(type);
             this._directiveCache.delete(type);
@@ -21640,7 +22213,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             return soFar;
                         }, [])
                             .join(', ');
-                        _this._reportError(syntaxError("Invalid " + (debugInfo ? debugInfo : 'provider') + " - only instances of Provider and Type are allowed, got: [" + providersInfo + "]"), type);
+                        _this._reportError(syntaxError("Invalid " + (debugInfo ?
+                            debugInfo :
+                            'provider') + " - only instances of Provider and Type are allowed, got: [" + providersInfo + "]"), type);
                         return;
                     }
                     if (providerMeta.token ===
@@ -21742,7 +22317,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             return res;
         };
-        CompileMetadataResolver.prototype._queryVarBindings = function (selector) { return selector.split(/\s*,\s*/); };
+        CompileMetadataResolver.prototype._queryVarBindings = function (selector) {
+            return selector.split(/\s*,\s*/);
+        };
         CompileMetadataResolver.prototype._getQueryMetadata = function (q, propertyName, typeOrFunc) {
             var _this = this;
             var selectors;
@@ -21762,7 +22339,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return {
                 selectors: selectors,
                 first: q.first,
-                descendants: q.descendants, propertyName: propertyName,
+                descendants: q.descendants,
+                propertyName: propertyName,
                 read: q.read ? this._getTokenMetadata(q.read) : null,
                 static: q.static
             };
@@ -21860,7 +22438,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function NgModuleResolver(_reflector) {
             this._reflector = _reflector;
         }
-        NgModuleResolver.prototype.isNgModule = function (type) { return this._reflector.annotations(type).some(createNgModule.isTypeOf); };
+        NgModuleResolver.prototype.isNgModule = function (type) {
+            return this._reflector.annotations(type).some(createNgModule.isTypeOf);
+        };
         NgModuleResolver.prototype.resolve = function (type, throwIfNotFound) {
             if (throwIfNotFound === void 0) { throwIfNotFound = true; }
             var ngModuleMeta = findLast(this._reflector.annotations(type), createNgModule.isTypeOf);
@@ -22403,8 +22983,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var summarizedName = stripSummaryForJitNameSuffix(staticSymbol.name);
                 var baseSymbol = this.getStaticSymbol(summarizedFileName, summarizedName, staticSymbol.members);
                 var baseImportAs = this.getImportAs(baseSymbol, useSummaries);
-                return baseImportAs ?
-                    this.getStaticSymbol(summaryForJitFileName(baseImportAs.filePath), summaryForJitName(baseImportAs.name), baseSymbol.members) :
+                return baseImportAs ? this.getStaticSymbol(summaryForJitFileName(baseImportAs.filePath), summaryForJitName(baseImportAs.name), baseSymbol.members) :
                     null;
             }
             var result = (useSummaries && this.summaryResolver.getImportAs(staticSymbol)) || null;
@@ -22815,8 +23394,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         StaticSymbolResolver.prototype.getSymbolByModule = function (module, symbolName, containingFile) {
             var filePath = this.resolveModule(module, containingFile);
             if (!filePath) {
-                this.reportError(new Error("Could not resolve module " + module + (containingFile ? ' relative to ' +
-                    this.host.getOutputName(containingFile) : '')));
+                this.reportError(new Error("Could not resolve module " + module + (containingFile ? ' relative to ' + this.host.getOutputName(containingFile) : '')));
                 return this.getStaticSymbol("ERROR:" + module, symbolName);
             }
             return this.getStaticSymbol(filePath, symbolName);
@@ -23223,8 +23801,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
         }
         return {
-            fileName: fileName, directives: directives, abstractDirectives: abstractDirectives, pipes: pipes,
-            ngModules: ngModules, injectables: injectables, exportsNonSourceFiles: exportsNonSourceFiles,
+            fileName: fileName,
+            directives: directives,
+            abstractDirectives: abstractDirectives,
+            pipes: pipes,
+            ngModules: ngModules,
+            injectables: injectables,
+            exportsNonSourceFiles: exportsNonSourceFiles,
         };
     }
     function isValueExportingNonSourceFile(host, metadata) {
@@ -23496,7 +24079,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         var typeHasRequiredAnnotation = requiredAnnotationTypes.some(function (requiredType) { return ownAnnotations_1.some(function (ann) { return requiredType.isTypeOf(ann); }); });
                         if (!typeHasRequiredAnnotation) {
                             this.reportError(formatMetadataError(metadataError("Class " + type.name + " in " + type.filePath + " extends from a " + CompileSummaryKind[summary.type.summaryKind] + " in another compilation unit without duplicating the decorator", 
-                            /* summary */ undefined, "Please add a " + requiredAnnotationTypes.map(function (type) { return type.ngMetadataName; }).join(' or ') + " decorator to the class"), type), type);
+                            /* summary */ undefined, "Please add a " + requiredAnnotationTypes.map(function (type) { return type.ngMetadataName; })
+                                .join(' or ') + " decorator to the class"), type), type);
                         }
                     }
                 }
@@ -23759,7 +24343,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             self.error({
                                 message: e.message,
                                 advise: e.advise,
-                                context: e.context, chain: chain,
+                                context: e.context,
+                                chain: chain,
                                 symbol: nestedContext
                             }, context);
                         }
@@ -23827,7 +24412,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     self.error({
                         message: FUNCTION_CALL_NOT_SUPPORTED,
                         context: functionSymbol,
-                        value: targetFunction, position: position
+                        value: targetFunction,
+                        position: position
                     }, context);
                 }
                 function simplify(expression) {
@@ -24371,7 +24957,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         AotSummaryResolver.prototype.getKnownModuleName = function (importedFilePath) {
             return this.knownFileNameToModuleNames.get(importedFilePath) || null;
         };
-        AotSummaryResolver.prototype.addSummary = function (summary) { this.summaryCache.set(summary.symbol, summary); };
+        AotSummaryResolver.prototype.addSummary = function (summary) {
+            this.summaryCache.set(summary.symbol, summary);
+        };
         AotSummaryResolver.prototype._loadSummaryFile = function (filePath) {
             var _this = this;
             var hasSummary = this.loadedFilePaths.get(filePath);
@@ -24397,7 +24985,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (moduleName) {
                     this.knownFileNameToModuleNames.set(filePath, moduleName);
                 }
-                importAs.forEach(function (importAs) { _this.importAs.set(importAs.symbol, importAs.importAs); });
+                importAs.forEach(function (importAs) {
+                    _this.importAs.set(importAs.symbol, importAs.importAs);
+                });
             }
             return hasSummary;
         };
@@ -24408,16 +24998,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function JitSummaryResolver() {
             this._summaries = new Map();
         }
-        JitSummaryResolver.prototype.isLibraryFile = function () { return false; };
-        JitSummaryResolver.prototype.toSummaryFileName = function (fileName) { return fileName; };
-        JitSummaryResolver.prototype.fromSummaryFileName = function (fileName) { return fileName; };
+        JitSummaryResolver.prototype.isLibraryFile = function () {
+            return false;
+        };
+        JitSummaryResolver.prototype.toSummaryFileName = function (fileName) {
+            return fileName;
+        };
+        JitSummaryResolver.prototype.fromSummaryFileName = function (fileName) {
+            return fileName;
+        };
         JitSummaryResolver.prototype.resolveSummary = function (reference) {
             return this._summaries.get(reference) || null;
         };
-        JitSummaryResolver.prototype.getSymbolsOf = function () { return []; };
-        JitSummaryResolver.prototype.getImportAs = function (reference) { return reference; };
-        JitSummaryResolver.prototype.getKnownModuleName = function (fileName) { return null; };
-        JitSummaryResolver.prototype.addSummary = function (summary) { this._summaries.set(summary.symbol, summary); };
+        JitSummaryResolver.prototype.getSymbolsOf = function () {
+            return [];
+        };
+        JitSummaryResolver.prototype.getImportAs = function (reference) {
+            return reference;
+        };
+        JitSummaryResolver.prototype.getKnownModuleName = function (fileName) {
+            return null;
+        };
+        JitSummaryResolver.prototype.addSummary = function (summary) {
+            this._summaries.set(summary.symbol, summary);
+        };
         return JitSummaryResolver;
     }());
 
@@ -24618,12 +25222,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return uri.match(_splitRe);
     }
     /**
-      * Removes dot segments in given path component, as described in
-      * RFC 3986, section 5.2.4.
-      *
-      * @param path A non-empty path component.
-      * @return Path component with removed dot segments.
-      */
+     * Removes dot segments in given path component, as described in
+     * RFC 3986, section 5.2.4.
+     *
+     * @param path A non-empty path component.
+     * @return Path component with removed dot segments.
+     */
     function _removeDotSegments(path) {
         if (path == '/')
             return '/';
@@ -24815,9 +25419,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         TemplateBinder.prototype.visitTextAttribute = function (attribute) { };
         TemplateBinder.prototype.visitIcu = function (icu) { };
         // The remaining visitors are concerned with processing AST expressions within template bindings
-        TemplateBinder.prototype.visitBoundAttribute = function (attribute) { attribute.value.visit(this); };
-        TemplateBinder.prototype.visitBoundEvent = function (event) { event.handler.visit(this); };
-        TemplateBinder.prototype.visitBoundText = function (text) { text.value.visit(this); };
+        TemplateBinder.prototype.visitBoundAttribute = function (attribute) {
+            attribute.value.visit(this);
+        };
+        TemplateBinder.prototype.visitBoundEvent = function (event) {
+            event.handler.visit(this);
+        };
+        TemplateBinder.prototype.visitBoundText = function (text) {
+            text.value.visit(this);
+        };
         TemplateBinder.prototype.visitPipe = function (ast, context) {
             this.usedPipes.add(ast.name);
             return _super.prototype.visitPipe.call(this, ast, context);
@@ -39285,7 +39895,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.1+1.sha-717df13');
+    var VERSION$2 = new Version$1('10.0.0-next.1+3.sha-83a9159');
 
     /**
      * @license
@@ -48818,8 +49428,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function recordMapEntry(entry, node, nodeMap, sourceFile) {
         if (!nodeMap.has(entry)) {
             nodeMap.set(entry, node);
-            if (node && (isMetadataImportedSymbolReferenceExpression(entry) ||
-                isMetadataImportDefaultReference(entry)) &&
+            if (node &&
+                (isMetadataImportedSymbolReferenceExpression(entry) ||
+                    isMetadataImportDefaultReference(entry)) &&
                 entry.line == null) {
                 var info = sourceInfo(node, sourceFile);
                 if (info.line != null)
@@ -49456,11 +50067,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Symbols.prototype.resolve = function (name, preferReference) {
             return (preferReference && this.references.get(name)) || this.symbols.get(name);
         };
-        Symbols.prototype.define = function (name, value) { this.symbols.set(name, value); };
+        Symbols.prototype.define = function (name, value) {
+            this.symbols.set(name, value);
+        };
         Symbols.prototype.defineReference = function (name, value) {
             this.references.set(name, value);
         };
-        Symbols.prototype.has = function (name) { return this.symbols.has(name); };
+        Symbols.prototype.has = function (name) {
+            return this.symbols.has(name);
+        };
         Object.defineProperty(Symbols.prototype, "symbols", {
             get: function () {
                 var result = this._symbols;
@@ -49829,7 +50444,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var exportedIdentifierName = function (identifier) {
                 return identifier && (exportMap.get(identifier.text) || identifier.text);
             };
-            var exportedName = function (node) { return exportedIdentifierName(node.name); };
+            var exportedName = function (node) {
+                return exportedIdentifierName(node.name);
+            };
             // Pre-declare classes and functions
             ts.forEachChild(sourceFile, function (node) {
                 switch (node.kind) {
@@ -49950,8 +50567,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                 if (!metadata)
                                     metadata = {};
                                 // TODO(alxhub): The literal here is not valid FunctionMetadata.
-                                metadata[name] = maybeFunc ? recordEntry(maybeFunc.func, node) :
-                                    { __symbolic: 'function' };
+                                metadata[name] =
+                                    maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
                             }
                         }
                         break;
@@ -49990,7 +50607,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                             operator: '+',
                                             left: {
                                                 __symbolic: 'select',
-                                                expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name
+                                                expression: recordEntry({ __symbolic: 'reference', name: enumName }, node),
+                                                name: name
                                             },
                                         };
                                     }
@@ -50111,7 +50729,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 var result = {
                     __symbolic: 'module',
-                    version: this.options.version || METADATA_VERSION, metadata: metadata
+                    version: this.options.version || METADATA_VERSION,
+                    metadata: metadata
                 };
                 if (sourceFile.moduleName)
                     result.importAs = sourceFile.moduleName;
@@ -50244,9 +50863,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function reportError(error) {
             var node = nodeMap.get(error);
             if (shouldReportNode(node)) {
-                var lineInfo = error.line != undefined ?
-                    error.character != undefined ? ":" + (error.line + 1) + ":" + (error.character + 1) :
-                        ":" + (error.line + 1) :
+                var lineInfo = error.line != undefined ? error.character != undefined ?
+                    ":" + (error.line + 1) + ":" + (error.character + 1) :
+                    ":" + (error.line + 1) :
                     '';
                 throw new Error("" + sourceFile.fileName + lineInfo + ": Metadata collected contains an error that will be reported at runtime: " + expandedMessage$1(error) + ".\n  " + JSON.stringify(error));
             }
@@ -51327,7 +51946,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('10.0.0-next.1+1.sha-717df13');
+    var VERSION$3 = new Version$1('10.0.0-next.1+3.sha-83a9159');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
