@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.1+15.sha-1bfa908
+ * @license Angular v9.1.1+17.sha-c8f9092
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -18214,16 +18214,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
         }
-        Object.defineProperty(BindingScope, "ROOT_SCOPE", {
-            get: function () {
-                if (!BindingScope._ROOT_SCOPE) {
-                    BindingScope._ROOT_SCOPE = new BindingScope().set(0, '$event', variable('$event'));
-                }
-                return BindingScope._ROOT_SCOPE;
-            },
-            enumerable: true,
-            configurable: true
-        });
+        BindingScope.createRootScope = function () {
+            return new BindingScope().set(0, '$event', variable('$event'));
+        };
         BindingScope.prototype.get = function (name) {
             var current = this;
             while (current) {
@@ -18774,7 +18767,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var pipesUsed = new Set();
         var changeDetection = meta.changeDetection;
         var template = meta.template;
-        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
+        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.createRootScope(), 0, templateTypeName, null, null, templateName, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, []);
         // We need to provide this so that dynamically generated components know what
         // projected content blocks to pass through to the component when it is instantiated.
@@ -19556,7 +19549,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.1+15.sha-1bfa908');
+    var VERSION$1 = new Version('9.1.1+17.sha-c8f9092');
 
     /**
      * @license
@@ -39895,7 +39888,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.1+15.sha-1bfa908');
+    var VERSION$2 = new Version$1('9.1.1+17.sha-c8f9092');
 
     /**
      * @license
@@ -51946,7 +51939,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.1.1+15.sha-1bfa908');
+    var VERSION$3 = new Version$1('9.1.1+17.sha-c8f9092');
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.VERSION = VERSION$3;
