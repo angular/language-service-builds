@@ -6,25 +6,14 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/expression_diagnostics" />
-import { Node, TemplateAst, TemplateAstPath } from '@angular/compiler';
-import { AstResult } from './common';
-import { SymbolQuery, SymbolTable } from './symbols';
+import { TemplateAstPath } from '@angular/compiler';
+import { SymbolTable } from './symbols';
 import * as ng from './types';
-export interface DiagnosticTemplateInfo {
-    fileName?: string;
-    offset: number;
-    query: SymbolQuery;
-    members: SymbolTable;
-    htmlAst: Node[];
-    templateAst: TemplateAst[];
-    source: string;
-}
-export declare function getTemplateExpressionDiagnostics(info: DiagnosticTemplateInfo): ng.Diagnostic[];
+export declare function getTemplateExpressionDiagnostics(info: ng.DiagnosticTemplateInfo): ng.Diagnostic[];
 /**
  * Returns the symbols available in a particular scope of a template.
  * @param info parsed template information
  * @param path path of template nodes narrowing to the context the expression scope should be
  * derived for.
  */
-export declare function getExpressionScope(info: DiagnosticTemplateInfo, path: TemplateAstPath): SymbolTable;
-export declare function diagnosticInfoFromTemplateInfo(info: AstResult): DiagnosticTemplateInfo;
+export declare function getExpressionScope(info: ng.DiagnosticTemplateInfo, path: TemplateAstPath): SymbolTable;

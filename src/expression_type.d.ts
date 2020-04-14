@@ -9,7 +9,7 @@
 import { AST, AstVisitor, Binary, BindingPipe, Chain, Conditional, FunctionCall, ImplicitReceiver, Interpolation, KeyedRead, KeyedWrite, LiteralArray, LiteralMap, LiteralPrimitive, MethodCall, NonNullAssert, PrefixNot, PropertyRead, PropertyWrite, Quote, SafeMethodCall, SafePropertyRead } from '@angular/compiler';
 import { Symbol, SymbolQuery, SymbolTable } from './symbols';
 import * as ng from './types';
-export interface ExpressionDiagnosticsContext {
+interface ExpressionDiagnosticsContext {
     inEvent?: boolean;
 }
 export declare class AstType implements AstVisitor {
@@ -25,7 +25,7 @@ export declare class AstType implements AstVisitor {
     visitChain(ast: Chain): Symbol;
     visitConditional(ast: Conditional): Symbol;
     visitFunctionCall(ast: FunctionCall): Symbol;
-    visitImplicitReceiver(ast: ImplicitReceiver): Symbol;
+    visitImplicitReceiver(_ast: ImplicitReceiver): Symbol;
     visitInterpolation(ast: Interpolation): Symbol;
     visitKeyedRead(ast: KeyedRead): Symbol;
     visitKeyedWrite(ast: KeyedWrite): Symbol;
@@ -38,7 +38,7 @@ export declare class AstType implements AstVisitor {
     visitNonNullAssert(ast: NonNullAssert): Symbol;
     visitPropertyRead(ast: PropertyRead): Symbol | undefined;
     visitPropertyWrite(ast: PropertyWrite): Symbol;
-    visitQuote(ast: Quote): Symbol;
+    visitQuote(_ast: Quote): Symbol;
     visitSafeMethodCall(ast: SafeMethodCall): Symbol;
     visitSafePropertyRead(ast: SafePropertyRead): Symbol | undefined;
     /**
@@ -55,3 +55,4 @@ export declare class AstType implements AstVisitor {
     private resolvePropertyRead;
     private isAny;
 }
+export {};

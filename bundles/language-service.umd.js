@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.1+31.sha-d50cb30
+ * @license Angular v10.0.0-next.1+32.sha-5e80e7e
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19534,7 +19534,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.1+31.sha-d50cb30');
+    var VERSION$1 = new Version('10.0.0-next.1+32.sha-5e80e7e');
 
     /**
      * @license
@@ -25905,7 +25905,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_compatible_call_signature));
             return this.anyType;
         };
-        AstType.prototype.visitImplicitReceiver = function (ast) {
+        AstType.prototype.visitImplicitReceiver = function (_ast) {
             var _this = this;
             // Return a pseudo-symbol for the implicit receiver.
             // The members of the implicit receiver are what is defined by the
@@ -25927,10 +25927,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 signatures: function () {
                     return [];
                 },
-                selectSignature: function (types) {
+                selectSignature: function (_types) {
                     return undefined;
                 },
-                indexed: function (argument) {
+                indexed: function (_argument) {
                     return undefined;
                 },
                 typeArguments: function () {
@@ -26050,7 +26050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // The type of a write is the type of the value being written.
             return this.getType(ast.value);
         };
-        AstType.prototype.visitQuote = function (ast) {
+        AstType.prototype.visitQuote = function (_ast) {
             // The type of a quoted expression is any.
             return this.query.getBuiltinType(BuiltinType$1.Any);
         };
@@ -26240,6 +26240,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             finally { if (e_2) throw e_2.error; }
         }
         return { selectors: results, map: map };
+    }
+    function diagnosticInfoFromTemplateInfo(info) {
+        return {
+            fileName: info.template.fileName,
+            offset: info.template.span.start,
+            query: info.template.query,
+            members: info.template.members,
+            htmlAst: info.htmlAst,
+            templateAst: info.templateAst,
+            source: info.template.source,
+        };
     }
     function findTemplateAstAt(ast, position) {
         var path = [];
@@ -26452,6 +26463,61 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 finally { if (e_6) throw e_6.error; }
             }
         }
+    }
+    /**
+     * Returns a property assignment from the assignment value, or `undefined` if there is no
+     * assignment.
+     */
+    function getPropertyAssignmentFromValue(value) {
+        if (!value.parent || !ts.isPropertyAssignment(value.parent)) {
+            return;
+        }
+        return value.parent;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgn property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        var objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        var callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        var decorator = callExprNode.parent;
+        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        var classDeclNode = decorator.parent;
+        return classDeclNode;
+    }
+    /**
+     * Determines if a property assignment is on a class decorator.
+     * See `getClassDeclFromDecoratorProperty`, which gets the class the decorator is applied to, for
+     * more details.
+     *
+     * @param prop property assignment
+     */
+    function isClassDecoratorProperty(propAsgn) {
+        return !!getClassDeclFromDecoratorProp(propAsgn);
     }
 
     /**
@@ -26835,17 +26901,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function spanOf$1(sourceSpan) {
         return { start: sourceSpan.start.offset, end: sourceSpan.end.offset };
     }
-    function diagnosticInfoFromTemplateInfo(info) {
-        return {
-            fileName: info.template.fileName,
-            offset: info.template.span.start,
-            query: info.template.query,
-            members: info.template.members,
-            htmlAst: info.htmlAst,
-            templateAst: info.templateAst,
-            source: info.template.source,
-        };
-    }
 
     /**
      * @license
@@ -26929,20 +26984,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // (that is the scope of the implicit receiver) is the right scope as the user is typing the
         // beginning of an expression.
         tail.visit({
-            visitBinary: function (ast) { },
-            visitChain: function (ast) { },
-            visitConditional: function (ast) { },
-            visitFunctionCall: function (ast) { },
-            visitImplicitReceiver: function (ast) { },
-            visitInterpolation: function (ast) {
+            visitBinary: function (_ast) { },
+            visitChain: function (_ast) { },
+            visitConditional: function (_ast) { },
+            visitFunctionCall: function (_ast) { },
+            visitImplicitReceiver: function (_ast) { },
+            visitInterpolation: function (_ast) {
                 result = undefined;
             },
-            visitKeyedRead: function (ast) { },
-            visitKeyedWrite: function (ast) { },
-            visitLiteralArray: function (ast) { },
-            visitLiteralMap: function (ast) { },
-            visitLiteralPrimitive: function (ast) { },
-            visitMethodCall: function (ast) { },
+            visitKeyedRead: function (_ast) { },
+            visitKeyedWrite: function (_ast) { },
+            visitLiteralArray: function (_ast) { },
+            visitLiteralMap: function (_ast) { },
+            visitLiteralPrimitive: function (_ast) { },
+            visitMethodCall: function (_ast) { },
             visitPipe: function (ast) {
                 if (position >= ast.exp.span.end &&
                     (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
@@ -26950,8 +27005,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     result = templateInfo.query.getPipes();
                 }
             },
-            visitPrefixNot: function (ast) { },
-            visitNonNullAssert: function (ast) { },
+            visitPrefixNot: function (_ast) { },
+            visitNonNullAssert: function (_ast) { },
             visitPropertyRead: function (ast) {
                 var receiverType = getType(ast.receiver);
                 result = receiverType ? receiverType.members() : scope;
@@ -26960,7 +27015,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var receiverType = getType(ast.receiver);
                 result = receiverType ? receiverType.members() : scope;
             },
-            visitQuote: function (ast) {
+            visitQuote: function (_ast) {
                 // For a quote, return the members of any (if there are any).
                 result = templateInfo.query.getBuiltinType(BuiltinType$1.Any).members();
             },
@@ -26997,17 +27052,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // (that is the scope of the implicit receiver) is the right scope as the user is typing the
         // beginning of an expression.
         tail.visit({
-            visitBinary: function (ast) { },
-            visitChain: function (ast) { },
-            visitConditional: function (ast) { },
-            visitFunctionCall: function (ast) { },
-            visitImplicitReceiver: function (ast) { },
-            visitInterpolation: function (ast) { },
-            visitKeyedRead: function (ast) { },
-            visitKeyedWrite: function (ast) { },
-            visitLiteralArray: function (ast) { },
-            visitLiteralMap: function (ast) { },
-            visitLiteralPrimitive: function (ast) { },
+            visitBinary: function (_ast) { },
+            visitChain: function (_ast) { },
+            visitConditional: function (_ast) { },
+            visitFunctionCall: function (_ast) { },
+            visitImplicitReceiver: function (_ast) { },
+            visitInterpolation: function (_ast) { },
+            visitKeyedRead: function (_ast) { },
+            visitKeyedWrite: function (_ast) { },
+            visitLiteralArray: function (_ast) { },
+            visitLiteralMap: function (_ast) { },
+            visitLiteralPrimitive: function (_ast) { },
             visitMethodCall: function (ast) {
                 var receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
@@ -27028,8 +27083,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     };
                 }
             },
-            visitPrefixNot: function (ast) { },
-            visitNonNullAssert: function (ast) { },
+            visitPrefixNot: function (_ast) { },
+            visitNonNullAssert: function (_ast) { },
             visitPropertyRead: function (ast) {
                 var receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
@@ -27046,7 +27101,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 //        ^^^^^^ value; visited separately as a nested AST
                 span = { start: start, end: start + ast.name.length };
             },
-            visitQuote: function (ast) { },
+            visitQuote: function (_ast) { },
             visitSafeMethodCall: function (ast) {
                 var receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
@@ -27647,7 +27702,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return result || this.getBuiltinType(BuiltinType$1.Any);
         };
-        TypeScriptSymbolQuery.prototype.getArrayType = function (type) {
+        TypeScriptSymbolQuery.prototype.getArrayType = function (_type) {
             return this.getBuiltinType(BuiltinType$1.Any);
         };
         TypeScriptSymbolQuery.prototype.getElementType = function (type) {
@@ -27759,7 +27814,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function signaturesOf(type, context) {
         return type.getCallSignatures().map(function (s) { return new SignatureWrapper(s, context); });
     }
-    function selectSignature(type, context, types) {
+    function selectSignature(type, context, _types) {
         // TODO: Do a better job of selecting the right signature. TypeScript does not currently support a
         // Type Relationship API (see https://github.com/angular/vscode-ng-language-service/issues/143).
         // Consider creating a TypeCheckBlock host in the language service that may also act as a
@@ -27971,7 +28026,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         SymbolWrapper.prototype.selectSignature = function (types) {
             return selectSignature(this.tsType, this.context);
         };
-        SymbolWrapper.prototype.indexed = function (argument) {
+        SymbolWrapper.prototype.indexed = function (_argument) {
             return undefined;
         };
         SymbolWrapper.prototype.typeArguments = function () {
@@ -28059,7 +28114,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         DeclaredSymbol.prototype.typeArguments = function () {
             return this.type.typeArguments();
         };
-        DeclaredSymbol.prototype.indexed = function (argument) {
+        DeclaredSymbol.prototype.indexed = function (_argument) {
             return undefined;
         };
         return DeclaredSymbol;
@@ -28152,7 +28207,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          */
         function SymbolTableWrapper(symbols, context, type) {
             this.context = context;
-            this.type = type;
             symbols = symbols || [];
             if (Array.isArray(symbols)) {
                 this.symbols = symbols;
@@ -28351,7 +28405,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return signature;
         };
-        PipeSymbol.prototype.indexed = function (argument) {
+        PipeSymbol.prototype.indexed = function (_argument) {
             return undefined;
         };
         PipeSymbol.prototype.typeArguments = function () {
@@ -28411,10 +28465,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function EmptyTable() {
             this.size = 0;
         }
-        EmptyTable.prototype.get = function (key) {
+        EmptyTable.prototype.get = function (_key) {
             return undefined;
         };
-        EmptyTable.prototype.has = function (key) {
+        EmptyTable.prototype.has = function (_key) {
             return false;
         };
         EmptyTable.prototype.values = function () {
@@ -28704,61 +28758,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return ExternalTemplate;
     }(BaseTemplate));
-    /**
-     * Returns a property assignment from the assignment value, or `undefined` if there is no
-     * assignment.
-     */
-    function getPropertyAssignmentFromValue(value) {
-        if (!value.parent || !ts.isPropertyAssignment(value.parent)) {
-            return;
-        }
-        return value.parent;
-    }
-    /**
-     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
-     * directive class the property applies to.
-     * If the property assignment is not on a class decorator, no declaration is returned.
-     *
-     * For example,
-     *
-     * @Component({
-     *   template: '<div></div>'
-     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
-     * })
-     * class AppComponent {}
-     *           ^---- class declaration node
-     *
-     * @param propAsgn property assignment
-     */
-    function getClassDeclFromDecoratorProp(propAsgnNode) {
-        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
-            return;
-        }
-        var objLitExprNode = propAsgnNode.parent;
-        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
-            return;
-        }
-        var callExprNode = objLitExprNode.parent;
-        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
-            return;
-        }
-        var decorator = callExprNode.parent;
-        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
-            return;
-        }
-        var classDeclNode = decorator.parent;
-        return classDeclNode;
-    }
-    /**
-     * Determines if a property assignment is on a class decorator.
-     * See `getClassDeclFromDecoratorProperty`, which gets the class the decorator is applied to, for
-     * more details.
-     *
-     * @param prop property assignment
-     */
-    function isClassDecoratorProperty(propAsgn) {
-        return !!getClassDeclFromDecoratorProp(propAsgn);
-    }
 
     /**
      * @license
@@ -29491,8 +29490,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return false;
         };
         ast.visit({
-            visitNgContent: function (ast) { },
-            visitEmbeddedTemplate: function (ast) { },
+            visitNgContent: function (_ast) { },
+            visitEmbeddedTemplate: function (_ast) { },
             visitElement: function (ast) {
                 var component = ast.directives.find(function (d) { return d.directive.isComponent; });
                 if (component) {
@@ -29518,7 +29517,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 symbol = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
                 span = spanOf(ast);
             },
-            visitVariable: function (ast) { },
+            visitVariable: function (_ast) { },
             visitEvent: function (ast) {
                 if (!attributeValueSymbol(ast.handler)) {
                     symbol = findOutputBinding(ast, path, info.template.query);
@@ -29577,7 +29576,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
             },
-            visitText: function (ast) { },
+            visitText: function (_ast) { },
             visitDirective: function (ast) {
                 // Need to cast because 'reference' is typed as any
                 staticSymbol = ast.directive.type.reference;
@@ -30342,7 +30341,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var tsDiagnostics = ngDiagnostics.map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
             return __spread(tss.sortAndDeduplicateDiagnostics(tsDiagnostics));
         };
-        LanguageServiceImpl.prototype.getCompletionsAtPosition = function (fileName, position, options) {
+        LanguageServiceImpl.prototype.getCompletionsAtPosition = function (fileName, position, _options) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var ast = this.host.getTemplateAstAtPosition(fileName, position);
             if (!ast) {
@@ -49262,7 +49261,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.1+31.sha-d50cb30');
+    var VERSION$2 = new Version$1('10.0.0-next.1+32.sha-5e80e7e');
 
     /**
      * @license
@@ -63808,7 +63807,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function DummyResourceLoader() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        DummyResourceLoader.prototype.get = function (url) {
+        DummyResourceLoader.prototype.get = function (_url) {
             return Promise.resolve('');
         };
         return DummyResourceLoader;
@@ -63837,10 +63836,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 ngModules: [],
             };
             this.summaryResolver = new AotSummaryResolver({
-                loadSummary: function (filePath) {
+                loadSummary: function (_filePath) {
                     return null;
                 },
-                isSourceFile: function (sourceFilePath) {
+                isSourceFile: function (_sourceFilePath) {
                     return true;
                 },
                 toSummaryFileName: function (sourceFilePath) {
@@ -63918,7 +63917,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.collectedErrors.clear();
             this.resolver.clearCache();
             var analyzeHost = {
-                isSourceFile: function (filePath) {
+                isSourceFile: function (_filePath) {
                     return true;
                 }
             };
@@ -64511,17 +64510,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return proxy;
     }
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var VERSION$3 = new Version$1('10.0.0-next.1+31.sha-d50cb30');
-
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
-    exports.VERSION = VERSION$3;
     exports.create = create;
     exports.createLanguageService = createLanguageService;
     exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
