@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.1+32.sha-5e80e7e
+ * @license Angular v10.0.0-next.1+33.sha-698b028
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19549,7 +19549,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.1+32.sha-5e80e7e');
+    var VERSION$1 = new Version('10.0.0-next.1+33.sha-698b028');
 
     /**
      * @license
@@ -30685,7 +30685,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function ɵɵdefineInjectable(opts) {
         return {
-            token: opts.token, providedIn: opts.providedIn || null, factory: opts.factory,
+            token: opts.token,
+            providedIn: opts.providedIn || null,
+            factory: opts.factory,
             value: undefined,
         };
     }
@@ -30711,7 +30713,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function ɵɵdefineInjector(options) {
         return {
-            factory: options.factory, providers: options.providers || [], imports: options.imports || [],
+            factory: options.factory,
+            providers: options.providers || [],
+            imports: options.imports || [],
         };
     }
     /**
@@ -30748,8 +30752,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function getInheritedInjectableDef(type) {
         // See `jit/injectable.ts#compileInjectable` for context on NG_PROV_DEF_FALLBACK.
-        var def = type && (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF] ||
-            (type[NG_PROV_DEF_FALLBACK] && type[NG_PROV_DEF_FALLBACK]()));
+        var def = type &&
+            (type[NG_PROV_DEF] || type[NG_INJECTABLE_DEF] ||
+                (type[NG_PROV_DEF_FALLBACK] && type[NG_PROV_DEF_FALLBACK]()));
         if (def) {
             var typeName = getTypeName(type);
             // TODO(FW-1307): Re-add ngDevMode when closure can handle it
@@ -30865,7 +30870,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function forwardRef(forwardRefFn) {
         forwardRefFn.__forward_ref__ = forwardRef;
-        forwardRefFn.toString = function () { return stringify$1(this()); };
+        forwardRefFn.toString = function () {
+            return stringify$1(this());
+        };
         return forwardRefFn;
     }
     /**
@@ -31099,7 +31106,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 });
             }
         }
-        InjectionToken.prototype.toString = function () { return "InjectionToken " + this._desc; };
+        InjectionToken.prototype.toString = function () {
+            return "InjectionToken " + this._desc;
+        };
         return InjectionToken;
     }());
 
@@ -31548,12 +31557,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     })(ViewEncapsulation$2 || (ViewEncapsulation$2 = {}));
 
     /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * This file contains reuseable "empty" symbols that can be used as default return values
      * in different parts of the rendering code. Because the same symbols are returned, this
@@ -31678,9 +31687,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-    * True if `value` is `LView`.
-    * @param value wrapped value of `RNode`, `LView`, `LContainer`
-    */
+     * True if `value` is `LView`.
+     * @param value wrapped value of `RNode`, `LView`, `LContainer`
+     */
     function isLView(value) {
         return Array.isArray(value) && typeof value[TYPE] === 'object';
     }
@@ -31711,7 +31720,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     // [Assert functions do not constraint type when they are guarded by a truthy
     // expression.](https://github.com/microsoft/TypeScript/issues/37295)
     function assertTNodeForLView(tNode, lView) {
-        tNode.hasOwnProperty('tView_') && assertEqual(tNode.tView_, lView[TVIEW], 'This TNode does not belong to this LView.');
+        tNode.hasOwnProperty('tView_') &&
+            assertEqual(tNode.tView_, lView[TVIEW], 'This TNode does not belong to this LView.');
     }
     function assertComponentType(actual, msg) {
         if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ɵcmp\' property.'; }
@@ -31827,7 +31837,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function isProceduralRenderer(renderer) {
         return !!(renderer.listen);
     }
-    var ɵ0$2 = function (hostElement, rendererType) { return getDocument(); };
+    var ɵ0$2 = function (hostElement, rendererType) {
+        return getDocument();
+    };
     var domRendererFactory3 = {
         createRenderer: ɵ0$2
     };
@@ -32214,7 +32226,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             if (directiveDef.afterContentChecked) {
                 (tView.contentHooks || (tView.contentHooks = [])).push(i, directiveDef.afterContentChecked);
-                (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, directiveDef.afterContentChecked);
+                (tView.contentCheckHooks || (tView.contentCheckHooks = []))
+                    .push(i, directiveDef.afterContentChecked);
             }
             if (directiveDef.afterViewInit) {
                 (tView.viewHooks || (tView.viewHooks = [])).push(-i, directiveDef.afterViewInit);
@@ -32277,7 +32290,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * case, when executing select(number))
      */
     function executeInitAndCheckHooks(lView, hooks, initPhase, nodeIndex) {
-        ngDevMode && assertNotEqual(initPhase, 3 /* InitPhaseCompleted */, 'Init pre-order hooks should not be called more than once');
+        ngDevMode &&
+            assertNotEqual(initPhase, 3 /* InitPhaseCompleted */, 'Init pre-order hooks should not be called more than once');
         if ((lView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
             callHooks(lView, hooks, initPhase, nodeIndex);
         }
@@ -32307,7 +32321,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * case, when executing select(number))
      */
     function callHooks(currentView, arr, initPhase, currentNodeIndex) {
-        ngDevMode && assertEqual(getCheckNoChangesMode(), false, 'Hooks should never be run in the check no changes mode.');
+        ngDevMode &&
+            assertEqual(getCheckNoChangesMode(), false, 'Hooks should never be run in the check no changes mode.');
         var startIndex = currentNodeIndex !== undefined ?
             (currentView[PREORDER_HOOK_FLAGS] & 65535 /* IndexOfTheNextPreOrderHookMaskMask */) :
             0;
@@ -32455,20 +32470,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *  }
      */
     /**
-    * Factory for creating instances of injectors in the NodeInjector.
-    *
-    * This factory is complicated by the fact that it can resolve `multi` factories as well.
-    *
-    * NOTE: Some of the fields are optional which means that this class has two hidden classes.
-    * - One without `multi` support (most common)
-    * - One with `multi` values, (rare).
-    *
-    * Since VMs can cache up to 4 inline hidden classes this is OK.
-    *
-    * - Single factory: Only `resolving` and `factory` is defined.
-    * - `providers` factory: `componentProviders` is a number and `index = -1`.
-    * - `viewProviders` factory: `componentProviders` is a number and `index` points to `providers`.
-    */
+     * Factory for creating instances of injectors in the NodeInjector.
+     *
+     * This factory is complicated by the fact that it can resolve `multi` factories as well.
+     *
+     * NOTE: Some of the fields are optional which means that this class has two hidden classes.
+     * - One without `multi` support (most common)
+     * - One with `multi` values, (rare).
+     *
+     * Since VMs can cache up to 4 inline hidden classes this is OK.
+     *
+     * - Single factory: Only `resolving` and `factory` is defined.
+     * - `providers` factory: `componentProviders` is a number and `index = -1`.
+     * - `viewProviders` factory: `componentProviders` is a number and `index` points to `providers`.
+     */
     var NodeInjectorFactory = /** @class */ (function () {
         function NodeInjectorFactory(
         /**
@@ -32683,11 +32698,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return renderStringify(value);
     }
-    var ɵ0$3 = function () {
-        return (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
-            setTimeout // everything else
-        ).bind(_global$1);
-    };
+    var ɵ0$3 = function () { return (typeof requestAnimationFrame !== 'undefined' &&
+        requestAnimationFrame || // browser only
+        setTimeout // everything else
+    )
+        .bind(_global$1); };
     var defaultScheduler = (ɵ0$3)();
     /**
      * The special delimiter we use to separate property names, prefixes, and suffixes
@@ -33095,12 +33110,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return null;
     }
     /**
-    * Retrieve or instantiate the injectable from the `LView` at particular `index`.
-    *
-    * This function checks to see if the value has already been instantiated and if so returns the
-    * cached `injectable`. Otherwise if it detects that the value is still a factory it
-    * instantiates the `injectable` and caches the value.
-    */
+     * Retrieve or instantiate the injectable from the `LView` at particular `index`.
+     *
+     * This function checks to see if the value has already been instantiated and if so returns the
+     * cached `injectable`. Otherwise if it detects that the value is still a factory it
+     * instantiates the `injectable` and caches the value.
+     */
     function getNodeInjectable(lView, tView, index, tNode) {
         var value = lView[index];
         var tData = tView.data;
@@ -33334,7 +33349,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function SafeHtmlImpl() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        SafeHtmlImpl.prototype.getTypeName = function () { return "HTML" /* Html */; };
+        SafeHtmlImpl.prototype.getTypeName = function () {
+            return "HTML" /* Html */;
+        };
         return SafeHtmlImpl;
     }(SafeValueImpl));
     var SafeStyleImpl = /** @class */ (function (_super) {
@@ -33342,7 +33359,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function SafeStyleImpl() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        SafeStyleImpl.prototype.getTypeName = function () { return "Style" /* Style */; };
+        SafeStyleImpl.prototype.getTypeName = function () {
+            return "Style" /* Style */;
+        };
         return SafeStyleImpl;
     }(SafeValueImpl));
     var SafeScriptImpl = /** @class */ (function (_super) {
@@ -33350,7 +33369,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function SafeScriptImpl() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        SafeScriptImpl.prototype.getTypeName = function () { return "Script" /* Script */; };
+        SafeScriptImpl.prototype.getTypeName = function () {
+            return "Script" /* Script */;
+        };
         return SafeScriptImpl;
     }(SafeValueImpl));
     var SafeUrlImpl = /** @class */ (function (_super) {
@@ -33358,7 +33379,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function SafeUrlImpl() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        SafeUrlImpl.prototype.getTypeName = function () { return "URL" /* Url */; };
+        SafeUrlImpl.prototype.getTypeName = function () {
+            return "URL" /* Url */;
+        };
         return SafeUrlImpl;
     }(SafeValueImpl));
     var SafeResourceUrlImpl = /** @class */ (function (_super) {
@@ -33366,7 +33389,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function SafeResourceUrlImpl() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
+        SafeResourceUrlImpl.prototype.getTypeName = function () {
+            return "ResourceURL" /* ResourceUrl */;
+        };
         return SafeResourceUrlImpl;
     }(SafeValueImpl));
 
@@ -33599,7 +33624,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /** Returns the matching `LContext` data for a given DOM node, directive or component instance.
+    /**
+     * Returns the matching `LContext` data for a given DOM node, directive or component instance.
      *
      * This function will examine the provided DOM element, component, or directive instance\'s
      * monkey-patched property to derive the `LContext` data. Once called then the monkey-patched
@@ -34082,12 +34108,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     };
 
     /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function getTStylingRangePrev(tStylingRange) {
         ngDevMode && assertNumber(tStylingRange, 'expected number');
         return (tStylingRange >> 17 /* PREV_SHIFT */) & 32767 /* UNSIGNED_MASK */;
@@ -36546,7 +36572,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(ViewRef.prototype, "context", {
-            get: function () { return this._lView[CONTEXT]; },
+            get: function () {
+                return this._lView[CONTEXT];
+            },
             enumerable: true,
             configurable: true
         });
@@ -36570,7 +36598,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             destroyLView(this._lView[TVIEW], this._lView);
         };
-        ViewRef.prototype.onDestroy = function (callback) { storeCleanupFn(this._lView[TVIEW], this._lView, callback); };
+        ViewRef.prototype.onDestroy = function (callback) {
+            storeCleanupFn(this._lView[TVIEW], this._lView, callback);
+        };
         /**
          * Marks a view and all of its ancestors dirty.
          *
@@ -36605,7 +36635,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * }
          * ```
          */
-        ViewRef.prototype.markForCheck = function () { markViewDirty(this._cdRefInjectingView || this._lView); };
+        ViewRef.prototype.markForCheck = function () {
+            markViewDirty(this._cdRefInjectingView || this._lView);
+        };
         /**
          * Detaches the view from the change detection tree.
          *
@@ -36659,7 +36691,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * }
          * ```
          */
-        ViewRef.prototype.detach = function () { this._lView[FLAGS] &= ~128 /* Attached */; };
+        ViewRef.prototype.detach = function () {
+            this._lView[FLAGS] &= ~128 /* Attached */;
+        };
         /**
          * Re-attaches a view to the change detection tree.
          *
@@ -36716,7 +36750,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * }
          * ```
          */
-        ViewRef.prototype.reattach = function () { this._lView[FLAGS] |= 128 /* Attached */; };
+        ViewRef.prototype.reattach = function () {
+            this._lView[FLAGS] |= 128 /* Attached */;
+        };
         /**
          * Checks the view and its children.
          *
@@ -36738,14 +36774,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          *
          * See {@link ChangeDetectorRef#detach detach} for more information.
          */
-        ViewRef.prototype.detectChanges = function () { detectChangesInternal(this._lView[TVIEW], this._lView, this.context); };
+        ViewRef.prototype.detectChanges = function () {
+            detectChangesInternal(this._lView[TVIEW], this._lView, this.context);
+        };
         /**
          * Checks the change detector and its children, and throws if any changes are detected.
          *
          * This is used in development mode to verify that running change detection doesn't
          * introduce other changes.
          */
-        ViewRef.prototype.checkNoChanges = function () { checkNoChangesInternal(this._lView[TVIEW], this._lView, this.context); };
+        ViewRef.prototype.checkNoChanges = function () {
+            checkNoChangesInternal(this._lView[TVIEW], this._lView, this.context);
+        };
         ViewRef.prototype.attachToViewContainerRef = function (vcRef) {
             if (this._appRef) {
                 throw new Error('This view is already attached directly to the ApplicationRef!');
@@ -36772,10 +36812,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this._view = _view;
             return _this;
         }
-        RootViewRef.prototype.detectChanges = function () { detectChangesInRootView(this._view); };
-        RootViewRef.prototype.checkNoChanges = function () { checkNoChangesInRootView(this._view); };
+        RootViewRef.prototype.detectChanges = function () {
+            detectChangesInRootView(this._view);
+        };
+        RootViewRef.prototype.checkNoChanges = function () {
+            checkNoChangesInRootView(this._view);
+        };
         Object.defineProperty(RootViewRef.prototype, "context", {
-            get: function () { return null; },
+            get: function () {
+                return null;
+            },
             enumerable: true,
             configurable: true
         });
@@ -36784,7 +36830,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function collectNativeNodes(tView, lView, tNode, result, isProjection) {
         if (isProjection === void 0) { isProjection = false; }
         while (tNode !== null) {
-            ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */, 1 /* Projection */, 4 /* ElementContainer */, 5 /* IcuContainer */);
+            ngDevMode &&
+                assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */, 1 /* Projection */, 4 /* ElementContainer */, 5 /* IcuContainer */);
             var lNode = lView[tNode.index];
             if (lNode !== null) {
                 result.push(unwrapRNode(lNode));
@@ -36967,14 +37014,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function ReflectionCapabilities(reflect) {
             this._reflect = reflect || _global$1['Reflect'];
         }
-        ReflectionCapabilities.prototype.isReflectionEnabled = function () { return true; };
-        ReflectionCapabilities.prototype.factory = function (t) { return function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            return new (t.bind.apply(t, __spread([void 0], args)))();
-        }; };
+        ReflectionCapabilities.prototype.isReflectionEnabled = function () {
+            return true;
+        };
+        ReflectionCapabilities.prototype.factory = function (t) {
+            return function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                return new (t.bind.apply(t, __spread([void 0], args)))();
+            };
+        };
         /** @internal */
         ReflectionCapabilities.prototype._zipTypesAndAnnotations = function (paramTypes, paramAnnotations) {
             var result;
@@ -37145,8 +37196,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ReflectionCapabilities.prototype.hasLifecycleHook = function (type, lcProperty) {
             return type instanceof Type$2 && lcProperty in type.prototype;
         };
-        ReflectionCapabilities.prototype.guards = function (type) { return {}; };
-        ReflectionCapabilities.prototype.getter = function (name) { return new Function('o', 'return o.' + name + ';'); };
+        ReflectionCapabilities.prototype.guards = function (type) {
+            return {};
+        };
+        ReflectionCapabilities.prototype.getter = function (name) {
+            return new Function('o', 'return o.' + name + ';');
+        };
         ReflectionCapabilities.prototype.setter = function (name) {
             return new Function('o', 'v', 'return o.' + name + ' = v;');
         };
@@ -37163,11 +37218,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Runtime type
             return "./" + stringify$1(type);
         };
-        ReflectionCapabilities.prototype.resourceUri = function (type) { return "./" + stringify$1(type); };
+        ReflectionCapabilities.prototype.resourceUri = function (type) {
+            return "./" + stringify$1(type);
+        };
         ReflectionCapabilities.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) {
             return runtime;
         };
-        ReflectionCapabilities.prototype.resolveEnum = function (enumIdentifier, name) { return enumIdentifier[name]; };
+        ReflectionCapabilities.prototype.resolveEnum = function (enumIdentifier, name) {
+            return enumIdentifier[name];
+        };
         return ReflectionCapabilities;
     }());
     function convertTsickleDecoratorIntoMetadata(decoratorInvocations) {
@@ -37358,7 +37417,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Start off by creating Records for every provider declared in every InjectorType
             // included transitively in additional providers then do the same for `def`. This order is
             // important because `def` may include providers that override ones in additionalProviders.
-            additionalProviders && deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider, def, additionalProviders); });
+            additionalProviders &&
+                deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider, def, additionalProviders); });
             deepForEach([def], function (injectorDef) { return _this.processInjectorType(injectorDef, [], dedupStack); });
             // Make sure the INJECTOR token provides this injector.
             this.records.set(INJECTOR, makeRecord(undefined, this));
@@ -37373,7 +37433,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             /**
              * Flag indicating that this injector was previously destroyed.
              */
-            get: function () { return this._destroyed; },
+            get: function () {
+                return this._destroyed;
+            },
             enumerable: true,
             configurable: true
         });
@@ -38329,7 +38391,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             /**
              * @returns the number of keys registered in the system.
              */
-            get: function () { return _globalKeyRegistry.numberOfKeys; },
+            get: function () {
+                return _globalKeyRegistry.numberOfKeys;
+            },
             enumerable: true,
             configurable: true
         });
@@ -38350,7 +38414,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return newKey;
         };
         Object.defineProperty(KeyRegistry.prototype, "numberOfKeys", {
-            get: function () { return this._allKeys.size; },
+            get: function () {
+                return this._allKeys.size;
+            },
             enumerable: true,
             configurable: true
         });
@@ -38373,8 +38439,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function Reflector(reflectionCapabilities) {
             this.reflectionCapabilities = reflectionCapabilities;
         }
-        Reflector.prototype.updateCapabilities = function (caps) { this.reflectionCapabilities = caps; };
-        Reflector.prototype.factory = function (type) { return this.reflectionCapabilities.factory(type); };
+        Reflector.prototype.updateCapabilities = function (caps) {
+            this.reflectionCapabilities = caps;
+        };
+        Reflector.prototype.factory = function (type) {
+            return this.reflectionCapabilities.factory(type);
+        };
         Reflector.prototype.parameters = function (typeOrFunc) {
             return this.reflectionCapabilities.parameters(typeOrFunc);
         };
@@ -38387,11 +38457,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Reflector.prototype.hasLifecycleHook = function (type, lcProperty) {
             return this.reflectionCapabilities.hasLifecycleHook(type, lcProperty);
         };
-        Reflector.prototype.getter = function (name) { return this.reflectionCapabilities.getter(name); };
-        Reflector.prototype.setter = function (name) { return this.reflectionCapabilities.setter(name); };
-        Reflector.prototype.method = function (name) { return this.reflectionCapabilities.method(name); };
-        Reflector.prototype.importUri = function (type) { return this.reflectionCapabilities.importUri(type); };
-        Reflector.prototype.resourceUri = function (type) { return this.reflectionCapabilities.resourceUri(type); };
+        Reflector.prototype.getter = function (name) {
+            return this.reflectionCapabilities.getter(name);
+        };
+        Reflector.prototype.setter = function (name) {
+            return this.reflectionCapabilities.setter(name);
+        };
+        Reflector.prototype.method = function (name) {
+            return this.reflectionCapabilities.method(name);
+        };
+        Reflector.prototype.importUri = function (type) {
+            return this.reflectionCapabilities.importUri(type);
+        };
+        Reflector.prototype.resourceUri = function (type) {
+            return this.reflectionCapabilities.resourceUri(type);
+        };
         Reflector.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) {
             return this.reflectionCapabilities.resolveIdentifier(name, moduleUrl, members, runtime);
         };
@@ -38808,7 +38888,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this._instantiateProvider(provider);
         };
-        ReflectiveInjector_.prototype._getMaxNumberOfObjects = function () { return this.objs.length; };
+        ReflectiveInjector_.prototype._getMaxNumberOfObjects = function () {
+            return this.objs.length;
+        };
         ReflectiveInjector_.prototype._instantiateProvider = function (provider) {
             if (provider.multiProvider) {
                 var res = [];
@@ -38915,7 +38997,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             enumerable: true,
             configurable: true
         });
-        ReflectiveInjector_.prototype.toString = function () { return this.displayName; };
+        ReflectiveInjector_.prototype.toString = function () {
+            return this.displayName;
+        };
         ReflectiveInjector_.INJECTOR_KEY = ReflectiveKey.get(Injector);
         return ReflectiveInjector_;
     }());
@@ -39035,12 +39119,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ViewChild = makePropDecorator('ViewChild', ɵ3, Query);
 
     /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Compute the static styling (class/style) from `TAttributes`.
      *
@@ -39163,14 +39247,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.wrapped = value;
         }
         /** Creates a wrapped value. */
-        WrappedValue.wrap = function (value) { return new WrappedValue(value); };
+        WrappedValue.wrap = function (value) {
+            return new WrappedValue(value);
+        };
         /**
          * Returns the underlying value of a wrapped value.
          * Returns the given `value` when it is not wrapped.
          **/
-        WrappedValue.unwrap = function (value) { return WrappedValue.isWrapped(value) ? value.wrapped : value; };
+        WrappedValue.unwrap = function (value) {
+            return WrappedValue.isWrapped(value) ? value.wrapped : value;
+        };
         /** Returns true if `value` is a wrapped value. */
-        WrappedValue.isWrapped = function (value) { return value instanceof WrappedValue; };
+        WrappedValue.isWrapped = function (value) {
+            return value instanceof WrappedValue;
+        };
         return WrappedValue;
     }());
     function isListLikeIterable(obj) {
@@ -39237,12 +39327,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
 
     /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * This file contains reuseable "empty" symbols that can be used as default return values
      * in different parts of the rendering code. Because the same symbols are returned, this
@@ -39631,7 +39721,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /**
          * Check whether the new value is the first value assigned.
          */
-        SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
+        SimpleChange.prototype.isFirstChange = function () {
+            return this.firstChange;
+        };
         return SimpleChange;
     }());
 
@@ -39887,7 +39979,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.1+32.sha-5e80e7e');
+    var VERSION$2 = new Version$1('10.0.0-next.1+33.sha-698b028');
 
     /**
      * @license
@@ -39899,7 +39991,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var DefaultIterableDifferFactory = /** @class */ (function () {
         function DefaultIterableDifferFactory() {
         }
-        DefaultIterableDifferFactory.prototype.supports = function (obj) { return isListLikeIterable(obj); };
+        DefaultIterableDifferFactory.prototype.supports = function (obj) {
+            return isListLikeIterable(obj);
+        };
         DefaultIterableDifferFactory.prototype.create = function (trackByFn) {
             return new DefaultIterableDiffer(trackByFn);
         };
@@ -40545,11 +40639,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return record;
         };
         Object.defineProperty(_DuplicateMap.prototype, "isEmpty", {
-            get: function () { return this.map.size === 0; },
+            get: function () {
+                return this.map.size === 0;
+            },
             enumerable: true,
             configurable: true
         });
-        _DuplicateMap.prototype.clear = function () { this.map.clear(); };
+        _DuplicateMap.prototype.clear = function () {
+            this.map.clear();
+        };
         return _DuplicateMap;
     }());
     function getPreviousIndex(item, addRemoveOffset, moveOffsets) {
@@ -40573,8 +40671,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var DefaultKeyValueDifferFactory = /** @class */ (function () {
         function DefaultKeyValueDifferFactory() {
         }
-        DefaultKeyValueDifferFactory.prototype.supports = function (obj) { return obj instanceof Map || isJsObject(obj); };
-        DefaultKeyValueDifferFactory.prototype.create = function () { return new DefaultKeyValueDiffer(); };
+        DefaultKeyValueDifferFactory.prototype.supports = function (obj) {
+            return obj instanceof Map || isJsObject(obj);
+        };
+        DefaultKeyValueDifferFactory.prototype.create = function () {
+            return new DefaultKeyValueDiffer();
+        };
         return DefaultKeyValueDifferFactory;
     }());
     var DefaultKeyValueDiffer = /** @class */ (function () {
@@ -41329,8 +41431,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if ((renderParent.flags & 1 /* TypeElement */) === 0 ||
                 (renderParent.flags & 33554432 /* ComponentView */) === 0 ||
                 (renderParent.element.componentRendererType &&
-                    renderParent.element.componentRendererType.encapsulation ===
-                        ViewEncapsulation$2.Native)) {
+                    renderParent.element.componentRendererType.encapsulation === ViewEncapsulation$2.Native)) {
                 // only children of non components, or children of components with native encapsulation should
                 // be attached.
                 return asElementData(view, def.renderParent.nodeIndex).renderElement;
@@ -41507,7 +41608,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 data._def.providers[index] = data._def.providersByKey[depDef.tokenKey] = {
                     flags: 1024 /* TypeFactoryProvider */ | 4096 /* LazyProvider */,
                     value: injectableDef.factory,
-                    deps: [], index: index,
+                    deps: [],
+                    index: index,
                     token: depDef.token,
                 };
                 data._providers[index] = UNDEFINED_VALUE;
@@ -41528,8 +41630,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function targetsModule(ngModule, def) {
         var providedIn = def.providedIn;
-        return providedIn != null && (providedIn === 'any' || providedIn === ngModule._def.scope ||
-            moduleTransitivelyPresent(ngModule, providedIn));
+        return providedIn != null &&
+            (providedIn === 'any' || providedIn === ngModule._def.scope ||
+                moduleTransitivelyPresent(ngModule, providedIn));
     }
     function _createProviderInstance(ngModule, providerDef) {
         var injectable;
@@ -41713,8 +41816,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return view;
     }
     function renderAttachEmbeddedView(elementData, prevView, view) {
-        var prevRenderNode = prevView ? renderNode(prevView, prevView.def.lastRenderRootNode) :
-            elementData.renderElement;
+        var prevRenderNode = prevView ? renderNode(prevView, prevView.def.lastRenderRootNode) : elementData.renderElement;
         var parentNode = view.renderer.parentNode(prevRenderNode);
         var nextSibling = view.renderer.nextSibling(prevRenderNode);
         // Note: We can't check if `nextSibling` is present, as on WebWorkers it will always be!
@@ -41815,17 +41917,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(ComponentRef_.prototype, "injector", {
-            get: function () { return new Injector_(this._view, this._elDef); },
+            get: function () {
+                return new Injector_(this._view, this._elDef);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(ComponentRef_.prototype, "componentType", {
-            get: function () { return this._component.constructor; },
+            get: function () {
+                return this._component.constructor;
+            },
             enumerable: true,
             configurable: true
         });
-        ComponentRef_.prototype.destroy = function () { this._viewRef.destroy(); };
-        ComponentRef_.prototype.onDestroy = function (callback) { this._viewRef.onDestroy(callback); };
+        ComponentRef_.prototype.destroy = function () {
+            this._viewRef.destroy();
+        };
+        ComponentRef_.prototype.onDestroy = function (callback) {
+            this._viewRef.onDestroy(callback);
+        };
         return ComponentRef_;
     }(ComponentRef));
     function createViewContainerData(view, elDef, elData) {
@@ -41842,12 +41952,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._embeddedViews = [];
         }
         Object.defineProperty(ViewContainerRef_.prototype, "element", {
-            get: function () { return new ElementRef(this._data.renderElement); },
+            get: function () {
+                return new ElementRef(this._data.renderElement);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(ViewContainerRef_.prototype, "injector", {
-            get: function () { return new Injector_(this._view, this._elDef); },
+            get: function () {
+                return new Injector_(this._view, this._elDef);
+            },
             enumerable: true,
             configurable: true
         });
@@ -41882,7 +41996,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return null;
         };
         Object.defineProperty(ViewContainerRef_.prototype, "length", {
-            get: function () { return this._embeddedViews.length; },
+            get: function () {
+                return this._embeddedViews.length;
+            },
             enumerable: true,
             configurable: true
         });
@@ -41943,22 +42059,32 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._appRef = null;
         }
         Object.defineProperty(ViewRef_.prototype, "rootNodes", {
-            get: function () { return rootRenderNodes(this._view); },
+            get: function () {
+                return rootRenderNodes(this._view);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(ViewRef_.prototype, "context", {
-            get: function () { return this._view.context; },
+            get: function () {
+                return this._view.context;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(ViewRef_.prototype, "destroyed", {
-            get: function () { return (this._view.state & 128 /* Destroyed */) !== 0; },
+            get: function () {
+                return (this._view.state & 128 /* Destroyed */) !== 0;
+            },
             enumerable: true,
             configurable: true
         });
-        ViewRef_.prototype.markForCheck = function () { markParentViewsForCheck(this._view); };
-        ViewRef_.prototype.detach = function () { this._view.state &= ~4 /* Attached */; };
+        ViewRef_.prototype.markForCheck = function () {
+            markParentViewsForCheck(this._view);
+        };
+        ViewRef_.prototype.detach = function () {
+            this._view.state &= ~4 /* Attached */;
+        };
         ViewRef_.prototype.detectChanges = function () {
             var fs = this._view.root.rendererFactory;
             if (fs.begin) {
@@ -41973,8 +42099,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
         };
-        ViewRef_.prototype.checkNoChanges = function () { Services.checkNoChangesView(this._view); };
-        ViewRef_.prototype.reattach = function () { this._view.state |= 4 /* Attached */; };
+        ViewRef_.prototype.checkNoChanges = function () {
+            Services.checkNoChangesView(this._view);
+        };
+        ViewRef_.prototype.reattach = function () {
+            this._view.state |= 4 /* Attached */;
+        };
         ViewRef_.prototype.onDestroy = function (callback) {
             if (!this._view.disposables) {
                 this._view.disposables = [];
@@ -42074,12 +42204,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return resolveNgModuleDep(this, { token: token, tokenKey: tokenKey(token), flags: flags }, notFoundValue);
         };
         Object.defineProperty(NgModuleRef_.prototype, "instance", {
-            get: function () { return this.get(this._moduleType); },
+            get: function () {
+                return this.get(this._moduleType);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(NgModuleRef_.prototype, "componentFactoryResolver", {
-            get: function () { return this.get(ComponentFactoryResolver); },
+            get: function () {
+                return this.get(ComponentFactoryResolver);
+            },
             enumerable: true,
             configurable: true
         });
@@ -42091,7 +42225,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             callNgModuleLifecycle(this);
             this._destroyListeners.forEach(function (listener) { return listener(); });
         };
-        NgModuleRef_.prototype.onDestroy = function (callback) { this._destroyListeners.push(callback); };
+        NgModuleRef_.prototype.onDestroy = function (callback) {
+            this._destroyListeners.push(callback);
+        };
         return NgModuleRef_;
     }());
 
@@ -42673,8 +42809,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     // projectable nodes can be passed as array of arrays or an array of iterables (ngUpgrade
                     // case). Here we do normalize passed data structure to be an array of arrays to avoid
                     // complex checks down the line.
-                    tElementNode.projection =
-                        projectableNodes.map(function (nodesforSlot) { return Array.from(nodesforSlot); });
+                    tElementNode.projection = projectableNodes.map(function (nodesforSlot) {
+                        return Array.from(nodesforSlot);
+                    });
                 }
                 // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
                 // executed here?
@@ -42719,7 +42856,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return _this;
         }
         Object.defineProperty(ComponentRef.prototype, "injector", {
-            get: function () { return new NodeInjector(this._tNode, this._rootLView); },
+            get: function () {
+                return new NodeInjector(this._tNode, this._rootLView);
+            },
             enumerable: true,
             configurable: true
         });
@@ -42893,13 +43032,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // and providing it, rather than letting the injector resolve it.
             _this.componentFactoryResolver = new ComponentFactoryResolver$1(_this);
             var ngModuleDef = getNgModuleDef(ngModuleType);
-            ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
+            ngDevMode &&
+                assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
             var ngLocaleIdDef = getNgLocaleIdDef(ngModuleType);
             ngLocaleIdDef && setLocaleId(ngLocaleIdDef);
             _this._bootstrapComponents = maybeUnwrapFn(ngModuleDef.bootstrap);
             _this._r3Injector = createInjectorWithoutInjectorInstances(ngModuleType, _parent, [
-                { provide: NgModuleRef, useValue: _this },
-                { provide: ComponentFactoryResolver, useValue: _this.componentFactoryResolver }
+                { provide: NgModuleRef, useValue: _this }, {
+                    provide: ComponentFactoryResolver,
+                    useValue: _this.componentFactoryResolver
+                }
             ], stringify$1(ngModuleType));
             // We need to resolve the injector types separately from the injector creation, because
             // the module might be trying to use this ref in its contructor for DI which will cause a
@@ -44452,7 +44594,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Emits an event containing a given value.
          * @param value The value to emit.
          */
-        EventEmitter.prototype.emit = function (value) { _super.prototype.next.call(this, value); };
+        EventEmitter.prototype.emit = function (value) {
+            _super.prototype.next.call(this, value);
+        };
         /**
          * Registers handlers for events emitted by this instance.
          * @param generatorOrNext When supplied, a custom handler for emitted events.
@@ -44468,26 +44612,43 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (generatorOrNext && typeof generatorOrNext === 'object') {
                 schedulerFn = this.__isAsync ? function (value) {
                     setTimeout(function () { return generatorOrNext.next(value); });
-                } : function (value) { generatorOrNext.next(value); };
+                } : function (value) {
+                    generatorOrNext.next(value);
+                };
                 if (generatorOrNext.error) {
-                    errorFn = this.__isAsync ? function (err) { setTimeout(function () { return generatorOrNext.error(err); }); } :
-                        function (err) { generatorOrNext.error(err); };
+                    errorFn = this.__isAsync ? function (err) {
+                        setTimeout(function () { return generatorOrNext.error(err); });
+                    } : function (err) {
+                        generatorOrNext.error(err);
+                    };
                 }
                 if (generatorOrNext.complete) {
-                    completeFn = this.__isAsync ? function () { setTimeout(function () { return generatorOrNext.complete(); }); } :
-                        function () { generatorOrNext.complete(); };
+                    completeFn = this.__isAsync ? function () {
+                        setTimeout(function () { return generatorOrNext.complete(); });
+                    } : function () {
+                        generatorOrNext.complete();
+                    };
                 }
             }
             else {
-                schedulerFn = this.__isAsync ? function (value) { setTimeout(function () { return generatorOrNext(value); }); } :
-                    function (value) { generatorOrNext(value); };
+                schedulerFn = this.__isAsync ? function (value) {
+                    setTimeout(function () { return generatorOrNext(value); });
+                } : function (value) {
+                    generatorOrNext(value);
+                };
                 if (error) {
-                    errorFn =
-                        this.__isAsync ? function (err) { setTimeout(function () { return error(err); }); } : function (err) { error(err); };
+                    errorFn = this.__isAsync ? function (err) {
+                        setTimeout(function () { return error(err); });
+                    } : function (err) {
+                        error(err);
+                    };
                 }
                 if (complete) {
-                    completeFn =
-                        this.__isAsync ? function () { setTimeout(function () { return complete(); }); } : function () { complete(); };
+                    completeFn = this.__isAsync ? function () {
+                        setTimeout(function () { return complete(); });
+                    } : function () {
+                        complete();
+                    };
                 }
             }
             var sink = _super.prototype.subscribe.call(this, schedulerFn, errorFn, completeFn);
@@ -44554,7 +44715,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * See
          * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
          */
-        QueryList.prototype.map = function (fn) { return this._results.map(fn); };
+        QueryList.prototype.map = function (fn) {
+            return this._results.map(fn);
+        };
         /**
          * See
          * [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
@@ -44580,7 +44743,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * See
          * [Array.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
          */
-        QueryList.prototype.forEach = function (fn) { this._results.forEach(fn); };
+        QueryList.prototype.forEach = function (fn) {
+            this._results.forEach(fn);
+        };
         /**
          * See
          * [Array.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
@@ -44591,8 +44756,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /**
          * Returns a copy of the internal results list as an Array.
          */
-        QueryList.prototype.toArray = function () { return this._results.slice(); };
-        QueryList.prototype.toString = function () { return this._results.toString(); };
+        QueryList.prototype.toArray = function () {
+            return this._results.slice();
+        };
+        QueryList.prototype.toString = function () {
+            return this._results.toString();
+        };
         /**
          * Updates the stored data of the query list, and resets the `dirty` flag to `false`, so that
          * on change detection, it will not notify of changes to the queries, unless a new change
@@ -44610,9 +44779,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /**
          * Triggers a change event by emitting on the `changes` {@link EventEmitter}.
          */
-        QueryList.prototype.notifyOnChanges = function () { this.changes.emit(this); };
+        QueryList.prototype.notifyOnChanges = function () {
+            this.changes.emit(this);
+        };
         /** internal */
-        QueryList.prototype.setDirty = function () { this.dirty = true; };
+        QueryList.prototype.setDirty = function () {
+            this.dirty = true;
+        };
         /** internal */
         QueryList.prototype.destroy = function () {
             this.changes.complete();
@@ -44634,7 +44807,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.queries = queries;
         }
         TQueries_.prototype.elementStart = function (tView, tNode) {
-            ngDevMode && assertFirstCreatePass(tView, 'Queries should collect results on the first template pass only');
+            ngDevMode &&
+                assertFirstCreatePass(tView, 'Queries should collect results on the first template pass only');
             for (var i = 0; i < this.queries.length; i++) {
                 this.queries[i].elementStart(tView, tNode);
             }
@@ -44662,7 +44836,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return queriesForTemplateRef !== null ? new TQueries_(queriesForTemplateRef) : null;
         };
         TQueries_.prototype.template = function (tView, tNode) {
-            ngDevMode && assertFirstCreatePass(tView, 'Queries should collect results on the first template pass only');
+            ngDevMode &&
+                assertFirstCreatePass(tView, 'Queries should collect results on the first template pass only');
             for (var i = 0; i < this.queries.length; i++) {
                 this.queries[i].template(tView, tNode);
             }
@@ -44672,11 +44847,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this.queries[index];
         };
         Object.defineProperty(TQueries_.prototype, "length", {
-            get: function () { return this.queries.length; },
+            get: function () {
+                return this.queries.length;
+            },
             enumerable: true,
             configurable: true
         });
-        TQueries_.prototype.track = function (tquery) { this.queries.push(tquery); };
+        TQueries_.prototype.track = function (tquery) {
+            this.queries.push(tquery);
+        };
         return TQueries_;
     }());
 
@@ -44936,7 +45115,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
             }
-            Promise.all(asyncInitPromises).then(function () { complete(); }).catch(function (e) { _this.reject(e); });
+            Promise.all(asyncInitPromises)
+                .then(function () {
+                complete();
+            })
+                .catch(function (e) {
+                _this.reject(e);
+            });
             if (asyncInitPromises.length === 0) {
                 complete();
             }
@@ -45249,7 +45434,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /**
          * Returns the id for a given NgModule, if one is defined and known to the compiler.
          */
-        Compiler.prototype.getModuleId = function (moduleType) { return undefined; };
+        Compiler.prototype.getModuleId = function (moduleType) {
+            return undefined;
+        };
         Compiler = __decorate([
             Injectable()
         ], Compiler);
@@ -45283,7 +45470,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function scheduleMicroTask(fn) {
         if (typeof Zone === 'undefined') {
             // use promise to schedule microTask instead of use Zone
-            promise.then(function () { fn && fn.apply(null, null); });
+            promise.then(function () {
+                fn && fn.apply(null, null);
+            });
         }
         else {
             Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
@@ -45446,7 +45635,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             self.nativeRequestAnimationFrame = getNativeRequestAnimationFrame().nativeRequestAnimationFrame;
             forkInnerZoneWithAngularBehavior(self);
         }
-        NgZone.isInAngularZone = function () { return Zone.current.get('isAngularZone') === true; };
+        NgZone.isInAngularZone = function () {
+            return Zone.current.get('isAngularZone') === true;
+        };
         NgZone.assertInAngularZone = function () {
             if (!NgZone.isInAngularZone()) {
                 throw new Error('Expected to be in Angular Zone, but it is not!');
@@ -45552,7 +45743,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         updateMicroTaskStatus(zone);
     }
     function forkInnerZoneWithAngularBehavior(zone) {
-        var delayChangeDetectionForEventsDelegate = function () { delayChangeDetectionForEvents(zone); };
+        var delayChangeDetectionForEventsDelegate = function () {
+            delayChangeDetectionForEvents(zone);
+        };
         var maybeDelayChangeDetection = !!zone.shouldCoalesceEventChangeDetection &&
             zone.nativeRequestAnimationFrame && delayChangeDetectionForEventsDelegate;
         zone._inner = zone._inner.fork({
@@ -45641,7 +45834,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         NoopNgZone.prototype.runGuarded = function (fn, applyThis, applyArgs) {
             return fn.apply(applyThis, applyArgs);
         };
-        NoopNgZone.prototype.runOutsideAngular = function (fn) { return fn(); };
+        NoopNgZone.prototype.runOutsideAngular = function (fn) {
+            return fn();
+        };
         NoopNgZone.prototype.runTask = function (fn, applyThis, applyArgs, name) {
             return fn.apply(applyThis, applyArgs);
         };
@@ -45806,7 +46001,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Get the number of pending requests
          * @deprecated pending requests are now tracked with zones
          */
-        Testability.prototype.getPendingRequestCount = function () { return this._pendingCount; };
+        Testability.prototype.getPendingRequestCount = function () {
+            return this._pendingCount;
+        };
         /**
          * Find providers by name
          * @param using The root element to search from
@@ -45845,24 +46042,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Unregisters an application.
          * @param token token of application, root element
          */
-        TestabilityRegistry.prototype.unregisterApplication = function (token) { this._applications.delete(token); };
+        TestabilityRegistry.prototype.unregisterApplication = function (token) {
+            this._applications.delete(token);
+        };
         /**
          * Unregisters all applications
          */
-        TestabilityRegistry.prototype.unregisterAllApplications = function () { this._applications.clear(); };
+        TestabilityRegistry.prototype.unregisterAllApplications = function () {
+            this._applications.clear();
+        };
         /**
          * Get a testability hook associated with the application
          * @param elem root element
          */
-        TestabilityRegistry.prototype.getTestability = function (elem) { return this._applications.get(elem) || null; };
+        TestabilityRegistry.prototype.getTestability = function (elem) {
+            return this._applications.get(elem) || null;
+        };
         /**
          * Get all registered testabilities
          */
-        TestabilityRegistry.prototype.getAllTestabilities = function () { return Array.from(this._applications.values()); };
+        TestabilityRegistry.prototype.getAllTestabilities = function () {
+            return Array.from(this._applications.values());
+        };
         /**
          * Get all registered applications(root elements)
          */
-        TestabilityRegistry.prototype.getAllRootElements = function () { return Array.from(this._applications.keys()); };
+        TestabilityRegistry.prototype.getAllRootElements = function () {
+            return Array.from(this._applications.keys());
+        };
         /**
          * Find testability of a node in the Tree
          * @param elem node
@@ -46036,7 +46243,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     throw new Error('No ErrorHandler. Is platform module (BrowserModule) included?');
                 }
                 moduleRef.onDestroy(function () { return remove(_this._modules, moduleRef); });
-                ngZone.runOutsideAngular(function () { return ngZone.onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } }); });
+                ngZone.runOutsideAngular(function () { return ngZone.onError.subscribe({
+                    next: function (error) {
+                        exceptionHandler.handleError(error);
+                    }
+                }); });
                 return _callAndReportToErrorHandler(exceptionHandler, ngZone, function () {
                     var initStatus = moduleRef.injector.get(ApplicationInitStatus);
                     initStatus.runInitializers();
@@ -46084,7 +46295,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 moduleRef.instance.ngDoBootstrap(appRef);
             }
             else {
-                throw new Error("The module " + stringify$1(moduleRef.instance.constructor) + " was bootstrapped, but it does not declare \"@NgModule.bootstrap\" components nor a \"ngDoBootstrap\" method. " +
+                throw new Error("The module " + stringify$1(moduleRef.instance
+                    .constructor) + " was bootstrapped, but it does not declare \"@NgModule.bootstrap\" components nor a \"ngDoBootstrap\" method. " +
                     "Please define one of these.");
             }
             this._modules.push(moduleRef);
@@ -46092,13 +46304,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /**
          * Register a listener to be called when the platform is disposed.
          */
-        PlatformRef.prototype.onDestroy = function (callback) { this._destroyListeners.push(callback); };
+        PlatformRef.prototype.onDestroy = function (callback) {
+            this._destroyListeners.push(callback);
+        };
         Object.defineProperty(PlatformRef.prototype, "injector", {
             /**
              * Retrieve the platform {@link Injector}, which is the parent injector for
              * every Angular application on the page and provides singleton providers.
              */
-            get: function () { return this._injector; },
+            get: function () {
+                return this._injector;
+            },
             enumerable: true,
             configurable: true
         });
@@ -46114,7 +46330,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._destroyed = true;
         };
         Object.defineProperty(PlatformRef.prototype, "destroyed", {
-            get: function () { return this._destroyed; },
+            get: function () {
+                return this._destroyed;
+            },
             enumerable: true,
             configurable: true
         });
@@ -46283,7 +46501,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
              */
             this.components = [];
             this._enforceNoNewChanges = isDevMode();
-            this._zone.onMicrotaskEmpty.subscribe({ next: function () { _this._zone.run(function () { _this.tick(); }); } });
+            this._zone.onMicrotaskEmpty.subscribe({
+                next: function () {
+                    _this._zone.run(function () {
+                        _this.tick();
+                    });
+                }
+            });
             var isCurrentlyStable = new Observable(function (observer) {
                 _this._stable = _this._zone.isStable && !_this._zone.hasPendingMacrotasks &&
                     !_this._zone.hasPendingMicrotasks;
@@ -46314,7 +46538,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     NgZone.assertInAngularZone();
                     if (_this._stable) {
                         _this._stable = false;
-                        _this._zone.runOutsideAngular(function () { observer.next(false); });
+                        _this._zone.runOutsideAngular(function () {
+                            observer.next(false);
+                        });
                     }
                 });
                 return function () {
@@ -46359,7 +46585,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var ngModule = isBoundToModule(componentFactory) ? undefined : this._injector.get(NgModuleRef);
             var selectorOrNode = rootSelectorOrNode || componentFactory.selector;
             var compRef = componentFactory.create(Injector.NULL, [], selectorOrNode, ngModule);
-            compRef.onDestroy(function () { _this._unloadComponent(compRef); });
+            compRef.onDestroy(function () {
+                _this._unloadComponent(compRef);
+            });
             var testability = compRef.injector.get(Testability, null);
             if (testability) {
                 compRef.injector.get(TestabilityRegistry)
@@ -46465,7 +46693,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             /**
              * Returns the number of attached views.
              */
-            get: function () { return this._views.length; },
+            get: function () {
+                return this._views.length;
+            },
             enumerable: true,
             configurable: true
         });
@@ -46675,27 +46905,37 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "injector", {
-            get: function () { return this._debugContext.injector; },
+            get: function () {
+                return this._debugContext.injector;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "componentInstance", {
-            get: function () { return this._debugContext.component; },
+            get: function () {
+                return this._debugContext.component;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "context", {
-            get: function () { return this._debugContext.context; },
+            get: function () {
+                return this._debugContext.context;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "references", {
-            get: function () { return this._debugContext.references; },
+            get: function () {
+                return this._debugContext.references;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "providerTokens", {
-            get: function () { return this._debugContext.providerTokens; },
+            get: function () {
+                return this._debugContext.providerTokens;
+            },
             enumerable: true,
             configurable: true
         });
@@ -46769,8 +47009,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         Object.defineProperty(DebugElement__PRE_R3__.prototype, "children", {
             get: function () {
-                return this
-                    .childNodes //
+                return this.childNodes //
                     .filter(function (node) { return node instanceof DebugElement__PRE_R3__; });
             },
             enumerable: true,
@@ -46820,7 +47059,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "injector", {
-            get: function () { return getInjector(this.nativeNode); },
+            get: function () {
+                return getInjector(this.nativeNode);
+            },
             enumerable: true,
             configurable: true
         });
@@ -46848,12 +47089,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "references", {
-            get: function () { return getLocalRefs(this.nativeNode); },
+            get: function () {
+                return getLocalRefs(this.nativeNode);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "providerTokens", {
-            get: function () { return getInjectionTokens(this.nativeNode); },
+            get: function () {
+                return getInjectionTokens(this.nativeNode);
+            },
             enumerable: true,
             configurable: true
         });
@@ -47442,7 +47687,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 queue.pop()();
             }
         });
-        return function (fn) { queue.push(fn); };
+        return function (fn) {
+            queue.push(fn);
+        };
     }
     /**
      * Configures the root injector for an app with
@@ -48076,11 +48323,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var view = {
             def: def,
             parent: parent,
-            viewContainerParent: null, parentNodeDef: parentNodeDef,
+            viewContainerParent: null,
+            parentNodeDef: parentNodeDef,
             context: null,
-            component: null, nodes: nodes,
-            state: 13 /* CatInit */, root: root, renderer: renderer,
-            oldValues: new Array(def.bindingCount), disposables: disposables,
+            component: null,
+            nodes: nodes,
+            state: 13 /* CatInit */,
+            root: root,
+            renderer: renderer,
+            oldValues: new Array(def.bindingCount),
+            disposables: disposables,
             initIndex: -1
         };
         return view;
@@ -48541,10 +48793,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             handleEvent: function (view, nodeIndex, eventName, event) {
                 return view.def.handleEvent(view, nodeIndex, eventName, event);
             },
-            updateDirectives: function (view, checkType) { return view.def.updateDirectives(checkType === 0 /* CheckAndUpdate */ ? prodCheckAndUpdateNode :
-                prodCheckNoChangesNode, view); },
-            updateRenderer: function (view, checkType) { return view.def.updateRenderer(checkType === 0 /* CheckAndUpdate */ ? prodCheckAndUpdateNode :
-                prodCheckNoChangesNode, view); },
+            updateDirectives: function (view, checkType) { return view.def.updateDirectives(checkType === 0 /* CheckAndUpdate */ ? prodCheckAndUpdateNode : prodCheckNoChangesNode, view); },
+            updateRenderer: function (view, checkType) { return view.def.updateRenderer(checkType === 0 /* CheckAndUpdate */ ? prodCheckAndUpdateNode : prodCheckNoChangesNode, view); },
         };
     }
     function createDebugServices() {
@@ -48582,8 +48832,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var renderer = rendererFactory.createRenderer(null, null);
         return {
             ngModule: ngModule,
-            injector: elInjector, projectableNodes: projectableNodes,
-            selectorOrNode: rootSelectorOrNode, sanitizer: sanitizer, rendererFactory: rendererFactory, renderer: renderer, errorHandler: errorHandler
+            injector: elInjector,
+            projectableNodes: projectableNodes,
+            selectorOrNode: rootSelectorOrNode,
+            sanitizer: sanitizer,
+            rendererFactory: rendererFactory,
+            renderer: renderer,
+            errorHandler: errorHandler
         };
     }
     function debugCreateEmbeddedView(parentView, anchorDef, viewDef, context) {
@@ -48932,17 +49187,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "injector", {
-            get: function () { return createInjector(this.elView, this.elDef); },
+            get: function () {
+                return createInjector(this.elView, this.elDef);
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "component", {
-            get: function () { return this.elOrCompView.component; },
+            get: function () {
+                return this.elOrCompView.component;
+            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "context", {
-            get: function () { return this.elOrCompView.context; },
+            get: function () {
+                return this.elOrCompView.context;
+            },
             enumerable: true,
             configurable: true
         });
@@ -49119,7 +49380,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.debugContextFactory = getCurrentDebugContext;
             this.data = this.delegate.data;
         }
-        DebugRenderer2.prototype.createDebugContext = function (nativeElement) { return this.debugContextFactory(nativeElement); };
+        DebugRenderer2.prototype.createDebugContext = function (nativeElement) {
+            return this.debugContextFactory(nativeElement);
+        };
         DebugRenderer2.prototype.destroyNode = function (node) {
             var debugNode = getDebugNode(node);
             removeDebugNodeFromIndex(debugNode);
@@ -49130,7 +49393,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.delegate.destroyNode(node);
             }
         };
-        DebugRenderer2.prototype.destroy = function () { this.delegate.destroy(); };
+        DebugRenderer2.prototype.destroy = function () {
+            this.delegate.destroy();
+        };
         DebugRenderer2.prototype.createElement = function (name, namespace) {
             var el = this.delegate.createElement(name, namespace);
             var debugCtx = this.createDebugContext(el);
@@ -49250,9 +49515,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this.delegate.listen(target, eventName, callback);
         };
-        DebugRenderer2.prototype.parentNode = function (node) { return this.delegate.parentNode(node); };
-        DebugRenderer2.prototype.nextSibling = function (node) { return this.delegate.nextSibling(node); };
-        DebugRenderer2.prototype.setValue = function (node, value) { return this.delegate.setValue(node, value); };
+        DebugRenderer2.prototype.parentNode = function (node) {
+            return this.delegate.parentNode(node);
+        };
+        DebugRenderer2.prototype.nextSibling = function (node) {
+            return this.delegate.nextSibling(node);
+        };
+        DebugRenderer2.prototype.setValue = function (node, value) {
+            return this.delegate.setValue(node, value);
+        };
         return DebugRenderer2;
     }());
 
@@ -49272,7 +49543,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return {
             factory: def.factory,
-            scope: def.scope, providers: providers, modules: modules, providersByKey: providersByKey,
+            scope: def.scope,
+            providers: providers,
+            modules: modules,
+            providersByKey: providersByKey,
         };
     }
     var NgModuleFactory_ = /** @class */ (function (_super) {
