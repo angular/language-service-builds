@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.2+3.sha-b1f1d3f
+ * @license Angular v10.0.0-next.2+14.sha-4a9f0be
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -2776,6 +2776,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return list;
     }
+    /**
+     * Partitions a given array into 2 arrays, based on a boolean value returned by the condition
+     * function.
+     *
+     * @param arr Input array that should be partitioned
+     * @param conditionFn Condition function that is called for each item in a given array and returns a
+     * boolean value.
+     */
+    function partitionArray(arr, conditionFn) {
+        var truthy = [];
+        var falsy = [];
+        arr.forEach(function (item) {
+            (conditionFn(item) ? truthy : falsy).push(item);
+        });
+        return [truthy, falsy];
+    }
 
     /**
      * @license
@@ -5153,6 +5169,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function isSingleI18nIcu(meta) {
         return isI18nRootNode(meta) && meta.nodes.length === 1 && meta.nodes[0] instanceof Icu$1;
+    }
+    function hasI18nMeta(node) {
+        return !!node.i18n;
     }
     function hasI18nAttrs(element) {
         return element.attrs.some(function (attr) { return isI18nAttribute(attr.name); });
@@ -17613,9 +17632,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
-            // TODO (FW-1942): exclude i18n attributes from the main attribute list and pass them
-            // as an `i18nAttrs` argument of the `getAttributeExpressions` function below.
-            var attrsExprs = this.getAttributeExpressions(template.attributes, template.inputs, template.outputs, undefined, template.templateAttrs, undefined);
+            var _a = __read(partitionArray(template.attributes, hasI18nMeta), 2), i18nStaticAttrs = _a[0], staticAttrs = _a[1];
+            var attrsExprs = this.getAttributeExpressions(staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -17646,19 +17664,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.templatePropertyBindings(templateIndex, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
             if (template.tagName === NG_TEMPLATE_TAG_NAME) {
-                var inputs_1 = [];
-                var i18nAttrs_1 = template.attributes.filter(function (attr) { return !!attr.i18n; });
-                template.inputs.forEach(function (input) { return (input.i18n ? i18nAttrs_1 : inputs_1).push(input); });
+                var _b = __read(partitionArray(template.inputs, hasI18nMeta), 2), i18nInputs = _b[0], inputs = _b[1];
+                var i18nAttrs = __spread(i18nStaticAttrs, i18nInputs);
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
                 // elements, in case of inline templates, corresponding instructions will be generated in the
                 // nested template function.
-                if (i18nAttrs_1.length > 0) {
-                    this.i18nAttributesInstruction(templateIndex, i18nAttrs_1, template.sourceSpan);
+                if (i18nAttrs.length > 0) {
+                    this.i18nAttributesInstruction(templateIndex, i18nAttrs, template.sourceSpan);
                 }
                 // Add the input bindings
-                if (inputs_1.length > 0) {
-                    this.templatePropertyBindings(templateIndex, inputs_1);
+                if (inputs.length > 0) {
+                    this.templatePropertyBindings(templateIndex, inputs);
                 }
                 // Generate listeners for directive output
                 if (template.outputs.length > 0) {
@@ -19534,7 +19551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.2+3.sha-b1f1d3f');
+    var VERSION$1 = new Version('10.0.0-next.2+14.sha-4a9f0be');
 
     /**
      * @license
@@ -36057,7 +36074,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (i > -1) {
             i++;
             while (i < attrs.length) {
-                if (attrs[i] === name)
+                var attr = attrs[i];
+                // Return in case we checked all template attrs and are switching to the next section in the
+                // attrs array (that starts with a number that represents an attribute marker).
+                if (typeof attr === 'number')
+                    return -1;
+                if (attr === name)
                     return i;
                 i++;
             }
@@ -38171,6 +38193,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function validateProperty(tView, lView, element, propName, tNode) {
+        // If `schemas` is set to `null`, that's an indication that this Component was compiled in AOT
+        // mode where this check happens at compile time. In JIT mode, `schemas` is always present and
+        // defined as an array (as an empty array in case `schemas` field is not defined) and we should
+        // execute the check below.
+        if (tView.schemas === null)
+            return true;
         // The property is considered valid if the element matches the schema, it exists on the element
         // or it is synthetic, and we are in a browser context (web worker nodes should be skipped).
         if (matchingSchemas(tView, lView, tNode.tagName) || propName in element ||
@@ -49378,7 +49406,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.2+3.sha-b1f1d3f');
+    var VERSION$2 = new Version$1('10.0.0-next.2+14.sha-4a9f0be');
 
     /**
      * @license
