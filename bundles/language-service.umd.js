@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.2+14.sha-4a9f0be
+ * @license Angular v10.0.0-next.2+13.sha-88b0985
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19551,7 +19551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.2+14.sha-4a9f0be');
+    var VERSION$1 = new Version('10.0.0-next.2+13.sha-88b0985');
 
     /**
      * @license
@@ -38193,12 +38193,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function validateProperty(tView, lView, element, propName, tNode) {
-        // If `schemas` is set to `null`, that's an indication that this Component was compiled in AOT
-        // mode where this check happens at compile time. In JIT mode, `schemas` is always present and
-        // defined as an array (as an empty array in case `schemas` field is not defined) and we should
-        // execute the check below.
-        if (tView.schemas === null)
-            return true;
         // The property is considered valid if the element matches the schema, it exists on the element
         // or it is synthetic, and we are in a browser context (web worker nodes should be skipped).
         if (matchingSchemas(tView, lView, tNode.tagName) || propName in element ||
@@ -49406,7 +49400,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.2+14.sha-4a9f0be');
+    var VERSION$2 = new Version$1('10.0.0-next.2+13.sha-88b0985');
 
     /**
      * @license
