@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.2+28.sha-78840e5
+ * @license Angular v10.0.0-next.2+30.sha-1fa1dd5
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19551,7 +19551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.2+28.sha-78840e5');
+    var VERSION$1 = new Version('10.0.0-next.2+30.sha-1fa1dd5');
 
     /**
      * @license
@@ -25591,8 +25591,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             message: 'Expected operands to be a string or number type',
             kind: 'Error',
         },
-        expected_operands_of_similar_type_or_any: {
-            message: 'Expected operands to be of similar type or any',
+        expected_operands_of_comparable_types_or_any: {
+            message: 'Expected operands to be of comparable types or any',
             kind: 'Error',
         },
         unrecognized_operator: {
@@ -25680,7 +25680,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /**
          * The type is a type that can hold any other type.
          */
-        BuiltinType[BuiltinType["Any"] = 0] = "Any";
+        BuiltinType[BuiltinType["Any"] = -1] = "Any";
+        /** Unknown types are functionally identical to any. */
+        BuiltinType[BuiltinType["Unknown"] = -1] = "Unknown";
         /**
          * The type of a string literal.
          */
@@ -25692,23 +25694,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /**
          * The type of the `true` and `false` literals.
          */
-        BuiltinType[BuiltinType["Boolean"] = 3] = "Boolean";
+        BuiltinType[BuiltinType["Boolean"] = 4] = "Boolean";
         /**
          * The type of the `undefined` literal.
          */
-        BuiltinType[BuiltinType["Undefined"] = 4] = "Undefined";
+        BuiltinType[BuiltinType["Undefined"] = 8] = "Undefined";
         /**
          * the type of the `null` literal.
          */
-        BuiltinType[BuiltinType["Null"] = 5] = "Null";
+        BuiltinType[BuiltinType["Null"] = 16] = "Null";
         /**
          * the type is an unbound type parameter.
          */
-        BuiltinType[BuiltinType["Unbound"] = 6] = "Unbound";
+        BuiltinType[BuiltinType["Unbound"] = 32] = "Unbound";
         /**
          * Not a built-in type.
          */
-        BuiltinType[BuiltinType["Other"] = 7] = "Other";
+        BuiltinType[BuiltinType["Other"] = 64] = "Other";
+        BuiltinType[BuiltinType["Object"] = 128] = "Object";
     })(BuiltinType$1 || (BuiltinType$1 = {}));
 
     /**
@@ -25739,15 +25742,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         AstType.prototype.visitBinary = function (ast) {
             var _this_1 = this;
-            // Treat undefined and null as other.
-            function normalize(kind, other) {
-                switch (kind) {
-                    case BuiltinType$1.Undefined:
-                    case BuiltinType$1.Null:
-                        return normalize(other, BuiltinType$1.Other);
-                }
-                return kind;
-            }
             var getType = function (ast, operation) {
                 var type = _this_1.getType(ast);
                 if (type.nullable) {
@@ -25764,16 +25758,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             _this_1.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expression_might_be_null));
                             break;
                     }
-                    return _this_1.query.getNonNullableType(type);
                 }
                 return type;
             };
             var leftType = getType(ast.left, ast.operation);
             var rightType = getType(ast.right, ast.operation);
-            var leftRawKind = this.query.getTypeKind(leftType);
-            var rightRawKind = this.query.getTypeKind(rightType);
-            var leftKind = normalize(leftRawKind, rightRawKind);
-            var rightKind = normalize(rightRawKind, leftRawKind);
+            var leftKind = this.query.getTypeKind(leftType);
+            var rightKind = this.query.getTypeKind(rightType);
             // The following swtich implements operator typing similar to the
             // type production tables in the TypeScript specification.
             // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.19
@@ -25848,25 +25839,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case '!=':
                 case '===':
                 case '!==':
-                    switch (operKind) {
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Boolean:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Number:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.String:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Other:
-                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.Boolean:
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Number:
-                        case BuiltinType$1.String << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.String << 8 | BuiltinType$1.String:
-                        case BuiltinType$1.Other << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Other << 8 | BuiltinType$1.Other:
-                            return this.query.getBuiltinType(BuiltinType$1.Boolean);
-                        default:
-                            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expected_operands_of_similar_type_or_any));
-                            return this.anyType;
+                    if (!(leftKind & rightKind) &&
+                        !((leftKind | rightKind) & (BuiltinType$1.Null | BuiltinType$1.Undefined))) {
+                        // Two values are comparable only if
+                        //   - they have some type overlap, or
+                        //   - at least one is not defined
+                        this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expected_operands_of_comparable_types_or_any));
                     }
+                    return this.query.getBuiltinType(BuiltinType$1.Boolean);
                 case '&&':
                     return rightType;
                 case '||':
@@ -28600,6 +28580,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             else if (type.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) {
                 return BuiltinType$1.Number;
             }
+            else if (type.flags & ts.TypeFlags.Object) {
+                return BuiltinType$1.Object;
+            }
             else if (type.flags & (ts.TypeFlags.Undefined)) {
                 return BuiltinType$1.Undefined;
             }
@@ -28607,30 +28590,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return BuiltinType$1.Null;
             }
             else if (type.flags & ts.TypeFlags.Union) {
-                // If all the constituent types of a union are the same kind, it is also that kind.
-                var candidate = null;
                 var unionType = type;
-                if (unionType.types.length > 0) {
-                    candidate = typeKindOf(unionType.types[0]);
+                if (unionType.types.length === 0)
+                    return BuiltinType$1.Other;
+                var ty = 0;
+                try {
+                    for (var _b = __values(unionType.types), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var subType = _c.value;
+                        ty |= typeKindOf(subType);
+                    }
+                }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                finally {
                     try {
-                        for (var _b = __values(unionType.types), _c = _b.next(); !_c.done; _c = _b.next()) {
-                            var subType = _c.value;
-                            if (candidate != typeKindOf(subType)) {
-                                return BuiltinType$1.Other;
-                            }
-                        }
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    catch (e_6_1) { e_6 = { error: e_6_1 }; }
-                    finally {
-                        try {
-                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                        }
-                        finally { if (e_6) throw e_6.error; }
-                    }
+                    finally { if (e_6) throw e_6.error; }
                 }
-                if (candidate != null) {
-                    return candidate;
-                }
+                return ty;
             }
             else if (type.flags & ts.TypeFlags.TypeParameter) {
                 return BuiltinType$1.Unbound;
@@ -49406,7 +49383,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.2+28.sha-78840e5');
+    var VERSION$2 = new Version$1('10.0.0-next.2+30.sha-1fa1dd5');
 
     /**
      * @license
