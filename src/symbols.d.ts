@@ -165,9 +165,7 @@ export declare enum BuiltinType {
     /**
      * The type is a type that can hold any other type.
      */
-    Any = -1,
-    /** Unknown types are functionally identical to any. */
-    Unknown = -1,
+    Any = 0,
     /**
      * The type of a string literal.
      */
@@ -179,24 +177,23 @@ export declare enum BuiltinType {
     /**
      * The type of the `true` and `false` literals.
      */
-    Boolean = 4,
+    Boolean = 3,
     /**
      * The type of the `undefined` literal.
      */
-    Undefined = 8,
+    Undefined = 4,
     /**
      * the type of the `null` literal.
      */
-    Null = 16,
+    Null = 5,
     /**
      * the type is an unbound type parameter.
      */
-    Unbound = 32,
+    Unbound = 6,
     /**
      * Not a built-in type.
      */
-    Other = 64,
-    Object = 128
+    Other = 7
 }
 /**
  * The kinds of definition.
