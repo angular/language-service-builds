@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.2+40.sha-bb150c2
+ * @license Angular v10.0.0-next.2+41.sha-81d23b3
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19551,7 +19551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.2+40.sha-bb150c2');
+    var VERSION$1 = new Version('10.0.0-next.2+41.sha-81d23b3');
 
     /**
      * @license
@@ -49383,7 +49383,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.2+40.sha-bb150c2');
+    var VERSION$2 = new Version$1('10.0.0-next.2+41.sha-81d23b3');
 
     /**
      * @license
@@ -54197,7 +54197,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         var pipeFactory = pipeDef.factory || (pipeDef.factory = getFactoryDef(pipeDef.type, true));
         var previousInjectImplementation = setInjectImplementation(ɵɵdirectiveInject);
+        // DI for pipes is supposed to behave like directives when placed on a component
+        // host node, which means that we have to disable access to `viewProviders`.
+        var previousIncludeViewProviders = setIncludeViewProviders(false);
         var pipeInstance = pipeFactory();
+        setIncludeViewProviders(previousIncludeViewProviders);
         setInjectImplementation(previousInjectImplementation);
         store(tView, getLView(), index, pipeInstance);
         return pipeInstance;
