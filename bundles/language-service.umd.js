@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.3+18.sha-d840503
+ * @license Angular v9.1.3+21.sha-b3fe901
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19566,7 +19566,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.3+18.sha-d840503');
+    var VERSION$1 = new Version('9.1.3+21.sha-b3fe901');
 
     /**
      * @license
@@ -39973,7 +39973,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.3+18.sha-d840503');
+    var VERSION$2 = new Version$1('9.1.3+21.sha-b3fe901');
 
     /**
      * @license
@@ -51666,9 +51666,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var filesChangedOrRemoved = [];
             // Check if any source files have been added / changed since last computation.
             var seen = new Set();
+            var ANGULAR_CORE = '@angular/core';
+            var corePath = this.reflectorHost.moduleNameToFileName(ANGULAR_CORE);
             try {
                 for (var _e = __values(program.getSourceFiles()), _f = _e.next(); !_f.done; _f = _e.next()) {
                     var fileName = _f.value.fileName;
+                    // If the `@angular/core` has been edited, the language service should be restart,
+                    // so ignore the change of `@angular/core`.
+                    if (fileName === corePath) {
+                        continue;
+                    }
                     seen.add(fileName);
                     var version = this.tsLsHost.getScriptVersion(fileName);
                     var lastVersion = this.fileVersions.get(fileName);
