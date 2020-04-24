@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.3+26.sha-dd049ca
+ * @license Angular v10.0.0-next.3+25.sha-bcd31cb
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19566,7 +19566,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.3+26.sha-dd049ca');
+    var VERSION$1 = new Version('10.0.0-next.3+25.sha-bcd31cb');
 
     /**
      * @license
@@ -39973,7 +39973,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.3+26.sha-dd049ca');
+    var VERSION$2 = new Version$1('10.0.0-next.3+25.sha-bcd31cb');
 
     /**
      * @license
@@ -51666,16 +51666,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var filesChangedOrRemoved = [];
             // Check if any source files have been added / changed since last computation.
             var seen = new Set();
-            var ANGULAR_CORE = '@angular/core';
-            var corePath = this.reflectorHost.moduleNameToFileName(ANGULAR_CORE);
             try {
                 for (var _e = __values(program.getSourceFiles()), _f = _e.next(); !_f.done; _f = _e.next()) {
                     var fileName = _f.value.fileName;
-                    // If the `@angular/core` has been edited, the language service should be restart,
-                    // so ignore the change of `@angular/core`.
-                    if (fileName === corePath) {
-                        continue;
-                    }
                     seen.add(fileName);
                     var version = this.tsLsHost.getScriptVersion(fileName);
                     var lastVersion = this.fileVersions.get(fileName);
