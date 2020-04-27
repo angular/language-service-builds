@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.3+35.sha-00e6cb1
+ * @license Angular v10.0.0-next.3+36.sha-f27deea
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19566,7 +19566,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.3+35.sha-00e6cb1');
+    var VERSION$1 = new Version('10.0.0-next.3+36.sha-f27deea');
 
     /**
      * @license
@@ -32007,7 +32007,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function setBindingRootForHostBindings(bindingRootIndex, currentDirectiveIndex) {
         var lFrame = instructionState.lFrame;
         lFrame.bindingIndex = lFrame.bindingRootIndex = bindingRootIndex;
-        lFrame.currentDirectiveIndex = currentDirectiveIndex;
+        setCurrentDirectiveIndex(currentDirectiveIndex);
+    }
+    /**
+     * Sets an index of a directive whose `hostBindings` are being processed.
+     *
+     * @param currentDirectiveIndex `TData` index where current directive instance can be found.
+     */
+    function setCurrentDirectiveIndex(currentDirectiveIndex) {
+        instructionState.lFrame.currentDirectiveIndex = currentDirectiveIndex;
     }
     function setCurrentQueryIndex(value) {
         instructionState.lFrame.currentQueryIndex = value;
@@ -39973,7 +39981,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.3+35.sha-00e6cb1');
+    var VERSION$2 = new Version$1('10.0.0-next.3+36.sha-f27deea');
 
     /**
      * @license
