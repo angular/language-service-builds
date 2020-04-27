@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.3+35.sha-00e6cb1
+ * @license Angular v10.0.0-next.3+36.sha-f27deea
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19551,7 +19551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.3+35.sha-00e6cb1');
+    var VERSION$1 = new Version('10.0.0-next.3+36.sha-f27deea');
 
     /**
      * @license
@@ -32657,7 +32657,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function setBindingRootForHostBindings(bindingRootIndex, currentDirectiveIndex) {
         var lFrame = instructionState.lFrame;
         lFrame.bindingIndex = lFrame.bindingRootIndex = bindingRootIndex;
-        lFrame.currentDirectiveIndex = currentDirectiveIndex;
+        setCurrentDirectiveIndex(currentDirectiveIndex);
     }
     /**
      * When host binding is executing this points to the directive index.
@@ -32666,6 +32666,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function getCurrentDirectiveIndex() {
         return instructionState.lFrame.currentDirectiveIndex;
+    }
+    /**
+     * Sets an index of a directive whose `hostBindings` are being processed.
+     *
+     * @param currentDirectiveIndex `TData` index where current directive instance can be found.
+     */
+    function setCurrentDirectiveIndex(currentDirectiveIndex) {
+        instructionState.lFrame.currentDirectiveIndex = currentDirectiveIndex;
+    }
+    /**
+     * Retrieve the current `DirectiveDef` which is active when `hostBindings` instruction is being
+     * executed.
+     *
+     * @param tData Current `TData` where the `DirectiveDef` will be looked up at.
+     */
+    function getCurrentDirectiveDef(tData) {
+        var currentDirectiveIndex = instructionState.lFrame.currentDirectiveIndex;
+        return currentDirectiveIndex === -1 ? null : tData[currentDirectiveIndex];
     }
     function getCurrentQueryIndex() {
         return instructionState.lFrame.currentQueryIndex;
@@ -38385,11 +38403,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var expando = tView.expandoInstructions;
         var firstCreatePass = tView.firstCreatePass;
         var elementIndex = tNode.index - HEADER_OFFSET;
+        var currentDirectiveIndex = getCurrentDirectiveIndex();
         try {
             setSelectedIndex(elementIndex);
-            for (var i = start; i < end; i++) {
-                var def = tView.data[i];
-                var directive = lView[i];
+            for (var dirIndex = start; dirIndex < end; dirIndex++) {
+                var def = tView.data[dirIndex];
+                var directive = lView[dirIndex];
+                setCurrentDirectiveIndex(dirIndex);
                 if (def.hostBindings !== null || def.hostVars !== 0 || def.hostAttrs !== null) {
                     invokeHostBindingsInCreationMode(def, directive);
                 }
@@ -38400,6 +38420,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         finally {
             setSelectedIndex(-1);
+            setCurrentDirectiveIndex(currentDirectiveIndex);
         }
     }
     /**
@@ -38991,9 +39012,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * There are cases where the sub component's renderer needs to be included
      * instead of the current renderer (see the componentSyntheticHost* instructions).
      */
-    function loadComponentRenderer(tNode, lView) {
-        var componentLView = unwrapLView(lView[tNode.index]);
-        return componentLView[RENDERER];
+    function loadComponentRenderer(currentDef, tNode, lView) {
+        // TODO(FW-2043): the `currentDef` is null when host bindings are invoked while creating root
+        // component (see packages/core/src/render3/component.ts). This is not consistent with the process
+        // of creating inner components, when current directive index is available in the state. In order
+        // to avoid relying on current def being `null` (thus special-casing root component creation), the
+        // process of creating root component should be unified with the process of creating inner
+        // components.
+        if (currentDef === null || isComponentDef(currentDef)) {
+            lView = unwrapLView(lView[tNode.index]);
+        }
+        return lView[RENDERER];
     }
     /** Handles an error thrown in an LView. */
     function handleError(lView, error) {
@@ -44460,7 +44489,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return ɵɵlistener;
     }
     /**
-     * Registers a synthetic host listener (e.g. `(@foo.start)`) on a component.
+     * Registers a synthetic host listener (e.g. `(@foo.start)`) on a component or directive.
      *
      * This instruction is for compatibility purposes and is designed to ensure that a
      * synthetic host listener (e.g. `@HostListener('@foo.start')`) properly gets rendered
@@ -44484,8 +44513,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (useCapture === void 0) { useCapture = false; }
         var tNode = getPreviousOrParentTNode();
         var lView = getLView();
-        var renderer = loadComponentRenderer(tNode, lView);
         var tView = getTView();
+        var currentDef = getCurrentDirectiveDef(tView.data);
+        var renderer = loadComponentRenderer(currentDef, tNode, lView);
         listenerInternal(tView, lView, renderer, tNode, eventName, listenerFn, useCapture, eventTargetResolver);
         return ɵɵcomponentHostSyntheticListener;
     }
@@ -46099,7 +46129,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param isClassBased `true` if `class` (`false` if `style`)
      */
     function wrapInStaticStylingKey(tData, tNode, stylingKey, isClassBased) {
-        var hostDirectiveDef = getHostDirectiveDef(tData);
+        var hostDirectiveDef = getCurrentDirectiveDef(tData);
         var residual = isClassBased ? tNode.residualClasses : tNode.residualStyles;
         if (hostDirectiveDef === null) {
             // We are in template node.
@@ -46327,16 +46357,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         return stylingKey === undefined ? null : stylingKey;
-    }
-    /**
-     * Retrieve the current `DirectiveDef` which is active when `hostBindings` style instruction is
-     * being executed (or `null` if we are in `template`.)
-     *
-     * @param tData Current `TData` where the `DirectiveDef` will be looked up at.
-     */
-    function getHostDirectiveDef(tData) {
-        var currentDirectiveIndex = getCurrentDirectiveIndex();
-        return currentDirectiveIndex === -1 ? null : tData[currentDirectiveIndex];
     }
     /**
      * Convert user input to `KeyValueArray`.
@@ -47973,7 +47993,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return ɵɵhostProperty;
     }
     /**
-     * Updates a synthetic host binding (e.g. `[@foo]`) on a component.
+     * Updates a synthetic host binding (e.g. `[@foo]`) on a component or directive.
      *
      * This instruction is for compatibility purposes and is designed to ensure that a
      * synthetic host binding (e.g. `@HostBinding('@foo')`) properly gets rendered in
@@ -47999,7 +48019,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (bindingUpdated(lView, bindingIndex, value)) {
             var tView = getTView();
             var tNode = getSelectedTNode();
-            var renderer = loadComponentRenderer(tNode, lView);
+            var currentDef = getCurrentDirectiveDef(tView.data);
+            var renderer = loadComponentRenderer(currentDef, tNode, lView);
             elementPropertyInternal(tView, tNode, lView, propName, value, renderer, sanitizer, true);
             ngDevMode && storePropertyBindingMetadata(tView.data, tNode, propName, bindingIndex);
         }
@@ -49397,7 +49418,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.3+35.sha-00e6cb1');
+    var VERSION$2 = new Version$1('10.0.0-next.3+36.sha-f27deea');
 
     /**
      * @license
