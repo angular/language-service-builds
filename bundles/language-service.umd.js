@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.4
+ * @license Angular v10.0.0-next.4+1.sha-62ba0ac
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19586,7 +19586,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.4');
+    var VERSION$1 = new Version('10.0.0-next.4+1.sha-62ba0ac');
 
     /**
      * @license
@@ -40020,7 +40020,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.4');
+    var VERSION$2 = new Version$1('10.0.0-next.4+1.sha-62ba0ac');
 
     /**
      * @license
@@ -51718,8 +51718,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             try {
                 for (var _e = __values(program.getSourceFiles()), _f = _e.next(); !_f.done; _f = _e.next()) {
                     var fileName = _f.value.fileName;
-                    // If the `@angular/core` has been edited, the language service should be restart,
-                    // so ignore the change of `@angular/core`.
+                    // If `@angular/core` is edited, the language service would have to be
+                    // restarted, so ignore changes to `@angular/core`.
+                    // When the StaticReflector is initialized at startup, it loads core
+                    // symbols from @angular/core by calling initializeConversionMap(). This
+                    // is only done once. If the file is invalidated, some of the core symbols
+                    // will be lost permanently.
                     if (fileName === corePath) {
                         continue;
                     }
