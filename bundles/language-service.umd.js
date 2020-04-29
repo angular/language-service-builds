@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.3+45.sha-89c5890
+ * @license Angular v10.0.0-next.3+46.sha-3d82aa7
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19571,7 +19571,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.3+45.sha-89c5890');
+    var VERSION$1 = new Version('10.0.0-next.3+46.sha-3d82aa7');
 
     /**
      * @license
@@ -36570,7 +36570,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         pipeRegistry, //
         firstChild, //
         schemas, //
-        consts) {
+        consts, //
+        incompleteFirstPass //
+        ) {
             this.type = type;
             this.id = id;
             this.blueprint = blueprint;
@@ -36601,6 +36603,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.firstChild = firstChild;
             this.schemas = schemas;
             this.consts = consts;
+            this.incompleteFirstPass = incompleteFirstPass;
         }
         Object.defineProperty(TView.prototype, "template_", {
             get: function () {
@@ -37611,6 +37614,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 renderChildComponents(lView, components);
             }
         }
+        catch (error) {
+            // If we didn't manage to get past the first template pass due to
+            // an error, mark the view as corrupted so we can try to recover.
+            if (tView.firstCreatePass) {
+                tView.incompleteFirstPass = true;
+            }
+            throw error;
+        }
         finally {
             lView[FLAGS] &= ~4 /* CreationMode */;
             leaveView();
@@ -37816,8 +37827,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @returns TView
      */
     function getOrCreateTComponentView(def) {
-        return def.tView ||
-            (def.tView = createTView(1 /* Component */, -1, def.template, def.decls, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery, def.schemas, def.consts));
+        var tView = def.tView;
+        // Create a TView if there isn't one, or recreate it if the first create pass didn't
+        // complete successfuly since we can't know for sure whether it's in a usable shape.
+        if (tView === null || tView.incompleteFirstPass) {
+            return def.tView = createTView(1 /* Component */, -1, def.template, def.decls, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery, def.schemas, def.consts);
+        }
+        return tView;
     }
     /**
      * Creates a TView instance
@@ -37870,7 +37886,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             typeof pipes === 'function' ? pipes() : pipes, // pipeRegistry: PipeDefList|null,
             null, // firstChild: TNode|null,
             schemas, // schemas: SchemaMetadata[]|null,
-            consts) : // consts: TConstants|null
+            consts, // consts: TConstants|null
+            false // incompleteFirstPass: boolean
+            ) :
             {
                 type: type,
                 id: viewIndex,
@@ -37902,6 +37920,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 firstChild: null,
                 schemas: schemas,
                 consts: consts,
+                incompleteFirstPass: false
             };
     }
     function createViewBlueprint(bindingStartIndex, initialViewLength) {
@@ -49438,7 +49457,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.3+45.sha-89c5890');
+    var VERSION$2 = new Version$1('10.0.0-next.3+46.sha-3d82aa7');
 
     /**
      * @license
