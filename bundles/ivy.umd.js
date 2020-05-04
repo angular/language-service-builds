@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.4+38.sha-58ea040
+ * @license Angular v10.0.0-next.4+39.sha-db4c59d
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
