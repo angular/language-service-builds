@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.5+72.sha-97d6d90
+ * @license Angular v10.0.0-next.5+73.sha-d0280a0
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19586,7 +19586,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.5+72.sha-97d6d90');
+    var VERSION$1 = new Version('10.0.0-next.5+73.sha-d0280a0');
 
     /**
      * @license
@@ -22189,9 +22189,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var message = "Can't resolve all parameters for " + stringifyType(typeOrFunc) + ": (" + depsTokens + ").";
                 if (throwOnUnknownDeps || this._config.strictInjectionParameters) {
                     this._reportError(syntaxError(message), typeOrFunc);
-                }
-                else {
-                    this._console.warn("Warning: " + message + " This will become an error in Angular v6.x");
                 }
             }
             return dependenciesMetadata;
@@ -40108,7 +40105,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.5+72.sha-97d6d90');
+    var VERSION$2 = new Version$1('10.0.0-next.5+73.sha-d0280a0');
 
     /**
      * @license
