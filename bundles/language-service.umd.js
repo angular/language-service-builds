@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.6
+ * @license Angular v9.1.6+5.sha-790af88
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -7196,6 +7196,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         return AST;
     }());
+    var ASTWithName = /** @class */ (function (_super) {
+        __extends(ASTWithName, _super);
+        function ASTWithName(span, sourceSpan, nameSpan) {
+            var _this = _super.call(this, span, sourceSpan) || this;
+            _this.nameSpan = nameSpan;
+            return _this;
+        }
+        return ASTWithName;
+    }(AST));
     /**
      * Represents a quoted expression of the form:
      *
@@ -7281,8 +7290,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }(AST));
     var PropertyRead = /** @class */ (function (_super) {
         __extends(PropertyRead, _super);
-        function PropertyRead(span, sourceSpan, receiver, name) {
-            var _this = _super.call(this, span, sourceSpan) || this;
+        function PropertyRead(span, sourceSpan, nameSpan, receiver, name) {
+            var _this = _super.call(this, span, sourceSpan, nameSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             return _this;
@@ -7292,11 +7301,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitPropertyRead(this, context);
         };
         return PropertyRead;
-    }(AST));
+    }(ASTWithName));
     var PropertyWrite = /** @class */ (function (_super) {
         __extends(PropertyWrite, _super);
-        function PropertyWrite(span, sourceSpan, receiver, name, value) {
-            var _this = _super.call(this, span, sourceSpan) || this;
+        function PropertyWrite(span, sourceSpan, nameSpan, receiver, name, value) {
+            var _this = _super.call(this, span, sourceSpan, nameSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             _this.value = value;
@@ -7307,11 +7316,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitPropertyWrite(this, context);
         };
         return PropertyWrite;
-    }(AST));
+    }(ASTWithName));
     var SafePropertyRead = /** @class */ (function (_super) {
         __extends(SafePropertyRead, _super);
-        function SafePropertyRead(span, sourceSpan, receiver, name) {
-            var _this = _super.call(this, span, sourceSpan) || this;
+        function SafePropertyRead(span, sourceSpan, nameSpan, receiver, name) {
+            var _this = _super.call(this, span, sourceSpan, nameSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             return _this;
@@ -7321,7 +7330,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitSafePropertyRead(this, context);
         };
         return SafePropertyRead;
-    }(AST));
+    }(ASTWithName));
     var KeyedRead = /** @class */ (function (_super) {
         __extends(KeyedRead, _super);
         function KeyedRead(span, sourceSpan, obj, key) {
@@ -7354,11 +7363,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var BindingPipe = /** @class */ (function (_super) {
         __extends(BindingPipe, _super);
         function BindingPipe(span, sourceSpan, exp, name, args, nameSpan) {
-            var _this = _super.call(this, span, sourceSpan) || this;
+            var _this = _super.call(this, span, sourceSpan, nameSpan) || this;
             _this.exp = exp;
             _this.name = name;
             _this.args = args;
-            _this.nameSpan = nameSpan;
             return _this;
         }
         BindingPipe.prototype.visit = function (visitor, context) {
@@ -7366,7 +7374,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitPipe(this, context);
         };
         return BindingPipe;
-    }(AST));
+    }(ASTWithName));
     var LiteralPrimitive = /** @class */ (function (_super) {
         __extends(LiteralPrimitive, _super);
         function LiteralPrimitive(span, sourceSpan, value) {
@@ -7464,8 +7472,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }(AST));
     var MethodCall = /** @class */ (function (_super) {
         __extends(MethodCall, _super);
-        function MethodCall(span, sourceSpan, receiver, name, args) {
-            var _this = _super.call(this, span, sourceSpan) || this;
+        function MethodCall(span, sourceSpan, nameSpan, receiver, name, args) {
+            var _this = _super.call(this, span, sourceSpan, nameSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             _this.args = args;
@@ -7476,11 +7484,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitMethodCall(this, context);
         };
         return MethodCall;
-    }(AST));
+    }(ASTWithName));
     var SafeMethodCall = /** @class */ (function (_super) {
         __extends(SafeMethodCall, _super);
-        function SafeMethodCall(span, sourceSpan, receiver, name, args) {
-            var _this = _super.call(this, span, sourceSpan) || this;
+        function SafeMethodCall(span, sourceSpan, nameSpan, receiver, name, args) {
+            var _this = _super.call(this, span, sourceSpan, nameSpan) || this;
             _this.receiver = receiver;
             _this.name = name;
             _this.args = args;
@@ -7491,7 +7499,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitSafeMethodCall(this, context);
         };
         return SafeMethodCall;
-    }(AST));
+    }(ASTWithName));
     var FunctionCall = /** @class */ (function (_super) {
         __extends(FunctionCall, _super);
         function FunctionCall(span, sourceSpan, target, args) {
@@ -7678,19 +7686,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new LiteralPrimitive(ast.span, ast.sourceSpan, ast.value);
         };
         AstTransformer.prototype.visitPropertyRead = function (ast, context) {
-            return new PropertyRead(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name);
+            return new PropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name);
         };
         AstTransformer.prototype.visitPropertyWrite = function (ast, context) {
-            return new PropertyWrite(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name, ast.value.visit(this));
+            return new PropertyWrite(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, ast.value.visit(this));
         };
         AstTransformer.prototype.visitSafePropertyRead = function (ast, context) {
-            return new SafePropertyRead(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name);
+            return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name);
         };
         AstTransformer.prototype.visitMethodCall = function (ast, context) {
-            return new MethodCall(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
         };
         AstTransformer.prototype.visitSafeMethodCall = function (ast, context) {
-            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
         };
         AstTransformer.prototype.visitFunctionCall = function (ast, context) {
             return new FunctionCall(ast.span, ast.sourceSpan, ast.target.visit(this), this.visitAll(ast.args));
@@ -7757,7 +7765,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         AstMemoryEfficientTransformer.prototype.visitPropertyRead = function (ast, context) {
             var receiver = ast.receiver.visit(this);
             if (receiver !== ast.receiver) {
-                return new PropertyRead(ast.span, ast.sourceSpan, receiver, ast.name);
+                return new PropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name);
             }
             return ast;
         };
@@ -7765,14 +7773,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var receiver = ast.receiver.visit(this);
             var value = ast.value.visit(this);
             if (receiver !== ast.receiver || value !== ast.value) {
-                return new PropertyWrite(ast.span, ast.sourceSpan, receiver, ast.name, value);
+                return new PropertyWrite(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, value);
             }
             return ast;
         };
         AstMemoryEfficientTransformer.prototype.visitSafePropertyRead = function (ast, context) {
             var receiver = ast.receiver.visit(this);
             if (receiver !== ast.receiver) {
-                return new SafePropertyRead(ast.span, ast.sourceSpan, receiver, ast.name);
+                return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name);
             }
             return ast;
         };
@@ -7780,7 +7788,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var receiver = ast.receiver.visit(this);
             var args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new MethodCall(ast.span, ast.sourceSpan, receiver, ast.name, args);
+                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
             }
             return ast;
         };
@@ -7788,7 +7796,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var receiver = ast.receiver.visit(this);
             var args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new SafeMethodCall(ast.span, ast.sourceSpan, receiver, ast.name, args);
+                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
             }
             return ast;
         };
@@ -8515,10 +8523,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Convert the ast to an unguarded access to the receiver's member. The map will substitute
             // leftMostNode with its unguarded version in the call to `this.visit()`.
             if (leftMostSafe instanceof SafeMethodCall) {
-                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args));
+                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args));
             }
             else {
-                this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.receiver, leftMostSafe.name));
+                this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name));
             }
             // Recursively convert the node now without the guarded member access.
             var access = this._visit(ast, _Mode.Expression);
@@ -14380,10 +14388,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(_ParseAST.prototype, "inputIndex", {
+        Object.defineProperty(_ParseAST.prototype, "atEOF", {
+            /** Whether all the parser input has been processed. */
             get: function () {
-                return (this.index < this.tokens.length) ? this.next.index + this.offset :
-                    this.inputLength + this.offset;
+                return this.index >= this.tokens.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(_ParseAST.prototype, "inputIndex", {
+            /**
+             * Index of the next token to be processed, or the end of the last token if all have been
+             * processed.
+             */
+            get: function () {
+                return this.atEOF ? this.currentEndIndex : this.next.index + this.offset;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(_ParseAST.prototype, "currentEndIndex", {
+            /**
+             * End index of the last processed token, or the start of the first token if none have been
+             * processed.
+             */
+            get: function () {
+                if (this.index > 0) {
+                    var curToken = this.peek(-1);
+                    return curToken.end + this.offset;
+                }
+                // No tokens have been processed yet; return the next token's start or the length of the input
+                // if there is no token.
+                if (this.tokens.length === 0) {
+                    return this.inputLength + this.offset;
+                }
+                return this.next.index + this.offset;
             },
             enumerable: true,
             configurable: true
@@ -14399,12 +14438,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         _ParseAST.prototype.span = function (start) {
-            // `end` is either the
-            //   - end index of the current token
-            //   - start of the first token (this can happen e.g. when creating an implicit receiver)
-            var curToken = this.peek(-1);
-            var end = this.index > 0 ? curToken.end + this.offset : this.inputIndex;
-            return new ParseSpan(start, end);
+            return new ParseSpan(start, this.currentEndIndex);
         };
         _ParseAST.prototype.sourceSpan = function (start) {
             var serial = start + "@" + this.inputIndex;
@@ -14788,7 +14822,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ParseAST.prototype.parseAccessMemberOrMethodCall = function (receiver, isSafe) {
             if (isSafe === void 0) { isSafe = false; }
             var start = receiver.span.start;
+            var nameStart = this.inputIndex;
             var id = this.expectIdentifierOrKeyword();
+            var nameSpan = this.sourceSpan(nameStart);
             if (this.consumeOptionalCharacter($LPAREN)) {
                 this.rparensExpected++;
                 var args = this.parseCallArguments();
@@ -14796,8 +14832,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.rparensExpected--;
                 var span = this.span(start);
                 var sourceSpan = this.sourceSpan(start);
-                return isSafe ? new SafeMethodCall(span, sourceSpan, receiver, id, args) :
-                    new MethodCall(span, sourceSpan, receiver, id, args);
+                return isSafe ? new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args) :
+                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args);
             }
             else {
                 if (isSafe) {
@@ -14806,7 +14842,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         return new EmptyExpr(this.span(start), this.sourceSpan(start));
                     }
                     else {
-                        return new SafePropertyRead(this.span(start), this.sourceSpan(start), receiver, id);
+                        return new SafePropertyRead(this.span(start), this.sourceSpan(start), nameSpan, receiver, id);
                     }
                 }
                 else {
@@ -14816,10 +14852,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             return new EmptyExpr(this.span(start), this.sourceSpan(start));
                         }
                         var value = this.parseConditional();
-                        return new PropertyWrite(this.span(start), this.sourceSpan(start), receiver, id, value);
+                        return new PropertyWrite(this.span(start), this.sourceSpan(start), nameSpan, receiver, id, value);
                     }
                     else {
-                        return new PropertyRead(this.span(start), this.sourceSpan(start), receiver, id);
+                        return new PropertyRead(this.span(start), this.sourceSpan(start), nameSpan, receiver, id);
                     }
                 }
             }
@@ -18114,7 +18150,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var slotPseudoLocal = "PIPE:" + slot;
             // Allocate one slot for the result plus one slot per pipe argument
             var pureFunctionSlot = this.allocatePureFunctionSlots(2 + pipe.args.length);
-            var target = new PropertyRead(pipe.span, pipe.sourceSpan, new ImplicitReceiver(pipe.span, pipe.sourceSpan), slotPseudoLocal);
+            var target = new PropertyRead(pipe.span, pipe.sourceSpan, pipe.nameSpan, new ImplicitReceiver(pipe.span, pipe.sourceSpan), slotPseudoLocal);
             var _a = pipeBindingCallInfo(pipe.args), identifier = _a.identifier, isVarLength = _a.isVarLength;
             this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(identifier));
             var args = __spread([pipe.exp], pipe.args);
@@ -19566,7 +19602,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.6');
+    var VERSION$1 = new Version('9.1.6+5.sha-790af88');
 
     /**
      * @license
@@ -25736,435 +25772,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    // AstType calculatetype of the ast given AST element.
-    var AstType = /** @class */ (function () {
-        function AstType(scope, query, context, source) {
-            this.scope = scope;
-            this.query = query;
-            this.context = context;
-            this.source = source;
-            this.diagnostics = [];
-        }
-        AstType.prototype.getType = function (ast) {
-            return ast.visit(this);
-        };
-        AstType.prototype.getDiagnostics = function (ast) {
-            var type = ast.visit(this);
-            if (this.context.inEvent && type.callable) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.callable_expression_expected_method_call));
-            }
-            return this.diagnostics;
-        };
-        AstType.prototype.visitBinary = function (ast) {
-            var _this_1 = this;
-            var getType = function (ast, operation) {
-                var type = _this_1.getType(ast);
-                if (type.nullable) {
-                    switch (operation) {
-                        case '&&':
-                        case '||':
-                        case '==':
-                        case '!=':
-                        case '===':
-                        case '!==':
-                            // Nullable allowed.
-                            break;
-                        default:
-                            _this_1.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expression_might_be_null));
-                            break;
-                    }
-                }
-                return type;
-            };
-            var leftType = getType(ast.left, ast.operation);
-            var rightType = getType(ast.right, ast.operation);
-            var leftKind = this.query.getTypeKind(leftType);
-            var rightKind = this.query.getTypeKind(rightType);
-            // The following swtich implements operator typing similar to the
-            // type production tables in the TypeScript specification.
-            // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.19
-            var operKind = leftKind << 8 | rightKind;
-            switch (ast.operation) {
-                case '*':
-                case '/':
-                case '%':
-                case '-':
-                case '<<':
-                case '>>':
-                case '>>>':
-                case '&':
-                case '^':
-                case '|':
-                    switch (operKind) {
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Number:
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Number:
-                            return this.query.getBuiltinType(BuiltinType$1.Number);
-                        default:
-                            var errorAst = ast.left;
-                            switch (leftKind) {
-                                case BuiltinType$1.Any:
-                                case BuiltinType$1.Number:
-                                    errorAst = ast.right;
-                                    break;
-                            }
-                            this.diagnostics.push(createDiagnostic(errorAst.span, Diagnostic.expected_a_number_type));
-                            return this.anyType;
-                    }
-                case '+':
-                    switch (operKind) {
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Boolean:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Number:
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.Other:
-                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.Other << 8 | BuiltinType$1.Any:
-                            return this.anyType;
-                        case BuiltinType$1.Any << 8 | BuiltinType$1.String:
-                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.String:
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.String:
-                        case BuiltinType$1.String << 8 | BuiltinType$1.Any:
-                        case BuiltinType$1.String << 8 | BuiltinType$1.Boolean:
-                        case BuiltinType$1.String << 8 | BuiltinType$1.Number:
-                        case BuiltinType$1.String << 8 | BuiltinType$1.String:
-                        case BuiltinType$1.String << 8 | BuiltinType$1.Other:
-                        case BuiltinType$1.Other << 8 | BuiltinType$1.String:
-                            return this.query.getBuiltinType(BuiltinType$1.String);
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Number:
-                            return this.query.getBuiltinType(BuiltinType$1.Number);
-                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.Number:
-                        case BuiltinType$1.Other << 8 | BuiltinType$1.Number:
-                            this.diagnostics.push(createDiagnostic(ast.left.span, Diagnostic.expected_a_number_type));
-                            return this.anyType;
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Boolean:
-                        case BuiltinType$1.Number << 8 | BuiltinType$1.Other:
-                            this.diagnostics.push(createDiagnostic(ast.right.span, Diagnostic.expected_a_number_type));
-                            return this.anyType;
-                        default:
-                            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expected_a_string_or_number_type));
-                            return this.anyType;
-                    }
-                case '>':
-                case '<':
-                case '<=':
-                case '>=':
-                case '==':
-                case '!=':
-                case '===':
-                case '!==':
-                    if (!(leftKind & rightKind) &&
-                        !((leftKind | rightKind) & (BuiltinType$1.Null | BuiltinType$1.Undefined))) {
-                        // Two values are comparable only if
-                        //   - they have some type overlap, or
-                        //   - at least one is not defined
-                        this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.expected_operands_of_comparable_types_or_any));
-                    }
-                    return this.query.getBuiltinType(BuiltinType$1.Boolean);
-                case '&&':
-                    return rightType;
-                case '||':
-                    return this.query.getTypeUnion(leftType, rightType);
-            }
-            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unrecognized_operator, ast.operation));
-            return this.anyType;
-        };
-        AstType.prototype.visitChain = function (ast) {
-            var e_1, _a;
-            try {
-                // If we are producing diagnostics, visit the children
-                for (var _b = __values(ast.expressions), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var expr = _c.value;
-                    expr.visit(this);
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-            // The type of a chain is always undefined.
-            return this.query.getBuiltinType(BuiltinType$1.Undefined);
-        };
-        AstType.prototype.visitConditional = function (ast) {
-            // The type of a conditional is the union of the true and false conditions.
-            ast.condition.visit(this);
-            ast.trueExp.visit(this);
-            ast.falseExp.visit(this);
-            return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
-        };
-        AstType.prototype.visitFunctionCall = function (ast) {
-            var _this_1 = this;
-            // The type of a function call is the return type of the selected signature.
-            // The signature is selected based on the types of the arguments. Angular doesn't
-            // support contextual typing of arguments so this is simpler than TypeScript's
-            // version.
-            var args = ast.args.map(function (arg) { return _this_1.getType(arg); });
-            var target = this.getType(ast.target);
-            if (!target || !target.callable) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.call_target_not_callable, this.sourceOf(ast.target), target.name));
-                return this.anyType;
-            }
-            var signature = target.selectSignature(args);
-            if (signature) {
-                return signature.result;
-            }
-            // TODO: Consider a better error message here. See `typescript_symbols#selectSignature` for more
-            // details.
-            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_compatible_call_signature));
-            return this.anyType;
-        };
-        AstType.prototype.visitImplicitReceiver = function (_ast) {
-            var _this = this;
-            // Return a pseudo-symbol for the implicit receiver.
-            // The members of the implicit receiver are what is defined by the
-            // scope passed into this class.
-            return {
-                name: '$implicit',
-                kind: 'component',
-                language: 'ng-template',
-                type: undefined,
-                container: undefined,
-                callable: false,
-                nullable: false,
-                public: true,
-                definition: undefined,
-                documentation: [],
-                members: function () {
-                    return _this.scope;
-                },
-                signatures: function () {
-                    return [];
-                },
-                selectSignature: function (_types) {
-                    return undefined;
-                },
-                indexed: function (_argument) {
-                    return undefined;
-                },
-                typeArguments: function () {
-                    return undefined;
-                },
-            };
-        };
-        AstType.prototype.visitInterpolation = function (ast) {
-            var e_2, _a;
-            try {
-                // If we are producing diagnostics, visit the children.
-                for (var _b = __values(ast.expressions), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var expr = _c.value;
-                    expr.visit(this);
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-            return this.undefinedType;
-        };
-        AstType.prototype.visitKeyedRead = function (ast) {
-            var targetType = this.getType(ast.obj);
-            var keyType = this.getType(ast.key);
-            var result = targetType.indexed(keyType, ast.key instanceof LiteralPrimitive ? ast.key.value : undefined);
-            return result || this.anyType;
-        };
-        AstType.prototype.visitKeyedWrite = function (ast) {
-            // The write of a type is the type of the value being written.
-            return this.getType(ast.value);
-        };
-        AstType.prototype.visitLiteralArray = function (ast) {
-            var _a;
-            var _this_1 = this;
-            // A type literal is an array type of the union of the elements
-            return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, __spread(ast.expressions.map(function (element) { return _this_1.getType(element); }))));
-        };
-        AstType.prototype.visitLiteralMap = function (ast) {
-            var e_3, _a;
-            try {
-                // If we are producing diagnostics, visit the children
-                for (var _b = __values(ast.values), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var value = _c.value;
-                    value.visit(this);
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-            // TODO: Return a composite type.
-            return this.anyType;
-        };
-        AstType.prototype.visitLiteralPrimitive = function (ast) {
-            // The type of a literal primitive depends on the value of the literal.
-            switch (ast.value) {
-                case true:
-                case false:
-                    return this.query.getBuiltinType(BuiltinType$1.Boolean);
-                case null:
-                    return this.query.getBuiltinType(BuiltinType$1.Null);
-                case undefined:
-                    return this.query.getBuiltinType(BuiltinType$1.Undefined);
-                default:
-                    switch (typeof ast.value) {
-                        case 'string':
-                            return this.query.getBuiltinType(BuiltinType$1.String);
-                        case 'number':
-                            return this.query.getBuiltinType(BuiltinType$1.Number);
-                        default:
-                            this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unrecognized_primitive, typeof ast.value));
-                            return this.anyType;
-                    }
-            }
-        };
-        AstType.prototype.visitMethodCall = function (ast) {
-            return this.resolveMethodCall(this.getType(ast.receiver), ast);
-        };
-        AstType.prototype.visitPipe = function (ast) {
-            var _this_1 = this;
-            // The type of a pipe node is the return type of the pipe's transform method. The table returned
-            // by getPipes() is expected to contain symbols with the corresponding transform method type.
-            var pipe = this.query.getPipes().get(ast.name);
-            if (!pipe) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.no_pipe_found, ast.name));
-                return this.anyType;
-            }
-            var expType = this.getType(ast.exp);
-            var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this_1.getType(arg); })));
-            if (!signature) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_signature, ast.name));
-                return this.anyType;
-            }
-            return signature.result;
-        };
-        AstType.prototype.visitPrefixNot = function (ast) {
-            // If we are producing diagnostics, visit the children
-            ast.expression.visit(this);
-            // The type of a prefix ! is always boolean.
-            return this.query.getBuiltinType(BuiltinType$1.Boolean);
-        };
-        AstType.prototype.visitNonNullAssert = function (ast) {
-            var expressionType = this.getType(ast.expression);
-            return this.query.getNonNullableType(expressionType);
-        };
-        AstType.prototype.visitPropertyRead = function (ast) {
-            return this.resolvePropertyRead(this.getType(ast.receiver), ast);
-        };
-        AstType.prototype.visitPropertyWrite = function (ast) {
-            // The type of a write is the type of the value being written.
-            return this.getType(ast.value);
-        };
-        AstType.prototype.visitQuote = function (_ast) {
-            // The type of a quoted expression is any.
-            return this.query.getBuiltinType(BuiltinType$1.Any);
-        };
-        AstType.prototype.visitSafeMethodCall = function (ast) {
-            return this.resolveMethodCall(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
-        };
-        AstType.prototype.visitSafePropertyRead = function (ast) {
-            return this.resolvePropertyRead(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
-        };
-        /**
-         * Gets the source of an expession AST.
-         * The AST's sourceSpan is relative to the start of the template source code, which is contained
-         * at this.source.
-         */
-        AstType.prototype.sourceOf = function (ast) {
-            return this.source.substring(ast.sourceSpan.start, ast.sourceSpan.end);
-        };
-        Object.defineProperty(AstType.prototype, "anyType", {
-            get: function () {
-                var result = this._anyType;
-                if (!result) {
-                    result = this._anyType = this.query.getBuiltinType(BuiltinType$1.Any);
-                }
-                return result;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AstType.prototype, "undefinedType", {
-            get: function () {
-                var result = this._undefinedType;
-                if (!result) {
-                    result = this._undefinedType = this.query.getBuiltinType(BuiltinType$1.Undefined);
-                }
-                return result;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        AstType.prototype.resolveMethodCall = function (receiverType, ast) {
-            var _this_1 = this;
-            if (this.isAny(receiverType)) {
-                return this.anyType;
-            }
-            var methodType = this.resolvePropertyRead(receiverType, ast);
-            if (!methodType) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.could_not_resolve_type, ast.name));
-                return this.anyType;
-            }
-            if (this.isAny(methodType)) {
-                return this.anyType;
-            }
-            if (!methodType.callable) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_not_callable, ast.name));
-                return this.anyType;
-            }
-            var signature = methodType.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
-            if (!signature) {
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.unable_to_resolve_signature, ast.name));
-                return this.anyType;
-            }
-            return signature.result;
-        };
-        AstType.prototype.resolvePropertyRead = function (receiverType, ast) {
-            if (this.isAny(receiverType)) {
-                return this.anyType;
-            }
-            // The type of a property read is the seelcted member's type.
-            var member = receiverType.members().get(ast.name);
-            if (!member) {
-                if (receiverType.name === '$implicit') {
-                    this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_not_defined_in_app_context, ast.name));
-                }
-                else if (receiverType.nullable && ast.receiver instanceof PropertyRead) {
-                    var receiver = ast.receiver.name;
-                    this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_possibly_undefined, receiver, receiver + "?." + ast.name, receiver + "!." + ast.name));
-                }
-                else {
-                    this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_not_defined_on_receiver, ast.name, receiverType.name));
-                }
-                return this.anyType;
-            }
-            if (!member.public) {
-                var container = receiverType.name === '$implicit' ? 'the component' : "'" + receiverType.name + "'";
-                this.diagnostics.push(createDiagnostic(ast.span, Diagnostic.identifier_is_private, ast.name, container));
-            }
-            return member.type;
-        };
-        AstType.prototype.isAny = function (symbol) {
-            return !symbol || this.query.getTypeKind(symbol) === BuiltinType$1.Any ||
-                (!!symbol.type && this.isAny(symbol.type));
-        };
-        return AstType;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function isParseSourceSpan(value) {
         return value && !!value.start;
     }
@@ -26530,6 +26137,445 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function isClassDecoratorProperty(propAsgn) {
         return !!getClassDeclFromDecoratorProp(propAsgn);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // AstType calculatetype of the ast given AST element.
+    var AstType = /** @class */ (function () {
+        function AstType(scope, query, context, source) {
+            this.scope = scope;
+            this.query = query;
+            this.context = context;
+            this.source = source;
+            this.diagnostics = [];
+        }
+        AstType.prototype.getType = function (ast) {
+            return ast.visit(this);
+        };
+        AstType.prototype.getDiagnostics = function (ast) {
+            var type = ast.visit(this);
+            if (this.context.inEvent && type.callable) {
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.callable_expression_expected_method_call));
+            }
+            return this.diagnostics;
+        };
+        AstType.prototype.visitBinary = function (ast) {
+            var _this_1 = this;
+            var getType = function (ast, operation) {
+                var type = _this_1.getType(ast);
+                if (type.nullable) {
+                    switch (operation) {
+                        case '&&':
+                        case '||':
+                        case '==':
+                        case '!=':
+                        case '===':
+                        case '!==':
+                            // Nullable allowed.
+                            break;
+                        default:
+                            _this_1.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.expression_might_be_null));
+                            break;
+                    }
+                }
+                return type;
+            };
+            var leftType = getType(ast.left, ast.operation);
+            var rightType = getType(ast.right, ast.operation);
+            var leftKind = this.query.getTypeKind(leftType);
+            var rightKind = this.query.getTypeKind(rightType);
+            // The following swtich implements operator typing similar to the
+            // type production tables in the TypeScript specification.
+            // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.19
+            var operKind = leftKind << 8 | rightKind;
+            switch (ast.operation) {
+                case '*':
+                case '/':
+                case '%':
+                case '-':
+                case '<<':
+                case '>>':
+                case '>>>':
+                case '&':
+                case '^':
+                case '|':
+                    switch (operKind) {
+                        case BuiltinType$1.Any << 8 | BuiltinType$1.Any:
+                        case BuiltinType$1.Number << 8 | BuiltinType$1.Any:
+                        case BuiltinType$1.Any << 8 | BuiltinType$1.Number:
+                        case BuiltinType$1.Number << 8 | BuiltinType$1.Number:
+                            return this.query.getBuiltinType(BuiltinType$1.Number);
+                        default:
+                            var errorAst = ast.left;
+                            switch (leftKind) {
+                                case BuiltinType$1.Any:
+                                case BuiltinType$1.Number:
+                                    errorAst = ast.right;
+                                    break;
+                            }
+                            this.diagnostics.push(createDiagnostic(errorAst.span, Diagnostic.expected_a_number_type));
+                            return this.anyType;
+                    }
+                case '+':
+                    switch (operKind) {
+                        case BuiltinType$1.Any << 8 | BuiltinType$1.Any:
+                        case BuiltinType$1.Any << 8 | BuiltinType$1.Boolean:
+                        case BuiltinType$1.Any << 8 | BuiltinType$1.Number:
+                        case BuiltinType$1.Any << 8 | BuiltinType$1.Other:
+                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.Any:
+                        case BuiltinType$1.Number << 8 | BuiltinType$1.Any:
+                        case BuiltinType$1.Other << 8 | BuiltinType$1.Any:
+                            return this.anyType;
+                        case BuiltinType$1.Any << 8 | BuiltinType$1.String:
+                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.String:
+                        case BuiltinType$1.Number << 8 | BuiltinType$1.String:
+                        case BuiltinType$1.String << 8 | BuiltinType$1.Any:
+                        case BuiltinType$1.String << 8 | BuiltinType$1.Boolean:
+                        case BuiltinType$1.String << 8 | BuiltinType$1.Number:
+                        case BuiltinType$1.String << 8 | BuiltinType$1.String:
+                        case BuiltinType$1.String << 8 | BuiltinType$1.Other:
+                        case BuiltinType$1.Other << 8 | BuiltinType$1.String:
+                            return this.query.getBuiltinType(BuiltinType$1.String);
+                        case BuiltinType$1.Number << 8 | BuiltinType$1.Number:
+                            return this.query.getBuiltinType(BuiltinType$1.Number);
+                        case BuiltinType$1.Boolean << 8 | BuiltinType$1.Number:
+                        case BuiltinType$1.Other << 8 | BuiltinType$1.Number:
+                            this.diagnostics.push(createDiagnostic(ast.left.span, Diagnostic.expected_a_number_type));
+                            return this.anyType;
+                        case BuiltinType$1.Number << 8 | BuiltinType$1.Boolean:
+                        case BuiltinType$1.Number << 8 | BuiltinType$1.Other:
+                            this.diagnostics.push(createDiagnostic(ast.right.span, Diagnostic.expected_a_number_type));
+                            return this.anyType;
+                        default:
+                            this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.expected_a_string_or_number_type));
+                            return this.anyType;
+                    }
+                case '>':
+                case '<':
+                case '<=':
+                case '>=':
+                case '==':
+                case '!=':
+                case '===':
+                case '!==':
+                    if (!(leftKind & rightKind) &&
+                        !((leftKind | rightKind) & (BuiltinType$1.Null | BuiltinType$1.Undefined))) {
+                        // Two values are comparable only if
+                        //   - they have some type overlap, or
+                        //   - at least one is not defined
+                        this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.expected_operands_of_comparable_types_or_any));
+                    }
+                    return this.query.getBuiltinType(BuiltinType$1.Boolean);
+                case '&&':
+                    return rightType;
+                case '||':
+                    return this.query.getTypeUnion(leftType, rightType);
+            }
+            this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unrecognized_operator, ast.operation));
+            return this.anyType;
+        };
+        AstType.prototype.visitChain = function (ast) {
+            var e_1, _a;
+            try {
+                // If we are producing diagnostics, visit the children
+                for (var _b = __values(ast.expressions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var expr = _c.value;
+                    expr.visit(this);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            // The type of a chain is always undefined.
+            return this.query.getBuiltinType(BuiltinType$1.Undefined);
+        };
+        AstType.prototype.visitConditional = function (ast) {
+            // The type of a conditional is the union of the true and false conditions.
+            ast.condition.visit(this);
+            ast.trueExp.visit(this);
+            ast.falseExp.visit(this);
+            return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
+        };
+        AstType.prototype.visitFunctionCall = function (ast) {
+            var _this_1 = this;
+            // The type of a function call is the return type of the selected signature.
+            // The signature is selected based on the types of the arguments. Angular doesn't
+            // support contextual typing of arguments so this is simpler than TypeScript's
+            // version.
+            var args = ast.args.map(function (arg) { return _this_1.getType(arg); });
+            var target = this.getType(ast.target);
+            if (!target || !target.callable) {
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.call_target_not_callable, this.sourceOf(ast.target), target.name));
+                return this.anyType;
+            }
+            var signature = target.selectSignature(args);
+            if (signature) {
+                return signature.result;
+            }
+            // TODO: Consider a better error message here. See `typescript_symbols#selectSignature` for more
+            // details.
+            this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unable_to_resolve_compatible_call_signature));
+            return this.anyType;
+        };
+        AstType.prototype.visitImplicitReceiver = function (_ast) {
+            var _this = this;
+            // Return a pseudo-symbol for the implicit receiver.
+            // The members of the implicit receiver are what is defined by the
+            // scope passed into this class.
+            return {
+                name: '$implicit',
+                kind: 'component',
+                language: 'ng-template',
+                type: undefined,
+                container: undefined,
+                callable: false,
+                nullable: false,
+                public: true,
+                definition: undefined,
+                documentation: [],
+                members: function () {
+                    return _this.scope;
+                },
+                signatures: function () {
+                    return [];
+                },
+                selectSignature: function (_types) {
+                    return undefined;
+                },
+                indexed: function (_argument) {
+                    return undefined;
+                },
+                typeArguments: function () {
+                    return undefined;
+                },
+            };
+        };
+        AstType.prototype.visitInterpolation = function (ast) {
+            var e_2, _a;
+            try {
+                // If we are producing diagnostics, visit the children.
+                for (var _b = __values(ast.expressions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var expr = _c.value;
+                    expr.visit(this);
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+            return this.undefinedType;
+        };
+        AstType.prototype.visitKeyedRead = function (ast) {
+            var targetType = this.getType(ast.obj);
+            var keyType = this.getType(ast.key);
+            var result = targetType.indexed(keyType, ast.key instanceof LiteralPrimitive ? ast.key.value : undefined);
+            return result || this.anyType;
+        };
+        AstType.prototype.visitKeyedWrite = function (ast) {
+            // The write of a type is the type of the value being written.
+            return this.getType(ast.value);
+        };
+        AstType.prototype.visitLiteralArray = function (ast) {
+            var _a;
+            var _this_1 = this;
+            // A type literal is an array type of the union of the elements
+            return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, __spread(ast.expressions.map(function (element) { return _this_1.getType(element); }))));
+        };
+        AstType.prototype.visitLiteralMap = function (ast) {
+            var e_3, _a;
+            try {
+                // If we are producing diagnostics, visit the children
+                for (var _b = __values(ast.values), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var value = _c.value;
+                    value.visit(this);
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+            // TODO: Return a composite type.
+            return this.anyType;
+        };
+        AstType.prototype.visitLiteralPrimitive = function (ast) {
+            // The type of a literal primitive depends on the value of the literal.
+            switch (ast.value) {
+                case true:
+                case false:
+                    return this.query.getBuiltinType(BuiltinType$1.Boolean);
+                case null:
+                    return this.query.getBuiltinType(BuiltinType$1.Null);
+                case undefined:
+                    return this.query.getBuiltinType(BuiltinType$1.Undefined);
+                default:
+                    switch (typeof ast.value) {
+                        case 'string':
+                            return this.query.getBuiltinType(BuiltinType$1.String);
+                        case 'number':
+                            return this.query.getBuiltinType(BuiltinType$1.Number);
+                        default:
+                            this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unrecognized_primitive, typeof ast.value));
+                            return this.anyType;
+                    }
+            }
+        };
+        AstType.prototype.visitMethodCall = function (ast) {
+            return this.resolveMethodCall(this.getType(ast.receiver), ast);
+        };
+        AstType.prototype.visitPipe = function (ast) {
+            var _this_1 = this;
+            // The type of a pipe node is the return type of the pipe's transform method. The table returned
+            // by getPipes() is expected to contain symbols with the corresponding transform method type.
+            var pipe = this.query.getPipes().get(ast.name);
+            if (!pipe) {
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.no_pipe_found, ast.name));
+                return this.anyType;
+            }
+            var expType = this.getType(ast.exp);
+            var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this_1.getType(arg); })));
+            if (!signature) {
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unable_to_resolve_signature, ast.name));
+                return this.anyType;
+            }
+            return signature.result;
+        };
+        AstType.prototype.visitPrefixNot = function (ast) {
+            // If we are producing diagnostics, visit the children
+            ast.expression.visit(this);
+            // The type of a prefix ! is always boolean.
+            return this.query.getBuiltinType(BuiltinType$1.Boolean);
+        };
+        AstType.prototype.visitNonNullAssert = function (ast) {
+            var expressionType = this.getType(ast.expression);
+            return this.query.getNonNullableType(expressionType);
+        };
+        AstType.prototype.visitPropertyRead = function (ast) {
+            return this.resolvePropertyRead(this.getType(ast.receiver), ast);
+        };
+        AstType.prototype.visitPropertyWrite = function (ast) {
+            // The type of a write is the type of the value being written.
+            return this.getType(ast.value);
+        };
+        AstType.prototype.visitQuote = function (_ast) {
+            // The type of a quoted expression is any.
+            return this.query.getBuiltinType(BuiltinType$1.Any);
+        };
+        AstType.prototype.visitSafeMethodCall = function (ast) {
+            return this.resolveMethodCall(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
+        };
+        AstType.prototype.visitSafePropertyRead = function (ast) {
+            return this.resolvePropertyRead(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
+        };
+        /**
+         * Gets the source of an expession AST.
+         * The AST's sourceSpan is relative to the start of the template source code, which is contained
+         * at this.source.
+         */
+        AstType.prototype.sourceOf = function (ast) {
+            return this.source.substring(ast.sourceSpan.start, ast.sourceSpan.end);
+        };
+        Object.defineProperty(AstType.prototype, "anyType", {
+            get: function () {
+                var result = this._anyType;
+                if (!result) {
+                    result = this._anyType = this.query.getBuiltinType(BuiltinType$1.Any);
+                }
+                return result;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(AstType.prototype, "undefinedType", {
+            get: function () {
+                var result = this._undefinedType;
+                if (!result) {
+                    result = this._undefinedType = this.query.getBuiltinType(BuiltinType$1.Undefined);
+                }
+                return result;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        AstType.prototype.resolveMethodCall = function (receiverType, ast) {
+            var _this_1 = this;
+            if (this.isAny(receiverType)) {
+                return this.anyType;
+            }
+            var methodType = this.resolvePropertyRead(receiverType, ast);
+            if (!methodType) {
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.could_not_resolve_type, ast.name));
+                return this.anyType;
+            }
+            if (this.isAny(methodType)) {
+                return this.anyType;
+            }
+            if (!methodType.callable) {
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.identifier_not_callable, ast.name));
+                return this.anyType;
+            }
+            var signature = methodType.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
+            if (!signature) {
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unable_to_resolve_signature, ast.name));
+                return this.anyType;
+            }
+            return signature.result;
+        };
+        AstType.prototype.resolvePropertyRead = function (receiverType, ast) {
+            if (this.isAny(receiverType)) {
+                return this.anyType;
+            }
+            // The type of a property read is the seelcted member's type.
+            var member = receiverType.members().get(ast.name);
+            if (!member) {
+                if (receiverType.name === '$implicit') {
+                    this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.identifier_not_defined_in_app_context, ast.name));
+                }
+                else if (receiverType.nullable && ast.receiver instanceof PropertyRead) {
+                    var receiver = ast.receiver.name;
+                    this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.identifier_possibly_undefined, receiver, receiver + "?." + ast.name, receiver + "!." + ast.name));
+                }
+                else {
+                    this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.identifier_not_defined_on_receiver, ast.name, receiverType.name));
+                }
+                return this.anyType;
+            }
+            if (!member.public) {
+                var container = receiverType.name === '$implicit' ? 'the component' : "'" + receiverType.name + "'";
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.identifier_is_private, ast.name, container));
+            }
+            return member.type;
+        };
+        AstType.prototype.isAny = function (symbol) {
+            return !symbol || this.query.getTypeKind(symbol) === BuiltinType$1.Any ||
+                (!!symbol.type && this.isAny(symbol.type));
+        };
+        return AstType;
+    }());
+    function refinedSpan(ast) {
+        // nameSpan is an absolute span, but the spans returned by the expression visitor are expected to
+        // be relative to the start of the expression.
+        // TODO: migrate to only using absolute spans
+        var absoluteOffset = ast.sourceSpan.start - ast.span.start;
+        if (ast instanceof ASTWithName) {
+            return offsetSpan(ast.nameSpan, -absoluteOffset);
+        }
+        return offsetSpan(ast.sourceSpan, -absoluteOffset);
     }
 
     /**
@@ -27058,6 +27104,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function getType(ast) {
             return new AstType(scope, templateInfo.query, {}, templateInfo.source).getType(ast);
         }
+        function spanFromName(ast) {
+            // `nameSpan` is an absolute span, but the span expected by the result of this method is
+            // relative to the start of the expression.
+            // TODO(ayazhafiz): migrate to only using absolute spans
+            var offset = ast.sourceSpan.start - ast.span.start;
+            return {
+                start: ast.nameSpan.start - offset,
+                end: ast.nameSpan.end - offset,
+            };
+        }
         var symbol = undefined;
         var span = undefined;
         // If the completion request is in a not in a pipe or property access then the global scope
@@ -27078,21 +27134,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitMethodCall: function (ast) {
                 var receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
-                span = ast.span;
+                span = spanFromName(ast);
             },
             visitPipe: function (ast) {
                 if (inSpan(position, ast.nameSpan, /* exclusive */ true)) {
                     // We are in a position a pipe name is expected.
                     var pipes = templateInfo.query.getPipes();
                     symbol = pipes.get(ast.name);
-                    // `nameSpan` is an absolute span, but the span expected by the result of this method is
-                    // relative to the start of the expression.
-                    // TODO(ayazhafiz): migrate to only using absolute spans
-                    var offset = ast.sourceSpan.start - ast.span.start;
-                    span = {
-                        start: ast.nameSpan.start - offset,
-                        end: ast.nameSpan.end - offset,
-                    };
+                    span = spanFromName(ast);
                 }
             },
             visitPrefixNot: function (_ast) { },
@@ -27100,29 +27149,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitPropertyRead: function (ast) {
                 var receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
-                span = ast.span;
+                span = spanFromName(ast);
             },
             visitPropertyWrite: function (ast) {
                 var receiverType = getType(ast.receiver);
-                var start = ast.span.start;
                 symbol = receiverType && receiverType.members().get(ast.name);
-                // A PropertyWrite span includes both the LHS (name) and the RHS (value) of the write. In this
-                // visit, only the name is relevant.
-                //   prop=$event
-                //   ^^^^        name
-                //        ^^^^^^ value; visited separately as a nested AST
-                span = { start: start, end: start + ast.name.length };
+                span = spanFromName(ast);
             },
             visitQuote: function (_ast) { },
             visitSafeMethodCall: function (ast) {
                 var receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
-                span = ast.span;
+                span = spanFromName(ast);
             },
             visitSafePropertyRead: function (ast) {
                 var receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
-                span = ast.span;
+                span = spanFromName(ast);
             },
         });
         if (symbol && span) {
@@ -29203,7 +29246,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // no-op for now
         };
         ExpressionVisitor.prototype.visitAttr = function (ast) {
-            var _this = this;
             var binding = getBindingDescriptor(ast.name);
             if (binding && binding.kind === ATTR.KW_MICROSYNTAX) {
                 // This a template binding given by micro syntax expression.
@@ -29217,8 +29259,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var absKeyOffset = 0;
                 var absValueOffset = ast.sourceSpan.start.offset;
                 var templateBindings = this.info.expressionParser.parseTemplateBindings(templateKey, templateValue, templateUrl, absKeyOffset, absValueOffset).templateBindings;
-                // Find the template binding that contains the position.
-                var templateBinding = templateBindings.find(function (b) { return inSpan(_this.position, b.sourceSpan); });
+                // Find the nearest template binding to the position.
+                var lastBindingEnd = templateBindings.length > 0 &&
+                    templateBindings[templateBindings.length - 1].sourceSpan.end;
+                var normalizedPositionToBinding_1 = lastBindingEnd && this.position > lastBindingEnd ? lastBindingEnd : this.position;
+                var templateBinding = templateBindings.find(function (b) { return inSpan(normalizedPositionToBinding_1, b.sourceSpan); });
                 if (!templateBinding) {
                     return;
                 }
@@ -40087,7 +40132,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.6');
+    var VERSION$2 = new Version$1('9.1.6+5.sha-790af88');
 
     /**
      * @license
