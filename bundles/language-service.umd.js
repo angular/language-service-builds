@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.6+21.sha-7eb1a58
+ * @license Angular v10.0.0-next.6+23.sha-286fbf4
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19606,7 +19606,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.6+21.sha-7eb1a58');
+    var VERSION$1 = new Version('10.0.0-next.6+23.sha-286fbf4');
 
     /**
      * @license
@@ -25928,81 +25928,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return new AstPath(path, position);
     }
     /**
-     * Return the node that most tightly encompass the specified `position`.
-     * @param node
-     * @param position
-     */
-    function findTightestNode(node, position) {
-        if (node.getStart() <= position && position < node.getEnd()) {
-            return node.forEachChild(function (c) { return findTightestNode(c, position); }) || node;
-        }
-    }
-    /**
-     * Return metadata about `node` if it looks like an Angular directive class.
-     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
-     * `@Pipe`, etc.
-     * These class declarations all share some common attributes, namely their
-     * decorator takes exactly one parameter and the parameter must be an object
-     * literal.
-     *
-     * For example,
-     *     v---------- `decoratorId`
-     * @NgModule({           <
-     *   declarations: [],   < classDecl
-     * })                    <
-     * class AppModule {}    <
-     *          ^----- `classId`
-     *
-     * @param node Potential node that represents an Angular directive.
-     */
-    function getDirectiveClassLike(node) {
-        var e_4, _a;
-        if (!ts.isClassDeclaration(node) || !node.name || !node.decorators) {
-            return;
-        }
-        try {
-            for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var d = _c.value;
-                var expr = d.expression;
-                if (!ts.isCallExpression(expr) || expr.arguments.length !== 1 ||
-                    !ts.isIdentifier(expr.expression)) {
-                    continue;
-                }
-                var arg = expr.arguments[0];
-                if (ts.isObjectLiteralExpression(arg)) {
-                    return {
-                        decoratorId: expr.expression,
-                        classId: node.name,
-                    };
-                }
-            }
-        }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_4) throw e_4.error; }
-        }
-    }
-    /**
-     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
-     * type T.
-     *
-     * @param startNode node to start searching for nested property assignment from
-     * @param propName property assignment name
-     * @param predicate function to verify that a node is of type T.
-     * @return node property assignment value of type T, or undefined if none is found
-     */
-    function findPropertyValueOfType(startNode, propName, predicate) {
-        if (ts.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
-            var initializer = startNode.initializer;
-            if (predicate(initializer))
-                return initializer;
-        }
-        return startNode.forEachChild(function (c) { return findPropertyValueOfType(c, propName, predicate); });
-    }
-    /**
      * Find the tightest node at the specified `position` from the AST `nodes`, and
      * return the path to the node.
      * @param nodes HTML AST nodes
@@ -26035,7 +25960,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Inverts an object's key-value pairs.
      */
     function invertMap(obj) {
-        var e_5, _a;
+        var e_4, _a;
         var result = {};
         try {
             for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -26044,12 +25969,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 result[v] = name_1;
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_4) throw e_4.error; }
         }
         return result;
     }
@@ -26059,7 +25984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param path narrowing
      */
     function findOutputBinding(binding, path, query) {
-        var e_6, _a;
+        var e_5, _a;
         var element = path.first(ElementAst);
         if (element) {
             try {
@@ -26075,69 +26000,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
             }
-            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_6) throw e_6.error; }
+                finally { if (e_5) throw e_5.error; }
             }
         }
-    }
-    /**
-     * Returns a property assignment from the assignment value, or `undefined` if there is no
-     * assignment.
-     */
-    function getPropertyAssignmentFromValue(value) {
-        if (!value.parent || !ts.isPropertyAssignment(value.parent)) {
-            return;
-        }
-        return value.parent;
-    }
-    /**
-     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
-     * directive class the property applies to.
-     * If the property assignment is not on a class decorator, no declaration is returned.
-     *
-     * For example,
-     *
-     * @Component({
-     *   template: '<div></div>'
-     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
-     * })
-     * class AppComponent {}
-     *           ^---- class declaration node
-     *
-     * @param propAsgn property assignment
-     */
-    function getClassDeclFromDecoratorProp(propAsgnNode) {
-        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
-            return;
-        }
-        var objLitExprNode = propAsgnNode.parent;
-        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
-            return;
-        }
-        var callExprNode = objLitExprNode.parent;
-        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
-            return;
-        }
-        var decorator = callExprNode.parent;
-        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
-            return;
-        }
-        var classDeclNode = decorator.parent;
-        return classDeclNode;
-    }
-    /**
-     * Determines if a property assignment is on a class decorator.
-     * See `getClassDeclFromDecoratorProperty`, which gets the class the decorator is applied to, for
-     * more details.
-     *
-     * @param prop property assignment
-     */
-    function isClassDecoratorProperty(propAsgn) {
-        return !!getClassDeclFromDecoratorProp(propAsgn);
     }
 
     /**
@@ -29881,6 +29751,136 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Return the node that most tightly encompass the specified `position`.
+     * @param node
+     * @param position
+     */
+    function findTightestNode(node, position) {
+        if (node.getStart() <= position && position < node.getEnd()) {
+            return node.forEachChild(function (c) { return findTightestNode(c, position); }) || node;
+        }
+    }
+    /**
+     * Returns a property assignment from the assignment value if the property name
+     * matches the specified `key`, or `undefined` if there is no match.
+     */
+    function getPropertyAssignmentFromValue(value, key) {
+        var propAssignment = value.parent;
+        if (!propAssignment || !tss.isPropertyAssignment(propAssignment) ||
+            propAssignment.name.getText() !== key) {
+            return;
+        }
+        return propAssignment;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgn property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !tss.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        var objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !tss.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        var callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !tss.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        var decorator = callExprNode.parent;
+        if (!decorator.parent || !tss.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        var classDeclNode = decorator.parent;
+        return classDeclNode;
+    }
+    /**
+     * Return metadata about `node` if it looks like an Angular directive class.
+     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
+     * `@Pipe`, etc.
+     * These class declarations all share some common attributes, namely their
+     * decorator takes exactly one parameter and the parameter must be an object
+     * literal.
+     *
+     * For example,
+     *     v---------- `decoratorId`
+     * @NgModule({           <
+     *   declarations: [],   < classDecl
+     * })                    <
+     * class AppModule {}    <
+     *          ^----- `classId`
+     *
+     * @param node Potential node that represents an Angular directive.
+     */
+    function getDirectiveClassLike(node) {
+        var e_1, _a;
+        if (!tss.isClassDeclaration(node) || !node.name || !node.decorators) {
+            return;
+        }
+        try {
+            for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var d = _c.value;
+                var expr = d.expression;
+                if (!tss.isCallExpression(expr) || expr.arguments.length !== 1 ||
+                    !tss.isIdentifier(expr.expression)) {
+                    continue;
+                }
+                var arg = expr.arguments[0];
+                if (tss.isObjectLiteralExpression(arg)) {
+                    return {
+                        decoratorId: expr.expression,
+                        classId: node.name,
+                    };
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+    }
+    /**
+     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
+     * type T.
+     *
+     * @param startNode node to start searching for nested property assignment from
+     * @param propName property assignment name
+     * @param predicate function to verify that a node is of type T.
+     * @return node property assignment value of type T, or undefined if none is found
+     */
+    function findPropertyValueOfType(startNode, propName, predicate) {
+        if (tss.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
+            var initializer = startNode.initializer;
+            if (predicate(initializer))
+                return initializer;
+        }
+        return startNode.forEachChild(function (c) { return findPropertyValueOfType(c, propName, predicate); });
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Convert Angular Span to TypeScript TextSpan. Angular Span has 'start' and
      * 'end' whereas TS TextSpan has 'start' and 'length'.
      * @param span Angular Span
@@ -29995,19 +29995,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // `styleUrls`'s property assignment can be found from the array (parent) node.
         //
         // First search for `templateUrl`.
-        var asgn = getPropertyAssignmentFromValue(urlNode);
-        if (!asgn || asgn.name.getText() !== 'templateUrl') {
+        var asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
+        if (!asgn) {
             // `templateUrl` assignment not found; search for `styleUrls` array assignment.
-            asgn = getPropertyAssignmentFromValue(urlNode.parent);
-            if (!asgn || asgn.name.getText() !== 'styleUrls') {
+            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
+            if (!asgn) {
                 // Nothing found, bail.
                 return;
             }
         }
         // If the property assignment is not a property of a class decorator, don't generate definitions
         // for it.
-        if (!isClassDecoratorProperty(asgn))
+        if (!getClassDeclFromDecoratorProp(asgn)) {
             return;
+        }
         var sf = urlNode.getSourceFile();
         // Extract url path specified by the url node, which is relative to the TypeScript source file
         // the url node is defined in.
@@ -49274,7 +49275,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.6+21.sha-7eb1a58');
+    var VERSION$2 = new Version$1('10.0.0-next.6+23.sha-286fbf4');
 
     /**
      * @license
@@ -64372,8 +64373,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!tss.isStringLiteralLike(node)) {
                 return;
             }
-            var tmplAsgn = getPropertyAssignmentFromValue(node);
-            if (!tmplAsgn || tmplAsgn.name.getText() !== 'template') {
+            var tmplAsgn = getPropertyAssignmentFromValue(node, 'template');
+            if (!tmplAsgn) {
                 return;
             }
             var classDecl = getClassDeclFromDecoratorProp(tmplAsgn);
