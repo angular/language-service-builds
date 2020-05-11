@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.6+18.sha-ed1b4a8
+ * @license Angular v10.0.0-next.6+20.sha-28f3c1c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -3691,7 +3691,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Identifiers.stylePropInterpolate7 = { name: 'ɵɵstylePropInterpolate7', moduleName: CORE$1 };
         Identifiers.stylePropInterpolate8 = { name: 'ɵɵstylePropInterpolate8', moduleName: CORE$1 };
         Identifiers.stylePropInterpolateV = { name: 'ɵɵstylePropInterpolateV', moduleName: CORE$1 };
-        Identifiers.containerCreate = { name: 'ɵɵcontainer', moduleName: CORE$1 };
         Identifiers.nextContext = { name: 'ɵɵnextContext', moduleName: CORE$1 };
         Identifiers.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵɵtext', moduleName: CORE$1 };
@@ -19622,7 +19621,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.6+18.sha-ed1b4a8');
+    var VERSION$1 = new Version('10.0.0-next.6+20.sha-28f3c1c');
 
     /**
      * @license
@@ -40150,7 +40149,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.6+18.sha-ed1b4a8');
+    var VERSION$2 = new Version$1('10.0.0-next.6+20.sha-28f3c1c');
 
     /**
      * @license
