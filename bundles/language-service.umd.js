@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.7+3.sha-352b9c7
+ * @license Angular v10.0.0-next.7+9.sha-7d3f504
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -3801,7 +3801,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // sanitization-related functions
         Identifiers.sanitizeHtml = { name: 'ɵɵsanitizeHtml', moduleName: CORE$1 };
         Identifiers.sanitizeStyle = { name: 'ɵɵsanitizeStyle', moduleName: CORE$1 };
-        Identifiers.defaultStyleSanitizer = { name: 'ɵɵdefaultStyleSanitizer', moduleName: CORE$1 };
         Identifiers.sanitizeResourceUrl = { name: 'ɵɵsanitizeResourceUrl', moduleName: CORE$1 };
         Identifiers.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE$1 };
         Identifiers.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE$1 };
@@ -13372,20 +13371,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return binding;
         };
-        StylingBuilder.prototype.registerStyleInput = function (name, isMapBased, value, sourceSpan, unit) {
+        StylingBuilder.prototype.registerStyleInput = function (name, isMapBased, value, sourceSpan, suffix) {
             if (isEmptyExpression(value)) {
                 return null;
             }
             name = normalizePropName(name);
-            var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag, bindingUnit = _a.unit;
-            var entry = {
-                name: property,
-                sanitize: property ? isStyleSanitizable(property) : true,
-                unit: unit || bindingUnit,
-                value: value,
-                sourceSpan: sourceSpan,
-                hasOverrideFlag: hasOverrideFlag
-            };
+            var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag, bindingSuffix = _a.suffix;
+            suffix = typeof suffix === 'string' && suffix.length !== 0 ? suffix : bindingSuffix;
+            var entry = { name: property, suffix: suffix, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag };
             if (isMapBased) {
                 this._styleMapInput = entry;
             }
@@ -13404,7 +13397,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return null;
             }
             var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag;
-            var entry = { name: property, value: value, sourceSpan: sourceSpan, sanitize: false, hasOverrideFlag: hasOverrideFlag, unit: null };
+            var entry = { name: property, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag, suffix: null };
             if (isMapBased) {
                 if (this._classMapInput) {
                     throw new Error('[class] and [className] bindings cannot be used on the same element simultaneously');
@@ -13560,7 +13553,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     allocateBindingSlots: totalBindingSlotsRequired,
                     supportsInterpolation: !!getInterpolationExpressionFn,
                     params: function (convertFn) {
-                        // params => stylingProp(propName, value, suffix|sanitizer)
+                        // params => stylingProp(propName, value, suffix)
                         var params = [];
                         params.push(literal(input.name));
                         var convertResult = convertFn(value);
@@ -13570,17 +13563,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         else {
                             params.push(convertResult);
                         }
-                        // [style.prop] bindings may use suffix values (e.g. px, em, etc...) and they
-                        // can also use a sanitizer. Sanitization occurs for url-based entries. Having
-                        // the suffix value and a sanitizer together into the instruction doesn't make
-                        // any sense (url-based entries cannot be sanitized).
-                        if (!isClassBased) {
-                            if (input.unit) {
-                                params.push(literal(input.unit));
-                            }
-                            else if (input.sanitize) {
-                                params.push(importExpr(Identifiers$1.defaultStyleSanitizer));
-                            }
+                        // [style.prop] bindings may use suffix values (e.g. px, em, etc...), therefore,
+                        // if that is detected then we need to pass that in as an optional param.
+                        if (!isClassBased && input.suffix !== null) {
+                            params.push(literal(input.suffix));
                         }
                         return params;
                     }
@@ -13638,15 +13624,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             map.set(key, map.size);
         }
     }
-    function isStyleSanitizable(prop) {
-        // Note that browsers support both the dash case and
-        // camel case property names when setting through JS.
-        return prop === 'background-image' || prop === 'backgroundImage' || prop === 'background' ||
-            prop === 'border-image' || prop === 'borderImage' || prop === 'border-image-source' ||
-            prop === 'borderImageSource' || prop === 'filter' || prop === 'list-style' ||
-            prop === 'listStyle' || prop === 'list-style-image' || prop === 'listStyleImage' ||
-            prop === 'clip-path' || prop === 'clipPath';
-    }
     function parseProperty(name) {
         var hasOverrideFlag = false;
         var overrideIndex = name.indexOf(IMPORTANT_FLAG);
@@ -13654,14 +13631,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             name = overrideIndex > 0 ? name.substring(0, overrideIndex) : '';
             hasOverrideFlag = true;
         }
-        var unit = '';
+        var suffix = null;
         var property = name;
         var unitIndex = name.lastIndexOf('.');
         if (unitIndex > 0) {
-            unit = name.substr(unitIndex + 1);
+            suffix = name.substr(unitIndex + 1);
             property = name.substring(0, unitIndex);
         }
-        return { property: property, unit: unit, hasOverrideFlag: hasOverrideFlag };
+        return { property: property, suffix: suffix, hasOverrideFlag: hasOverrideFlag };
     }
     /**
      * Gets the instruction to generate for an interpolated class map.
@@ -19606,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.7+3.sha-352b9c7');
+    var VERSION$1 = new Version('10.0.0-next.7+9.sha-7d3f504');
 
     /**
      * @license
@@ -32802,7 +32779,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             assertEqual(newLFrame.elementDepthCount, 0, 'Expected clean LFrame');
             assertEqual(newLFrame.currentDirectiveIndex, -1, 'Expected clean LFrame');
             assertEqual(newLFrame.currentNamespace, null, 'Expected clean LFrame');
-            assertEqual(newLFrame.currentSanitizer, null, 'Expected clean LFrame');
             assertEqual(newLFrame.bindingRootIndex, -1, 'Expected clean LFrame');
             assertEqual(newLFrame.currentQueryIndex, 0, 'Expected clean LFrame');
         }
@@ -32833,7 +32809,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             contextLView: null,
             elementDepthCount: 0,
             currentNamespace: null,
-            currentSanitizer: null,
             currentDirectiveIndex: -1,
             bindingRootIndex: -1,
             bindingIndex: -1,
@@ -32884,7 +32859,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         oldLFrame.elementDepthCount = 0;
         oldLFrame.currentDirectiveIndex = -1;
         oldLFrame.currentNamespace = null;
-        oldLFrame.currentSanitizer = null;
         oldLFrame.bindingRootIndex = -1;
         oldLFrame.bindingIndex = -1;
         oldLFrame.currentQueryIndex = 0;
@@ -32965,15 +32939,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function getNamespace() {
         return instructionState.lFrame.currentNamespace;
-    }
-    function setCurrentStyleSanitizer(sanitizer) {
-        instructionState.lFrame.currentSanitizer = sanitizer;
-    }
-    function getCurrentStyleSanitizer() {
-        // TODO(misko): This should throw when there is no LView, but it turns out we can get here from
-        // `NodeStyleDebug` hence we return `null`. This should be fixed
-        var lFrame = instructionState.lFrame;
-        return lFrame === null ? null : lFrame.currentSanitizer;
     }
 
     /**
@@ -35206,44 +35171,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function ɵɵsanitizeUrlOrResourceUrl(unsafeUrl, tag, prop) {
         return getUrlSanitizer(tag, prop)(unsafeUrl);
-    }
-    /**
-     * The default style sanitizer will handle sanitization for style properties.
-     *
-     * Style sanitization is no longer apart of Angular because modern browsers no
-     * longer support javascript expressions. Therefore, the reason why this API
-     * exists is exclusively for unwrapping any style value expressions that were
-     * marked as `SafeValue` values.
-     *
-     * This API will be removed in a future release of Angular.
-     *
-     * @publicApi
-     */
-    var ɵɵdefaultStyleSanitizer = function (prop, value, mode) {
-        if (value === undefined && mode === undefined) {
-            // This is a workaround for the fact that `StyleSanitizeFn` should not exist once PR#34480
-            // lands. For now the `StyleSanitizeFn` and should act like `(value: any) => string` as a
-            // work around.
-            return ɵɵsanitizeStyle(prop);
-        }
-        mode = mode || 3 /* ValidateAndSanitize */;
-        var doSanitizeValue = true;
-        if (mode & 1 /* ValidateProperty */) {
-            doSanitizeValue = stylePropNeedsSanitization(prop);
-        }
-        if (mode & 2 /* SanitizeOnly */) {
-            return doSanitizeValue ? ɵɵsanitizeStyle(value) : unwrapSafeValue(value);
-        }
-        else {
-            return doSanitizeValue;
-        }
-    };
-    function stylePropNeedsSanitization(prop) {
-        return prop === 'background-image' || prop === 'backgroundImage' || prop === 'background' ||
-            prop === 'border-image' || prop === 'borderImage' || prop === 'border-image-source' ||
-            prop === 'borderImageSource' || prop === 'filter' || prop === 'list-style' ||
-            prop === 'listStyle' || prop === 'list-style-image' || prop === 'listStyleImage' ||
-            prop === 'clip-path' || prop === 'clipPath';
     }
     function validateAgainstEventProperties(name) {
         if (name.toLowerCase().startsWith('on')) {
@@ -45713,25 +45640,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Sets the current style sanitizer function which will then be used
-     * within all follow-up prop and map-based style binding instructions
-     * for the given element.
-     *
-     * Note that once styling has been applied to the element (i.e. once
-     * `advance(n)` is executed or the hostBindings/template function exits)
-     * then the active `sanitizerFn` will be set to `null`. This means that
-     * once styling is applied to another element then a another call to
-     * `styleSanitizer` will need to be made.
-     *
-     * @param sanitizerFn The sanitization function that will be used to
-     *       process style prop/value entries.
-     *
-     * @codeGenApi
-     */
-    function ɵɵstyleSanitizer(sanitizer) {
-        setCurrentStyleSanitizer(sanitizer);
-    }
-    /**
      * Update a style binding on an element with the provided value.
      *
      * If the style value is falsy then it will be removed from the element
@@ -45744,8 +45652,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param prop A valid CSS property.
      * @param value New value to write (`null` or an empty string to remove).
      * @param suffix Optional suffix. Used with scalar values to add unit such as `px`.
-     *        Note that when a suffix is provided then the underlying sanitizer will
-     *        be ignored.
      *
      * Note that this will apply the provided style value to the host element if this function is called
      * within a host binding function.
@@ -45851,10 +45757,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * @param prop property name.
      * @param value binding value.
-     * @param suffixOrSanitizer suffix or sanitization function
+     * @param suffix suffix for the property (e.g. `em` or `px`)
      * @param isClassBased `true` if `class` change (`false` if `style`)
      */
-    function checkStylingProperty(prop, value, suffixOrSanitizer, isClassBased) {
+    function checkStylingProperty(prop, value, suffix, isClassBased) {
         var lView = getLView();
         var tView = getTView();
         // Styling instructions use 2 slots per binding.
@@ -45865,25 +45771,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             stylingFirstUpdatePass(tView, prop, bindingIndex, isClassBased);
         }
         if (value !== NO_CHANGE && bindingUpdated(lView, bindingIndex, value)) {
-            // This is a work around. Once PR#34480 lands the sanitizer is passed explicitly and this line
-            // can be removed.
-            var styleSanitizer = void 0;
-            if (suffixOrSanitizer == null) {
-                if (styleSanitizer = getCurrentStyleSanitizer()) {
-                    suffixOrSanitizer = styleSanitizer;
-                }
-            }
             var tNode = tView.data[getSelectedIndex() + HEADER_OFFSET];
-            updateStyling(tView, tNode, lView, lView[RENDERER], prop, lView[bindingIndex + 1] = normalizeAndApplySuffixOrSanitizer(value, suffixOrSanitizer), isClassBased, bindingIndex);
+            updateStyling(tView, tNode, lView, lView[RENDERER], prop, lView[bindingIndex + 1] = normalizeSuffix(value, suffix), isClassBased, bindingIndex);
         }
     }
     /**
      * Common code between `ɵɵclassMap` and `ɵɵstyleMap`.
      *
      * @param keyValueArraySet (See `keyValueArraySet` in "util/array_utils") Gets passed in as a
-     * function so that
-     *        `style` can pass in version which does sanitization. This is done for tree shaking
-     *        purposes.
+     *        function so that `style` can be processed. This is done for tree shaking purposes.
      * @param stringParser Parser used to parse `value` if `string`. (Passed in as `style` and `class`
      *        have different parsers.)
      * @param value bound value from application
@@ -46237,9 +46133,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * keep additional `Map` to keep track of duplicates or items which have not yet been visited.
      *
      * @param keyValueArraySet (See `keyValueArraySet` in "util/array_utils") Gets passed in as a
-     * function so that
-     *        `style` can pass in version which does sanitization. This is done for tree shaking
-     *        purposes.
+     *        function so that `style` can be processed. This is done
+     *        for tree shaking purposes.
      * @param stringParser The parser is passed in so that it will be tree shakable. See
      *        `styleStringParser` and `classStringParser`
      * @param value The value to parse/convert to `KeyValueArray`
@@ -46271,19 +46166,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return styleKeyValueArray;
     }
     /**
-     * Set a `value` for a `key` taking style sanitization into account.
+     * Set a `value` for a `key`.
      *
      * See: `keyValueArraySet` for details
      *
      * @param keyValueArray KeyValueArray to add to.
-     * @param key Style key to add. (This key will be checked if it needs sanitization)
-     * @param value The value to set (If key needs sanitization it will be sanitized)
+     * @param key Style key to add.
+     * @param value The value to set.
      */
     function styleKeyValueArraySet(keyValueArray, key, value) {
-        if (stylePropNeedsSanitization(key)) {
-            value = ɵɵsanitizeStyle(value);
-        }
-        keyValueArraySet(keyValueArray, key, value);
+        keyValueArraySet(keyValueArray, key, unwrapSafeValue(value));
     }
     /**
      * Update map based styling.
@@ -46408,10 +46300,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * NOTE: The styling stores two values.
      * 1. The raw value which came from the application is stored at `index + 0` location. (This value
      *    is used for dirty checking).
-     * 2. The normalized value (converted to `KeyValueArray` if map and sanitized) is stored at `index +
-     * 1`.
-     *    The advantage of storing the sanitized value is that once the value is written we don't need
-     *    to worry about sanitizing it later or keeping track of the sanitizer.
+     * 2. The normalized value is stored at `index + 1`.
      *
      * @param tData `TData` used for traversing the priority.
      * @param tNode `TNode` to use for resolving static styling. Also controls search direction.
@@ -46487,20 +46376,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return value !== undefined;
     }
     /**
-     * Sanitizes or adds suffix to the value.
+     * Normalizes and/or adds a suffix to the value.
      *
      * If value is `null`/`undefined` no suffix is added
      * @param value
-     * @param suffixOrSanitizer
+     * @param suffix
      */
-    function normalizeAndApplySuffixOrSanitizer(value, suffixOrSanitizer) {
+    function normalizeSuffix(value, suffix) {
         if (value == null /** || value === undefined */) ;
-        else if (typeof suffixOrSanitizer === 'function') {
-            // sanitize the value.
-            value = suffixOrSanitizer(value);
-        }
-        else if (typeof suffixOrSanitizer === 'string') {
-            value = value + suffixOrSanitizer;
+        else if (typeof suffix === 'string') {
+            value = value + suffix;
         }
         else if (typeof value === 'object') {
             value = stringify$1(unwrapSafeValue(value));
@@ -49275,7 +49160,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.7+3.sha-352b9c7');
+    var VERSION$2 = new Version$1('10.0.0-next.7+9.sha-7d3f504');
 
     /**
      * @license
@@ -56573,7 +56458,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         'ɵɵstylePropInterpolate7': ɵɵstylePropInterpolate7,
         'ɵɵstylePropInterpolate8': ɵɵstylePropInterpolate8,
         'ɵɵstylePropInterpolateV': ɵɵstylePropInterpolateV,
-        'ɵɵstyleSanitizer': ɵɵstyleSanitizer,
         'ɵɵclassProp': ɵɵclassProp,
         'ɵɵselect': ɵɵselect,
         'ɵɵadvance': ɵɵadvance,
@@ -56603,7 +56487,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         'ɵɵsetNgModuleScope': ɵɵsetNgModuleScope,
         'ɵɵsanitizeHtml': ɵɵsanitizeHtml,
         'ɵɵsanitizeStyle': ɵɵsanitizeStyle,
-        'ɵɵdefaultStyleSanitizer': ɵɵdefaultStyleSanitizer,
         'ɵɵsanitizeResourceUrl': ɵɵsanitizeResourceUrl,
         'ɵɵsanitizeScript': ɵɵsanitizeScript,
         'ɵɵsanitizeUrl': ɵɵsanitizeUrl,
