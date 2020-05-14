@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.7+52.sha-ea971f7
+ * @license Angular v10.0.0-next.7+53.sha-aaa89bb
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.7+52.sha-ea971f7');
+    var VERSION$1 = new Version('10.0.0-next.7+53.sha-aaa89bb');
 
     /**
      * @license
@@ -32188,7 +32188,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * detected. (see: `LView[DECLARATION_COMPONENT_VIEW])`.
      *
      * This flag, once set, is never unset for the `LContainer`. This means that when unset we can skip
-     * a lot of work in `refreshDynamicEmbeddedViews`. But when set we still need to verify
+     * a lot of work in `refreshEmbeddedViews`. But when set we still need to verify
      * that the `MOVED_VIEWS` are transplanted and on-push.
      */
     var HAS_TRANSPLANTED_VIEWS = 2;
@@ -37575,7 +37575,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // insertion points. This is needed to avoid the situation where the template is defined in this
             // `LView` but its declaration appears after the insertion component.
             markTransplantedViewsForRefresh(lView);
-            refreshDynamicEmbeddedViews(lView);
+            refreshEmbeddedViews(lView);
             // Content query results must be refreshed before content hooks are called.
             if (tView.contentQueries !== null) {
                 refreshContentQueries(tView, lView);
@@ -38637,10 +38637,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return lContainer;
     }
     /**
-     * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes
+     * Goes over embedded views (ones created through ViewContainerRef APIs) and refreshes
      * them by executing an associated template function.
      */
-    function refreshDynamicEmbeddedViews(lView) {
+    function refreshEmbeddedViews(lView) {
         for (var lContainer = getFirstLContainer(lView); lContainer !== null; lContainer = getNextLContainer(lContainer)) {
             for (var i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
                 var embeddedLView = lContainer[i];
@@ -38675,7 +38675,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Note, it is possible that the `movedViews` is tracking views that are transplanted *and*
                 // those that aren't (declaration component === insertion component). In the latter case,
                 // it's fine to add the flag, as we will clear it immediately in
-                // `refreshDynamicEmbeddedViews` for the view currently being refreshed.
+                // `refreshEmbeddedViews` for the view currently being refreshed.
                 movedLView[FLAGS] |= 1024 /* RefreshTransplantedView */;
             }
         }
@@ -49136,7 +49136,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.7+52.sha-ea971f7');
+    var VERSION$2 = new Version$1('10.0.0-next.7+53.sha-aaa89bb');
 
     /**
      * @license
