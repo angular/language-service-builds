@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.7+50.sha-7a30153
+ * @license Angular v10.0.0-next.7+51.sha-ddaa124
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.7+50.sha-7a30153');
+    var VERSION$1 = new Version('10.0.0-next.7+51.sha-ddaa124');
 
     /**
      * @license
@@ -37435,7 +37435,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             tView.node = tNode = createTNode(tView, tParentNode, //
             2 /* View */, index, null, null);
         }
-        return lView[T_HOST] = tNode;
+        lView[T_HOST] = tNode;
     }
     /**
      * When elements are created dynamically after a view blueprint is created (e.g. through
@@ -40035,10 +40035,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._cdRefInjectingView = _cdRefInjectingView;
             this._appRef = null;
             this._viewContainerRef = null;
-            /**
-             * @internal
-             */
-            this._tViewNode = null;
         }
         Object.defineProperty(ViewRef.prototype, "rootNodes", {
             get: function () {
@@ -40431,9 +40427,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         embeddedLView[QUERIES] = declarationViewLQueries.createEmbeddedView(embeddedTView);
                     }
                     renderView(embeddedTView, embeddedLView, context);
-                    var viewRef = new ViewRef(embeddedLView);
-                    viewRef._tViewNode = embeddedLView[T_HOST];
-                    return viewRef;
+                    return new ViewRef(embeddedLView);
                 };
                 return TemplateRef;
             }(TemplateRefToken));
@@ -49142,7 +49136,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.7+50.sha-7a30153');
+    var VERSION$2 = new Version$1('10.0.0-next.7+51.sha-ddaa124');
 
     /**
      * @license
@@ -51986,7 +51980,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!rootSelectorOrNode || isIsolated) {
                 // The host element of the internal or isolated root view is attached to the component's host
                 // view node.
-                componentRef.hostView._tViewNode.child = tElementNode;
+                ngDevMode && assertNodeOfPossibleTypes(rootTView.node, 2 /* View */);
+                rootTView.node.child = tElementNode;
             }
             return componentRef;
         };
@@ -52011,7 +52006,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.destroyCbs = [];
             _this.instance = instance;
             _this.hostView = _this.changeDetectorRef = new RootViewRef(_rootLView);
-            _this.hostView._tViewNode = assignTViewNodeToLView(_rootLView[TVIEW], null, -1, _rootLView);
+            assignTViewNodeToLView(_rootLView[TVIEW], null, -1, _rootLView);
             _this.componentType = componentType;
             return _this;
         }
