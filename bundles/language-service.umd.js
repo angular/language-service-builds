@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-next.7+17.sha-2418c6a
+ * @license Angular v10.0.0-next.7+43.sha-f16ca1c
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -5927,7 +5927,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.lines.slice(-1)[0];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         SourceMapGenerator.prototype.toJSON = function () {
@@ -6062,7 +6062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._lines[this._lines.length - 1];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         EmitterVisitorContext.prototype.println = function (from, lastPart) {
@@ -6113,7 +6113,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._classes.length > 0 ? this._classes[this._classes.length - 1] : null;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         EmitterVisitorContext.prototype.toSource = function () {
@@ -6201,7 +6201,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return this._lines;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return EmitterVisitorContext;
@@ -9404,21 +9404,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return !this.path || !this.path.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(AstPath.prototype, "head", {
             get: function () {
                 return this.path[0];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(AstPath.prototype, "tail", {
             get: function () {
                 return this.path[this.path.length - 1];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         AstPath.prototype.parentOf = function (node) {
@@ -11518,7 +11518,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 });
                 return lazyProviders.concat(eagerProviders);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ProviderElementContext.prototype, "transformedDirectiveAsts", {
@@ -11529,7 +11529,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     sortedProviderTypes.indexOf(dir2.directive.type); });
                 return sortedDirectives;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ProviderElementContext.prototype, "queryMatches", {
@@ -11540,7 +11540,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 });
                 return allMatches;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ProviderElementContext.prototype._addQueryReadsTo = function (token, defaultValue, queryReadTokens) {
@@ -11877,7 +11877,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._interpolationConfig;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         BindingParser.prototype.getUsedPipes = function () {
@@ -12450,7 +12450,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._exprParser;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         TemplateParser.prototype.parse = function (component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces) {
@@ -14366,7 +14366,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.peek(0);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(_ParseAST.prototype, "atEOF", {
@@ -14374,7 +14374,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.index >= this.tokens.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(_ParseAST.prototype, "inputIndex", {
@@ -14385,7 +14385,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.atEOF ? this.currentEndIndex : this.next.index + this.offset;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(_ParseAST.prototype, "currentEndIndex", {
@@ -14405,7 +14405,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return this.next.index + this.offset;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(_ParseAST.prototype, "currentAbsoluteOffset", {
@@ -14415,7 +14415,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.absoluteOffset + this.inputIndex;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         _ParseAST.prototype.span = function (start) {
@@ -16095,21 +16095,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._registry.icus;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(I18nContext.prototype, "isRoot", {
             get: function () {
                 return this.level === 0;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(I18nContext.prototype, "isResolved", {
             get: function () {
                 return this._unresolvedCtxCount === 0;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         I18nContext.prototype.getSerializedPlaceholders = function () {
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-next.7+17.sha-2418c6a');
+    var VERSION$1 = new Version('10.0.0-next.7+43.sha-f16ca1c');
 
     /**
      * @license
@@ -20368,7 +20368,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._msgCountAtSectionStart !== void 0;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         /**
@@ -26346,7 +26346,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return result;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(AstType.prototype, "undefinedType", {
@@ -26357,7 +26357,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return result;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         AstType.prototype.resolveMethodCall = function (receiverType, ast) {
@@ -27454,7 +27454,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return result;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return SchemaInformation;
@@ -27742,21 +27742,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.context.checker.typeToString(this.tsType);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TypeWrapper.prototype, "callable", {
             get: function () {
                 return typeCallable(this.tsType);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TypeWrapper.prototype, "nullable", {
             get: function () {
                 return this.context.checker.getNonNullableType(this.tsType) != this.tsType;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TypeWrapper.prototype, "documentation", {
@@ -27767,7 +27767,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return symbol.getDocumentationComment(this.context.checker);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TypeWrapper.prototype, "definition", {
@@ -27775,7 +27775,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var symbol = this.tsType.getSymbol();
                 return symbol ? definitionFromTsSymbol(symbol) : undefined;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         TypeWrapper.prototype.members = function () {
@@ -27857,28 +27857,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.symbol.name;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "kind", {
             get: function () {
                 return this.callable ? 'method' : 'property';
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "type", {
             get: function () {
                 return new TypeWrapper(this.tsType, this.context);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "container", {
             get: function () {
                 return getContainerOf(this.symbol, this.context);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "public", {
@@ -27886,28 +27886,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Symbols that are not explicitly made private are public.
                 return !isSymbolPrivate(this.symbol);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "callable", {
             get: function () {
                 return typeCallable(this.tsType);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "definition", {
             get: function () {
                 return definitionFromTsSymbol(this.symbol);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SymbolWrapper.prototype, "documentation", {
             get: function () {
                 return this.symbol.getDocumentationComment(this.context.checker);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         SymbolWrapper.prototype.members = function () {
@@ -27944,7 +27944,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return type;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return SymbolWrapper;
@@ -27960,49 +27960,49 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.declaration.name;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "kind", {
             get: function () {
                 return this.declaration.kind;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "container", {
             get: function () {
                 return undefined;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "type", {
             get: function () {
                 return this.declaration.type;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "callable", {
             get: function () {
                 return this.type.callable;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "definition", {
             get: function () {
                 return this.declaration.definition;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DeclaredSymbol.prototype, "documentation", {
             get: function () {
                 return this.declaration.type.documentation;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         DeclaredSymbol.prototype.members = function () {
@@ -28031,14 +28031,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return new SymbolTableWrapper(this.signature.getParameters(), this.context);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SignatureWrapper.prototype, "result", {
             get: function () {
                 return new TypeWrapper(this.signature.getReturnType(), this.context);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return SignatureWrapper;
@@ -28052,14 +28052,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.signature.arguments;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(SignatureResultOverride.prototype, "result", {
             get: function () {
                 return this.resultType;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return SignatureResultOverride;
@@ -28127,7 +28127,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.symbols.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         SymbolTableWrapper.prototype.get = function (key) {
@@ -28167,7 +28167,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.map.size;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         MapSymbolTable.prototype.get = function (key) {
@@ -28215,7 +28215,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.pipes.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         PipesTable.prototype.get = function (key) {
@@ -28250,14 +28250,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.pipe.name;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(PipeSymbol.prototype, "type", {
             get: function () {
                 return new TypeWrapper(this.tsType, this.context);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(PipeSymbol.prototype, "definition", {
@@ -28265,7 +28265,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var symbol = this.tsType.getSymbol();
                 return symbol ? definitionFromTsSymbol(symbol) : undefined;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(PipeSymbol.prototype, "documentation", {
@@ -28276,7 +28276,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return symbol.getDocumentationComment(this.context.checker);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         PipeSymbol.prototype.members = function () {
@@ -28328,7 +28328,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return type;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         PipeSymbol.prototype.findClassSymbol = function (type) {
@@ -28408,7 +28408,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 throw new Error("Internal error, unhandled literal kind " + builtinType + ":" + BuiltinType$1[builtinType]);
         }
         var node = ts.createNode(syntaxKind);
-        node.parent = ctx.node;
+        node.parent = ts.createEmptyStatement();
         return ctx.checker.getTypeAtLocation(node);
     }
     function spanAt(sourceFile, line, column) {
@@ -28562,7 +28562,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.classSymbol;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(BaseTemplate.prototype, "members", {
@@ -28581,7 +28581,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return this.membersTable;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(BaseTemplate.prototype, "query", {
@@ -28607,7 +28607,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return this.queryCache;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return BaseTemplate;
@@ -29078,7 +29078,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return Array.from(this.completions.values());
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
@@ -29643,63 +29643,63 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.sym.name;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "language", {
             get: function () {
                 return this.sym.language;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "type", {
             get: function () {
                 return this.sym.type;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "container", {
             get: function () {
                 return this.sym.container;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "public", {
             get: function () {
                 return this.sym.public;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "callable", {
             get: function () {
                 return this.sym.callable;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "nullable", {
             get: function () {
                 return this.sym.nullable;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "definition", {
             get: function () {
                 return this.sym.definition;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(OverrideKindSymbol.prototype, "documentation", {
             get: function () {
                 return this.sym.documentation;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         OverrideKindSymbol.prototype.members = function () {
@@ -36524,7 +36524,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 processTNodeChildren(this.firstChild, buf);
                 return buf.join('');
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return TView;
@@ -36608,7 +36608,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         return 'TNodeType.???';
                 }
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "flags_", {
@@ -36632,7 +36632,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     flags.push('TNodeFlags.isProjected');
                 return flags.join('|');
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "template_", {
@@ -36654,21 +36654,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 buf.push('</', this.tagName || this.type_, '>');
                 return buf.join('');
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "styleBindings_", {
             get: function () {
                 return toDebugStyleBinding(this, false);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TNode.prototype, "classBindings_", {
             get: function () {
                 return toDebugStyleBinding(this, true);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return TNode;
@@ -36796,35 +36796,35 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     indexWithinInitPhase: flags >> 11 /* IndexWithinInitPhaseShift */,
                 };
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "parent", {
             get: function () {
                 return toDebug(this._raw_lView[PARENT]);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "host", {
             get: function () {
                 return toHtml(this._raw_lView[HOST], true);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "html", {
             get: function () {
                 return (this.nodes || []).map(function (node) { return toHtml(node.native, true); }).join('');
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "context", {
             get: function () {
                 return this._raw_lView[CONTEXT];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "nodes", {
@@ -36838,91 +36838,91 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var tNode = lView[TVIEW].firstChild;
                 return toDebugNodes(tNode, lView);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "tView", {
             get: function () {
                 return this._raw_lView[TVIEW];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "cleanup", {
             get: function () {
                 return this._raw_lView[CLEANUP];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "injector", {
             get: function () {
                 return this._raw_lView[INJECTOR$1];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "rendererFactory", {
             get: function () {
                 return this._raw_lView[RENDERER_FACTORY];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "renderer", {
             get: function () {
                 return this._raw_lView[RENDERER];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "sanitizer", {
             get: function () {
                 return this._raw_lView[SANITIZER];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "childHead", {
             get: function () {
                 return toDebug(this._raw_lView[CHILD_HEAD]);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "next", {
             get: function () {
                 return toDebug(this._raw_lView[NEXT]);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "childTail", {
             get: function () {
                 return toDebug(this._raw_lView[CHILD_TAIL]);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "declarationView", {
             get: function () {
                 return toDebug(this._raw_lView[DECLARATION_VIEW]);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "queries", {
             get: function () {
                 return this._raw_lView[QUERIES];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "tHost", {
             get: function () {
                 return this._raw_lView[T_HOST];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LViewDebug.prototype, "childViews", {
@@ -36938,7 +36938,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return childViews;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return LViewDebug;
@@ -36982,7 +36982,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._raw_lContainer[HAS_TRANSPLANTED_VIEWS];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "views", {
@@ -36990,42 +36990,42 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this._raw_lContainer.slice(CONTAINER_HEADER_OFFSET)
                     .map(toDebug);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "parent", {
             get: function () {
                 return toDebug(this._raw_lContainer[PARENT]);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "movedViews", {
             get: function () {
                 return this._raw_lContainer[MOVED_VIEWS];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "host", {
             get: function () {
                 return this._raw_lContainer[HOST];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "native", {
             get: function () {
                 return this._raw_lContainer[NATIVE];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(LContainerDebug.prototype, "next", {
             get: function () {
                 return toDebug(this._raw_lContainer[NEXT]);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return LContainerDebug;
@@ -37056,7 +37056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return getTNode(this._lView[TVIEW], this.nodeIndex);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return I18NDebugItem;
@@ -37157,7 +37157,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return results;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return I18nMutateOpCodesDebug;
@@ -37245,7 +37245,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return results;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return I18nUpdateOpCodesDebug;
@@ -40049,21 +40049,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return [];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ViewRef.prototype, "context", {
             get: function () {
                 return this._lView[CONTEXT];
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ViewRef.prototype, "destroyed", {
             get: function () {
                 return (this._lView[FLAGS] & 256 /* Destroyed */) === 256 /* Destroyed */;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ViewRef.prototype.destroy = function () {
@@ -40303,7 +40303,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return null;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return RootViewRef;
@@ -40481,14 +40481,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     get: function () {
                         return createElementRef(ElementRefToken, this._hostTNode, this._hostView);
                     },
-                    enumerable: true,
+                    enumerable: false,
                     configurable: true
                 });
                 Object.defineProperty(ViewContainerRef.prototype, "injector", {
                     get: function () {
                         return new NodeInjector(this._hostTNode, this._hostView);
                     },
-                    enumerable: true,
+                    enumerable: false,
                     configurable: true
                 });
                 Object.defineProperty(ViewContainerRef.prototype, "parentInjector", {
@@ -40501,7 +40501,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             new NodeInjector(null, this._hostView) :
                             new NodeInjector(parentTNode, parentView);
                     },
-                    enumerable: true,
+                    enumerable: false,
                     configurable: true
                 });
                 ViewContainerRef.prototype.clear = function () {
@@ -40516,7 +40516,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     get: function () {
                         return this._lContainer.length - CONTAINER_HEADER_OFFSET;
                     },
-                    enumerable: true,
+                    enumerable: false,
                     configurable: true
                 });
                 ViewContainerRef.prototype.createEmbeddedView = function (templateRef, context, index) {
@@ -41368,7 +41368,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._destroyed;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         /**
@@ -42068,7 +42068,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return _globalKeyRegistry.numberOfKeys;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return ReflectiveKey;
@@ -42091,7 +42091,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._allKeys.size;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return KeyRegistry;
@@ -42668,7 +42668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     .join(', ');
                 return "ReflectiveInjector(providers: [" + providers + "])";
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ReflectiveInjector_.prototype.toString = function () {
@@ -49142,7 +49142,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-next.7+17.sha-2418c6a');
+    var VERSION$2 = new Version$1('10.0.0-next.7+43.sha-f16ca1c');
 
     /**
      * @license
@@ -49349,7 +49349,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this._additionsHead !== null || this._movesHead !== null ||
                     this._removalsHead !== null || this._identityChangesHead !== null;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         /**
@@ -49805,7 +49805,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.map.size === 0;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         _DuplicateMap.prototype.clear = function () {
@@ -49861,7 +49861,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this._additionsHead !== null || this._changesHead !== null ||
                     this._removalsHead !== null;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         DefaultKeyValueDiffer.prototype.forEachItem = function (fn) {
@@ -51019,7 +51019,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return inputsArr;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ComponentFactory_.prototype, "outputs", {
@@ -51031,7 +51031,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return outputsArr;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         /**
@@ -51069,21 +51069,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return new ElementRef(asElementData(this._view, this._elDef.nodeIndex).renderElement);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ComponentRef_.prototype, "injector", {
             get: function () {
                 return new Injector_(this._view, this._elDef);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ComponentRef_.prototype, "componentType", {
             get: function () {
                 return this._component.constructor;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ComponentRef_.prototype.destroy = function () {
@@ -51111,14 +51111,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return new ElementRef(this._data.renderElement);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ViewContainerRef_.prototype, "injector", {
             get: function () {
                 return new Injector_(this._view, this._elDef);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ViewContainerRef_.prototype, "parentInjector", {
@@ -51132,7 +51132,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return view ? new Injector_(view, elDef) : new Injector_(this._view, null);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ViewContainerRef_.prototype.clear = function () {
@@ -51155,7 +51155,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._embeddedViews.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ViewContainerRef_.prototype.createEmbeddedView = function (templateRef, context, index) {
@@ -51218,21 +51218,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return rootRenderNodes(this._view);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ViewRef_.prototype, "context", {
             get: function () {
                 return this._view.context;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ViewRef_.prototype, "destroyed", {
             get: function () {
                 return (this._view.state & 128 /* Destroyed */) !== 0;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ViewRef_.prototype.markForCheck = function () {
@@ -51313,7 +51313,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return new ElementRef(asElementData(this._parentView, this._def.nodeIndex).renderElement);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return TemplateRef_;
@@ -51363,14 +51363,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.get(this._moduleType);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(NgModuleRef_.prototype, "componentFactoryResolver", {
             get: function () {
                 return this.get(ComponentFactoryResolver);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         NgModuleRef_.prototype.destroy = function () {
@@ -51899,14 +51899,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return toRefArray(this.componentDef.inputs);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(ComponentFactory.prototype, "outputs", {
             get: function () {
                 return toRefArray(this.componentDef.outputs);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ComponentFactory.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
@@ -52019,7 +52019,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return new NodeInjector(this._tNode, this._rootLView);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ComponentRef.prototype.destroy = function () {
@@ -55510,88 +55510,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Use in components with the `@Output` directive to emit custom events
-     * synchronously or asynchronously, and register handlers for those events
-     * by subscribing to an instance.
-     *
-     * @usageNotes
-     *
-     * Extends
-     * [RxJS `Subject`](https://rxjs.dev/api/index/class/Subject)
-     * for Angular by adding the `emit()` method.
-     *
-     * In the following example, a component defines two output properties
-     * that create event emitters. When the title is clicked, the emitter
-     * emits an open or close event to toggle the current visibility state.
-     *
-     * ```html
-     * @Component({
-     *   selector: 'zippy',
-     *   template: `
-     *   <div class="zippy">
-     *     <div (click)="toggle()">Toggle</div>
-     *     <div [hidden]="!visible">
-     *       <ng-content></ng-content>
-     *     </div>
-     *  </div>`})
-     * export class Zippy {
-     *   visible: boolean = true;
-     *   @Output() open: EventEmitter<any> = new EventEmitter();
-     *   @Output() close: EventEmitter<any> = new EventEmitter();
-     *
-     *   toggle() {
-     *     this.visible = !this.visible;
-     *     if (this.visible) {
-     *       this.open.emit(null);
-     *     } else {
-     *       this.close.emit(null);
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     * Access the event object with the `$event` argument passed to the output event
-     * handler:
-     *
-     * ```html
-     * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
-     * ```
-     *
-     * @see [Observables in Angular](guide/observables-in-angular)
-     * @publicApi
-     */
-    var EventEmitter = /** @class */ (function (_super) {
-        __extends(EventEmitter, _super);
-        /**
-         * Creates an instance of this class that can
-         * deliver events synchronously or asynchronously.
-         *
-         * @param isAsync When true, deliver events asynchronously.
-         *
-         */
-        function EventEmitter(isAsync) {
+    var EventEmitter_ = /** @class */ (function (_super) {
+        __extends(EventEmitter_, _super);
+        function EventEmitter_(isAsync) {
             if (isAsync === void 0) { isAsync = false; }
             var _this = _super.call(this) || this;
             _this.__isAsync = isAsync;
             return _this;
         }
-        /**
-         * Emits an event containing a given value.
-         * @param value The value to emit.
-         */
-        EventEmitter.prototype.emit = function (value) {
+        EventEmitter_.prototype.emit = function (value) {
             _super.prototype.next.call(this, value);
         };
-        /**
-         * Registers handlers for events emitted by this instance.
-         * @param generatorOrNext When supplied, a custom handler for emitted events.
-         * @param error When supplied, a custom handler for an error notification
-         * from this emitter.
-         * @param complete When supplied, a custom handler for a completion
-         * notification from this emitter.
-         */
-        EventEmitter.prototype.subscribe = function (generatorOrNext, error, complete) {
+        EventEmitter_.prototype.subscribe = function (generatorOrNext, error, complete) {
             var schedulerFn;
             var errorFn = function (err) { return null; };
             var completeFn = function () { return null; };
@@ -55643,8 +55573,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return sink;
         };
-        return EventEmitter;
+        return EventEmitter_;
     }(Subject));
+    /**
+     * @publicApi
+     */
+    var EventEmitter = EventEmitter_;
 
     /**
      * @license
@@ -55897,7 +55831,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.queries.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         TQueries_.prototype.track = function (tquery) {
@@ -58711,7 +58645,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._injector;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         /**
@@ -58729,7 +58663,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._destroyed;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         PlatformRef.ɵfac = function PlatformRef_Factory(t) { return new (t || PlatformRef)(ɵɵinject(Injector)); };
@@ -59090,7 +59024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._views.length;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         ApplicationRef.ɵfac = function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(ɵɵinject(NgZone), ɵɵinject(Console), ɵɵinject(Injector), ɵɵinject(ErrorHandler), ɵɵinject(ComponentFactoryResolver), ɵɵinject(ApplicationInitStatus)); };
@@ -59292,35 +59226,35 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this._debugContext.injector;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "componentInstance", {
             get: function () {
                 return this._debugContext.component;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "context", {
             get: function () {
                 return this._debugContext.context;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "references", {
             get: function () {
                 return this._debugContext.references;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__PRE_R3__.prototype, "providerTokens", {
             get: function () {
                 return this._debugContext.providerTokens;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return DebugNode__PRE_R3__;
@@ -59396,7 +59330,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this.childNodes //
                     .filter(function (node) { return node instanceof DebugElement__PRE_R3__; });
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         DebugElement__PRE_R3__.prototype.triggerEventHandler = function (eventName, eventObj) {
@@ -59439,14 +59373,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var parent = this.nativeNode.parentNode;
                 return parent ? new DebugElement__POST_R3__(parent) : null;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "injector", {
             get: function () {
                 return getInjector(this.nativeNode);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "componentInstance", {
@@ -59455,35 +59389,35 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return nativeElement &&
                     (getComponent(nativeElement) || getOwningComponent(nativeElement));
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "context", {
             get: function () {
                 return getComponent(this.nativeNode) || getContext(this.nativeNode);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "listeners", {
             get: function () {
                 return getListeners(this.nativeNode).filter(function (listener) { return listener.type === 'dom'; });
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "references", {
             get: function () {
                 return getLocalRefs(this.nativeNode);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "providerTokens", {
             get: function () {
                 return getInjectionTokens(this.nativeNode);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return DebugNode__POST_R3__;
@@ -59500,7 +59434,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.nativeNode.nodeType == Node.ELEMENT_NODE ? this.nativeNode : null;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "name", {
@@ -59516,7 +59450,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     return this.nativeNode.nodeName;
                 }
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "properties", {
@@ -59548,7 +59482,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 collectPropertyBindings(properties, tNode, lView, tData);
                 return properties;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "attributes", {
@@ -59600,7 +59534,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return attributes;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "styles", {
@@ -59610,7 +59544,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return {};
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "classes", {
@@ -59624,7 +59558,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 classes.forEach(function (value) { return result[value] = true; });
                 return result;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "childNodes", {
@@ -59637,7 +59571,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return children;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "children", {
@@ -59653,7 +59587,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return children;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         DebugElement__POST_R3__.prototype.query = function (predicate) {
@@ -61565,28 +61499,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Has to be done lazily as we use the DebugContext also during creation of elements...
                 return asElementData(this.elView, this.elDef.nodeIndex).componentView || this.view;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "injector", {
             get: function () {
                 return createInjector$1(this.elView, this.elDef);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "component", {
             get: function () {
                 return this.elOrCompView.component;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "context", {
             get: function () {
                 return this.elOrCompView.context;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "providerTokens", {
@@ -61603,7 +61537,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return tokens;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "references", {
@@ -61621,7 +61555,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return references;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "componentRenderElement", {
@@ -61629,7 +61563,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var elData = findHostElement(this.elOrCompView);
                 return elData ? elData.renderElement : undefined;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(DebugContext_.prototype, "renderNode", {
@@ -61637,7 +61571,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this.nodeDef.flags & 2 /* TypeText */ ? renderNode(this.view, this.nodeDef) :
                     renderNode(this.elView, this.elDef);
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         DebugContext_.prototype.logError = function (console) {
@@ -62734,7 +62668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return result;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Symbols.prototype.buildImports = function () {
@@ -63963,7 +63897,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, staticReflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
                 return this._resolver;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
@@ -63974,7 +63908,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             get: function () {
                 return this.resolver.getReflector();
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         /**
@@ -64218,7 +64152,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return program;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         /**
