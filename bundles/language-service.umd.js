@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.6+37.sha-4de546e
+ * @license Angular v9.1.6+41.sha-d808333
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19601,7 +19601,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.6+37.sha-4de546e');
+    var VERSION$1 = new Version('9.1.6+41.sha-d808333');
 
     /**
      * @license
@@ -31709,7 +31709,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * detected. (see: `LView[DECLARATION_COMPONENT_VIEW])`.
      *
      * This flag, once set, is never unset for the `LContainer`. This means that when unset we can skip
-     * a lot of work in `refreshDynamicEmbeddedViews`. But when set we still need to verify
+     * a lot of work in `refreshEmbeddedViews`. But when set we still need to verify
      * that the `MOVED_VIEWS` are transplanted and on-push.
      */
     var HAS_TRANSPLANTED_VIEWS = 2;
@@ -34422,8 +34422,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         parent, //
         projection, //
         styles, //
+        stylesWithoutHost, //
         residualStyles, //
         classes, //
+        classesWithoutHost, //
         residualClasses, //
         classBindings, //
         styleBindings) {
@@ -34451,8 +34453,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.parent = parent;
             this.projection = projection;
             this.styles = styles;
+            this.stylesWithoutHost = stylesWithoutHost;
             this.residualStyles = residualStyles;
             this.classes = classes;
+            this.classesWithoutHost = classesWithoutHost;
             this.residualClasses = residualClasses;
             this.classBindings = classBindings;
             this.styleBindings = styleBindings;
@@ -35387,7 +35391,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // insertion points. This is needed to avoid the situation where the template is defined in this
             // `LView` but its declaration appears after the insertion component.
             markTransplantedViewsForRefresh(lView);
-            refreshDynamicEmbeddedViews(lView);
+            refreshEmbeddedViews(lView);
             // Content query results must be refreshed before content hooks are called.
             if (tView.contentQueries !== null) {
                 refreshContentQueries(tView, lView);
@@ -35700,8 +35704,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         tParent, // parent: TElementNode|TContainerNode|null
         null, // projection: number|(ITNode|RNode[])[]|null
         null, // styles: string|null
+        null, // stylesWithoutHost: string|null
         undefined, // residualStyles: string|null
         null, // classes: string|null
+        null, // classesWithoutHost: string|null
         undefined, // residualClasses: string|null
         0, // classBindings: TStylingRange;
         0) :
@@ -35729,8 +35735,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 parent: tParent,
                 projection: null,
                 styles: null,
+                stylesWithoutHost: null,
                 residualStyles: undefined,
                 classes: null,
+                classesWithoutHost: null,
                 residualClasses: undefined,
                 classBindings: 0,
                 styleBindings: 0,
@@ -35866,10 +35874,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var LContainerArray = ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) &&
         createNamedArrayType('LContainer');
     /**
-     * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes
+     * Goes over embedded views (ones created through ViewContainerRef APIs) and refreshes
      * them by executing an associated template function.
      */
-    function refreshDynamicEmbeddedViews(lView) {
+    function refreshEmbeddedViews(lView) {
         for (var lContainer = getFirstLContainer(lView); lContainer !== null; lContainer = getNextLContainer(lContainer)) {
             for (var i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
                 var embeddedLView = lContainer[i];
@@ -35904,7 +35912,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Note, it is possible that the `movedViews` is tracking views that are transplanted *and*
                 // those that aren't (declaration component === insertion component). In the latter case,
                 // it's fine to add the flag, as we will clear it immediately in
-                // `refreshDynamicEmbeddedViews` for the view currently being refreshed.
+                // `refreshEmbeddedViews` for the view currently being refreshed.
                 movedLView[FLAGS] |= 1024 /* RefreshTransplantedView */;
             }
         }
@@ -37136,7 +37144,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
     var INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{/;
     var INHERITED_CLASS_WITH_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{[\s\S]*constructor\s*\(/;
-    var INHERITED_CLASS_WITH_DELEGATE_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{[\s\S]*constructor\s*\(\)\s*{\s+super\(\.\.\.arguments\)/;
+    var INHERITED_CLASS_WITH_DELEGATE_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{[\s\S]*constructor\s*\(\)\s*{\s*super\(\.\.\.arguments\)/;
     /**
      * Determine whether a stringified type is a class which delegates its constructor
      * to its parent.
@@ -39271,29 +39279,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * @param tNode The `TNode` into which the styling information should be loaded.
      * @param attrs `TAttributes` containing the styling information.
+     * @param writeToHost Where should the resulting static styles be written?
+     *   - `false` Write to `TNode.stylesWithoutHost` / `TNode.classesWithoutHost`
+     *   - `true` Write to `TNode.styles` / `TNode.classes`
      */
-    function computeStaticStyling(tNode, attrs) {
+    function computeStaticStyling(tNode, attrs, writeToHost) {
         ngDevMode &&
             assertFirstCreatePass(getTView(), 'Expecting to be called in first template pass only');
-        var styles = tNode.styles;
-        var classes = tNode.classes;
+        var styles = writeToHost ? tNode.styles : null;
+        var classes = writeToHost ? tNode.classes : null;
         var mode = 0;
-        for (var i = 0; i < attrs.length; i++) {
-            var value = attrs[i];
-            if (typeof value === 'number') {
-                mode = value;
-            }
-            else if (mode == 1 /* Classes */) {
-                classes = concatStringsWithSpace(classes, value);
-            }
-            else if (mode == 2 /* Styles */) {
-                var style = value;
-                var styleValue = attrs[++i];
-                styles = concatStringsWithSpace(styles, style + ': ' + styleValue + ';');
+        if (attrs !== null) {
+            for (var i = 0; i < attrs.length; i++) {
+                var value = attrs[i];
+                if (typeof value === 'number') {
+                    mode = value;
+                }
+                else if (mode == 1 /* Classes */) {
+                    classes = concatStringsWithSpace(classes, value);
+                }
+                else if (mode == 2 /* Styles */) {
+                    var style = value;
+                    var styleValue = attrs[++i];
+                    styles = concatStringsWithSpace(styles, style + ': ' + styleValue + ';');
+                }
             }
         }
-        styles !== null && (tNode.styles = styles);
-        classes !== null && (tNode.classes = classes);
+        writeToHost ? tNode.styles = styles : tNode.stylesWithoutHost = styles;
+        writeToHost ? tNode.classes = classes : tNode.classesWithoutHost = classes;
     }
 
     /**
@@ -39755,7 +39768,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var tNode = getOrCreateTNode(tView, null, 0, 3 /* Element */, null, null);
         var mergedAttrs = tNode.mergedAttrs = def.hostAttrs;
         if (mergedAttrs !== null) {
-            computeStaticStyling(tNode, mergedAttrs);
+            computeStaticStyling(tNode, mergedAttrs, true);
             if (rNode !== null) {
                 setUpAttributes(hostRenderer, rNode, mergedAttrs);
                 if (tNode.classes !== null) {
@@ -40118,7 +40131,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.6+37.sha-4de546e');
+    var VERSION$2 = new Version$1('9.1.6+41.sha-d808333');
 
     /**
      * @license
