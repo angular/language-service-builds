@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.1.6+50.sha-0912be4
+ * @license Angular v9.1.6+62.sha-6db8e7e
  * Copyright Google Inc. All Rights Reserved.
  * License: MIT
  */
@@ -19601,7 +19601,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.1.6+50.sha-0912be4');
+    var VERSION$1 = new Version('9.1.6+62.sha-6db8e7e');
 
     /**
      * @license
@@ -35283,7 +35283,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             tView.node = tNode = createTNode(tView, tParentNode, //
             2 /* View */, index, null, null);
         }
-        return lView[T_HOST] = tNode;
+        lView[T_HOST] = tNode;
     }
     //////////////////////////
     //// Render
@@ -36693,10 +36693,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._cdRefInjectingView = _cdRefInjectingView;
             this._appRef = null;
             this._viewContainerRef = null;
-            /**
-             * @internal
-             */
-            this._tViewNode = null;
         }
         Object.defineProperty(ViewRef.prototype, "rootNodes", {
             get: function () {
@@ -40131,7 +40127,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.1.6+50.sha-0912be4');
+    var VERSION$2 = new Version$1('9.1.6+62.sha-6db8e7e');
 
     /**
      * @license
@@ -42982,7 +42978,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!rootSelectorOrNode || isIsolated) {
                 // The host element of the internal or isolated root view is attached to the component's host
                 // view node.
-                componentRef.hostView._tViewNode.child = tElementNode;
+                ngDevMode && assertNodeOfPossibleTypes(rootTView.node, 2 /* View */);
+                rootTView.node.child = tElementNode;
             }
             return componentRef;
         };
@@ -43007,7 +43004,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             _this.destroyCbs = [];
             _this.instance = instance;
             _this.hostView = _this.changeDetectorRef = new RootViewRef(_rootLView);
-            _this.hostView._tViewNode = assignTViewNodeToLView(_rootLView[TVIEW], null, -1, _rootLView);
+            assignTViewNodeToLView(_rootLView[TVIEW], null, -1, _rootLView);
             _this.componentType = componentType;
             return _this;
         }
