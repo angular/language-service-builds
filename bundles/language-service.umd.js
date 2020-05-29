@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+22.sha-82761ec
+ * @license Angular v10.0.0-rc.0+23.sha-d16a7f3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -68,21 +68,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         return __assign.apply(this, arguments);
     };
-
-    function __decorate(decorators, target, key, desc) {
-        var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-        if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-        else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-        return c > 3 && r && Object.defineProperty(target, key, r), r;
-    }
-
-    function __param(paramIndex, decorator) {
-        return function (target, key) { decorator(target, key, paramIndex); }
-    }
-
-    function __metadata(metadataKey, metadataValue) {
-        if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
-    }
 
     function __values(o) {
         var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
@@ -19598,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+22.sha-82761ec');
+    var VERSION$1 = new Version('10.0.0-rc.0+23.sha-d16a7f3');
 
     /**
      * @license
@@ -40119,7 +40104,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+22.sha-82761ec');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+23.sha-d16a7f3');
 
     /**
      * @license
@@ -45206,11 +45191,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             this.initialized = true;
         };
-        ApplicationInitStatus = __decorate([
-            Injectable(),
-            __param(0, Inject(APP_INITIALIZER)), __param(0, Optional()),
-            __metadata("design:paramtypes", [Array])
-        ], ApplicationInitStatus);
+        ApplicationInitStatus.decorators = [
+            { type: Injectable }
+        ];
+        /** @nocollapse */
+        ApplicationInitStatus.ctorParameters = function () { return [
+            { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
+        ]; };
         return ApplicationInitStatus;
     }());
 
@@ -45291,9 +45278,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // tslint:disable-next-line:no-console
             console.warn(message);
         };
-        Console = __decorate([
-            Injectable()
-        ], Console);
+        Console.decorators = [
+            { type: Injectable }
+        ];
         return Console;
     }());
 
@@ -45516,9 +45503,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Compiler.prototype.getModuleId = function (moduleType) {
             return undefined;
         };
-        Compiler = __decorate([
-            Injectable()
-        ], Compiler);
+        Compiler.decorators = [
+            { type: Injectable }
+        ];
         return Compiler;
     }());
     /**
@@ -46093,10 +46080,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // TODO(juliemr): implement.
             return [];
         };
-        Testability = __decorate([
-            Injectable(),
-            __metadata("design:paramtypes", [NgZone])
-        ], Testability);
+        Testability.decorators = [
+            { type: Injectable }
+        ];
+        /** @nocollapse */
+        Testability.ctorParameters = function () { return [
+            { type: NgZone }
+        ]; };
         return Testability;
     }());
     /**
@@ -46159,10 +46149,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (findInAncestors === void 0) { findInAncestors = true; }
             return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
         };
-        TestabilityRegistry = __decorate([
-            Injectable(),
-            __metadata("design:paramtypes", [])
-        ], TestabilityRegistry);
+        TestabilityRegistry.decorators = [
+            { type: Injectable }
+        ];
+        /** @nocollapse */
+        TestabilityRegistry.ctorParameters = function () { return []; };
         return TestabilityRegistry;
     }());
     var _NoopGetTestability = /** @class */ (function () {
@@ -46415,10 +46406,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             enumerable: false,
             configurable: true
         });
-        PlatformRef = __decorate([
-            Injectable(),
-            __metadata("design:paramtypes", [Injector])
-        ], PlatformRef);
+        PlatformRef.decorators = [
+            { type: Injectable }
+        ];
+        /** @nocollapse */
+        PlatformRef.ctorParameters = function () { return [
+            { type: Injector }
+        ]; };
         return PlatformRef;
     }());
     function getNgZone(ngZoneOption, ngZoneEventCoalescing) {
@@ -46778,13 +46772,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             enumerable: false,
             configurable: true
         });
-        ApplicationRef = __decorate([
-            Injectable(),
-            __metadata("design:paramtypes", [NgZone, Console, Injector,
-                ErrorHandler,
-                ComponentFactoryResolver,
-                ApplicationInitStatus])
-        ], ApplicationRef);
+        ApplicationRef.decorators = [
+            { type: Injectable }
+        ];
+        /** @nocollapse */
+        ApplicationRef.ctorParameters = function () { return [
+            { type: NgZone },
+            { type: Console },
+            { type: Injector },
+            { type: ErrorHandler },
+            { type: ComponentFactoryResolver },
+            { type: ApplicationInitStatus }
+        ]; };
         return ApplicationRef;
     }());
     function remove(list, el) {
@@ -46792,83 +46791,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (index > -1) {
             list.splice(index, 1);
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var _SEPARATOR = '#';
-    var FACTORY_CLASS_SUFFIX = 'NgFactory';
-    /**
-     * Configuration for SystemJsNgModuleLoader.
-     * token.
-     *
-     * @publicApi
-     * @deprecated the `string` form of `loadChildren` is deprecated, and `SystemJsNgModuleLoaderConfig`
-     * is part of its implementation. See `LoadChildren` for more details.
-     */
-    var SystemJsNgModuleLoaderConfig = /** @class */ (function () {
-        function SystemJsNgModuleLoaderConfig() {
-        }
-        return SystemJsNgModuleLoaderConfig;
-    }());
-    var DEFAULT_CONFIG = {
-        factoryPathPrefix: '',
-        factoryPathSuffix: '.ngfactory',
-    };
-    /**
-     * NgModuleFactoryLoader that uses SystemJS to load NgModuleFactory
-     * @publicApi
-     * @deprecated the `string` form of `loadChildren` is deprecated, and `SystemJsNgModuleLoader` is
-     * part of its implementation. See `LoadChildren` for more details.
-     */
-    var SystemJsNgModuleLoader = /** @class */ (function () {
-        function SystemJsNgModuleLoader(_compiler, config) {
-            this._compiler = _compiler;
-            this._config = config || DEFAULT_CONFIG;
-        }
-        SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode =  this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
-        };
-        SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
-            var _this = this;
-            var _a = __read(path.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
-            if (exportName === undefined) {
-                exportName = 'default';
-            }
-            return System.import(module)
-                .then(function (module) { return module[exportName]; })
-                .then(function (type) { return checkNotEmpty(type, module, exportName); })
-                .then(function (type) { return _this._compiler.compileModuleAsync(type); });
-        };
-        SystemJsNgModuleLoader.prototype.loadFactory = function (path) {
-            var _a = __read(path.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
-            var factoryClassSuffix = FACTORY_CLASS_SUFFIX;
-            if (exportName === undefined) {
-                exportName = 'default';
-                factoryClassSuffix = '';
-            }
-            return System.import(this._config.factoryPathPrefix + module + this._config.factoryPathSuffix)
-                .then(function (module) { return module[exportName + factoryClassSuffix]; })
-                .then(function (factory) { return checkNotEmpty(factory, module, exportName); });
-        };
-        SystemJsNgModuleLoader = __decorate([
-            Injectable(),
-            __param(1, Optional()),
-            __metadata("design:paramtypes", [Compiler, SystemJsNgModuleLoaderConfig])
-        ], SystemJsNgModuleLoader);
-        return SystemJsNgModuleLoader;
-    }());
-    function checkNotEmpty(value, modulePath, exportName) {
-        if (!value) {
-            throw new Error("Cannot find '" + exportName + "' in '" + modulePath + "'");
-        }
-        return value;
     }
 
     /**
@@ -47770,26 +47692,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             queue.push(fn);
         };
     }
-    /**
-     * Configures the root injector for an app with
-     * providers of `@angular/core` dependencies that `ApplicationRef` needs
-     * to bootstrap components.
-     *
-     * Re-exported by `BrowserModule`, which is included automatically in the root
-     * `AppModule` when you create a new app with the CLI `new` command.
-     *
-     * @publicApi
-     */
-    var ApplicationModule = /** @class */ (function () {
-        // Inject ApplicationRef to make it eager...
-        function ApplicationModule(appRef) {
-        }
-        ApplicationModule = __decorate([
-            NgModule({ providers: APPLICATION_MODULE_PROVIDERS }),
-            __metadata("design:paramtypes", [ApplicationRef])
-        ], ApplicationModule);
-        return ApplicationModule;
-    }());
 
     /**
      * @license
