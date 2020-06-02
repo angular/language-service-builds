@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.2
+ * @license Angular v10.0.0-rc.2+7.sha-cb6996b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.2');
+    var VERSION$1 = new Version('10.0.0-rc.2+7.sha-cb6996b');
 
     /**
      * @license
@@ -30559,8 +30559,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 var decoratorInstance = new ((_a = PropDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
                 function PropDecorator(target, name) {
                     var constructor = target.constructor;
-                    // Use of Object.defineProperty is important since it creates non-enumerable property which
-                    // prevents the property is copied during subclassing.
+                    // Use of Object.defineProperty is important because it creates a non-enumerable property
+                    // which prevents the property from being copied during subclassing.
                     var meta = constructor.hasOwnProperty(PROP_METADATA) ?
                         constructor[PROP_METADATA] :
                         Object.defineProperty(constructor, PROP_METADATA, { value: {} })[PROP_METADATA];
@@ -39317,18 +39317,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    // JS has NaN !== NaN
-    function looseIdentical(a, b) {
-        return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function devModeEqual(a, b) {
         var isListLikeIterableA = isListLikeIterable(a);
         var isListLikeIterableB = isListLikeIterable(b);
@@ -39342,7 +39330,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return true;
             }
             else {
-                return looseIdentical(a, b);
+                return Object.is(a, b);
             }
         }
     }
@@ -40104,7 +40092,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.2');
+    var VERSION$2 = new Version$1('10.0.0-rc.2+7.sha-cb6996b');
 
     /**
      * @license
@@ -40263,7 +40251,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 for (var index_1 = 0; index_1 < this.length; index_1++) {
                     item = collection[index_1];
                     itemTrackBy = this._trackByFn(index_1, item);
-                    if (record === null || !looseIdentical(record.trackById, itemTrackBy)) {
+                    if (record === null || !Object.is(record.trackById, itemTrackBy)) {
                         record = this._mismatch(record, item, itemTrackBy, index_1);
                         mayBeDirty = true;
                     }
@@ -40272,7 +40260,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             // TODO(misko): can we limit this to duplicates only?
                             record = this._verifyReinsertion(record, item, itemTrackBy, index_1);
                         }
-                        if (!looseIdentical(record.item, item))
+                        if (!Object.is(record.item, item))
                             this._addIdentityChange(record, item);
                     }
                     record = record._next;
@@ -40282,7 +40270,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 index = 0;
                 iterateListLike(collection, function (item) {
                     itemTrackBy = _this._trackByFn(index, item);
-                    if (record === null || !looseIdentical(record.trackById, itemTrackBy)) {
+                    if (record === null || !Object.is(record.trackById, itemTrackBy)) {
                         record = _this._mismatch(record, item, itemTrackBy, index);
                         mayBeDirty = true;
                     }
@@ -40291,7 +40279,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             // TODO(misko): can we limit this to duplicates only?
                             record = _this._verifyReinsertion(record, item, itemTrackBy, index);
                         }
-                        if (!looseIdentical(record.item, item))
+                        if (!Object.is(record.item, item))
                             _this._addIdentityChange(record, item);
                     }
                     record = record._next;
@@ -40370,7 +40358,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (record !== null) {
                 // We have seen this before, we need to move it forward in the collection.
                 // But first we need to check if identity changed, so we can update in view if necessary
-                if (!looseIdentical(record.item, item))
+                if (!Object.is(record.item, item))
                     this._addIdentityChange(record, item);
                 this._moveAfter(record, previousRecord, index);
             }
@@ -40380,7 +40368,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (record !== null) {
                     // It is an item which we have evicted earlier: reinsert it back into the list.
                     // But first we need to check if identity changed, so we can update in view if necessary
-                    if (!looseIdentical(record.item, item))
+                    if (!Object.is(record.item, item))
                         this._addIdentityChange(record, item);
                     this._reinsertAfter(record, previousRecord, index);
                 }
@@ -40686,7 +40674,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var record;
             for (record = this._head; record !== null; record = record._nextDup) {
                 if ((atOrAfterIndex === null || atOrAfterIndex <= record.currentIndex) &&
-                    looseIdentical(record.trackById, trackById)) {
+                    Object.is(record.trackById, trackById)) {
                     return record;
                 }
             }
@@ -40990,7 +40978,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         // Add the record or a given key to the list of changes only when the value has actually changed
         DefaultKeyValueDiffer.prototype._maybeAddToChanges = function (record, newValue) {
-            if (!looseIdentical(newValue, record.currentValue)) {
+            if (!Object.is(newValue, record.currentValue)) {
                 record.previousValue = record.currentValue;
                 record.currentValue = newValue;
                 this._addToChanges(record);
@@ -41445,7 +41433,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function checkBinding(view, def, bindingIdx, value) {
         var oldValues = view.oldValues;
         if ((view.state & 2 /* FirstCheck */) ||
-            !looseIdentical(oldValues[def.bindingIndex + bindingIdx], value)) {
+            !Object.is(oldValues[def.bindingIndex + bindingIdx], value)) {
             return true;
         }
         return false;
