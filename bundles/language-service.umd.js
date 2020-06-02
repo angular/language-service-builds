@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+45.sha-4414be7
+ * @license Angular v10.0.0-rc.0+48.sha-044a199
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+45.sha-4414be7');
+    var VERSION$1 = new Version('10.0.0-rc.0+48.sha-044a199');
 
     /**
      * @license
@@ -30765,8 +30765,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * @param type A type which may have `ɵprov`, via inheritance.
      *
-     * @deprecated Will be removed in v10, where an error will occur in the scenario if we find the
-     * `ɵprov` on an ancestor only.
+     * @deprecated Will be removed in a future version of Angular, where an error will occur in the
+     *     scenario if we find the `ɵprov` on an ancestor only.
      */
     function getInheritedInjectableDef(type) {
         // See `jit/injectable.ts#compileInjectable` for context on NG_PROV_DEF_FALLBACK.
@@ -30778,7 +30778,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // TODO(FW-1307): Re-add ngDevMode when closure can handle it
             // ngDevMode &&
             console.warn("DEPRECATED: DI is instantiating a token \"" + typeName + "\" that inherits its @Injectable decorator but does not provide one itself.\n" +
-                ("This will become an error in v10. Please add @Injectable() to the \"" + typeName + "\" class."));
+                ("This will become an error in a future version of Angular. Please add @Injectable() to the \"" + typeName + "\" class."));
             return def;
         }
         else {
@@ -40092,7 +40092,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+45.sha-4414be7');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+48.sha-044a199');
 
     /**
      * @license
