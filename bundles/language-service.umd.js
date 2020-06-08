@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+91.sha-ed3c549
+ * @license Angular v10.0.0-rc.0+92.sha-650974e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+91.sha-ed3c549');
+    var VERSION$1 = new Version('10.0.0-rc.0+92.sha-650974e');
 
     /**
      * @license
@@ -29017,12 +29017,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function entityCompletions(value, position) {
         // Look for entity completions
+        // TODO(kyliau): revisit the usefulness of this feature. It provides
+        // autocompletion for HTML entities, which IMO is outside the core functionality
+        // of Angular language service. Besides, we do not have a complete list.
+        // See https://dev.w3.org/html5/html-author/charref
         var re = /&[A-Za-z]*;?(?!\d)/g;
         var found;
         var result = [];
         while (found = re.exec(value)) {
             var len = found[0].length;
-            if (position >= found.index && position < (found.index + len)) {
+            // end position must be inclusive to account for cases like '&|' where
+            // cursor is right behind the ampersand.
+            if (position >= found.index && position <= (found.index + len)) {
                 result = Object.keys(NAMED_ENTITIES).map(function (name) {
                     return {
                         name: "&" + name + ";",
@@ -40092,7 +40098,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+91.sha-ed3c549');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+92.sha-650974e');
 
     /**
      * @license
