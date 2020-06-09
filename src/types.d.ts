@@ -223,7 +223,7 @@ export interface Diagnostic {
  *
  * @publicApi
  */
-export declare type LanguageService = Pick<ts.LanguageService, 'getCompletionsAtPosition' | 'getDefinitionAndBoundSpan' | 'getQuickInfoAtPosition' | 'getSemanticDiagnostics'>;
+export declare type LanguageService = Pick<ts.LanguageService, 'getCompletionsAtPosition' | 'getDefinitionAndBoundSpan' | 'getQuickInfoAtPosition' | 'getSemanticDiagnostics' | 'getReferencesAtPosition'>;
 /** Information about an Angular template AST. */
 export interface AstResult {
     htmlAst: HtmlAst[];

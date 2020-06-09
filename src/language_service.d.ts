@@ -22,5 +22,6 @@ declare class LanguageServiceImpl implements ng.LanguageService {
     getCompletionsAtPosition(fileName: string, position: number, _options?: tss.GetCompletionsAtPositionOptions): tss.CompletionInfo | undefined;
     getDefinitionAndBoundSpan(fileName: string, position: number): tss.DefinitionInfoAndBoundSpan | undefined;
     getQuickInfoAtPosition(fileName: string, position: number): tss.QuickInfo | undefined;
+    getReferencesAtPosition(fileName: string, position: number): tss.ReferenceEntry[] | undefined;
 }
 export {};
