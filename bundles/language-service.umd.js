@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+110.sha-eaa38a5
+ * @license Angular v10.0.0-rc.0+111.sha-b2ccc34
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+110.sha-eaa38a5');
+    var VERSION$1 = new Version('10.0.0-rc.0+111.sha-b2ccc34');
 
     /**
      * @license
@@ -49199,7 +49199,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+110.sha-eaa38a5');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+111.sha-b2ccc34');
 
     /**
      * @license
@@ -58464,17 +58464,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var compileNgModuleFactory = compileNgModuleFactory__POST_R3__;
     function compileNgModuleFactory__POST_R3__(injector, options, moduleType) {
         ngDevMode && assertNgModuleType(moduleType);
-        var compilerOptions = injector.get(COMPILER_OPTIONS, []).concat(options);
-        if (typeof ngJitMode === 'undefined' || ngJitMode) {
-            // Configure the compiler to use the provided options. This call may fail when multiple modules
-            // are bootstrapped with incompatible options, as a component can only be compiled according to
-            // a single set of options.
-            setJitOptions({
-                defaultEncapsulation: _lastDefined(compilerOptions.map(function (options) { return options.defaultEncapsulation; })),
-                preserveWhitespaces: _lastDefined(compilerOptions.map(function (options) { return options.preserveWhitespaces; })),
-            });
-        }
         var moduleFactory = new NgModuleFactory$1(moduleType);
+        // All of the logic below is irrelevant for AOT-compiled code.
+        if (typeof ngJitMode !== 'undefined' && !ngJitMode) {
+            return Promise.resolve(moduleFactory);
+        }
+        var compilerOptions = injector.get(COMPILER_OPTIONS, []).concat(options);
+        // Configure the compiler to use the provided options. This call may fail when multiple modules
+        // are bootstrapped with incompatible options, as a component can only be compiled according to
+        // a single set of options.
+        setJitOptions({
+            defaultEncapsulation: _lastDefined(compilerOptions.map(function (opts) { return opts.defaultEncapsulation; })),
+            preserveWhitespaces: _lastDefined(compilerOptions.map(function (opts) { return opts.preserveWhitespaces; })),
+        });
         if (isComponentResourceResolutionQueueEmpty()) {
             return Promise.resolve(moduleFactory);
         }
