@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+100.sha-6280cf9
+ * @license Angular v10.0.0-rc.0+101.sha-55979fe
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+100.sha-6280cf9');
+    var VERSION$1 = new Version('10.0.0-rc.0+101.sha-55979fe');
 
     /**
      * @license
@@ -30446,6 +30446,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             var declarations = this.host.getDeclarations(fileName);
             return getTsHover(position, declarations, analyzedModules);
         };
+        LanguageServiceImpl.prototype.getReferencesAtPosition = function (fileName, position) {
+            var defAndSpan = this.getDefinitionAndBoundSpan(fileName, position);
+            if (!(defAndSpan === null || defAndSpan === void 0 ? void 0 : defAndSpan.definitions)) {
+                return;
+            }
+            var definitions = defAndSpan.definitions;
+            var tsDef = definitions.find(function (def) { return def.fileName.endsWith('.ts'); });
+            if (!tsDef) {
+                return;
+            }
+            return this.host.tsLS.getReferencesAtPosition(tsDef.fileName, tsDef.textSpan.start);
+        };
         return LanguageServiceImpl;
     }());
 
@@ -40120,7 +40132,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+100.sha-6280cf9');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+101.sha-55979fe');
 
     /**
      * @license
