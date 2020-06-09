@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.2+71.sha-a1616ce
+ * @license Angular v10.0.0-rc.3+3.sha-bf2cb6f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.2+71.sha-a1616ce');
+    var VERSION$1 = new Version('10.0.0-rc.3+3.sha-bf2cb6f');
 
     /**
      * @license
@@ -27717,12 +27717,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function signaturesOf(type, context) {
         return type.getCallSignatures().map(function (s) { return new SignatureWrapper(s, context); });
     }
-    function selectSignature(type, context, _types) {
+    function selectSignature(type, context, types) {
         // TODO: Do a better job of selecting the right signature. TypeScript does not currently support a
         // Type Relationship API (see https://github.com/angular/vscode-ng-language-service/issues/143).
         // Consider creating a TypeCheckBlock host in the language service that may also act as a
         // scratchpad for type comparisons.
         var signatures = type.getCallSignatures();
+        var passedInTypes = types.map(function (type) {
+            if (type instanceof TypeWrapper) {
+                return type.tsType;
+            }
+        });
+        // Try to select a matching signature in which all parameter types match.
+        // Note that this is just a best-effort approach, because we're checking for
+        // strict type equality rather than compatibility.
+        // For example, if the signature contains a ReadonlyArray<number> and the
+        // passed parameter type is an Array<number>, this will fail.
+        function allParameterTypesMatch(signature) {
+            var tc = context.checker;
+            return signature.getParameters().every(function (parameter, i) {
+                var type = tc.getTypeOfSymbolAtLocation(parameter, parameter.valueDeclaration);
+                return type === passedInTypes[i];
+            });
+        }
+        var exactMatch = signatures.find(allParameterTypesMatch);
+        if (exactMatch) {
+            return new SignatureWrapper(exactMatch, context);
+        }
+        // If not, fallback to a naive selection
         return signatures.length ? new SignatureWrapper(signatures[0], context) : undefined;
     }
     var TypeWrapper = /** @class */ (function () {
@@ -27789,7 +27811,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return signaturesOf(this.tsType, this.context);
         };
         TypeWrapper.prototype.selectSignature = function (types) {
-            return selectSignature(this.tsType, this.context);
+            return selectSignature(this.tsType, this.context, types);
         };
         TypeWrapper.prototype.indexed = function (type, value) {
             if (!(type instanceof TypeWrapper))
@@ -27927,7 +27949,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return signaturesOf(this.tsType, this.context);
         };
         SymbolWrapper.prototype.selectSignature = function (types) {
-            return selectSignature(this.tsType, this.context);
+            return selectSignature(this.tsType, this.context, types);
         };
         SymbolWrapper.prototype.indexed = function (_argument) {
             return undefined;
@@ -28286,7 +28308,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return signaturesOf(this.tsType, this.context);
         };
         PipeSymbol.prototype.selectSignature = function (types) {
-            var signature = selectSignature(this.tsType, this.context);
+            var signature = selectSignature(this.tsType, this.context, types);
             if (types.length > 0) {
                 var parameterType = types[0];
                 var resultType = undefined;
@@ -30423,6 +30445,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // directive belongs to.
             var declarations = this.host.getDeclarations(fileName);
             return getTsHover(position, declarations, analyzedModules);
+        };
+        LanguageServiceImpl.prototype.getReferencesAtPosition = function (fileName, position) {
+            var defAndSpan = this.getDefinitionAndBoundSpan(fileName, position);
+            if (!(defAndSpan === null || defAndSpan === void 0 ? void 0 : defAndSpan.definitions)) {
+                return;
+            }
+            var definitions = defAndSpan.definitions;
+            var tsDef = definitions.find(function (def) { return def.fileName.endsWith('.ts'); });
+            if (!tsDef) {
+                return;
+            }
+            return this.host.tsLS.getReferencesAtPosition(tsDef.fileName, tsDef.textSpan.start);
         };
         return LanguageServiceImpl;
     }());
@@ -40098,7 +40132,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.2+71.sha-a1616ce');
+    var VERSION$2 = new Version$1('10.0.0-rc.3+3.sha-bf2cb6f');
 
     /**
      * @license
