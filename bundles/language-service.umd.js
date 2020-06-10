@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+117.sha-021dd33
+ * @license Angular v10.0.0-rc.0+122.sha-d76a872
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+117.sha-021dd33');
+    var VERSION$1 = new Version('10.0.0-rc.0+122.sha-d76a872');
 
     /**
      * @license
@@ -28800,7 +28800,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             result = elementCompletions(templateInfo);
         }
         else {
-            var astPosition_1 = templatePosition - mostSpecific.sourceSpan.start.offset;
+            var astPosition = templatePosition - mostSpecific.sourceSpan.start.offset;
             mostSpecific.visit({
                 visitElement: function (ast) {
                     var startTagSpan = spanOf(ast.sourceSpan);
@@ -28829,10 +28829,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 },
                 visitText: function (ast) {
-                    // Check if we are in a entity.
-                    result = entityCompletions(getSourceText(template, spanOf(ast)), astPosition_1);
-                    if (result.length)
-                        return result;
                     result = interpolationCompletions(templateInfo, templatePosition);
                     if (result.length)
                         return result;
@@ -29037,32 +29033,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return results;
     }
-    function entityCompletions(value, position) {
-        // Look for entity completions
-        // TODO(kyliau): revisit the usefulness of this feature. It provides
-        // autocompletion for HTML entities, which IMO is outside the core functionality
-        // of Angular language service. Besides, we do not have a complete list.
-        // See https://dev.w3.org/html5/html-author/charref
-        var re = /&[A-Za-z]*;?(?!\d)/g;
-        var found;
-        var result = [];
-        while (found = re.exec(value)) {
-            var len = found[0].length;
-            // end position must be inclusive to account for cases like '&|' where
-            // cursor is right behind the ampersand.
-            if (position >= found.index && position <= (found.index + len)) {
-                result = Object.keys(NAMED_ENTITIES).map(function (name) {
-                    return {
-                        name: "&" + name + ";",
-                        kind: CompletionKind.ENTITY,
-                        sortText: name,
-                    };
-                });
-                break;
-            }
-        }
-        return result;
-    }
     function interpolationCompletions(info, position) {
         // Look for an interpolation in at the position.
         var templatePath = findTemplateAstAt(info.templateAst, position);
@@ -29265,9 +29235,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
         return ExpressionVisitor;
     }(NullTemplateVisitor));
-    function getSourceText(template, span) {
-        return template.source.substring(span.start, span.end);
-    }
     /**
      * Return all Angular-specific attributes for the element with `elementName`.
      * @param info
@@ -49199,7 +49166,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+117.sha-021dd33');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+122.sha-d76a872');
 
     /**
      * @license
