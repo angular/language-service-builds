@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+113.sha-0a1d078
+ * @license Angular v10.0.0-rc.0+114.sha-401ef71
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+113.sha-0a1d078');
+    var VERSION$1 = new Version('10.0.0-rc.0+114.sha-401ef71');
 
     /**
      * @license
@@ -40132,7 +40132,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+113.sha-0a1d078');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+114.sha-401ef71');
 
     /**
      * @license
@@ -45222,7 +45222,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ApplicationInitStatus.decorators = [
             { type: Injectable }
         ];
-        /** @nocollapse */
         ApplicationInitStatus.ctorParameters = function () { return [
             { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
         ]; };
@@ -46111,7 +46110,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         Testability.decorators = [
             { type: Injectable }
         ];
-        /** @nocollapse */
         Testability.ctorParameters = function () { return [
             { type: NgZone }
         ]; };
@@ -46180,7 +46178,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         TestabilityRegistry.decorators = [
             { type: Injectable }
         ];
-        /** @nocollapse */
         TestabilityRegistry.ctorParameters = function () { return []; };
         return TestabilityRegistry;
     }());
@@ -46437,7 +46434,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         PlatformRef.decorators = [
             { type: Injectable }
         ];
-        /** @nocollapse */
         PlatformRef.ctorParameters = function () { return [
             { type: Injector }
         ]; };
@@ -46803,7 +46799,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ApplicationRef.decorators = [
             { type: Injectable }
         ];
-        /** @nocollapse */
         ApplicationRef.ctorParameters = function () { return [
             { type: NgZone },
             { type: Console },
