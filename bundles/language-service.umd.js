@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+138.sha-284123c
+ * @license Angular v10.0.0-rc.0+159.sha-a075260
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+138.sha-284123c');
+    var VERSION$1 = new Version('10.0.0-rc.0+159.sha-a075260');
 
     /**
      * @license
@@ -49166,7 +49166,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+138.sha-284123c');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+159.sha-a075260');
 
     /**
      * @license
@@ -58488,7 +58488,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ALLOW_MULTIPLE_PLATFORMS = new InjectionToken('AllowMultipleToken');
     /**
      * Creates a platform.
-     * Platforms have to be eagerly created via this function.
+     * Platforms must be created on launch using this function.
      *
      * @publicApi
      */
@@ -58505,7 +58505,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return _platform;
     }
     /**
-     * Creates a factory for a platform
+     * Creates a factory for a platform. Can be used to provide or override `Providers` specific to
+     * your applciation's runtime needs, such as `PLATFORM_INITIALIZER` and `PLATFORM_ID`.
+     * @param parentPlatformFactory Another platform factory to modify. Allows you to compose factories
+     * to build up configurations that might be required by different libraries or parts of the
+     * application.
+     * @param name Identifies the new platform factory.
+     * @param providers A set of dependency providers for platforms created with the new factory.
      *
      * @publicApi
      */
@@ -58532,7 +58538,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
     }
     /**
-     * Checks that there currently is a platform which contains the given token as a provider.
+     * Checks that there is currently a platform that contains the given token as a provider.
      *
      * @publicApi
      */
@@ -58555,12 +58561,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return _platform && !_platform.destroyed ? _platform : null;
     }
     /**
-     * The Angular platform is the entry point for Angular on a web page. Each page
-     * has exactly one platform, and services (such as reflection) which are common
+     * The Angular platform is the entry point for Angular on a web page.
+     * Each page has exactly one platform. Services (such as reflection) which are common
      * to every Angular application running on the page are bound in its scope.
-     *
-     * A page's platform is initialized implicitly when a platform is created via a platform factory
-     * (e.g. {@link platformBrowser}), or explicitly by calling the {@link createPlatform} function.
+     * A page's platform is initialized implicitly when a platform is created using a platform
+     * factory such as `PlatformBrowser`, or explicitly by calling the `createPlatform()` function.
      *
      * @publicApi
      */
@@ -58573,11 +58578,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._destroyed = false;
         }
         /**
-         * Creates an instance of an `@NgModule` for the given platform
-         * for offline compilation.
+         * Creates an instance of an `@NgModule` for the given platform for offline compilation.
          *
          * @usageNotes
-         * ### Simple Example
+         *
+         * The following example creates the NgModule for a browser platform.
          *
          * ```typescript
          * my_module.ts:
@@ -58673,14 +58678,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._modules.push(moduleRef);
         };
         /**
-         * Register a listener to be called when the platform is disposed.
+         * Registers a listener to be called when the platform is destroyed.
          */
         PlatformRef.prototype.onDestroy = function (callback) {
             this._destroyListeners.push(callback);
         };
         Object.defineProperty(PlatformRef.prototype, "injector", {
             /**
-             * Retrieve the platform {@link Injector}, which is the parent injector for
+             * Retrieves the platform {@link Injector}, which is the parent injector for
              * every Angular application on the page and provides singleton providers.
              */
             get: function () {
@@ -58690,7 +58695,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         /**
-         * Destroy the Angular platform and all Angular applications on the page.
+         * Destroys the current Angular platform and all Angular applications on the page.
+         * Destroys all modules and listeners registered with the platform.
          */
         PlatformRef.prototype.destroy = function () {
             if (this._destroyed) {
