@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+136.sha-7e5f6c2
+ * @license Angular v10.0.0-rc.0+138.sha-284123c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+136.sha-7e5f6c2');
+    var VERSION$1 = new Version('10.0.0-rc.0+138.sha-284123c');
 
     /**
      * @license
@@ -40099,7 +40099,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+136.sha-7e5f6c2');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+138.sha-284123c');
 
     /**
      * @license
@@ -45796,9 +45796,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return;
         }
         zone.lastRequestAnimationFrameId = zone.nativeRequestAnimationFrame.call(_global$1, function () {
-            zone.lastRequestAnimationFrameId = -1;
-            updateMicroTaskStatus(zone);
-            checkStable(zone);
+            // This is a work around for https://github.com/angular/angular/issues/36839.
+            // The core issue is that when event coalescing is enabled it is possible for microtasks
+            // to get flushed too early (As is the case with `Promise.then`) between the
+            // coalescing eventTasks.
+            //
+            // To workaround this we schedule a "fake" eventTask before we process the
+            // coalescing eventTasks. The benefit of this is that the "fake" container eventTask
+            //  will prevent the microtasks queue from getting drained in between the coalescing
+            // eventTask execution.
+            if (!zone.fakeTopEventTask) {
+                zone.fakeTopEventTask = Zone.root.scheduleEventTask('fakeTopEventTask', function () {
+                    zone.lastRequestAnimationFrameId = -1;
+                    updateMicroTaskStatus(zone);
+                    checkStable(zone);
+                }, undefined, function () { }, function () { });
+            }
+            zone.fakeTopEventTask.invoke();
         });
         updateMicroTaskStatus(zone);
     }
