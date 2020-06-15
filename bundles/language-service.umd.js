@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+174.sha-adc9d5c
+ * @license Angular v10.0.0-rc.0+177.sha-a7faa6b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0-rc.0+174.sha-adc9d5c');
+    var VERSION$1 = new Version('10.0.0-rc.0+177.sha-a7faa6b');
 
     /**
      * @license
@@ -26863,7 +26863,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             class_1.prototype.visit = function (ast) {
                 if ((!excludeEmpty || ast.sourceSpan.start < ast.sourceSpan.end) &&
                     inSpan(position, ast.sourceSpan)) {
-                    path.push(ast);
+                    var isNotNarrower = path.length && !isNarrower(ast.span, path[path.length - 1].span);
+                    if (!isNotNarrower) {
+                        path.push(ast);
+                    }
                     ast.visit(this);
                 }
             };
@@ -26874,7 +26877,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (ast instanceof ASTWithSource) {
             ast = ast.ast;
         }
-        visitor.visit(ast);
+        // `Interpolation` is useless here except the `expressions` of it.
+        if (ast instanceof Interpolation) {
+            ast = ast.expressions.filter(function (_ast) { return inSpan(position, _ast.sourceSpan); })[0];
+        }
+        if (ast) {
+            visitor.visit(ast);
+        }
         return new AstPath(path, position);
     }
     function getExpressionCompletions(scope, ast, position, templateInfo) {
@@ -40099,7 +40108,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0-rc.0+174.sha-adc9d5c');
+    var VERSION$2 = new Version$1('10.0.0-rc.0+177.sha-a7faa6b');
 
     /**
      * @license
