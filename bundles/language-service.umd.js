@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+260.sha-d12cdb5
+ * @license Angular v10.0.0-rc.0+262.sha-9118f49
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17623,7 +17623,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.0-rc.0+260.sha-d12cdb5');
+    const VERSION$1 = new Version('10.0.0-rc.0+262.sha-9118f49');
 
     /**
      * @license
@@ -33376,7 +33376,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.0-rc.0+260.sha-d12cdb5');
+    const VERSION$2 = new Version$1('10.0.0-rc.0+262.sha-9118f49');
 
     /**
      * @license
@@ -34690,12 +34690,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 elementCreate(elementName, rendererFactory.createRenderer(null, this.componentDef), getNamespace(elementName));
             const rootFlags = this.componentDef.onPush ? 64 /* Dirty */ | 512 /* IsRoot */ :
                 16 /* CheckAlways */ | 512 /* IsRoot */;
-            // Check whether this Component needs to be isolated from other components, i.e. whether it
-            // should be placed into its own (empty) root context or existing root context should be used.
-            // Note: this is internal-only convention and might change in the future, so it should not be
-            // relied upon externally.
-            const isIsolated = typeof rootSelectorOrNode === 'string' &&
-                /^#root-ng-internal-isolated-\d+/.test(rootSelectorOrNode);
             const rootContext = createRootContext();
             // Create the root view. Uses empty TView and ContentTemplate.
             const rootTView = createTView(0 /* Root */, -1, null, 1, 0, null, null, null, null, null);
@@ -34750,12 +34744,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 leaveView();
             }
             const componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootLView), rootLView, tElementNode);
-            if (!rootSelectorOrNode || isIsolated) {
-                // The host element of the internal or isolated root view is attached to the component's host
-                // view node.
-                ngDevMode && assertNodeOfPossibleTypes(rootTView.node, 2 /* View */);
-                rootTView.node.child = tElementNode;
-            }
+            // The host element of the internal root view is attached to the component's host view node.
+            ngDevMode && assertNodeOfPossibleTypes(rootTView.node, 2 /* View */);
+            rootTView.node.child = tElementNode;
             return componentRef;
         }
     }
