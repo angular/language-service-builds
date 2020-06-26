@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0+25.sha-67cfc4c
+ * @license Angular v10.0.0+29.sha-ad6680f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.0+25.sha-67cfc4c');
+    var VERSION$1 = new Version('10.0.0+29.sha-ad6680f');
 
     /**
      * @license
@@ -40108,7 +40108,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.0+25.sha-67cfc4c');
+    var VERSION$2 = new Version$1('10.0.0+29.sha-ad6680f');
 
     /**
      * @license
@@ -51587,6 +51587,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             configurable: true
         });
         /**
+         * Return all known external templates.
+         */
+        TypeScriptServiceHost.prototype.getExternalTemplates = function () {
+            return __spread(this.fileToComponent.keys());
+        };
+        /**
          * Checks whether the program has changed and returns all analyzed modules.
          * If program has changed, invalidate all caches and update fileToComponent
          * and templateReferences.
@@ -52133,8 +52139,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Use a WeakMap to keep track of Project to Host mapping so that when Project
+    // is deleted Host could be garbage collected.
+    var PROJECT_MAP = new WeakMap();
+    /**
+     * This function is called by tsserver to retrieve the external (non-TS) files
+     * that should belong to the specified `project`. For Angular, these files are
+     * external templates. This is called once when the project is loaded, then
+     * every time when the program is updated.
+     * @param project Project for which external files should be retrieved.
+     */
+    function getExternalFiles(project) {
+        if (!project.hasRoots()) {
+            // During project initialization where there is no root files yet we should
+            // not do any work.
+            return [];
+        }
+        var ngLsHost = PROJECT_MAP.get(project);
+        ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getAnalyzedModules();
+        return (ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getExternalTemplates()) || [];
+    }
     function create(info) {
-        var tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config;
+        var tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config, project = info.project;
         // This plugin could operate under two different modes:
         // 1. TS + Angular
         //    Plugin augments TS language service to provide additional Angular
@@ -52147,6 +52173,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var angularOnly = config ? config.angularOnly === true : false;
         var ngLSHost = new TypeScriptServiceHost(tsLSHost, tsLS);
         var ngLS = createLanguageService(ngLSHost);
+        PROJECT_MAP.set(project, ngLSHost);
         function getCompletionsAtPosition(fileName, position, options) {
             if (!angularOnly) {
                 var results = tsLS.getCompletionsAtPosition(fileName, position, options);
@@ -52218,6 +52245,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     exports.create = create;
     exports.createLanguageService = createLanguageService;
     exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
+    exports.getExternalFiles = getExternalFiles;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

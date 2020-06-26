@@ -60,6 +60,10 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     private get reflector();
     /**
+     * Return all known external templates.
+     */
+    getExternalTemplates(): string[];
+    /**
      * Checks whether the program has changed and returns all analyzed modules.
      * If program has changed, invalidate all caches and update fileToComponent
      * and templateReferences.
