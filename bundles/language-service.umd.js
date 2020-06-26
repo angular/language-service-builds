@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+276.sha-e0eeb4a
+ * @license Angular v10.0.0-rc.0+281.sha-acf3cff
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17623,7 +17623,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.0-rc.0+276.sha-e0eeb4a');
+    const VERSION$1 = new Version('10.0.0-rc.0+281.sha-acf3cff');
 
     /**
      * @license
@@ -27582,10 +27582,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         assertDefined(tNode, 'should be called with a TNode');
         assertEqual(tNode.type, type, `should be a ${typeName(type)}`);
     }
-    function assertNodeOfPossibleTypes(tNode, ...types) {
+    function assertNodeOfPossibleTypes(tNode, types, message) {
         assertDefined(tNode, 'should be called with a TNode');
         const found = types.some(type => tNode.type === type);
-        assertEqual(found, true, `Should be one of ${types.map(typeName).join(', ')} but got ${typeName(tNode.type)}`);
+        assertEqual(found, true, message !== null && message !== void 0 ? message : `Should be one of ${types.map(typeName).join(', ')} but got ${typeName(tNode.type)}`);
     }
     function typeName(type) {
         if (type == 1 /* Projection */)
@@ -29472,7 +29472,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         let tNode = tView.node;
         if (tNode == null) {
             ngDevMode && tParentNode &&
-                assertNodeOfPossibleTypes(tParentNode, 3 /* Element */, 0 /* Container */);
+                assertNodeOfPossibleTypes(tParentNode, [3 /* Element */, 0 /* Container */]);
             tView.node = tNode = createTNode(tView, tParentNode, //
             2 /* View */, index, null, null);
         }
@@ -30681,8 +30681,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function applyNodes(renderer, action, tNode, lView, renderParent, beforeNode, isProjection) {
         while (tNode != null) {
             ngDevMode && assertTNodeForLView(tNode, lView);
-            ngDevMode &&
-                assertNodeOfPossibleTypes(tNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */, 1 /* Projection */, 5 /* IcuContainer */);
+            ngDevMode && assertNodeOfPossibleTypes(tNode, [
+                0 /* Container */, 3 /* Element */, 4 /* ElementContainer */, 1 /* Projection */,
+                5 /* IcuContainer */
+            ]);
             const rawSlotValue = lView[tNode.index];
             const tNodeType = tNode.type;
             if (isProjection) {
@@ -30700,7 +30702,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     applyProjectionRecursive(renderer, action, lView, tNode, renderParent, beforeNode);
                 }
                 else {
-                    ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */);
+                    ngDevMode && assertNodeOfPossibleTypes(tNode, [3 /* Element */, 0 /* Container */]);
                     applyToElementOrContainer(action, renderer, renderParent, rawSlotValue, beforeNode);
                 }
             }
@@ -31137,8 +31139,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function collectNativeNodes(tView, lView, tNode, result, isProjection = false) {
         while (tNode !== null) {
-            ngDevMode &&
-                assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */, 1 /* Projection */, 4 /* ElementContainer */, 5 /* IcuContainer */);
+            ngDevMode && assertNodeOfPossibleTypes(tNode, [
+                3 /* Element */, 0 /* Container */, 1 /* Projection */, 4 /* ElementContainer */,
+                5 /* IcuContainer */
+            ]);
             const lNode = lView[tNode.index];
             if (lNode !== null) {
                 result.push(unwrapRNode(lNode));
@@ -33376,7 +33380,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.0-rc.0+276.sha-e0eeb4a');
+    const VERSION$2 = new Version$1('10.0.0-rc.0+281.sha-acf3cff');
 
     /**
      * @license
@@ -34745,7 +34749,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             const componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootLView), rootLView, tElementNode);
             // The host element of the internal root view is attached to the component's host view node.
-            ngDevMode && assertNodeOfPossibleTypes(rootTView.node, 2 /* View */);
+            ngDevMode && assertNodeOfPossibleTypes(rootTView.node, [2 /* View */]);
             rootTView.node.child = tElementNode;
             return componentRef;
         }
