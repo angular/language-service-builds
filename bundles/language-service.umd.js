@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+278.sha-0879d2e
+ * @license Angular v10.0.0-rc.0+282.sha-8fd8143
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17623,7 +17623,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.0-rc.0+278.sha-0879d2e');
+    const VERSION$1 = new Version('10.0.0-rc.0+282.sha-8fd8143');
 
     /**
      * @license
@@ -29791,7 +29791,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * This regular expression was taken from the Closure sanitization library.
      */
-    const SAFE_URL_PATTERN = /^(?:(?:https?|mailto|ftp|tel|file):|[^&:/?#]*(?:[/?#]|$))/gi;
+    const SAFE_URL_PATTERN = /^(?:(?:https?|mailto|ftp|tel|file|sms):|[^&:/?#]*(?:[/?#]|$))/gi;
     /** A pattern that matches safe data URLs. Only matches image, video and audio types. */
     const DATA_URL_PATTERN = /^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[a-z0-9+\/]+=*$/i;
     function _sanitizeUrl(url) {
@@ -43793,7 +43793,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.0-rc.0+278.sha-0879d2e');
+    const VERSION$2 = new Version$1('10.0.0-rc.0+282.sha-8fd8143');
 
     /**
      * @license
