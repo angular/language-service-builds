@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+282.sha-8fd8143
+ * @license Angular v10.0.0-rc.0+283.sha-ae5257c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17623,7 +17623,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.0-rc.0+282.sha-8fd8143');
+    const VERSION$1 = new Version('10.0.0-rc.0+283.sha-ae5257c');
 
     /**
      * @license
@@ -24230,76 +24230,87 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return { start: absoluteStartPosition, length };
     }
     function getTemplateCompletions(templateInfo, position) {
-        let result = [];
         const { htmlAst, template } = templateInfo;
-        // The templateNode starts at the delimiter character so we add 1 to skip it.
+        // Calculate the position relative to the start of the template. This is needed
+        // because spans in HTML AST are relative. Inline template has non-zero start position.
         const templatePosition = position - template.span.start;
-        const path = getPathToNodeAtPosition(htmlAst, templatePosition);
-        const mostSpecific = path.tail;
-        if (path.empty || !mostSpecific) {
-            result = elementCompletions(templateInfo);
-        }
-        else {
-            const astPosition = templatePosition - mostSpecific.sourceSpan.start.offset;
-            mostSpecific.visit({
-                visitElement(ast) {
-                    const startTagSpan = spanOf(ast.sourceSpan);
-                    const tagLen = ast.name.length;
-                    // + 1 for the opening angle bracket
-                    if (templatePosition <= startTagSpan.start + tagLen + 1) {
-                        // If we are in the tag then return the element completions.
-                        result = elementCompletions(templateInfo);
-                    }
-                    else if (templatePosition < startTagSpan.end) {
-                        // We are in the attribute section of the element (but not in an attribute).
-                        // Return the attribute completions.
-                        result = attributeCompletionsForElement(templateInfo, ast.name);
-                    }
-                },
-                visitAttribute(ast) {
-                    // An attribute consists of two parts, LHS="RHS".
-                    // Determine if completions are requested for LHS or RHS
-                    if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                        // RHS completion
-                        result = attributeValueCompletions(templateInfo, path);
-                    }
-                    else {
-                        // LHS completion
-                        result = attributeCompletions(templateInfo, path);
-                    }
-                },
-                visitText(ast) {
-                    result = interpolationCompletions(templateInfo, templatePosition);
-                    if (result.length)
-                        return result;
-                    const element = path.first(Element$2);
-                    if (element) {
-                        const definition = getHtmlTagDefinition(element.name);
-                        if (definition.contentType === TagContentType.PARSABLE_DATA) {
-                            result = voidElementAttributeCompletions(templateInfo, path);
-                            if (!result.length) {
-                                // If the element can hold content, show element completions.
-                                result = elementCompletions(templateInfo);
-                            }
-                        }
-                    }
-                    else {
-                        // If no element container, implies parsable data so show elements.
-                        result = voidElementAttributeCompletions(templateInfo, path);
-                        if (!result.length) {
-                            result = elementCompletions(templateInfo);
-                        }
-                    }
-                },
-                visitComment() { },
-                visitExpansion() { },
-                visitExpansionCase() { }
-            }, null);
-        }
+        const htmlPath = getPathToNodeAtPosition(htmlAst, templatePosition);
+        const mostSpecific = htmlPath.tail;
+        const visitor = new HtmlVisitor(templateInfo, htmlPath);
+        const results = mostSpecific ?
+            mostSpecific.visit(visitor, null /* context */) :
+            elementCompletions(templateInfo);
         const replacementSpan = getBoundedWordSpan(templateInfo, position, mostSpecific);
-        return result.map(entry => {
+        return results.map(entry => {
             return Object.assign(Object.assign({}, entry), { replacementSpan });
         });
+    }
+    class HtmlVisitor {
+        constructor(templateInfo, htmlPath) {
+            this.templateInfo = templateInfo;
+            this.htmlPath = htmlPath;
+            this.relativePosition = htmlPath.position;
+        }
+        // Note that every visitor method must explicitly specify return type because
+        // Visitor returns `any` for all methods.
+        visitElement(ast) {
+            const startTagSpan = spanOf(ast.sourceSpan);
+            const tagLen = ast.name.length;
+            // + 1 for the opening angle bracket
+            if (this.relativePosition <= startTagSpan.start + tagLen + 1) {
+                // If we are in the tag then return the element completions.
+                return elementCompletions(this.templateInfo);
+            }
+            if (this.relativePosition < startTagSpan.end) {
+                // We are in the attribute section of the element (but not in an attribute).
+                // Return the attribute completions.
+                return attributeCompletionsForElement(this.templateInfo, ast.name);
+            }
+            return [];
+        }
+        visitAttribute(ast) {
+            // An attribute consists of two parts, LHS="RHS".
+            // Determine if completions are requested for LHS or RHS
+            if (ast.valueSpan && inSpan(this.relativePosition, spanOf(ast.valueSpan))) {
+                // RHS completion
+                return attributeValueCompletions(this.templateInfo, this.htmlPath);
+            }
+            // LHS completion
+            return attributeCompletions(this.templateInfo, this.htmlPath);
+        }
+        visitText() {
+            var _a;
+            const templatePath = findTemplateAstAt(this.templateInfo.templateAst, this.relativePosition);
+            if (templatePath.tail instanceof BoundTextAst) {
+                // If we know that this is an interpolation then do not try other scenarios.
+                const visitor = new ExpressionVisitor(this.templateInfo, this.relativePosition, () => getExpressionScope(diagnosticInfoFromTemplateInfo(this.templateInfo), templatePath));
+                (_a = templatePath.tail) === null || _a === void 0 ? void 0 : _a.visit(visitor, null);
+                return visitor.results;
+            }
+            // TODO(kyliau): Not sure if this check is really needed since we don't have
+            // any test cases for it.
+            const element = this.htmlPath.first(Element$2);
+            if (element &&
+                getHtmlTagDefinition(element.name).contentType !== TagContentType.PARSABLE_DATA) {
+                return [];
+            }
+            // This is to account for cases like <h1> <a> text | </h1> where the
+            // closest element has no closing tag and thus is considered plain text.
+            const results = voidElementAttributeCompletions(this.templateInfo, this.htmlPath);
+            if (results.length) {
+                return results;
+            }
+            return elementCompletions(this.templateInfo);
+        }
+        visitComment() {
+            return [];
+        }
+        visitExpansion() {
+            return [];
+        }
+        visitExpansionCase() {
+            return [];
+        }
     }
     function attributeCompletions(info, path) {
         const attr = path.tail;
@@ -24440,16 +24451,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         return results;
-    }
-    function interpolationCompletions(info, position) {
-        // Look for an interpolation in at the position.
-        const templatePath = findTemplateAstAt(info.templateAst, position);
-        if (!templatePath.tail) {
-            return [];
-        }
-        const visitor = new ExpressionVisitor(info, position, () => getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath));
-        templatePath.tail.visit(visitor, null);
-        return visitor.results;
     }
     // There is a special case of HTML where text that contains a unclosed tag is treated as
     // text. For exaple '<h1> Some <a text </h1>' produces a text nodes inside of the H1
@@ -43793,7 +43794,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.0-rc.0+282.sha-8fd8143');
+    const VERSION$2 = new Version$1('10.0.0-rc.0+283.sha-ae5257c');
 
     /**
      * @license
