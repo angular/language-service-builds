@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+273.sha-f954ab6
+ * @license Angular v10.0.0-rc.0+275.sha-c942662
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17623,7 +17623,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.0-rc.0+273.sha-f954ab6');
+    const VERSION$1 = new Version('10.0.0-rc.0+275.sha-c942662');
 
     /**
      * @license
@@ -43784,7 +43784,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.0-rc.0+273.sha-f954ab6');
+    const VERSION$2 = new Version$1('10.0.0-rc.0+275.sha-c942662');
 
     /**
      * @license
@@ -54289,6 +54289,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return this.resolver.getReflector();
         }
         /**
+         * Return all known external templates.
+         */
+        getExternalTemplates() {
+            return [...this.fileToComponent.keys()];
+        }
+        /**
          * Checks whether the program has changed and returns all analyzed modules.
          * If program has changed, invalidate all caches and update fileToComponent
          * and templateReferences.
@@ -54744,8 +54750,28 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Use a WeakMap to keep track of Project to Host mapping so that when Project
+    // is deleted Host could be garbage collected.
+    const PROJECT_MAP = new WeakMap();
+    /**
+     * This function is called by tsserver to retrieve the external (non-TS) files
+     * that should belong to the specified `project`. For Angular, these files are
+     * external templates. This is called once when the project is loaded, then
+     * every time when the program is updated.
+     * @param project Project for which external files should be retrieved.
+     */
+    function getExternalFiles(project) {
+        if (!project.hasRoots()) {
+            // During project initialization where there is no root files yet we should
+            // not do any work.
+            return [];
+        }
+        const ngLsHost = PROJECT_MAP.get(project);
+        ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getAnalyzedModules();
+        return (ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getExternalTemplates()) || [];
+    }
     function create(info) {
-        const { languageService: tsLS, languageServiceHost: tsLSHost, config } = info;
+        const { languageService: tsLS, languageServiceHost: tsLSHost, config, project } = info;
         // This plugin could operate under two different modes:
         // 1. TS + Angular
         //    Plugin augments TS language service to provide additional Angular
@@ -54758,6 +54784,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const angularOnly = config ? config.angularOnly === true : false;
         const ngLSHost = new TypeScriptServiceHost(tsLSHost, tsLS);
         const ngLS = createLanguageService(ngLSHost);
+        PROJECT_MAP.set(project, ngLSHost);
         function getCompletionsAtPosition(fileName, position, options) {
             if (!angularOnly) {
                 const results = tsLS.getCompletionsAtPosition(fileName, position, options);
@@ -54829,6 +54856,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     exports.create = create;
     exports.createLanguageService = createLanguageService;
     exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
+    exports.getExternalFiles = getExternalFiles;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
