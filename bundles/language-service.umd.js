@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.1
+ * @license Angular v10.0.1+4.sha-78460c1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19583,7 +19583,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('10.0.1');
+    var VERSION$1 = new Version('10.0.1+4.sha-78460c1');
 
     /**
      * @license
@@ -28799,77 +28799,92 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return { start: absoluteStartPosition, length: length };
     }
     function getTemplateCompletions(templateInfo, position) {
-        var result = [];
         var htmlAst = templateInfo.htmlAst, template = templateInfo.template;
-        // The templateNode starts at the delimiter character so we add 1 to skip it.
+        // Calculate the position relative to the start of the template. This is needed
+        // because spans in HTML AST are relative. Inline template has non-zero start position.
         var templatePosition = position - template.span.start;
-        var path = getPathToNodeAtPosition(htmlAst, templatePosition);
-        var mostSpecific = path.tail;
-        if (path.empty || !mostSpecific) {
-            result = elementCompletions(templateInfo);
-        }
-        else {
-            var astPosition = templatePosition - mostSpecific.sourceSpan.start.offset;
-            mostSpecific.visit({
-                visitElement: function (ast) {
-                    var startTagSpan = spanOf(ast.sourceSpan);
-                    var tagLen = ast.name.length;
-                    // + 1 for the opening angle bracket
-                    if (templatePosition <= startTagSpan.start + tagLen + 1) {
-                        // If we are in the tag then return the element completions.
-                        result = elementCompletions(templateInfo);
-                    }
-                    else if (templatePosition < startTagSpan.end) {
-                        // We are in the attribute section of the element (but not in an attribute).
-                        // Return the attribute completions.
-                        result = attributeCompletionsForElement(templateInfo, ast.name);
-                    }
-                },
-                visitAttribute: function (ast) {
-                    // An attribute consists of two parts, LHS="RHS".
-                    // Determine if completions are requested for LHS or RHS
-                    if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                        // RHS completion
-                        result = attributeValueCompletions(templateInfo, path);
-                    }
-                    else {
-                        // LHS completion
-                        result = attributeCompletions(templateInfo, path);
-                    }
-                },
-                visitText: function (ast) {
-                    result = interpolationCompletions(templateInfo, templatePosition);
-                    if (result.length)
-                        return result;
-                    var element = path.first(Element$2);
-                    if (element) {
-                        var definition = getHtmlTagDefinition(element.name);
-                        if (definition.contentType === TagContentType.PARSABLE_DATA) {
-                            result = voidElementAttributeCompletions(templateInfo, path);
-                            if (!result.length) {
-                                // If the element can hold content, show element completions.
-                                result = elementCompletions(templateInfo);
-                            }
-                        }
-                    }
-                    else {
-                        // If no element container, implies parsable data so show elements.
-                        result = voidElementAttributeCompletions(templateInfo, path);
-                        if (!result.length) {
-                            result = elementCompletions(templateInfo);
-                        }
-                    }
-                },
-                visitComment: function () { },
-                visitExpansion: function () { },
-                visitExpansionCase: function () { }
-            }, null);
-        }
+        var htmlPath = getPathToNodeAtPosition(htmlAst, templatePosition);
+        var mostSpecific = htmlPath.tail;
+        var visitor = new HtmlVisitor(templateInfo, htmlPath);
+        var results = mostSpecific ?
+            mostSpecific.visit(visitor, null /* context */) :
+            elementCompletions(templateInfo);
         var replacementSpan = getBoundedWordSpan(templateInfo, position, mostSpecific);
-        return result.map(function (entry) {
+        return results.map(function (entry) {
             return __assign(__assign({}, entry), { replacementSpan: replacementSpan });
         });
     }
+    var HtmlVisitor = /** @class */ (function () {
+        function HtmlVisitor(templateInfo, htmlPath) {
+            this.templateInfo = templateInfo;
+            this.htmlPath = htmlPath;
+            this.relativePosition = htmlPath.position;
+        }
+        // Note that every visitor method must explicitly specify return type because
+        // Visitor returns `any` for all methods.
+        HtmlVisitor.prototype.visitElement = function (ast) {
+            var startTagSpan = spanOf(ast.sourceSpan);
+            var tagLen = ast.name.length;
+            // + 1 for the opening angle bracket
+            if (this.relativePosition <= startTagSpan.start + tagLen + 1) {
+                // If we are in the tag then return the element completions.
+                return elementCompletions(this.templateInfo);
+            }
+            if (this.relativePosition < startTagSpan.end) {
+                // We are in the attribute section of the element (but not in an attribute).
+                // Return the attribute completions.
+                return attributeCompletionsForElement(this.templateInfo, ast.name);
+            }
+            return [];
+        };
+        HtmlVisitor.prototype.visitAttribute = function (ast) {
+            // An attribute consists of two parts, LHS="RHS".
+            // Determine if completions are requested for LHS or RHS
+            if (ast.valueSpan && inSpan(this.relativePosition, spanOf(ast.valueSpan))) {
+                // RHS completion
+                return attributeValueCompletions(this.templateInfo, this.htmlPath);
+            }
+            // LHS completion
+            return attributeCompletions(this.templateInfo, this.htmlPath);
+        };
+        HtmlVisitor.prototype.visitText = function () {
+            var _this = this;
+            var _a;
+            var templatePath = findTemplateAstAt(this.templateInfo.templateAst, this.relativePosition);
+            if (templatePath.tail instanceof BoundTextAst) {
+                // If we know that this is an interpolation then do not try other scenarios.
+                var visitor = new ExpressionVisitor(this.templateInfo, this.relativePosition, function () {
+                    return getExpressionScope(diagnosticInfoFromTemplateInfo(_this.templateInfo), templatePath);
+                });
+                (_a = templatePath.tail) === null || _a === void 0 ? void 0 : _a.visit(visitor, null);
+                return visitor.results;
+            }
+            // TODO(kyliau): Not sure if this check is really needed since we don't have
+            // any test cases for it.
+            var element = this.htmlPath.first(Element$2);
+            if (element &&
+                getHtmlTagDefinition(element.name).contentType !== TagContentType.PARSABLE_DATA) {
+                return [];
+            }
+            // This is to account for cases like <h1> <a> text | </h1> where the
+            // closest element has no closing tag and thus is considered plain text.
+            var results = voidElementAttributeCompletions(this.templateInfo, this.htmlPath);
+            if (results.length) {
+                return results;
+            }
+            return elementCompletions(this.templateInfo);
+        };
+        HtmlVisitor.prototype.visitComment = function () {
+            return [];
+        };
+        HtmlVisitor.prototype.visitExpansion = function () {
+            return [];
+        };
+        HtmlVisitor.prototype.visitExpansionCase = function () {
+            return [];
+        };
+        return HtmlVisitor;
+    }());
     function attributeCompletions(info, path) {
         var attr = path.tail;
         var elem = path.parentOf(attr);
@@ -29041,16 +29056,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             finally { if (e_3) throw e_3.error; }
         }
         return results;
-    }
-    function interpolationCompletions(info, position) {
-        // Look for an interpolation in at the position.
-        var templatePath = findTemplateAstAt(info.templateAst, position);
-        if (!templatePath.tail) {
-            return [];
-        }
-        var visitor = new ExpressionVisitor(info, position, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath); });
-        templatePath.tail.visit(visitor, null);
-        return visitor.results;
     }
     // There is a special case of HTML where text that contains a unclosed tag is treated as
     // text. For exaple '<h1> Some <a text </h1>' produces a text nodes inside of the H1
@@ -32859,7 +32864,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function bloomAdd(injectorIndex, tView, type) {
         ngDevMode && assertEqual(tView.firstCreatePass, true, 'expected firstCreatePass to be true');
-        var id = typeof type !== 'string' ? type[NG_ELEMENT_ID] : type.charCodeAt(0) || 0;
+        var id;
+        if (typeof type === 'string') {
+            id = type.charCodeAt(0) || 0;
+        }
+        else if (type.hasOwnProperty(NG_ELEMENT_ID)) {
+            id = type[NG_ELEMENT_ID];
+        }
         // Set a unique ID on the directive type, so if something tries to inject the directive,
         // we can easily retrieve the ID and hash it into the bloom bit that should be checked.
         if (id == null) {
@@ -33231,7 +33242,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (typeof token === 'string') {
             return token.charCodeAt(0) || 0;
         }
-        var tokenId = token[NG_ELEMENT_ID];
+        var tokenId = 
+        // First check with `hasOwnProperty` so we don't get an inherited ID.
+        token.hasOwnProperty(NG_ELEMENT_ID) ? token[NG_ELEMENT_ID] : undefined;
         // Negative token IDs are used for special objects such as `Injector`
         return (typeof tokenId === 'number' && tokenId > 0) ? tokenId & BLOOM_MASK : tokenId;
     }
@@ -35641,17 +35654,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return rElement;
     }
     /**
-     * Saves the cleanup function itself in LView.cleanupInstances.
+     * Saves context for this cleanup function in LView.cleanupInstances.
      *
-     * This is necessary for functions that are wrapped with their contexts, like in renderer2
-     * listeners.
-     *
-     * On the first template pass, the index of the cleanup function is saved in TView.
+     * On the first template pass, saves in TView:
+     * - Cleanup function
+     * - Index of context we just saved in LView.cleanupInstances
      */
-    function storeCleanupFn(tView, lView, cleanupFn) {
-        getLCleanup(lView).push(cleanupFn);
+    function storeCleanupWithContext(tView, lView, context, cleanupFn) {
+        var lCleanup = getLCleanup(lView);
+        lCleanup.push(context);
         if (tView.firstCreatePass) {
-            getTViewCleanup(tView).push(lView[CLEANUP].length - 1, null);
+            getTViewCleanup(tView).push(cleanupFn, lCleanup.length - 1);
         }
     }
     /**
@@ -36724,7 +36737,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             destroyLView(this._lView[TVIEW], this._lView);
         };
         ViewRef.prototype.onDestroy = function (callback) {
-            storeCleanupFn(this._lView[TVIEW], this._lView, callback);
+            storeCleanupWithContext(this._lView[TVIEW], this._lView, null, callback);
         };
         /**
          * Marks a view and all of its ancestors dirty.
@@ -40108,7 +40121,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('10.0.1');
+    var VERSION$2 = new Version$1('10.0.1+4.sha-78460c1');
 
     /**
      * @license
