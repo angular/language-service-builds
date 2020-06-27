@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+288.sha-c00f4ab
+ * @license Angular v10.0.0-rc.0+290.sha-98c047b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17623,7 +17623,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.0-rc.0+288.sha-c00f4ab');
+    const VERSION$1 = new Version('10.0.0-rc.0+290.sha-98c047b');
 
     /**
      * @license
@@ -29855,17 +29855,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return rElement;
     }
     /**
-     * Saves the cleanup function itself in LView.cleanupInstances.
+     * Saves context for this cleanup function in LView.cleanupInstances.
      *
-     * This is necessary for functions that are wrapped with their contexts, like in renderer2
-     * listeners.
-     *
-     * On the first template pass, the index of the cleanup function is saved in TView.
+     * On the first template pass, saves in TView:
+     * - Cleanup function
+     * - Index of context we just saved in LView.cleanupInstances
      */
-    function storeCleanupFn(tView, lView, cleanupFn) {
-        getLCleanup(lView).push(cleanupFn);
+    function storeCleanupWithContext(tView, lView, context, cleanupFn) {
+        const lCleanup = getLCleanup(lView);
+        lCleanup.push(context);
         if (tView.firstCreatePass) {
-            getTViewCleanup(tView).push(lView[CLEANUP].length - 1, null);
+            getTViewCleanup(tView).push(cleanupFn, lCleanup.length - 1);
         }
     }
     /**
@@ -30926,7 +30926,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             destroyLView(this._lView[TVIEW], this._lView);
         }
         onDestroy(callback) {
-            storeCleanupFn(this._lView[TVIEW], this._lView, callback);
+            storeCleanupWithContext(this._lView[TVIEW], this._lView, null, callback);
         }
         /**
          * Marks a view and all of its ancestors dirty.
@@ -33389,7 +33389,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.0-rc.0+288.sha-c00f4ab');
+    const VERSION$2 = new Version$1('10.0.0-rc.0+290.sha-98c047b');
 
     /**
      * @license
