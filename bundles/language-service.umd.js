@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.0-rc.0+316.sha-1801d0c
+ * @license Angular v10.0.0-rc.0+319.sha-596fbb3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -14068,7 +14068,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     // ICU expression is a plain string, not wrapped into start
                     // and end tags, so we wrap it before passing to binding parser
                     const wrapped = `${config.start}${value}${config.end}`;
-                    vars[key] = this._visitTextWithInterpolation(wrapped, expansion.sourceSpan);
+                    // Currently when the `plural` or `select` keywords in an ICU contain trailing spaces (e.g.
+                    // `{count, select , ...}`), these spaces are also included into the key names in ICU vars
+                    // (e.g. "VAR_SELECT "). These trailing spaces are not desirable, since they will later be
+                    // converted into `_` symbols while normalizing placeholder names, which might lead to
+                    // mismatches at runtime (i.e. placeholder will not be replaced with the correct value).
+                    const formattedKey = key.trim();
+                    vars[formattedKey] =
+                        this._visitTextWithInterpolation(wrapped, expansion.sourceSpan);
                 }
                 else {
                     placeholders[key] = this._visitTextWithInterpolation(value, expansion.sourceSpan);
@@ -17623,7 +17630,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.0-rc.0+316.sha-1801d0c');
+    const VERSION$1 = new Version('10.0.0-rc.0+319.sha-596fbb3');
 
     /**
      * @license
@@ -33392,7 +33399,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.0-rc.0+316.sha-1801d0c');
+    const VERSION$2 = new Version$1('10.0.0-rc.0+319.sha-596fbb3');
 
     /**
      * @license
