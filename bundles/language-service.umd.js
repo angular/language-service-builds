@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.3+33.sha-c776825
+ * @license Angular v10.0.3+36.sha-a94383f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13339,10 +13339,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitSafeMethodCall(ast, context) { }
         visitFunctionCall(ast, context) { }
         visitLiteralArray(ast, context) {
-            this.visitAll(ast.expressions);
+            this.visitAll(ast.expressions, context);
         }
         visitLiteralMap(ast, context) {
-            this.visitAll(ast.values);
+            this.visitAll(ast.values, context);
         }
         visitBinary(ast, context) { }
         visitPrefixNot(ast, context) { }
@@ -13353,26 +13353,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         visitKeyedRead(ast, context) { }
         visitKeyedWrite(ast, context) { }
-        visitAll(asts) {
-            return asts.map(node => node.visit(this));
+        visitAll(asts, context) {
+            return asts.map(node => node.visit(this, context));
         }
         visitChain(ast, context) { }
         visitQuote(ast, context) { }
     }
     /**
-     * This class extends SimpleExpressionChecker used in View Engine and performs more strict checks to
-     * make sure host bindings do not contain pipes. In View Engine, having pipes in host bindings is
+     * This class implements SimpleExpressionChecker used in View Engine and performs more strict checks
+     * to make sure host bindings do not contain pipes. In View Engine, having pipes in host bindings is
      * not supported as well, but in some cases (like `!(value | async)`) the error is not triggered at
      * compile time. In order to preserve View Engine behavior, more strict checks are introduced for
      * Ivy mode only.
      */
-    class IvySimpleExpressionChecker extends SimpleExpressionChecker {
-        visitBinary(ast, context) {
-            ast.left.visit(this);
-            ast.right.visit(this);
+    class IvySimpleExpressionChecker extends RecursiveAstVisitor {
+        constructor() {
+            super(...arguments);
+            this.errors = [];
         }
-        visitPrefixNot(ast, context) {
-            ast.expression.visit(this);
+        visitPipe() {
+            this.errors.push('pipes');
         }
     }
 
@@ -17623,7 +17623,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.3+33.sha-c776825');
+    const VERSION$1 = new Version('10.0.3+36.sha-a94383f');
 
     /**
      * @license
@@ -33392,7 +33392,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.3+33.sha-c776825');
+    const VERSION$2 = new Version$1('10.0.3+36.sha-a94383f');
 
     /**
      * @license
