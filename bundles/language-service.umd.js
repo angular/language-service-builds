@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.0+36.sha-0eaa084
+ * @license Angular v10.1.0-next.0+38.sha-10aba15
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17630,7 +17630,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.0+36.sha-0eaa084');
+    const VERSION$1 = new Version('10.1.0-next.0+38.sha-10aba15');
 
     /**
      * @license
@@ -22609,7 +22609,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitKeyedWrite(_ast) { },
             visitLiteralArray(_ast) { },
             visitLiteralMap(_ast) { },
-            visitLiteralPrimitive(_ast) { },
+            visitLiteralPrimitive(ast) {
+                // The type `LiteralPrimitive` include the `ERROR`, and it's wrapped as `string`.
+                // packages/compiler/src/template_parser/binding_parser.ts#L308
+                // So exclude the `ERROR` here.
+                if (typeof ast.value === 'string' &&
+                    ast.value ===
+                        templateInfo.source.slice(ast.sourceSpan.start + 1, ast.sourceSpan.end - 1)) {
+                    result = undefined;
+                }
+            },
             visitMethodCall(_ast) { },
             visitPipe(ast) {
                 if (position >= ast.exp.span.end &&
@@ -43755,7 +43764,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.0+36.sha-0eaa084');
+    const VERSION$2 = new Version$1('10.1.0-next.0+38.sha-10aba15');
 
     /**
      * @license
