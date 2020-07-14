@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.0+46.sha-421e807
+ * @license Angular v10.1.0-next.0+48.sha-f4fac40
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17630,7 +17630,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.0+46.sha-421e807');
+    const VERSION$1 = new Version('10.1.0-next.0+48.sha-f4fac40');
 
     /**
      * @license
@@ -26256,7 +26256,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * (and thus Ivy instructions), so a single initialization there is sufficient to ensure ngDevMode
      * is defined for the entire instruction set.
      *
-     * When using checking `ngDevMode` on toplevel, always init it before referencing it
+     * When checking `ngDevMode` on toplevel, always init it before referencing it
      * (e.g. `((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode())`), otherwise you can
      *  get a `ReferenceError` like in https://github.com/angular/angular/issues/31595.
      *
@@ -43764,7 +43764,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.0+46.sha-421e807');
+    const VERSION$2 = new Version$1('10.1.0-next.0+48.sha-f4fac40');
 
     /**
      * @license
