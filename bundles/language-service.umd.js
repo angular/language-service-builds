@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.1+10.sha-bf641e1
+ * @license Angular v10.1.0-next.1+8.sha-c8e77d8
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3348,7 +3348,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.attributes = attributes;
             this.sourceSpan = sourceSpan;
             this.i18n = i18n;
-            this.name = 'ng-content';
         }
         visit(visitor) {
             return visitor.visitContent(this);
@@ -17631,7 +17630,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.1+10.sha-bf641e1');
+    const VERSION$1 = new Version('10.1.0-next.1+8.sha-c8e77d8');
 
     /**
      * @license
@@ -32948,7 +32947,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             propName = mapPropName(propName);
             if (ngDevMode) {
                 validateAgainstEventProperties(propName);
-                if (!validateProperty(tView, element, propName, tNode)) {
+                if (!validateProperty(tView, lView, element, propName, tNode)) {
                     // Return here since we only log warnings for unknown properties.
                     logUnknownPropertyError(propName, tNode);
                     return;
@@ -32966,10 +32965,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     element[propName] = value;
             }
         }
-        else if (tNode.type === 0 /* Container */ || tNode.type === 4 /* ElementContainer */) {
+        else if (tNode.type === 0 /* Container */) {
             // If the node is a container and the property didn't
             // match any of the inputs or schemas we should throw.
-            if (ngDevMode && !matchingSchemas(tView, tNode.tagName)) {
+            if (ngDevMode && !matchingSchemas(tView, lView, tNode.tagName)) {
                 logUnknownPropertyError(propName, tNode);
             }
         }
@@ -33022,7 +33021,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
         }
     }
-    function validateProperty(tView, element, propName, tNode) {
+    function validateProperty(tView, lView, element, propName, tNode) {
         // If `schemas` is set to `null`, that's an indication that this Component was compiled in AOT
         // mode where this check happens at compile time. In JIT mode, `schemas` is always present and
         // defined as an array (as an empty array in case `schemas` field is not defined) and we should
@@ -33031,14 +33030,15 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return true;
         // The property is considered valid if the element matches the schema, it exists on the element
         // or it is synthetic, and we are in a browser context (web worker nodes should be skipped).
-        if (matchingSchemas(tView, tNode.tagName) || propName in element || isAnimationProp(propName)) {
+        if (matchingSchemas(tView, lView, tNode.tagName) || propName in element ||
+            isAnimationProp(propName)) {
             return true;
         }
         // Note: `typeof Node` returns 'function' in most browsers, but on IE it is 'object' so we
         // need to account for both here, while being careful for `typeof null` also returning 'object'.
         return typeof Node === 'undefined' || Node === null || !(element instanceof Node);
     }
-    function matchingSchemas(tView, tagName) {
+    function matchingSchemas(tView, lView, tagName) {
         const schemas = tView.schemas;
         if (schemas !== null) {
             for (let i = 0; i < schemas.length; i++) {
@@ -38682,7 +38682,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const attrs = getConstant(tViewConsts, attrsIndex);
         const tNode = getOrCreateTNode(tView, lView[T_HOST], index, 3 /* Element */, name, attrs);
         const hasDirectives = resolveDirectives(tView, lView, tNode, getConstant(tViewConsts, localRefsIndex));
-        ngDevMode && logUnknownElementError(tView, native, tNode, hasDirectives);
+        ngDevMode && logUnknownElementError(tView, lView, native, tNode, hasDirectives);
         if (tNode.attrs !== null) {
             computeStaticStyling(tNode, tNode.attrs, false);
         }
@@ -38797,7 +38797,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         ɵɵelementStart(index, name, attrsIndex, localRefsIndex);
         ɵɵelementEnd();
     }
-    function logUnknownElementError(tView, element, tNode, hasDirectives) {
+    function logUnknownElementError(tView, lView, element, tNode, hasDirectives) {
         const schemas = tView.schemas;
         // If `schemas` is set to `null`, that's an indication that this Component was compiled in AOT
         // mode where this check happens at compile time. In JIT mode, `schemas` is always present and
@@ -38818,7 +38818,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 element instanceof HTMLUnknownElement) ||
                 (typeof customElements !== 'undefined' && tagName.indexOf('-') > -1 &&
                     !customElements.get(tagName));
-            if (isUnknown && !matchingSchemas(tView, tagName)) {
+            if (isUnknown && !matchingSchemas(tView, lView, tagName)) {
                 let message = `'${tagName}' is not a known element:\n`;
                 message += `1. If '${tagName}' is an Angular component, then verify that it is part of this module.\n`;
                 if (tagName && tagName.indexOf('-') > -1) {
@@ -43764,7 +43764,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.1+10.sha-bf641e1');
+    const VERSION$2 = new Version$1('10.1.0-next.1+8.sha-c8e77d8');
 
     /**
      * @license
