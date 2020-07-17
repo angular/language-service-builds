@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.1+26.sha-b3b03c3
+ * @license Angular v10.1.0-next.1+27.sha-38a7021
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.1+26.sha-b3b03c3');
+    const VERSION$1 = new Version('10.1.0-next.1+27.sha-38a7021');
 
     /**
      * @license
@@ -28235,10 +28235,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function locateDirectiveOrProvider(tNode, tView, token, canAccessViewProviders, isHostSpecialCase) {
         const nodeProviderIndexes = tNode.providerIndexes;
         const tInjectables = tView.data;
-        const injectablesStart = nodeProviderIndexes & 65535 /* ProvidersStartIndexMask */;
+        const injectablesStart = nodeProviderIndexes & 1048575 /* ProvidersStartIndexMask */;
         const directivesStart = tNode.directiveStart;
         const directiveEnd = tNode.directiveEnd;
-        const cptViewProvidersCount = nodeProviderIndexes >> 16 /* CptViewProvidersCountShift */;
+        const cptViewProvidersCount = nodeProviderIndexes >> 20 /* CptViewProvidersCountShift */;
         const startingIndex = canAccessViewProviders ? injectablesStart : injectablesStart + cptViewProvidersCount;
         // When the host special case applies, only the viewProviders and the component are visible
         const endIndex = isHostSpecialCase ? injectablesStart + cptViewProvidersCount : directiveEnd;
@@ -29465,6 +29465,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     else {
                         // If it's not a number, it's a host binding function that needs to be executed.
                         if (instruction !== null) {
+                            ngDevMode &&
+                                assertLessThan(currentDirectiveIndex, 1048576 /* CptViewProvidersCountShifter */, 'Reached the max number of host bindings');
                             setBindingRootForHostBindings(bindingRootIndex, currentDirectiveIndex);
                             const hostCtx = lView[currentDirectiveIndex];
                             instruction(2 /* Update */, hostCtx);
@@ -30142,7 +30144,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // requires non standard math arithmetic and it can prevent VM optimizations.
         // `0-0` will always produce `0` and will not cause a potential deoptimization in VM.
         const elementIndex = HEADER_OFFSET - tNode.index;
-        const providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
+        const providerStartIndex = tNode.providerIndexes & 1048575 /* ProvidersStartIndexMask */;
         const providerCount = tView.data.length - providerStartIndex;
         (tView.expandoInstructions || (tView.expandoInstructions = []))
             .push(elementIndex, providerCount, directiveCount);
@@ -33502,7 +33504,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.1+26.sha-b3b03c3');
+    const VERSION$2 = new Version$1('10.1.0-next.1+27.sha-38a7021');
 
     /**
      * @license
