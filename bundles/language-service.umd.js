@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.4+19.sha-f2ca463
+ * @license Angular v10.0.4+22.sha-481df83
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17624,7 +17624,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.4+19.sha-f2ca463');
+    const VERSION$1 = new Version('10.0.4+22.sha-481df83');
 
     /**
      * @license
@@ -26851,6 +26851,96 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Represents a basic change from a previous to a new value for a single
+     * property on a directive instance. Passed as a value in a
+     * {@link SimpleChanges} object to the `ngOnChanges` hook.
+     *
+     * @see `OnChanges`
+     *
+     * @publicApi
+     */
+    class SimpleChange {
+        constructor(previousValue, currentValue, firstChange) {
+            this.previousValue = previousValue;
+            this.currentValue = currentValue;
+            this.firstChange = firstChange;
+        }
+        /**
+         * Check whether the new value is the first value assigned.
+         */
+        isFirstChange() {
+            return this.firstChange;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function NgOnChangesFeatureImpl(definition) {
+        if (definition.type.prototype.ngOnChanges) {
+            definition.setInput = ngOnChangesSetInput;
+        }
+        return rememberChangeHistoryAndInvokeOnChangesHook;
+    }
+    /**
+     * This is a synthetic lifecycle hook which gets inserted into `TView.preOrderHooks` to simulate
+     * `ngOnChanges`.
+     *
+     * The hook reads the `NgSimpleChangesStore` data from the component instance and if changes are
+     * found it invokes `ngOnChanges` on the component instance.
+     *
+     * @param this Component instance. Because this function gets inserted into `TView.preOrderHooks`,
+     *     it is guaranteed to be called with component instance.
+     */
+    function rememberChangeHistoryAndInvokeOnChangesHook() {
+        const simpleChangesStore = getSimpleChangesStore(this);
+        const current = simpleChangesStore === null || simpleChangesStore === void 0 ? void 0 : simpleChangesStore.current;
+        if (current) {
+            const previous = simpleChangesStore.previous;
+            if (previous === EMPTY_OBJ) {
+                simpleChangesStore.previous = current;
+            }
+            else {
+                // New changes are copied to the previous store, so that we don't lose history for inputs
+                // which were not changed this time
+                for (let key in current) {
+                    previous[key] = current[key];
+                }
+            }
+            simpleChangesStore.current = null;
+            this.ngOnChanges(current);
+        }
+    }
+    function ngOnChangesSetInput(instance, value, publicName, privateName) {
+        const simpleChangesStore = getSimpleChangesStore(instance) ||
+            setSimpleChangesStore(instance, { previous: EMPTY_OBJ, current: null });
+        const current = simpleChangesStore.current || (simpleChangesStore.current = {});
+        const previous = simpleChangesStore.previous;
+        const declaredName = this.declaredInputs[publicName];
+        const previousChange = previous[declaredName];
+        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ);
+        instance[privateName] = value;
+    }
+    const SIMPLE_CHANGES_STORE = '__ngSimpleChanges__';
+    function getSimpleChangesStore(instance) {
+        return instance[SIMPLE_CHANGES_STORE] || null;
+    }
+    function setSimpleChangesStore(instance, store) {
+        return instance[SIMPLE_CHANGES_STORE] = store;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
     const MATH_ML_NAMESPACE = 'http://www.w3.org/1998/MathML/';
 
@@ -27257,17 +27347,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function registerPreOrderHooks(directiveIndex, directiveDef, tView) {
         ngDevMode && assertFirstCreatePass(tView);
-        const { onChanges, onInit, doCheck } = directiveDef;
-        if (onChanges) {
-            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(directiveIndex, onChanges);
-            (tView.preOrderCheckHooks || (tView.preOrderCheckHooks = [])).push(directiveIndex, onChanges);
+        const { ngOnChanges, ngOnInit, ngDoCheck } = directiveDef.type.prototype;
+        if (ngOnChanges) {
+            const wrappedOnChanges = NgOnChangesFeatureImpl(directiveDef);
+            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(directiveIndex, wrappedOnChanges);
+            (tView.preOrderCheckHooks || (tView.preOrderCheckHooks = []))
+                .push(directiveIndex, wrappedOnChanges);
         }
-        if (onInit) {
-            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(-directiveIndex, onInit);
+        if (ngOnInit) {
+            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(0 - directiveIndex, ngOnInit);
         }
-        if (doCheck) {
-            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(directiveIndex, doCheck);
-            (tView.preOrderCheckHooks || (tView.preOrderCheckHooks = [])).push(directiveIndex, doCheck);
+        if (ngDoCheck) {
+            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(directiveIndex, ngDoCheck);
+            (tView.preOrderCheckHooks || (tView.preOrderCheckHooks = [])).push(directiveIndex, ngDoCheck);
         }
     }
     /**
@@ -27295,23 +27387,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // hooks for projected components and directives must be called *before* their hosts.
         for (let i = tNode.directiveStart, end = tNode.directiveEnd; i < end; i++) {
             const directiveDef = tView.data[i];
-            if (directiveDef.afterContentInit) {
-                (tView.contentHooks || (tView.contentHooks = [])).push(-i, directiveDef.afterContentInit);
+            const lifecycleHooks = directiveDef.type.prototype;
+            const { ngAfterContentInit, ngAfterContentChecked, ngAfterViewInit, ngAfterViewChecked, ngOnDestroy } = lifecycleHooks;
+            if (ngAfterContentInit) {
+                (tView.contentHooks || (tView.contentHooks = [])).push(-i, ngAfterContentInit);
             }
-            if (directiveDef.afterContentChecked) {
-                (tView.contentHooks || (tView.contentHooks = [])).push(i, directiveDef.afterContentChecked);
-                (tView.contentCheckHooks || (tView.contentCheckHooks = []))
-                    .push(i, directiveDef.afterContentChecked);
+            if (ngAfterContentChecked) {
+                (tView.contentHooks || (tView.contentHooks = [])).push(i, ngAfterContentChecked);
+                (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, ngAfterContentChecked);
             }
-            if (directiveDef.afterViewInit) {
-                (tView.viewHooks || (tView.viewHooks = [])).push(-i, directiveDef.afterViewInit);
+            if (ngAfterViewInit) {
+                (tView.viewHooks || (tView.viewHooks = [])).push(-i, ngAfterViewInit);
             }
-            if (directiveDef.afterViewChecked) {
-                (tView.viewHooks || (tView.viewHooks = [])).push(i, directiveDef.afterViewChecked);
-                (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, directiveDef.afterViewChecked);
+            if (ngAfterViewChecked) {
+                (tView.viewHooks || (tView.viewHooks = [])).push(i, ngAfterViewChecked);
+                (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, ngAfterViewChecked);
             }
-            if (directiveDef.onDestroy != null) {
-                (tView.destroyHooks || (tView.destroyHooks = [])).push(i, directiveDef.onDestroy);
+            if (ngOnDestroy != null) {
+                (tView.destroyHooks || (tView.destroyHooks = [])).push(i, ngOnDestroy);
             }
         }
     }
@@ -28135,10 +28228,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function locateDirectiveOrProvider(tNode, tView, token, canAccessViewProviders, isHostSpecialCase) {
         const nodeProviderIndexes = tNode.providerIndexes;
         const tInjectables = tView.data;
-        const injectablesStart = nodeProviderIndexes & 65535 /* ProvidersStartIndexMask */;
+        const injectablesStart = nodeProviderIndexes & 1048575 /* ProvidersStartIndexMask */;
         const directivesStart = tNode.directiveStart;
         const directiveEnd = tNode.directiveEnd;
-        const cptViewProvidersCount = nodeProviderIndexes >> 16 /* CptViewProvidersCountShift */;
+        const cptViewProvidersCount = nodeProviderIndexes >> 20 /* CptViewProvidersCountShift */;
         const startingIndex = canAccessViewProviders ? injectablesStart : injectablesStart + cptViewProvidersCount;
         // When the host special case applies, only the viewProviders and the component are visible
         const endIndex = isHostSpecialCase ? injectablesStart + cptViewProvidersCount : directiveEnd;
@@ -29365,6 +29458,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     else {
                         // If it's not a number, it's a host binding function that needs to be executed.
                         if (instruction !== null) {
+                            ngDevMode &&
+                                assertLessThan(currentDirectiveIndex, 1048576 /* CptViewProvidersCountShifter */, 'Reached the max number of host bindings');
                             setBindingRootForHostBindings(bindingRootIndex, currentDirectiveIndex);
                             const hostCtx = lView[currentDirectiveIndex];
                             instruction(2 /* Update */, hostCtx);
@@ -30042,7 +30137,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // requires non standard math arithmetic and it can prevent VM optimizations.
         // `0-0` will always produce `0` and will not cause a potential deoptimization in VM.
         const elementIndex = HEADER_OFFSET - tNode.index;
-        const providerStartIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
+        const providerStartIndex = tNode.providerIndexes & 1048575 /* ProvidersStartIndexMask */;
         const providerCount = tView.data.length - providerStartIndex;
         (tView.expandoInstructions || (tView.expandoInstructions = []))
             .push(elementIndex, providerCount, directiveCount);
@@ -33402,7 +33497,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.4+19.sha-f2ca463');
+    const VERSION$2 = new Version$1('10.0.4+22.sha-481df83');
 
     /**
      * @license
