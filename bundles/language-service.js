@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.1+41.sha-eae13e4
+ * @license Angular v10.1.0-next.1+42.sha-d72b1e4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2778,8 +2778,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
     Identifiers$1.select = { name: 'ɵɵselect', moduleName: CORE$1 };
     Identifiers$1.advance = { name: 'ɵɵadvance', moduleName: CORE$1 };
-    Identifiers$1.updateSyntheticHostBinding = { name: 'ɵɵupdateSyntheticHostBinding', moduleName: CORE$1 };
-    Identifiers$1.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
+    Identifiers$1.syntheticHostProperty = { name: 'ɵɵsyntheticHostProperty', moduleName: CORE$1 };
+    Identifiers$1.syntheticHostListener = { name: 'ɵɵsyntheticHostListener', moduleName: CORE$1 };
     Identifiers$1.attribute = { name: 'ɵɵattribute', moduleName: CORE$1 };
     Identifiers$1.attributeInterpolate1 = { name: 'ɵɵattributeInterpolate1', moduleName: CORE$1 };
     Identifiers$1.attributeInterpolate2 = { name: 'ɵɵattributeInterpolate2', moduleName: CORE$1 };
@@ -17110,7 +17110,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             else if (instruction === Identifiers$1.attribute) {
                 attributeBindings.push(instructionParams);
             }
-            else if (instruction === Identifiers$1.updateSyntheticHostBinding) {
+            else if (instruction === Identifiers$1.syntheticHostProperty) {
                 syntheticHostBindings.push(instructionParams);
             }
             else {
@@ -17124,7 +17124,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             updateStatements.push(chainedInstruction(Identifiers$1.attribute, attributeBindings).toStmt());
         }
         if (syntheticHostBindings.length > 0) {
-            updateStatements.push(chainedInstruction(Identifiers$1.updateSyntheticHostBinding, syntheticHostBindings).toStmt());
+            updateStatements.push(chainedInstruction(Identifiers$1.syntheticHostProperty, syntheticHostBindings).toStmt());
         }
         // since we're dealing with directives/components and both have hostBinding
         // functions, we need to generate a special hostAttrs instruction that deals
@@ -17190,7 +17190,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // host bindings that have a synthetic property (e.g. @foo) should always be rendered
                 // in the context of the component and not the parent. Therefore there is a special
                 // compatibility instruction available for this purpose.
-                instruction = Identifiers$1.updateSyntheticHostBinding;
+                instruction = Identifiers$1.syntheticHostProperty;
             }
             else {
                 instruction = Identifiers$1.hostProperty;
@@ -17217,7 +17217,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         });
         if (syntheticListeners.length > 0) {
-            instructions.push(chainedInstruction(Identifiers$1.componentHostSyntheticListener, syntheticListeners).toStmt());
+            instructions.push(chainedInstruction(Identifiers$1.syntheticHostListener, syntheticListeners).toStmt());
         }
         if (listeners.length > 0) {
             instructions.push(chainedInstruction(Identifiers$1.listener, listeners).toStmt());
@@ -17593,7 +17593,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.1+41.sha-eae13e4');
+    const VERSION$1 = new Version('10.1.0-next.1+42.sha-d72b1e4');
 
     /**
      * @license
@@ -39101,14 +39101,14 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @codeGenApi
      */
-    function ɵɵcomponentHostSyntheticListener(eventName, listenerFn, useCapture = false, eventTargetResolver) {
+    function ɵɵsyntheticHostListener(eventName, listenerFn, useCapture = false, eventTargetResolver) {
         const tNode = getPreviousOrParentTNode();
         const lView = getLView();
         const tView = getTView();
         const currentDef = getCurrentDirectiveDef(tView.data);
         const renderer = loadComponentRenderer(currentDef, tNode, lView);
         listenerInternal(tView, lView, renderer, tNode, eventName, listenerFn, useCapture, eventTargetResolver);
-        return ɵɵcomponentHostSyntheticListener;
+        return ɵɵsyntheticHostListener;
     }
     /**
      * A utility function that checks if a given element has already an event handler registered for an
@@ -42558,7 +42558,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @codeGenApi
      */
-    function ɵɵupdateSyntheticHostBinding(propName, value, sanitizer) {
+    function ɵɵsyntheticHostProperty(propName, value, sanitizer) {
         const lView = getLView();
         const bindingIndex = nextBindingIndex();
         if (bindingUpdated(lView, bindingIndex, value)) {
@@ -42569,7 +42569,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             elementPropertyInternal(tView, tNode, lView, propName, value, renderer, sanitizer, true);
             ngDevMode && storePropertyBindingMetadata(tView.data, tNode, propName, bindingIndex);
         }
-        return ɵɵupdateSyntheticHostBinding;
+        return ɵɵsyntheticHostProperty;
     }
 
     /**
@@ -43726,7 +43726,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.1+41.sha-eae13e4');
+    const VERSION$2 = new Version$1('10.1.0-next.1+42.sha-d72b1e4');
 
     /**
      * @license
@@ -49415,8 +49415,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         'ɵɵrestoreView': ɵɵrestoreView,
         'ɵɵlistener': ɵɵlistener,
         'ɵɵprojection': ɵɵprojection,
-        'ɵɵupdateSyntheticHostBinding': ɵɵupdateSyntheticHostBinding,
-        'ɵɵcomponentHostSyntheticListener': ɵɵcomponentHostSyntheticListener,
+        'ɵɵsyntheticHostProperty': ɵɵsyntheticHostProperty,
+        'ɵɵsyntheticHostListener': ɵɵsyntheticHostListener,
         'ɵɵpipeBind1': ɵɵpipeBind1,
         'ɵɵpipeBind2': ɵɵpipeBind2,
         'ɵɵpipeBind3': ɵɵpipeBind3,
