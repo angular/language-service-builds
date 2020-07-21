@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.4+35.sha-4664acc
+ * @license Angular v10.0.4+36.sha-2af3d9c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5563,8 +5563,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
     Identifiers$1.select = { name: 'ɵɵselect', moduleName: CORE$1 };
     Identifiers$1.advance = { name: 'ɵɵadvance', moduleName: CORE$1 };
-    Identifiers$1.updateSyntheticHostBinding = { name: 'ɵɵupdateSyntheticHostBinding', moduleName: CORE$1 };
-    Identifiers$1.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
+    Identifiers$1.syntheticHostProperty = { name: 'ɵɵsyntheticHostProperty', moduleName: CORE$1 };
+    Identifiers$1.syntheticHostListener = { name: 'ɵɵsyntheticHostListener', moduleName: CORE$1 };
     Identifiers$1.attribute = { name: 'ɵɵattribute', moduleName: CORE$1 };
     Identifiers$1.attributeInterpolate1 = { name: 'ɵɵattributeInterpolate1', moduleName: CORE$1 };
     Identifiers$1.attributeInterpolate2 = { name: 'ɵɵattributeInterpolate2', moduleName: CORE$1 };
@@ -18324,7 +18324,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             else if (instruction === Identifiers$1.attribute) {
                 attributeBindings.push(instructionParams);
             }
-            else if (instruction === Identifiers$1.updateSyntheticHostBinding) {
+            else if (instruction === Identifiers$1.syntheticHostProperty) {
                 syntheticHostBindings.push(instructionParams);
             }
             else {
@@ -18338,7 +18338,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             updateStatements.push(chainedInstruction(Identifiers$1.attribute, attributeBindings).toStmt());
         }
         if (syntheticHostBindings.length > 0) {
-            updateStatements.push(chainedInstruction(Identifiers$1.updateSyntheticHostBinding, syntheticHostBindings).toStmt());
+            updateStatements.push(chainedInstruction(Identifiers$1.syntheticHostProperty, syntheticHostBindings).toStmt());
         }
         // since we're dealing with directives/components and both have hostBinding
         // functions, we need to generate a special hostAttrs instruction that deals
@@ -18404,7 +18404,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // host bindings that have a synthetic property (e.g. @foo) should always be rendered
                 // in the context of the component and not the parent. Therefore there is a special
                 // compatibility instruction available for this purpose.
-                instruction = Identifiers$1.updateSyntheticHostBinding;
+                instruction = Identifiers$1.syntheticHostProperty;
             }
             else {
                 instruction = Identifiers$1.hostProperty;
@@ -18431,7 +18431,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
         });
         if (syntheticListeners.length > 0) {
-            instructions.push(chainedInstruction(Identifiers$1.componentHostSyntheticListener, syntheticListeners).toStmt());
+            instructions.push(chainedInstruction(Identifiers$1.syntheticHostListener, syntheticListeners).toStmt());
         }
         if (listeners.length > 0) {
             instructions.push(chainedInstruction(Identifiers$1.listener, listeners).toStmt());
@@ -18807,7 +18807,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.4+35.sha-4664acc');
+    const VERSION$1 = new Version('10.0.4+36.sha-2af3d9c');
 
     /**
      * @license
@@ -19396,7 +19396,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.0.4+35.sha-4664acc');
+    const VERSION$2 = new Version('10.0.4+36.sha-2af3d9c');
 
     /**
      * @license
