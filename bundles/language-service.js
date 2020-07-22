@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.5
+ * @license Angular v10.0.5+7.sha-6ec7297
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17586,7 +17586,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.5');
+    const VERSION$1 = new Version('10.0.5+7.sha-6ec7297');
 
     /**
      * @license
@@ -33459,7 +33459,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.5');
+    const VERSION$2 = new Version$1('10.0.5+7.sha-6ec7297');
 
     /**
      * @license
@@ -36688,7 +36688,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * A [DI token](guide/glossary#di-token "DI token definition") that you can use to provide
      * one or more initialization functions.
      *
-     * The provided function are injected at application startup and executed during
+     * The provided functions are injected at application startup and executed during
      * app initialization. If any of these functions returns a Promise, initialization
      * does not complete until the Promise is resolved.
      *
