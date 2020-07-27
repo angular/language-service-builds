@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.2+31.sha-4dfc3fe
+ * @license Angular v10.1.0-next.2+35.sha-8e5969b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1997,6 +1997,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     const KEY_CONTEXT = {};
     /**
+     * Generally all primitive values are excluded from the `ConstantPool`, but there is an exclusion
+     * for strings that reach a certain length threshold. This constant defines the length threshold for
+     * strings.
+     */
+    const POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS = 50;
+    /**
      * A node that is a place-holder that allows the node to be replaced when the actual
      * node is known.
      *
@@ -2048,7 +2054,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.nextNameIndex = 0;
         }
         getConstLiteral(literal, forceShared) {
-            if (literal instanceof LiteralExpr || literal instanceof FixupExpression) {
+            if ((literal instanceof LiteralExpr && !isLongStringExpr(literal)) ||
+                literal instanceof FixupExpression) {
                 // Do no put simple literals into the constant pool or try to produce a constant for a
                 // reference to a constant.
                 return literal;
@@ -2224,6 +2231,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function isVariable(e) {
         return e instanceof ReadVarExpr;
+    }
+    function isLongStringExpr(expr) {
+        return typeof expr.value === 'string' &&
+            expr.value.length >= POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS;
     }
 
     /**
@@ -16896,7 +16907,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const styleValues = meta.encapsulation == ViewEncapsulation.Emulated ?
                 compileStyles(meta.styles, CONTENT_ATTR, HOST_ATTR) :
                 meta.styles;
-            const strings = styleValues.map(str => literal(str));
+            const strings = styleValues.map(str => constantPool.getConstLiteral(literal(str)));
             definitionMap.set('styles', literalArr(strings));
         }
         else if (meta.encapsulation === ViewEncapsulation.Emulated) {
@@ -17593,7 +17604,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.2+31.sha-4dfc3fe');
+    const VERSION$1 = new Version('10.1.0-next.2+35.sha-8e5969b');
 
     /**
      * @license
@@ -43726,7 +43737,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.2+31.sha-4dfc3fe');
+    const VERSION$2 = new Version$1('10.1.0-next.2+35.sha-8e5969b');
 
     /**
      * @license
