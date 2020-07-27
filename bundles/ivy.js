@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.2+44.sha-03a6252
+ * @license Angular v10.1.0-next.2+45.sha-65cc0c8
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18825,7 +18825,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.2+44.sha-03a6252');
+    const VERSION$1 = new Version('10.1.0-next.2+45.sha-65cc0c8');
 
     /**
      * @license
@@ -19414,7 +19414,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.2+44.sha-03a6252');
+    const VERSION$2 = new Version('10.1.0-next.2+45.sha-65cc0c8');
 
     /**
      * @license
@@ -21146,6 +21146,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 name = 'constructor';
             }
             else if (ts.isIdentifier(node.name)) {
+                name = node.name.text;
+                nameNode = node.name;
+            }
+            else if (ts.isStringLiteral(node.name)) {
                 name = node.name.text;
                 nameNode = node.name;
             }
