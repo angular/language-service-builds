@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.2+39.sha-96aa14d
+ * @license Angular v10.1.0-next.2+42.sha-5d3ba8d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17604,7 +17604,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.2+39.sha-96aa14d');
+    const VERSION$1 = new Version('10.1.0-next.2+42.sha-5d3ba8d');
 
     /**
      * @license
@@ -25878,6 +25878,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *   The factory can call `inject` to access the `Injector` and request injection of dependencies.
      *
      * @codeGenApi
+     * @publicApi This instruction has been emitted by ViewEngine for some time and is deployed to npm.
      */
     function ɵɵdefineInjectable(opts) {
         return {
@@ -25905,7 +25906,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *   whose providers will also be added to the injector. Locally provided types will override
      *   providers from imports.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵdefineInjector(options) {
         return {
@@ -30175,7 +30176,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @returns `html` string which is safe to display to user, because all of the dangerous javascript
      * and urls have been removed.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵsanitizeHtml(unsafeHtml) {
         const sanitizer = getSanitizer();
@@ -30196,7 +30197,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @param unsafeStyle untrusted `style`, typically from the user.
      * @returns `style` string which is safe to bind to the `style` properties.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵsanitizeStyle(unsafeStyle) {
         const sanitizer = getSanitizer();
@@ -30222,7 +30223,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @returns `url` string which is safe to bind to the `src` properties such as `<img src>`, because
      * all of the dangerous javascript has been removed.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵsanitizeUrl(unsafeUrl) {
         const sanitizer = getSanitizer();
@@ -30243,7 +30244,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @returns `url` string which is safe to bind to the `src` properties such as `<img src>`, because
      * only trusted `url`s have been allowed to pass.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵsanitizeResourceUrl(unsafeResourceUrl) {
         const sanitizer = getSanitizer();
@@ -30265,7 +30266,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @returns `url` string which is safe to bind to the `<script>` element such as `<img src>`,
      * because only trusted `scripts` have been allowed to pass.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵsanitizeScript(unsafeScript) {
         const sanitizer = getSanitizer();
@@ -30306,7 +30307,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @param prop name of the property that contains the value.
      * @returns `url` string which is safe to bind.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵsanitizeUrlOrResourceUrl(unsafeUrl, tag, prop) {
         return getUrlSanitizer(tag, prop)(unsafeUrl);
@@ -43737,7 +43738,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.2+39.sha-96aa14d');
+    const VERSION$2 = new Version$1('10.1.0-next.2+42.sha-5d3ba8d');
 
     /**
      * @license
