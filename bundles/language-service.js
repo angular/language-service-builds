@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.2+39.sha-96aa14d
+ * @license Angular v10.1.0-next.2+42.sha-5d3ba8d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17604,7 +17604,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.2+39.sha-96aa14d');
+    const VERSION$1 = new Version('10.1.0-next.2+42.sha-5d3ba8d');
 
     /**
      * @license
@@ -25867,6 +25867,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *   The factory can call `inject` to access the `Injector` and request injection of dependencies.
      *
      * @codeGenApi
+     * @publicApi This instruction has been emitted by ViewEngine for some time and is deployed to npm.
      */
     function ɵɵdefineInjectable(opts) {
         return {
@@ -25894,7 +25895,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *   whose providers will also be added to the injector. Locally provided types will override
      *   providers from imports.
      *
-     * @publicApi
+     * @codeGenApi
      */
     function ɵɵdefineInjector(options) {
         return {
@@ -33477,7 +33478,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.2+39.sha-96aa14d');
+    const VERSION$2 = new Version$1('10.1.0-next.2+42.sha-5d3ba8d');
 
     /**
      * @license
