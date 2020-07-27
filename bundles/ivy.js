@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.2+31.sha-4dfc3fe
+ * @license Angular v10.1.0-next.2+35.sha-8e5969b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5129,6 +5129,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     const KEY_CONTEXT = {};
     /**
+     * Generally all primitive values are excluded from the `ConstantPool`, but there is an exclusion
+     * for strings that reach a certain length threshold. This constant defines the length threshold for
+     * strings.
+     */
+    const POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS = 50;
+    /**
      * A node that is a place-holder that allows the node to be replaced when the actual
      * node is known.
      *
@@ -5180,7 +5186,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.nextNameIndex = 0;
         }
         getConstLiteral(literal, forceShared) {
-            if (literal instanceof LiteralExpr || literal instanceof FixupExpression) {
+            if ((literal instanceof LiteralExpr && !isLongStringExpr(literal)) ||
+                literal instanceof FixupExpression) {
                 // Do no put simple literals into the constant pool or try to produce a constant for a
                 // reference to a constant.
                 return literal;
@@ -5356,6 +5363,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     function isVariable(e) {
         return e instanceof ReadVarExpr;
+    }
+    function isLongStringExpr(expr) {
+        return typeof expr.value === 'string' &&
+            expr.value.length >= POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS;
     }
 
     /**
@@ -18117,7 +18128,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const styleValues = meta.encapsulation == ViewEncapsulation.Emulated ?
                 compileStyles(meta.styles, CONTENT_ATTR, HOST_ATTR) :
                 meta.styles;
-            const strings = styleValues.map(str => literal(str));
+            const strings = styleValues.map(str => constantPool.getConstLiteral(literal(str)));
             definitionMap.set('styles', literalArr(strings));
         }
         else if (meta.encapsulation === ViewEncapsulation.Emulated) {
@@ -18814,7 +18825,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.2+31.sha-4dfc3fe');
+    const VERSION$1 = new Version('10.1.0-next.2+35.sha-8e5969b');
 
     /**
      * @license
@@ -19403,7 +19414,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.2+31.sha-4dfc3fe');
+    const VERSION$2 = new Version('10.1.0-next.2+35.sha-8e5969b');
 
     /**
      * @license
@@ -24442,52 +24453,77 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             };
         };
     }
-    class IvyVisitor extends Visitor {
-        constructor(compilation, reflector, importManager, defaultImportRecorder, isClosureCompilerEnabled, isCore, constantPool) {
+    /**
+     * Visits all classes, performs Ivy compilation where Angular decorators are present and collects
+     * result in a Map that associates a ts.ClassDeclaration with Ivy compilation results. This visitor
+     * does NOT perform any TS transformations.
+     */
+    class IvyCompilationVisitor extends Visitor {
+        constructor(compilation, constantPool) {
             super();
             this.compilation = compilation;
+            this.constantPool = constantPool;
+            this.classCompilationMap = new Map();
+        }
+        visitClassDeclaration(node) {
+            // Determine if this class has an Ivy field that needs to be added, and compile the field
+            // to an expression if so.
+            const result = this.compilation.compile(node, this.constantPool);
+            if (result !== null) {
+                this.classCompilationMap.set(node, result);
+            }
+            return { node };
+        }
+    }
+    /**
+     * Visits all classes and performs transformation of corresponding TS nodes based on the Ivy
+     * compilation results (provided as an argument).
+     */
+    class IvyTransformationVisitor extends Visitor {
+        constructor(compilation, classCompilationMap, reflector, importManager, defaultImportRecorder, isClosureCompilerEnabled, isCore) {
+            super();
+            this.compilation = compilation;
+            this.classCompilationMap = classCompilationMap;
             this.reflector = reflector;
             this.importManager = importManager;
             this.defaultImportRecorder = defaultImportRecorder;
             this.isClosureCompilerEnabled = isClosureCompilerEnabled;
             this.isCore = isCore;
-            this.constantPool = constantPool;
         }
         visitClassDeclaration(node) {
-            // Determine if this class has an Ivy field that needs to be added, and compile the field
-            // to an expression if so.
-            const res = this.compilation.compile(node, this.constantPool);
-            if (res !== null) {
-                // There is at least one field to add.
-                const statements = [];
-                const members = [...node.members];
-                res.forEach(field => {
-                    // Translate the initializer for the field into TS nodes.
-                    const exprNode = translateExpression(field.initializer, this.importManager, this.defaultImportRecorder, ts.ScriptTarget.ES2015);
-                    // Create a static property declaration for the new field.
-                    const property = ts.createProperty(undefined, [ts.createToken(ts.SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
-                    if (this.isClosureCompilerEnabled) {
-                        // Closure compiler transforms the form `Service.ɵprov = X` into `Service$ɵprov = X`. To
-                        // prevent this transformation, such assignments need to be annotated with @nocollapse.
-                        // Note that tsickle is typically responsible for adding such annotations, however it
-                        // doesn't yet handle synthetic fields added during other transformations.
-                        ts.addSyntheticLeadingComment(property, ts.SyntaxKind.MultiLineCommentTrivia, '* @nocollapse ', 
-                        /* hasTrailingNewLine */ false);
-                    }
-                    field.statements
-                        .map(stmt => translateStatement(stmt, this.importManager, this.defaultImportRecorder, ts.ScriptTarget.ES2015))
-                        .forEach(stmt => statements.push(stmt));
-                    members.push(property);
-                });
-                // Replace the class declaration with an updated version.
-                node = ts.updateClassDeclaration(node, 
-                // Remove the decorator which triggered this compilation, leaving the others alone.
-                maybeFilterDecorator(node.decorators, this.compilation.decoratorsFor(node)), node.modifiers, node.name, node.typeParameters, node.heritageClauses || [], 
-                // Map over the class members and remove any Angular decorators from them.
-                members.map(member => this._stripAngularDecorators(member)));
-                return { node, after: statements };
+            // If this class is not registered in the map, it means that it doesn't have Angular decorators,
+            // thus no further processing is required.
+            if (!this.classCompilationMap.has(node)) {
+                return { node };
             }
-            return { node };
+            // There is at least one field to add.
+            const statements = [];
+            const members = [...node.members];
+            for (const field of this.classCompilationMap.get(node)) {
+                // Translate the initializer for the field into TS nodes.
+                const exprNode = translateExpression(field.initializer, this.importManager, this.defaultImportRecorder, ts.ScriptTarget.ES2015);
+                // Create a static property declaration for the new field.
+                const property = ts.createProperty(undefined, [ts.createToken(ts.SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
+                if (this.isClosureCompilerEnabled) {
+                    // Closure compiler transforms the form `Service.ɵprov = X` into `Service$ɵprov = X`. To
+                    // prevent this transformation, such assignments need to be annotated with @nocollapse.
+                    // Note that tsickle is typically responsible for adding such annotations, however it
+                    // doesn't yet handle synthetic fields added during other transformations.
+                    ts.addSyntheticLeadingComment(property, ts.SyntaxKind.MultiLineCommentTrivia, '* @nocollapse ', 
+                    /* hasTrailingNewLine */ false);
+                }
+                field.statements
+                    .map(stmt => translateStatement(stmt, this.importManager, this.defaultImportRecorder, ts.ScriptTarget.ES2015))
+                    .forEach(stmt => statements.push(stmt));
+                members.push(property);
+            }
+            // Replace the class declaration with an updated version.
+            node = ts.updateClassDeclaration(node, 
+            // Remove the decorator which triggered this compilation, leaving the others alone.
+            maybeFilterDecorator(node.decorators, this.compilation.decoratorsFor(node)), node.modifiers, node.name, node.typeParameters, node.heritageClauses || [], 
+            // Map over the class members and remove any Angular decorators from them.
+            members.map(member => this._stripAngularDecorators(member)));
+            return { node, after: statements };
         }
         /**
          * Return all decorators on a `Declaration` which are from @angular/core, or an empty set if none
@@ -24584,9 +24620,22 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function transformIvySourceFile(compilation, context, reflector, importRewriter, file, isCore, isClosureCompilerEnabled, defaultImportRecorder) {
         const constantPool = new ConstantPool();
         const importManager = new ImportManager(importRewriter);
-        // Recursively scan through the AST and perform any updates requested by the IvyCompilation.
-        const visitor = new IvyVisitor(compilation, reflector, importManager, defaultImportRecorder, isClosureCompilerEnabled, isCore, constantPool);
-        let sf = visit(file, visitor, context);
+        // The transformation process consists of 2 steps:
+        //
+        //  1. Visit all classes, perform compilation and collect the results.
+        //  2. Perform actual transformation of required TS nodes using compilation results from the first
+        //     step.
+        //
+        // This is needed to have all `o.Expression`s generated before any TS transforms happen. This
+        // allows `ConstantPool` to properly identify expressions that can be shared across multiple
+        // components declared in the same file.
+        // Step 1. Go though all classes in AST, perform compilation and collect the results.
+        const compilationVisitor = new IvyCompilationVisitor(compilation, constantPool);
+        visit(file, compilationVisitor, context);
+        // Step 2. Scan through the AST again and perform transformations based on Ivy compilation
+        // results obtained at Step 1.
+        const transformationVisitor = new IvyTransformationVisitor(compilation, compilationVisitor.classCompilationMap, reflector, importManager, defaultImportRecorder, isClosureCompilerEnabled, isCore);
+        let sf = visit(file, transformationVisitor, context);
         // Generate the constant statements first, as they may involve adding additional imports
         // to the ImportManager.
         const constants = constantPool.statements.map(stmt => translateStatement(stmt, importManager, defaultImportRecorder, getLocalizeCompileTarget(context)));
