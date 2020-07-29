@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.3+2.sha-9c8bc4a
+ * @license Angular v10.1.0-next.3+13.sha-1b17722
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18825,7 +18825,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.3+2.sha-9c8bc4a');
+    const VERSION$1 = new Version('10.1.0-next.3+13.sha-1b17722');
 
     /**
      * @license
@@ -19414,7 +19414,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.3+2.sha-9c8bc4a');
+    const VERSION$2 = new Version('10.1.0-next.3+13.sha-1b17722');
 
     /**
      * @license
@@ -19587,6 +19587,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * ```
          */
         ErrorCode[ErrorCode["DUPLICATE_VARIABLE_DECLARATION"] = 8006] = "DUPLICATE_VARIABLE_DECLARATION";
+        /**
+         * The template type-checking engine would need to generate an inline type check block for a
+         * component, but the current type-checking environment doesn't support it.
+         */
+        ErrorCode[ErrorCode["INLINE_TCB_REQUIRED"] = 8900] = "INLINE_TCB_REQUIRED";
+        /**
+         * The template type-checking engine would need to generate an inline type constructor for a
+         * directive or component, but the current type-checking environment doesn't support it.
+         */
+        ErrorCode[ErrorCode["INLINE_TYPE_CTOR_REQUIRED"] = 8901] = "INLINE_TYPE_CTOR_REQUIRED";
         /**
          * An injectable already has a `ɵprov` property.
          */
@@ -26326,8 +26336,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 schemas = scope.schemas;
             }
-            const bound = new R3TargetBinder(matcher).bind({ template: meta.template.diagNodes });
-            ctx.addTemplate(new Reference$1(node), bound, pipes, schemas, meta.template.sourceMapping, meta.template.file);
+            const binder = new R3TargetBinder(matcher);
+            ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, pipes, schemas, meta.template.sourceMapping, meta.template.file);
         }
         resolve(node, analysis) {
             const context = node.getSourceFile();
@@ -30717,6 +30727,72 @@ export * from '${relativeEntryPoint}';
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Describes the scope of the caller's interest in template type-checking results.
+     */
+    var OptimizeFor;
+    (function (OptimizeFor) {
+        /**
+         * Indicates that a consumer of a `TemplateTypeChecker` is only interested in results for a given
+         * file, and wants them as fast as possible.
+         *
+         * Calling `TemplateTypeChecker` methods successively for multiple files while specifying
+         * `OptimizeFor.SingleFile` can result in significant unnecessary overhead overall.
+         */
+        OptimizeFor[OptimizeFor["SingleFile"] = 0] = "SingleFile";
+        /**
+         * Indicates that a consumer of a `TemplateTypeChecker` intends to query for results pertaining to
+         * the entire user program, and so the type-checker should internally optimize for this case.
+         *
+         * Initial calls to retrieve type-checking information may take longer, but repeated calls to
+         * gather information for the whole user program will be significantly faster with this mode of
+         * optimization.
+         */
+        OptimizeFor[OptimizeFor["WholeProgram"] = 1] = "WholeProgram";
+    })(OptimizeFor || (OptimizeFor = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A `ShimGenerator` which adds type-checking files to the `ts.Program`.
+     *
+     * This is a requirement for performant template type-checking, as TypeScript will only reuse
+     * information in the main program when creating the type-checking program if the set of files in
+     * each are exactly the same. Thus, the main program also needs the synthetic type-checking files.
+     */
+    class TypeCheckShimGenerator {
+        constructor() {
+            this.extensionPrefix = 'ngtypecheck';
+            this.shouldEmit = false;
+        }
+        generateShimForFile(sf, genFilePath, priorShimSf) {
+            if (priorShimSf !== null) {
+                // If this shim existed in the previous program, reuse it now. It might not be correct, but
+                // reusing it in the main program allows the shape of its imports to potentially remain the
+                // same and TS can then use the fastest path for incremental program creation. Later during
+                // the type-checking phase it's going to either be reused, or replaced anyways. Thus there's
+                // no harm in reuse here even if it's out of date.
+                return priorShimSf;
+            }
+            return ts.createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+        }
+        static shimFor(fileName) {
+            return absoluteFrom(fileName.replace(/\.tsx?$/, '.ngtypecheck.ts'));
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Wraps the node in parenthesis such that inserted span comments become attached to the proper
      * node. This is an alias for `ts.createParen` with the benefit that it signifies that the
      * inserted parenthesis are for diagnostic purposes, not for correctness of the rendered TCB code.
@@ -30802,12 +30878,20 @@ export * from '${relativeEntryPoint}';
             return null;
         }
         const mapping = resolver.getSourceMapping(sourceLocation.id);
-        return makeTemplateDiagnostic(mapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
+        return makeTemplateDiagnostic(sourceLocation.id, mapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
+    }
+    function findTypeCheckBlock(file, id) {
+        for (const stmt of file.statements) {
+            if (ts.isFunctionDeclaration(stmt) && getTemplateId(stmt, file) === id) {
+                return stmt;
+            }
+        }
+        return null;
     }
     /**
      * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
      */
-    function makeTemplateDiagnostic(mapping, span, category, code, messageText, relatedMessage) {
+    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessage) {
         if (mapping.type === 'direct') {
             let relatedInformation = undefined;
             if (relatedMessage !== undefined) {
@@ -30830,6 +30914,7 @@ export * from '${relativeEntryPoint}';
                 messageText,
                 file: mapping.node.getSourceFile(),
                 componentFile: mapping.node.getSourceFile(),
+                templateId,
                 start: span.start.offset,
                 length: span.end.offset - span.start.offset,
                 relatedInformation,
@@ -30878,6 +30963,7 @@ export * from '${relativeEntryPoint}';
                 messageText,
                 file: sf,
                 componentFile: componentSf,
+                templateId,
                 start: span.start.offset,
                 length: span.end.offset - span.start.offset,
                 // Show a secondary message indicating the component whose template contains the error.
@@ -31002,7 +31088,7 @@ export * from '${relativeEntryPoint}';
                     errorMsg +=
                         `2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`;
                 }
-                const diag = makeTemplateDiagnostic(mapping, element.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
+                const diag = makeTemplateDiagnostic(id, mapping, element.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
                 this._diagnostics.push(diag);
             }
         }
@@ -31022,7 +31108,7 @@ export * from '${relativeEntryPoint}';
                             .name}' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.` +
                             `\n3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`;
                 }
-                const diag = makeTemplateDiagnostic(mapping, span, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ATTRIBUTE), errorMsg);
+                const diag = makeTemplateDiagnostic(id, mapping, span, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ATTRIBUTE), errorMsg);
                 this._diagnostics.push(diag);
             }
         }
@@ -31848,7 +31934,7 @@ export * from '${relativeEntryPoint}';
             const mapping = this.resolver.getSourceMapping(templateId);
             const value = ref.value.trim();
             const errorMsg = `No directive found with exportAs '${value}'.`;
-            this._diagnostics.push(makeTemplateDiagnostic(mapping, ref.valueSpan || ref.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, ref.valueSpan || ref.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
         }
         missingPipe(templateId, ast) {
             const mapping = this.resolver.getSourceMapping(templateId);
@@ -31857,7 +31943,7 @@ export * from '${relativeEntryPoint}';
             if (sourceSpan === null) {
                 throw new Error(`Assertion failure: no SourceLocation found for usage of pipe '${ast.name}'.`);
             }
-            this._diagnostics.push(makeTemplateDiagnostic(mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
         }
         illegalAssignmentToTemplateVar(templateId, assignment, target) {
             const mapping = this.resolver.getSourceMapping(templateId);
@@ -31867,7 +31953,7 @@ export * from '${relativeEntryPoint}';
             if (sourceSpan === null) {
                 throw new Error(`Assertion failure: no SourceLocation found for property binding.`);
             }
-            this._diagnostics.push(makeTemplateDiagnostic(mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, {
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, {
                 text: `The variable ${assignment.name} is declared here.`,
                 span: target.valueSpan || target.sourceSpan,
             }));
@@ -31880,175 +31966,29 @@ export * from '${relativeEntryPoint}';
             // variable in question.
             //
             // TODO(alxhub): allocate to a tighter span once one is available.
-            this._diagnostics.push(makeTemplateDiagnostic(mapping, variable.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, {
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, variable.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, {
                 text: `The variable '${firstDecl.name}' was first declared here.`,
                 span: firstDecl.sourceSpan,
             }));
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A `ShimGenerator` which adds type-checking files to the `ts.Program`.
-     *
-     * This is a requirement for performant template type-checking, as TypeScript will only reuse
-     * information in the main program when creating the type-checking program if the set of files in
-     * each are exactly the same. Thus, the main program also needs the synthetic type-checking files.
-     */
-    class TypeCheckShimGenerator {
-        constructor() {
-            this.extensionPrefix = 'ngtypecheck';
-            this.shouldEmit = false;
+        requiresInlineTcb(templateId, node) {
+            this._diagnostics.push(makeInlineDiagnostic(templateId, ErrorCode.INLINE_TCB_REQUIRED, node.name, `This component requires inline template type-checking, which is not supported by the current environment.`));
         }
-        generateShimForFile(sf, genFilePath, priorShimSf) {
-            if (priorShimSf !== null) {
-                // If this shim existed in the previous program, reuse it now. It might not be correct, but
-                // reusing it in the main program allows the shape of its imports to potentially remain the
-                // same and TS can then use the fastest path for incremental program creation. Later during
-                // the type-checking phase it's going to either be reused, or replaced anyways. Thus there's
-                // no harm in reuse here even if it's out of date.
-                return priorShimSf;
-            }
-            return ts.createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-        }
-        static shimFor(fileName) {
-            return absoluteFrom(fileName.replace(/\.tsx?$/, '.ngtypecheck.ts'));
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const LF_CHAR = 10;
-    const CR_CHAR = 13;
-    const LINE_SEP_CHAR = 8232;
-    const PARAGRAPH_CHAR = 8233;
-    /** Gets the line and character for the given position from the line starts map. */
-    function getLineAndCharacterFromPosition(lineStartsMap, position) {
-        const lineIndex = findClosestLineStartPosition(lineStartsMap, position);
-        return { character: position - lineStartsMap[lineIndex], line: lineIndex };
-    }
-    /**
-     * Computes the line start map of the given text. This can be used in order to
-     * retrieve the line and character of a given text position index.
-     */
-    function computeLineStartsMap(text) {
-        const result = [0];
-        let pos = 0;
-        while (pos < text.length) {
-            const char = text.charCodeAt(pos++);
-            // Handles the "CRLF" line break. In that case we peek the character
-            // after the "CR" and check if it is a line feed.
-            if (char === CR_CHAR) {
-                if (text.charCodeAt(pos) === LF_CHAR) {
-                    pos++;
-                }
-                result.push(pos);
-            }
-            else if (char === LF_CHAR || char === LINE_SEP_CHAR || char === PARAGRAPH_CHAR) {
-                result.push(pos);
-            }
-        }
-        result.push(pos);
-        return result;
-    }
-    /** Finds the closest line start for the given position. */
-    function findClosestLineStartPosition(linesMap, position, low = 0, high = linesMap.length - 1) {
-        while (low <= high) {
-            const pivotIdx = Math.floor((low + high) / 2);
-            const pivotEl = linesMap[pivotIdx];
-            if (pivotEl === position) {
-                return pivotIdx;
-            }
-            else if (position > pivotEl) {
-                low = pivotIdx + 1;
+        requiresInlineTypeConstructors(templateId, node, directives) {
+            let message;
+            if (directives.length > 1) {
+                message =
+                    `This component uses directives which require inline type constructors, which are not supported by the current environment.`;
             }
             else {
-                high = pivotIdx - 1;
+                message =
+                    `This component uses a directive which requires an inline type constructor, which is not supported by the current environment.`;
             }
-        }
-        // In case there was no exact match, return the closest "lower" line index. We also
-        // subtract the index by one because want the index of the previous line start.
-        return low - 1;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents the source of a template that was processed during type-checking. This information is
-     * used when translating parse offsets in diagnostics back to their original line/column location.
-     */
-    class TemplateSource {
-        constructor(mapping, file) {
-            this.mapping = mapping;
-            this.file = file;
-            this.lineStarts = null;
-        }
-        toParseSourceSpan(start, end) {
-            const startLoc = this.toParseLocation(start);
-            const endLoc = this.toParseLocation(end);
-            return new ParseSourceSpan(startLoc, endLoc);
-        }
-        toParseLocation(position) {
-            const lineStarts = this.acquireLineStarts();
-            const { line, character } = getLineAndCharacterFromPosition(lineStarts, position);
-            return new ParseLocation(this.file, position, line, character);
-        }
-        acquireLineStarts() {
-            if (this.lineStarts === null) {
-                this.lineStarts = computeLineStartsMap(this.file.content);
-            }
-            return this.lineStarts;
+            this._diagnostics.push(makeInlineDiagnostic(templateId, ErrorCode.INLINE_TYPE_CTOR_REQUIRED, node.name, message, directives.map(dir => makeRelatedInformation(dir.name, `Requires an inline type constructor.`))));
         }
     }
-    /**
-     * Assigns IDs to templates and keeps track of their origins.
-     *
-     * Implements `TemplateSourceResolver` to resolve the source of a template based on these IDs.
-     */
-    class TemplateSourceManager {
-        constructor() {
-            this.nextTemplateId = 1;
-            /**
-             * This map keeps track of all template sources that have been type-checked by the id that is
-             * attached to a TCB's function declaration as leading trivia. This enables translation of
-             * diagnostics produced for TCB code to their source location in the template.
-             */
-            this.templateSources = new Map();
-        }
-        captureSource(mapping, file) {
-            const id = `tcb${this.nextTemplateId++}`;
-            this.templateSources.set(id, new TemplateSource(mapping, file));
-            return id;
-        }
-        getSourceMapping(id) {
-            if (!this.templateSources.has(id)) {
-                throw new Error(`Unexpected unknown template ID: ${id}`);
-            }
-            return this.templateSources.get(id).mapping;
-        }
-        toParseSourceSpan(id, span) {
-            if (!this.templateSources.has(id)) {
-                return null;
-            }
-            const templateSource = this.templateSources.get(id);
-            return templateSource.toParseSourceSpan(span.start, span.end);
-        }
+    function makeInlineDiagnostic(templateId, code, node, messageText, relatedInformation) {
+        return Object.assign(Object.assign({}, makeDiagnostic(code, node, messageText, relatedInformation)), { componentFile: node.getSourceFile(), templateId });
     }
 
     /**
@@ -33817,17 +33757,34 @@ export * from '${relativeEntryPoint}';
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * How a type-checking context should handle operations which would require inlining.
+     */
+    var InliningMode;
+    (function (InliningMode) {
+        /**
+         * Use inlining operations when required.
+         */
+        InliningMode[InliningMode["InlineOps"] = 0] = "InlineOps";
+        /**
+         * Produce diagnostics if an operation would require inlining.
+         */
+        InliningMode[InliningMode["Error"] = 1] = "Error";
+    })(InliningMode || (InliningMode = {}));
+    /**
      * A template type checking context for a program.
      *
      * The `TypeCheckContext` allows registration of components and their templates which need to be
      * type checked.
      */
-    class TypeCheckContext {
-        constructor(config, compilerHost, refEmitter, reflector) {
+    class TypeCheckContextImpl {
+        constructor(config, compilerHost, componentMappingStrategy, refEmitter, reflector, host, inlining) {
             this.config = config;
             this.compilerHost = compilerHost;
+            this.componentMappingStrategy = componentMappingStrategy;
             this.refEmitter = refEmitter;
             this.reflector = reflector;
+            this.host = host;
+            this.inlining = inlining;
             this.fileMap = new Map();
             /**
              * A `Map` of `ts.SourceFile`s that the context has seen to the operations (additions of methods
@@ -33839,20 +33796,6 @@ export * from '${relativeEntryPoint}';
              * queued.
              */
             this.typeCtorPending = new Set();
-            /**
-             * Map of data for file paths which was adopted from a prior compilation.
-             *
-             * This data allows the `TypeCheckContext` to generate a `TypeCheckRequest` which can interpret
-             * diagnostics from type-checking shims included in the prior compilation.
-             */
-            this.adoptedFiles = new Map();
-        }
-        /**
-         * Record the `FileTypeCheckingData` from a previous program that's associated with a particular
-         * source file.
-         */
-        adoptPriorResults(sf, data) {
-            this.adoptedFiles.set(absoluteFromSourceFile(sf), data);
         }
         /**
          * Record a template for the given component `node`, with a `SelectorMatcher` for directive
@@ -33862,14 +33805,30 @@ export * from '${relativeEntryPoint}';
          * @param template AST nodes of the template being recorded.
          * @param matcher `SelectorMatcher` which tracks directives that are in scope for this template.
          */
-        addTemplate(ref, boundTarget, pipes, schemas, sourceMapping, file) {
+        addTemplate(ref, binder, template, pipes, schemas, sourceMapping, file) {
+            if (!this.host.shouldCheckComponent(ref.node)) {
+                return;
+            }
+            const sfPath = absoluteFromSourceFile(ref.node.getSourceFile());
+            const overrideTemplate = this.host.getTemplateOverride(sfPath, ref.node);
+            if (overrideTemplate !== null) {
+                template = overrideTemplate;
+            }
+            // Accumulate a list of any directives which could not have type constructors generated due to
+            // unsupported inlining operations.
+            let missingInlines = [];
             const fileData = this.dataForFile(ref.node.getSourceFile());
-            const id = fileData.sourceManager.captureSource(sourceMapping, file);
+            const shimData = this.pendingShimForComponent(ref.node);
+            const boundTarget = binder.bind({ template });
             // Get all of the directives used in the template and record type constructors for all of them.
             for (const dir of boundTarget.getUsedDirectives()) {
                 const dirRef = dir.ref;
                 const dirNode = dirRef.node;
                 if (requiresInlineTypeCtor(dirNode, this.reflector)) {
+                    if (this.inlining === InliningMode.Error) {
+                        missingInlines.push(dirNode);
+                        continue;
+                    }
                     // Add a type constructor operation for the directive.
                     this.addInlineTypeCtor(fileData, dirNode.getSourceFile(), dirRef, {
                         fnName: 'ngTypeCtor',
@@ -33886,15 +33845,37 @@ export * from '${relativeEntryPoint}';
                     });
                 }
             }
-            const tcbMetadata = { id, boundTarget, pipes, schemas };
-            if (requiresInlineTypeCheckBlock(ref.node)) {
+            const tcbRequiresInline = requiresInlineTypeCheckBlock(ref.node);
+            // If inlining is not supported, but is required for either the TCB or one of its directive
+            // dependencies, then exit here with an error.
+            if (this.inlining === InliningMode.Error && (tcbRequiresInline || missingInlines.length > 0)) {
+                // This template cannot be supported because the underlying strategy does not support inlining
+                // and inlining would be required.
+                // Record diagnostics to indicate the issues with this template.
+                const templateId = fileData.sourceManager.getTemplateId(ref.node);
+                if (tcbRequiresInline) {
+                    shimData.oobRecorder.requiresInlineTcb(templateId, ref.node);
+                }
+                if (missingInlines.length > 0) {
+                    shimData.oobRecorder.requiresInlineTypeConstructors(templateId, ref.node, missingInlines);
+                }
+                // Checking this template would be unsupported, so don't try.
+                return;
+            }
+            const meta = {
+                id: fileData.sourceManager.captureSource(ref.node, sourceMapping, file),
+                boundTarget,
+                pipes,
+                schemas,
+            };
+            if (tcbRequiresInline) {
                 // This class didn't meet the requirements for external type checking, so generate an inline
                 // TCB for the class.
-                this.addInlineTypeCheckBlock(fileData, ref, tcbMetadata);
+                this.addInlineTypeCheckBlock(fileData, shimData, ref, meta);
             }
             else {
                 // The class can be type-checked externally as normal.
-                fileData.typeCheckFile.addTypeCheckBlock(ref, tcbMetadata, fileData.domSchemaChecker, fileData.oobRecorder);
+                shimData.file.addTypeCheckBlock(ref, meta, shimData.domSchemaChecker, shimData.oobRecorder);
             }
         }
         /**
@@ -33960,46 +33941,51 @@ export * from '${relativeEntryPoint}';
                     updates.set(absoluteFromSourceFile(originalSf), newText);
                 }
             }
-            const results = {
-                updates: updates,
-                perFileData: new Map(),
-            };
-            for (const [sfPath, fileData] of this.fileMap.entries()) {
-                updates.set(fileData.typeCheckFile.fileName, fileData.typeCheckFile.render());
-                results.perFileData.set(sfPath, {
-                    genesisDiagnostics: [
-                        ...fileData.domSchemaChecker.diagnostics,
-                        ...fileData.oobRecorder.diagnostics,
-                    ],
-                    hasInlines: fileData.hasInlines,
-                    sourceResolver: fileData.sourceManager,
-                    typeCheckFile: fileData.typeCheckFile.fileName,
-                });
+            // Then go through each input file that has pending code generation operations.
+            for (const [sfPath, pendingFileData] of this.fileMap) {
+                // For each input file, consider generation operations for each of its shims.
+                for (const pendingShimData of pendingFileData.shimData.values()) {
+                    this.host.recordShimData(sfPath, {
+                        genesisDiagnostics: [
+                            ...pendingShimData.domSchemaChecker.diagnostics,
+                            ...pendingShimData.oobRecorder.diagnostics,
+                        ],
+                        hasInlines: pendingFileData.hasInlines,
+                        path: pendingShimData.file.fileName,
+                    });
+                    updates.set(pendingShimData.file.fileName, pendingShimData.file.render());
+                }
             }
-            for (const [sfPath, fileData] of this.adoptedFiles.entries()) {
-                results.perFileData.set(sfPath, fileData);
-            }
-            return results;
+            return updates;
         }
-        addInlineTypeCheckBlock(fileData, ref, tcbMeta) {
+        addInlineTypeCheckBlock(fileData, shimData, ref, tcbMeta) {
             const sf = ref.node.getSourceFile();
             if (!this.opMap.has(sf)) {
                 this.opMap.set(sf, []);
             }
             const ops = this.opMap.get(sf);
-            ops.push(new TcbOp$1(ref, tcbMeta, this.config, this.reflector, fileData.domSchemaChecker, fileData.oobRecorder));
+            ops.push(new TcbOp$1(ref, tcbMeta, this.config, this.reflector, shimData.domSchemaChecker, shimData.oobRecorder));
             fileData.hasInlines = true;
+        }
+        pendingShimForComponent(node) {
+            const fileData = this.dataForFile(node.getSourceFile());
+            const shimPath = this.componentMappingStrategy.shimPathForComponent(node);
+            if (!fileData.shimData.has(shimPath)) {
+                fileData.shimData.set(shimPath, {
+                    domSchemaChecker: new RegistryDomSchemaChecker(fileData.sourceManager),
+                    oobRecorder: new OutOfBandDiagnosticRecorderImpl(fileData.sourceManager),
+                    file: new TypeCheckFile(shimPath, this.config, this.refEmitter, this.reflector, this.compilerHost),
+                });
+            }
+            return fileData.shimData.get(shimPath);
         }
         dataForFile(sf) {
             const sfPath = absoluteFromSourceFile(sf);
             if (!this.fileMap.has(sfPath)) {
-                const sourceManager = new TemplateSourceManager();
                 const data = {
-                    domSchemaChecker: new RegistryDomSchemaChecker(sourceManager),
-                    oobRecorder: new OutOfBandDiagnosticRecorderImpl(sourceManager),
-                    typeCheckFile: new TypeCheckFile(TypeCheckShimGenerator.shimFor(sfPath), this.config, this.refEmitter, this.reflector, this.compilerHost),
                     hasInlines: false,
-                    sourceManager,
+                    sourceManager: this.host.getSourceManager(sfPath),
+                    shimData: new Map(),
                 };
                 this.fileMap.set(sfPath, data);
             }
@@ -34078,12 +34064,157 @@ export * from '${relativeEntryPoint}';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const LF_CHAR = 10;
+    const CR_CHAR = 13;
+    const LINE_SEP_CHAR = 8232;
+    const PARAGRAPH_CHAR = 8233;
+    /** Gets the line and character for the given position from the line starts map. */
+    function getLineAndCharacterFromPosition(lineStartsMap, position) {
+        const lineIndex = findClosestLineStartPosition(lineStartsMap, position);
+        return { character: position - lineStartsMap[lineIndex], line: lineIndex };
+    }
+    /**
+     * Computes the line start map of the given text. This can be used in order to
+     * retrieve the line and character of a given text position index.
+     */
+    function computeLineStartsMap(text) {
+        const result = [0];
+        let pos = 0;
+        while (pos < text.length) {
+            const char = text.charCodeAt(pos++);
+            // Handles the "CRLF" line break. In that case we peek the character
+            // after the "CR" and check if it is a line feed.
+            if (char === CR_CHAR) {
+                if (text.charCodeAt(pos) === LF_CHAR) {
+                    pos++;
+                }
+                result.push(pos);
+            }
+            else if (char === LF_CHAR || char === LINE_SEP_CHAR || char === PARAGRAPH_CHAR) {
+                result.push(pos);
+            }
+        }
+        result.push(pos);
+        return result;
+    }
+    /** Finds the closest line start for the given position. */
+    function findClosestLineStartPosition(linesMap, position, low = 0, high = linesMap.length - 1) {
+        while (low <= high) {
+            const pivotIdx = Math.floor((low + high) / 2);
+            const pivotEl = linesMap[pivotIdx];
+            if (pivotEl === position) {
+                return pivotIdx;
+            }
+            else if (position > pivotEl) {
+                low = pivotIdx + 1;
+            }
+            else {
+                high = pivotIdx - 1;
+            }
+        }
+        // In case there was no exact match, return the closest "lower" line index. We also
+        // subtract the index by one because want the index of the previous line start.
+        return low - 1;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Represents the source of a template that was processed during type-checking. This information is
+     * used when translating parse offsets in diagnostics back to their original line/column location.
+     */
+    class TemplateSource {
+        constructor(mapping, file) {
+            this.mapping = mapping;
+            this.file = file;
+            this.lineStarts = null;
+        }
+        toParseSourceSpan(start, end) {
+            const startLoc = this.toParseLocation(start);
+            const endLoc = this.toParseLocation(end);
+            return new ParseSourceSpan(startLoc, endLoc);
+        }
+        toParseLocation(position) {
+            const lineStarts = this.acquireLineStarts();
+            const { line, character } = getLineAndCharacterFromPosition(lineStarts, position);
+            return new ParseLocation(this.file, position, line, character);
+        }
+        acquireLineStarts() {
+            if (this.lineStarts === null) {
+                this.lineStarts = computeLineStartsMap(this.file.content);
+            }
+            return this.lineStarts;
+        }
+    }
+    /**
+     * Assigns IDs to templates and keeps track of their origins.
+     *
+     * Implements `TemplateSourceResolver` to resolve the source of a template based on these IDs.
+     */
+    class TemplateSourceManager {
+        constructor() {
+            /**
+             * This map keeps track of all template sources that have been type-checked by the id that is
+             * attached to a TCB's function declaration as leading trivia. This enables translation of
+             * diagnostics produced for TCB code to their source location in the template.
+             */
+            this.templateSources = new Map();
+        }
+        getTemplateId(node) {
+            return getTemplateId$1(node);
+        }
+        captureSource(node, mapping, file) {
+            const id = getTemplateId$1(node);
+            this.templateSources.set(id, new TemplateSource(mapping, file));
+            return id;
+        }
+        getSourceMapping(id) {
+            if (!this.templateSources.has(id)) {
+                throw new Error(`Unexpected unknown template ID: ${id}`);
+            }
+            return this.templateSources.get(id).mapping;
+        }
+        toParseSourceSpan(id, span) {
+            if (!this.templateSources.has(id)) {
+                return null;
+            }
+            const templateSource = this.templateSources.get(id);
+            return templateSource.toParseSourceSpan(span.start, span.end);
+        }
+    }
+    const TEMPLATE_ID = Symbol('ngTemplateId');
+    const NEXT_TEMPLATE_ID = Symbol('ngNextTemplateId');
+    function getTemplateId$1(node) {
+        if (node[TEMPLATE_ID] === undefined) {
+            node[TEMPLATE_ID] = allocateTemplateId(node.getSourceFile());
+        }
+        return node[TEMPLATE_ID];
+    }
+    function allocateTemplateId(sf) {
+        if (sf[NEXT_TEMPLATE_ID] === undefined) {
+            sf[NEXT_TEMPLATE_ID] = 1;
+        }
+        return (`tcb${sf[NEXT_TEMPLATE_ID]++}`);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Primary template type-checking engine, which performs type-checking using a
      * `TypeCheckingProgramStrategy` for type-checking program maintenance, and the
      * `ProgramTypeCheckAdapter` for generation of template type-checking code.
      */
-    class TemplateTypeChecker {
+    class TemplateTypeCheckerImpl {
         constructor(originalProgram, typeCheckingStrategy, typeCheckAdapter, config, refEmitter, reflector, compilerHost, priorBuild) {
             this.originalProgram = originalProgram;
             this.typeCheckingStrategy = typeCheckingStrategy;
@@ -34093,64 +34224,353 @@ export * from '${relativeEntryPoint}';
             this.reflector = reflector;
             this.compilerHost = compilerHost;
             this.priorBuild = priorBuild;
-            this.files = new Map();
+            this.state = new Map();
+            this.isComplete = false;
         }
-        /**
-         * Reset the internal type-checking program by generating type-checking code from the user's
-         * program.
-         */
-        refresh() {
-            this.files.clear();
-            const ctx = new TypeCheckContext(this.config, this.compilerHost, this.refEmitter, this.reflector);
-            // Typecheck all the files.
-            for (const sf of this.originalProgram.getSourceFiles()) {
-                if (sf.isDeclarationFile || isShim(sf)) {
-                    continue;
-                }
-                const previousResults = this.priorBuild.priorTypeCheckingResultsFor(sf);
-                if (previousResults === null) {
-                    // Previous results were not available, so generate new type-checking code for this file.
-                    this.typeCheckAdapter.typeCheck(sf, ctx);
-                }
-                else {
-                    // Previous results were available, and can be adopted into the current build.
-                    ctx.adoptPriorResults(sf, previousResults);
+        resetOverrides() {
+            for (const fileRecord of this.state.values()) {
+                if (fileRecord.templateOverrides !== null) {
+                    fileRecord.templateOverrides = null;
+                    fileRecord.shimData.clear();
+                    fileRecord.isComplete = false;
                 }
             }
-            const results = ctx.finalize();
-            this.typeCheckingStrategy.updateFiles(results.updates, UpdateMode.Complete);
-            for (const [file, fileData] of results.perFileData) {
-                this.files.set(file, fileData);
+        }
+        overrideComponentTemplate(component, template) {
+            const { nodes, errors } = parseTemplate(template, 'override.html', {
+                preserveWhitespaces: true,
+                leadingTriviaChars: [],
+            });
+            if (errors !== undefined) {
+                return { nodes, errors };
             }
-            return results;
+            const filePath = absoluteFromSourceFile(component.getSourceFile());
+            const fileRecord = this.getFileData(filePath);
+            const id = fileRecord.sourceManager.getTemplateId(component);
+            if (fileRecord.templateOverrides === null) {
+                fileRecord.templateOverrides = new Map();
+            }
+            fileRecord.templateOverrides.set(id, nodes);
+            // Clear data for the shim in question, so it'll be regenerated on the next request.
+            const shimFile = this.typeCheckingStrategy.shimPathForComponent(component);
+            fileRecord.shimData.delete(shimFile);
+            fileRecord.isComplete = false;
+            this.isComplete = false;
+            return { nodes };
         }
         /**
          * Retrieve type-checking diagnostics from the given `ts.SourceFile` using the most recent
          * type-checking program.
          */
-        getDiagnosticsForFile(sf) {
-            const path = absoluteFromSourceFile(sf);
-            if (!this.files.has(path)) {
+        getDiagnosticsForFile(sf, optimizeFor) {
+            switch (optimizeFor) {
+                case OptimizeFor.WholeProgram:
+                    this.ensureAllShimsForAllFiles();
+                    break;
+                case OptimizeFor.SingleFile:
+                    this.ensureAllShimsForOneFile(sf);
+                    break;
+            }
+            const sfPath = absoluteFromSourceFile(sf);
+            const fileRecord = this.state.get(sfPath);
+            const typeCheckProgram = this.typeCheckingStrategy.getProgram();
+            const diagnostics = [];
+            if (fileRecord.hasInlines) {
+                const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
+                diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(inlineSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+            }
+            for (const [shimPath, shimRecord] of fileRecord.shimData) {
+                const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
+                diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(shimSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+                diagnostics.push(...shimRecord.genesisDiagnostics);
+            }
+            return diagnostics.filter((diag) => diag !== null);
+        }
+        getDiagnosticsForComponent(component) {
+            this.ensureShimForComponent(component);
+            const sf = component.getSourceFile();
+            const sfPath = absoluteFromSourceFile(sf);
+            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+            const fileRecord = this.getFileData(sfPath);
+            if (!fileRecord.shimData.has(shimPath)) {
                 return [];
             }
-            const record = this.files.get(path);
+            const templateId = fileRecord.sourceManager.getTemplateId(component);
+            const shimRecord = fileRecord.shimData.get(shimPath);
             const typeCheckProgram = this.typeCheckingStrategy.getProgram();
-            const typeCheckSf = getSourceFileOrError(typeCheckProgram, record.typeCheckFile);
-            const rawDiagnostics = [];
-            rawDiagnostics.push(...typeCheckProgram.getSemanticDiagnostics(typeCheckSf));
-            if (record.hasInlines) {
-                const inlineSf = getSourceFileOrError(typeCheckProgram, path);
-                rawDiagnostics.push(...typeCheckProgram.getSemanticDiagnostics(inlineSf));
+            const diagnostics = [];
+            if (shimRecord.hasInlines) {
+                const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
+                diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(inlineSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
             }
-            return rawDiagnostics
-                .map(diag => {
-                if (!shouldReportDiagnostic(diag)) {
-                    return null;
+            const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
+            diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(shimSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+            diagnostics.push(...shimRecord.genesisDiagnostics);
+            return diagnostics.filter((diag) => diag !== null && diag.templateId === templateId);
+        }
+        getTypeCheckBlock(component) {
+            this.ensureAllShimsForOneFile(component.getSourceFile());
+            const program = this.typeCheckingStrategy.getProgram();
+            const filePath = absoluteFromSourceFile(component.getSourceFile());
+            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+            if (!this.state.has(filePath)) {
+                throw new Error(`Error: no data for source file: ${filePath}`);
+            }
+            const fileRecord = this.state.get(filePath);
+            const id = fileRecord.sourceManager.getTemplateId(component);
+            const shimSf = getSourceFileOrNull(program, shimPath);
+            if (shimSf === null || !fileRecord.shimData.has(shimPath)) {
+                throw new Error(`Error: no shim file in program: ${shimPath}`);
+            }
+            let node = findTypeCheckBlock(shimSf, id);
+            if (node === null) {
+                // Try for an inline block.
+                const inlineSf = getSourceFileOrError(program, filePath);
+                node = findTypeCheckBlock(inlineSf, id);
+            }
+            return node;
+        }
+        maybeAdoptPriorResultsForFile(sf) {
+            const sfPath = absoluteFromSourceFile(sf);
+            if (this.state.has(sfPath)) {
+                const existingResults = this.state.get(sfPath);
+                if (existingResults.templateOverrides !== null) {
+                    // Cannot adopt prior results if template overrides have been requested.
+                    return;
                 }
-                return translateDiagnostic(diag, record.sourceResolver);
-            })
-                .filter((diag) => diag !== null)
-                .concat(record.genesisDiagnostics);
+                if (existingResults.isComplete) {
+                    // All data for this file has already been generated, so no need to adopt anything.
+                    return;
+                }
+            }
+            const previousResults = this.priorBuild.priorTypeCheckingResultsFor(sf);
+            if (previousResults === null || !previousResults.isComplete ||
+                previousResults.templateOverrides !== null) {
+                return;
+            }
+            this.state.set(sfPath, previousResults);
+        }
+        ensureAllShimsForAllFiles() {
+            if (this.isComplete) {
+                return;
+            }
+            const host = new WholeProgramTypeCheckingHost(this);
+            const ctx = this.newContext(host);
+            for (const sf of this.originalProgram.getSourceFiles()) {
+                if (sf.isDeclarationFile || isShim(sf)) {
+                    continue;
+                }
+                this.maybeAdoptPriorResultsForFile(sf);
+                const sfPath = absoluteFromSourceFile(sf);
+                const fileData = this.getFileData(sfPath);
+                if (fileData.isComplete) {
+                    continue;
+                }
+                this.typeCheckAdapter.typeCheck(sf, ctx);
+                fileData.isComplete = true;
+            }
+            this.updateFromContext(ctx);
+            this.isComplete = true;
+        }
+        ensureAllShimsForOneFile(sf) {
+            this.maybeAdoptPriorResultsForFile(sf);
+            const sfPath = absoluteFromSourceFile(sf);
+            const fileData = this.getFileData(sfPath);
+            if (fileData.isComplete) {
+                // All data for this file is present and accounted for already.
+                return;
+            }
+            const host = new SingleFileTypeCheckingHost(sfPath, fileData, this.typeCheckingStrategy, this);
+            const ctx = this.newContext(host);
+            this.typeCheckAdapter.typeCheck(sf, ctx);
+            fileData.isComplete = true;
+            this.updateFromContext(ctx);
+        }
+        ensureShimForComponent(component) {
+            const sf = component.getSourceFile();
+            const sfPath = absoluteFromSourceFile(sf);
+            this.maybeAdoptPriorResultsForFile(sf);
+            const fileData = this.getFileData(sfPath);
+            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+            if (fileData.shimData.has(shimPath)) {
+                // All data for this component is available.
+                return;
+            }
+            const host = new SingleShimTypeCheckingHost(sfPath, fileData, this.typeCheckingStrategy, this, shimPath);
+            const ctx = this.newContext(host);
+            this.typeCheckAdapter.typeCheck(sf, ctx);
+            this.updateFromContext(ctx);
+        }
+        newContext(host) {
+            const inlining = this.typeCheckingStrategy.supportsInlineOperations ? InliningMode.InlineOps :
+                InliningMode.Error;
+            return new TypeCheckContextImpl(this.config, this.compilerHost, this.typeCheckingStrategy, this.refEmitter, this.reflector, host, inlining);
+        }
+        /**
+         * Remove any shim data that depends on inline operations applied to the type-checking program.
+         *
+         * This can be useful if new inlines need to be applied, and it's not possible to guarantee that
+         * they won't overwrite or corrupt existing inlines that are used by such shims.
+         */
+        clearAllShimDataUsingInlines() {
+            for (const fileData of this.state.values()) {
+                if (!fileData.hasInlines) {
+                    continue;
+                }
+                for (const [shimFile, shimData] of fileData.shimData.entries()) {
+                    if (shimData.hasInlines) {
+                        fileData.shimData.delete(shimFile);
+                    }
+                }
+                fileData.hasInlines = false;
+                fileData.isComplete = false;
+                this.isComplete = false;
+            }
+        }
+        updateFromContext(ctx) {
+            const updates = ctx.finalize();
+            this.typeCheckingStrategy.updateFiles(updates, UpdateMode.Incremental);
+            this.priorBuild.recordSuccessfulTypeCheck(this.state);
+        }
+        getFileData(path) {
+            if (!this.state.has(path)) {
+                this.state.set(path, {
+                    hasInlines: false,
+                    templateOverrides: null,
+                    sourceManager: new TemplateSourceManager(),
+                    isComplete: false,
+                    shimData: new Map(),
+                });
+            }
+            return this.state.get(path);
+        }
+    }
+    function convertDiagnostic(diag, sourceResolver) {
+        if (!shouldReportDiagnostic(diag)) {
+            return null;
+        }
+        return translateDiagnostic(diag, sourceResolver);
+    }
+    /**
+     * Drives a `TypeCheckContext` to generate type-checking code for every component in the program.
+     */
+    class WholeProgramTypeCheckingHost {
+        constructor(impl) {
+            this.impl = impl;
+        }
+        getSourceManager(sfPath) {
+            return this.impl.getFileData(sfPath).sourceManager;
+        }
+        shouldCheckComponent(node) {
+            const fileData = this.impl.getFileData(absoluteFromSourceFile(node.getSourceFile()));
+            const shimPath = this.impl.typeCheckingStrategy.shimPathForComponent(node);
+            // The component needs to be checked unless the shim which would contain it already exists.
+            return !fileData.shimData.has(shimPath);
+        }
+        getTemplateOverride(sfPath, node) {
+            const fileData = this.impl.getFileData(sfPath);
+            if (fileData.templateOverrides === null) {
+                return null;
+            }
+            const templateId = fileData.sourceManager.getTemplateId(node);
+            if (fileData.templateOverrides.has(templateId)) {
+                return fileData.templateOverrides.get(templateId);
+            }
+            return null;
+        }
+        recordShimData(sfPath, data) {
+            const fileData = this.impl.getFileData(sfPath);
+            fileData.shimData.set(data.path, data);
+            if (data.hasInlines) {
+                fileData.hasInlines = true;
+            }
+        }
+        recordComplete(sfPath) {
+            this.impl.getFileData(sfPath).isComplete = true;
+        }
+    }
+    /**
+     * Drives a `TypeCheckContext` to generate type-checking code efficiently for a single input file.
+     */
+    class SingleFileTypeCheckingHost {
+        constructor(sfPath, fileData, strategy, impl) {
+            this.sfPath = sfPath;
+            this.fileData = fileData;
+            this.strategy = strategy;
+            this.impl = impl;
+            this.seenInlines = false;
+        }
+        assertPath(sfPath) {
+            if (this.sfPath !== sfPath) {
+                throw new Error(`AssertionError: querying TypeCheckingHost outside of assigned file`);
+            }
+        }
+        getSourceManager(sfPath) {
+            this.assertPath(sfPath);
+            return this.fileData.sourceManager;
+        }
+        shouldCheckComponent(node) {
+            if (this.sfPath !== absoluteFromSourceFile(node.getSourceFile())) {
+                return false;
+            }
+            const shimPath = this.strategy.shimPathForComponent(node);
+            // Only need to generate a TCB for the class if no shim exists for it currently.
+            return !this.fileData.shimData.has(shimPath);
+        }
+        getTemplateOverride(sfPath, node) {
+            this.assertPath(sfPath);
+            if (this.fileData.templateOverrides === null) {
+                return null;
+            }
+            const templateId = this.fileData.sourceManager.getTemplateId(node);
+            if (this.fileData.templateOverrides.has(templateId)) {
+                return this.fileData.templateOverrides.get(templateId);
+            }
+            return null;
+        }
+        recordShimData(sfPath, data) {
+            this.assertPath(sfPath);
+            // Previous type-checking state may have required the use of inlines (assuming they were
+            // supported). If the current operation also requires inlines, this presents a problem:
+            // generating new inlines may invalidate any old inlines that old state depends on.
+            //
+            // Rather than resolve this issue by tracking specific dependencies on inlines, if the new state
+            // relies on inlines, any old state that relied on them is simply cleared. This happens when the
+            // first new state that uses inlines is encountered.
+            if (data.hasInlines && !this.seenInlines) {
+                this.impl.clearAllShimDataUsingInlines();
+                this.seenInlines = true;
+            }
+            this.fileData.shimData.set(data.path, data);
+            if (data.hasInlines) {
+                this.fileData.hasInlines = true;
+            }
+        }
+        recordComplete(sfPath) {
+            this.assertPath(sfPath);
+            this.fileData.isComplete = true;
+        }
+    }
+    /**
+     * Drives a `TypeCheckContext` to generate type-checking code efficiently for only those components
+     * which map to a single shim of a single input file.
+     */
+    class SingleShimTypeCheckingHost extends SingleFileTypeCheckingHost {
+        constructor(sfPath, fileData, strategy, impl, shimPath) {
+            super(sfPath, fileData, strategy, impl);
+            this.shimPath = shimPath;
+        }
+        shouldCheckNode(node) {
+            if (this.sfPath !== absoluteFromSourceFile(node.getSourceFile())) {
+                return false;
+            }
+            // Only generate a TCB for the component if it maps to the requested shim file.
+            const shimPath = this.strategy.shimPathForComponent(node);
+            if (shimPath !== this.shimPath) {
+                return false;
+            }
+            // Only need to generate a TCB for the class if no shim exists for it currently.
+            return !this.fileData.shimData.has(shimPath);
         }
     }
 
@@ -34296,6 +34716,9 @@ export * from '${relativeEntryPoint}';
          */
         getNextProgram() {
             return this.nextProgram;
+        }
+        getTemplateTypeChecker() {
+            return this.ensureAnalyzed().templateTypeChecker;
         }
         /**
          * Perform Angular's analysis step (as a precursor to `getDiagnostics` or `prepareEmit`)
@@ -34547,11 +34970,6 @@ export * from '${relativeEntryPoint}';
                 return [];
             }
             const compilation = this.ensureAnalyzed();
-            // Execute the typeCheck phase of each decorator in the program.
-            const prepSpan = this.perfRecorder.start('typeCheckPrep');
-            const results = compilation.templateTypeChecker.refresh();
-            this.incrementalDriver.recordSuccessfulTypeCheck(results.perFileData);
-            this.perfRecorder.stop(prepSpan);
             // Get the diagnostics.
             const typeCheckSpan = this.perfRecorder.start('typeCheckDiagnostics');
             const diagnostics = [];
@@ -34559,7 +34977,7 @@ export * from '${relativeEntryPoint}';
                 if (sf.isDeclarationFile || this.adapter.isShim(sf)) {
                     continue;
                 }
-                diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf));
+                diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, OptimizeFor.WholeProgram));
             }
             const program = this.typeCheckingProgramStrategy.getProgram();
             this.perfRecorder.stop(typeCheckSpan);
@@ -34739,7 +35157,7 @@ export * from '${relativeEntryPoint}';
                 new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.options.i18nInLocale),
             ];
             const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, dtsTransforms);
-            const templateTypeChecker = new TemplateTypeChecker(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver);
+            const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver);
             return {
                 isCore,
                 traitCompiler,
@@ -35218,6 +35636,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function createTypeCheckingProgramStrategy(project) {
         return {
+            supportsInlineOperations: false,
+            shimPathForComponent(component) {
+                return TypeCheckShimGenerator.shimFor(absoluteFromSourceFile(component.getSourceFile()));
+            },
             getProgram() {
                 const program = project.getLanguageService().getProgram();
                 if (!program) {
