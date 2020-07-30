@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.3+19.sha-3a525d1
+ * @license Angular v10.1.0-next.3+20.sha-fd51e01
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17634,7 +17634,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.3+19.sha-3a525d1');
+    const VERSION$1 = new Version('10.1.0-next.3+20.sha-fd51e01');
 
     /**
      * @license
@@ -20238,7 +20238,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     const prop = propData
                         .find(a => a['__symbolic'] == 'property' || a['__symbolic'] == 'method');
                     const decorators = [];
-                    if (propMetadata[propName]) {
+                    // hasOwnProperty() is used here to make sure we do not look up methods
+                    // on `Object.prototype`.
+                    if (propMetadata === null || propMetadata === void 0 ? void 0 : propMetadata.hasOwnProperty(propName)) {
                         decorators.push(...propMetadata[propName]);
                     }
                     propMetadata[propName] = decorators;
@@ -33508,7 +33510,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.3+19.sha-3a525d1');
+    const VERSION$2 = new Version$1('10.1.0-next.3+20.sha-fd51e01');
 
     /**
      * @license
