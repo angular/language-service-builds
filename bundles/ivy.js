@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.6+19.sha-4a6abbd
+ * @license Angular v10.0.6+20.sha-a15d7ac
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18848,7 +18848,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.6+19.sha-4a6abbd');
+    const VERSION$1 = new Version('10.0.6+20.sha-a15d7ac');
 
     /**
      * @license
@@ -19437,7 +19437,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.0.6+19.sha-4a6abbd');
+    const VERSION$2 = new Version('10.0.6+20.sha-a15d7ac');
 
     /**
      * @license
@@ -20236,7 +20236,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         ['ɵɵInjectorDef', 'ɵɵInjectorDef'],
         ['ɵɵNgModuleDefWithMeta', 'ɵɵNgModuleDefWithMeta'],
         ['ɵNgModuleFactory', 'NgModuleFactory'],
-        ['ɵnoSideEffects', 'ɵnoSideEffects'],
     ]);
     const CORE_MODULE = '@angular/core';
     /**
@@ -30075,7 +30074,7 @@ export * from '${relativeEntryPoint}';
                 // For each symbol name, generate a constant export of the corresponding NgFactory.
                 // This will encompass a lot of symbols which don't need factories, but that's okay
                 // because it won't miss any that do.
-                const varLines = symbolNames.map(name => `export const ${name}NgFactory: i0.ɵNgModuleFactory<any> = i0.ɵnoSideEffects(() => new i0.ɵNgModuleFactory(${name}));`);
+                const varLines = symbolNames.map(name => `export const ${name}NgFactory: i0.ɵNgModuleFactory<any> = new i0.ɵNgModuleFactory(${name});`);
                 sourceText += [
                     // This might be incorrect if the current package being compiled is Angular core, but it's
                     // okay to leave in at type checking time. TypeScript can handle this reference via its path
