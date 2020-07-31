@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.6+21.sha-879ff08f
+ * @license Angular v10.0.7+2.sha-7ff5ef2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4208,8 +4208,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         callMethod(name, params, sourceSpan) {
             return new InvokeMethodExpr(this, name, params, null, sourceSpan);
         }
-        callFn(params, sourceSpan) {
-            return new InvokeFunctionExpr(this, params, null, sourceSpan);
+        callFn(params, sourceSpan, pure) {
+            return new InvokeFunctionExpr(this, params, null, sourceSpan, pure);
         }
         instantiate(params, type, sourceSpan) {
             return new InstantiateExpr(this, params, type, sourceSpan);
@@ -7109,7 +7109,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         else {
             const baseFactory = variable(`ɵ${meta.name}_BaseFactory`);
             const getInheritedFactory = importExpr(Identifiers$1.getInheritedFactory);
-            const baseFactoryStmt = baseFactory.set(getInheritedFactory.callFn([meta.internalType]))
+            const baseFactoryStmt = baseFactory
+                .set(getInheritedFactory.callFn([meta.internalType], /* sourceSpan */ undefined, /* pure */ true))
                 .toDeclStmt(INFERRED_TYPE, [StmtModifier.Exported, StmtModifier.Final]);
             statements.push(baseFactoryStmt);
             // There is no constructor, use the base class' factory to construct typeForCtor.
@@ -18848,7 +18849,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.6+21.sha-879ff08f');
+    const VERSION$1 = new Version('10.0.7+2.sha-7ff5ef2');
 
     /**
      * @license
@@ -19437,7 +19438,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.0.6+21.sha-879ff08f');
+    const VERSION$2 = new Version('10.0.7+2.sha-7ff5ef2');
 
     /**
      * @license
@@ -35383,12 +35384,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         constructor(project, options) {
             this.project = project;
             this.options = options;
+            this.lastKnownProgram = null;
             this.tsCompilerHost = makeCompilerHostFromProject(project);
-            const ngCompilerHost = NgCompilerHost.wrap(this.tsCompilerHost, project.getRootFiles(), // input files
-            options, null);
             this.strategy = createTypeCheckingProgramStrategy(project);
-            this.lastKnownProgram = this.strategy.getProgram();
-            this.compiler = new NgCompiler(ngCompilerHost, options, this.lastKnownProgram, this.strategy, new PatchedProgramIncrementalBuildStrategy());
+            // Do not retrieve the program in constructor because project is still in
+            // the process of loading, and not all data members have been initialized.
         }
         setCompilerOptions(options) {
             this.options = options;
@@ -35397,12 +35397,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const inputFiles = this.project.getRootFiles();
             const ngCompilerHost = NgCompilerHost.wrap(this.tsCompilerHost, inputFiles, this.options, this.lastKnownProgram);
             const program = this.strategy.getProgram();
-            this.compiler = new NgCompiler(ngCompilerHost, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), this.lastKnownProgram);
+            const compiler = new NgCompiler(ngCompilerHost, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), this.lastKnownProgram);
             try {
                 // This is the only way to force the compiler to update the typecheck file
                 // in the program. We have to do try-catch because the compiler immediately
                 // throws if it fails to parse any template in the entire program!
-                const d = this.compiler.getDiagnostics();
+                const d = compiler.getDiagnostics();
                 if (d.length) {
                     // There could be global compilation errors. It's useful to print them
                     // out in development.
@@ -35413,11 +35413,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 console.error('Failed to analyze program', e.message);
                 return;
             }
-            this.lastKnownProgram = this.compiler.getNextProgram();
-            return this.lastKnownProgram;
-        }
-        getDiagnostics(sourceFile) {
-            return this.compiler.getDiagnostics(sourceFile);
+            this.lastKnownProgram = compiler.getNextProgram();
+            return {
+                compiler,
+                program: this.lastKnownProgram,
+            };
         }
     }
     function createTypeCheckingProgramStrategy(project) {
@@ -35484,15 +35484,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.compiler = new Compiler(project, this.options);
         }
         getSemanticDiagnostics(fileName) {
-            const program = this.compiler.analyze();
-            if (!program) {
+            const result = this.compiler.analyze();
+            if (!result) {
                 return [];
             }
+            const { compiler, program } = result;
             const sourceFile = program.getSourceFile(fileName);
             if (!sourceFile) {
                 return [];
             }
-            return this.compiler.getDiagnostics(sourceFile);
+            return compiler.getDiagnostics(sourceFile);
         }
         watchConfigFile(project) {
             // TODO: Check the case when the project is disposed. An InferredProject
