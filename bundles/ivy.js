@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.3+38.sha-3a46c2d
+ * @license Angular v10.1.0-next.3+39.sha-ff9f4de
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -10838,6 +10838,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function _unknownEntityErrorMsg(entitySrc) {
         return `Unknown entity "${entitySrc}" - use the "&#<decimal>;" or  "&#x<hex>;" syntax`;
     }
+    function _unparsableEntityErrorMsg(type, entityStr) {
+        return `Unable to parse entity "${entityStr}" - ${type} character reference entities must end with ";"`;
+    }
+    var CharacterReferenceType;
+    (function (CharacterReferenceType) {
+        CharacterReferenceType["HEX"] = "hexadecimal";
+        CharacterReferenceType["DEC"] = "decimal";
+    })(CharacterReferenceType || (CharacterReferenceType = {}));
     class _ControlFlowError {
         constructor(error) {
             this.error = error;
@@ -11069,7 +11077,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const codeStart = this._cursor.clone();
                 this._attemptCharCodeUntilFn(isDigitEntityEnd);
                 if (this._cursor.peek() != $SEMICOLON) {
-                    throw this._createError(_unexpectedCharacterErrorMsg(this._cursor.peek()), this._cursor.getSpan());
+                    // Advance cursor to include the peeked character in the string provided to the error
+                    // message.
+                    this._cursor.advance();
+                    const entityType = isHex ? CharacterReferenceType.HEX : CharacterReferenceType.DEC;
+                    throw this._createError(_unparsableEntityErrorMsg(entityType, this._cursor.getChars(start)), this._cursor.getSpan());
                 }
                 const strNum = this._cursor.getChars(codeStart);
                 this._cursor.advance();
@@ -18856,7 +18868,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.3+38.sha-3a46c2d');
+    const VERSION$1 = new Version('10.1.0-next.3+39.sha-ff9f4de');
 
     /**
      * @license
@@ -19445,7 +19457,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.3+38.sha-3a46c2d');
+    const VERSION$2 = new Version('10.1.0-next.3+39.sha-ff9f4de');
 
     /**
      * @license
