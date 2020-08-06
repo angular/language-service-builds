@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.4+17.sha-18cd1a9
+ * @license Angular v10.1.0-next.4+19.sha-26be5b4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17647,7 +17647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.4+17.sha-18cd1a9');
+    const VERSION$1 = new Version('10.1.0-next.4+19.sha-26be5b4');
 
     /**
      * @license
@@ -28904,8 +28904,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Patch a `debug` property on top of the existing object.
+     *
+     * NOTE: always call this method with `ngDevMode && attachDebugObject(...)`
+     *
+     * @param obj Object to patch
+     * @param debug Value to patch
+     */
     function attachDebugObject(obj, debug) {
-        Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
+        if (ngDevMode) {
+            Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
+        }
+        else {
+            throw new Error('This method should be guarded with `ngDevMode` so that it can be tree shaken in production!');
+        }
     }
 
     /**
@@ -29576,6 +29589,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const tNode = tView.data[adjustedIndex] ||
             createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs);
         setPreviousOrParentTNode(tNode, true);
+        if (ngDevMode) ;
         return tNode;
     }
     function createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs) {
@@ -33523,7 +33537,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.4+17.sha-18cd1a9');
+    const VERSION$2 = new Version$1('10.1.0-next.4+19.sha-26be5b4');
 
     /**
      * @license
