@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.4+15.sha-dca4443
+ * @license Angular v10.1.0-next.4+12.sha-696a9b0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18868,7 +18868,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.4+15.sha-dca4443');
+    const VERSION$1 = new Version('10.1.0-next.4+12.sha-696a9b0');
 
     /**
      * @license
@@ -19457,7 +19457,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.4+15.sha-dca4443');
+    const VERSION$2 = new Version('10.1.0-next.4+12.sha-696a9b0');
 
     /**
      * @license
@@ -20257,7 +20257,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         ['ɵɵInjectorDef', 'ɵɵInjectorDef'],
         ['ɵɵNgModuleDefWithMeta', 'ɵɵNgModuleDefWithMeta'],
         ['ɵNgModuleFactory', 'NgModuleFactory'],
-        ['ɵnoSideEffects', 'ɵnoSideEffects'],
     ]);
     const CORE_MODULE = '@angular/core';
     /**
@@ -27239,10 +27238,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 rawDeclarations: analysis.rawDeclarations,
             });
             if (this.factoryTracker !== null) {
-                this.factoryTracker.track(node.getSourceFile(), {
-                    name: analysis.factorySymbolName,
-                    hasId: analysis.id !== null,
-                });
+                this.factoryTracker.track(node.getSourceFile(), analysis.factorySymbolName);
             }
             this.injectableRegistry.registerInjectable(node);
         }
@@ -30353,17 +30349,14 @@ export * from '${relativeEntryPoint}';
             if (sf.moduleName !== undefined) {
                 genFile.moduleName = generatedModuleName(sf.moduleName, sf.fileName, '.ngfactory');
             }
-            const moduleSymbols = new Map();
-            this.sourceToFactorySymbols.set(absoluteSfPath, moduleSymbols);
-            this.sourceInfo.set(genFilePath, {
-                sourceFilePath: absoluteSfPath,
-                moduleSymbols,
-            });
+            const moduleSymbolNames = new Set();
+            this.sourceToFactorySymbols.set(absoluteSfPath, moduleSymbolNames);
+            this.sourceInfo.set(genFilePath, { sourceFilePath: absoluteSfPath, moduleSymbolNames });
             return genFile;
         }
-        track(sf, moduleInfo) {
+        track(sf, factorySymbolName) {
             if (this.sourceToFactorySymbols.has(sf.fileName)) {
-                this.sourceToFactorySymbols.get(sf.fileName).set(moduleInfo.name, moduleInfo);
+                this.sourceToFactorySymbols.get(sf.fileName).add(factorySymbolName);
             }
         }
     }
@@ -30384,7 +30377,7 @@ export * from '${relativeEntryPoint}';
             // Don't transform non-generated code.
             return file;
         }
-        const { moduleSymbols, sourceFilePath } = factoryMap.get(file.fileName);
+        const { moduleSymbolNames, sourceFilePath } = factoryMap.get(file.fileName);
         file = ts.getMutableClone(file);
         // Not every exported factory statement is valid. They were generated before the program was
         // analyzed, and before ngtsc knew which symbols were actually NgModules. factoryMap contains
@@ -30434,21 +30427,8 @@ export * from '${relativeEntryPoint}';
                     }
                     // Otherwise, check if this export is a factory for a known NgModule, and retain it if so.
                     const match = STRIP_NG_FACTORY.exec(decl.name.text);
-                    const module = match ? moduleSymbols.get(match[1]) : null;
-                    if (module) {
-                        // If the module can be tree shaken, then the factory should be wrapped in a
-                        // `noSideEffects()` call which tells Closure to treat the expression as pure, allowing
-                        // it to be removed if the result is not used.
-                        //
-                        // `NgModule`s with an `id` property will be lazy loaded. Google-internal lazy loading
-                        // infra relies on a side effect from the `new NgModuleFactory()` call, which registers
-                        // the module globally. Because of this, we **cannot** tree shake any module which has
-                        // an `id` property. Doing so would cause lazy loaded modules to never be registered.
-                        const moduleIsTreeShakable = !module.hasId;
-                        const newStmt = !moduleIsTreeShakable ?
-                            stmt :
-                            updateInitializers(stmt, (init) => init ? wrapInNoSideEffects(init) : undefined);
-                        transformedStatements.push(newStmt);
+                    if (match !== null && moduleSymbolNames.has(match[1])) {
+                        transformedStatements.push(stmt);
                     }
                 }
                 else {
@@ -30515,39 +30495,6 @@ export * from '${relativeEntryPoint}';
             return null;
         }
         return commentText;
-    }
-    /**
-     * Wraps the given expression in a call to `ɵnoSideEffects()`, which tells
-     * Closure we don't care about the side effects of this expression and it should
-     * be treated as "pure". Closure is free to tree shake this expression if its
-     * result is not used.
-     *
-     * Example: Takes `1 + 2` and returns `i0.ɵnoSideEffects(() => 1 + 2)`.
-     */
-    function wrapInNoSideEffects(expr) {
-        const noSideEffects = ts.createPropertyAccess(ts.createIdentifier('i0'), 'ɵnoSideEffects');
-        return ts.createCall(noSideEffects, 
-        /* typeArguments */ [], 
-        /* arguments */
-        [
-            ts.createFunctionExpression(
-            /* modifiers */ [], 
-            /* asteriskToken */ undefined, 
-            /* name */ undefined, 
-            /* typeParameters */ [], 
-            /* parameters */ [], 
-            /* type */ undefined, 
-            /* body */ ts.createBlock([
-                ts.createReturn(expr),
-            ])),
-        ]);
-    }
-    /**
-     * Clones and updates the initializers for a given statement to use the new
-     * expression provided. Does not mutate the input statement.
-     */
-    function updateInitializers(stmt, update) {
-        return ts.updateVariableStatement(stmt, stmt.modifiers, ts.updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts.updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
     }
 
     /**
