@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.8+19.sha-deb290b
+ * @license Angular v10.0.8+20.sha-ef7b70a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17640,7 +17640,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.8+19.sha-deb290b');
+    const VERSION$1 = new Version('10.0.8+20.sha-ef7b70a');
 
     /**
      * @license
@@ -28662,6 +28662,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
 
     /**
+     * Converts `TNodeType` into human readable text.
+     * Make sure this matches with `TNodeType`
+     */
+    const TNodeTypeAsString = [
+        'Container',
+        'Projection',
+        'View',
+        'Element',
+        'ElementContainer',
+        'IcuContainer' // 5
+    ];
+
+    /**
      * @license
      * Copyright Google LLC All Rights Reserved.
      *
@@ -29032,8 +29045,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         firstChild, //
         schemas, //
         consts, //
-        incompleteFirstPass //
-        ) {
+        incompleteFirstPass, //
+        _decls, //
+        _vars) {
             this.type = type;
             this.id = id;
             this.blueprint = blueprint;
@@ -29065,6 +29079,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.schemas = schemas;
             this.consts = consts;
             this.incompleteFirstPass = incompleteFirstPass;
+            this._decls = _decls;
+            this._vars = _vars;
         }
         get template_() {
             const buf = [];
@@ -29320,7 +29336,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         get parent() {
             return toDebug(this._raw_lView[PARENT]);
         }
-        get host() {
+        get hostHTML() {
             return toHtml(this._raw_lView[HOST], true);
         }
         get html() {
@@ -29331,8 +29347,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         /**
          * The tree of nodes associated with the current `LView`. The nodes have been normalized into
-         * a
-         * tree structure with relevant details pulled out for readability.
+         * a tree structure with relevant details pulled out for readability.
          */
         get nodes() {
             const lView = this._raw_lView;
@@ -29375,6 +29390,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         get tHost() {
             return this._raw_lView[T_HOST];
         }
+        get decls() {
+            const tView = this.tView;
+            const start = HEADER_OFFSET;
+            return toLViewRange(this.tView, this._raw_lView, start, start + tView._decls);
+        }
+        get vars() {
+            const tView = this.tView;
+            const start = HEADER_OFFSET + tView._decls;
+            return toLViewRange(this.tView, this._raw_lView, start, start + tView._vars);
+        }
+        get i18n() {
+            const tView = this.tView;
+            const start = HEADER_OFFSET + tView._decls + tView._vars;
+            return toLViewRange(this.tView, this._raw_lView, start, this.tView.expandoStartIndex);
+        }
+        get expando() {
+            const tView = this.tView;
+            return toLViewRange(this.tView, this._raw_lView, this.tView.expandoStartIndex, this._raw_lView.length);
+        }
         /**
          * Normalized view of child views (and containers) attached at this location.
          */
@@ -29387,6 +29421,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return childViews;
         }
+    }
+    function toLViewRange(tView, lView, start, end) {
+        let content = [];
+        for (let index = start; index < end; index++) {
+            content.push({ index: index, t: tView.data[index], l: lView[index] });
+        }
+        return { start: start, end: end, length: end - start, content: content };
     }
     /**
      * Turns a flat list of nodes into a tree by walking the associated `TNode` tree.
@@ -29405,34 +29446,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return debugNodes;
         }
         else {
-            return null;
+            return [];
         }
     }
     function buildDebugNode(tNode, lView, nodeIndex) {
         const rawValue = lView[nodeIndex];
         const native = unwrapRNode(rawValue);
-        const componentLViewDebug = toDebug(readLViewValue(rawValue));
         return {
             html: toHtml(native),
+            type: TNodeTypeAsString[tNode.type],
             native: native,
-            nodes: toDebugNodes(tNode.child, lView),
-            component: componentLViewDebug,
+            children: toDebugNodes(tNode.child, lView),
         };
-    }
-    /**
-     * Return an `LView` value if found.
-     *
-     * @param value `LView` if any
-     */
-    function readLViewValue(value) {
-        while (Array.isArray(value)) {
-            // This check is not quite right, as it does not take into account `StylingContext`
-            // This is why it is in debug, not in util.ts
-            if (value.length >= HEADER_OFFSET - 1)
-                return value;
-            value = value[HOST];
-        }
-        return null;
     }
 
     const ɵ0$4 = () => Promise.resolve(null);
@@ -29912,8 +29937,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             null, // firstChild: TNode|null,
             schemas, // schemas: SchemaMetadata[]|null,
             consts, // consts: TConstants|null
-            false // incompleteFirstPass: boolean
-            ) :
+            false, // incompleteFirstPass: boolean
+            decls, // ngDevMode only: decls
+            vars) :
             {
                 type: type,
                 id: viewIndex,
@@ -33530,7 +33556,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.0.8+19.sha-deb290b');
+    const VERSION$2 = new Version$1('10.0.8+20.sha-ef7b70a');
 
     /**
      * @license
