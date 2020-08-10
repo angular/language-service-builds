@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.4+33.sha-6da9e58
+ * @license Angular v10.1.0-next.4+34.sha-5dc8d28
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17647,7 +17647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.4+33.sha-6da9e58');
+    const VERSION$1 = new Version('10.1.0-next.4+34.sha-5dc8d28');
 
     /**
      * @license
@@ -43641,7 +43641,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.4+33.sha-6da9e58');
+    const VERSION$2 = new Version$1('10.1.0-next.4+34.sha-5dc8d28');
 
     /**
      * @license
@@ -49275,21 +49275,23 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return this._appliesToNextNode;
         }
         matchTNode(tView, tNode) {
-            if (Array.isArray(this.metadata.predicate)) {
-                const localNames = this.metadata.predicate;
-                for (let i = 0; i < localNames.length; i++) {
-                    this.matchTNodeWithReadOption(tView, tNode, getIdxOfMatchingSelector(tNode, localNames[i]));
+            const predicate = this.metadata.predicate;
+            if (Array.isArray(predicate)) {
+                for (let i = 0; i < predicate.length; i++) {
+                    const name = predicate[i];
+                    this.matchTNodeWithReadOption(tView, tNode, getIdxOfMatchingSelector(tNode, name));
+                    // Also try matching the name to a provider since strings can be used as DI tokens too.
+                    this.matchTNodeWithReadOption(tView, tNode, locateDirectiveOrProvider(tNode, tView, name, false, false));
                 }
             }
             else {
-                const typePredicate = this.metadata.predicate;
-                if (typePredicate === TemplateRef) {
+                if (predicate === TemplateRef) {
                     if (tNode.type === 0 /* Container */) {
                         this.matchTNodeWithReadOption(tView, tNode, -1);
                     }
                 }
                 else {
-                    this.matchTNodeWithReadOption(tView, tNode, locateDirectiveOrProvider(tNode, tView, typePredicate, false, false));
+                    this.matchTNodeWithReadOption(tView, tNode, locateDirectiveOrProvider(tNode, tView, predicate, false, false));
                 }
             }
         }
