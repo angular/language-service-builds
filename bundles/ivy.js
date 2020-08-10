@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.8+28.sha-7f11149
+ * @license Angular v10.0.8+31.sha-32109dc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18861,7 +18861,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.8+28.sha-7f11149');
+    const VERSION$1 = new Version('10.0.8+31.sha-32109dc');
 
     /**
      * @license
@@ -19450,7 +19450,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.0.8+28.sha-7f11149');
+    const VERSION$2 = new Version('10.0.8+31.sha-32109dc');
 
     /**
      * @license
@@ -25217,7 +25217,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             throw new Error(`Duplicate decorated properties found on class '${clazz.name.text}': ` +
                 duplicateDecoratedMemberNames.join(', '));
         }
-        const decoratedMembers = classMembers.map(member => classMemberToMetadata(member.name, member.decorators, isCore));
+        const decoratedMembers = classMembers.map(member => { var _a; return classMemberToMetadata((_a = member.nameNode) !== null && _a !== void 0 ? _a : member.name, member.decorators, isCore); });
         if (decoratedMembers.length > 0) {
             metaPropDecorators = ts.createObjectLiteral(decoratedMembers);
         }
