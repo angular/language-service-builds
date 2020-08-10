@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.4+31.sha-8f708b5
+ * @license Angular v10.1.0-next.4+32.sha-250e299
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17647,7 +17647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.4+31.sha-8f708b5');
+    const VERSION$1 = new Version('10.1.0-next.4+32.sha-250e299');
 
     /**
      * @license
@@ -33581,7 +33581,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.4+31.sha-8f708b5');
+    const VERSION$2 = new Version$1('10.1.0-next.4+32.sha-250e299');
 
     /**
      * @license
@@ -35001,30 +35001,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
-     */
-    if (typeof ngI18nClosureMode === 'undefined') {
-        // These property accesses can be ignored because ngI18nClosureMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
-        // NOTE: we need to have it in IIFE so that the tree-shaker is happy.
-        (function () {
-            // tslint:disable-next-line:no-toplevel-property-access
-            _global$1['ngI18nClosureMode'] =
-                // TODO(FW-1250): validate that this actually, you know, works.
-                // tslint:disable-next-line:no-toplevel-property-access
-                typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
-        })();
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Index of each type of locale data from the locale data array
      */
     var LocaleDataIndex;
@@ -35095,6 +35071,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (typeof localeId === 'string') {
             LOCALE_ID = localeId.toLowerCase().replace(/_/g, '-');
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
+     */
+    if (typeof ngI18nClosureMode === 'undefined') {
+        // These property accesses can be ignored because ngI18nClosureMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
+        // NOTE: we need to have it in IIFE so that the tree-shaker is happy.
+        (function () {
+            // tslint:disable-next-line:no-toplevel-property-access
+            _global$1['ngI18nClosureMode'] =
+                // TODO(FW-1250): validate that this actually, you know, works.
+                // tslint:disable-next-line:no-toplevel-property-access
+                typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
+        })();
     }
 
     /*! *****************************************************************************
