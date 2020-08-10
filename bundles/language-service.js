@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.4+27.sha-0de93fd
+ * @license Angular v10.1.0-next.4+29.sha-6d8c73a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17647,7 +17647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.4+27.sha-0de93fd');
+    const VERSION$1 = new Version('10.1.0-next.4+29.sha-6d8c73a');
 
     /**
      * @license
@@ -26534,7 +26534,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             (typeof node === 'object' && node != null &&
                 node.constructor.name === 'WebWorkerRenderNode'), true, `The provided value must be an instance of a DOM Node but got ${stringify$1(node)}`);
     }
-    function assertDataInRange(arr, index) {
+    function assertIndexInRange(arr, index) {
         const maxLen = arr ? arr.length : 0;
         assertLessThan(index, maxLen, `Index expected to be less than ${maxLen} but got ${index}`);
     }
@@ -27074,7 +27074,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function getNativeByTNode(tNode, lView) {
         ngDevMode && assertTNodeForLView(tNode, lView);
-        ngDevMode && assertDataInRange(lView, tNode.index);
+        ngDevMode && assertIndexInRange(lView, tNode.index);
         const node = unwrapRNode(lView[tNode.index]);
         ngDevMode && !isProceduralRenderer(lView[RENDERER]) && assertDomNode(node);
         return node;
@@ -27086,7 +27086,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function getComponentLViewByIndex(nodeIndex, hostView) {
         // Could be an LView or an LContainer. If LContainer, unwrap to find LView.
-        ngDevMode && assertDataInRange(hostView, nodeIndex);
+        ngDevMode && assertIndexInRange(hostView, nodeIndex);
         const slotValue = hostView[nodeIndex];
         const lView = isLView(slotValue) ? slotValue : slotValue[HOST];
         return lView;
@@ -28859,7 +28859,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function selectIndexInternal(tView, lView, index, checkNoChangesMode) {
         ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
-        ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
+        ngDevMode && assertIndexInRange(lView, index + HEADER_OFFSET);
         // Flush the initial hooks for elements in the view that have been added up to this point.
         // PERF WARNING: do NOT extract this to a separate function without running benchmarks
         if (!checkNoChangesMode) {
@@ -29304,19 +29304,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function toHtml(value, includeChildren = false) {
         const node = unwrapRNode(value);
         if (node) {
-            const isTextNode = node.nodeType === Node.TEXT_NODE;
-            const outerHTML = (isTextNode ? node.textContent : node.outerHTML) || '';
-            if (includeChildren || isTextNode) {
-                return outerHTML;
-            }
-            else {
-                const innerHTML = '>' + node.innerHTML + '<';
-                return (outerHTML.split(innerHTML)[0]) + '>';
+            switch (node.nodeType) {
+                case Node.TEXT_NODE:
+                    return node.textContent;
+                case Node.COMMENT_NODE:
+                    return `<!--${node.textContent}-->`;
+                case Node.ELEMENT_NODE:
+                    const outerHTML = node.outerHTML;
+                    if (includeChildren) {
+                        return outerHTML;
+                    }
+                    else {
+                        const innerHTML = '>' + node.innerHTML + '<';
+                        return (outerHTML.split(innerHTML)[0]) + '>';
+                    }
             }
         }
-        else {
-            return null;
-        }
+        return null;
     }
     class LViewDebug {
         constructor(_raw_lView) {
@@ -29614,7 +29618,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const tNode = tView.data[adjustedIndex] ||
             createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs);
         setPreviousOrParentTNode(tNode, true);
-        if (ngDevMode) ;
         return tNode;
     }
     function createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs) {
@@ -29912,7 +29915,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // that has a host binding, we will update the blueprint with that def's hostVars count.
         const initialViewLength = bindingStartIndex + vars;
         const blueprint = createViewBlueprint(bindingStartIndex, initialViewLength);
-        return blueprint[TVIEW] = ngDevMode ?
+        const tView = blueprint[TVIEW] = ngDevMode ?
             new TViewConstructor(type, viewIndex, // id: number,
             blueprint, // blueprint: LView,
             templateFn, // template: ComponentTemplate<{}>|null,
@@ -29980,6 +29983,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 consts: consts,
                 incompleteFirstPass: false
             };
+        if (ngDevMode) {
+            // For performance reasons it is important that the tView retains the same shape during runtime.
+            // (To make sure that all of the code is monomorphic.) For this reason we seal the object to
+            // prevent class transitions.
+            Object.seal(tView);
+        }
+        return tView;
     }
     function createViewBlueprint(bindingStartIndex, initialViewLength) {
         const blueprint = ngDevMode ? new LViewBlueprint() : [];
@@ -30053,37 +30063,38 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function createTNode(tView, tParent, type, adjustedIndex, tagName, attrs) {
         ngDevMode && ngDevMode.tNode++;
         let injectorIndex = tParent ? tParent.injectorIndex : -1;
-        return ngDevMode ? new TNodeDebug(tView, // tView_: TView
-        type, // type: TNodeType
-        adjustedIndex, // index: number
-        injectorIndex, // injectorIndex: number
-        -1, // directiveStart: number
-        -1, // directiveEnd: number
-        -1, // directiveStylingLast: number
-        null, // propertyBindings: number[]|null
-        0, // flags: TNodeFlags
-        0, // providerIndexes: TNodeProviderIndexes
-        tagName, // tagName: string|null
-        attrs, // attrs: (string|AttributeMarker|(string|SelectorFlags)[])[]|null
-        null, // mergedAttrs
-        null, // localNames: (string|number)[]|null
-        undefined, // initialInputs: (string[]|null)[]|null|undefined
-        null, // inputs: PropertyAliases|null
-        null, // outputs: PropertyAliases|null
-        null, // tViews: ITView|ITView[]|null
-        null, // next: ITNode|null
-        null, // projectionNext: ITNode|null
-        null, // child: ITNode|null
-        tParent, // parent: TElementNode|TContainerNode|null
-        null, // projection: number|(ITNode|RNode[])[]|null
-        null, // styles: string|null
-        null, // stylesWithoutHost: string|null
-        undefined, // residualStyles: string|null
-        null, // classes: string|null
-        null, // classesWithoutHost: string|null
-        undefined, // residualClasses: string|null
-        0, // classBindings: TStylingRange;
-        0) :
+        const tNode = ngDevMode ?
+            new TNodeDebug(tView, // tView_: TView
+            type, // type: TNodeType
+            adjustedIndex, // index: number
+            injectorIndex, // injectorIndex: number
+            -1, // directiveStart: number
+            -1, // directiveEnd: number
+            -1, // directiveStylingLast: number
+            null, // propertyBindings: number[]|null
+            0, // flags: TNodeFlags
+            0, // providerIndexes: TNodeProviderIndexes
+            tagName, // tagName: string|null
+            attrs, // attrs: (string|AttributeMarker|(string|SelectorFlags)[])[]|null
+            null, // mergedAttrs
+            null, // localNames: (string|number)[]|null
+            undefined, // initialInputs: (string[]|null)[]|null|undefined
+            null, // inputs: PropertyAliases|null
+            null, // outputs: PropertyAliases|null
+            null, // tViews: ITView|ITView[]|null
+            null, // next: ITNode|null
+            null, // projectionNext: ITNode|null
+            null, // child: ITNode|null
+            tParent, // parent: TElementNode|TContainerNode|null
+            null, // projection: number|(ITNode|RNode[])[]|null
+            null, // styles: string|null
+            null, // stylesWithoutHost: string|null
+            undefined, // residualStyles: string|null
+            null, // classes: string|null
+            null, // classesWithoutHost: string|null
+            undefined, // residualClasses: string|null
+            0, // classBindings: TStylingRange;
+            0) :
             {
                 type: type,
                 index: adjustedIndex,
@@ -30116,6 +30127,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 classBindings: 0,
                 styleBindings: 0,
             };
+        if (ngDevMode) {
+            // For performance reasons it is important that the tNode retains the same shape during runtime.
+            // (To make sure that all of the code is monomorphic.) For this reason we seal the object to
+            // prevent class transitions.
+            Object.seal(tNode);
+        }
+        return tNode;
     }
     /**
      * Instantiate a root component.
@@ -33256,7 +33274,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function createRootComponentView(rNode, def, rootView, rendererFactory, hostRenderer, sanitizer) {
         const tView = rootView[TVIEW];
-        ngDevMode && assertDataInRange(rootView, 0 + HEADER_OFFSET);
+        ngDevMode && assertIndexInRange(rootView, 0 + HEADER_OFFSET);
         rootView[0 + HEADER_OFFSET] = rNode;
         const tNode = getOrCreateTNode(tView, null, 0, 3 /* Element */, null, null);
         const mergedAttrs = tNode.mergedAttrs = def.hostAttrs;
@@ -33563,7 +33581,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.4+27.sha-0de93fd');
+    const VERSION$2 = new Version$1('10.1.0-next.4+29.sha-6d8c73a');
 
     /**
      * @license
