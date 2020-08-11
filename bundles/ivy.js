@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.4+36.sha-df76a20
+ * @license Angular v10.1.0-next.4+43.sha-e2e5f83
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9422,6 +9422,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         // Try to generate a simple binding (no temporaries or statements)
         // otherwise generate a general binding
         BindingForm[BindingForm["TrySimple"] = 1] = "TrySimple";
+        // Inlines assignment of temporaries into the generated expression. The result may still
+        // have statements attached for declarations of temporary variables.
+        // This is the only relevant form for Ivy, the other forms are only used in ViewEngine.
+        BindingForm[BindingForm["Expression"] = 2] = "Expression";
     })(BindingForm || (BindingForm = {}));
     /**
      * Converts the given expression AST into an executable output AST, assuming the expression
@@ -9432,7 +9436,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (!localResolver) {
             localResolver = new DefaultLocalResolver();
         }
-        const currValExpr = createCurrValueExpr(bindingId);
         const visitor = new _AstToIrVisitor(localResolver, implicitReceiver, bindingId, interpolationFunction);
         const outputExpr = expressionWithoutBuiltins.visit(visitor, _Mode.Expression);
         const stmts = getStatementsFromVisitor(visitor, bindingId);
@@ -9442,6 +9445,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (visitor.temporaryCount === 0 && form == BindingForm.TrySimple) {
             return new ConvertPropertyBindingResult([], outputExpr);
         }
+        else if (form === BindingForm.Expression) {
+            return new ConvertPropertyBindingResult(stmts, outputExpr);
+        }
+        const currValExpr = createCurrValueExpr(bindingId);
         stmts.push(currValExpr.set(outputExpr).toDeclStmt(DYNAMIC_TYPE, [StmtModifier.Final]));
         return new ConvertPropertyBindingResult(stmts, currValExpr);
     }
@@ -17301,7 +17308,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 this._bindingScope.getOrCreateSharedContextVar(0);
         }
         convertPropertyBinding(value) {
-            const convertedPropertyBinding = convertPropertyBinding(this, this.getImplicitReceiverExpr(), value, this.bindingContext(), BindingForm.TrySimple, () => error('Unexpected interpolation'));
+            const convertedPropertyBinding = convertPropertyBinding(this, this.getImplicitReceiverExpr(), value, this.bindingContext(), BindingForm.Expression, () => error('Unexpected interpolation'));
             const valExpr = convertedPropertyBinding.currValExpr;
             this._tempVariables.push(...convertedPropertyBinding.stmts);
             return valExpr;
@@ -18445,7 +18452,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return null;
     }
     function bindingFn(implicit, value) {
-        return convertPropertyBinding(null, implicit, value, 'b', BindingForm.TrySimple, () => error('Unexpected interpolation'));
+        return convertPropertyBinding(null, implicit, value, 'b', BindingForm.Expression, () => error('Unexpected interpolation'));
     }
     function convertStylingCall(call, bindingContext, bindingFn) {
         return call.params(value => bindingFn(bindingContext, value).currValExpr);
@@ -18868,7 +18875,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.4+36.sha-df76a20');
+    const VERSION$1 = new Version('10.1.0-next.4+43.sha-e2e5f83');
 
     /**
      * @license
@@ -19457,7 +19464,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.4+36.sha-df76a20');
+    const VERSION$2 = new Version('10.1.0-next.4+43.sha-e2e5f83');
 
     /**
      * @license
@@ -20678,18 +20685,21 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function typeToValue(typeNode, checker) {
         // It's not possible to get a value expression if the parameter doesn't even have a type.
-        if (typeNode === null || !ts.isTypeReferenceNode(typeNode)) {
-            return null;
+        if (typeNode === null) {
+            return missingType();
+        }
+        if (!ts.isTypeReferenceNode(typeNode)) {
+            return unsupportedType(typeNode);
         }
         const symbols = resolveTypeSymbols(typeNode, checker);
         if (symbols === null) {
-            return null;
+            return unknownReference(typeNode);
         }
         const { local, decl } = symbols;
         // It's only valid to convert a type reference to a value reference if the type actually
         // has a value declaration associated with it.
         if (decl.valueDeclaration === undefined) {
-            return null;
+            return noValueDeclaration(typeNode, decl.declarations[0]);
         }
         // The type points to a valid value declaration. Rewrite the TypeReference into an
         // Expression which references the value pointed to by the TypeReference, if possible.
@@ -20700,8 +20710,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (ts.isImportClause(firstDecl) && firstDecl.name !== undefined) {
                 // This is a default import.
                 //   import Foo from 'foo';
+                if (firstDecl.isTypeOnly) {
+                    // Type-only imports cannot be represented as value.
+                    return typeOnlyImport(typeNode, firstDecl);
+                }
                 return {
-                    local: true,
+                    kind: 0 /* LOCAL */,
                     // Copying the name here ensures the generated references will be correctly transformed
                     // along with the import.
                     expression: ts.updateIdentifier(firstDecl.name),
@@ -20713,6 +20727,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 //   import {Foo} from 'foo';
                 // or
                 //   import {Foo as Bar} from 'foo';
+                if (firstDecl.parent.parent.isTypeOnly) {
+                    // Type-only imports cannot be represented as value.
+                    return typeOnlyImport(typeNode, firstDecl.parent.parent);
+                }
                 // Determine the name to import (`Foo`) from the import specifier, as the symbol names of
                 // the imported type could refer to a local alias (like `Bar` in the example above).
                 const importedName = (firstDecl.propertyName || firstDecl.name).text;
@@ -20721,7 +20739,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const [_localName, ...nestedPath] = symbols.symbolNames;
                 const moduleName = extractModuleName(firstDecl.parent.parent.parent);
                 return {
-                    local: false,
+                    kind: 1 /* IMPORTED */,
                     valueDeclaration: decl.valueDeclaration,
                     moduleName,
                     importedName,
@@ -20731,9 +20749,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             else if (ts.isNamespaceImport(firstDecl)) {
                 // The import is a namespace import
                 //   import * as Foo from 'foo';
+                if (firstDecl.parent.isTypeOnly) {
+                    // Type-only imports cannot be represented as value.
+                    return typeOnlyImport(typeNode, firstDecl.parent);
+                }
                 if (symbols.symbolNames.length === 1) {
                     // The type refers to the namespace itself, which cannot be represented as a value.
-                    return null;
+                    return namespaceImport(typeNode, firstDecl.parent);
                 }
                 // The first symbol name refers to the local name of the namespace, which is is discarded
                 // as a new namespace import will be generated. This is followed by the symbol name that needs
@@ -20741,7 +20763,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const [_ns, importedName, ...nestedPath] = symbols.symbolNames;
                 const moduleName = extractModuleName(firstDecl.parent.parent);
                 return {
-                    local: false,
+                    kind: 1 /* IMPORTED */,
                     valueDeclaration: decl.valueDeclaration,
                     moduleName,
                     importedName,
@@ -20753,14 +20775,50 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const expression = typeNodeToValueExpr(typeNode);
         if (expression !== null) {
             return {
-                local: true,
+                kind: 0 /* LOCAL */,
                 expression,
                 defaultImportStatement: null,
             };
         }
         else {
-            return null;
+            return unsupportedType(typeNode);
         }
+    }
+    function unsupportedType(typeNode) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 5 /* UNSUPPORTED */, typeNode },
+        };
+    }
+    function noValueDeclaration(typeNode, decl) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 1 /* NO_VALUE_DECLARATION */, typeNode, decl },
+        };
+    }
+    function typeOnlyImport(typeNode, importClause) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 2 /* TYPE_ONLY_IMPORT */, typeNode, importClause },
+        };
+    }
+    function unknownReference(typeNode) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 3 /* UNKNOWN_REFERENCE */, typeNode },
+        };
+    }
+    function namespaceImport(typeNode, importClause) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 4 /* NAMESPACE */, typeNode, importClause },
+        };
+    }
+    function missingType() {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 0 /* MISSING_TYPE */ },
+        };
     }
     /**
      * Attempt to extract a `ts.Expression` that's equivalent to a `ts.TypeNode`, as the two have
@@ -20912,9 +20970,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     let childTypeNodes = typeNode.types.filter(childTypeNode => childTypeNode.kind !== ts.SyntaxKind.NullKeyword);
                     if (childTypeNodes.length === 1) {
                         typeNode = childTypeNodes[0];
-                    }
-                    else {
-                        typeNode = null;
                     }
                 }
                 const typeValueReference = typeToValue(typeNode, this.checker);
@@ -21441,14 +21496,53 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         });
         return res;
     }
-    function extractDirectiveGuards(node, reflector) {
-        const staticMembers = reflector.getMembersOfClass(node).filter(member => member.isStatic);
+    /**
+     * Inspects the class' members and extracts the metadata that is used when type-checking templates
+     * that use the directive. This metadata does not contain information from a base class, if any,
+     * making this metadata invariant to changes of inherited classes.
+     */
+    function extractDirectiveTypeCheckMeta(node, inputs, reflector) {
+        const members = reflector.getMembersOfClass(node);
+        const staticMembers = members.filter(member => member.isStatic);
         const ngTemplateGuards = staticMembers.map(extractTemplateGuard)
             .filter((guard) => guard !== null);
         const hasNgTemplateContextGuard = staticMembers.some(member => member.kind === ClassMemberKind.Method && member.name === 'ngTemplateContextGuard');
         const coercedInputFields = new Set(staticMembers.map(extractCoercedInput)
             .filter((inputName) => inputName !== null));
-        return { hasNgTemplateContextGuard, ngTemplateGuards, coercedInputFields };
+        const restrictedInputFields = new Set();
+        const stringLiteralInputFields = new Set();
+        const undeclaredInputFields = new Set();
+        for (const fieldName of Object.keys(inputs)) {
+            const field = members.find(member => member.name === fieldName);
+            if (field === undefined || field.node === null) {
+                undeclaredInputFields.add(fieldName);
+                continue;
+            }
+            if (isRestricted(field.node)) {
+                restrictedInputFields.add(fieldName);
+            }
+            if (field.nameNode !== null && ts.isStringLiteral(field.nameNode)) {
+                stringLiteralInputFields.add(fieldName);
+            }
+        }
+        const arity = reflector.getGenericArityOfClass(node);
+        return {
+            hasNgTemplateContextGuard,
+            ngTemplateGuards,
+            coercedInputFields,
+            restrictedInputFields,
+            stringLiteralInputFields,
+            undeclaredInputFields,
+            isGeneric: arity !== null && arity > 0,
+        };
+    }
+    function isRestricted(node) {
+        if (node.modifiers === undefined) {
+            return false;
+        }
+        return node.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.PrivateKeyword ||
+            modifier.kind === ts.SyntaxKind.ProtectedKeyword ||
+            modifier.kind === ts.SyntaxKind.ReadonlyKeyword);
     }
     function extractTemplateGuard(member) {
         if (!member.name.startsWith('ngTemplateGuard_')) {
@@ -21596,7 +21690,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // The type metadata was the wrong shape.
                 return null;
             }
-            return Object.assign(Object.assign({ ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs: readStringMapType(def.type.typeArguments[3]), outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveGuards(clazz, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
+            const inputs = readStringMapType(def.type.typeArguments[3]);
+            return Object.assign(Object.assign({ ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs, outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveTypeCheckMeta(clazz, inputs, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
         }
         /**
          * Read pipe metadata from a referenced class in a .d.ts file.
@@ -21752,7 +21847,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         let inputs = {};
         let outputs = {};
-        let coercedInputFields = new Set();
+        const coercedInputFields = new Set();
+        const undeclaredInputFields = new Set();
+        const restrictedInputFields = new Set();
+        const stringLiteralInputFields = new Set();
         let isDynamic = false;
         const addMetadata = (meta) => {
             if (meta.baseClass === 'dynamic') {
@@ -21773,11 +21871,23 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             for (const coercedInputField of meta.coercedInputFields) {
                 coercedInputFields.add(coercedInputField);
             }
+            for (const undeclaredInputField of meta.undeclaredInputFields) {
+                undeclaredInputFields.add(undeclaredInputField);
+            }
+            for (const restrictedInputField of meta.restrictedInputFields) {
+                restrictedInputFields.add(restrictedInputField);
+            }
+            for (const field of meta.stringLiteralInputFields) {
+                stringLiteralInputFields.add(field);
+            }
         };
         addMetadata(topMeta);
         return Object.assign(Object.assign({}, topMeta), { inputs,
             outputs,
-            coercedInputFields, baseClass: isDynamic ? 'dynamic' : null });
+            coercedInputFields,
+            undeclaredInputFields,
+            restrictedInputFields,
+            stringLiteralInputFields, baseClass: isDynamic ? 'dynamic' : null });
     }
 
     /**
@@ -24858,10 +24968,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ConstructorDepErrorKind;
-    (function (ConstructorDepErrorKind) {
-        ConstructorDepErrorKind[ConstructorDepErrorKind["NO_SUITABLE_TOKEN"] = 0] = "NO_SUITABLE_TOKEN";
-    })(ConstructorDepErrorKind || (ConstructorDepErrorKind = {}));
     function getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore) {
         const deps = [];
         const errors = [];
@@ -24922,10 +25028,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 resolved = R3ResolvedDependencyType.ChangeDetectorRef;
             }
             if (token === null) {
+                if (param.typeValueReference.kind !== 2 /* UNAVAILABLE */) {
+                    throw new Error('Illegal state: expected value reference to be unavailable if no token is present');
+                }
                 errors.push({
                     index: idx,
-                    kind: ConstructorDepErrorKind.NO_SUITABLE_TOKEN,
                     param,
+                    reason: param.typeValueReference.reason,
                 });
             }
             else {
@@ -24940,10 +25049,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function valueReferenceToExpression(valueRef, defaultImportRecorder) {
-        if (valueRef === null) {
+        if (valueRef.kind === 2 /* UNAVAILABLE */) {
             return null;
         }
-        else if (valueRef.local) {
+        else if (valueRef.kind === 0 /* LOCAL */) {
             if (defaultImportRecorder !== null && valueRef.defaultImportStatement !== null &&
                 ts.isIdentifier(valueRef.expression)) {
                 defaultImportRecorder.recordImportedIdentifier(valueRef.expression, valueRef.defaultImportStatement);
@@ -24951,11 +25060,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return new WrappedNodeExpr(valueRef.expression);
         }
         else {
-            // TODO(alxhub): this cast is necessary because the g3 typescript version doesn't narrow here.
-            const ref = valueRef;
-            let importExpr = new ExternalExpr({ moduleName: ref.moduleName, name: ref.importedName });
-            if (ref.nestedPath !== null) {
-                for (const property of ref.nestedPath) {
+            let importExpr = new ExternalExpr({ moduleName: valueRef.moduleName, name: valueRef.importedName });
+            if (valueRef.nestedPath !== null) {
+                for (const property of valueRef.nestedPath) {
                     importExpr = new ReadPropExpr(importExpr, property);
                 }
             }
@@ -25000,12 +25107,69 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         else {
             // TODO(alxhub): this cast is necessary because the g3 typescript version doesn't narrow here.
-            const { param, index } = deps.errors[0];
             // There is at least one error.
-            throw new FatalDiagnosticError(ErrorCode.PARAM_MISSING_TOKEN, param.nameNode, `No suitable injection token for parameter '${param.name || index}' of class '${clazz.name.text}'.\n` +
-                (param.typeNode !== null ? `Found ${param.typeNode.getText()}` :
-                    'no type or decorator'));
+            const error = deps.errors[0];
+            throw createUnsuitableInjectionTokenError(clazz, error);
         }
+    }
+    /**
+     * Creates a fatal error with diagnostic for an invalid injection token.
+     * @param clazz The class for which the injection token was unavailable.
+     * @param error The reason why no valid injection token is available.
+     */
+    function createUnsuitableInjectionTokenError(clazz, error) {
+        const { param, index, reason } = error;
+        let chainMessage = undefined;
+        let hints = undefined;
+        switch (reason.kind) {
+            case 5 /* UNSUPPORTED */:
+                chainMessage = 'Consider using the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type is not supported as injection token.'),
+                ];
+                break;
+            case 1 /* NO_VALUE_DECLARATION */:
+                chainMessage = 'Consider using the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type does not have a value, so it cannot be used as injection token.'),
+                    makeRelatedInformation(reason.decl, 'The type is declared here.'),
+                ];
+                break;
+            case 2 /* TYPE_ONLY_IMPORT */:
+                chainMessage =
+                    'Consider changing the type-only import to a regular import, or use the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type is imported using a type-only import, which prevents it from being usable as an injection token.'),
+                    makeRelatedInformation(reason.importClause, 'The type-only import occurs here.'),
+                ];
+                break;
+            case 4 /* NAMESPACE */:
+                chainMessage = 'Consider using the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type corresponds with a namespace, which cannot be used as injection token.'),
+                    makeRelatedInformation(reason.importClause, 'The namespace import occurs here.'),
+                ];
+                break;
+            case 3 /* UNKNOWN_REFERENCE */:
+                chainMessage = 'The type should reference a known declaration.';
+                hints = [makeRelatedInformation(reason.typeNode, 'This type could not be resolved.')];
+                break;
+            case 0 /* MISSING_TYPE */:
+                chainMessage =
+                    'Consider adding a type to the parameter or use the @Inject decorator to specify an injection token.';
+                break;
+        }
+        const chain = {
+            messageText: `No suitable injection token for parameter '${param.name || index}' of class '${clazz.name.text}'.`,
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            next: [{
+                    messageText: chainMessage,
+                    category: ts.DiagnosticCategory.Message,
+                    code: 0,
+                }],
+        };
+        return new FatalDiagnosticError(ErrorCode.PARAM_MISSING_TOKEN, param.nameNode, chain, hints);
     }
     function toR3Reference(valueRef, typeRef, valueContext, typeContext, refEmitter) {
         const value = refEmitter.emit(valueRef, valueContext);
@@ -25491,7 +25655,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     function ctorParameterToMetadata(param, defaultImportRecorder, isCore) {
         // Parameters sometimes have a type that can be referenced. If so, then use it, otherwise
         // its type is undefined.
-        const type = param.typeValueReference !== null ?
+        const type = param.typeValueReference.kind !== 2 /* UNAVAILABLE */ ?
             valueReferenceToExpression(param.typeValueReference, defaultImportRecorder) :
             new LiteralExpr(undefined);
         const mapEntries = [
@@ -25613,7 +25777,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     meta: analysis,
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
-                    guards: extractDirectiveGuards(node, this.reflector),
+                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, analysis.inputs, this.reflector),
                     providersRequiringFactory
                 }
             };
@@ -25622,7 +25786,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this directive's information with the `MetadataRegistry`. This ensures that
             // the information about the directive is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.guards));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
             this.injectableRegistry.registerInjectable(node);
         }
         resolve(node, analysis) {
@@ -26307,7 +26471,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // These will be replaced during the compilation step, after all `NgModule`s have been
                         // analyzed and the full compilation scope for the component can be realized.
                         animations, viewProviders: wrappedViewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath }),
-                    guards: extractDirectiveGuards(node, this.reflector),
+                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, metadata.inputs, this.reflector),
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     template,
                     providersRequiringFactory,
@@ -26323,7 +26487,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this component's information with the `MetadataRegistry`. This ensures that
             // the information about the component is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.guards));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
             this.injectableRegistry.registerInjectable(node);
         }
         index(context, node, analysis) {
@@ -31286,6 +31450,18 @@ export * from '${relativeEntryPoint}';
         /* declarationList */ [decl]);
     }
     /**
+     * Creates a `ts.TypeQueryNode` for a coerced input.
+     *
+     * For example: `typeof MatInput.ngAcceptInputType_value`, where MatInput is `typeName` and `value`
+     * is the `coercedInputName`.
+     *
+     * @param typeName The `EntityName` of the Directive where the static coerced input is defined.
+     * @param coercedInputName The field name of the coerced input.
+     */
+    function tsCreateTypeQueryForCoercedInput(typeName, coercedInputName) {
+        return ts.createTypeQueryNode(ts.createQualifiedName(typeName, `ngAcceptInputType_${coercedInputName}`));
+    }
+    /**
      * Create a `ts.VariableStatement` that initializes a variable with a given expression.
      *
      * Unlike with `tsDeclareVariable`, the type of the variable is inferred from the initializer
@@ -31688,8 +31864,7 @@ export * from '${relativeEntryPoint}';
                 /* modifiers */ undefined, 
                 /* name */ key, 
                 /* questionToken */ undefined, 
-                /* type */
-                ts.createTypeQueryNode(ts.createQualifiedName(rawType.typeName, `ngAcceptInputType_${key}`)), 
+                /* type */ tsCreateTypeQueryForCoercedInput(rawType.typeName, key), 
                 /* initializer */ undefined));
             }
         }
@@ -32288,7 +32463,7 @@ export * from '${relativeEntryPoint}';
             return node;
         }
         visitQuote(ast) {
-            throw new Error('Method not implemented.');
+            return NULL_AS_ANY;
         }
         visitSafeMethodCall(ast) {
             // See the comments in SafePropertyRead above for an explanation of the cases here.
@@ -32729,13 +32904,15 @@ export * from '${relativeEntryPoint}';
         }
     }
     /**
-     * A `TcbOp` which constructs an instance of a directive with types inferred from its inputs, which
-     * also checks the bindings to the directive in the process.
+     * A `TcbOp` which constructs an instance of a directive _without_ setting any of its inputs. Inputs
+     * are later set in the `TcbDirectiveInputsOp`. Type checking was found to be faster when done in
+     * this way as opposed to `TcbDirectiveCtorOp` which is only necessary when the directive is
+     * generic.
      *
      * Executing this operation returns a reference to the directive instance variable with its inferred
      * type.
      */
-    class TcbDirectiveOp extends TcbOp {
+    class TcbDirectiveTypeOp extends TcbOp {
         constructor(tcb, scope, node, dir) {
             super();
             this.tcb = tcb;
@@ -32745,34 +32922,170 @@ export * from '${relativeEntryPoint}';
         }
         execute() {
             const id = this.tcb.allocateId();
-            // Process the directive and construct expressions for each of its bindings.
-            const inputs = tcbGetDirectiveInputs(this.node, this.dir, this.tcb, this.scope);
+            const type = this.tcb.env.referenceType(this.dir.ref);
+            this.scope.addStatement(tsDeclareVariable(id, type));
+            return id;
+        }
+    }
+    /**
+     * A `TcbOp` which constructs an instance of a directive with types inferred from its inputs. The
+     * inputs themselves are not checked here; checking of inputs is achieved in `TcbDirectiveInputsOp`.
+     * Any errors reported in this statement are ignored, as the type constructor call is only present
+     * for type-inference.
+     *
+     * When a Directive is generic, it is required that the TCB generates the instance using this method
+     * in order to infer the type information correctly.
+     *
+     * Executing this operation returns a reference to the directive instance variable with its inferred
+     * type.
+     */
+    class TcbDirectiveCtorOp extends TcbOp {
+        constructor(tcb, scope, node, dir) {
+            super();
+            this.tcb = tcb;
+            this.scope = scope;
+            this.node = node;
+            this.dir = dir;
+        }
+        execute() {
+            const id = this.tcb.allocateId();
+            const genericInputs = new Map();
+            const inputs = getBoundInputs(this.dir, this.node, this.tcb);
+            for (const input of inputs) {
+                for (const fieldName of input.fieldNames) {
+                    // Skip the field if an attribute has already been bound to it; we can't have a duplicate
+                    // key in the type constructor call.
+                    if (genericInputs.has(fieldName)) {
+                        continue;
+                    }
+                    const expression = translateInput(input.attribute, this.tcb, this.scope);
+                    genericInputs.set(fieldName, {
+                        type: 'binding',
+                        field: fieldName,
+                        expression,
+                        sourceSpan: input.attribute.sourceSpan
+                    });
+                }
+            }
+            // Add unset directive inputs for each of the remaining unset fields.
+            for (const fieldName of Object.keys(this.dir.inputs)) {
+                if (!genericInputs.has(fieldName)) {
+                    genericInputs.set(fieldName, { type: 'unset', field: fieldName });
+                }
+            }
             // Call the type constructor of the directive to infer a type, and assign the directive
             // instance.
-            const typeCtor = tcbCallTypeCtor(this.dir, this.tcb, inputs);
-            addParseSpanInfo(typeCtor, this.node.sourceSpan);
+            const typeCtor = tcbCallTypeCtor(this.dir, this.tcb, Array.from(genericInputs.values()));
+            ignoreDiagnostics(typeCtor);
             this.scope.addStatement(tsCreateVariable(id, typeCtor));
             return id;
         }
         circularFallback() {
-            return new TcbDirectiveCircularFallbackOp(this.tcb, this.scope, this.node, this.dir);
+            return new TcbDirectiveCtorCircularFallbackOp(this.tcb, this.scope, this.node, this.dir);
+        }
+    }
+    /**
+     * A `TcbOp` which generates code to check input bindings on an element that correspond with the
+     * members of a directive.
+     *
+     * Executing this operation returns nothing.
+     */
+    class TcbDirectiveInputsOp extends TcbOp {
+        constructor(tcb, scope, node, dir) {
+            super();
+            this.tcb = tcb;
+            this.scope = scope;
+            this.node = node;
+            this.dir = dir;
+        }
+        execute() {
+            const dirId = this.scope.resolve(this.node, this.dir);
+            // TODO(joost): report duplicate properties
+            const inputs = getBoundInputs(this.dir, this.node, this.tcb);
+            for (const input of inputs) {
+                // For bound inputs, the property is assigned the binding expression.
+                let expr = translateInput(input.attribute, this.tcb, this.scope);
+                if (!this.tcb.env.config.checkTypeOfInputBindings) {
+                    // If checking the type of bindings is disabled, cast the resulting expression to 'any'
+                    // before the assignment.
+                    expr = tsCastToAny(expr);
+                }
+                else if (!this.tcb.env.config.strictNullInputBindings) {
+                    // If strict null checks are disabled, erase `null` and `undefined` from the type by
+                    // wrapping the expression in a non-null assertion.
+                    expr = ts.createNonNullExpression(expr);
+                }
+                let assignment = wrapForDiagnostics(expr);
+                for (const fieldName of input.fieldNames) {
+                    let target;
+                    if (this.dir.coercedInputFields.has(fieldName)) {
+                        // The input has a coercion declaration which should be used instead of assigning the
+                        // expression into the input field directly. To achieve this, a variable is declared
+                        // with a type of `typeof Directive.ngAcceptInputType_fieldName` which is then used as
+                        // target of the assignment.
+                        const dirTypeRef = this.tcb.env.referenceType(this.dir.ref);
+                        if (!ts.isTypeReferenceNode(dirTypeRef)) {
+                            throw new Error(`Expected TypeReferenceNode from reference to ${this.dir.ref.debugName}`);
+                        }
+                        const id = this.tcb.allocateId();
+                        const type = tsCreateTypeQueryForCoercedInput(dirTypeRef.typeName, fieldName);
+                        this.scope.addStatement(tsDeclareVariable(id, type));
+                        target = id;
+                    }
+                    else if (this.dir.undeclaredInputFields.has(fieldName)) {
+                        // If no coercion declaration is present nor is the field declared (i.e. the input is
+                        // declared in a `@Directive` or `@Component` decorator's `inputs` property) there is no
+                        // assignment target available, so this field is skipped.
+                        continue;
+                    }
+                    else if (!this.tcb.env.config.honorAccessModifiersForInputBindings &&
+                        this.dir.restrictedInputFields.has(fieldName)) {
+                        // If strict checking of access modifiers is disabled and the field is restricted
+                        // (i.e. private/protected/readonly), generate an assignment into a temporary variable
+                        // that has the type of the field. This achieves type-checking but circumvents the access
+                        // modifiers.
+                        const id = this.tcb.allocateId();
+                        const dirTypeRef = this.tcb.env.referenceType(this.dir.ref);
+                        if (!ts.isTypeReferenceNode(dirTypeRef)) {
+                            throw new Error(`Expected TypeReferenceNode from reference to ${this.dir.ref.debugName}`);
+                        }
+                        const type = ts.createIndexedAccessTypeNode(ts.createTypeQueryNode(dirId), ts.createLiteralTypeNode(ts.createStringLiteral(fieldName)));
+                        const temp = tsDeclareVariable(id, type);
+                        this.scope.addStatement(temp);
+                        target = id;
+                    }
+                    else {
+                        // To get errors assign directly to the fields on the instance, using property access
+                        // when possible. String literal fields may not be valid JS identifiers so we use
+                        // literal element access instead for those cases.
+                        target = this.dir.stringLiteralInputFields.has(fieldName) ?
+                            ts.createElementAccess(dirId, ts.createStringLiteral(fieldName)) :
+                            ts.createPropertyAccess(dirId, ts.createIdentifier(fieldName));
+                    }
+                    // Finally the assignment is extended by assigning it into the target expression.
+                    assignment = ts.createBinary(target, ts.SyntaxKind.EqualsToken, assignment);
+                }
+                addParseSpanInfo(assignment, input.attribute.sourceSpan);
+                this.scope.addStatement(ts.createExpressionStatement(assignment));
+            }
+            return null;
         }
     }
     /**
      * A `TcbOp` which is used to generate a fallback expression if the inference of a directive type
-     * via `TcbDirectiveOp` requires a reference to its own type. This can happen using a template
+     * via `TcbDirectiveCtorOp` requires a reference to its own type. This can happen using a template
      * reference:
      *
      * ```html
      * <some-cmp #ref [prop]="ref.foo"></some-cmp>
      * ```
      *
-     * In this case, `TcbDirectiveCircularFallbackOp` will add a second inference of the directive type
-     * to the type-check block, this time calling the directive's type constructor without any input
-     * expressions. This infers the widest possible supertype for the directive, which is used to
+     * In this case, `TcbDirectiveCtorCircularFallbackOp` will add a second inference of the directive
+     * type to the type-check block, this time calling the directive's type constructor without any
+     * input expressions. This infers the widest possible supertype for the directive, which is used to
      * resolve any recursive references required to infer the real type.
      */
-    class TcbDirectiveCircularFallbackOp extends TcbOp {
+    class TcbDirectiveCtorCircularFallbackOp extends TcbOp {
         constructor(tcb, scope, node, dir) {
             super();
             this.tcb = tcb;
@@ -33095,8 +33408,8 @@ export * from '${relativeEntryPoint}';
              */
             this.elementOpMap = new Map();
             /**
-             * A map of maps which tracks the index of `TcbDirectiveOp`s in the `opQueue` for each directive
-             * on a `TmplAstElement` or `TmplAstTemplate` node.
+             * A map of maps which tracks the index of `TcbDirectiveCtorOp`s in the `opQueue` for each
+             * directive on a `TmplAstElement` or `TmplAstTemplate` node.
              */
             this.directiveOpMap = new Map();
             /**
@@ -33337,8 +33650,11 @@ export * from '${relativeEntryPoint}';
             }
             const dirMap = new Map();
             for (const dir of directives) {
-                const dirIndex = this.opQueue.push(new TcbDirectiveOp(this.tcb, this, node, dir)) - 1;
+                const directiveOp = dir.isGeneric ? new TcbDirectiveCtorOp(this.tcb, this, node, dir) :
+                    new TcbDirectiveTypeOp(this.tcb, this, node, dir);
+                const dirIndex = this.opQueue.push(directiveOp) - 1;
                 dirMap.set(dir, dirIndex);
+                this.opQueue.push(new TcbDirectiveInputsOp(this.tcb, this, node, dir));
             }
             this.directiveOpMap.set(node, dirMap);
             // After expanding the directives, we might need to queue an operation to check any unclaimed
@@ -33630,40 +33946,10 @@ export * from '${relativeEntryPoint}';
         /* typeArguments */ undefined, 
         /* argumentsArray */ [ts.createObjectLiteral(members)]);
     }
-    function tcbGetDirectiveInputs(el, dir, tcb, scope) {
-        // Only the first binding to a property is written.
-        // TODO(alxhub): produce an error for duplicate bindings to the same property, independently of
-        // this logic.
-        const directiveInputs = new Map();
-        // `dir.inputs` is an object map of field names on the directive class to property names.
-        // This is backwards from what's needed to match bindings - a map of properties to field names
-        // is desired. Invert `dir.inputs` into `propMatch` to create this map.
-        const propMatch = new Map();
-        const inputs = dir.inputs;
-        Object.keys(inputs).forEach(key => {
-            Array.isArray(inputs[key]) ? propMatch.set(inputs[key][0], key) :
-                propMatch.set(inputs[key], key);
-        });
-        el.inputs.forEach(processAttribute);
-        el.attributes.forEach(processAttribute);
-        if (el instanceof Template) {
-            el.templateAttrs.forEach(processAttribute);
-        }
-        // Add unset directive inputs for each of the remaining unset fields.
-        // Note: it's actually important here that `propMatch.values()` isn't used, as there can be
-        // multiple fields which share the same property name and only one of them will be listed as a
-        // value in `propMatch`.
-        for (const field of Object.keys(inputs)) {
-            if (!directiveInputs.has(field)) {
-                directiveInputs.set(field, { type: 'unset', field });
-            }
-        }
-        return Array.from(directiveInputs.values());
-        /**
-         * Add a binding expression to the map for each input/template attribute of the directive that has
-         * a matching binding.
-         */
-        function processAttribute(attr) {
+    function getBoundInputs(directive, node, tcb) {
+        const boundInputs = [];
+        const propertyToFieldNames = invertInputs(directive.inputs);
+        const processAttribute = (attr) => {
             // Skip non-property bindings.
             if (attr instanceof BoundAttribute && attr.type !== 0 /* Property */) {
                 return;
@@ -33673,30 +33959,49 @@ export * from '${relativeEntryPoint}';
                 return;
             }
             // Skip the attribute if the directive does not have an input for it.
-            if (!propMatch.has(attr.name)) {
+            if (!propertyToFieldNames.has(attr.name)) {
                 return;
             }
-            const field = propMatch.get(attr.name);
-            // Skip the attribute if a previous binding also wrote to it.
-            if (directiveInputs.has(field)) {
-                return;
-            }
-            let expr;
-            if (attr instanceof BoundAttribute) {
-                // Produce an expression representing the value of the binding.
-                expr = tcbExpression(attr.value, tcb, scope);
+            const fieldNames = propertyToFieldNames.get(attr.name);
+            boundInputs.push({ attribute: attr, fieldNames });
+        };
+        node.inputs.forEach(processAttribute);
+        node.attributes.forEach(processAttribute);
+        if (node instanceof Template) {
+            node.templateAttrs.forEach(processAttribute);
+        }
+        return boundInputs;
+    }
+    /**
+     * Translates the given attribute binding to a `ts.Expression`.
+     */
+    function translateInput(attr, tcb, scope) {
+        if (attr instanceof BoundAttribute) {
+            // Produce an expression representing the value of the binding.
+            return tcbExpression(attr.value, tcb, scope);
+        }
+        else {
+            // For regular attributes with a static string value, use the represented string literal.
+            return ts.createStringLiteral(attr.value);
+        }
+    }
+    /**
+     * Inverts the input-mapping from field-to-property name into property-to-field name, to be able
+     * to match a property in a template with the corresponding field on a directive.
+     */
+    function invertInputs(inputs) {
+        const propertyToFieldNames = new Map();
+        for (const fieldName of Object.keys(inputs)) {
+            const propertyNames = inputs[fieldName];
+            const propertyName = Array.isArray(propertyNames) ? propertyNames[0] : propertyNames;
+            if (propertyToFieldNames.has(propertyName)) {
+                propertyToFieldNames.get(propertyName).push(fieldName);
             }
             else {
-                // For regular attributes with a static string value, use the represented string literal.
-                expr = ts.createStringLiteral(attr.value);
+                propertyToFieldNames.set(propertyName, [fieldName]);
             }
-            directiveInputs.set(field, {
-                type: 'binding',
-                field: field,
-                expression: expr,
-                sourceSpan: attr.sourceSpan,
-            });
         }
+        return propertyToFieldNames;
     }
     const EVENT_PARAMETER = '$event';
     /**
@@ -33920,7 +34225,7 @@ export * from '${relativeEntryPoint}';
             for (const dir of boundTarget.getUsedDirectives()) {
                 const dirRef = dir.ref;
                 const dirNode = dirRef.node;
-                if (requiresInlineTypeCtor(dirNode, this.reflector)) {
+                if (dir.isGeneric && requiresInlineTypeCtor(dirNode, this.reflector)) {
                     if (this.inlining === InliningMode.Error) {
                         missingInlines.push(dirNode);
                         continue;
@@ -34986,6 +35291,7 @@ export * from '${relativeEntryPoint}';
                     checkQueries: false,
                     checkTemplateBodies: true,
                     checkTypeOfInputBindings: strictTemplates,
+                    honorAccessModifiersForInputBindings: false,
                     strictNullInputBindings: strictTemplates,
                     checkTypeOfAttributes: strictTemplates,
                     // Even in full template type-checking mode, DOM binding checks are not quite ready yet.
@@ -35014,6 +35320,7 @@ export * from '${relativeEntryPoint}';
                     checkTemplateBodies: false,
                     checkTypeOfInputBindings: false,
                     strictNullInputBindings: false,
+                    honorAccessModifiersForInputBindings: false,
                     checkTypeOfAttributes: false,
                     checkTypeOfDomBindings: false,
                     checkTypeOfOutputEvents: false,
@@ -35032,6 +35339,10 @@ export * from '${relativeEntryPoint}';
             if (this.options.strictInputTypes !== undefined) {
                 typeCheckingConfig.checkTypeOfInputBindings = this.options.strictInputTypes;
                 typeCheckingConfig.applyTemplateContextGuards = this.options.strictInputTypes;
+            }
+            if (this.options.strictInputAccessModifiers !== undefined) {
+                typeCheckingConfig.honorAccessModifiersForInputBindings =
+                    this.options.strictInputAccessModifiers;
             }
             if (this.options.strictNullInputTypes !== undefined) {
                 typeCheckingConfig.strictNullInputBindings = this.options.strictNullInputTypes;
