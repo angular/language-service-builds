@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.8+36.sha-f6cfc92
+ * @license Angular v10.0.8+37.sha-ca2b4bc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18868,7 +18868,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.8+36.sha-f6cfc92');
+    const VERSION$1 = new Version('10.0.8+37.sha-ca2b4bc');
 
     /**
      * @license
@@ -19457,7 +19457,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.0.8+36.sha-f6cfc92');
+    const VERSION$2 = new Version('10.0.8+37.sha-ca2b4bc');
 
     /**
      * @license
@@ -19521,17 +19521,18 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     class FatalDiagnosticError {
-        constructor(code, node, message) {
+        constructor(code, node, message, relatedInformation) {
             this.code = code;
             this.node = node;
             this.message = message;
+            this.relatedInformation = relatedInformation;
             /**
              * @internal
              */
             this._isFatalDiagnosticError = true;
         }
         toDiagnostic() {
-            return makeDiagnostic(this.code, this.node, this.message);
+            return makeDiagnostic(this.code, this.node, this.message, this.relatedInformation);
         }
     }
     function makeDiagnostic(code, node, messageText, relatedInformation) {
@@ -20677,18 +20678,21 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function typeToValue(typeNode, checker) {
         // It's not possible to get a value expression if the parameter doesn't even have a type.
-        if (typeNode === null || !ts.isTypeReferenceNode(typeNode)) {
-            return null;
+        if (typeNode === null) {
+            return missingType();
+        }
+        if (!ts.isTypeReferenceNode(typeNode)) {
+            return unsupportedType(typeNode);
         }
         const symbols = resolveTypeSymbols(typeNode, checker);
         if (symbols === null) {
-            return null;
+            return unknownReference(typeNode);
         }
         const { local, decl } = symbols;
         // It's only valid to convert a type reference to a value reference if the type actually
         // has a value declaration associated with it.
         if (decl.valueDeclaration === undefined) {
-            return null;
+            return noValueDeclaration(typeNode, decl.declarations[0]);
         }
         // The type points to a valid value declaration. Rewrite the TypeReference into an
         // Expression which references the value pointed to by the TypeReference, if possible.
@@ -20699,8 +20703,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (ts.isImportClause(firstDecl) && firstDecl.name !== undefined) {
                 // This is a default import.
                 //   import Foo from 'foo';
+                if (firstDecl.isTypeOnly) {
+                    // Type-only imports cannot be represented as value.
+                    return typeOnlyImport(typeNode, firstDecl);
+                }
                 return {
-                    local: true,
+                    kind: 0 /* LOCAL */,
                     // Copying the name here ensures the generated references will be correctly transformed
                     // along with the import.
                     expression: ts.updateIdentifier(firstDecl.name),
@@ -20712,6 +20720,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 //   import {Foo} from 'foo';
                 // or
                 //   import {Foo as Bar} from 'foo';
+                if (firstDecl.parent.parent.isTypeOnly) {
+                    // Type-only imports cannot be represented as value.
+                    return typeOnlyImport(typeNode, firstDecl.parent.parent);
+                }
                 // Determine the name to import (`Foo`) from the import specifier, as the symbol names of
                 // the imported type could refer to a local alias (like `Bar` in the example above).
                 const importedName = (firstDecl.propertyName || firstDecl.name).text;
@@ -20720,7 +20732,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const [_localName, ...nestedPath] = symbols.symbolNames;
                 const moduleName = extractModuleName(firstDecl.parent.parent.parent);
                 return {
-                    local: false,
+                    kind: 1 /* IMPORTED */,
                     valueDeclaration: decl.valueDeclaration,
                     moduleName,
                     importedName,
@@ -20730,9 +20742,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             else if (ts.isNamespaceImport(firstDecl)) {
                 // The import is a namespace import
                 //   import * as Foo from 'foo';
+                if (firstDecl.parent.isTypeOnly) {
+                    // Type-only imports cannot be represented as value.
+                    return typeOnlyImport(typeNode, firstDecl.parent);
+                }
                 if (symbols.symbolNames.length === 1) {
                     // The type refers to the namespace itself, which cannot be represented as a value.
-                    return null;
+                    return namespaceImport(typeNode, firstDecl.parent);
                 }
                 // The first symbol name refers to the local name of the namespace, which is is discarded
                 // as a new namespace import will be generated. This is followed by the symbol name that needs
@@ -20740,7 +20756,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const [_ns, importedName, ...nestedPath] = symbols.symbolNames;
                 const moduleName = extractModuleName(firstDecl.parent.parent);
                 return {
-                    local: false,
+                    kind: 1 /* IMPORTED */,
                     valueDeclaration: decl.valueDeclaration,
                     moduleName,
                     importedName,
@@ -20752,14 +20768,50 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const expression = typeNodeToValueExpr(typeNode);
         if (expression !== null) {
             return {
-                local: true,
+                kind: 0 /* LOCAL */,
                 expression,
                 defaultImportStatement: null,
             };
         }
         else {
-            return null;
+            return unsupportedType(typeNode);
         }
+    }
+    function unsupportedType(typeNode) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 5 /* UNSUPPORTED */, typeNode },
+        };
+    }
+    function noValueDeclaration(typeNode, decl) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 1 /* NO_VALUE_DECLARATION */, typeNode, decl },
+        };
+    }
+    function typeOnlyImport(typeNode, importClause) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 2 /* TYPE_ONLY_IMPORT */, typeNode, importClause },
+        };
+    }
+    function unknownReference(typeNode) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 3 /* UNKNOWN_REFERENCE */, typeNode },
+        };
+    }
+    function namespaceImport(typeNode, importClause) {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 4 /* NAMESPACE */, typeNode, importClause },
+        };
+    }
+    function missingType() {
+        return {
+            kind: 2 /* UNAVAILABLE */,
+            reason: { kind: 0 /* MISSING_TYPE */ },
+        };
     }
     /**
      * Attempt to extract a `ts.Expression` that's equivalent to a `ts.TypeNode`, as the two have
@@ -20911,9 +20963,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     let childTypeNodes = typeNode.types.filter(childTypeNode => childTypeNode.kind !== ts.SyntaxKind.NullKeyword);
                     if (childTypeNodes.length === 1) {
                         typeNode = childTypeNodes[0];
-                    }
-                    else {
-                        typeNode = null;
                     }
                 }
                 const typeValueReference = typeToValue(typeNode, this.checker);
@@ -24660,10 +24709,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ConstructorDepErrorKind;
-    (function (ConstructorDepErrorKind) {
-        ConstructorDepErrorKind[ConstructorDepErrorKind["NO_SUITABLE_TOKEN"] = 0] = "NO_SUITABLE_TOKEN";
-    })(ConstructorDepErrorKind || (ConstructorDepErrorKind = {}));
     function getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore) {
         const deps = [];
         const errors = [];
@@ -24724,10 +24769,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 resolved = R3ResolvedDependencyType.ChangeDetectorRef;
             }
             if (token === null) {
+                if (param.typeValueReference.kind !== 2 /* UNAVAILABLE */) {
+                    throw new Error('Illegal state: expected value reference to be unavailable if no token is present');
+                }
                 errors.push({
                     index: idx,
-                    kind: ConstructorDepErrorKind.NO_SUITABLE_TOKEN,
                     param,
+                    reason: param.typeValueReference.reason,
                 });
             }
             else {
@@ -24742,10 +24790,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function valueReferenceToExpression(valueRef, defaultImportRecorder) {
-        if (valueRef === null) {
+        if (valueRef.kind === 2 /* UNAVAILABLE */) {
             return null;
         }
-        else if (valueRef.local) {
+        else if (valueRef.kind === 0 /* LOCAL */) {
             if (defaultImportRecorder !== null && valueRef.defaultImportStatement !== null &&
                 ts.isIdentifier(valueRef.expression)) {
                 defaultImportRecorder.recordImportedIdentifier(valueRef.expression, valueRef.defaultImportStatement);
@@ -24753,11 +24801,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return new WrappedNodeExpr(valueRef.expression);
         }
         else {
-            // TODO(alxhub): this cast is necessary because the g3 typescript version doesn't narrow here.
-            const ref = valueRef;
-            let importExpr = new ExternalExpr({ moduleName: ref.moduleName, name: ref.importedName });
-            if (ref.nestedPath !== null) {
-                for (const property of ref.nestedPath) {
+            let importExpr = new ExternalExpr({ moduleName: valueRef.moduleName, name: valueRef.importedName });
+            if (valueRef.nestedPath !== null) {
+                for (const property of valueRef.nestedPath) {
                     importExpr = new ReadPropExpr(importExpr, property);
                 }
             }
@@ -24802,12 +24848,69 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         else {
             // TODO(alxhub): this cast is necessary because the g3 typescript version doesn't narrow here.
-            const { param, index } = deps.errors[0];
             // There is at least one error.
-            throw new FatalDiagnosticError(ErrorCode.PARAM_MISSING_TOKEN, param.nameNode, `No suitable injection token for parameter '${param.name || index}' of class '${clazz.name.text}'.\n` +
-                (param.typeNode !== null ? `Found ${param.typeNode.getText()}` :
-                    'no type or decorator'));
+            const error = deps.errors[0];
+            throw createUnsuitableInjectionTokenError(clazz, error);
         }
+    }
+    /**
+     * Creates a fatal error with diagnostic for an invalid injection token.
+     * @param clazz The class for which the injection token was unavailable.
+     * @param error The reason why no valid injection token is available.
+     */
+    function createUnsuitableInjectionTokenError(clazz, error) {
+        const { param, index, reason } = error;
+        let chainMessage = undefined;
+        let hints = undefined;
+        switch (reason.kind) {
+            case 5 /* UNSUPPORTED */:
+                chainMessage = 'Consider using the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type is not supported as injection token.'),
+                ];
+                break;
+            case 1 /* NO_VALUE_DECLARATION */:
+                chainMessage = 'Consider using the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type does not have a value, so it cannot be used as injection token.'),
+                    makeRelatedInformation(reason.decl, 'The type is declared here.'),
+                ];
+                break;
+            case 2 /* TYPE_ONLY_IMPORT */:
+                chainMessage =
+                    'Consider changing the type-only import to a regular import, or use the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type is imported using a type-only import, which prevents it from being usable as an injection token.'),
+                    makeRelatedInformation(reason.importClause, 'The type-only import occurs here.'),
+                ];
+                break;
+            case 4 /* NAMESPACE */:
+                chainMessage = 'Consider using the @Inject decorator to specify an injection token.';
+                hints = [
+                    makeRelatedInformation(reason.typeNode, 'This type corresponds with a namespace, which cannot be used as injection token.'),
+                    makeRelatedInformation(reason.importClause, 'The namespace import occurs here.'),
+                ];
+                break;
+            case 3 /* UNKNOWN_REFERENCE */:
+                chainMessage = 'The type should reference a known declaration.';
+                hints = [makeRelatedInformation(reason.typeNode, 'This type could not be resolved.')];
+                break;
+            case 0 /* MISSING_TYPE */:
+                chainMessage =
+                    'Consider adding a type to the parameter or use the @Inject decorator to specify an injection token.';
+                break;
+        }
+        const chain = {
+            messageText: `No suitable injection token for parameter '${param.name || index}' of class '${clazz.name.text}'.`,
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            next: [{
+                    messageText: chainMessage,
+                    category: ts.DiagnosticCategory.Message,
+                    code: 0,
+                }],
+        };
+        return new FatalDiagnosticError(ErrorCode.PARAM_MISSING_TOKEN, param.nameNode, chain, hints);
     }
     function toR3Reference(valueRef, typeRef, valueContext, typeContext, refEmitter) {
         const value = refEmitter.emit(valueRef, valueContext);
@@ -25254,7 +25357,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     function ctorParameterToMetadata(param, defaultImportRecorder, isCore) {
         // Parameters sometimes have a type that can be referenced. If so, then use it, otherwise
         // its type is undefined.
-        const type = param.typeValueReference !== null ?
+        const type = param.typeValueReference.kind !== 2 /* UNAVAILABLE */ ?
             valueReferenceToExpression(param.typeValueReference, defaultImportRecorder) :
             new LiteralExpr(undefined);
         const mapEntries = [
