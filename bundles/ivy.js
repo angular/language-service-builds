@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.5+26.sha-3b9c802
+ * @license Angular v10.1.0-next.5+27.sha-cfe424e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -148,9 +148,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
 
     let fs = new InvalidFileSystem();
-    function getFileSystem() {
-        return fs;
-    }
     function setFileSystem(fileSystem) {
         fs = fileSystem;
     }
@@ -198,12 +195,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function relative(from, to) {
         return fs.relative(from, to);
-    }
-    /**
-     * Static access to `basename`.
-     */
-    function basename(filePath, extension) {
-        return fs.basename(filePath, extension);
     }
     /**
      * Returns true if the given path is locally relative.
@@ -18893,7 +18884,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.5+26.sha-3b9c802');
+    const VERSION$1 = new Version('10.1.0-next.5+27.sha-cfe424e');
 
     /**
      * @license
@@ -19482,7 +19473,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.5+26.sha-3b9c802');
+    const VERSION$2 = new Version('10.1.0-next.5+27.sha-cfe424e');
 
     /**
      * @license
@@ -19730,13 +19721,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const TS = /\.tsx?$/i;
     const D_TS = /\.d\.ts$/i;
     function isDtsPath(filePath) {
         return D_TS.test(filePath);
-    }
-    function isNonDeclarationTsPath(filePath) {
-        return TS.test(filePath) && !D_TS.test(filePath);
     }
     function nodeNameForError(node) {
         if (node.name !== undefined && ts.isIdentifier(node.name)) {
@@ -19788,23 +19775,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         return topLevel.modifiers !== undefined &&
             topLevel.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
-    }
-    function getRootDirs(host, options) {
-        const rootDirs = [];
-        if (options.rootDirs !== undefined) {
-            rootDirs.push(...options.rootDirs);
-        }
-        else if (options.rootDir !== undefined) {
-            rootDirs.push(options.rootDir);
-        }
-        else {
-            rootDirs.push(host.getCurrentDirectory());
-        }
-        // In Windows the above might not always return posix separated paths
-        // See:
-        // https://github.com/Microsoft/TypeScript/blob/3f7357d37f66c842d70d835bc925ec2a873ecfec/src/compiler/sys.ts#L650
-        // Also compiler options might be set via an API which doesn't normalize paths
-        return rootDirs.map(rootDir => absoluteFrom(host.getCanonicalFileName(rootDir)));
     }
     function nodeDebugInfo(node) {
         const sf = getSourceFile(node);
@@ -20239,10 +20209,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function relativePathBetween(from, to) {
         const relativePath = stripExtension(relative(dirname(resolve(from)), resolve(to)));
         return relativePath !== '' ? toRelativeImport(relativePath) : null;
-    }
-    function normalizeSeparators(path) {
-        // TODO: normalize path only for OS that need it.
-        return path.replace(/\\/g, '/');
     }
 
     /**
@@ -27901,70 +27867,6 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    class FlatIndexGenerator {
-        constructor(entryPoint, relativeFlatIndexPath, moduleName) {
-            this.entryPoint = entryPoint;
-            this.moduleName = moduleName;
-            this.shouldEmit = true;
-            this.flatIndexPath =
-                join(dirname(entryPoint), relativeFlatIndexPath).replace(/\.js$/, '') + '.ts';
-        }
-        makeTopLevelShim() {
-            const relativeEntryPoint = relativePathBetween(this.flatIndexPath, this.entryPoint);
-            const contents = `/**
- * Generated bundle index. Do not edit.
- */
-
-export * from '${relativeEntryPoint}';
-`;
-            const genFile = ts.createSourceFile(this.flatIndexPath, contents, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
-            if (this.moduleName !== null) {
-                genFile.moduleName = this.moduleName;
-            }
-            return genFile;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function findFlatIndexEntryPoint(rootFiles) {
-        // There are two ways for a file to be recognized as the flat module index:
-        // 1) if it's the only file!!!!!!
-        // 2) (deprecated) if it's named 'index.ts' and has the shortest path of all such files.
-        const tsFiles = rootFiles.filter(file => isNonDeclarationTsPath(file));
-        let resolvedEntryPoint = null;
-        if (tsFiles.length === 1) {
-            // There's only one file - this is the flat module index.
-            resolvedEntryPoint = tsFiles[0];
-        }
-        else {
-            // In the event there's more than one TS file, one of them can still be selected as the
-            // flat module index if it's named 'index.ts'. If there's more than one 'index.ts', the one
-            // with the shortest path wins.
-            //
-            // This behavior is DEPRECATED and only exists to support existing usages.
-            for (const tsFile of tsFiles) {
-                if (getFileSystem().basename(tsFile) === 'index.ts' &&
-                    (resolvedEntryPoint === null || tsFile.length <= resolvedEntryPoint.length)) {
-                    resolvedEntryPoint = tsFile;
-                }
-            }
-        }
-        return resolvedEntryPoint;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Produce `ts.Diagnostic`s for classes that are visible from exported types (e.g. directives
      * exposed by exported `NgModule`s) that are not themselves exported.
@@ -30230,31 +30132,6 @@ export * from '${relativeEntryPoint}';
         return sf[NgExtension] !== undefined;
     }
     /**
-     * Returns the `NgExtensionData` for a given `ts.SourceFile`, adding it if none exists.
-     */
-    function sfExtensionData(sf) {
-        const extSf = sf;
-        if (extSf[NgExtension] !== undefined) {
-            // The file already has extension data, so return it directly.
-            return extSf[NgExtension];
-        }
-        // The file has no existing extension data, so add it and return it.
-        const extension = {
-            isTopLevelShim: false,
-            fileShim: null,
-            originalReferencedFiles: null,
-            taggedReferenceFiles: null,
-        };
-        extSf[NgExtension] = extension;
-        return extension;
-    }
-    /**
-     * Check whether `sf` is a per-file shim `ts.SourceFile`.
-     */
-    function isFileShimSourceFile(sf) {
-        return isExtended(sf) && sf[NgExtension].fileShim !== null;
-    }
-    /**
      * Check whether `sf` is a shim `ts.SourceFile` (either a per-file shim or a top-level shim).
      */
     function isShim(sf) {
@@ -30268,291 +30145,7 @@ export * from '${relativeEntryPoint}';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const TS_EXTENSIONS = /\.tsx?$/i;
-    /**
-     * Replace the .ts or .tsx extension of a file with the shim filename suffix.
-     */
-    function makeShimFileName(fileName, suffix) {
-        return absoluteFrom(fileName.replace(TS_EXTENSIONS, suffix));
-    }
-    function generatedModuleName(originalModuleName, originalFileName, genSuffix) {
-        let moduleName;
-        if (originalFileName.endsWith('/index.ts')) {
-            moduleName = originalModuleName + '/index' + genSuffix;
-        }
-        else {
-            moduleName = originalModuleName + genSuffix;
-        }
-        return moduleName;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Generates and tracks shim files for each original `ts.SourceFile`.
-     *
-     * The `ShimAdapter` provides an API that's designed to be used by a `ts.CompilerHost`
-     * implementation and allows it to include synthetic "shim" files in the program that's being
-     * created. It works for both freshly created programs as well as with reuse of an older program
-     * (which already may contain shim files and thus have a different creation flow).
-     */
-    class ShimAdapter {
-        constructor(delegate, tsRootFiles, topLevelGenerators, perFileGenerators, oldProgram) {
-            this.delegate = delegate;
-            /**
-             * A map of shim file names to the `ts.SourceFile` generated for those shims.
-             */
-            this.shims = new Map();
-            /**
-             * A map of shim file names to existing shims which were part of a previous iteration of this
-             * program.
-             *
-             * Not all of these shims will be inherited into this program.
-             */
-            this.priorShims = new Map();
-            /**
-             * File names which are already known to not be shims.
-             *
-             * This allows for short-circuit returns without the expense of running regular expressions
-             * against the filename repeatedly.
-             */
-            this.notShims = new Set();
-            /**
-             * The shim generators supported by this adapter as well as extra precalculated data facilitating
-             * their use.
-             */
-            this.generators = [];
-            /**
-             * A `Set` of shim `ts.SourceFile`s which should not be emitted.
-             */
-            this.ignoreForEmit = new Set();
-            /**
-             * Extension prefixes of all installed per-file shims.
-             */
-            this.extensionPrefixes = [];
-            // Initialize `this.generators` with a regex that matches each generator's paths.
-            for (const gen of perFileGenerators) {
-                // This regex matches paths for shims from this generator. The first (and only) capture group
-                // extracts the filename prefix, which can be used to find the original file that was used to
-                // generate this shim.
-                const pattern = `^(.*)\\.${gen.extensionPrefix}\\.ts$`;
-                const regexp = new RegExp(pattern, 'i');
-                this.generators.push({
-                    generator: gen,
-                    test: regexp,
-                    suffix: `.${gen.extensionPrefix}.ts`,
-                });
-                this.extensionPrefixes.push(gen.extensionPrefix);
-            }
-            // Process top-level generators and pre-generate their shims. Accumulate the list of filenames
-            // as extra input files.
-            const extraInputFiles = [];
-            for (const gen of topLevelGenerators) {
-                const sf = gen.makeTopLevelShim();
-                sfExtensionData(sf).isTopLevelShim = true;
-                if (!gen.shouldEmit) {
-                    this.ignoreForEmit.add(sf);
-                }
-                const fileName = absoluteFromSourceFile(sf);
-                this.shims.set(fileName, sf);
-                extraInputFiles.push(fileName);
-            }
-            // Add to that list the per-file shims associated with each root file. This is needed because
-            // reference tagging alone may not work in TS compilations that have `noResolve` set. Such
-            // compilations rely on the list of input files completely describing the program.
-            for (const rootFile of tsRootFiles) {
-                for (const gen of this.generators) {
-                    extraInputFiles.push(makeShimFileName(rootFile, gen.suffix));
-                }
-            }
-            this.extraInputFiles = extraInputFiles;
-            // If an old program is present, extract all per-file shims into a map, which will be used to
-            // generate new versions of those shims.
-            if (oldProgram !== null) {
-                for (const oldSf of oldProgram.getSourceFiles()) {
-                    if (oldSf.isDeclarationFile || !isFileShimSourceFile(oldSf)) {
-                        continue;
-                    }
-                    this.priorShims.set(absoluteFromSourceFile(oldSf), oldSf);
-                }
-            }
-        }
-        /**
-         * Produce a shim `ts.SourceFile` if `fileName` refers to a shim file which should exist in the
-         * program.
-         *
-         * If `fileName` does not refer to a potential shim file, `null` is returned. If a corresponding
-         * base file could not be determined, `undefined` is returned instead.
-         */
-        maybeGenerate(fileName) {
-            // Fast path: either this filename has been proven not to be a shim before, or it is a known
-            // shim and no generation is required.
-            if (this.notShims.has(fileName)) {
-                return null;
-            }
-            else if (this.shims.has(fileName)) {
-                return this.shims.get(fileName);
-            }
-            // .d.ts files can't be shims.
-            if (isDtsPath(fileName)) {
-                this.notShims.add(fileName);
-                return null;
-            }
-            // This is the first time seeing this path. Try to match it against a shim generator.
-            for (const record of this.generators) {
-                const match = record.test.exec(fileName);
-                if (match === null) {
-                    continue;
-                }
-                // The path matched. Extract the filename prefix without the extension.
-                const prefix = match[1];
-                // This _might_ be a shim, if an underlying base file exists. The base file might be .ts or
-                // .tsx.
-                let baseFileName = absoluteFrom(prefix + '.ts');
-                if (!this.delegate.fileExists(baseFileName)) {
-                    // No .ts file by that name - try .tsx.
-                    baseFileName = absoluteFrom(prefix + '.tsx');
-                    if (!this.delegate.fileExists(baseFileName)) {
-                        // This isn't a shim after all since there is no original file which would have triggered
-                        // its generation, even though the path is right. There are a few reasons why this could
-                        // occur:
-                        //
-                        // * when resolving an import to an .ngfactory.d.ts file, the module resolution algorithm
-                        //   will first look for an .ngfactory.ts file in its place, which will be requested here.
-                        // * when the user writes a bad import.
-                        // * when a file is present in one compilation and removed in the next incremental step.
-                        //
-                        // Note that this does not add the filename to `notShims`, so this path is not cached.
-                        // That's okay as these cases above are edge cases and do not occur regularly in normal
-                        // operations.
-                        return undefined;
-                    }
-                }
-                // Retrieve the original file for which the shim will be generated.
-                const inputFile = this.delegate.getSourceFile(baseFileName, ts.ScriptTarget.Latest);
-                if (inputFile === undefined || isShim(inputFile)) {
-                    // Something strange happened here. This case is also not cached in `notShims`, but this
-                    // path is not expected to occur in reality so this shouldn't be a problem.
-                    return undefined;
-                }
-                // Actually generate and cache the shim.
-                return this.generateSpecific(fileName, record.generator, inputFile);
-            }
-            // No generator matched.
-            this.notShims.add(fileName);
-            return null;
-        }
-        generateSpecific(fileName, generator, inputFile) {
-            let priorShimSf = null;
-            if (this.priorShims.has(fileName)) {
-                // In the previous program a shim with this name already existed. It's passed to the shim
-                // generator which may reuse it instead of generating a fresh shim.
-                priorShimSf = this.priorShims.get(fileName);
-                this.priorShims.delete(fileName);
-            }
-            const shimSf = generator.generateShimForFile(inputFile, fileName, priorShimSf);
-            // Mark the new generated source file as a shim that originated from this generator.
-            sfExtensionData(shimSf).fileShim = {
-                extension: generator.extensionPrefix,
-                generatedFrom: absoluteFromSourceFile(inputFile),
-            };
-            if (!generator.shouldEmit) {
-                this.ignoreForEmit.add(shimSf);
-            }
-            this.shims.set(fileName, shimSf);
-            return shimSf;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const TS_DTS_SUFFIX = /(\.d)?\.ts$/;
     const STRIP_NG_FACTORY = /(.*)NgFactory$/;
-    /**
-     * Generates ts.SourceFiles which contain variable declarations for NgFactories for every exported
-     * class of an input ts.SourceFile.
-     */
-    class FactoryGenerator {
-        constructor() {
-            this.sourceInfo = new Map();
-            this.sourceToFactorySymbols = new Map();
-            this.shouldEmit = true;
-            this.extensionPrefix = 'ngfactory';
-        }
-        generateShimForFile(sf, genFilePath) {
-            const absoluteSfPath = absoluteFromSourceFile(sf);
-            const relativePathToSource = './' + basename(sf.fileName).replace(TS_DTS_SUFFIX, '');
-            // Collect a list of classes that need to have factory types emitted for them. This list is
-            // overly broad as at this point the ts.TypeChecker hasn't been created, and can't be used to
-            // semantically understand which decorated types are actually decorated with Angular decorators.
-            //
-            // The exports generated here are pruned in the factory transform during emit.
-            const symbolNames = sf.statements
-                // Pick out top level class declarations...
-                .filter(ts.isClassDeclaration)
-                // which are named, exported, and have decorators.
-                .filter(decl => isExported$1(decl) && decl.decorators !== undefined &&
-                decl.name !== undefined)
-                // Grab the symbol name.
-                .map(decl => decl.name.text);
-            let sourceText = '';
-            // If there is a top-level comment in the original file, copy it over at the top of the
-            // generated factory file. This is important for preserving any load-bearing jsdoc comments.
-            const leadingComment = getFileoverviewComment(sf);
-            if (leadingComment !== null) {
-                // Leading comments must be separated from the rest of the contents by a blank line.
-                sourceText = leadingComment + '\n\n';
-            }
-            if (symbolNames.length > 0) {
-                // For each symbol name, generate a constant export of the corresponding NgFactory.
-                // This will encompass a lot of symbols which don't need factories, but that's okay
-                // because it won't miss any that do.
-                const varLines = symbolNames.map(name => `export const ${name}NgFactory: i0.ɵNgModuleFactory<any> = new i0.ɵNgModuleFactory(${name});`);
-                sourceText += [
-                    // This might be incorrect if the current package being compiled is Angular core, but it's
-                    // okay to leave in at type checking time. TypeScript can handle this reference via its path
-                    // mapping, but downstream bundlers can't. If the current package is core itself, this will
-                    // be replaced in the factory transformer before emit.
-                    `import * as i0 from '@angular/core';`,
-                    `import {${symbolNames.join(', ')}} from '${relativePathToSource}';`,
-                    ...varLines,
-                ].join('\n');
-            }
-            // Add an extra export to ensure this module has at least one. It'll be removed later in the
-            // factory transformer if it ends up not being needed.
-            sourceText += '\nexport const ɵNonEmptyModule = true;';
-            const genFile = ts.createSourceFile(genFilePath, sourceText, sf.languageVersion, true, ts.ScriptKind.TS);
-            if (sf.moduleName !== undefined) {
-                genFile.moduleName = generatedModuleName(sf.moduleName, sf.fileName, '.ngfactory');
-            }
-            const moduleSymbols = new Map();
-            this.sourceToFactorySymbols.set(absoluteSfPath, moduleSymbols);
-            this.sourceInfo.set(genFilePath, {
-                sourceFilePath: absoluteSfPath,
-                moduleSymbols,
-            });
-            return genFile;
-        }
-        track(sf, moduleInfo) {
-            if (this.sourceToFactorySymbols.has(sf.fileName)) {
-                this.sourceToFactorySymbols.get(sf.fileName).set(moduleInfo.name, moduleInfo);
-            }
-        }
-    }
-    function isExported$1(decl) {
-        return decl.modifiers !== undefined &&
-            decl.modifiers.some(mod => mod.kind == ts.SyntaxKind.ExportKeyword);
-    }
     function generatedFactoryTransform(factoryMap, importRewriter) {
         return (context) => {
             return (file) => {
@@ -30673,32 +30266,6 @@ export * from '${relativeEntryPoint}';
         return file;
     }
     /**
-     * Parses and returns the comment text of a \@fileoverview comment in the given source file.
-     */
-    function getFileoverviewComment(sourceFile) {
-        const text = sourceFile.getFullText();
-        const trivia = text.substring(0, sourceFile.getStart());
-        const leadingComments = ts.getLeadingCommentRanges(trivia, 0);
-        if (!leadingComments || leadingComments.length === 0) {
-            return null;
-        }
-        const comment = leadingComments[0];
-        if (comment.kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-            return null;
-        }
-        // Only comments separated with a \n\n from the file contents are considered file-level comments
-        // in TypeScript.
-        if (text.substring(comment.end, comment.end + 2) !== '\n\n') {
-            return null;
-        }
-        const commentText = text.substring(comment.pos, comment.end);
-        // Closure Compiler ignores @suppress and similar if the comment contains @license.
-        if (commentText.indexOf('@license') !== -1) {
-            return null;
-        }
-        return commentText;
-    }
-    /**
      * Wraps the given expression in a call to `ɵnoSideEffects()`, which tells
      * Closure we don't care about the side effects of this expression and it should
      * be treated as "pure". Closure is free to tree shake this expression if its
@@ -30730,131 +30297,6 @@ export * from '${relativeEntryPoint}';
      */
     function updateInitializers(stmt, update) {
         return ts.updateVariableStatement(stmt, stmt.modifiers, ts.updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts.updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Manipulates the `referencedFiles` property of `ts.SourceFile`s to add references to shim files
-     * for each original source file, causing the shims to be loaded into the program as well.
-     *
-     * `ShimReferenceTagger`s are intended to operate during program creation only.
-     */
-    class ShimReferenceTagger {
-        constructor(shimExtensions) {
-            /**
-             * Tracks which original files have been processed and had shims generated if necessary.
-             *
-             * This is used to avoid generating shims twice for the same file.
-             */
-            this.tagged = new Set();
-            /**
-             * Whether shim tagging is currently being performed.
-             */
-            this.enabled = true;
-            this.suffixes = shimExtensions.map(extension => `.${extension}.ts`);
-        }
-        /**
-         * Tag `sf` with any needed references if it's not a shim itself.
-         */
-        tag(sf) {
-            if (!this.enabled || sf.isDeclarationFile || isShim(sf) || this.tagged.has(sf) ||
-                !isNonDeclarationTsPath(sf.fileName)) {
-                return;
-            }
-            const ext = sfExtensionData(sf);
-            // If this file has never been tagged before, capture its `referencedFiles` in the extension
-            // data.
-            if (ext.originalReferencedFiles === null) {
-                ext.originalReferencedFiles = sf.referencedFiles;
-            }
-            const referencedFiles = [...ext.originalReferencedFiles];
-            const sfPath = absoluteFromSourceFile(sf);
-            for (const suffix of this.suffixes) {
-                referencedFiles.push({
-                    fileName: makeShimFileName(sfPath, suffix),
-                    pos: 0,
-                    end: 0,
-                });
-            }
-            ext.taggedReferenceFiles = referencedFiles;
-            sf.referencedFiles = referencedFiles;
-            this.tagged.add(sf);
-        }
-        /**
-         * Disable the `ShimReferenceTagger` and free memory associated with tracking tagged files.
-         */
-        finalize() {
-            this.enabled = false;
-            this.tagged.clear();
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class SummaryGenerator {
-        constructor() {
-            this.shouldEmit = true;
-            this.extensionPrefix = 'ngsummary';
-        }
-        generateShimForFile(sf, genFilePath) {
-            // Collect a list of classes that need to have factory types emitted for them. This list is
-            // overly broad as at this point the ts.TypeChecker has not been created and so it can't be used
-            // to semantically understand which decorators are Angular decorators. It's okay to output an
-            // overly broad set of summary exports as the exports are no-ops anyway, and summaries are a
-            // compatibility layer which will be removed after Ivy is enabled.
-            const symbolNames = [];
-            for (const stmt of sf.statements) {
-                if (ts.isClassDeclaration(stmt)) {
-                    // If the class isn't exported, or if it's not decorated, then skip it.
-                    if (!isExported$2(stmt) || stmt.decorators === undefined || stmt.name === undefined) {
-                        continue;
-                    }
-                    symbolNames.push(stmt.name.text);
-                }
-                else if (ts.isExportDeclaration(stmt)) {
-                    // Look for an export statement of the form "export {...};". If it doesn't match that, then
-                    // skip it.
-                    if (stmt.exportClause === undefined || stmt.moduleSpecifier !== undefined ||
-                        !ts.isNamedExports(stmt.exportClause)) {
-                        continue;
-                    }
-                    for (const specifier of stmt.exportClause.elements) {
-                        // At this point, there is no guarantee that specifier here refers to a class declaration,
-                        // but that's okay.
-                        // Use specifier.name as that's guaranteed to be the exported name, regardless of whether
-                        // specifier.propertyName is set.
-                        symbolNames.push(specifier.name.text);
-                    }
-                }
-            }
-            const varLines = symbolNames.map(name => `export const ${name}NgSummary: any = null;`);
-            if (varLines.length === 0) {
-                // In the event there are no other exports, add an empty export to ensure the generated
-                // summary file is still an ES module.
-                varLines.push(`export const ɵempty = null;`);
-            }
-            const sourceText = varLines.join('\n');
-            const genFile = ts.createSourceFile(genFilePath, sourceText, sf.languageVersion, true, ts.ScriptKind.TS);
-            if (sf.moduleName !== undefined) {
-                genFile.moduleName = generatedModuleName(sf.moduleName, sf.fileName, '.ngsummary');
-            }
-            return genFile;
-        }
-    }
-    function isExported$2(decl) {
-        return decl.modifiers !== undefined &&
-            decl.modifiers.some(mod => mod.kind == ts.SyntaxKind.ExportKeyword);
     }
 
     /**
@@ -35769,208 +35211,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Delegates all methods of `ExtendedTsCompilerHost` to a delegate, with the exception of
-     * `getSourceFile` and `fileExists` which are implemented in `NgCompilerHost`.
-     *
-     * If a new method is added to `ts.CompilerHost` which is not delegated, a type error will be
-     * generated for this class.
-     */
-    class DelegatingCompilerHost {
-        constructor(delegate) {
-            this.delegate = delegate;
-            // Excluded are 'getSourceFile' and 'fileExists', which are actually implemented by NgCompilerHost
-            // below.
-            this.createHash = this.delegateMethod('createHash');
-            this.directoryExists = this.delegateMethod('directoryExists');
-            this.fileNameToModuleName = this.delegateMethod('fileNameToModuleName');
-            this.getCancellationToken = this.delegateMethod('getCancellationToken');
-            this.getCanonicalFileName = this.delegateMethod('getCanonicalFileName');
-            this.getCurrentDirectory = this.delegateMethod('getCurrentDirectory');
-            this.getDefaultLibFileName = this.delegateMethod('getDefaultLibFileName');
-            this.getDefaultLibLocation = this.delegateMethod('getDefaultLibLocation');
-            this.getDirectories = this.delegateMethod('getDirectories');
-            this.getEnvironmentVariable = this.delegateMethod('getEnvironmentVariable');
-            this.getModifiedResourceFiles = this.delegateMethod('getModifiedResourceFiles');
-            this.getNewLine = this.delegateMethod('getNewLine');
-            this.getParsedCommandLine = this.delegateMethod('getParsedCommandLine');
-            this.getSourceFileByPath = this.delegateMethod('getSourceFileByPath');
-            this.readDirectory = this.delegateMethod('readDirectory');
-            this.readFile = this.delegateMethod('readFile');
-            this.readResource = this.delegateMethod('readResource');
-            this.realpath = this.delegateMethod('realpath');
-            this.resolveModuleNames = this.delegateMethod('resolveModuleNames');
-            this.resolveTypeReferenceDirectives = this.delegateMethod('resolveTypeReferenceDirectives');
-            this.resourceNameToFileName = this.delegateMethod('resourceNameToFileName');
-            this.trace = this.delegateMethod('trace');
-            this.useCaseSensitiveFileNames = this.delegateMethod('useCaseSensitiveFileNames');
-            this.writeFile = this.delegateMethod('writeFile');
-        }
-        delegateMethod(name) {
-            return this.delegate[name] !== undefined ? this.delegate[name].bind(this.delegate) :
-                undefined;
-        }
-    }
-    /**
-     * A wrapper around `ts.CompilerHost` (plus any extension methods from `ExtendedTsCompilerHost`).
-     *
-     * In order for a consumer to include Angular compilation in their TypeScript compiler, the
-     * `ts.Program` must be created with a host that adds Angular-specific files (e.g. factories,
-     * summaries, the template type-checking file, etc) to the compilation. `NgCompilerHost` is the
-     * host implementation which supports this.
-     *
-     * The interface implementations here ensure that `NgCompilerHost` fully delegates to
-     * `ExtendedTsCompilerHost` methods whenever present.
-     */
-    class NgCompilerHost extends DelegatingCompilerHost {
-        constructor(delegate, inputFiles, rootDirs, shimAdapter, shimTagger, entryPoint, factoryTracker, diagnostics) {
-            super(delegate);
-            this.shimAdapter = shimAdapter;
-            this.shimTagger = shimTagger;
-            this.factoryTracker = null;
-            this.entryPoint = null;
-            this.factoryTracker = factoryTracker;
-            this.entryPoint = entryPoint;
-            this.constructionDiagnostics = diagnostics;
-            this.inputFiles = [...inputFiles, ...shimAdapter.extraInputFiles];
-            this.rootDirs = rootDirs;
-        }
-        /**
-         * Retrieves a set of `ts.SourceFile`s which should not be emitted as JS files.
-         *
-         * Available after this host is used to create a `ts.Program` (which causes all the files in the
-         * program to be enumerated).
-         */
-        get ignoreForEmit() {
-            return this.shimAdapter.ignoreForEmit;
-        }
-        /**
-         * Retrieve the array of shim extension prefixes for which shims were created for each original
-         * file.
-         */
-        get shimExtensionPrefixes() {
-            return this.shimAdapter.extensionPrefixes;
-        }
-        /**
-         * Performs cleanup that needs to happen after a `ts.Program` has been created using this host.
-         */
-        postProgramCreationCleanup() {
-            this.shimTagger.finalize();
-        }
-        /**
-         * Create an `NgCompilerHost` from a delegate host, an array of input filenames, and the full set
-         * of TypeScript and Angular compiler options.
-         */
-        static wrap(delegate, inputFiles, options, oldProgram) {
-            // TODO(alxhub): remove the fallback to allowEmptyCodegenFiles after verifying that the rest of
-            // our build tooling is no longer relying on it.
-            const allowEmptyCodegenFiles = options.allowEmptyCodegenFiles || false;
-            const shouldGenerateFactoryShims = options.generateNgFactoryShims !== undefined ?
-                options.generateNgFactoryShims :
-                allowEmptyCodegenFiles;
-            const shouldGenerateSummaryShims = options.generateNgSummaryShims !== undefined ?
-                options.generateNgSummaryShims :
-                allowEmptyCodegenFiles;
-            const topLevelShimGenerators = [];
-            const perFileShimGenerators = [];
-            if (shouldGenerateSummaryShims) {
-                // Summary generation.
-                perFileShimGenerators.push(new SummaryGenerator());
-            }
-            let factoryTracker = null;
-            if (shouldGenerateFactoryShims) {
-                const factoryGenerator = new FactoryGenerator();
-                perFileShimGenerators.push(factoryGenerator);
-                factoryTracker = factoryGenerator;
-            }
-            const rootDirs = getRootDirs(delegate, options);
-            perFileShimGenerators.push(new TypeCheckShimGenerator());
-            let diagnostics = [];
-            const normalizedTsInputFiles = [];
-            for (const inputFile of inputFiles) {
-                if (!isNonDeclarationTsPath(inputFile)) {
-                    continue;
-                }
-                normalizedTsInputFiles.push(resolve(inputFile));
-            }
-            let entryPoint = null;
-            if (options.flatModuleOutFile != null && options.flatModuleOutFile !== '') {
-                entryPoint = findFlatIndexEntryPoint(normalizedTsInputFiles);
-                if (entryPoint === null) {
-                    // This error message talks specifically about having a single .ts file in "files". However
-                    // the actual logic is a bit more permissive. If a single file exists, that will be taken,
-                    // otherwise the highest level (shortest path) "index.ts" file will be used as the flat
-                    // module entry point instead. If neither of these conditions apply, the error below is
-                    // given.
-                    //
-                    // The user is not informed about the "index.ts" option as this behavior is deprecated -
-                    // an explicit entrypoint should always be specified.
-                    diagnostics.push({
-                        category: ts.DiagnosticCategory.Error,
-                        code: ngErrorCode(ErrorCode.CONFIG_FLAT_MODULE_NO_INDEX),
-                        file: undefined,
-                        start: undefined,
-                        length: undefined,
-                        messageText: 'Angular compiler option "flatModuleOutFile" requires one and only one .ts file in the "files" field.',
-                    });
-                }
-                else {
-                    const flatModuleId = options.flatModuleId || null;
-                    const flatModuleOutFile = normalizeSeparators(options.flatModuleOutFile);
-                    const flatIndexGenerator = new FlatIndexGenerator(entryPoint, flatModuleOutFile, flatModuleId);
-                    topLevelShimGenerators.push(flatIndexGenerator);
-                }
-            }
-            const shimAdapter = new ShimAdapter(delegate, normalizedTsInputFiles, topLevelShimGenerators, perFileShimGenerators, oldProgram);
-            const shimTagger = new ShimReferenceTagger(perFileShimGenerators.map(gen => gen.extensionPrefix));
-            return new NgCompilerHost(delegate, inputFiles, rootDirs, shimAdapter, shimTagger, entryPoint, factoryTracker, diagnostics);
-        }
-        /**
-         * Check whether the given `ts.SourceFile` is a shim file.
-         *
-         * If this returns false, the file is user-provided.
-         */
-        isShim(sf) {
-            return isShim(sf);
-        }
-        getSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile) {
-            // Is this a previously known shim?
-            const shimSf = this.shimAdapter.maybeGenerate(resolve(fileName));
-            if (shimSf !== null) {
-                // Yes, so return it.
-                return shimSf;
-            }
-            // No, so it's a file which might need shims (or a file which doesn't exist).
-            const sf = this.delegate.getSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
-            if (sf === undefined) {
-                return undefined;
-            }
-            this.shimTagger.tag(sf);
-            return sf;
-        }
-        fileExists(fileName) {
-            // Consider the file as existing whenever
-            //  1) it really does exist in the delegate host, or
-            //  2) at least one of the shim generators recognizes it
-            // Note that we can pass the file name as branded absolute fs path because TypeScript
-            // internally only passes POSIX-like paths.
-            //
-            // Also note that the `maybeGenerate` check below checks for both `null` and `undefined`.
-            return this.delegate.fileExists(fileName) ||
-                this.shimAdapter.maybeGenerate(resolve(fileName)) != null;
-        }
-        get unifiedModulesHost() {
-            return this.fileNameToModuleName !== undefined ? this : null;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function createNgCompilerOptions(basePath, config, tsOptions) {
         // enableIvy `ngtsc` is an alias for `true`.
         const { angularCompilerOptions = {} } = config;
@@ -36012,126 +35252,86 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function makeCompilerHostFromProject(project) {
-        const compilerHost = {
+    class LanguageService {
+        constructor(project, tsLS) {
+            this.tsLS = tsLS;
+            this.lastKnownProgram = null;
+            this.options = parseNgCompilerOptions(project);
+            this.strategy = createTypeCheckingProgramStrategy(project);
+            this.adapter = createNgCompilerAdapter(project);
+            this.watchConfigFile(project);
+        }
+        getSemanticDiagnostics(fileName) {
+            const program = this.strategy.getProgram();
+            const compiler = this.createCompiler(program);
+            if (fileName.endsWith('.ts')) {
+                const sourceFile = program.getSourceFile(fileName);
+                if (!sourceFile) {
+                    return [];
+                }
+                const ttc = compiler.getTemplateTypeChecker();
+                const diagnostics = ttc.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile);
+                this.lastKnownProgram = compiler.getNextProgram();
+                return diagnostics;
+            }
+            throw new Error('Ivy LS currently does not support external template');
+        }
+        createCompiler(program) {
+            return new NgCompiler(this.adapter, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), this.lastKnownProgram);
+        }
+        watchConfigFile(project) {
+            // TODO: Check the case when the project is disposed. An InferredProject
+            // could be disposed when a tsconfig.json is added to the workspace,
+            // in which case it becomes a ConfiguredProject (or vice-versa).
+            // We need to make sure that the FileWatcher is closed.
+            if (!(project instanceof ts$1.server.ConfiguredProject)) {
+                return;
+            }
+            const { host } = project.projectService;
+            host.watchFile(project.getConfigFilePath(), (fileName, eventKind) => {
+                project.log(`Config file changed: ${fileName}`);
+                if (eventKind === ts$1.FileWatcherEventKind.Changed) {
+                    this.options = parseNgCompilerOptions(project);
+                }
+            });
+        }
+    }
+    function parseNgCompilerOptions(project) {
+        let config = {};
+        if (project instanceof ts$1.server.ConfiguredProject) {
+            const configPath = project.getConfigFilePath();
+            const result = ts$1.readConfigFile(configPath, path => project.readFile(path));
+            if (result.error) {
+                project.error(ts$1.flattenDiagnosticMessageText(result.error.messageText, '\n'));
+            }
+            config = result.config || config;
+        }
+        const basePath = project.getCurrentDirectory();
+        return createNgCompilerOptions(basePath, config, project.getCompilationSettings());
+    }
+    function createNgCompilerAdapter(project) {
+        var _a;
+        return {
+            entryPoint: null,
+            constructionDiagnostics: [],
+            ignoreForEmit: new Set(),
+            factoryTracker: null,
+            unifiedModulesHost: null,
+            rootDirs: ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [],
+            isShim,
             fileExists(fileName) {
                 return project.fileExists(fileName);
             },
             readFile(fileName) {
                 return project.readFile(fileName);
             },
-            directoryExists(directoryName) {
-                return project.directoryExists(directoryName);
-            },
             getCurrentDirectory() {
                 return project.getCurrentDirectory();
-            },
-            getDirectories(path) {
-                return project.getDirectories(path);
-            },
-            getSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile) {
-                const path = project.projectService.toPath(fileName);
-                return project.getSourceFile(path);
-            },
-            getSourceFileByPath(fileName, path, languageVersion, onError, shouldCreateNewSourceFile) {
-                return project.getSourceFile(path);
-            },
-            getCancellationToken() {
-                return {
-                    isCancellationRequested() {
-                        return project.getCancellationToken().isCancellationRequested();
-                    },
-                    throwIfCancellationRequested() {
-                        if (this.isCancellationRequested()) {
-                            throw new ts$1.OperationCanceledException();
-                        }
-                    },
-                };
-            },
-            getDefaultLibFileName(options) {
-                return project.getDefaultLibFileName();
-            },
-            writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles) {
-                return project.writeFile(fileName, data);
             },
             getCanonicalFileName(fileName) {
                 return project.projectService.toCanonicalFileName(fileName);
             },
-            useCaseSensitiveFileNames() {
-                return project.useCaseSensitiveFileNames();
-            },
-            getNewLine() {
-                return project.getNewLine();
-            },
-            readDirectory(rootDir, extensions, excludes, includes, depth) {
-                return project.readDirectory(rootDir, extensions, excludes, includes, depth);
-            },
-            resolveModuleNames(moduleNames, containingFile, reusedNames, redirectedReference, options) {
-                return project.resolveModuleNames(moduleNames, containingFile, reusedNames, redirectedReference);
-            },
-            resolveTypeReferenceDirectives(typeReferenceDirectiveNames, containingFile, redirectedReference, options) {
-                return project.resolveTypeReferenceDirectives(typeReferenceDirectiveNames, containingFile, redirectedReference);
-            },
         };
-        if (project.trace) {
-            compilerHost.trace = function trace(s) {
-                project.trace(s);
-            };
-        }
-        if (project.realpath) {
-            compilerHost.realpath = function realpath(path) {
-                return project.realpath(path);
-            };
-        }
-        return compilerHost;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class Compiler {
-        constructor(project, options) {
-            this.project = project;
-            this.options = options;
-            this.lastKnownProgram = null;
-            this.tsCompilerHost = makeCompilerHostFromProject(project);
-            this.strategy = createTypeCheckingProgramStrategy(project);
-            // Do not retrieve the program in constructor because project is still in
-            // the process of loading, and not all data members have been initialized.
-        }
-        setCompilerOptions(options) {
-            this.options = options;
-        }
-        analyze() {
-            const inputFiles = this.project.getRootFiles();
-            const ngCompilerHost = NgCompilerHost.wrap(this.tsCompilerHost, inputFiles, this.options, this.lastKnownProgram);
-            const program = this.strategy.getProgram();
-            const compiler = new NgCompiler(ngCompilerHost, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), this.lastKnownProgram);
-            try {
-                // This is the only way to force the compiler to update the typecheck file
-                // in the program. We have to do try-catch because the compiler immediately
-                // throws if it fails to parse any template in the entire program!
-                const d = compiler.getDiagnostics();
-                if (d.length) {
-                    // There could be global compilation errors. It's useful to print them
-                    // out in development.
-                    console.error(d.map(d => ts$1.flattenDiagnosticMessageText(d.messageText, '\n')));
-                }
-            }
-            catch (e) {
-                console.error('Failed to analyze program', e.message);
-                return;
-            }
-            this.lastKnownProgram = compiler.getNextProgram();
-            return {
-                compiler,
-                program: this.lastKnownProgram,
-            };
-        }
     }
     function createTypeCheckingProgramStrategy(project) {
         return {
@@ -36146,10 +35346,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 }
                 return program;
             },
-            updateFiles(contents, updateMode) {
-                if (updateMode !== UpdateMode.Complete) {
-                    throw new Error(`Incremental update mode is currently not supported`);
-                }
+            updateFiles(contents) {
                 for (const [fileName, newText] of contents) {
                     const scriptInfo = getOrCreateTypeCheckScriptInfo(project, fileName);
                     const snapshot = scriptInfo.getSnapshot();
@@ -36180,64 +35377,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             project.addRoot(scriptInfo);
         }
         return scriptInfo;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class LanguageService {
-        constructor(project, tsLS) {
-            this.tsLS = tsLS;
-            this.options = parseNgCompilerOptions(project);
-            this.watchConfigFile(project);
-            this.compiler = new Compiler(project, this.options);
-        }
-        getSemanticDiagnostics(fileName) {
-            const result = this.compiler.analyze();
-            if (!result) {
-                return [];
-            }
-            const { compiler, program } = result;
-            const sourceFile = program.getSourceFile(fileName);
-            if (!sourceFile) {
-                return [];
-            }
-            return compiler.getDiagnostics(sourceFile);
-        }
-        watchConfigFile(project) {
-            // TODO: Check the case when the project is disposed. An InferredProject
-            // could be disposed when a tsconfig.json is added to the workspace,
-            // in which case it becomes a ConfiguredProject (or vice-versa).
-            // We need to make sure that the FileWatcher is closed.
-            if (!(project instanceof ts$1.server.ConfiguredProject)) {
-                return;
-            }
-            const { host } = project.projectService;
-            host.watchFile(project.getConfigFilePath(), (fileName, eventKind) => {
-                project.log(`Config file changed: ${fileName}`);
-                if (eventKind === ts$1.FileWatcherEventKind.Changed) {
-                    this.options = parseNgCompilerOptions(project);
-                    this.compiler.setCompilerOptions(this.options);
-                }
-            });
-        }
-    }
-    function parseNgCompilerOptions(project) {
-        let config = {};
-        if (project instanceof ts$1.server.ConfiguredProject) {
-            const configPath = project.getConfigFilePath();
-            const result = ts$1.readConfigFile(configPath, path => project.readFile(path));
-            if (result.error) {
-                project.error(ts$1.flattenDiagnosticMessageText(result.error.messageText, '\n'));
-            }
-            config = result.config || config;
-        }
-        const basePath = project.getCurrentDirectory();
-        return createNgCompilerOptions(basePath, config, project.getCompilationSettings());
     }
 
     /**
