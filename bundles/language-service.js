@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.5+20.sha-71079ce
+ * @license Angular v10.1.0-next.5+22.sha-cb05c01
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3899,9 +3899,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /* Closure variables holding messages must be named `MSG_[A-Z0-9]+` */
-    const CLOSURE_TRANSLATION_PREFIX = 'MSG_';
-    /* Prefix for non-`goog.getMsg` i18n-related vars */
-    const TRANSLATION_PREFIX = 'I18N_';
+    const CLOSURE_TRANSLATION_VAR_PREFIX = 'MSG_';
+    /**
+     * Prefix for non-`goog.getMsg` i18n-related vars.
+     * Note: the prefix uses lowercase characters intentionally due to a Closure behavior that
+     * considers variables like `I18N_0` as constants and throws an error when their value changes.
+     */
+    const TRANSLATION_VAR_PREFIX = 'i18n_';
     /** Name of the i18n attributes **/
     const I18N_ATTR = 'i18n';
     const I18N_ATTR_PREFIX = 'i18n-';
@@ -4028,7 +4032,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @returns Complete translation const prefix
      */
     function getTranslationConstPrefix(extra) {
-        return `${CLOSURE_TRANSLATION_PREFIX}${extra}`.toUpperCase();
+        return `${CLOSURE_TRANSLATION_VAR_PREFIX}${extra}`.toUpperCase();
     }
     /**
      * Generate AST to declare a variable. E.g. `var I18N_1;`.
@@ -15173,8 +15177,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return params;
     }
+    function createComponentDefConsts() {
+        return { prepareStatements: [], constExpressions: [] };
+    }
     class TemplateDefinitionBuilder {
-        constructor(constantPool, parentBindingScope, level = 0, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds, _constants = []) {
+        constructor(constantPool, parentBindingScope, level = 0, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds, _constants = createComponentDefConsts()) {
             this.constantPool = constantPool;
             this.level = level;
             this.contextName = contextName;
@@ -15338,12 +15345,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._bindingScope.notifyImplicitReceiverUse();
         }
         i18nTranslate(message, params = {}, ref, transformFn) {
-            const _ref = ref || variable(this.constantPool.uniqueName(TRANSLATION_PREFIX));
+            const _ref = ref || this.i18nGenerateMainBlockVar();
             // Closure Compiler requires const names to start with `MSG_` but disallows any other const to
             // start with `MSG_`. We define a variable starting with `MSG_` just for the `goog.getMsg` call
             const closureVar = this.i18nGenerateClosureVar(message.id);
             const statements = getTranslationDeclStmts(message, _ref, closureVar, params, transformFn);
-            this.constantPool.statements.push(...statements);
+            this._constants.prepareStatements.push(...statements);
             return _ref;
         }
         registerContextVariables(variable$1) {
@@ -15391,6 +15398,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             return bound;
         }
+        // Generates top level vars for i18n blocks (i.e. `i18n_N`).
+        i18nGenerateMainBlockVar() {
+            return variable(this.constantPool.uniqueName(TRANSLATION_VAR_PREFIX));
+        }
+        // Generates vars with Closure-specific names for i18n blocks (i.e. `MSG_XXX`).
         i18nGenerateClosureVar(messageId) {
             let name;
             const suffix = this.fileBasedI18nSuffix.toUpperCase();
@@ -15448,16 +15460,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         i18nStart(span = null, meta, selfClosing) {
             const index = this.allocateDataSlot();
-            if (this.i18nContext) {
-                this.i18n = this.i18nContext.forkChildContext(index, this.templateIndex, meta);
-            }
-            else {
-                const ref = variable(this.constantPool.uniqueName(TRANSLATION_PREFIX));
-                this.i18n = new I18nContext(index, ref, 0, this.templateIndex, meta);
-            }
+            this.i18n = this.i18nContext ?
+                this.i18nContext.forkChildContext(index, this.templateIndex, meta) :
+                new I18nContext(index, this.i18nGenerateMainBlockVar(), 0, this.templateIndex, meta);
             // generate i18nStart instruction
             const { id, ref } = this.i18n;
-            const params = [literal(index), ref];
+            const params = [literal(index), this.addToConsts(ref)];
             if (id > 0) {
                 // do not push 3rd argument (sub-block id)
                 // into i18nStart call for top level i18n context
@@ -15525,8 +15533,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             if (i18nAttrArgs.length > 0) {
                 const index = literal(this.allocateDataSlot());
-                const args = this.constantPool.getConstLiteral(literalArr(i18nAttrArgs), true);
-                this.creationInstruction(sourceSpan, Identifiers$1.i18nAttributes, [index, args]);
+                const constIndex = this.addToConsts(literalArr(i18nAttrArgs));
+                this.creationInstruction(sourceSpan, Identifiers$1.i18nAttributes, [index, constIndex]);
                 if (hasBindings) {
                     this.updateInstruction(sourceSpan, Identifiers$1.i18nApply, [index]);
                 }
@@ -16205,13 +16213,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (isNull(expression)) {
                 return TYPED_NULL_EXPR;
             }
+            const consts = this._constants.constExpressions;
             // Try to reuse a literal that's already in the array, if possible.
-            for (let i = 0; i < this._constants.length; i++) {
-                if (this._constants[i].isEquivalent(expression)) {
+            for (let i = 0; i < consts.length; i++) {
+                if (consts[i].isEquivalent(expression)) {
                     return literal(i);
                 }
             }
-            return literal(this._constants.push(expression) - 1);
+            return literal(consts.push(expression) - 1);
         }
         addAttrsToConsts(attrs) {
             return attrs.length > 0 ? this.addToConsts(literalArr(attrs)) : TYPED_NULL_EXPR;
@@ -16927,10 +16936,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         definitionMap.set('decls', literal(templateBuilder.getConstCount()));
         // e.g. `vars: 2`
         definitionMap.set('vars', literal(templateBuilder.getVarCount()));
-        // e.g. `consts: [['one', 'two'], ['three', 'four']]
-        const consts = templateBuilder.getConsts();
-        if (consts.length > 0) {
-            definitionMap.set('consts', literalArr(consts));
+        // Generate `consts` section of ComponentDef:
+        // - either as an array:
+        //   `consts: [['one', 'two'], ['three', 'four']]`
+        // - or as a factory function in case additional statements are present (to support i18n):
+        //   `consts: function() { var i18n_0; if (ngI18nClosureMode) {...} else {...} return [i18n_0]; }`
+        const { constExpressions, prepareStatements } = templateBuilder.getConsts();
+        if (constExpressions.length > 0) {
+            let constsExpr = literalArr(constExpressions);
+            // Prepare statements are present - turn `consts` into a function.
+            if (prepareStatements.length > 0) {
+                constsExpr = fn([], [...prepareStatements, new ReturnStatement(constsExpr)]);
+            }
+            definitionMap.set('consts', constsExpr);
         }
         definitionMap.set('template', templateFunctionExpression);
         // e.g. `directives: [MyDirective]`
@@ -17654,7 +17672,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.5+20.sha-71079ce');
+    const VERSION$1 = new Version('10.1.0-next.5+22.sha-cb05c01');
 
     /**
      * @license
@@ -32625,7 +32643,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @param schemas Schemas for this view
      * @param consts Constants for this view
      */
-    function createTView(type, viewIndex, templateFn, decls, vars, directives, pipes, viewQuery, schemas, consts) {
+    function createTView(type, viewIndex, templateFn, decls, vars, directives, pipes, viewQuery, schemas, constsOrFactory) {
         ngDevMode && ngDevMode.tView++;
         const bindingStartIndex = HEADER_OFFSET + decls;
         // This length does not yet contain host bindings from child directives because at this point,
@@ -32633,6 +32651,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // that has a host binding, we will update the blueprint with that def's hostVars count.
         const initialViewLength = bindingStartIndex + vars;
         const blueprint = createViewBlueprint(bindingStartIndex, initialViewLength);
+        const consts = typeof constsOrFactory === 'function' ? constsOrFactory() : constsOrFactory;
         const tView = blueprint[TVIEW] = ngDevMode ?
             new TViewConstructor(type, viewIndex, // id: number,
             blueprint, // blueprint: LView,
@@ -43648,7 +43667,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.5+20.sha-71079ce');
+    const VERSION$2 = new Version$1('10.1.0-next.5+22.sha-cb05c01');
 
     /**
      * @license
@@ -46687,14 +46706,15 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *   `template` instruction index. A `block` that matches the sub-template in which it was declared.
      *
      * @param index A unique index of the translation in the static block.
-     * @param message The translation message.
+     * @param messageIndex An index of the translation message from the `def.consts` array.
      * @param subTemplateIndex Optional sub-template index in the `message`.
      *
      * @codeGenApi
      */
-    function ɵɵi18nStart(index, message, subTemplateIndex) {
+    function ɵɵi18nStart(index, messageIndex, subTemplateIndex) {
         const tView = getTView();
         ngDevMode && assertDefined(tView, `tView should be defined`);
+        const message = getConstant(tView.consts, messageIndex);
         pushI18nIndex(index);
         // We need to delay projections until `i18nEnd`
         setDelayProjection(true);
@@ -46737,13 +46757,13 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *   `template` instruction index. A `block` that matches the sub-template in which it was declared.
      *
      * @param index A unique index of the translation in the static block.
-     * @param message The translation message.
+     * @param messageIndex An index of the translation message from the `def.consts` array.
      * @param subTemplateIndex Optional sub-template index in the `message`.
      *
      * @codeGenApi
      */
-    function ɵɵi18n(index, message, subTemplateIndex) {
-        ɵɵi18nStart(index, message, subTemplateIndex);
+    function ɵɵi18n(index, messageIndex, subTemplateIndex) {
+        ɵɵi18nStart(index, messageIndex, subTemplateIndex);
         ɵɵi18nEnd();
     }
     /**
@@ -46754,11 +46774,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @codeGenApi
      */
-    function ɵɵi18nAttributes(index, values) {
+    function ɵɵi18nAttributes(index, attrsIndex) {
         const lView = getLView();
         const tView = getTView();
         ngDevMode && assertDefined(tView, `tView should be defined`);
-        i18nAttributesFirstPass(lView, tView, index, values);
+        const attrs = getConstant(tView.consts, attrsIndex);
+        i18nAttributesFirstPass(lView, tView, index, attrs);
     }
     /**
      * Stores the values of the bindings during each update cycle in order to determine if we need to
