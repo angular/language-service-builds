@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.7+6.sha-68a9a01
+ * @license Angular v10.1.0-next.7+7.sha-f245c6b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17672,7 +17672,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.7+6.sha-68a9a01');
+    const VERSION$1 = new Version('10.1.0-next.7+7.sha-f245c6b');
 
     /**
      * @license
@@ -29805,8 +29805,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         getInertBodyElement(html) {
             // We add these extra elements to ensure that the rest of the content is parsed as expected
             // e.g. leading whitespace is maintained and tags like `<meta>` do not get hoisted to the
-            // `<head>` tag.
-            html = '<body><remove></remove>' + html + '</body>';
+            // `<head>` tag. Note that the `<body>` tag is closed implicitly to prevent unclosed tags
+            // in `html` from consuming the otherwise explicit `</body>` tag.
+            html = '<body><remove></remove>' + html;
             try {
                 const body = new window.DOMParser().parseFromString(html, 'text/html').body;
                 body.removeChild(body.firstChild);
@@ -43697,7 +43698,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.7+6.sha-68a9a01');
+    const VERSION$2 = new Version$1('10.1.0-next.7+7.sha-f245c6b');
 
     /**
      * @license
