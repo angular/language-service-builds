@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.11
+ * @license Angular v10.0.11+5.sha-5528536
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18859,7 +18859,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.11');
+    const VERSION$1 = new Version('10.0.11+5.sha-5528536');
 
     /**
      * @license
@@ -19448,7 +19448,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.0.11');
+    const VERSION$2 = new Version('10.0.11+5.sha-5528536');
 
     /**
      * @license
@@ -33249,6 +33249,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                     });
                 }
             }
+            const templateId = fileData.sourceManager.getTemplateId(ref.node);
+            shimData.templates.set(templateId, {
+                template,
+                boundTarget,
+            });
             const tcbRequiresInline = requiresInlineTypeCheckBlock(ref.node);
             // If inlining is not supported, but is required for either the TCB or one of its directive
             // dependencies, then exit here with an error.
@@ -33256,7 +33261,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // This template cannot be supported because the underlying strategy does not support inlining
                 // and inlining would be required.
                 // Record diagnostics to indicate the issues with this template.
-                const templateId = fileData.sourceManager.getTemplateId(ref.node);
                 if (tcbRequiresInline) {
                     shimData.oobRecorder.requiresInlineTcb(templateId, ref.node);
                 }
@@ -33356,6 +33360,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         ],
                         hasInlines: pendingFileData.hasInlines,
                         path: pendingShimData.file.fileName,
+                        templates: pendingShimData.templates,
                     });
                     updates.set(pendingShimData.file.fileName, pendingShimData.file.render());
                 }
@@ -33379,6 +33384,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     domSchemaChecker: new RegistryDomSchemaChecker(fileData.sourceManager),
                     oobRecorder: new OutOfBandDiagnosticRecorderImpl(fileData.sourceManager),
                     file: new TypeCheckFile(shimPath, this.config, this.refEmitter, this.reflector, this.compilerHost),
+                    templates: new Map(),
                 });
             }
             return fileData.shimData.get(shimPath);
@@ -33639,6 +33645,22 @@ Either add the @Injectable() decorator to '${provider.node.name
                     fileRecord.isComplete = false;
                 }
             }
+        }
+        getTemplate(component) {
+            this.ensureShimForComponent(component);
+            const sf = component.getSourceFile();
+            const sfPath = absoluteFromSourceFile(sf);
+            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+            const fileRecord = this.getFileData(sfPath);
+            if (!fileRecord.shimData.has(shimPath)) {
+                return [];
+            }
+            const templateId = fileRecord.sourceManager.getTemplateId(component);
+            const shimRecord = fileRecord.shimData.get(shimPath);
+            if (!shimRecord.templates.has(templateId)) {
+                return null;
+            }
+            return shimRecord.templates.get(templateId).template;
         }
         overrideComponentTemplate(component, template) {
             const { nodes, errors } = parseTemplate(template, 'override.html', {
