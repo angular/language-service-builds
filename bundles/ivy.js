@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.7+17.sha-e7da404
+ * @license Angular v10.1.0-next.7+18.sha-874792d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4148,6 +4148,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     const FUNCTION_TYPE = new BuiltinType(BuiltinTypeName.Function);
     const NONE_TYPE = new BuiltinType(BuiltinTypeName.None);
     ///// Expressions
+    var UnaryOperator;
+    (function (UnaryOperator) {
+        UnaryOperator[UnaryOperator["Minus"] = 0] = "Minus";
+        UnaryOperator[UnaryOperator["Plus"] = 1] = "Plus";
+    })(UnaryOperator || (UnaryOperator = {}));
     var BinaryOperator;
     (function (BinaryOperator) {
         BinaryOperator[BinaryOperator["Equals"] = 0] = "Equals";
@@ -4676,6 +4681,24 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         toDeclStmt(name, modifiers = null) {
             return new DeclareFunctionStmt(name, this.params, this.statements, this.type, modifiers, this.sourceSpan);
+        }
+    }
+    class UnaryOperatorExpr extends Expression {
+        constructor(operator, expr, type, sourceSpan, parens = true) {
+            super(type || NUMBER_TYPE, sourceSpan);
+            this.operator = operator;
+            this.expr = expr;
+            this.parens = parens;
+        }
+        isEquivalent(e) {
+            return e instanceof UnaryOperatorExpr && this.operator === e.operator &&
+                this.expr.isEquivalent(e.expr);
+        }
+        isConstant() {
+            return false;
+        }
+        visitExpression(visitor, context) {
+            return visitor.visitUnaryOperatorExpr(this, context);
         }
     }
     class BinaryOperatorExpr extends Expression {
@@ -5348,6 +5371,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.visitAssertNotNullExpr = invalid;
             this.visitCastExpr = invalid;
             this.visitFunctionExpr = invalid;
+            this.visitUnaryOperatorExpr = invalid;
             this.visitBinaryOperatorExpr = invalid;
             this.visitReadPropExpr = invalid;
             this.visitReadKeyExpr = invalid;
@@ -7910,6 +7934,26 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             ast.condition.visitExpression(this, ctx);
             return null;
         }
+        visitUnaryOperatorExpr(ast, ctx) {
+            let opStr;
+            switch (ast.operator) {
+                case UnaryOperator.Plus:
+                    opStr = '+';
+                    break;
+                case UnaryOperator.Minus:
+                    opStr = '-';
+                    break;
+                default:
+                    throw new Error(`Unknown operator ${ast.operator}`);
+            }
+            if (ast.parens)
+                ctx.print(ast, `(`);
+            ctx.print(ast, opStr);
+            ast.expr.visitExpression(this, ctx);
+            if (ast.parens)
+                ctx.print(ast, `)`);
+            return null;
+        }
         visitBinaryOperatorExpr(ast, ctx) {
             let opStr;
             switch (ast.operator) {
@@ -8836,6 +8880,40 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return visitor.visitBinary(this, context);
         }
     }
+    /**
+     * For backwards compatibility reasons, `Unary` inherits from `Binary` and mimics the binary AST
+     * node that was originally used. This inheritance relation can be deleted in some future major,
+     * after consumers have been given a chance to fully support Unary.
+     */
+    class Unary extends Binary {
+        /**
+         * During the deprecation period this constructor is private, to avoid consumers from creating
+         * a `Unary` with the fallback properties for `Binary`.
+         */
+        constructor(span, sourceSpan, operator, expr, binaryOp, binaryLeft, binaryRight) {
+            super(span, sourceSpan, binaryOp, binaryLeft, binaryRight);
+            this.operator = operator;
+            this.expr = expr;
+        }
+        /**
+         * Creates a unary minus expression "-x", represented as `Binary` using "0 - x".
+         */
+        static createMinus(span, sourceSpan, expr) {
+            return new Unary(span, sourceSpan, '-', expr, '-', new LiteralPrimitive(span, sourceSpan, 0), expr);
+        }
+        /**
+         * Creates a unary plus expression "+x", represented as `Binary` using "x - 0".
+         */
+        static createPlus(span, sourceSpan, expr) {
+            return new Unary(span, sourceSpan, '+', expr, '-', expr, new LiteralPrimitive(span, sourceSpan, 0));
+        }
+        visit(visitor, context = null) {
+            if (visitor.visitUnary !== undefined) {
+                return visitor.visitUnary(this, context);
+            }
+            return visitor.visitBinary(this, context);
+        }
+    }
     class PrefixNot extends AST {
         constructor(span, sourceSpan, expression) {
             super(span, sourceSpan);
@@ -8950,6 +9028,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // to selectively visit the specified node.
             ast.visit(this, context);
         }
+        visitUnary(ast, context) {
+            this.visit(ast.expr, context);
+        }
         visitBinary(ast, context) {
             this.visit(ast.left, context);
             this.visit(ast.right, context);
@@ -9058,6 +9139,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitLiteralMap(ast, context) {
             return new LiteralMap(ast.span, ast.sourceSpan, ast.keys, this.visitAll(ast.values));
         }
+        visitUnary(ast, context) {
+            switch (ast.operator) {
+                case '+':
+                    return Unary.createPlus(ast.span, ast.sourceSpan, ast.expr.visit(this));
+                case '-':
+                    return Unary.createMinus(ast.span, ast.sourceSpan, ast.expr.visit(this));
+                default:
+                    throw new Error(`Unknown unary operator ${ast.operator}`);
+            }
+        }
         visitBinary(ast, context) {
             return new Binary(ast.span, ast.sourceSpan, ast.operation, ast.left.visit(this), ast.right.visit(this));
         }
@@ -9165,6 +9256,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const values = this.visitAll(ast.values);
             if (values !== ast.values) {
                 return new LiteralMap(ast.span, ast.sourceSpan, ast.keys, values);
+            }
+            return ast;
+        }
+        visitUnary(ast, context) {
+            const expr = ast.expr.visit(this);
+            if (expr !== ast.expr) {
+                switch (ast.operator) {
+                    case '+':
+                        return Unary.createPlus(ast.span, ast.sourceSpan, expr);
+                    case '-':
+                        return Unary.createMinus(ast.span, ast.sourceSpan, expr);
+                    default:
+                        throw new Error(`Unknown unary operator ${ast.operator}`);
+                }
             }
             return ast;
         }
@@ -9565,6 +9670,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.temporaryCount = 0;
             this.usesImplicitReceiver = false;
         }
+        visitUnary(ast, mode) {
+            let op;
+            switch (ast.operator) {
+                case '+':
+                    op = UnaryOperator.Plus;
+                    break;
+                case '-':
+                    op = UnaryOperator.Minus;
+                    break;
+                default:
+                    throw new Error(`Unsupported operator ${ast.operator}`);
+            }
+            return convertToStatementIfNeeded(mode, new UnaryOperatorExpr(op, this._visit(ast.expr, _Mode.Expression), undefined, this.convertSourceSpan(ast.span)));
+        }
         visitBinary(ast, mode) {
             let op;
             switch (ast.operation) {
@@ -9889,6 +10008,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return (this._nodeMap.get(ast) || ast).visit(visitor);
             };
             return ast.visit({
+                visitUnary(ast) {
+                    return null;
+                },
                 visitBinary(ast) {
                     return null;
                 },
@@ -9962,6 +10084,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return ast.some(ast => visit(visitor, ast));
             };
             return ast.visit({
+                visitUnary(ast) {
+                    return visit(this, ast.expr);
+                },
                 visitBinary(ast) {
                     return visit(this, ast.left) || visit(this, ast.right);
                 },
@@ -14149,18 +14274,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (this.next.type == TokenType$1.Operator) {
                 const start = this.inputIndex;
                 const operator = this.next.strValue;
-                const literalSpan = new ParseSpan(start, start);
-                const literalSourceSpan = literalSpan.toAbsolute(this.absoluteOffset);
                 let result;
                 switch (operator) {
                     case '+':
                         this.advance();
                         result = this.parsePrefix();
-                        return new Binary(this.span(start), this.sourceSpan(start), '-', result, new LiteralPrimitive(literalSpan, literalSourceSpan, 0));
+                        return Unary.createPlus(this.span(start), this.sourceSpan(start), result);
                     case '-':
                         this.advance();
                         result = this.parsePrefix();
-                        return new Binary(this.span(start), this.sourceSpan(start), operator, new LiteralPrimitive(literalSpan, literalSourceSpan, 0), result);
+                        return Unary.createMinus(this.span(start), this.sourceSpan(start), result);
                     case '!':
                         this.advance();
                         result = this.parsePrefix();
@@ -14584,6 +14707,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitLiteralMap(ast, context) {
             this.visitAll(ast.values, context);
         }
+        visitUnary(ast, context) { }
         visitBinary(ast, context) { }
         visitPrefixNot(ast, context) { }
         visitNonNullAssert(ast, context) { }
@@ -18884,7 +19008,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.7+17.sha-e7da404');
+    const VERSION$1 = new Version('10.1.0-next.7+18.sha-874792d');
 
     /**
      * @license
@@ -19473,7 +19597,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.7+17.sha-e7da404');
+    const VERSION$2 = new Version('10.1.0-next.7+18.sha-874792d');
 
     /**
      * @license
@@ -23643,6 +23767,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return !this.isStatement ? new Context(true) : this;
         }
     }
+    const UNARY_OPERATORS$1 = new Map([
+        [UnaryOperator.Minus, ts.SyntaxKind.MinusToken],
+        [UnaryOperator.Plus, ts.SyntaxKind.PlusToken],
+    ]);
     const BINARY_OPERATORS$1 = new Map([
         [BinaryOperator.And, ts.SyntaxKind.AmpersandAmpersandToken],
         [BinaryOperator.Bigger, ts.SyntaxKind.GreaterThanToken],
@@ -23875,6 +24003,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitFunctionExpr(ast, context) {
             return ts.createFunctionExpression(undefined, undefined, ast.name || undefined, undefined, ast.params.map(param => ts.createParameter(undefined, undefined, undefined, param.name, undefined, undefined, undefined)), undefined, ts.createBlock(ast.statements.map(stmt => stmt.visitStatement(this, context))));
         }
+        visitUnaryOperatorExpr(ast, context) {
+            if (!UNARY_OPERATORS$1.has(ast.operator)) {
+                throw new Error(`Unknown unary operator: ${UnaryOperator[ast.operator]}`);
+            }
+            return ts.createPrefix(UNARY_OPERATORS$1.get(ast.operator), ast.expr.visitExpression(this, context));
+        }
         visitBinaryOperatorExpr(ast, context) {
             if (!BINARY_OPERATORS$1.has(ast.operator)) {
                 throw new Error(`Unknown binary operator: ${BinaryOperator[ast.operator]}`);
@@ -24041,6 +24175,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             throw new Error('Method not implemented.');
         }
         visitFunctionExpr(ast, context) {
+            throw new Error('Method not implemented.');
+        }
+        visitUnaryOperatorExpr(ast, context) {
             throw new Error('Method not implemented.');
         }
         visitBinaryOperatorExpr(ast, context) {
@@ -31732,6 +31869,10 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     const NULL_AS_ANY = ts.createAsExpression(ts.createNull(), ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
     const UNDEFINED = ts.createIdentifier('undefined');
+    const UNARY_OPS = new Map([
+        ['+', ts.SyntaxKind.PlusToken],
+        ['-', ts.SyntaxKind.MinusToken],
+    ]);
     const BINARY_OPS = new Map([
         ['+', ts.SyntaxKind.PlusToken],
         ['-', ts.SyntaxKind.MinusToken],
@@ -31780,6 +31921,16 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return resolved;
             }
             return ast.visit(this);
+        }
+        visitUnary(ast) {
+            const expr = this.translate(ast.expr);
+            const op = UNARY_OPS.get(ast.operator);
+            if (op === undefined) {
+                throw new Error(`Unsupported Unary.operator: ${ast.operator}`);
+            }
+            const node = wrapForDiagnostics(ts.createPrefix(op, expr));
+            addParseSpanInfo(node, ast.sourceSpan);
+            return node;
         }
         visitBinary(ast) {
             const lhs = wrapForDiagnostics(this.translate(ast.left));
@@ -32000,6 +32151,9 @@ Either add the @Injectable() decorator to '${provider.node.name
     class VeSafeLhsInferenceBugDetector {
         static veWillInferAnyFor(ast) {
             return ast.receiver.visit(VeSafeLhsInferenceBugDetector.SINGLETON);
+        }
+        visitUnary(ast) {
+            return ast.expr.visit(this);
         }
         visitBinary(ast) {
             return ast.left.visit(this) || ast.right.visit(this);
