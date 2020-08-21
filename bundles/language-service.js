@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.7+17.sha-e7da404
+ * @license Angular v10.1.0-next.7+18.sha-874792d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -958,6 +958,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const FUNCTION_TYPE = new BuiltinType(BuiltinTypeName.Function);
     const NONE_TYPE = new BuiltinType(BuiltinTypeName.None);
     ///// Expressions
+    var UnaryOperator;
+    (function (UnaryOperator) {
+        UnaryOperator[UnaryOperator["Minus"] = 0] = "Minus";
+        UnaryOperator[UnaryOperator["Plus"] = 1] = "Plus";
+    })(UnaryOperator || (UnaryOperator = {}));
     var BinaryOperator;
     (function (BinaryOperator) {
         BinaryOperator[BinaryOperator["Equals"] = 0] = "Equals";
@@ -1479,6 +1484,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         toDeclStmt(name, modifiers = null) {
             return new DeclareFunctionStmt(name, this.params, this.statements, this.type, modifiers, this.sourceSpan);
+        }
+    }
+    class UnaryOperatorExpr extends Expression {
+        constructor(operator, expr, type, sourceSpan, parens = true) {
+            super(type || NUMBER_TYPE, sourceSpan);
+            this.operator = operator;
+            this.expr = expr;
+            this.parens = parens;
+        }
+        isEquivalent(e) {
+            return e instanceof UnaryOperatorExpr && this.operator === e.operator &&
+                this.expr.isEquivalent(e.expr);
+        }
+        isConstant() {
+            return false;
+        }
+        visitExpression(visitor, context) {
+            return visitor.visitUnaryOperatorExpr(this, context);
         }
     }
     class BinaryOperatorExpr extends Expression {
@@ -2225,6 +2248,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.visitAssertNotNullExpr = invalid;
             this.visitCastExpr = invalid;
             this.visitFunctionExpr = invalid;
+            this.visitUnaryOperatorExpr = invalid;
             this.visitBinaryOperatorExpr = invalid;
             this.visitReadPropExpr = invalid;
             this.visitReadKeyExpr = invalid;
@@ -5125,6 +5149,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             ast.condition.visitExpression(this, ctx);
             return null;
         }
+        visitUnaryOperatorExpr(ast, ctx) {
+            let opStr;
+            switch (ast.operator) {
+                case UnaryOperator.Plus:
+                    opStr = '+';
+                    break;
+                case UnaryOperator.Minus:
+                    opStr = '-';
+                    break;
+                default:
+                    throw new Error(`Unknown operator ${ast.operator}`);
+            }
+            if (ast.parens)
+                ctx.print(ast, `(`);
+            ctx.print(ast, opStr);
+            ast.expr.visitExpression(this, ctx);
+            if (ast.parens)
+                ctx.print(ast, `)`);
+            return null;
+        }
         visitBinaryOperatorExpr(ast, ctx) {
             let opStr;
             switch (ast.operator) {
@@ -6051,6 +6095,40 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitBinary(this, context);
         }
     }
+    /**
+     * For backwards compatibility reasons, `Unary` inherits from `Binary` and mimics the binary AST
+     * node that was originally used. This inheritance relation can be deleted in some future major,
+     * after consumers have been given a chance to fully support Unary.
+     */
+    class Unary extends Binary {
+        /**
+         * During the deprecation period this constructor is private, to avoid consumers from creating
+         * a `Unary` with the fallback properties for `Binary`.
+         */
+        constructor(span, sourceSpan, operator, expr, binaryOp, binaryLeft, binaryRight) {
+            super(span, sourceSpan, binaryOp, binaryLeft, binaryRight);
+            this.operator = operator;
+            this.expr = expr;
+        }
+        /**
+         * Creates a unary minus expression "-x", represented as `Binary` using "0 - x".
+         */
+        static createMinus(span, sourceSpan, expr) {
+            return new Unary(span, sourceSpan, '-', expr, '-', new LiteralPrimitive(span, sourceSpan, 0), expr);
+        }
+        /**
+         * Creates a unary plus expression "+x", represented as `Binary` using "x - 0".
+         */
+        static createPlus(span, sourceSpan, expr) {
+            return new Unary(span, sourceSpan, '+', expr, '-', expr, new LiteralPrimitive(span, sourceSpan, 0));
+        }
+        visit(visitor, context = null) {
+            if (visitor.visitUnary !== undefined) {
+                return visitor.visitUnary(this, context);
+            }
+            return visitor.visitBinary(this, context);
+        }
+    }
     class PrefixNot extends AST {
         constructor(span, sourceSpan, expression) {
             super(span, sourceSpan);
@@ -6165,6 +6243,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // to selectively visit the specified node.
             ast.visit(this, context);
         }
+        visitUnary(ast, context) {
+            this.visit(ast.expr, context);
+        }
         visitBinary(ast, context) {
             this.visit(ast.left, context);
             this.visit(ast.right, context);
@@ -6273,6 +6354,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitLiteralMap(ast, context) {
             return new LiteralMap(ast.span, ast.sourceSpan, ast.keys, this.visitAll(ast.values));
         }
+        visitUnary(ast, context) {
+            switch (ast.operator) {
+                case '+':
+                    return Unary.createPlus(ast.span, ast.sourceSpan, ast.expr.visit(this));
+                case '-':
+                    return Unary.createMinus(ast.span, ast.sourceSpan, ast.expr.visit(this));
+                default:
+                    throw new Error(`Unknown unary operator ${ast.operator}`);
+            }
+        }
         visitBinary(ast, context) {
             return new Binary(ast.span, ast.sourceSpan, ast.operation, ast.left.visit(this), ast.right.visit(this));
         }
@@ -6380,6 +6471,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const values = this.visitAll(ast.values);
             if (values !== ast.values) {
                 return new LiteralMap(ast.span, ast.sourceSpan, ast.keys, values);
+            }
+            return ast;
+        }
+        visitUnary(ast, context) {
+            const expr = ast.expr.visit(this);
+            if (expr !== ast.expr) {
+                switch (ast.operator) {
+                    case '+':
+                        return Unary.createPlus(ast.span, ast.sourceSpan, expr);
+                    case '-':
+                        return Unary.createMinus(ast.span, ast.sourceSpan, expr);
+                    default:
+                        throw new Error(`Unknown unary operator ${ast.operator}`);
+                }
             }
             return ast;
         }
@@ -6780,6 +6885,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.temporaryCount = 0;
             this.usesImplicitReceiver = false;
         }
+        visitUnary(ast, mode) {
+            let op;
+            switch (ast.operator) {
+                case '+':
+                    op = UnaryOperator.Plus;
+                    break;
+                case '-':
+                    op = UnaryOperator.Minus;
+                    break;
+                default:
+                    throw new Error(`Unsupported operator ${ast.operator}`);
+            }
+            return convertToStatementIfNeeded(mode, new UnaryOperatorExpr(op, this._visit(ast.expr, _Mode.Expression), undefined, this.convertSourceSpan(ast.span)));
+        }
         visitBinary(ast, mode) {
             let op;
             switch (ast.operation) {
@@ -7104,6 +7223,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return (this._nodeMap.get(ast) || ast).visit(visitor);
             };
             return ast.visit({
+                visitUnary(ast) {
+                    return null;
+                },
                 visitBinary(ast) {
                     return null;
                 },
@@ -7177,6 +7299,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return ast.some(ast => visit(visitor, ast));
             };
             return ast.visit({
+                visitUnary(ast) {
+                    return visit(this, ast.expr);
+                },
                 visitBinary(ast) {
                     return visit(this, ast.left) || visit(this, ast.right);
                 },
@@ -12937,18 +13062,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this.next.type == TokenType$1.Operator) {
                 const start = this.inputIndex;
                 const operator = this.next.strValue;
-                const literalSpan = new ParseSpan(start, start);
-                const literalSourceSpan = literalSpan.toAbsolute(this.absoluteOffset);
                 let result;
                 switch (operator) {
                     case '+':
                         this.advance();
                         result = this.parsePrefix();
-                        return new Binary(this.span(start), this.sourceSpan(start), '-', result, new LiteralPrimitive(literalSpan, literalSourceSpan, 0));
+                        return Unary.createPlus(this.span(start), this.sourceSpan(start), result);
                     case '-':
                         this.advance();
                         result = this.parsePrefix();
-                        return new Binary(this.span(start), this.sourceSpan(start), operator, new LiteralPrimitive(literalSpan, literalSourceSpan, 0), result);
+                        return Unary.createMinus(this.span(start), this.sourceSpan(start), result);
                     case '!':
                         this.advance();
                         result = this.parsePrefix();
@@ -13372,6 +13495,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitLiteralMap(ast, context) {
             this.visitAll(ast.values, context);
         }
+        visitUnary(ast, context) { }
         visitBinary(ast, context) { }
         visitPrefixNot(ast, context) { }
         visitNonNullAssert(ast, context) { }
@@ -17672,7 +17796,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.7+17.sha-e7da404');
+    const VERSION$1 = new Version('10.1.0-next.7+18.sha-874792d');
 
     /**
      * @license
@@ -21879,6 +22003,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this.diagnostics;
         }
+        visitUnary(ast) {
+            // Visit the child to produce diagnostics.
+            ast.expr.visit(this);
+            // The unary plus and minus operator are always of type number.
+            // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.18
+            switch (ast.operator) {
+                case '-':
+                case '+':
+                    return this.query.getBuiltinType(BuiltinType$1.Number);
+            }
+            this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unrecognized_operator, ast.operator));
+            return this.anyType;
+        }
         visitBinary(ast) {
             const getType = (ast, operation) => {
                 const type = this.getType(ast);
@@ -22641,6 +22778,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // (that is the scope of the implicit receiver) is the right scope as the user is typing the
         // beginning of an expression.
         tail.visit({
+            visitUnary(_ast) { },
             visitBinary(_ast) { },
             visitChain(_ast) { },
             visitConditional(_ast) { },
@@ -22728,6 +22866,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // (that is the scope of the implicit receiver) is the right scope as the user is typing the
         // beginning of an expression.
         tail.visit({
+            visitUnary(_ast) { },
             visitBinary(_ast) { },
             visitChain(_ast) { },
             visitConditional(_ast) { },
@@ -33637,7 +33776,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-next.7+17.sha-e7da404');
+    const VERSION$2 = new Version$1('10.1.0-next.7+18.sha-874792d');
 
     /**
      * @license
