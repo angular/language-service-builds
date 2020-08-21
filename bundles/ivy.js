@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.0.11+11.sha-7f2a3e4
+ * @license Angular v10.0.11+13.sha-814b436
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18859,7 +18859,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.0.11+11.sha-7f2a3e4');
+    const VERSION$1 = new Version('10.0.11+13.sha-814b436');
 
     /**
      * @license
@@ -19448,7 +19448,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.0.11+11.sha-7f2a3e4');
+    const VERSION$2 = new Version('10.0.11+13.sha-814b436');
 
     /**
      * @license
@@ -20656,8 +20656,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         const { local, decl } = symbols;
         // It's only valid to convert a type reference to a value reference if the type actually
-        // has a value declaration associated with it.
-        if (decl.valueDeclaration === undefined) {
+        // has a value declaration associated with it. Note that const enums are an exception,
+        // because while they do have a value declaration, they don't exist at runtime.
+        if (decl.valueDeclaration === undefined || decl.flags & ts.SymbolFlags.ConstEnum) {
             return noValueDeclaration(typeNode, decl.declarations[0]);
         }
         // The type points to a valid value declaration. Rewrite the TypeReference into an
