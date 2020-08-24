@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-next.7+19.sha-b48cc6e
+ * @license Angular v10.1.0-next.7+25.sha-375f0a6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19008,7 +19008,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-next.7+19.sha-b48cc6e');
+    const VERSION$1 = new Version('10.1.0-next.7+25.sha-375f0a6');
 
     /**
      * @license
@@ -19597,7 +19597,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0-next.7+19.sha-b48cc6e');
+    const VERSION$2 = new Version('10.1.0-next.7+25.sha-375f0a6');
 
     /**
      * @license
@@ -20825,9 +20825,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
                 return {
                     kind: 0 /* LOCAL */,
-                    // Copying the name here ensures the generated references will be correctly transformed
-                    // along with the import.
-                    expression: ts.updateIdentifier(firstDecl.name),
+                    expression: firstDecl.name,
                     defaultImportStatement: firstDecl.parent,
                 };
             }
@@ -21076,7 +21074,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // We also don't need to support `foo: Foo|undefined` because Angular's DI injects `null` for
                 // optional tokes that don't have providers.
                 if (typeNode && ts.isUnionTypeNode(typeNode)) {
-                    let childTypeNodes = typeNode.types.filter(childTypeNode => childTypeNode.kind !== ts.SyntaxKind.NullKeyword);
+                    let childTypeNodes = typeNode.types.filter(
+                    // TODO(alan-agius4): remove `childTypeNode.kind !== ts.SyntaxKind.NullKeyword` when
+                    // TS 3.9 support is dropped. In TS 4.0 NullKeyword is a child of LiteralType.
+                    childTypeNode => childTypeNode.kind !== ts.SyntaxKind.NullKeyword &&
+                        !(ts.isLiteralTypeNode(childTypeNode) &&
+                            childTypeNode.literal.kind === ts.SyntaxKind.NullKeyword));
                     if (childTypeNodes.length === 1) {
                         typeNode = childTypeNodes[0];
                     }
@@ -21550,7 +21553,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (!ts.isTupleTypeNode(def)) {
             return [];
         }
-        return def.elementTypes.map(element => {
+        // TODO(alan-agius4): remove `def.elementTypes` and casts when TS 3.9 support is dropped and G3 is
+        // using TS 4.0.
+        return (def.elements || def.elementTypes)
+            .map(element => {
             if (!ts.isTypeQueryNode(element)) {
                 throw new Error(`Expected TypeQueryNode: ${nodeDebugInfo(element)}`);
             }
@@ -21597,7 +21603,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return [];
         }
         const res = [];
-        type.elementTypes.forEach(el => {
+        // TODO(alan-agius4): remove `def.elementTypes` and casts when TS 3.9 support is dropped and G3 is
+        // using TS 4.0.
+        (type.elements || type.elementTypes)
+            .forEach(el => {
             if (!ts.isLiteralTypeNode(el) || !ts.isStringLiteral(el.literal)) {
                 return;
             }
@@ -23197,9 +23206,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     /* moduleSpecifier */ ts.createStringLiteral(moduleName));
                     statements.push(stmt);
                 });
-                file = ts.getMutableClone(file);
-                file.statements = ts.createNodeArray(statements);
-                return file;
+                return ts.updateSourceFileNode(file, statements);
             };
         };
     }
@@ -24130,7 +24137,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitLiteralExpr(ast, context) {
             if (ast.value === null) {
-                return ts.createKeywordTypeNode(ts.SyntaxKind.NullKeyword);
+                // TODO(alan-agius4): Remove when we no longer support TS 3.9
+                // Use: return ts.createLiteralTypeNode(ts.createNull()) directly.
+                return ts.versionMajorMinor.charAt(0) === '4' ?
+                    ts.createLiteralTypeNode(ts.createNull()) :
+                    ts.createKeywordTypeNode(ts.SyntaxKind.NullKeyword);
             }
             else if (ast.value === undefined) {
                 return ts.createKeywordTypeNode(ts.SyntaxKind.UndefinedKeyword);
@@ -24372,7 +24383,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // for @fileoverview Closure annotation. If there is no @fileoverview annotations, this
             // statement would be a noop.
             const fileoverviewAnchorStmt = ts.createNotEmittedStatement(sf);
-            sf.statements = ts.createNodeArray([fileoverviewAnchorStmt, ...existingImports, ...addedImports, ...extraStatements, ...body]);
+            return ts.updateSourceFileNode(sf, ts.createNodeArray([
+                fileoverviewAnchorStmt, ...existingImports, ...addedImports, ...extraStatements, ...body
+            ]));
         }
         return sf;
     }
@@ -24578,28 +24591,40 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.typeReplacements.set(declaration, type);
         }
         transformClassElement(element, imports) {
-            if (!ts.isMethodSignature(element)) {
-                return element;
+            // // TODO(alan-agius4): Remove when we no longer support TS 3.9
+            // TS <= 3.9
+            if (ts.isMethodSignature(element)) {
+                const original = ts.getOriginalNode(element);
+                if (!this.typeReplacements.has(original)) {
+                    return element;
+                }
+                const returnType = this.typeReplacements.get(original);
+                const tsReturnType = translateType(returnType, imports);
+                const methodSignature = ts.updateMethodSignature(
+                /* node */ element, 
+                /* typeParameters */ element.typeParameters, 
+                /* parameters */ element.parameters, 
+                /* type */ tsReturnType, 
+                /* name */ element.name, 
+                /* questionToken */ element.questionToken);
+                // Copy over any modifiers, these cannot be set during the `ts.updateMethodSignature` call.
+                methodSignature.modifiers = element.modifiers;
+                // A bug in the TypeScript declaration causes `ts.MethodSignature` not to be assignable to
+                // `ts.ClassElement`. Since `element` was a `ts.MethodSignature` already, transforming it into
+                // this type is actually correct.
+                return methodSignature;
             }
-            const original = ts.getOriginalNode(element);
-            if (!this.typeReplacements.has(original)) {
-                return element;
+            // TS 4.0 +
+            if (ts.isMethodDeclaration(element)) {
+                const original = ts.getOriginalNode(element, ts.isMethodDeclaration);
+                if (!this.typeReplacements.has(original)) {
+                    return element;
+                }
+                const returnType = this.typeReplacements.get(original);
+                const tsReturnType = translateType(returnType, imports);
+                return ts.updateMethod(element, element.decorators, element.modifiers, element.asteriskToken, element.name, element.questionToken, element.typeParameters, element.parameters, tsReturnType, element.body);
             }
-            const returnType = this.typeReplacements.get(original);
-            const tsReturnType = translateType(returnType, imports);
-            const methodSignature = ts.updateMethodSignature(
-            /* node */ element, 
-            /* typeParameters */ element.typeParameters, 
-            /* parameters */ element.parameters, 
-            /* type */ tsReturnType, 
-            /* name */ element.name, 
-            /* questionToken */ element.questionToken);
-            // Copy over any modifiers, these cannot be set during the `ts.updateMethodSignature` call.
-            methodSignature.modifiers = element.modifiers;
-            // A bug in the TypeScript declaration causes `ts.MethodSignature` not to be assignable to
-            // `ts.ClassElement`. Since `element` was a `ts.MethodSignature` already, transforming it into
-            // this type is actually correct.
-            return methodSignature;
+            return element;
         }
         transformFunctionDeclaration(element, imports) {
             const original = ts.getOriginalNode(element);
@@ -25714,7 +25739,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (!reflection.isClass(clazz)) {
             return null;
         }
-        const id = ts.updateIdentifier(reflection.getAdjacentNameOfClass(clazz));
+        const id = reflection.getAdjacentNameOfClass(clazz);
         // Reflect over the class decorators. If none are present, or those that are aren't from
         // Angular, then return null. Otherwise, turn them into metadata.
         const classDecorators = reflection.getDecoratorsOfDeclaration(clazz);
@@ -30298,7 +30323,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             return file;
         }
         const { moduleSymbols, sourceFilePath } = factoryMap.get(file.fileName);
-        file = ts.getMutableClone(file);
         // Not every exported factory statement is valid. They were generated before the program was
         // analyzed, and before ngtsc knew which symbols were actually NgModules. factoryMap contains
         // that knowledge now, so this transform filters the statement list and removes exported factories
@@ -30380,7 +30404,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // satisfy closure compiler.
             transformedStatements.push(nonEmptyExport);
         }
-        file.statements = ts.createNodeArray(transformedStatements);
+        file = ts.updateSourceFileNode(file, transformedStatements);
         // If any imports to @angular/core were detected and rewritten (which happens when compiling
         // @angular/core), go through the SourceFile and rewrite references to symbols imported from core.
         if (coreImportIdentifiers.size > 0) {
@@ -30471,8 +30495,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         // Only update the statements in the SourceFile if any have changed.
         if (newStatements !== undefined) {
-            sf = ts.getMutableClone(sf);
-            sf.statements = ts.createNodeArray(newStatements);
+            return ts.updateSourceFileNode(sf, newStatements);
         }
         return sf;
     }
@@ -30525,13 +30548,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             const postSwitchName = decl.initializer.text.replace(IVY_SWITCH_PRE_SUFFIX, IVY_SWITCH_POST_SUFFIX);
             // Find the post-switch variable identifier. If one can't be found, it's an error. This is
             // reported as a thrown error and not a diagnostic as transformers cannot output diagnostics.
-            let newIdentifier = findPostSwitchIdentifier(statements, postSwitchName);
+            const newIdentifier = findPostSwitchIdentifier(statements, postSwitchName);
             if (newIdentifier === null) {
                 throw new Error(`Unable to find identifier ${postSwitchName} in ${stmt.getSourceFile().fileName} for the Ivy switch.`);
             }
-            // Copy the identifier with updateIdentifier(). This copies the internal information which
-            // allows TS to write a correct reference to the identifier.
-            newIdentifier = ts.updateIdentifier(newIdentifier);
             newDeclarations[i] = ts.updateVariableDeclaration(
             /* node */ decl, 
             /* name */ decl.name, 
@@ -31147,6 +31167,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 visitTypeReferenceNode: type => canEmitTypeReference(type),
                 visitArrayTypeNode: type => canEmitTypeWorker(type.elementType),
                 visitKeywordType: () => true,
+                visitLiteralType: () => true,
                 visitOtherType: () => false,
             });
         }
@@ -31205,6 +31226,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 visitTypeReferenceNode: type => this.emitTypeReference(type),
                 visitArrayTypeNode: type => ts.updateArrayTypeNode(type, this.emitType(type.elementType)),
                 visitKeywordType: type => type,
+                visitLiteralType: type => type,
                 visitOtherType: () => {
                     throw new Error('Unable to emit a complex type');
                 },
@@ -31242,6 +31264,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         else if (ts.isArrayTypeNode(type)) {
             return visitor.visitArrayTypeNode(type);
+        }
+        else if (ts.isLiteralTypeNode(type)) {
+            return visitor.visitLiteralType(type);
         }
         switch (type.kind) {
             case ts.SyntaxKind.AnyKeyword:

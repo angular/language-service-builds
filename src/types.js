@@ -16,7 +16,7 @@
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.CompletionKind = exports.DirectiveKind = void 0;
+    exports.CompletionKind = exports.DirectiveKind = exports.BuiltinType = exports.StaticSymbol = void 0;
     var compiler_1 = require("@angular/compiler");
     Object.defineProperty(exports, "StaticSymbol", { enumerable: true, get: function () { return compiler_1.StaticSymbol; } });
     var symbols_1 = require("@angular/language-service/src/symbols");
