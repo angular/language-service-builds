@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0-rc.0+16.sha-5e4aeaa
+ * @license Angular v10.1.0-rc.0+17.sha-0dda97e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -342,7 +342,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     class HtmlTagDefinition {
-        constructor({ closedByChildren, implicitNamespacePrefix, contentType = TagContentType.PARSABLE_DATA, closedByParent = false, isVoid = false, ignoreFirstLf = false } = {}) {
+        constructor({ closedByChildren, implicitNamespacePrefix, contentType = TagContentType.PARSABLE_DATA, closedByParent = false, isVoid = false, ignoreFirstLf = false, preventNamespaceInheritance = false } = {}) {
             this.closedByChildren = {};
             this.closedByParent = false;
             this.canSelfClose = false;
@@ -354,6 +354,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.implicitNamespacePrefix = implicitNamespacePrefix || null;
             this.contentType = contentType;
             this.ignoreFirstLf = ignoreFirstLf;
+            this.preventNamespaceInheritance = preventNamespaceInheritance;
         }
         isClosedByChild(name) {
             return this.isVoid || name.toLowerCase() in this.closedByChildren;
@@ -364,6 +365,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     // This implementation does not fully conform to the HTML5 spec.
     let TAG_DEFINITIONS;
     function getHtmlTagDefinition(tagName) {
+        var _a, _b;
         if (!TAG_DEFINITIONS) {
             _DEFAULT_TAG_DEFINITION = new HtmlTagDefinition();
             TAG_DEFINITIONS = {
@@ -397,6 +399,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 'th': new HtmlTagDefinition({ closedByChildren: ['td', 'th'], closedByParent: true }),
                 'col': new HtmlTagDefinition({ isVoid: true }),
                 'svg': new HtmlTagDefinition({ implicitNamespacePrefix: 'svg' }),
+                'foreignObject': new HtmlTagDefinition({
+                    // Usually the implicit namespace here would be redundant since it will be inherited from
+                    // the parent `svg`, but we have to do it for `foreignObject`, because the way the parser
+                    // works is that the parent node of an end tag is its own start tag which means that
+                    // the `preventNamespaceInheritance` on `foreignObject` would have it default to the
+                    // implicit namespace which is `html`, unless specified otherwise.
+                    implicitNamespacePrefix: 'svg',
+                    // We want to prevent children of foreignObject from inheriting its namespace, because
+                    // the point of the element is to allow nodes from other namespaces to be inserted.
+                    preventNamespaceInheritance: true,
+                }),
                 'math': new HtmlTagDefinition({ implicitNamespacePrefix: 'math' }),
                 'li': new HtmlTagDefinition({ closedByChildren: ['li'], closedByParent: true }),
                 'dt': new HtmlTagDefinition({ closedByChildren: ['dt', 'dd'] }),
@@ -415,7 +428,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 'textarea': new HtmlTagDefinition({ contentType: TagContentType.ESCAPABLE_RAW_TEXT, ignoreFirstLf: true }),
             };
         }
-        return TAG_DEFINITIONS[tagName.toLowerCase()] || _DEFAULT_TAG_DEFINITION;
+        // We have to make both a case-sensitive and a case-insesitive lookup, because
+        // HTML tag names are case insensitive, whereas some SVG tags are case sensitive.
+        return (_b = (_a = TAG_DEFINITIONS[tagName]) !== null && _a !== void 0 ? _a : TAG_DEFINITIONS[tagName.toLowerCase()]) !== null && _b !== void 0 ? _b : _DEFAULT_TAG_DEFINITION;
     }
 
     /**
@@ -9408,7 +9423,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (prefix === '') {
                 prefix = this.getTagDefinition(localName).implicitNamespacePrefix || '';
                 if (prefix === '' && parentElement != null) {
-                    prefix = getNsPrefix(parentElement.name);
+                    const parentTagName = splitNsName(parentElement.name)[1];
+                    const parentTagDefinition = this.getTagDefinition(parentTagName);
+                    if (!parentTagDefinition.preventNamespaceInheritance) {
+                        prefix = getNsPrefix(parentElement.name);
+                    }
                 }
             }
             return mergeNsAndName(prefix, localName);
@@ -17796,7 +17815,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0-rc.0+16.sha-5e4aeaa');
+    const VERSION$1 = new Version('10.1.0-rc.0+17.sha-0dda97e');
 
     /**
      * @license
@@ -18241,6 +18260,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.isVoid = false;
             this.ignoreFirstLf = false;
             this.canSelfClose = true;
+            this.preventNamespaceInheritance = false;
         }
         requireExtraParent(currentParent) {
             return false;
@@ -33776,7 +33796,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0-rc.0+16.sha-5e4aeaa');
+    const VERSION$2 = new Version$1('10.1.0-rc.0+17.sha-0dda97e');
 
     /**
      * @license
