@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "10.1.0-rc.0+6.sha-dd82f2f",
+  "version": "10.1.0-rc.0+12.sha-6b1a505",
   "description": "Angular - language services",
   "main": "./bundles/language-service.js",
   "typings": "./index.d.ts",
