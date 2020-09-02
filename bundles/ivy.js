@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.0+1.sha-86e7cd8
+ * @license Angular v11.0.0-next.0+5.sha-1d8c5d8
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5865,231 +5865,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const $EOF = 0;
-    const $BSPACE = 8;
-    const $TAB = 9;
-    const $LF = 10;
-    const $VTAB = 11;
-    const $FF = 12;
-    const $CR = 13;
-    const $SPACE = 32;
-    const $BANG = 33;
-    const $DQ = 34;
-    const $HASH = 35;
-    const $$ = 36;
-    const $PERCENT = 37;
-    const $AMPERSAND = 38;
-    const $SQ = 39;
-    const $LPAREN = 40;
-    const $RPAREN = 41;
-    const $STAR = 42;
-    const $PLUS = 43;
-    const $COMMA = 44;
-    const $MINUS = 45;
-    const $PERIOD = 46;
-    const $SLASH = 47;
-    const $COLON = 58;
-    const $SEMICOLON = 59;
-    const $LT = 60;
-    const $EQ = 61;
-    const $GT = 62;
-    const $QUESTION = 63;
-    const $0 = 48;
-    const $7 = 55;
-    const $9 = 57;
-    const $A = 65;
-    const $E = 69;
-    const $F = 70;
-    const $X = 88;
-    const $Z = 90;
-    const $LBRACKET = 91;
-    const $BACKSLASH = 92;
-    const $RBRACKET = 93;
-    const $CARET = 94;
-    const $_ = 95;
-    const $a = 97;
-    const $b = 98;
-    const $e = 101;
-    const $f = 102;
-    const $n = 110;
-    const $r = 114;
-    const $t = 116;
-    const $u = 117;
-    const $v = 118;
-    const $x = 120;
-    const $z = 122;
-    const $LBRACE = 123;
-    const $BAR = 124;
-    const $RBRACE = 125;
-    const $NBSP = 160;
-    const $BT = 96;
-    function isWhitespace(code) {
-        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
-    }
-    function isDigit(code) {
-        return $0 <= code && code <= $9;
-    }
-    function isAsciiLetter(code) {
-        return code >= $a && code <= $z || code >= $A && code <= $Z;
-    }
-    function isAsciiHexDigit(code) {
-        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
-    }
-    function isNewLine(code) {
-        return code === $LF || code === $CR;
-    }
-    function isOctalDigit(code) {
-        return $0 <= code && code <= $7;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class ParseLocation {
-        constructor(file, offset, line, col) {
-            this.file = file;
-            this.offset = offset;
-            this.line = line;
-            this.col = col;
-        }
-        toString() {
-            return this.offset != null ? `${this.file.url}@${this.line}:${this.col}` : this.file.url;
-        }
-        moveBy(delta) {
-            const source = this.file.content;
-            const len = source.length;
-            let offset = this.offset;
-            let line = this.line;
-            let col = this.col;
-            while (offset > 0 && delta < 0) {
-                offset--;
-                delta++;
-                const ch = source.charCodeAt(offset);
-                if (ch == $LF) {
-                    line--;
-                    const priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
-                    col = priorLine > 0 ? offset - priorLine : offset;
-                }
-                else {
-                    col--;
-                }
-            }
-            while (offset < len && delta > 0) {
-                const ch = source.charCodeAt(offset);
-                offset++;
-                delta--;
-                if (ch == $LF) {
-                    line++;
-                    col = 0;
-                }
-                else {
-                    col++;
-                }
-            }
-            return new ParseLocation(this.file, offset, line, col);
-        }
-        // Return the source around the location
-        // Up to `maxChars` or `maxLines` on each side of the location
-        getContext(maxChars, maxLines) {
-            const content = this.file.content;
-            let startOffset = this.offset;
-            if (startOffset != null) {
-                if (startOffset > content.length - 1) {
-                    startOffset = content.length - 1;
-                }
-                let endOffset = startOffset;
-                let ctxChars = 0;
-                let ctxLines = 0;
-                while (ctxChars < maxChars && startOffset > 0) {
-                    startOffset--;
-                    ctxChars++;
-                    if (content[startOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                ctxChars = 0;
-                ctxLines = 0;
-                while (ctxChars < maxChars && endOffset < content.length - 1) {
-                    endOffset++;
-                    ctxChars++;
-                    if (content[endOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                return {
-                    before: content.substring(startOffset, this.offset),
-                    after: content.substring(this.offset, endOffset + 1),
-                };
-            }
-            return null;
-        }
-    }
-    class ParseSourceFile {
-        constructor(content, url) {
-            this.content = content;
-            this.url = url;
-        }
-    }
-    class ParseSourceSpan {
-        constructor(start, end, details = null) {
-            this.start = start;
-            this.end = end;
-            this.details = details;
-        }
-        toString() {
-            return this.start.file.content.substring(this.start.offset, this.end.offset);
-        }
-    }
-    var ParseErrorLevel;
-    (function (ParseErrorLevel) {
-        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
-        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
-    })(ParseErrorLevel || (ParseErrorLevel = {}));
-    class ParseError {
-        constructor(span, msg, level = ParseErrorLevel.ERROR) {
-            this.span = span;
-            this.msg = msg;
-            this.level = level;
-        }
-        contextualMessage() {
-            const ctx = this.span.start.getContext(100, 3);
-            return ctx ? `${this.msg} ("${ctx.before}[${ParseErrorLevel[this.level]} ->]${ctx.after}")` :
-                this.msg;
-        }
-        toString() {
-            const details = this.span.details ? `, ${this.span.details}` : '';
-            return `${this.contextualMessage()}: ${this.span.start}${details}`;
-        }
-    }
-    /**
-     * Generates Source Span object for a given R3 Type for JIT mode.
-     *
-     * @param kind Component or Directive.
-     * @param typeName name of the Component or Directive.
-     * @param sourceUrl reference to Component or Directive source.
-     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
-     */
-    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
-        const sourceFileName = `in ${kind} ${typeName} in ${sourceUrl}`;
-        const sourceFile = new ParseSourceFile('', sourceFileName);
-        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     class Text {
         constructor(value, sourceSpan) {
             this.value = value;
@@ -6170,10 +5945,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.startSourceSpan = startSourceSpan;
             this.endSourceSpan = endSourceSpan;
             this.i18n = i18n;
-            // If the element is empty then the source span should include any closing tag
-            if (children.length === 0 && startSourceSpan && endSourceSpan) {
-                this.sourceSpan = new ParseSourceSpan(sourceSpan.start, endSourceSpan.end);
-            }
         }
         visit(visitor) {
             return visitor.visitElement(this);
@@ -8463,6 +8234,231 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     function isUseStrictStatement(statement) {
         return statement.isEquivalent(literal('use strict').toStmt());
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const $EOF = 0;
+    const $BSPACE = 8;
+    const $TAB = 9;
+    const $LF = 10;
+    const $VTAB = 11;
+    const $FF = 12;
+    const $CR = 13;
+    const $SPACE = 32;
+    const $BANG = 33;
+    const $DQ = 34;
+    const $HASH = 35;
+    const $$ = 36;
+    const $PERCENT = 37;
+    const $AMPERSAND = 38;
+    const $SQ = 39;
+    const $LPAREN = 40;
+    const $RPAREN = 41;
+    const $STAR = 42;
+    const $PLUS = 43;
+    const $COMMA = 44;
+    const $MINUS = 45;
+    const $PERIOD = 46;
+    const $SLASH = 47;
+    const $COLON = 58;
+    const $SEMICOLON = 59;
+    const $LT = 60;
+    const $EQ = 61;
+    const $GT = 62;
+    const $QUESTION = 63;
+    const $0 = 48;
+    const $7 = 55;
+    const $9 = 57;
+    const $A = 65;
+    const $E = 69;
+    const $F = 70;
+    const $X = 88;
+    const $Z = 90;
+    const $LBRACKET = 91;
+    const $BACKSLASH = 92;
+    const $RBRACKET = 93;
+    const $CARET = 94;
+    const $_ = 95;
+    const $a = 97;
+    const $b = 98;
+    const $e = 101;
+    const $f = 102;
+    const $n = 110;
+    const $r = 114;
+    const $t = 116;
+    const $u = 117;
+    const $v = 118;
+    const $x = 120;
+    const $z = 122;
+    const $LBRACE = 123;
+    const $BAR = 124;
+    const $RBRACE = 125;
+    const $NBSP = 160;
+    const $BT = 96;
+    function isWhitespace(code) {
+        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
+    }
+    function isDigit(code) {
+        return $0 <= code && code <= $9;
+    }
+    function isAsciiLetter(code) {
+        return code >= $a && code <= $z || code >= $A && code <= $Z;
+    }
+    function isAsciiHexDigit(code) {
+        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
+    }
+    function isNewLine(code) {
+        return code === $LF || code === $CR;
+    }
+    function isOctalDigit(code) {
+        return $0 <= code && code <= $7;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class ParseLocation {
+        constructor(file, offset, line, col) {
+            this.file = file;
+            this.offset = offset;
+            this.line = line;
+            this.col = col;
+        }
+        toString() {
+            return this.offset != null ? `${this.file.url}@${this.line}:${this.col}` : this.file.url;
+        }
+        moveBy(delta) {
+            const source = this.file.content;
+            const len = source.length;
+            let offset = this.offset;
+            let line = this.line;
+            let col = this.col;
+            while (offset > 0 && delta < 0) {
+                offset--;
+                delta++;
+                const ch = source.charCodeAt(offset);
+                if (ch == $LF) {
+                    line--;
+                    const priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
+                    col = priorLine > 0 ? offset - priorLine : offset;
+                }
+                else {
+                    col--;
+                }
+            }
+            while (offset < len && delta > 0) {
+                const ch = source.charCodeAt(offset);
+                offset++;
+                delta--;
+                if (ch == $LF) {
+                    line++;
+                    col = 0;
+                }
+                else {
+                    col++;
+                }
+            }
+            return new ParseLocation(this.file, offset, line, col);
+        }
+        // Return the source around the location
+        // Up to `maxChars` or `maxLines` on each side of the location
+        getContext(maxChars, maxLines) {
+            const content = this.file.content;
+            let startOffset = this.offset;
+            if (startOffset != null) {
+                if (startOffset > content.length - 1) {
+                    startOffset = content.length - 1;
+                }
+                let endOffset = startOffset;
+                let ctxChars = 0;
+                let ctxLines = 0;
+                while (ctxChars < maxChars && startOffset > 0) {
+                    startOffset--;
+                    ctxChars++;
+                    if (content[startOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                ctxChars = 0;
+                ctxLines = 0;
+                while (ctxChars < maxChars && endOffset < content.length - 1) {
+                    endOffset++;
+                    ctxChars++;
+                    if (content[endOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                return {
+                    before: content.substring(startOffset, this.offset),
+                    after: content.substring(this.offset, endOffset + 1),
+                };
+            }
+            return null;
+        }
+    }
+    class ParseSourceFile {
+        constructor(content, url) {
+            this.content = content;
+            this.url = url;
+        }
+    }
+    class ParseSourceSpan {
+        constructor(start, end, details = null) {
+            this.start = start;
+            this.end = end;
+            this.details = details;
+        }
+        toString() {
+            return this.start.file.content.substring(this.start.offset, this.end.offset);
+        }
+    }
+    var ParseErrorLevel;
+    (function (ParseErrorLevel) {
+        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
+        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
+    })(ParseErrorLevel || (ParseErrorLevel = {}));
+    class ParseError {
+        constructor(span, msg, level = ParseErrorLevel.ERROR) {
+            this.span = span;
+            this.msg = msg;
+            this.level = level;
+        }
+        contextualMessage() {
+            const ctx = this.span.start.getContext(100, 3);
+            return ctx ? `${this.msg} ("${ctx.before}[${ParseErrorLevel[this.level]} ->]${ctx.after}")` :
+                this.msg;
+        }
+        toString() {
+            const details = this.span.details ? `, ${this.span.details}` : '';
+            return `${this.contextualMessage()}: ${this.span.start}${details}`;
+        }
+    }
+    /**
+     * Generates Source Span object for a given R3 Type for JIT mode.
+     *
+     * @param kind Component or Directive.
+     * @param typeName name of the Component or Directive.
+     * @param sourceUrl reference to Component or Directive source.
+     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
+     */
+    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
+        const sourceFileName = `in ${kind} ${typeName} in ${sourceUrl}`;
+        const sourceFile = new ParseSourceFile('', sourceFileName);
+        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
     }
 
     /**
@@ -10881,7 +10877,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class Element$1 extends NodeWithI18n {
-        constructor(name, attrs, children, sourceSpan, startSourceSpan = null, endSourceSpan = null, i18n) {
+        constructor(name, attrs, children, sourceSpan, startSourceSpan, endSourceSpan = null, i18n) {
             super(sourceSpan, i18n);
             this.name = name;
             this.attrs = attrs;
@@ -11436,14 +11432,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this._beginToken(TokenType.RAW_TEXT);
             const condition = this._readUntil($COMMA);
             const normalizedCondition = this._processCarriageReturns(condition);
-            if (this._escapedString || this._i18nNormalizeLineEndingsInICUs) {
-                // Either the template is inline or,
-                // we explicitly want to normalize line endings for this text.
+            if (this._i18nNormalizeLineEndingsInICUs) {
+                // We explicitly want to normalize line endings for this text.
                 this._endToken([normalizedCondition]);
             }
             else {
-                // The expression is in an external template and, for backward compatibility,
-                // we are not normalizing line endings.
+                // We are not normalizing line endings.
                 const conditionToken = this._endToken([condition]);
                 if (normalizedCondition !== condition) {
                     this.nonNormalizedIcuExpressions.push(conditionToken);
@@ -12042,7 +12036,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             const end = this._peek.sourceSpan.start;
             const span = new ParseSourceSpan(startTagToken.sourceSpan.start, end);
-            const el = new Element$1(fullName, attrs, [], span, span, undefined);
+            // Create a separate `startSpan` because `span` will be modified when there is an `end` span.
+            const startSpan = new ParseSourceSpan(startTagToken.sourceSpan.start, end);
+            const el = new Element$1(fullName, attrs, [], span, startSpan, undefined);
             this._pushElement(el);
             if (selfClosing) {
                 // Elements that are self-closed have their `endSourceSpan` set to the full span, as the
@@ -12076,6 +12072,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     // removed from the element stack at this point are closed implicitly, so they won't get
                     // an end source span (as there is no explicit closing element).
                     el.endSourceSpan = endSourceSpan;
+                    el.sourceSpan.end = endSourceSpan.end || el.sourceSpan.end;
                     this._elementStack.splice(stackIndex, this._elementStack.length - stackIndex);
                     return true;
                 }
@@ -16023,7 +16020,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             });
             const isVoid = getHtmlTagDefinition(el.name).isVoid;
             const startPhName = context.placeholderRegistry.getStartTagPlaceholderName(el.name, attrs, isVoid);
-            context.placeholderToContent[startPhName] = el.sourceSpan.toString();
+            context.placeholderToContent[startPhName] = el.startSourceSpan.toString();
             let closePhName = '';
             if (!isVoid) {
                 closePhName = context.placeholderRegistry.getCloseTagPlaceholderName(el.name);
@@ -16907,7 +16904,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         addNamespaceInstruction(nsInstruction, element) {
             this._namespace = nsInstruction;
-            this.creationInstruction(element.sourceSpan, nsInstruction);
+            this.creationInstruction(element.startSourceSpan, nsInstruction);
         }
         /**
          * Adds an update instruction for an interpolated property or attribute, such as
@@ -16935,6 +16932,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
         }
         visitElement(element) {
+            var _a, _b;
             const elementIndex = this.allocateDataSlot();
             const stylingBuilder = new StylingBuilder(null);
             let isNonBindableMode = false;
@@ -17006,12 +17004,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainer : Identifiers$1.element, trimTrailingNulls(parameters));
             }
             else {
-                this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
+                this.creationInstruction(element.startSourceSpan, isNgContainer$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
                 if (isNonBindableMode) {
-                    this.creationInstruction(element.sourceSpan, Identifiers$1.disableBindings);
+                    this.creationInstruction(element.startSourceSpan, Identifiers$1.disableBindings);
                 }
                 if (i18nAttrs.length > 0) {
-                    this.i18nAttributesInstruction(elementIndex, i18nAttrs, element.sourceSpan);
+                    this.i18nAttributesInstruction(elementIndex, i18nAttrs, (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan);
                 }
                 // Generate Listeners (outputs)
                 if (element.outputs.length > 0) {
@@ -17024,7 +17022,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // Note: it's important to keep i18n/i18nStart instructions after i18nAttributes and
                 // listeners, to make sure i18nAttributes instruction targets current element at runtime.
                 if (isI18nRootElement) {
-                    this.i18nStart(element.sourceSpan, element.i18n, createSelfClosingI18nInstruction);
+                    this.i18nStart(element.startSourceSpan, element.i18n, createSelfClosingI18nInstruction);
                 }
             }
             // the code here will collect all update-level styling instructions and add them to the
@@ -17148,7 +17146,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             if (!createSelfClosingInstruction) {
                 // Finish element construction mode.
-                const span = element.endSourceSpan || element.sourceSpan;
+                const span = (_b = element.endSourceSpan) !== null && _b !== void 0 ? _b : element.sourceSpan;
                 if (isI18nRootElement) {
                     this.i18nEnd(span, createSelfClosingI18nInstruction);
                 }
@@ -17159,6 +17157,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
         }
         visitTemplate(template) {
+            var _a;
             const NG_TEMPLATE_TAG_NAME = 'ng-template';
             const templateIndex = this.allocateDataSlot();
             if (this.i18n) {
@@ -17215,7 +17214,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // elements, in case of inline templates, corresponding instructions will be generated in the
                 // nested template function.
                 if (i18nAttrs.length > 0) {
-                    this.i18nAttributesInstruction(templateIndex, i18nAttrs, template.sourceSpan);
+                    this.i18nAttributesInstruction(templateIndex, i18nAttrs, (_a = template.startSourceSpan) !== null && _a !== void 0 ? _a : template.sourceSpan);
                 }
                 // Add the input bindings
                 if (inputs.length > 0) {
@@ -19027,7 +19026,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.0+1.sha-86e7cd8');
+    const VERSION$1 = new Version('11.0.0-next.0+5.sha-1d8c5d8');
 
     /**
      * @license
@@ -19617,7 +19616,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.0+1.sha-86e7cd8');
+    const VERSION$2 = new Version('11.0.0-next.0+5.sha-1d8c5d8');
 
     /**
      * @license
@@ -26984,13 +26983,15 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 interpolation = InterpolationConfig.fromArray(value);
             }
+            // We always normalize line endings if the template has been escaped (i.e. is inline).
+            const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
             const { errors, nodes: emitNodes, styleUrls, styles, ngContentSelectors } = parseTemplate(templateStr, templateUrl, {
                 preserveWhitespaces,
                 interpolationConfig: interpolation,
                 range: templateRange,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
-                i18nNormalizeLineEndingsInICUs: this.i18nNormalizeLineEndingsInICUs,
+                i18nNormalizeLineEndingsInICUs,
             });
             // Unfortunately, the primary parse of the template above may not contain accurate source map
             // information. If used directly, it would result in incorrect code locations in template
@@ -27010,7 +27011,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 range: templateRange,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
-                i18nNormalizeLineEndingsInICUs: this.i18nNormalizeLineEndingsInICUs,
+                i18nNormalizeLineEndingsInICUs,
                 leadingTriviaChars: [],
             });
             return {
@@ -28853,7 +28854,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 name = node.name;
                 kind = IdentifierKind.Element;
             }
-            const { sourceSpan } = node;
+            const sourceSpan = node.startSourceSpan;
             // An element's or template's source span can be of the form `<element>`, `<element />`, or
             // `<element></element>`. Only the selector is interesting to the indexer, so the source is
             // searched for the first occurrence of the element (selector) name.
@@ -30986,7 +30987,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     errorMsg +=
                         `2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`;
                 }
-                const diag = makeTemplateDiagnostic(id, mapping, element.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
+                const diag = makeTemplateDiagnostic(id, mapping, element.startSourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
                 this._diagnostics.push(diag);
             }
         }
