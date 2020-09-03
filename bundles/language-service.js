@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0+7.sha-25afbcc
+ * @license Angular v10.1.0+9.sha-9bf32c4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -14066,11 +14066,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const ivyNodes = visitAll$1(transformer, htmlNodes);
         // Errors might originate in either the binding parser or the html to ivy transformer
         const allErrors = bindingParser.errors.concat(transformer.errors);
-        const errors = allErrors.filter(e => e.level === ParseErrorLevel.ERROR);
-        if (errors.length > 0) {
-            const errorString = errors.join('\n');
-            throw syntaxError(`Template parse errors:\n${errorString}`, errors);
-        }
         return {
             nodes: ivyNodes,
             errors: allErrors,
@@ -17815,7 +17810,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0+7.sha-25afbcc');
+    const VERSION$1 = new Version('10.1.0+9.sha-9bf32c4');
 
     /**
      * @license
@@ -33796,7 +33791,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0+7.sha-25afbcc');
+    const VERSION$2 = new Version$1('10.1.0+9.sha-9bf32c4');
 
     /**
      * @license

@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0+7.sha-25afbcc
+ * @license Angular v10.1.0+9.sha-9bf32c4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5024,15 +5024,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function error(msg) {
         throw new Error(`Internal Error: ${msg}`);
     }
-    function syntaxError(msg, parseErrors) {
-        const error = Error(msg);
-        error[ERROR_SYNTAX_ERROR] = true;
-        if (parseErrors)
-            error[ERROR_PARSE_ERRORS] = parseErrors;
-        return error;
-    }
-    const ERROR_SYNTAX_ERROR = 'ngSyntaxError';
-    const ERROR_PARSE_ERRORS = 'ngParseErrors';
     // Escape characters that have a special meaning in Regular Expressions
     function escapeRegExp(s) {
         return s.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
@@ -15278,11 +15269,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const ivyNodes = visitAll$1(transformer, htmlNodes);
         // Errors might originate in either the binding parser or the html to ivy transformer
         const allErrors = bindingParser.errors.concat(transformer.errors);
-        const errors = allErrors.filter(e => e.level === ParseErrorLevel.ERROR);
-        if (errors.length > 0) {
-            const errorString = errors.join('\n');
-            throw syntaxError(`Template parse errors:\n${errorString}`, errors);
-        }
         return {
             nodes: ivyNodes,
             errors: allErrors,
@@ -19027,7 +19013,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0+7.sha-25afbcc');
+    const VERSION$1 = new Version('10.1.0+9.sha-9bf32c4');
 
     /**
      * @license
@@ -19617,7 +19603,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0+7.sha-25afbcc');
+    const VERSION$2 = new Version('10.1.0+9.sha-9bf32c4');
 
     /**
      * @license
@@ -19721,6 +19707,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * expression containing a pipe.
          */
         ErrorCode[ErrorCode["HOST_BINDING_PARSE_ERROR"] = 5001] = "HOST_BINDING_PARSE_ERROR";
+        /**
+         * Raised when the compiler cannot parse a component's template.
+         */
+        ErrorCode[ErrorCode["TEMPLATE_PARSE_ERROR"] = 5002] = "TEMPLATE_PARSE_ERROR";
         /**
          * Raised when an NgModule contains an invalid reference in `declarations`.
          */
@@ -25052,6 +25042,127 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
+     */
+    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessage) {
+        if (mapping.type === 'direct') {
+            let relatedInformation = undefined;
+            if (relatedMessage !== undefined) {
+                relatedInformation = [{
+                        category: ts.DiagnosticCategory.Message,
+                        code: 0,
+                        file: mapping.node.getSourceFile(),
+                        start: relatedMessage.span.start.offset,
+                        length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
+                        messageText: relatedMessage.text,
+                    }];
+            }
+            // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
+            // constant within the `@Component` decorator for the template. This allows us to map the error
+            // directly into the bytes of the source file.
+            return {
+                source: 'ngtsc',
+                code,
+                category,
+                messageText,
+                file: mapping.node.getSourceFile(),
+                componentFile: mapping.node.getSourceFile(),
+                templateId,
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                relatedInformation,
+            };
+        }
+        else if (mapping.type === 'indirect' || mapping.type === 'external') {
+            // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
+            // to a string constant in the decorator), the component's file name is given with a suffix
+            // indicating it's not the TS file being displayed, but a template.
+            // For external temoplates, the HTML filename is used.
+            const componentSf = mapping.componentClass.getSourceFile();
+            const componentName = mapping.componentClass.name.text;
+            // TODO(alxhub): remove cast when TS in g3 supports this narrowing.
+            const fileName = mapping.type === 'indirect' ?
+                `${componentSf.fileName} (${componentName} template)` :
+                mapping.templateUrl;
+            // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
+            // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
+            // Also investigate caching the file to avoid running the parser multiple times.
+            const sf = ts.createSourceFile(fileName, mapping.template, ts.ScriptTarget.Latest, false, ts.ScriptKind.JSX);
+            let relatedInformation = [];
+            if (relatedMessage !== undefined) {
+                relatedInformation.push({
+                    category: ts.DiagnosticCategory.Message,
+                    code: 0,
+                    file: sf,
+                    start: relatedMessage.span.start.offset,
+                    length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
+                    messageText: relatedMessage.text,
+                });
+            }
+            relatedInformation.push({
+                category: ts.DiagnosticCategory.Message,
+                code: 0,
+                file: componentSf,
+                // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
+                // and getEnd() are used because they don't include surrounding whitespace.
+                start: mapping.node.getStart(),
+                length: mapping.node.getEnd() - mapping.node.getStart(),
+                messageText: `Error occurs in the template of component ${componentName}.`,
+            });
+            return {
+                source: 'ngtsc',
+                category,
+                code,
+                messageText,
+                file: sf,
+                componentFile: componentSf,
+                templateId,
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                // Show a secondary message indicating the component whose template contains the error.
+                relatedInformation,
+            };
+        }
+        else {
+            throw new Error(`Unexpected source mapping type: ${mapping.type}`);
+        }
+    }
+    function isTemplateDiagnostic(diagnostic) {
+        return diagnostic.hasOwnProperty('componentFile') &&
+            ts.isSourceFile(diagnostic.componentFile);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const TEMPLATE_ID = Symbol('ngTemplateId');
+    const NEXT_TEMPLATE_ID = Symbol('ngNextTemplateId');
+    function getTemplateId(clazz) {
+        const node = clazz;
+        if (node[TEMPLATE_ID] === undefined) {
+            node[TEMPLATE_ID] = allocateTemplateId(node.getSourceFile());
+        }
+        return node[TEMPLATE_ID];
+    }
+    function allocateTemplateId(sf) {
+        if (sf[NEXT_TEMPLATE_ID] === undefined) {
+            sf[NEXT_TEMPLATE_ID] = 1;
+        }
+        return (`tcb${sf[NEXT_TEMPLATE_ID]++}`);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     let _tsSourceMapBug29300Fixed;
     /**
      * Test the current version of TypeScript to see if it has fixed the external SourceMap
@@ -26582,8 +26693,21 @@ Either add the @Injectable() decorator to '${provider.node.name
                     template = this._extractInlineTemplate(node, decorator, component, containingFile);
                 }
             }
+            let diagnostics = undefined;
             if (template.errors !== undefined) {
-                throw new Error(`Errors parsing template: ${template.errors.map(e => e.toString()).join(', ')}`);
+                // If there are any template parsing errors, convert them to `ts.Diagnostic`s for display.
+                const id = getTemplateId(node);
+                diagnostics = template.errors.map(error => {
+                    const span = error.span;
+                    if (span.start.offset === span.end.offset) {
+                        // Template errors can contain zero-length spans, if the error occurs at a single point.
+                        // However, TypeScript does not handle displaying a zero-length diagnostic very well, so
+                        // increase the ending offset by 1 for such errors, to ensure the position is shown in the
+                        // diagnostic.
+                        span.end.offset++;
+                    }
+                    return makeTemplateDiagnostic(id, template.sourceMapping, span, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.TEMPLATE_PARSE_ERROR), error.msg);
+                });
             }
             // Figure out the set of styles. The ordering here is important: external resources (styleUrls)
             // precede inline styles, and styles defined in the template override styles defined in the
@@ -26644,6 +26768,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     providersRequiringFactory,
                     viewProvidersRequiringFactory,
                 },
+                diagnostics,
             };
             if (changeDetection !== null) {
                 output.analysis.meta.changeDetection = changeDetection;
@@ -30690,271 +30815,6 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Wraps the node in parenthesis such that inserted span comments become attached to the proper
-     * node. This is an alias for `ts.createParen` with the benefit that it signifies that the
-     * inserted parenthesis are for diagnostic purposes, not for correctness of the rendered TCB code.
-     *
-     * Note that it is important that nodes and its attached comment are not wrapped into parenthesis
-     * by default, as it prevents correct translation of e.g. diagnostics produced for incorrect method
-     * arguments. Such diagnostics would then be produced for the parenthesised node whereas the
-     * positional comment would be located within that node, resulting in a mismatch.
-     */
-    function wrapForDiagnostics(expr) {
-        return ts.createParen(expr);
-    }
-    const IGNORE_MARKER = 'ignore';
-    /**
-     * Adds a marker to the node that signifies that any errors within the node should not be reported.
-     */
-    function ignoreDiagnostics(node) {
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_MARKER, /* hasTrailingNewLine */ false);
-    }
-    /**
-     * Adds a synthetic comment to the expression that represents the parse span of the provided node.
-     * This comment can later be retrieved as trivia of a node to recover original source locations.
-     */
-    function addParseSpanInfo(node, span) {
-        let commentText;
-        if (span instanceof AbsoluteSourceSpan) {
-            commentText = `${span.start},${span.end}`;
-        }
-        else {
-            commentText = `${span.start.offset},${span.end.offset}`;
-        }
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, commentText, /* hasTrailingNewLine */ false);
-    }
-    /**
-     * Adds a synthetic comment to the function declaration that contains the template id
-     * of the class declaration.
-     */
-    function addTemplateId(tcb, id) {
-        ts.addSyntheticLeadingComment(tcb, ts.SyntaxKind.MultiLineCommentTrivia, id, true);
-    }
-    /**
-     * Determines if the diagnostic should be reported. Some diagnostics are produced because of the
-     * way TCBs are generated; those diagnostics should not be reported as type check errors of the
-     * template.
-     */
-    function shouldReportDiagnostic(diagnostic) {
-        const { code } = diagnostic;
-        if (code === 6133 /* $var is declared but its value is never read. */) {
-            return false;
-        }
-        else if (code === 6199 /* All variables are unused. */) {
-            return false;
-        }
-        else if (code === 2695 /* Left side of comma operator is unused and has no side effects. */) {
-            return false;
-        }
-        else if (code === 7006 /* Parameter '$event' implicitly has an 'any' type. */) {
-            return false;
-        }
-        return true;
-    }
-    /**
-     * Attempts to translate a TypeScript diagnostic produced during template type-checking to their
-     * location of origin, based on the comments that are emitted in the TCB code.
-     *
-     * If the diagnostic could not be translated, `null` is returned to indicate that the diagnostic
-     * should not be reported at all. This prevents diagnostics from non-TCB code in a user's source
-     * file from being reported as type-check errors.
-     */
-    function translateDiagnostic(diagnostic, resolver) {
-        if (diagnostic.file === undefined || diagnostic.start === undefined) {
-            return null;
-        }
-        // Locate the node that the diagnostic is reported on and determine its location in the source.
-        const node = getTokenAtPosition(diagnostic.file, diagnostic.start);
-        const sourceLocation = findSourceLocation(node, diagnostic.file);
-        if (sourceLocation === null) {
-            return null;
-        }
-        // Now use the external resolver to obtain the full `ParseSourceFile` of the template.
-        const span = resolver.toParseSourceSpan(sourceLocation.id, sourceLocation.span);
-        if (span === null) {
-            return null;
-        }
-        const mapping = resolver.getSourceMapping(sourceLocation.id);
-        return makeTemplateDiagnostic(sourceLocation.id, mapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
-    }
-    function findTypeCheckBlock(file, id) {
-        for (const stmt of file.statements) {
-            if (ts.isFunctionDeclaration(stmt) && getTemplateId(stmt, file) === id) {
-                return stmt;
-            }
-        }
-        return null;
-    }
-    /**
-     * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
-     */
-    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessage) {
-        if (mapping.type === 'direct') {
-            let relatedInformation = undefined;
-            if (relatedMessage !== undefined) {
-                relatedInformation = [{
-                        category: ts.DiagnosticCategory.Message,
-                        code: 0,
-                        file: mapping.node.getSourceFile(),
-                        start: relatedMessage.span.start.offset,
-                        length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
-                        messageText: relatedMessage.text,
-                    }];
-            }
-            // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
-            // constant within the `@Component` decorator for the template. This allows us to map the error
-            // directly into the bytes of the source file.
-            return {
-                source: 'ngtsc',
-                code,
-                category,
-                messageText,
-                file: mapping.node.getSourceFile(),
-                componentFile: mapping.node.getSourceFile(),
-                templateId,
-                start: span.start.offset,
-                length: span.end.offset - span.start.offset,
-                relatedInformation,
-            };
-        }
-        else if (mapping.type === 'indirect' || mapping.type === 'external') {
-            // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
-            // to a string constant in the decorator), the component's file name is given with a suffix
-            // indicating it's not the TS file being displayed, but a template.
-            // For external temoplates, the HTML filename is used.
-            const componentSf = mapping.componentClass.getSourceFile();
-            const componentName = mapping.componentClass.name.text;
-            // TODO(alxhub): remove cast when TS in g3 supports this narrowing.
-            const fileName = mapping.type === 'indirect' ?
-                `${componentSf.fileName} (${componentName} template)` :
-                mapping.templateUrl;
-            // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
-            // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
-            // Also investigate caching the file to avoid running the parser multiple times.
-            const sf = ts.createSourceFile(fileName, mapping.template, ts.ScriptTarget.Latest, false, ts.ScriptKind.JSX);
-            let relatedInformation = [];
-            if (relatedMessage !== undefined) {
-                relatedInformation.push({
-                    category: ts.DiagnosticCategory.Message,
-                    code: 0,
-                    file: sf,
-                    start: relatedMessage.span.start.offset,
-                    length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
-                    messageText: relatedMessage.text,
-                });
-            }
-            relatedInformation.push({
-                category: ts.DiagnosticCategory.Message,
-                code: 0,
-                file: componentSf,
-                // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
-                // and getEnd() are used because they don't include surrounding whitespace.
-                start: mapping.node.getStart(),
-                length: mapping.node.getEnd() - mapping.node.getStart(),
-                messageText: `Error occurs in the template of component ${componentName}.`,
-            });
-            return {
-                source: 'ngtsc',
-                category,
-                code,
-                messageText,
-                file: sf,
-                componentFile: componentSf,
-                templateId,
-                start: span.start.offset,
-                length: span.end.offset - span.start.offset,
-                // Show a secondary message indicating the component whose template contains the error.
-                relatedInformation,
-            };
-        }
-        else {
-            throw new Error(`Unexpected source mapping type: ${mapping.type}`);
-        }
-    }
-    /**
-     * Traverses up the AST starting from the given node to extract the source location from comments
-     * that have been emitted into the TCB. If the node does not exist within a TCB, or if an ignore
-     * marker comment is found up the tree, this function returns null.
-     */
-    function findSourceLocation(node, sourceFile) {
-        // Search for comments until the TCB's function declaration is encountered.
-        while (node !== undefined && !ts.isFunctionDeclaration(node)) {
-            if (hasIgnoreMarker(node, sourceFile)) {
-                // There's an ignore marker on this node, so the diagnostic should not be reported.
-                return null;
-            }
-            const span = readSpanComment(sourceFile, node);
-            if (span !== null) {
-                // Once the positional information has been extracted, search further up the TCB to extract
-                // the unique id that is attached with the TCB's function declaration.
-                const id = getTemplateId(node, sourceFile);
-                if (id === null) {
-                    return null;
-                }
-                return { id, span };
-            }
-            node = node.parent;
-        }
-        return null;
-    }
-    function getTemplateId(node, sourceFile) {
-        // Walk up to the function declaration of the TCB, the file information is attached there.
-        while (!ts.isFunctionDeclaration(node)) {
-            if (hasIgnoreMarker(node, sourceFile)) {
-                // There's an ignore marker on this node, so the diagnostic should not be reported.
-                return null;
-            }
-            node = node.parent;
-            // Bail once we have reached the root.
-            if (node === undefined) {
-                return null;
-            }
-        }
-        const start = node.getFullStart();
-        return ts.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText;
-        }) || null;
-    }
-    const parseSpanComment = /^(\d+),(\d+)$/;
-    function readSpanComment(sourceFile, node) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            const match = commentText.match(parseSpanComment);
-            if (match === null) {
-                return null;
-            }
-            return new AbsoluteSourceSpan(+match[1], +match[2]);
-        }) || null;
-    }
-    function hasIgnoreMarker(node, sourceFile) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText === IGNORE_MARKER;
-        }) === true;
-    }
-    function isTemplateDiagnostic(diagnostic) {
-        return diagnostic.hasOwnProperty('componentFile') &&
-            ts.isSourceFile(diagnostic.componentFile);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const REGISTRY = new DomElementSchemaRegistry();
     const REMOVE_XHTML_REGEX = /^:xhtml:/;
     /**
@@ -31903,6 +31763,181 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function makeInlineDiagnostic(templateId, code, node, messageText, relatedInformation) {
         return Object.assign(Object.assign({}, makeDiagnostic(code, node, messageText, relatedInformation)), { componentFile: node.getSourceFile(), templateId });
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Wraps the node in parenthesis such that inserted span comments become attached to the proper
+     * node. This is an alias for `ts.createParen` with the benefit that it signifies that the
+     * inserted parenthesis are for diagnostic purposes, not for correctness of the rendered TCB code.
+     *
+     * Note that it is important that nodes and its attached comment are not wrapped into parenthesis
+     * by default, as it prevents correct translation of e.g. diagnostics produced for incorrect method
+     * arguments. Such diagnostics would then be produced for the parenthesised node whereas the
+     * positional comment would be located within that node, resulting in a mismatch.
+     */
+    function wrapForDiagnostics(expr) {
+        return ts.createParen(expr);
+    }
+    const IGNORE_MARKER = 'ignore';
+    /**
+     * Adds a marker to the node that signifies that any errors within the node should not be reported.
+     */
+    function ignoreDiagnostics(node) {
+        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_MARKER, /* hasTrailingNewLine */ false);
+    }
+    /**
+     * Adds a synthetic comment to the expression that represents the parse span of the provided node.
+     * This comment can later be retrieved as trivia of a node to recover original source locations.
+     */
+    function addParseSpanInfo(node, span) {
+        let commentText;
+        if (span instanceof AbsoluteSourceSpan) {
+            commentText = `${span.start},${span.end}`;
+        }
+        else {
+            commentText = `${span.start.offset},${span.end.offset}`;
+        }
+        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, commentText, /* hasTrailingNewLine */ false);
+    }
+    /**
+     * Adds a synthetic comment to the function declaration that contains the template id
+     * of the class declaration.
+     */
+    function addTemplateId(tcb, id) {
+        ts.addSyntheticLeadingComment(tcb, ts.SyntaxKind.MultiLineCommentTrivia, id, true);
+    }
+    /**
+     * Determines if the diagnostic should be reported. Some diagnostics are produced because of the
+     * way TCBs are generated; those diagnostics should not be reported as type check errors of the
+     * template.
+     */
+    function shouldReportDiagnostic(diagnostic) {
+        const { code } = diagnostic;
+        if (code === 6133 /* $var is declared but its value is never read. */) {
+            return false;
+        }
+        else if (code === 6199 /* All variables are unused. */) {
+            return false;
+        }
+        else if (code === 2695 /* Left side of comma operator is unused and has no side effects. */) {
+            return false;
+        }
+        else if (code === 7006 /* Parameter '$event' implicitly has an 'any' type. */) {
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Attempts to translate a TypeScript diagnostic produced during template type-checking to their
+     * location of origin, based on the comments that are emitted in the TCB code.
+     *
+     * If the diagnostic could not be translated, `null` is returned to indicate that the diagnostic
+     * should not be reported at all. This prevents diagnostics from non-TCB code in a user's source
+     * file from being reported as type-check errors.
+     */
+    function translateDiagnostic(diagnostic, resolver) {
+        if (diagnostic.file === undefined || diagnostic.start === undefined) {
+            return null;
+        }
+        // Locate the node that the diagnostic is reported on and determine its location in the source.
+        const node = getTokenAtPosition(diagnostic.file, diagnostic.start);
+        const sourceLocation = findSourceLocation(node, diagnostic.file);
+        if (sourceLocation === null) {
+            return null;
+        }
+        // Now use the external resolver to obtain the full `ParseSourceFile` of the template.
+        const span = resolver.toParseSourceSpan(sourceLocation.id, sourceLocation.span);
+        if (span === null) {
+            return null;
+        }
+        const mapping = resolver.getSourceMapping(sourceLocation.id);
+        return makeTemplateDiagnostic(sourceLocation.id, mapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
+    }
+    function findTypeCheckBlock(file, id) {
+        for (const stmt of file.statements) {
+            if (ts.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file) === id) {
+                return stmt;
+            }
+        }
+        return null;
+    }
+    /**
+     * Traverses up the AST starting from the given node to extract the source location from comments
+     * that have been emitted into the TCB. If the node does not exist within a TCB, or if an ignore
+     * marker comment is found up the tree, this function returns null.
+     */
+    function findSourceLocation(node, sourceFile) {
+        // Search for comments until the TCB's function declaration is encountered.
+        while (node !== undefined && !ts.isFunctionDeclaration(node)) {
+            if (hasIgnoreMarker(node, sourceFile)) {
+                // There's an ignore marker on this node, so the diagnostic should not be reported.
+                return null;
+            }
+            const span = readSpanComment(sourceFile, node);
+            if (span !== null) {
+                // Once the positional information has been extracted, search further up the TCB to extract
+                // the unique id that is attached with the TCB's function declaration.
+                const id = getTemplateId$1(node, sourceFile);
+                if (id === null) {
+                    return null;
+                }
+                return { id, span };
+            }
+            node = node.parent;
+        }
+        return null;
+    }
+    function getTemplateId$1(node, sourceFile) {
+        // Walk up to the function declaration of the TCB, the file information is attached there.
+        while (!ts.isFunctionDeclaration(node)) {
+            if (hasIgnoreMarker(node, sourceFile)) {
+                // There's an ignore marker on this node, so the diagnostic should not be reported.
+                return null;
+            }
+            node = node.parent;
+            // Bail once we have reached the root.
+            if (node === undefined) {
+                return null;
+            }
+        }
+        const start = node.getFullStart();
+        return ts.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText;
+        }) || null;
+    }
+    const parseSpanComment = /^(\d+),(\d+)$/;
+    function readSpanComment(sourceFile, node) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            const match = commentText.match(parseSpanComment);
+            if (match === null) {
+                return null;
+            }
+            return new AbsoluteSourceSpan(+match[1], +match[2]);
+        }) || null;
+    }
+    function hasIgnoreMarker(node, sourceFile) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText === IGNORE_MARKER;
+        }) === true;
     }
 
     /**
@@ -34308,10 +34343,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.templateSources = new Map();
         }
         getTemplateId(node) {
-            return getTemplateId$1(node);
+            return getTemplateId(node);
         }
         captureSource(node, mapping, file) {
-            const id = getTemplateId$1(node);
+            const id = getTemplateId(node);
             this.templateSources.set(id, new TemplateSource(mapping, file));
             return id;
         }
@@ -34328,20 +34363,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const templateSource = this.templateSources.get(id);
             return templateSource.toParseSourceSpan(span.start, span.end);
         }
-    }
-    const TEMPLATE_ID = Symbol('ngTemplateId');
-    const NEXT_TEMPLATE_ID = Symbol('ngNextTemplateId');
-    function getTemplateId$1(node) {
-        if (node[TEMPLATE_ID] === undefined) {
-            node[TEMPLATE_ID] = allocateTemplateId(node.getSourceFile());
-        }
-        return node[TEMPLATE_ID];
-    }
-    function allocateTemplateId(sf) {
-        if (sf[NEXT_TEMPLATE_ID] === undefined) {
-            sf[NEXT_TEMPLATE_ID] = 1;
-        }
-        return (`tcb${sf[NEXT_TEMPLATE_ID]++}`);
     }
 
     /**
