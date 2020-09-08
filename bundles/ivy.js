@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0+20.sha-5863537
+ * @license Angular v10.1.0+26.sha-a1c34c6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5623,7 +5623,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.element = { name: 'ɵɵelement', moduleName: CORE$1 };
     Identifiers$1.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
     Identifiers$1.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
-    Identifiers$1.select = { name: 'ɵɵselect', moduleName: CORE$1 };
     Identifiers$1.advance = { name: 'ɵɵadvance', moduleName: CORE$1 };
     Identifiers$1.syntheticHostProperty = { name: 'ɵɵsyntheticHostProperty', moduleName: CORE$1 };
     Identifiers$1.syntheticHostListener = { name: 'ɵɵsyntheticHostListener', moduleName: CORE$1 };
@@ -19013,7 +19012,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0+20.sha-5863537');
+    const VERSION$1 = new Version('10.1.0+26.sha-a1c34c6');
 
     /**
      * @license
@@ -19357,7 +19356,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
             });
             const setAttributeBinding = (attribute, ioType) => {
-                const dir = directives.find(dir => dir[ioType].hasOwnProperty(attribute.name));
+                const dir = directives.find(dir => dir[ioType].hasBindingPropertyName(attribute.name));
                 const binding = dir !== undefined ? dir : node;
                 this.bindings.set(attribute, binding);
             };
@@ -19603,7 +19602,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0+20.sha-5863537');
+    const VERSION$2 = new Version('10.1.0+26.sha-a1c34c6');
 
     /**
      * @license
@@ -21559,6 +21558,142 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * A mapping of component property and template binding property names, for example containing the
+     * inputs of a particular directive or component.
+     *
+     * A single component property has exactly one input/output annotation (and therefore one binding
+     * property name) associated with it, but the same binding property name may be shared across many
+     * component property names.
+     *
+     * Allows bidirectional querying of the mapping - looking up all inputs/outputs with a given
+     * property name, or mapping from a specific class property to its binding property name.
+     */
+    class ClassPropertyMapping {
+        constructor(forwardMap) {
+            this.forwardMap = forwardMap;
+            this.reverseMap = reverseMapFromForwardMap(forwardMap);
+        }
+        /**
+         * Construct a `ClassPropertyMapping` with no entries.
+         */
+        static empty() {
+            return new ClassPropertyMapping(new Map());
+        }
+        /**
+         * Construct a `ClassPropertyMapping` from a primitive JS object which maps class property names
+         * to either binding property names or an array that contains both names, which is used in on-disk
+         * metadata formats (e.g. in .d.ts files).
+         */
+        static fromMappedObject(obj) {
+            const forwardMap = new Map();
+            for (const classPropertyName of Object.keys(obj)) {
+                const value = obj[classPropertyName];
+                const bindingPropertyName = Array.isArray(value) ? value[0] : value;
+                const inputOrOutput = { classPropertyName, bindingPropertyName };
+                forwardMap.set(classPropertyName, inputOrOutput);
+            }
+            return new ClassPropertyMapping(forwardMap);
+        }
+        /**
+         * Merge two mappings into one, with class properties from `b` taking precedence over class
+         * properties from `a`.
+         */
+        static merge(a, b) {
+            const forwardMap = new Map(a.forwardMap.entries());
+            for (const [classPropertyName, inputOrOutput] of b.forwardMap) {
+                forwardMap.set(classPropertyName, inputOrOutput);
+            }
+            return new ClassPropertyMapping(forwardMap);
+        }
+        /**
+         * All class property names mapped in this mapping.
+         */
+        get classPropertyNames() {
+            return Array.from(this.forwardMap.keys());
+        }
+        /**
+         * All binding property names mapped in this mapping.
+         */
+        get propertyNames() {
+            return Array.from(this.reverseMap.keys());
+        }
+        /**
+         * Check whether a mapping for the given property name exists.
+         */
+        hasBindingPropertyName(propertyName) {
+            return this.reverseMap.has(propertyName);
+        }
+        /**
+         * Lookup all `InputOrOutput`s that use this `propertyName`.
+         */
+        getByBindingPropertyName(propertyName) {
+            return this.reverseMap.has(propertyName) ? this.reverseMap.get(propertyName) : null;
+        }
+        /**
+         * Lookup the `InputOrOutput` associated with a `classPropertyName`.
+         */
+        getByClassPropertyName(classPropertyName) {
+            return this.forwardMap.has(classPropertyName) ? this.forwardMap.get(classPropertyName) : null;
+        }
+        /**
+         * Convert this mapping to a primitive JS object which maps each class property directly to the
+         * binding property name associated with it.
+         */
+        toDirectMappedObject() {
+            const obj = {};
+            for (const [classPropertyName, inputOrOutput] of this.forwardMap) {
+                obj[classPropertyName] = inputOrOutput.bindingPropertyName;
+            }
+            return obj;
+        }
+        /**
+         * Convert this mapping to a primitive JS object which maps each class property either to itself
+         * (for cases where the binding property name is the same) or to an array which contains both
+         * names if they differ.
+         *
+         * This object format is used when mappings are serialized (for example into .d.ts files).
+         */
+        toJointMappedObject() {
+            const obj = {};
+            for (const [classPropertyName, inputOrOutput] of this.forwardMap) {
+                if (inputOrOutput.bindingPropertyName === classPropertyName) {
+                    obj[classPropertyName] = inputOrOutput.bindingPropertyName;
+                }
+                else {
+                    obj[classPropertyName] = [inputOrOutput.bindingPropertyName, classPropertyName];
+                }
+            }
+            return obj;
+        }
+        /**
+         * Implement the iterator protocol and return entry objects which contain the class and binding
+         * property names (and are useful for destructuring).
+         */
+        *[Symbol.iterator]() {
+            for (const [classPropertyName, inputOrOutput] of this.forwardMap.entries()) {
+                yield [classPropertyName, inputOrOutput.bindingPropertyName];
+            }
+        }
+    }
+    function reverseMapFromForwardMap(forwardMap) {
+        const reverseMap = new Map();
+        for (const [_, inputOrOutput] of forwardMap) {
+            if (!reverseMap.has(inputOrOutput.bindingPropertyName)) {
+                reverseMap.set(inputOrOutput.bindingPropertyName, []);
+            }
+            reverseMap.get(inputOrOutput.bindingPropertyName).push(inputOrOutput);
+        }
+        return reverseMap;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function extractReferencesFromType(checker, def, ngModuleImportedFrom, resolutionContext) {
         if (!ts.isTupleTypeNode(def)) {
             return [];
@@ -21640,17 +21775,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const restrictedInputFields = new Set();
         const stringLiteralInputFields = new Set();
         const undeclaredInputFields = new Set();
-        for (const fieldName of Object.keys(inputs)) {
-            const field = members.find(member => member.name === fieldName);
+        for (const classPropertyName of inputs.classPropertyNames) {
+            const field = members.find(member => member.name === classPropertyName);
             if (field === undefined || field.node === null) {
-                undeclaredInputFields.add(fieldName);
+                undeclaredInputFields.add(classPropertyName);
                 continue;
             }
             if (isRestricted(field.node)) {
-                restrictedInputFields.add(fieldName);
+                restrictedInputFields.add(classPropertyName);
             }
             if (field.nameNode !== null && ts.isStringLiteral(field.nameNode)) {
-                stringLiteralInputFields.add(fieldName);
+                stringLiteralInputFields.add(classPropertyName);
             }
         }
         const arity = reflector.getGenericArityOfClass(node);
@@ -21818,8 +21953,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // The type metadata was the wrong shape.
                 return null;
             }
-            const inputs = readStringMapType(def.type.typeArguments[3]);
-            return Object.assign(Object.assign({ ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs, outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveTypeCheckMeta(clazz, inputs, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
+            const inputs = ClassPropertyMapping.fromMappedObject(readStringMapType(def.type.typeArguments[3]));
+            const outputs = ClassPropertyMapping.fromMappedObject(readStringMapType(def.type.typeArguments[4]));
+            return Object.assign(Object.assign({ ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs,
+                outputs, queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveTypeCheckMeta(clazz, inputs, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
         }
         /**
          * Read pipe metadata from a referenced class in a .d.ts file.
@@ -21973,13 +22110,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (topMeta === null) {
             throw new Error(`Metadata not found for directive: ${dir.debugName}`);
         }
-        let inputs = {};
-        let outputs = {};
         const coercedInputFields = new Set();
         const undeclaredInputFields = new Set();
         const restrictedInputFields = new Set();
         const stringLiteralInputFields = new Set();
         let isDynamic = false;
+        let inputs = ClassPropertyMapping.empty();
+        let outputs = ClassPropertyMapping.empty();
         const addMetadata = (meta) => {
             if (meta.baseClass === 'dynamic') {
                 isDynamic = true;
@@ -21994,8 +22131,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     isDynamic = true;
                 }
             }
-            inputs = Object.assign(Object.assign({}, inputs), meta.inputs);
-            outputs = Object.assign(Object.assign({}, outputs), meta.outputs);
+            inputs = ClassPropertyMapping.merge(inputs, meta.inputs);
+            outputs = ClassPropertyMapping.merge(outputs, meta.outputs);
             for (const coercedInputField of meta.coercedInputFields) {
                 coercedInputFields.add(coercedInputField);
             }
@@ -26042,20 +26179,22 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return { diagnostics: [getUndecoratedClassWithAngularFeaturesDiagnostic(node)] };
             }
             const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags, this.annotateForClosureCompiler);
-            const analysis = directiveResult && directiveResult.metadata;
-            if (analysis === undefined) {
+            if (directiveResult === undefined) {
                 return {};
             }
+            const analysis = directiveResult.metadata;
             let providersRequiringFactory = null;
             if (directiveResult !== undefined && directiveResult.decorator.has('providers')) {
                 providersRequiringFactory = resolveProvidersRequiringFactory(directiveResult.decorator.get('providers'), this.reflector, this.evaluator);
             }
             return {
                 analysis: {
+                    inputs: directiveResult.inputs,
+                    outputs: directiveResult.outputs,
                     meta: analysis,
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
-                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, analysis.inputs, this.reflector),
+                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, directiveResult.inputs, this.reflector),
                     providersRequiringFactory
                 }
             };
@@ -26064,7 +26203,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this directive's information with the `MetadataRegistry`. This ensures that
             // the information about the directive is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
             this.injectableRegistry.registerInjectable(node);
         }
         resolve(node, analysis) {
@@ -26214,6 +26353,8 @@ Either add the @Injectable() decorator to '${provider.node.name
         const usesInheritance = reflector.hasBaseClass(clazz);
         const type = wrapTypeReference(reflector, clazz);
         const internalType = new WrappedNodeExpr(reflector.getInternalNameOfClass(clazz));
+        const inputs = ClassPropertyMapping.fromMappedObject(Object.assign(Object.assign({}, inputsFromMeta), inputsFromFields));
+        const outputs = ClassPropertyMapping.fromMappedObject(Object.assign(Object.assign({}, outputsFromMeta), outputsFromFields));
         const metadata = {
             name: clazz.name.text,
             deps: ctorDeps,
@@ -26221,8 +26362,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             lifecycle: {
                 usesOnChanges,
             },
-            inputs: Object.assign(Object.assign({}, inputsFromMeta), inputsFromFields),
-            outputs: Object.assign(Object.assign({}, outputsFromMeta), outputsFromFields),
+            inputs: inputs.toJointMappedObject(),
+            outputs: outputs.toDirectMappedObject(),
             queries,
             viewQueries,
             selector,
@@ -26235,7 +26376,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             exportAs,
             providers
         };
-        return { decorator: directive, metadata };
+        return {
+            decorator: directive,
+            metadata,
+            inputs,
+            outputs,
+        };
     }
     function extractQueryMetadata(exprNode, name, args, propertyName, reflector, evaluator) {
         if (args.length === 0) {
@@ -26637,7 +26783,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return {};
             }
             // Next, read the `@Component`-specific fields.
-            const { decorator: component, metadata } = directiveResult;
+            const { decorator: component, metadata, inputs, outputs } = directiveResult;
             // Go through the root directories for this project, and select the one with the smallest
             // relative path representation.
             const relativeContextFilePath = this.rootDirs.reduce((previous, rootDir) => {
@@ -26755,6 +26901,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             const output = {
                 analysis: {
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
+                    inputs,
+                    outputs,
                     meta: Object.assign(Object.assign({}, metadata), { template: {
                             nodes: template.emitNodes,
                             ngContentSelectors: template.ngContentSelectors,
@@ -26762,7 +26910,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // These will be replaced during the compilation step, after all `NgModule`s have been
                         // analyzed and the full compilation scope for the component can be realized.
                         animations, viewProviders: wrappedViewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath }),
-                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, metadata.inputs, this.reflector),
+                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, inputs, this.reflector),
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     template,
                     providersRequiringFactory,
@@ -26779,7 +26927,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this component's information with the `MetadataRegistry`. This ensures that
             // the information about the component is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
             this.injectableRegistry.registerInjectable(node);
         }
         index(context, node, analysis) {
@@ -31534,8 +31682,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     fnName,
                     body: true,
                     fields: {
-                        inputs: Object.keys(dir.inputs),
-                        outputs: Object.keys(dir.outputs),
+                        inputs: dir.inputs.classPropertyNames,
+                        outputs: dir.outputs.classPropertyNames,
                         // TODO: support queries
                         queries: dir.queries,
                     },
@@ -32702,7 +32850,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             // Add unset directive inputs for each of the remaining unset fields.
-            for (const fieldName of Object.keys(this.dir.inputs)) {
+            for (const [fieldName] of this.dir.inputs) {
                 if (!genericInputs.has(fieldName)) {
                     genericInputs.set(fieldName, { type: 'unset', field: fieldName });
                 }
@@ -32988,19 +33136,13 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute() {
             let dirId = null;
-            // `dir.outputs` is an object map of field names on the directive class to event names.
-            // This is backwards from what's needed to match event handlers - a map of event names to field
-            // names is desired. Invert `dir.outputs` into `fieldByEventName` to create this map.
-            const fieldByEventName = new Map();
             const outputs = this.dir.outputs;
-            for (const key of Object.keys(outputs)) {
-                fieldByEventName.set(outputs[key], key);
-            }
             for (const output of this.node.outputs) {
-                if (output.type !== 0 /* Regular */ || !fieldByEventName.has(output.name)) {
+                if (output.type !== 0 /* Regular */ || !outputs.hasBindingPropertyName(output.name)) {
                     continue;
                 }
-                const field = fieldByEventName.get(output.name);
+                // TODO(alxhub): consider supporting multiple fields with the same property name for outputs.
+                const field = outputs.getByBindingPropertyName(output.name)[0].classPropertyName;
                 if (this.tcb.env.config.checkTypeOfOutputEvents) {
                     // For strict checking of directive events, generate a call to the `subscribe` method
                     // on the directive's output field to let type information flow into the handler function's
@@ -33432,9 +33574,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node instanceof Element) {
                 // Go through the directives and remove any inputs that it claims from `elementInputs`.
                 for (const dir of directives) {
-                    for (const fieldName of Object.keys(dir.inputs)) {
-                        const value = dir.inputs[fieldName];
-                        claimedInputs.add(Array.isArray(value) ? value[0] : value);
+                    for (const propertyName of dir.inputs.propertyNames) {
+                        claimedInputs.add(propertyName);
                     }
                 }
                 this.opQueue.push(new TcbUnclaimedInputsOp(this.tcb, this, node, claimedInputs));
@@ -33467,8 +33608,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node instanceof Element) {
                 // Go through the directives and register any outputs that it claims in `claimedOutputs`.
                 for (const dir of directives) {
-                    for (const outputField of Object.keys(dir.outputs)) {
-                        claimedOutputs.add(dir.outputs[outputField]);
+                    for (const outputProperty of dir.outputs.propertyNames) {
+                        claimedOutputs.add(outputProperty);
                     }
                 }
                 this.opQueue.push(new TcbUnclaimedOutputsOp(this.tcb, this, node, claimedOutputs));
@@ -33718,7 +33859,6 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getBoundInputs(directive, node, tcb) {
         const boundInputs = [];
-        const propertyToFieldNames = invertInputs(directive.inputs);
         const processAttribute = (attr) => {
             // Skip non-property bindings.
             if (attr instanceof BoundAttribute && attr.type !== 0 /* Property */) {
@@ -33729,10 +33869,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return;
             }
             // Skip the attribute if the directive does not have an input for it.
-            if (!propertyToFieldNames.has(attr.name)) {
+            const inputs = directive.inputs.getByBindingPropertyName(attr.name);
+            if (inputs === null) {
                 return;
             }
-            const fieldNames = propertyToFieldNames.get(attr.name);
+            const fieldNames = inputs.map(input => input.classPropertyName);
             boundInputs.push({ attribute: attr, fieldNames });
         };
         node.inputs.forEach(processAttribute);
@@ -33754,24 +33895,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             // For regular attributes with a static string value, use the represented string literal.
             return ts.createStringLiteral(attr.value);
         }
-    }
-    /**
-     * Inverts the input-mapping from field-to-property name into property-to-field name, to be able
-     * to match a property in a template with the corresponding field on a directive.
-     */
-    function invertInputs(inputs) {
-        const propertyToFieldNames = new Map();
-        for (const fieldName of Object.keys(inputs)) {
-            const propertyNames = inputs[fieldName];
-            const propertyName = Array.isArray(propertyNames) ? propertyNames[0] : propertyNames;
-            if (propertyToFieldNames.has(propertyName)) {
-                propertyToFieldNames.get(propertyName).push(fieldName);
-            }
-            else {
-                propertyToFieldNames.set(propertyName, [fieldName]);
-            }
-        }
-        return propertyToFieldNames;
     }
     const EVENT_PARAMETER = '$event';
     /**
@@ -34007,8 +34130,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // it comes from a .d.ts file. .d.ts declarations don't have bodies.
                         body: !dirNode.getSourceFile().isDeclarationFile,
                         fields: {
-                            inputs: Object.keys(dir.inputs),
-                            outputs: Object.keys(dir.outputs),
+                            inputs: dir.inputs.classPropertyNames,
+                            outputs: dir.outputs.classPropertyNames,
                             // TODO(alxhub): support queries
                             queries: dir.queries,
                         },
