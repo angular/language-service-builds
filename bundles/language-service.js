@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0+26.sha-a1c34c6
+ * @license Angular v10.1.0+34.sha-190dca0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1302,6 +1302,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitLiteralExpr(this, context);
         }
     }
+    class MessagePiece {
+        constructor(text, sourceSpan) {
+            this.text = text;
+            this.sourceSpan = sourceSpan;
+        }
+    }
+    class LiteralPiece extends MessagePiece {
+    }
+    class PlaceholderPiece extends MessagePiece {
+    }
     class LocalizedString extends Expression {
         constructor(metaBlock, messageParts, placeHolderNames, expressions, sourceSpan) {
             super(STRING_TYPE, sourceSpan);
@@ -1344,7 +1354,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     metaBlock = `${metaBlock}${LEGACY_ID_INDICATOR}${legacyId}`;
                 });
             }
-            return createCookedRawString(metaBlock, this.messageParts[0]);
+            return createCookedRawString(metaBlock, this.messageParts[0].text);
+        }
+        getMessagePartSourceSpan(i) {
+            var _a, _b;
+            return (_b = (_a = this.messageParts[i]) === null || _a === void 0 ? void 0 : _a.sourceSpan) !== null && _b !== void 0 ? _b : this.sourceSpan;
+        }
+        getPlaceholderSourceSpan(i) {
+            var _a, _b, _c, _d;
+            return (_d = (_b = (_a = this.placeHolderNames[i]) === null || _a === void 0 ? void 0 : _a.sourceSpan) !== null && _b !== void 0 ? _b : (_c = this.expressions[i]) === null || _c === void 0 ? void 0 : _c.sourceSpan) !== null && _d !== void 0 ? _d : this.sourceSpan;
         }
         /**
          * Serialize the given `placeholderName` and `messagePart` into "cooked" and "raw" strings that
@@ -1354,9 +1372,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * @param messagePart The following message string after this placeholder
          */
         serializeI18nTemplatePart(partIndex) {
-            const placeholderName = this.placeHolderNames[partIndex - 1];
+            const placeholderName = this.placeHolderNames[partIndex - 1].text;
             const messagePart = this.messageParts[partIndex];
-            return createCookedRawString(placeholderName, messagePart);
+            return createCookedRawString(placeholderName, messagePart.text);
         }
     }
     const escapeSlashes = (str) => str.replace(/\\/g, '\\\\');
@@ -3555,7 +3573,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class TagPlaceholder {
-        constructor(tag, attrs, startName, closeName, children, isVoid, sourceSpan) {
+        constructor(tag, attrs, startName, closeName, children, isVoid, 
+        // TODO sourceSpan should cover all (we need a startSourceSpan and endSourceSpan)
+        sourceSpan, startSourceSpan, endSourceSpan) {
             this.tag = tag;
             this.attrs = attrs;
             this.startName = startName;
@@ -3563,6 +3583,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.children = children;
             this.isVoid = isVoid;
             this.sourceSpan = sourceSpan;
+            this.startSourceSpan = startSourceSpan;
+            this.endSourceSpan = endSourceSpan;
         }
         visit(visitor, context) {
             return visitor.visitTagPlaceholder(this, context);
@@ -12572,9 +12594,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     class SplitInterpolation {
-        constructor(strings, expressions, offsets) {
+        constructor(strings, stringSpans, expressions, expressionsSpans, offsets) {
             this.strings = strings;
+            this.stringSpans = stringSpans;
             this.expressions = expressions;
+            this.expressionsSpans = expressionsSpans;
             this.offsets = offsets;
         }
     }
@@ -12717,27 +12741,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const strings = [];
             const expressions = [];
             const offsets = [];
+            const stringSpans = [];
+            const expressionSpans = [];
             let offset = 0;
             for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
                 if (i % 2 === 0) {
                     // fixed string
                     strings.push(part);
+                    const start = offset;
                     offset += part.length;
+                    stringSpans.push({ start, end: offset });
                 }
                 else if (part.trim().length > 0) {
+                    const start = offset;
                     offset += interpolationConfig.start.length;
                     expressions.push(part);
                     offsets.push(offset);
                     offset += part.length + interpolationConfig.end.length;
+                    expressionSpans.push({ start, end: offset });
                 }
                 else {
                     this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${this._findInterpolationErrorColumn(parts, i, interpolationConfig)} in`, location);
                     expressions.push('$implicit');
                     offsets.push(offset);
+                    expressionSpans.push({ start: offset, end: offset });
                 }
             }
-            return new SplitInterpolation(strings, expressions, offsets);
+            return new SplitInterpolation(strings, stringSpans, expressions, expressionSpans, offsets);
         }
         wrapLiteralPrimitive(input, location, absoluteOffset) {
             const span = new ParseSpan(0, input == null ? 0 : input.length);
@@ -14811,7 +14842,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 closePhName = context.placeholderRegistry.getCloseTagPlaceholderName(el.name);
                 context.placeholderToContent[closePhName] = `</${el.name}>`;
             }
-            const node = new TagPlaceholder(el.name, attrs, startPhName, closePhName, children, isVoid, el.sourceSpan);
+            const node = new TagPlaceholder(el.name, attrs, startPhName, closePhName, children, isVoid, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
             return context.visitNodeFn(el, node);
         }
         visitAttribute(attribute, context) {
@@ -14870,18 +14901,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 const phName = context.placeholderRegistry.getPlaceholderName(baseName, expression);
                 if (splitInterpolation.strings[i].length) {
                     // No need to add empty strings
-                    nodes.push(new Text$1(splitInterpolation.strings[i], sourceSpan));
+                    const stringSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.stringSpans[i]);
+                    nodes.push(new Text$1(splitInterpolation.strings[i], stringSpan));
                 }
-                nodes.push(new Placeholder(expression, phName, sourceSpan));
+                const expressionSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.expressionsSpans[i]);
+                nodes.push(new Placeholder(expression, phName, expressionSpan));
                 context.placeholderToContent[phName] = sDelimiter + expression + eDelimiter;
             }
             // The last index contains no expression
             const lastStringIdx = splitInterpolation.strings.length - 1;
             if (splitInterpolation.strings[lastStringIdx].length) {
-                nodes.push(new Text$1(splitInterpolation.strings[lastStringIdx], sourceSpan));
+                const stringSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.stringSpans[lastStringIdx]);
+                nodes.push(new Text$1(splitInterpolation.strings[lastStringIdx], stringSpan));
             }
             return container;
         }
+    }
+    function getOffsetSourceSpan(sourceSpan, { start, end }) {
+        return new ParseSourceSpan(sourceSpan.start.moveBy(start), sourceSpan.start.moveBy(end));
     }
     const _CUSTOM_PH_EXP = /\/\/[\s\S]*i18n[\s\S]*\([\s\S]*ph[\s\S]*=[\s\S]*("|')([\s\S]*?)\1[\s\S]*\)/g;
     function _extractPlaceholderName(input) {
@@ -15157,22 +15194,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function createLocalizeStatements(variable, message, params) {
         const { messageParts, placeHolders } = serializeI18nMessageForLocalize(message);
         const sourceSpan = getSourceSpan(message);
-        const expressions = placeHolders.map(ph => params[ph]);
+        const expressions = placeHolders.map(ph => params[ph.text]);
         const localizedString$1 = localizedString(message, messageParts, placeHolders, expressions, sourceSpan);
         const variableInitialization = variable.set(localizedString$1);
         return [new ExpressionStatement(variableInitialization)];
-    }
-    class MessagePiece {
-        constructor(text) {
-            this.text = text;
-        }
-    }
-    class LiteralPiece extends MessagePiece {
-    }
-    class PlaceholderPiece extends MessagePiece {
-        constructor(name) {
-            super(formatI18nPlaceholderName(name, /* useCamelCase */ false));
-        }
     }
     /**
      * This visitor walks over an i18n tree, capturing literal strings and placeholders.
@@ -15186,27 +15211,31 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 context[context.length - 1].text += text.value;
             }
             else {
-                context.push(new LiteralPiece(text.value));
+                context.push(new LiteralPiece(text.value, text.sourceSpan));
             }
         }
         visitContainer(container, context) {
             container.children.forEach(child => child.visit(this, context));
         }
         visitIcu(icu, context) {
-            context.push(new LiteralPiece(serializeIcuNode(icu)));
+            context.push(new LiteralPiece(serializeIcuNode(icu), icu.sourceSpan));
         }
         visitTagPlaceholder(ph, context) {
-            context.push(new PlaceholderPiece(ph.startName));
+            var _a, _b;
+            context.push(this.createPlaceholderPiece(ph.startName, (_a = ph.startSourceSpan) !== null && _a !== void 0 ? _a : ph.sourceSpan));
             if (!ph.isVoid) {
                 ph.children.forEach(child => child.visit(this, context));
-                context.push(new PlaceholderPiece(ph.closeName));
+                context.push(this.createPlaceholderPiece(ph.closeName, (_b = ph.endSourceSpan) !== null && _b !== void 0 ? _b : ph.sourceSpan));
             }
         }
         visitPlaceholder(ph, context) {
-            context.push(new PlaceholderPiece(ph.name));
+            context.push(this.createPlaceholderPiece(ph.name, ph.sourceSpan));
         }
         visitIcuPlaceholder(ph, context) {
-            context.push(new PlaceholderPiece(ph.name));
+            context.push(this.createPlaceholderPiece(ph.name, ph.sourceSpan));
+        }
+        createPlaceholderPiece(name, sourceSpan) {
+            return new PlaceholderPiece(formatI18nPlaceholderName(name, /* useCamelCase */ false), sourceSpan);
         }
     }
     const serializerVisitor$2 = new LocalizeSerializerVisitor();
@@ -15242,26 +15271,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const placeHolders = [];
         if (pieces[0] instanceof PlaceholderPiece) {
             // The first piece was a placeholder so we need to add an initial empty message part.
-            messageParts.push('');
+            messageParts.push(createEmptyMessagePart(pieces[0].sourceSpan.start));
         }
         for (let i = 0; i < pieces.length; i++) {
             const part = pieces[i];
             if (part instanceof LiteralPiece) {
-                messageParts.push(part.text);
+                messageParts.push(part);
             }
             else {
-                placeHolders.push(part.text);
+                placeHolders.push(part);
                 if (pieces[i - 1] instanceof PlaceholderPiece) {
                     // There were two placeholders in a row, so we need to add an empty message part.
-                    messageParts.push('');
+                    messageParts.push(createEmptyMessagePart(part.sourceSpan.end));
                 }
             }
         }
         if (pieces[pieces.length - 1] instanceof PlaceholderPiece) {
             // The last piece was a placeholder so we need to add a final empty message part.
-            messageParts.push('');
+            messageParts.push(createEmptyMessagePart(pieces[pieces.length - 1].sourceSpan.end));
         }
         return { messageParts, placeHolders };
+    }
+    function createEmptyMessagePart(location) {
+        return new LiteralPiece('', new ParseSourceSpan(location, location));
     }
 
     /**
@@ -17809,7 +17841,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0+26.sha-a1c34c6');
+    const VERSION$1 = new Version('10.1.0+34.sha-190dca0');
 
     /**
      * @license
@@ -33790,7 +33822,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.0+26.sha-a1c34c6');
+    const VERSION$2 = new Version$1('10.1.0+34.sha-190dca0');
 
     /**
      * @license
