@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.0+39.sha-bfb7eec
+ * @license Angular v11.0.0-next.0+41.sha-b0c79f2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19064,7 +19064,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.0+39.sha-bfb7eec');
+    const VERSION$1 = new Version('11.0.0-next.0+41.sha-b0c79f2');
 
     /**
      * @license
@@ -19654,7 +19654,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.0+39.sha-bfb7eec');
+    const VERSION$2 = new Version('11.0.0-next.0+41.sha-b0c79f2');
 
     /**
      * @license
@@ -20869,7 +20869,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         // has a value declaration associated with it. Note that const enums are an exception,
         // because while they do have a value declaration, they don't exist at runtime.
         if (decl.valueDeclaration === undefined || decl.flags & ts.SymbolFlags.ConstEnum) {
-            return noValueDeclaration(typeNode, decl.declarations[0]);
+            let typeOnlyDecl = null;
+            if (decl.declarations !== undefined && decl.declarations.length > 0) {
+                typeOnlyDecl = decl.declarations[0];
+            }
+            return noValueDeclaration(typeNode, typeOnlyDecl);
         }
         // The type points to a valid value declaration. Rewrite the TypeReference into an
         // Expression which references the value pointed to by the TypeReference, if possible.
@@ -25616,8 +25620,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 chainMessage = 'Consider using the @Inject decorator to specify an injection token.';
                 hints = [
                     makeRelatedInformation(reason.typeNode, 'This type does not have a value, so it cannot be used as injection token.'),
-                    makeRelatedInformation(reason.decl, 'The type is declared here.'),
                 ];
+                if (reason.decl !== null) {
+                    hints.push(makeRelatedInformation(reason.decl, 'The type is declared here.'));
+                }
                 break;
             case 2 /* TYPE_ONLY_IMPORT */:
                 chainMessage =
