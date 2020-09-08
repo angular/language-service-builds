@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.0+26.sha-83ace4e
+ * @license Angular v11.0.0-next.0+39.sha-bfb7eec
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4492,6 +4492,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return visitor.visitLiteralExpr(this, context);
         }
     }
+    class MessagePiece {
+        constructor(text, sourceSpan) {
+            this.text = text;
+            this.sourceSpan = sourceSpan;
+        }
+    }
+    class LiteralPiece extends MessagePiece {
+    }
+    class PlaceholderPiece extends MessagePiece {
+    }
     class LocalizedString extends Expression {
         constructor(metaBlock, messageParts, placeHolderNames, expressions, sourceSpan) {
             super(STRING_TYPE, sourceSpan);
@@ -4534,7 +4544,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     metaBlock = `${metaBlock}${LEGACY_ID_INDICATOR}${legacyId}`;
                 });
             }
-            return createCookedRawString(metaBlock, this.messageParts[0]);
+            return createCookedRawString(metaBlock, this.messageParts[0].text);
+        }
+        getMessagePartSourceSpan(i) {
+            var _a, _b;
+            return (_b = (_a = this.messageParts[i]) === null || _a === void 0 ? void 0 : _a.sourceSpan) !== null && _b !== void 0 ? _b : this.sourceSpan;
+        }
+        getPlaceholderSourceSpan(i) {
+            var _a, _b, _c, _d;
+            return (_d = (_b = (_a = this.placeHolderNames[i]) === null || _a === void 0 ? void 0 : _a.sourceSpan) !== null && _b !== void 0 ? _b : (_c = this.expressions[i]) === null || _c === void 0 ? void 0 : _c.sourceSpan) !== null && _d !== void 0 ? _d : this.sourceSpan;
         }
         /**
          * Serialize the given `placeholderName` and `messagePart` into "cooked" and "raw" strings that
@@ -4544,9 +4562,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * @param messagePart The following message string after this placeholder
          */
         serializeI18nTemplatePart(partIndex) {
-            const placeholderName = this.placeHolderNames[partIndex - 1];
+            const placeholderName = this.placeHolderNames[partIndex - 1].text;
             const messagePart = this.messageParts[partIndex];
-            return createCookedRawString(placeholderName, messagePart);
+            return createCookedRawString(placeholderName, messagePart.text);
         }
     }
     const escapeSlashes = (str) => str.replace(/\\/g, '\\\\');
@@ -6115,7 +6133,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class TagPlaceholder {
-        constructor(tag, attrs, startName, closeName, children, isVoid, sourceSpan) {
+        constructor(tag, attrs, startName, closeName, children, isVoid, 
+        // TODO sourceSpan should cover all (we need a startSourceSpan and endSourceSpan)
+        sourceSpan, startSourceSpan, endSourceSpan) {
             this.tag = tag;
             this.attrs = attrs;
             this.startName = startName;
@@ -6123,6 +6143,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.children = children;
             this.isVoid = isVoid;
             this.sourceSpan = sourceSpan;
+            this.startSourceSpan = startSourceSpan;
+            this.endSourceSpan = endSourceSpan;
         }
         visit(visitor, context) {
             return visitor.visitTagPlaceholder(this, context);
@@ -13772,9 +13794,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     class SplitInterpolation {
-        constructor(strings, expressions, offsets) {
+        constructor(strings, stringSpans, expressions, expressionsSpans, offsets) {
             this.strings = strings;
+            this.stringSpans = stringSpans;
             this.expressions = expressions;
+            this.expressionsSpans = expressionsSpans;
             this.offsets = offsets;
         }
     }
@@ -13917,27 +13941,34 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const strings = [];
             const expressions = [];
             const offsets = [];
+            const stringSpans = [];
+            const expressionSpans = [];
             let offset = 0;
             for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
                 if (i % 2 === 0) {
                     // fixed string
                     strings.push(part);
+                    const start = offset;
                     offset += part.length;
+                    stringSpans.push({ start, end: offset });
                 }
                 else if (part.trim().length > 0) {
+                    const start = offset;
                     offset += interpolationConfig.start.length;
                     expressions.push(part);
                     offsets.push(offset);
                     offset += part.length + interpolationConfig.end.length;
+                    expressionSpans.push({ start, end: offset });
                 }
                 else {
                     this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${this._findInterpolationErrorColumn(parts, i, interpolationConfig)} in`, location);
                     expressions.push('$implicit');
                     offsets.push(offset);
+                    expressionSpans.push({ start: offset, end: offset });
                 }
             }
-            return new SplitInterpolation(strings, expressions, offsets);
+            return new SplitInterpolation(strings, stringSpans, expressions, expressionSpans, offsets);
         }
         wrapLiteralPrimitive(input, location, absoluteOffset) {
             const span = new ParseSpan(0, input == null ? 0 : input.length);
@@ -16011,7 +16042,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 closePhName = context.placeholderRegistry.getCloseTagPlaceholderName(el.name);
                 context.placeholderToContent[closePhName] = `</${el.name}>`;
             }
-            const node = new TagPlaceholder(el.name, attrs, startPhName, closePhName, children, isVoid, el.sourceSpan);
+            const node = new TagPlaceholder(el.name, attrs, startPhName, closePhName, children, isVoid, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
             return context.visitNodeFn(el, node);
         }
         visitAttribute(attribute, context) {
@@ -16070,18 +16101,24 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const phName = context.placeholderRegistry.getPlaceholderName(baseName, expression);
                 if (splitInterpolation.strings[i].length) {
                     // No need to add empty strings
-                    nodes.push(new Text$1(splitInterpolation.strings[i], sourceSpan));
+                    const stringSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.stringSpans[i]);
+                    nodes.push(new Text$1(splitInterpolation.strings[i], stringSpan));
                 }
-                nodes.push(new Placeholder(expression, phName, sourceSpan));
+                const expressionSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.expressionsSpans[i]);
+                nodes.push(new Placeholder(expression, phName, expressionSpan));
                 context.placeholderToContent[phName] = sDelimiter + expression + eDelimiter;
             }
             // The last index contains no expression
             const lastStringIdx = splitInterpolation.strings.length - 1;
             if (splitInterpolation.strings[lastStringIdx].length) {
-                nodes.push(new Text$1(splitInterpolation.strings[lastStringIdx], sourceSpan));
+                const stringSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.stringSpans[lastStringIdx]);
+                nodes.push(new Text$1(splitInterpolation.strings[lastStringIdx], stringSpan));
             }
             return container;
         }
+    }
+    function getOffsetSourceSpan(sourceSpan, { start, end }) {
+        return new ParseSourceSpan(sourceSpan.start.moveBy(start), sourceSpan.start.moveBy(end));
     }
     const _CUSTOM_PH_EXP = /\/\/[\s\S]*i18n[\s\S]*\([\s\S]*ph[\s\S]*=[\s\S]*("|')([\s\S]*?)\1[\s\S]*\)/g;
     function _extractPlaceholderName(input) {
@@ -16357,22 +16394,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function createLocalizeStatements(variable, message, params) {
         const { messageParts, placeHolders } = serializeI18nMessageForLocalize(message);
         const sourceSpan = getSourceSpan(message);
-        const expressions = placeHolders.map(ph => params[ph]);
+        const expressions = placeHolders.map(ph => params[ph.text]);
         const localizedString$1 = localizedString(message, messageParts, placeHolders, expressions, sourceSpan);
         const variableInitialization = variable.set(localizedString$1);
         return [new ExpressionStatement(variableInitialization)];
-    }
-    class MessagePiece {
-        constructor(text) {
-            this.text = text;
-        }
-    }
-    class LiteralPiece extends MessagePiece {
-    }
-    class PlaceholderPiece extends MessagePiece {
-        constructor(name) {
-            super(formatI18nPlaceholderName(name, /* useCamelCase */ false));
-        }
     }
     /**
      * This visitor walks over an i18n tree, capturing literal strings and placeholders.
@@ -16386,27 +16411,31 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 context[context.length - 1].text += text.value;
             }
             else {
-                context.push(new LiteralPiece(text.value));
+                context.push(new LiteralPiece(text.value, text.sourceSpan));
             }
         }
         visitContainer(container, context) {
             container.children.forEach(child => child.visit(this, context));
         }
         visitIcu(icu, context) {
-            context.push(new LiteralPiece(serializeIcuNode(icu)));
+            context.push(new LiteralPiece(serializeIcuNode(icu), icu.sourceSpan));
         }
         visitTagPlaceholder(ph, context) {
-            context.push(new PlaceholderPiece(ph.startName));
+            var _a, _b;
+            context.push(this.createPlaceholderPiece(ph.startName, (_a = ph.startSourceSpan) !== null && _a !== void 0 ? _a : ph.sourceSpan));
             if (!ph.isVoid) {
                 ph.children.forEach(child => child.visit(this, context));
-                context.push(new PlaceholderPiece(ph.closeName));
+                context.push(this.createPlaceholderPiece(ph.closeName, (_b = ph.endSourceSpan) !== null && _b !== void 0 ? _b : ph.sourceSpan));
             }
         }
         visitPlaceholder(ph, context) {
-            context.push(new PlaceholderPiece(ph.name));
+            context.push(this.createPlaceholderPiece(ph.name, ph.sourceSpan));
         }
         visitIcuPlaceholder(ph, context) {
-            context.push(new PlaceholderPiece(ph.name));
+            context.push(this.createPlaceholderPiece(ph.name, ph.sourceSpan));
+        }
+        createPlaceholderPiece(name, sourceSpan) {
+            return new PlaceholderPiece(formatI18nPlaceholderName(name, /* useCamelCase */ false), sourceSpan);
         }
     }
     const serializerVisitor$2 = new LocalizeSerializerVisitor();
@@ -16442,26 +16471,29 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const placeHolders = [];
         if (pieces[0] instanceof PlaceholderPiece) {
             // The first piece was a placeholder so we need to add an initial empty message part.
-            messageParts.push('');
+            messageParts.push(createEmptyMessagePart(pieces[0].sourceSpan.start));
         }
         for (let i = 0; i < pieces.length; i++) {
             const part = pieces[i];
             if (part instanceof LiteralPiece) {
-                messageParts.push(part.text);
+                messageParts.push(part);
             }
             else {
-                placeHolders.push(part.text);
+                placeHolders.push(part);
                 if (pieces[i - 1] instanceof PlaceholderPiece) {
                     // There were two placeholders in a row, so we need to add an empty message part.
-                    messageParts.push('');
+                    messageParts.push(createEmptyMessagePart(part.sourceSpan.end));
                 }
             }
         }
         if (pieces[pieces.length - 1] instanceof PlaceholderPiece) {
             // The last piece was a placeholder so we need to add a final empty message part.
-            messageParts.push('');
+            messageParts.push(createEmptyMessagePart(pieces[pieces.length - 1].sourceSpan.end));
         }
         return { messageParts, placeHolders };
+    }
+    function createEmptyMessagePart(location) {
+        return new LiteralPiece('', new ParseSourceSpan(location, location));
     }
 
     /**
@@ -18037,6 +18069,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
         if (parseResult.errors && parseResult.errors.length > 0) {
             return {
+                interpolationConfig,
+                preserveWhitespaces,
+                template,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -18063,9 +18098,27 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
         if (errors && errors.length > 0) {
-            return { errors, nodes: [], styleUrls: [], styles: [], ngContentSelectors: [] };
+            return {
+                interpolationConfig,
+                preserveWhitespaces,
+                template,
+                errors,
+                nodes: [],
+                styleUrls: [],
+                styles: [],
+                ngContentSelectors: []
+            };
         }
-        return { nodes, styleUrls, styles, ngContentSelectors };
+        return {
+            interpolationConfig,
+            preserveWhitespaces,
+            errors: null,
+            template,
+            nodes,
+            styleUrls,
+            styles,
+            ngContentSelectors
+        };
     }
     const elementRegistry = new DomElementSchemaRegistry();
     /**
@@ -18835,7 +18888,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 DEFAULT_INTERPOLATION_CONFIG;
             // Parse the template and check for errors.
             const template = parseTemplate(facade.template, sourceMapUrl, { preserveWhitespaces: facade.preserveWhitespaces, interpolationConfig });
-            if (template.errors !== undefined) {
+            if (template.errors !== null) {
                 const errors = template.errors.map(err => err.toString()).join(', ');
                 throw new Error(`Errors during JIT compilation of template for ${facade.name}: ${errors}`);
             }
@@ -19011,7 +19064,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.0+26.sha-83ace4e');
+    const VERSION$1 = new Version('11.0.0-next.0+39.sha-bfb7eec');
 
     /**
      * @license
@@ -19355,7 +19408,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
             });
             const setAttributeBinding = (attribute, ioType) => {
-                const dir = directives.find(dir => dir[ioType].hasOwnProperty(attribute.name));
+                const dir = directives.find(dir => dir[ioType].hasBindingPropertyName(attribute.name));
                 const binding = dir !== undefined ? dir : node;
                 this.bindings.set(attribute, binding);
             };
@@ -19601,7 +19654,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.0+26.sha-83ace4e');
+    const VERSION$2 = new Version('11.0.0-next.0+39.sha-bfb7eec');
 
     /**
      * @license
@@ -21557,6 +21610,142 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * A mapping of component property and template binding property names, for example containing the
+     * inputs of a particular directive or component.
+     *
+     * A single component property has exactly one input/output annotation (and therefore one binding
+     * property name) associated with it, but the same binding property name may be shared across many
+     * component property names.
+     *
+     * Allows bidirectional querying of the mapping - looking up all inputs/outputs with a given
+     * property name, or mapping from a specific class property to its binding property name.
+     */
+    class ClassPropertyMapping {
+        constructor(forwardMap) {
+            this.forwardMap = forwardMap;
+            this.reverseMap = reverseMapFromForwardMap(forwardMap);
+        }
+        /**
+         * Construct a `ClassPropertyMapping` with no entries.
+         */
+        static empty() {
+            return new ClassPropertyMapping(new Map());
+        }
+        /**
+         * Construct a `ClassPropertyMapping` from a primitive JS object which maps class property names
+         * to either binding property names or an array that contains both names, which is used in on-disk
+         * metadata formats (e.g. in .d.ts files).
+         */
+        static fromMappedObject(obj) {
+            const forwardMap = new Map();
+            for (const classPropertyName of Object.keys(obj)) {
+                const value = obj[classPropertyName];
+                const bindingPropertyName = Array.isArray(value) ? value[0] : value;
+                const inputOrOutput = { classPropertyName, bindingPropertyName };
+                forwardMap.set(classPropertyName, inputOrOutput);
+            }
+            return new ClassPropertyMapping(forwardMap);
+        }
+        /**
+         * Merge two mappings into one, with class properties from `b` taking precedence over class
+         * properties from `a`.
+         */
+        static merge(a, b) {
+            const forwardMap = new Map(a.forwardMap.entries());
+            for (const [classPropertyName, inputOrOutput] of b.forwardMap) {
+                forwardMap.set(classPropertyName, inputOrOutput);
+            }
+            return new ClassPropertyMapping(forwardMap);
+        }
+        /**
+         * All class property names mapped in this mapping.
+         */
+        get classPropertyNames() {
+            return Array.from(this.forwardMap.keys());
+        }
+        /**
+         * All binding property names mapped in this mapping.
+         */
+        get propertyNames() {
+            return Array.from(this.reverseMap.keys());
+        }
+        /**
+         * Check whether a mapping for the given property name exists.
+         */
+        hasBindingPropertyName(propertyName) {
+            return this.reverseMap.has(propertyName);
+        }
+        /**
+         * Lookup all `InputOrOutput`s that use this `propertyName`.
+         */
+        getByBindingPropertyName(propertyName) {
+            return this.reverseMap.has(propertyName) ? this.reverseMap.get(propertyName) : null;
+        }
+        /**
+         * Lookup the `InputOrOutput` associated with a `classPropertyName`.
+         */
+        getByClassPropertyName(classPropertyName) {
+            return this.forwardMap.has(classPropertyName) ? this.forwardMap.get(classPropertyName) : null;
+        }
+        /**
+         * Convert this mapping to a primitive JS object which maps each class property directly to the
+         * binding property name associated with it.
+         */
+        toDirectMappedObject() {
+            const obj = {};
+            for (const [classPropertyName, inputOrOutput] of this.forwardMap) {
+                obj[classPropertyName] = inputOrOutput.bindingPropertyName;
+            }
+            return obj;
+        }
+        /**
+         * Convert this mapping to a primitive JS object which maps each class property either to itself
+         * (for cases where the binding property name is the same) or to an array which contains both
+         * names if they differ.
+         *
+         * This object format is used when mappings are serialized (for example into .d.ts files).
+         */
+        toJointMappedObject() {
+            const obj = {};
+            for (const [classPropertyName, inputOrOutput] of this.forwardMap) {
+                if (inputOrOutput.bindingPropertyName === classPropertyName) {
+                    obj[classPropertyName] = inputOrOutput.bindingPropertyName;
+                }
+                else {
+                    obj[classPropertyName] = [inputOrOutput.bindingPropertyName, classPropertyName];
+                }
+            }
+            return obj;
+        }
+        /**
+         * Implement the iterator protocol and return entry objects which contain the class and binding
+         * property names (and are useful for destructuring).
+         */
+        *[Symbol.iterator]() {
+            for (const [classPropertyName, inputOrOutput] of this.forwardMap.entries()) {
+                yield [classPropertyName, inputOrOutput.bindingPropertyName];
+            }
+        }
+    }
+    function reverseMapFromForwardMap(forwardMap) {
+        const reverseMap = new Map();
+        for (const [_, inputOrOutput] of forwardMap) {
+            if (!reverseMap.has(inputOrOutput.bindingPropertyName)) {
+                reverseMap.set(inputOrOutput.bindingPropertyName, []);
+            }
+            reverseMap.get(inputOrOutput.bindingPropertyName).push(inputOrOutput);
+        }
+        return reverseMap;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function extractReferencesFromType(checker, def, ngModuleImportedFrom, resolutionContext) {
         if (!ts.isTupleTypeNode(def)) {
             return [];
@@ -21638,17 +21827,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const restrictedInputFields = new Set();
         const stringLiteralInputFields = new Set();
         const undeclaredInputFields = new Set();
-        for (const fieldName of Object.keys(inputs)) {
-            const field = members.find(member => member.name === fieldName);
+        for (const classPropertyName of inputs.classPropertyNames) {
+            const field = members.find(member => member.name === classPropertyName);
             if (field === undefined || field.node === null) {
-                undeclaredInputFields.add(fieldName);
+                undeclaredInputFields.add(classPropertyName);
                 continue;
             }
             if (isRestricted(field.node)) {
-                restrictedInputFields.add(fieldName);
+                restrictedInputFields.add(classPropertyName);
             }
             if (field.nameNode !== null && ts.isStringLiteral(field.nameNode)) {
-                stringLiteralInputFields.add(fieldName);
+                stringLiteralInputFields.add(classPropertyName);
             }
         }
         const arity = reflector.getGenericArityOfClass(node);
@@ -21816,8 +22005,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // The type metadata was the wrong shape.
                 return null;
             }
-            const inputs = readStringMapType(def.type.typeArguments[3]);
-            return Object.assign(Object.assign({ ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs, outputs: readStringMapType(def.type.typeArguments[4]), queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveTypeCheckMeta(clazz, inputs, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
+            const inputs = ClassPropertyMapping.fromMappedObject(readStringMapType(def.type.typeArguments[3]));
+            const outputs = ClassPropertyMapping.fromMappedObject(readStringMapType(def.type.typeArguments[4]));
+            return Object.assign(Object.assign({ ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs,
+                outputs, queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveTypeCheckMeta(clazz, inputs, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
         }
         /**
          * Read pipe metadata from a referenced class in a .d.ts file.
@@ -21971,13 +22162,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (topMeta === null) {
             throw new Error(`Metadata not found for directive: ${dir.debugName}`);
         }
-        let inputs = {};
-        let outputs = {};
         const coercedInputFields = new Set();
         const undeclaredInputFields = new Set();
         const restrictedInputFields = new Set();
         const stringLiteralInputFields = new Set();
         let isDynamic = false;
+        let inputs = ClassPropertyMapping.empty();
+        let outputs = ClassPropertyMapping.empty();
         const addMetadata = (meta) => {
             if (meta.baseClass === 'dynamic') {
                 isDynamic = true;
@@ -21992,8 +22183,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     isDynamic = true;
                 }
             }
-            inputs = Object.assign(Object.assign({}, inputs), meta.inputs);
-            outputs = Object.assign(Object.assign({}, outputs), meta.outputs);
+            inputs = ClassPropertyMapping.merge(inputs, meta.inputs);
+            outputs = ClassPropertyMapping.merge(outputs, meta.outputs);
             for (const coercedInputField of meta.coercedInputFields) {
                 coercedInputFields.add(coercedInputField);
             }
@@ -23900,7 +24091,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitReadVarExpr(ast, context) {
             const identifier = ts.createIdentifier(ast.name);
-            this.setSourceMapRange(identifier, ast);
+            this.setSourceMapRange(identifier, ast.sourceSpan);
             return identifier;
         }
         visitWriteVarExpr(expr, context) {
@@ -23920,7 +24111,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitInvokeMethodExpr(ast, context) {
             const target = ast.receiver.visitExpression(this, context);
             const call = ts.createCall(ast.name !== null ? ts.createPropertyAccess(target, ast.name) : target, undefined, ast.args.map(arg => arg.visitExpression(this, context)));
-            this.setSourceMapRange(call, ast);
+            this.setSourceMapRange(call, ast.sourceSpan);
             return call;
         }
         visitInvokeFunctionExpr(ast, context) {
@@ -23928,7 +24119,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (ast.pure) {
                 ts.addSyntheticLeadingComment(expr, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
             }
-            this.setSourceMapRange(expr, ast);
+            this.setSourceMapRange(expr, ast.sourceSpan);
             return expr;
         }
         visitInstantiateExpr(ast, context) {
@@ -23945,14 +24136,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             else {
                 expr = ts.createLiteral(ast.value);
             }
-            this.setSourceMapRange(expr, ast);
+            this.setSourceMapRange(expr, ast.sourceSpan);
             return expr;
         }
         visitLocalizedString(ast, context) {
             const localizedString = this.scriptTarget >= ts.ScriptTarget.ES2015 ?
-                createLocalizedStringTaggedTemplate(ast, context, this) :
-                createLocalizedStringFunctionCall(ast, context, this, this.imports);
-            this.setSourceMapRange(localizedString, ast);
+                this.createLocalizedStringTaggedTemplate(ast, context) :
+                this.createLocalizedStringFunctionCall(ast, context);
+            this.setSourceMapRange(localizedString, ast.sourceSpan);
             return localizedString;
         }
         visitExternalExpr(ast, context) {
@@ -24038,13 +24229,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitLiteralArrayExpr(ast, context) {
             const expr = ts.createArrayLiteral(ast.entries.map(expr => expr.visitExpression(this, context)));
-            this.setSourceMapRange(expr, ast);
+            this.setSourceMapRange(expr, ast.sourceSpan);
             return expr;
         }
         visitLiteralMapExpr(ast, context) {
             const entries = ast.entries.map(entry => ts.createPropertyAssignment(entry.quoted ? ts.createLiteral(entry.key) : ts.createIdentifier(entry.key), entry.value.visitExpression(this, context)));
             const expr = ts.createObjectLiteral(entries);
-            this.setSourceMapRange(expr, ast);
+            this.setSourceMapRange(expr, ast.sourceSpan);
             return expr;
         }
         visitCommaExpr(ast, context) {
@@ -24059,9 +24250,100 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitTypeofExpr(ast, context) {
             return ts.createTypeOf(ast.expr.visitExpression(this, context));
         }
-        setSourceMapRange(expr, ast) {
-            if (ast.sourceSpan) {
-                const { start, end } = ast.sourceSpan;
+        /**
+         * Translate the `LocalizedString` node into a `TaggedTemplateExpression` for ES2015 formatted
+         * output.
+         */
+        createLocalizedStringTaggedTemplate(ast, context) {
+            let template;
+            const length = ast.messageParts.length;
+            const metaBlock = ast.serializeI18nHead();
+            if (length === 1) {
+                template = ts.createNoSubstitutionTemplateLiteral(metaBlock.cooked, metaBlock.raw);
+                this.setSourceMapRange(template, ast.getMessagePartSourceSpan(0));
+            }
+            else {
+                // Create the head part
+                const head = ts.createTemplateHead(metaBlock.cooked, metaBlock.raw);
+                this.setSourceMapRange(head, ast.getMessagePartSourceSpan(0));
+                const spans = [];
+                // Create the middle parts
+                for (let i = 1; i < length - 1; i++) {
+                    const resolvedExpression = ast.expressions[i - 1].visitExpression(this, context);
+                    this.setSourceMapRange(resolvedExpression, ast.getPlaceholderSourceSpan(i - 1));
+                    const templatePart = ast.serializeI18nTemplatePart(i);
+                    const templateMiddle = createTemplateMiddle(templatePart.cooked, templatePart.raw);
+                    this.setSourceMapRange(templateMiddle, ast.getMessagePartSourceSpan(i));
+                    const templateSpan = ts.createTemplateSpan(resolvedExpression, templateMiddle);
+                    spans.push(templateSpan);
+                }
+                // Create the tail part
+                const resolvedExpression = ast.expressions[length - 2].visitExpression(this, context);
+                this.setSourceMapRange(resolvedExpression, ast.getPlaceholderSourceSpan(length - 2));
+                const templatePart = ast.serializeI18nTemplatePart(length - 1);
+                const templateTail = createTemplateTail(templatePart.cooked, templatePart.raw);
+                this.setSourceMapRange(templateTail, ast.getMessagePartSourceSpan(length - 1));
+                spans.push(ts.createTemplateSpan(resolvedExpression, templateTail));
+                // Put it all together
+                template = ts.createTemplateExpression(head, spans);
+            }
+            const expression = ts.createTaggedTemplate(ts.createIdentifier('$localize'), template);
+            this.setSourceMapRange(expression, ast.sourceSpan);
+            return expression;
+        }
+        /**
+         * Translate the `LocalizedString` node into a `$localize` call using the imported
+         * `__makeTemplateObject` helper for ES5 formatted output.
+         */
+        createLocalizedStringFunctionCall(ast, context) {
+            // A `$localize` message consists `messageParts` and `expressions`, which get interleaved
+            // together. The interleaved pieces look like:
+            // `[messagePart0, expression0, messagePart1, expression1, messagePart2]`
+            //
+            // Note that there is always a message part at the start and end, and so therefore
+            // `messageParts.length === expressions.length + 1`.
+            //
+            // Each message part may be prefixed with "metadata", which is wrapped in colons (:) delimiters.
+            // The metadata is attached to the first and subsequent message parts by calls to
+            // `serializeI18nHead()` and `serializeI18nTemplatePart()` respectively.
+            // The first message part (i.e. `ast.messageParts[0]`) is used to initialize `messageParts`
+            // array.
+            const messageParts = [ast.serializeI18nHead()];
+            const expressions = [];
+            // The rest of the `ast.messageParts` and each of the expressions are `ast.expressions` pushed
+            // into the arrays. Note that `ast.messagePart[i]` corresponds to `expressions[i-1]`
+            for (let i = 1; i < ast.messageParts.length; i++) {
+                expressions.push(ast.expressions[i - 1].visitExpression(this, context));
+                messageParts.push(ast.serializeI18nTemplatePart(i));
+            }
+            // The resulting downlevelled tagged template string uses a call to the `__makeTemplateObject()`
+            // helper, so we must ensure it has been imported.
+            const { moduleImport, symbol } = this.imports.generateNamedImport('tslib', '__makeTemplateObject');
+            const __makeTemplateObjectHelper = (moduleImport === null) ?
+                ts.createIdentifier(symbol) :
+                ts.createPropertyAccess(ts.createIdentifier(moduleImport), ts.createIdentifier(symbol));
+            // Generate the call in the form:
+            // `$localize(__makeTemplateObject(cookedMessageParts, rawMessageParts), ...expressions);`
+            const cookedLiterals = messageParts.map((messagePart, i) => this.createLiteral(messagePart.cooked, ast.getMessagePartSourceSpan(i)));
+            const rawLiterals = messageParts.map((messagePart, i) => this.createLiteral(messagePart.raw, ast.getMessagePartSourceSpan(i)));
+            return ts.createCall(
+            /* expression */ ts.createIdentifier('$localize'), 
+            /* typeArguments */ undefined, 
+            /* argumentsArray */ [
+                ts.createCall(
+                /* expression */ __makeTemplateObjectHelper, 
+                /* typeArguments */ undefined, 
+                /* argumentsArray */
+                [
+                    ts.createArrayLiteral(cookedLiterals),
+                    ts.createArrayLiteral(rawLiterals),
+                ]),
+                ...expressions,
+            ]);
+        }
+        setSourceMapRange(expr, sourceSpan) {
+            if (sourceSpan) {
+                const { start, end } = sourceSpan;
                 const { url, content } = start.file;
                 if (url) {
                     if (!this.externalSourceFiles.has(url)) {
@@ -24071,6 +24353,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     ts.setSourceMapRange(expr, { pos: start.offset, end: end.offset, source });
                 }
             }
+        }
+        createLiteral(text, span) {
+            const literal = ts.createStringLiteral(text);
+            this.setSourceMapRange(literal, span);
+            return literal;
         }
     }
     class TypeTranslatorVisitor {
@@ -24262,38 +24549,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return typeNode;
         }
     }
-    /**
-     * Translate the `LocalizedString` node into a `TaggedTemplateExpression` for ES2015 formatted
-     * output.
-     */
-    function createLocalizedStringTaggedTemplate(ast, context, visitor) {
-        let template;
-        const length = ast.messageParts.length;
-        const metaBlock = ast.serializeI18nHead();
-        if (length === 1) {
-            template = ts.createNoSubstitutionTemplateLiteral(metaBlock.cooked, metaBlock.raw);
-        }
-        else {
-            // Create the head part
-            const head = ts.createTemplateHead(metaBlock.cooked, metaBlock.raw);
-            const spans = [];
-            // Create the middle parts
-            for (let i = 1; i < length - 1; i++) {
-                const resolvedExpression = ast.expressions[i - 1].visitExpression(visitor, context);
-                const templatePart = ast.serializeI18nTemplatePart(i);
-                const templateMiddle = createTemplateMiddle(templatePart.cooked, templatePart.raw);
-                spans.push(ts.createTemplateSpan(resolvedExpression, templateMiddle));
-            }
-            // Create the tail part
-            const resolvedExpression = ast.expressions[length - 2].visitExpression(visitor, context);
-            const templatePart = ast.serializeI18nTemplatePart(length - 1);
-            const templateTail = createTemplateTail(templatePart.cooked, templatePart.raw);
-            spans.push(ts.createTemplateSpan(resolvedExpression, templateTail));
-            // Put it all together
-            template = ts.createTemplateExpression(head, spans);
-        }
-        return ts.createTaggedTemplate(ts.createIdentifier('$localize'), template);
-    }
     // HACK: Use this in place of `ts.createTemplateMiddle()`.
     // Revert once https://github.com/microsoft/TypeScript/issues/35374 is fixed
     function createTemplateMiddle(cooked, raw) {
@@ -24307,53 +24562,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const node = ts.createTemplateHead(cooked, raw);
         node.kind = ts.SyntaxKind.TemplateTail;
         return node;
-    }
-    /**
-     * Translate the `LocalizedString` node into a `$localize` call using the imported
-     * `__makeTemplateObject` helper for ES5 formatted output.
-     */
-    function createLocalizedStringFunctionCall(ast, context, visitor, imports) {
-        // A `$localize` message consists `messageParts` and `expressions`, which get interleaved
-        // together. The interleaved pieces look like:
-        // `[messagePart0, expression0, messagePart1, expression1, messagePart2]`
-        //
-        // Note that there is always a message part at the start and end, and so therefore
-        // `messageParts.length === expressions.length + 1`.
-        //
-        // Each message part may be prefixed with "metadata", which is wrapped in colons (:) delimiters.
-        // The metadata is attached to the first and subsequent message parts by calls to
-        // `serializeI18nHead()` and `serializeI18nTemplatePart()` respectively.
-        // The first message part (i.e. `ast.messageParts[0]`) is used to initialize `messageParts` array.
-        const messageParts = [ast.serializeI18nHead()];
-        const expressions = [];
-        // The rest of the `ast.messageParts` and each of the expressions are `ast.expressions` pushed
-        // into the arrays. Note that `ast.messagePart[i]` corresponds to `expressions[i-1]`
-        for (let i = 1; i < ast.messageParts.length; i++) {
-            expressions.push(ast.expressions[i - 1].visitExpression(visitor, context));
-            messageParts.push(ast.serializeI18nTemplatePart(i));
-        }
-        // The resulting downlevelled tagged template string uses a call to the `__makeTemplateObject()`
-        // helper, so we must ensure it has been imported.
-        const { moduleImport, symbol } = imports.generateNamedImport('tslib', '__makeTemplateObject');
-        const __makeTemplateObjectHelper = (moduleImport === null) ?
-            ts.createIdentifier(symbol) :
-            ts.createPropertyAccess(ts.createIdentifier(moduleImport), ts.createIdentifier(symbol));
-        // Generate the call in the form:
-        // `$localize(__makeTemplateObject(cookedMessageParts, rawMessageParts), ...expressions);`
-        return ts.createCall(
-        /* expression */ ts.createIdentifier('$localize'), 
-        /* typeArguments */ undefined, 
-        /* argumentsArray */ [
-            ts.createCall(
-            /* expression */ __makeTemplateObjectHelper, 
-            /* typeArguments */ undefined, 
-            /* argumentsArray */
-            [
-                ts.createArrayLiteral(messageParts.map(messagePart => ts.createStringLiteral(messagePart.cooked))),
-                ts.createArrayLiteral(messageParts.map(messagePart => ts.createStringLiteral(messagePart.raw))),
-            ]),
-            ...expressions,
-        ]);
     }
 
     /**
@@ -26040,20 +26248,22 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return { diagnostics: [getUndecoratedClassWithAngularFeaturesDiagnostic(node)] };
             }
             const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags, this.annotateForClosureCompiler);
-            const analysis = directiveResult && directiveResult.metadata;
-            if (analysis === undefined) {
+            if (directiveResult === undefined) {
                 return {};
             }
+            const analysis = directiveResult.metadata;
             let providersRequiringFactory = null;
             if (directiveResult !== undefined && directiveResult.decorator.has('providers')) {
                 providersRequiringFactory = resolveProvidersRequiringFactory(directiveResult.decorator.get('providers'), this.reflector, this.evaluator);
             }
             return {
                 analysis: {
+                    inputs: directiveResult.inputs,
+                    outputs: directiveResult.outputs,
                     meta: analysis,
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
-                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, analysis.inputs, this.reflector),
+                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, directiveResult.inputs, this.reflector),
                     providersRequiringFactory
                 }
             };
@@ -26062,7 +26272,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this directive's information with the `MetadataRegistry`. This ensures that
             // the information about the directive is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
             this.injectableRegistry.registerInjectable(node);
         }
         resolve(node, analysis) {
@@ -26212,6 +26422,8 @@ Either add the @Injectable() decorator to '${provider.node.name
         const usesInheritance = reflector.hasBaseClass(clazz);
         const type = wrapTypeReference(reflector, clazz);
         const internalType = new WrappedNodeExpr(reflector.getInternalNameOfClass(clazz));
+        const inputs = ClassPropertyMapping.fromMappedObject(Object.assign(Object.assign({}, inputsFromMeta), inputsFromFields));
+        const outputs = ClassPropertyMapping.fromMappedObject(Object.assign(Object.assign({}, outputsFromMeta), outputsFromFields));
         const metadata = {
             name: clazz.name.text,
             deps: ctorDeps,
@@ -26219,8 +26431,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             lifecycle: {
                 usesOnChanges,
             },
-            inputs: Object.assign(Object.assign({}, inputsFromMeta), inputsFromFields),
-            outputs: Object.assign(Object.assign({}, outputsFromMeta), outputsFromFields),
+            inputs: inputs.toJointMappedObject(),
+            outputs: outputs.toDirectMappedObject(),
             queries,
             viewQueries,
             selector,
@@ -26233,7 +26445,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             exportAs,
             providers
         };
-        return { decorator: directive, metadata };
+        return {
+            decorator: directive,
+            metadata,
+            inputs,
+            outputs,
+        };
     }
     function extractQueryMetadata(exprNode, name, args, propertyName, reflector, evaluator) {
         if (args.length === 0) {
@@ -26623,6 +26840,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         analyze(node, decorator, flags = HandlerFlags.NONE) {
+            var _a;
             const containingFile = node.getSourceFile().fileName;
             this.literalCache.delete(decorator);
             // @Component inherits @Directive, so begin by extracting the @Directive metadata and building
@@ -26635,7 +26853,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return {};
             }
             // Next, read the `@Component`-specific fields.
-            const { decorator: component, metadata } = directiveResult;
+            const { decorator: component, metadata, inputs, outputs } = directiveResult;
             // Go through the root directories for this project, and select the one with the smallest
             // relative path representation.
             const relativeContextFilePath = this.rootDirs.reduce((previous, rootDir) => {
@@ -26692,7 +26910,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             let diagnostics = undefined;
-            if (template.errors !== undefined) {
+            if (template.errors !== null) {
                 // If there are any template parsing errors, convert them to `ts.Diagnostic`s for display.
                 const id = getTemplateId(node);
                 diagnostics = template.errors.map(error => {
@@ -26753,14 +26971,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             const output = {
                 analysis: {
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
+                    inputs,
+                    outputs,
                     meta: Object.assign(Object.assign({}, metadata), { template: {
-                            nodes: template.emitNodes,
+                            nodes: template.nodes,
                             ngContentSelectors: template.ngContentSelectors,
-                        }, encapsulation, interpolation: template.interpolation, styles: styles || [], 
+                        }, encapsulation, interpolation: (_a = template.interpolationConfig) !== null && _a !== void 0 ? _a : DEFAULT_INTERPOLATION_CONFIG, styles: styles || [], 
                         // These will be replaced during the compilation step, after all `NgModule`s have been
                         // analyzed and the full compilation scope for the component can be realized.
                         animations, viewProviders: wrappedViewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath }),
-                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, metadata.inputs, this.reflector),
+                    typeCheckMeta: extractDirectiveTypeCheckMeta(node, inputs, this.reflector),
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     template,
                     providersRequiringFactory,
@@ -26777,7 +26997,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this component's information with the `MetadataRegistry`. This ensures that
             // the information about the component is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.meta.inputs, outputs: analysis.meta.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
             this.injectableRegistry.registerInjectable(node);
         }
         index(context, node, analysis) {
@@ -27097,7 +27317,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 preserveWhitespaces = value;
             }
-            let interpolation = DEFAULT_INTERPOLATION_CONFIG;
+            let interpolationConfig = DEFAULT_INTERPOLATION_CONFIG;
             if (component.has('interpolation')) {
                 const expr = component.get('interpolation');
                 const value = this.evaluator.evaluate(expr);
@@ -27105,13 +27325,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                     !value.every(element => typeof element === 'string')) {
                     throw createValueHasWrongTypeError(expr, value, 'interpolation must be an array with 2 elements of string type');
                 }
-                interpolation = InterpolationConfig.fromArray(value);
+                interpolationConfig = InterpolationConfig.fromArray(value);
             }
             // We always normalize line endings if the template has been escaped (i.e. is inline).
             const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
-            const { errors, nodes: emitNodes, styleUrls, styles, ngContentSelectors } = parseTemplate(templateStr, templateUrl, {
+            const parsedTemplate = parseTemplate(templateStr, templateUrl, {
                 preserveWhitespaces,
-                interpolationConfig: interpolation,
+                interpolationConfig,
                 range: templateRange,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
@@ -27131,26 +27351,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             // the above options set to preserve source mappings.
             const { nodes: diagNodes } = parseTemplate(templateStr, templateUrl, {
                 preserveWhitespaces: true,
-                interpolationConfig: interpolation,
+                interpolationConfig,
                 range: templateRange,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
                 leadingTriviaChars: [],
             });
-            return {
-                interpolation,
-                emitNodes,
-                diagNodes,
-                styleUrls,
-                styles,
-                ngContentSelectors,
-                errors,
-                template: templateStr,
-                templateUrl,
-                isInline: component.has('template'),
-                file: new ParseSourceFile(templateStr, templateUrl),
-            };
+            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: templateStr, templateUrl, isInline: component.has('template'), file: new ParseSourceFile(templateStr, templateUrl) });
         }
         _expressionToImportedFile(expr, origin) {
             if (!(expr instanceof ExternalExpr)) {
@@ -31534,8 +31742,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     fnName,
                     body: true,
                     fields: {
-                        inputs: Object.keys(dir.inputs),
-                        outputs: Object.keys(dir.outputs),
+                        inputs: dir.inputs.classPropertyNames,
+                        outputs: dir.outputs.classPropertyNames,
                         // TODO: support queries
                         queries: dir.queries,
                     },
@@ -32702,7 +32910,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             // Add unset directive inputs for each of the remaining unset fields.
-            for (const fieldName of Object.keys(this.dir.inputs)) {
+            for (const [fieldName] of this.dir.inputs) {
                 if (!genericInputs.has(fieldName)) {
                     genericInputs.set(fieldName, { type: 'unset', field: fieldName });
                 }
@@ -32988,19 +33196,13 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute() {
             let dirId = null;
-            // `dir.outputs` is an object map of field names on the directive class to event names.
-            // This is backwards from what's needed to match event handlers - a map of event names to field
-            // names is desired. Invert `dir.outputs` into `fieldByEventName` to create this map.
-            const fieldByEventName = new Map();
             const outputs = this.dir.outputs;
-            for (const key of Object.keys(outputs)) {
-                fieldByEventName.set(outputs[key], key);
-            }
             for (const output of this.node.outputs) {
-                if (output.type !== 0 /* Regular */ || !fieldByEventName.has(output.name)) {
+                if (output.type !== 0 /* Regular */ || !outputs.hasBindingPropertyName(output.name)) {
                     continue;
                 }
-                const field = fieldByEventName.get(output.name);
+                // TODO(alxhub): consider supporting multiple fields with the same property name for outputs.
+                const field = outputs.getByBindingPropertyName(output.name)[0].classPropertyName;
                 if (this.tcb.env.config.checkTypeOfOutputEvents) {
                     // For strict checking of directive events, generate a call to the `subscribe` method
                     // on the directive's output field to let type information flow into the handler function's
@@ -33432,9 +33634,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node instanceof Element) {
                 // Go through the directives and remove any inputs that it claims from `elementInputs`.
                 for (const dir of directives) {
-                    for (const fieldName of Object.keys(dir.inputs)) {
-                        const value = dir.inputs[fieldName];
-                        claimedInputs.add(Array.isArray(value) ? value[0] : value);
+                    for (const propertyName of dir.inputs.propertyNames) {
+                        claimedInputs.add(propertyName);
                     }
                 }
                 this.opQueue.push(new TcbUnclaimedInputsOp(this.tcb, this, node, claimedInputs));
@@ -33467,8 +33668,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node instanceof Element) {
                 // Go through the directives and register any outputs that it claims in `claimedOutputs`.
                 for (const dir of directives) {
-                    for (const outputField of Object.keys(dir.outputs)) {
-                        claimedOutputs.add(dir.outputs[outputField]);
+                    for (const outputProperty of dir.outputs.propertyNames) {
+                        claimedOutputs.add(outputProperty);
                     }
                 }
                 this.opQueue.push(new TcbUnclaimedOutputsOp(this.tcb, this, node, claimedOutputs));
@@ -33718,7 +33919,6 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getBoundInputs(directive, node, tcb) {
         const boundInputs = [];
-        const propertyToFieldNames = invertInputs(directive.inputs);
         const processAttribute = (attr) => {
             // Skip non-property bindings.
             if (attr instanceof BoundAttribute && attr.type !== 0 /* Property */) {
@@ -33729,10 +33929,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return;
             }
             // Skip the attribute if the directive does not have an input for it.
-            if (!propertyToFieldNames.has(attr.name)) {
+            const inputs = directive.inputs.getByBindingPropertyName(attr.name);
+            if (inputs === null) {
                 return;
             }
-            const fieldNames = propertyToFieldNames.get(attr.name);
+            const fieldNames = inputs.map(input => input.classPropertyName);
             boundInputs.push({ attribute: attr, fieldNames });
         };
         node.inputs.forEach(processAttribute);
@@ -33754,24 +33955,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             // For regular attributes with a static string value, use the represented string literal.
             return ts.createStringLiteral(attr.value);
         }
-    }
-    /**
-     * Inverts the input-mapping from field-to-property name into property-to-field name, to be able
-     * to match a property in a template with the corresponding field on a directive.
-     */
-    function invertInputs(inputs) {
-        const propertyToFieldNames = new Map();
-        for (const fieldName of Object.keys(inputs)) {
-            const propertyNames = inputs[fieldName];
-            const propertyName = Array.isArray(propertyNames) ? propertyNames[0] : propertyNames;
-            if (propertyToFieldNames.has(propertyName)) {
-                propertyToFieldNames.get(propertyName).push(fieldName);
-            }
-            else {
-                propertyToFieldNames.set(propertyName, [fieldName]);
-            }
-        }
-        return propertyToFieldNames;
     }
     const EVENT_PARAMETER = '$event';
     /**
@@ -34007,8 +34190,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // it comes from a .d.ts file. .d.ts declarations don't have bodies.
                         body: !dirNode.getSourceFile().isDeclarationFile,
                         fields: {
-                            inputs: Object.keys(dir.inputs),
-                            outputs: Object.keys(dir.outputs),
+                            inputs: dir.inputs.classPropertyNames,
+                            outputs: dir.outputs.classPropertyNames,
                             // TODO(alxhub): support queries
                             queries: dir.queries,
                         },
@@ -34420,7 +34603,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 preserveWhitespaces: true,
                 leadingTriviaChars: [],
             });
-            if (errors !== undefined) {
+            if (errors !== null) {
                 return { nodes, errors };
             }
             const filePath = absoluteFromSourceFile(component.getSourceFile());
