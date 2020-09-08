@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.0+25.sha-926ffcd
+ * @license Angular v11.0.0-next.0+28.sha-2c4a98a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5623,7 +5623,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.element = { name: 'ɵɵelement', moduleName: CORE$1 };
     Identifiers$1.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
     Identifiers$1.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
-    Identifiers$1.select = { name: 'ɵɵselect', moduleName: CORE$1 };
     Identifiers$1.advance = { name: 'ɵɵadvance', moduleName: CORE$1 };
     Identifiers$1.syntheticHostProperty = { name: 'ɵɵsyntheticHostProperty', moduleName: CORE$1 };
     Identifiers$1.syntheticHostListener = { name: 'ɵɵsyntheticHostListener', moduleName: CORE$1 };
@@ -19012,7 +19011,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.0+25.sha-926ffcd');
+    const VERSION$1 = new Version('11.0.0-next.0+28.sha-2c4a98a');
 
     /**
      * @license
@@ -19602,7 +19601,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.0+25.sha-926ffcd');
+    const VERSION$2 = new Version('11.0.0-next.0+28.sha-2c4a98a');
 
     /**
      * @license

@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.0+25.sha-926ffcd
+ * @license Angular v11.0.0-next.0+28.sha-2c4a98a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2856,7 +2856,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.element = { name: 'ɵɵelement', moduleName: CORE$1 };
     Identifiers$1.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
     Identifiers$1.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
-    Identifiers$1.select = { name: 'ɵɵselect', moduleName: CORE$1 };
     Identifiers$1.advance = { name: 'ɵɵadvance', moduleName: CORE$1 };
     Identifiers$1.syntheticHostProperty = { name: 'ɵɵsyntheticHostProperty', moduleName: CORE$1 };
     Identifiers$1.syntheticHostListener = { name: 'ɵɵsyntheticHostListener', moduleName: CORE$1 };
@@ -17809,7 +17808,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.0+25.sha-926ffcd');
+    const VERSION$1 = new Version('11.0.0-next.0+28.sha-2c4a98a');
 
     /**
      * @license
@@ -31593,15 +31592,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         ngDevMode && assertGreaterThan(delta, 0, 'Can only advance forward');
         selectIndexInternal(getTView(), getLView(), getSelectedIndex() + delta, getCheckNoChangesMode());
     }
-    /**
-     * Selects an element for later binding instructions.
-     * @deprecated No longer being generated, but still used in unit tests.
-     * @codeGenApi
-     */
-    function ɵɵselect(index) {
-        // TODO(misko): Remove this function as it is no longer being used.
-        selectIndexInternal(getTView(), getLView(), index, getCheckNoChangesMode());
-    }
     function selectIndexInternal(tView, lView, index, checkNoChangesMode) {
         ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
         ngDevMode && assertIndexInRange(lView, index + HEADER_OFFSET);
@@ -43851,7 +43841,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.0+25.sha-926ffcd');
+    const VERSION$2 = new Version$1('11.0.0-next.0+28.sha-2c4a98a');
 
     /**
      * @license
@@ -49962,7 +49952,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         'ɵɵstylePropInterpolate8': ɵɵstylePropInterpolate8,
         'ɵɵstylePropInterpolateV': ɵɵstylePropInterpolateV,
         'ɵɵclassProp': ɵɵclassProp,
-        'ɵɵselect': ɵɵselect,
         'ɵɵadvance': ɵɵadvance,
         'ɵɵtemplate': ɵɵtemplate,
         'ɵɵtext': ɵɵtext,
