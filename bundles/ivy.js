@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.0+46.sha-f1b355b
+ * @license Angular v10.1.0+48.sha-3965484
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19044,7 +19044,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.0+46.sha-f1b355b');
+    const VERSION$1 = new Version('10.1.0+48.sha-3965484');
 
     /**
      * @license
@@ -19634,7 +19634,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.1.0+46.sha-f1b355b');
+    const VERSION$2 = new Version('10.1.0+48.sha-3965484');
 
     /**
      * @license
@@ -22055,74 +22055,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Given a reference to a directive, return a flattened version of its `DirectiveMeta` metadata
-     * which includes metadata from its entire inheritance chain.
-     *
-     * The returned `DirectiveMeta` will either have `baseClass: null` if the inheritance chain could be
-     * fully resolved, or `baseClass: 'dynamic'` if the inheritance chain could not be completely
-     * followed.
-     */
-    function flattenInheritedDirectiveMetadata(reader, dir) {
-        const topMeta = reader.getDirectiveMetadata(dir);
-        if (topMeta === null) {
-            throw new Error(`Metadata not found for directive: ${dir.debugName}`);
-        }
-        if (topMeta.baseClass === null) {
-            return topMeta;
-        }
-        const coercedInputFields = new Set();
-        const undeclaredInputFields = new Set();
-        const restrictedInputFields = new Set();
-        const stringLiteralInputFields = new Set();
-        let isDynamic = false;
-        let inputs = ClassPropertyMapping.empty();
-        let outputs = ClassPropertyMapping.empty();
-        const addMetadata = (meta) => {
-            if (meta.baseClass === 'dynamic') {
-                isDynamic = true;
-            }
-            else if (meta.baseClass !== null) {
-                const baseMeta = reader.getDirectiveMetadata(meta.baseClass);
-                if (baseMeta !== null) {
-                    addMetadata(baseMeta);
-                }
-                else {
-                    // Missing metadata for the base class means it's effectively dynamic.
-                    isDynamic = true;
-                }
-            }
-            inputs = ClassPropertyMapping.merge(inputs, meta.inputs);
-            outputs = ClassPropertyMapping.merge(outputs, meta.outputs);
-            for (const coercedInputField of meta.coercedInputFields) {
-                coercedInputFields.add(coercedInputField);
-            }
-            for (const undeclaredInputField of meta.undeclaredInputFields) {
-                undeclaredInputFields.add(undeclaredInputField);
-            }
-            for (const restrictedInputField of meta.restrictedInputFields) {
-                restrictedInputFields.add(restrictedInputField);
-            }
-            for (const field of meta.stringLiteralInputFields) {
-                stringLiteralInputFields.add(field);
-            }
-        };
-        addMetadata(topMeta);
-        return Object.assign(Object.assign({}, topMeta), { inputs,
-            outputs,
-            coercedInputFields,
-            undeclaredInputFields,
-            restrictedInputFields,
-            stringLiteralInputFields, baseClass: isDynamic ? 'dynamic' : null });
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * A registry of directive, pipe, and module metadata for types defined in the current compilation
      * unit, which supports both reading and registering.
      */
@@ -22192,6 +22124,71 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // if it was compiled already.
             return this.classes.has(declaration) || hasInjectableFields(declaration, this.host);
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Given a reference to a directive, return a flattened version of its `DirectiveMeta` metadata
+     * which includes metadata from its entire inheritance chain.
+     *
+     * The returned `DirectiveMeta` will either have `baseClass: null` if the inheritance chain could be
+     * fully resolved, or `baseClass: 'dynamic'` if the inheritance chain could not be completely
+     * followed.
+     */
+    function flattenInheritedDirectiveMetadata(reader, dir) {
+        const topMeta = reader.getDirectiveMetadata(dir);
+        if (topMeta === null) {
+            throw new Error(`Metadata not found for directive: ${dir.debugName}`);
+        }
+        const coercedInputFields = new Set();
+        const undeclaredInputFields = new Set();
+        const restrictedInputFields = new Set();
+        const stringLiteralInputFields = new Set();
+        let isDynamic = false;
+        let inputs = ClassPropertyMapping.empty();
+        let outputs = ClassPropertyMapping.empty();
+        const addMetadata = (meta) => {
+            if (meta.baseClass === 'dynamic') {
+                isDynamic = true;
+            }
+            else if (meta.baseClass !== null) {
+                const baseMeta = reader.getDirectiveMetadata(meta.baseClass);
+                if (baseMeta !== null) {
+                    addMetadata(baseMeta);
+                }
+                else {
+                    // Missing metadata for the base class means it's effectively dynamic.
+                    isDynamic = true;
+                }
+            }
+            inputs = ClassPropertyMapping.merge(inputs, meta.inputs);
+            outputs = ClassPropertyMapping.merge(outputs, meta.outputs);
+            for (const coercedInputField of meta.coercedInputFields) {
+                coercedInputFields.add(coercedInputField);
+            }
+            for (const undeclaredInputField of meta.undeclaredInputFields) {
+                undeclaredInputFields.add(undeclaredInputField);
+            }
+            for (const restrictedInputField of meta.restrictedInputFields) {
+                restrictedInputFields.add(restrictedInputField);
+            }
+            for (const field of meta.stringLiteralInputFields) {
+                stringLiteralInputFields.add(field);
+            }
+        };
+        addMetadata(topMeta);
+        return Object.assign(Object.assign({}, topMeta), { inputs,
+            outputs,
+            coercedInputFields,
+            undeclaredInputFields,
+            restrictedInputFields,
+            stringLiteralInputFields, baseClass: isDynamic ? 'dynamic' : null });
     }
 
     /**
@@ -26728,75 +26725,6 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Computes scope information to be used in template type checking.
-     */
-    class TypeCheckScopes {
-        constructor(scopeReader, metaReader) {
-            this.scopeReader = scopeReader;
-            this.metaReader = metaReader;
-            /**
-             * Cache of flattened directive metadata. Because flattened metadata is scope-invariant it's
-             * cached individually, such that all scopes refer to the same flattened metadata.
-             */
-            this.flattenedDirectiveMetaCache = new Map();
-            /**
-             * Cache of the computed type check scope per NgModule declaration.
-             */
-            this.scopeCache = new Map();
-        }
-        /**
-         * Computes the type-check scope information for the component declaration. If the NgModule
-         * contains an error, then 'error' is returned. If the component is not declared in any NgModule,
-         * an empty type-check scope is returned.
-         */
-        getTypeCheckScope(node) {
-            const matcher = new SelectorMatcher();
-            const pipes = new Map();
-            const scope = this.scopeReader.getScopeForComponent(node);
-            if (scope === null) {
-                return { matcher, pipes, schemas: [] };
-            }
-            else if (scope === 'error') {
-                return scope;
-            }
-            if (this.scopeCache.has(scope.ngModule)) {
-                return this.scopeCache.get(scope.ngModule);
-            }
-            for (const meta of scope.compilation.directives) {
-                if (meta.selector !== null) {
-                    const extMeta = this.getInheritedDirectiveMetadata(meta.ref);
-                    matcher.addSelectables(CssSelector.parse(meta.selector), extMeta);
-                }
-            }
-            for (const { name, ref } of scope.compilation.pipes) {
-                if (!ts.isClassDeclaration(ref.node)) {
-                    throw new Error(`Unexpected non-class declaration ${ts.SyntaxKind[ref.node.kind]} for pipe ${ref.debugName}`);
-                }
-                pipes.set(name, ref);
-            }
-            const typeCheckScope = { matcher, pipes, schemas: scope.schemas };
-            this.scopeCache.set(scope.ngModule, typeCheckScope);
-            return typeCheckScope;
-        }
-        getInheritedDirectiveMetadata(ref) {
-            const clazz = ref.node;
-            if (this.flattenedDirectiveMetaCache.has(clazz)) {
-                return this.flattenedDirectiveMetaCache.get(clazz);
-            }
-            const meta = flattenInheritedDirectiveMetadata(this.metaReader, ref);
-            this.flattenedDirectiveMetaCache.set(clazz, meta);
-            return meta;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const EMPTY_MAP = new Map();
     const EMPTY_ARRAY = [];
     /**
@@ -26826,7 +26754,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.literalCache = new Map();
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
-            this.typeCheckScopes = new TypeCheckScopes(this.scopeReader, this.metaReader);
             /**
              * During the asynchronous preanalyze phase, it's necessary to parse the template to extract
              * any potential <link> tags which might need to be loaded. This cache ensures that work is not
@@ -27089,13 +27016,31 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (!ts.isClassDeclaration(node)) {
                 return;
             }
-            const scope = this.typeCheckScopes.getTypeCheckScope(node);
+            const matcher = new SelectorMatcher();
+            const pipes = new Map();
+            let schemas = [];
+            const scope = this.scopeReader.getScopeForComponent(node);
             if (scope === 'error') {
                 // Don't type-check components that had errors in their scopes.
                 return;
             }
-            const binder = new R3TargetBinder(scope.matcher);
-            ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file);
+            if (scope !== null) {
+                for (const meta of scope.compilation.directives) {
+                    if (meta.selector !== null) {
+                        const extMeta = flattenInheritedDirectiveMetadata(this.metaReader, meta.ref);
+                        matcher.addSelectables(CssSelector.parse(meta.selector), extMeta);
+                    }
+                }
+                for (const { name, ref } of scope.compilation.pipes) {
+                    if (!ts.isClassDeclaration(ref.node)) {
+                        throw new Error(`Unexpected non-class declaration ${ts.SyntaxKind[ref.node.kind]} for pipe ${ref.debugName}`);
+                    }
+                    pipes.set(name, ref);
+                }
+                schemas = scope.schemas;
+            }
+            const binder = new R3TargetBinder(matcher);
+            ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, pipes, schemas, meta.template.sourceMapping, meta.template.file);
         }
         resolve(node, analysis) {
             const context = node.getSourceFile();
@@ -27109,58 +27054,75 @@ Either add the @Injectable() decorator to '${provider.node.name
                 wrapDirectivesAndPipesInClosure: false,
             };
             if (scope !== null && scope !== 'error') {
+                // Replace the empty components and directives from the analyze() step with a fully expanded
+                // scope. This is possible now because during resolve() the whole compilation unit has been
+                // fully analyzed.
+                //
+                // First it needs to be determined if actually importing the directives/pipes used in the
+                // template would create a cycle. Currently ngtsc refuses to generate cycles, so an option
+                // known as "remote scoping" is used if a cycle would be created. In remote scoping, the
+                // module file sets the directives/pipes on the ɵcmp of the component, without
+                // requiring new imports (but also in a way that breaks tree shaking).
+                //
+                // Determining this is challenging, because the TemplateDefinitionBuilder is responsible for
+                // matching directives and pipes in the template; however, that doesn't run until the actual
+                // compile() step. It's not possible to run template compilation sooner as it requires the
+                // ConstantPool for the overall file being compiled (which isn't available until the transform
+                // step).
+                //
+                // Instead, directives/pipes are matched independently here, using the R3TargetBinder. This is
+                // an alternative implementation of template matching which is used for template type-checking
+                // and will eventually replace matching in the TemplateDefinitionBuilder.
+                // Set up the R3TargetBinder, as well as a 'directives' array and a 'pipes' map that are later
+                // fed to the TemplateDefinitionBuilder. First, a SelectorMatcher is constructed to match
+                // directives that are in scope.
                 const matcher = new SelectorMatcher();
+                const directives = [];
                 for (const dir of scope.compilation.directives) {
-                    if (dir.selector !== null) {
-                        matcher.addSelectables(CssSelector.parse(dir.selector), dir);
+                    const { ref, selector } = dir;
+                    if (selector !== null) {
+                        const expression = this.refEmitter.emit(ref, context);
+                        directives.push({ selector, expression });
+                        matcher.addSelectables(CssSelector.parse(selector), Object.assign(Object.assign({}, dir), { expression }));
                     }
                 }
                 const pipes = new Map();
                 for (const pipe of scope.compilation.pipes) {
-                    pipes.set(pipe.name, pipe.ref);
+                    pipes.set(pipe.name, this.refEmitter.emit(pipe.ref, context));
                 }
-                // Next, the component template AST is bound using the R3TargetBinder. This produces a
+                // Next, the component template AST is bound using the R3TargetBinder. This produces an
                 // BoundTarget, which is similar to a ts.TypeChecker.
                 const binder = new R3TargetBinder(matcher);
                 const bound = binder.bind({ template: metadata.template.nodes });
                 // The BoundTarget knows which directives and pipes matched the template.
-                const usedDirectives = bound.getUsedDirectives().map(directive => {
-                    return {
-                        selector: directive.selector,
-                        expression: this.refEmitter.emit(directive.ref, context),
-                    };
-                });
-                const usedPipes = [];
-                for (const pipeName of bound.getUsedPipes()) {
-                    if (!pipes.has(pipeName)) {
-                        continue;
-                    }
-                    const pipe = pipes.get(pipeName);
-                    usedPipes.push({
-                        pipeName,
-                        expression: this.refEmitter.emit(pipe, context),
-                    });
-                }
+                const usedDirectives = bound.getUsedDirectives();
+                const usedPipes = bound.getUsedPipes().map(name => pipes.get(name));
                 // Scan through the directives/pipes actually used in the template and check whether any
                 // import which needs to be generated would create a cycle.
                 const cycleDetected = usedDirectives.some(dir => this._isCyclicImport(dir.expression, context)) ||
-                    usedPipes.some(pipe => this._isCyclicImport(pipe.expression, context));
+                    usedPipes.some(pipe => this._isCyclicImport(pipe, context));
                 if (!cycleDetected) {
                     // No cycle was detected. Record the imports that need to be created in the cycle detector
                     // so that future cyclic import checks consider their production.
                     for (const { expression } of usedDirectives) {
                         this._recordSyntheticImport(expression, context);
                     }
-                    for (const { expression } of usedPipes) {
-                        this._recordSyntheticImport(expression, context);
+                    for (const pipe of usedPipes) {
+                        this._recordSyntheticImport(pipe, context);
                     }
                     // Check whether the directive/pipe arrays in ɵcmp need to be wrapped in closures.
                     // This is required if any directive/pipe reference is to a declaration in the same file but
                     // declared after this component.
                     const wrapDirectivesAndPipesInClosure = usedDirectives.some(dir => isExpressionForwardReference(dir.expression, node.name, context)) ||
-                        usedPipes.some(pipe => isExpressionForwardReference(pipe.expression, node.name, context));
-                    data.directives = usedDirectives;
-                    data.pipes = new Map(usedPipes.map(pipe => [pipe.pipeName, pipe.expression]));
+                        usedPipes.some(pipe => isExpressionForwardReference(pipe, node.name, context));
+                    // Actual compilation still uses the full scope, not the narrowed scope determined by
+                    // R3TargetBinder. This is a hedge against potential issues with the R3TargetBinder - right
+                    // now the TemplateDefinitionBuilder is the "source of truth" for which directives/pipes are
+                    // actually used (though the two should agree perfectly).
+                    //
+                    // TODO(alxhub): switch TemplateDefinitionBuilder over to using R3TargetBinder directly.
+                    data.directives = directives;
+                    data.pipes = pipes;
                     data.wrapDirectivesAndPipesInClosure = wrapDirectivesAndPipesInClosure;
                 }
                 else {
@@ -30484,7 +30446,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // Finally, produce the `LocalModuleScope` with both the compilation and export scopes.
             const scope = {
-                ngModule: ngModule.ref.node,
                 compilation: {
                     directives: Array.from(compilationDirectives.values()),
                     pipes: Array.from(compilationPipes.values()),
