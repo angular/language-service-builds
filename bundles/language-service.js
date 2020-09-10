@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.1+5.sha-1373a98
+ * @license Angular v11.0.0-next.1+9.sha-281865b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17861,7 +17861,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.1+5.sha-1373a98');
+    const VERSION$1 = new Version('11.0.0-next.1+9.sha-281865b');
 
     /**
      * @license
@@ -43895,7 +43895,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.1+5.sha-1373a98');
+    const VERSION$2 = new Version$1('11.0.0-next.1+9.sha-281865b');
 
     /**
      * @license
@@ -44109,7 +44109,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         _reset() {
             if (this.isDirty) {
                 let record;
-                let nextRecord;
                 for (record = this._previousItHead = this._itHead; record !== null; record = record._next) {
                     record._nextPrevious = record._next;
                 }
@@ -44117,9 +44116,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     record.previousIndex = record.currentIndex;
                 }
                 this._additionsHead = this._additionsTail = null;
-                for (record = this._movesHead; record !== null; record = nextRecord) {
+                for (record = this._movesHead; record !== null; record = record._nextMoved) {
                     record.previousIndex = record.currentIndex;
-                    nextRecord = record._nextMoved;
                 }
                 this._movesHead = this._movesTail = null;
                 this._removalsHead = this._removalsTail = null;
