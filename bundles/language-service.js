@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.1+9.sha-281865b
+ * @license Angular v11.0.0-next.1+11.sha-d141516
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17861,7 +17861,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.1+9.sha-281865b');
+    const VERSION$1 = new Version('11.0.0-next.1+11.sha-d141516');
 
     /**
      * @license
@@ -34358,6 +34358,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // would be cleared and the counter decremented), we need to decrement the view counter here
         // instead.
         if (lView[FLAGS] & 1024 /* RefreshTransplantedView */) {
+            lView[FLAGS] &= ~1024 /* RefreshTransplantedView */;
             updateTransplantedViewCount(insertionLContainer, -1);
         }
         movedViews.splice(declarationViewIndex, 1);
@@ -43895,7 +43896,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.1+9.sha-281865b');
+    const VERSION$2 = new Version$1('11.0.0-next.1+11.sha-d141516');
 
     /**
      * @license
