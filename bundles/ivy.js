@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.1+13.sha-26f2820
+ * @license Angular v11.0.0-next.1+19.sha-19598b4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19064,7 +19064,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.1+13.sha-26f2820');
+    const VERSION$1 = new Version('11.0.0-next.1+19.sha-19598b4');
 
     /**
      * @license
@@ -19654,7 +19654,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.1+13.sha-26f2820');
+    const VERSION$2 = new Version('11.0.0-next.1+19.sha-19598b4');
 
     /**
      * @license
@@ -19982,6 +19982,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return ts.resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost, moduleResolutionCache !== null ? moduleResolutionCache : undefined)
                 .resolvedModule;
         }
+    }
+    /** Returns true if the node is an assignment expression. */
+    function isAssignment(node) {
+        return ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken;
     }
 
     /**
@@ -30994,6 +30998,26 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SymbolKind;
+    (function (SymbolKind) {
+        SymbolKind[SymbolKind["Input"] = 0] = "Input";
+        SymbolKind[SymbolKind["Output"] = 1] = "Output";
+        SymbolKind[SymbolKind["Binding"] = 2] = "Binding";
+        SymbolKind[SymbolKind["Reference"] = 3] = "Reference";
+        SymbolKind[SymbolKind["Variable"] = 4] = "Variable";
+        SymbolKind[SymbolKind["Directive"] = 5] = "Directive";
+        SymbolKind[SymbolKind["Element"] = 6] = "Element";
+        SymbolKind[SymbolKind["Template"] = 7] = "Template";
+        SymbolKind[SymbolKind["Expression"] = 8] = "Expression";
+    })(SymbolKind || (SymbolKind = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * A `ShimGenerator` which adds type-checking files to the `ts.Program`.
      *
@@ -31986,6 +32010,150 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const parseSpanComment = /^(\d+),(\d+)$/;
+    /**
+     * Reads the trailing comments and finds the first match which is a span comment (i.e. 4,10) on a
+     * node and returns it as an `AbsoluteSourceSpan`.
+     *
+     * Will return `null` if no trailing comments on the node match the expected form of a source span.
+     */
+    function readSpanComment(node, sourceFile = node.getSourceFile()) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            const match = commentText.match(parseSpanComment);
+            if (match === null) {
+                return null;
+            }
+            return new AbsoluteSourceSpan(+match[1], +match[2]);
+        }) || null;
+    }
+    /** Used to identify what type the comment is. */
+    var CommentTriviaType;
+    (function (CommentTriviaType) {
+        CommentTriviaType["DIAGNOSTIC"] = "D";
+        CommentTriviaType["EXPRESSION_TYPE_IDENTIFIER"] = "T";
+    })(CommentTriviaType || (CommentTriviaType = {}));
+    /** Identifies what the TCB expression is for (for example, a directive declaration). */
+    var ExpressionIdentifier;
+    (function (ExpressionIdentifier) {
+        ExpressionIdentifier["DIRECTIVE"] = "DIR";
+    })(ExpressionIdentifier || (ExpressionIdentifier = {}));
+    /** Tags the node with the given expression identifier. */
+    function addExpressionIdentifier(node, identifier) {
+        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
+        /* hasTrailingNewLine */ false);
+    }
+    const IGNORE_MARKER = `${CommentTriviaType.DIAGNOSTIC}:ignore`;
+    /**
+     * Tag the `ts.Node` with an indication that any errors arising from the evaluation of the node
+     * should be ignored.
+     */
+    function markIgnoreDiagnostics(node) {
+        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_MARKER, /* hasTrailingNewLine */ false);
+    }
+    /** Returns true if the node has a marker that indicates diagnostics errors should be ignored.  */
+    function hasIgnoreMarker(node, sourceFile) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText === IGNORE_MARKER;
+        }) === true;
+    }
+    function makeRecursiveVisitor(visitor) {
+        function recursiveVisitor(node) {
+            const res = visitor(node);
+            return res !== null ? res : node.forEachChild(recursiveVisitor);
+        }
+        return recursiveVisitor;
+    }
+    function getSpanFromOptions(opts) {
+        let withSpan = null;
+        if (opts.withSpan !== undefined) {
+            if (opts.withSpan instanceof AbsoluteSourceSpan) {
+                withSpan = opts.withSpan;
+            }
+            else {
+                withSpan = { start: opts.withSpan.start.offset, end: opts.withSpan.end.offset };
+            }
+        }
+        return withSpan;
+    }
+    /**
+     * Given a `ts.Node` with finds the first node whose matching the criteria specified
+     * by the `FindOptions`.
+     *
+     * Returns `null` when no `ts.Node` matches the given conditions.
+     */
+    function findFirstMatchingNode(tcb, opts) {
+        var _a;
+        const withSpan = getSpanFromOptions(opts);
+        const sf = tcb.getSourceFile();
+        const visitor = makeRecursiveVisitor(node => {
+            if (!opts.filter(node)) {
+                return null;
+            }
+            if (withSpan !== null) {
+                const comment = readSpanComment(node, sf);
+                if (comment === null || withSpan.start !== comment.start || withSpan.end !== comment.end) {
+                    return null;
+                }
+            }
+            return node;
+        });
+        return (_a = tcb.forEachChild(visitor)) !== null && _a !== void 0 ? _a : null;
+    }
+    /**
+     * Given a `ts.Node` with source span comments, finds the first node whose source span comment
+     * matches the given `sourceSpan`. Additionally, the `filter` function allows matching only
+     * `ts.Nodes` of a given type, which provides the ability to select only matches of a given type
+     * when there may be more than one.
+     *
+     * Returns `null` when no `ts.Node` matches the given conditions.
+     */
+    function findAllMatchingNodes(tcb, opts) {
+        const withSpan = getSpanFromOptions(opts);
+        const results = [];
+        const stack = [tcb];
+        const sf = tcb.getSourceFile();
+        while (stack.length > 0) {
+            const node = stack.pop();
+            if (!opts.filter(node)) {
+                stack.push(...node.getChildren());
+                continue;
+            }
+            if (withSpan !== null) {
+                const comment = readSpanComment(node, sf);
+                if (comment === null || withSpan.start !== comment.start || withSpan.end !== comment.end) {
+                    stack.push(...node.getChildren());
+                    continue;
+                }
+            }
+            results.push(node);
+        }
+        return results;
+    }
+    function hasExpressionIdentifier(sourceFile, node, identifier) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return false;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText === `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`;
+        }) || false;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Wraps the node in parenthesis such that inserted span comments become attached to the proper
      * node. This is an alias for `ts.createParen` with the benefit that it signifies that the
@@ -31999,12 +32167,14 @@ Either add the @Injectable() decorator to '${provider.node.name
     function wrapForDiagnostics(expr) {
         return ts.createParen(expr);
     }
-    const IGNORE_MARKER = 'ignore';
     /**
-     * Adds a marker to the node that signifies that any errors within the node should not be reported.
+     * Wraps the node in parenthesis such that inserted span comments become attached to the proper
+     * node. This is an alias for `ts.createParen` with the benefit that it signifies that the
+     * inserted parenthesis are for use by the type checker, not for correctness of the rendered TCB
+     * code.
      */
-    function ignoreDiagnostics(node) {
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_MARKER, /* hasTrailingNewLine */ false);
+    function wrapForTypeChecker(expr) {
+        return ts.createParen(expr);
     }
     /**
      * Adds a synthetic comment to the expression that represents the parse span of the provided node.
@@ -32094,7 +32264,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // There's an ignore marker on this node, so the diagnostic should not be reported.
                 return null;
             }
-            const span = readSpanComment(sourceFile, node);
+            const span = readSpanComment(node, sourceFile);
             if (span !== null) {
                 // Once the positional information has been extracted, search further up the TCB to extract
                 // the unique id that is attached with the TCB's function declaration.
@@ -32129,29 +32299,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
             return commentText;
         }) || null;
-    }
-    const parseSpanComment = /^(\d+),(\d+)$/;
-    function readSpanComment(sourceFile, node) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            const match = commentText.match(parseSpanComment);
-            if (match === null) {
-                return null;
-            }
-            return new AbsoluteSourceSpan(+match[1], +match[2]);
-        }) || null;
-    }
-    function hasIgnoreMarker(node, sourceFile) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText === IGNORE_MARKER;
-        }) === true;
     }
 
     /**
@@ -32246,7 +32393,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitConditional(ast) {
             const condExpr = this.translate(ast.condition);
             const trueExpr = this.translate(ast.trueExp);
-            const falseExpr = this.translate(ast.falseExp);
+            // Wrap `falseExpr` in parens so that the trailing parse span info is not attributed to the
+            // whole conditional.
+            // In the following example, the last source span comment (5,6) could be seen as the
+            // trailing comment for _either_ the whole conditional expression _or_ just the `falseExpr` that
+            // is immediately before it:
+            // `conditional /*1,2*/ ? trueExpr /*3,4*/ : falseExpr /*5,6*/`
+            // This should be instead be `conditional /*1,2*/ ? trueExpr /*3,4*/ : (falseExpr /*5,6*/)`
+            const falseExpr = wrapForTypeChecker(this.translate(ast.falseExp));
             const node = ts.createParen(ts.createConditional(condExpr, trueExpr, falseExpr));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
@@ -32265,7 +32419,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Build up a chain of binary + operations to simulate the string concatenation of the
             // interpolation's expressions. The chain is started using an actual string literal to ensure
             // the type is inferred as 'string'.
-            return ast.expressions.reduce((lhs, ast) => ts.createBinary(lhs, ts.SyntaxKind.PlusToken, this.translate(ast)), ts.createLiteral(''));
+            return ast.expressions.reduce((lhs, ast) => ts.createBinary(lhs, ts.SyntaxKind.PlusToken, wrapForTypeChecker(this.translate(ast))), ts.createLiteral(''));
         }
         visitKeyedRead(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.obj));
@@ -32760,7 +32914,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                             const expr = tcbExpression(boundInput.value, this.tcb, this.scope);
                             // The expression has already been checked in the type constructor invocation, so
                             // it should be ignored when used within a template guard.
-                            ignoreDiagnostics(expr);
+                            markIgnoreDiagnostics(expr);
                             if (guard.type === 'binding') {
                                 // Use the binding expression itself as guard.
                                 directiveGuards.push(expr);
@@ -32866,7 +33020,70 @@ Either add the @Injectable() decorator to '${provider.node.name
         execute() {
             const id = this.tcb.allocateId();
             const type = this.tcb.env.referenceType(this.dir.ref);
+            addExpressionIdentifier(type, ExpressionIdentifier.DIRECTIVE);
+            addParseSpanInfo(type, this.node.startSourceSpan || this.node.sourceSpan);
             this.scope.addStatement(tsDeclareVariable(id, type));
+            return id;
+        }
+    }
+    /**
+     * A `TcbOp` which creates a variable for a local ref in a template.
+     * The initializer for the variable is the variable expression for the directive, template, or
+     * element the ref refers to. When the reference is used in the template, those TCB statements will
+     * access this variable as well. For example:
+     * ```
+     * var _t1 = document.createElement('div');
+     * var _t2 = _t1;
+     * _t2.value
+     * ```
+     * This operation supports more fluent lookups for the `TemplateTypeChecker` when getting a symbol
+     * for a reference. In most cases, this isn't essential; that is, the information for the symbol
+     * could be gathered without this operation using the `BoundTarget`. However, for the case of
+     * ng-template references, we will need this reference variable to not only provide a location in
+     * the shim file, but also to narrow the variable to the correct `TemplateRef<T>` type rather than
+     * `TemplateRef<any>` (this work is still TODO).
+     *
+     * Executing this operation returns a reference to the directive instance variable with its inferred
+     * type.
+     */
+    class TcbReferenceOp extends TcbOp {
+        constructor(tcb, scope, node, host, target) {
+            super();
+            this.tcb = tcb;
+            this.scope = scope;
+            this.node = node;
+            this.host = host;
+            this.target = target;
+            // The statement generated by this operation is only used to for the Type Checker
+            // so it can map a reference variable in the template directly to a node in the TCB.
+            this.optional = true;
+        }
+        execute() {
+            const id = this.tcb.allocateId();
+            let initializer = ts.getMutableClone(this.target instanceof Template || this.target instanceof Element ?
+                this.scope.resolve(this.target) :
+                this.scope.resolve(this.host, this.target));
+            // The reference is either to an element, an <ng-template> node, or to a directive on an
+            // element or template.
+            if ((this.target instanceof Element && !this.tcb.env.config.checkTypeOfDomReferences) ||
+                !this.tcb.env.config.checkTypeOfNonDomReferences) {
+                // References to DOM nodes are pinned to 'any' when `checkTypeOfDomReferences` is `false`.
+                // References to `TemplateRef`s and directives are pinned to 'any' when
+                // `checkTypeOfNonDomReferences` is `false`.
+                initializer =
+                    ts.createAsExpression(initializer, ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+            }
+            else if (this.target instanceof Template) {
+                // Direct references to an <ng-template> node simply require a value of type
+                // `TemplateRef<any>`. To get this, an expression of the form
+                // `(_t1 as any as TemplateRef<any>)` is constructed.
+                initializer =
+                    ts.createAsExpression(initializer, ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+                initializer = ts.createAsExpression(initializer, this.tcb.env.referenceExternalType('@angular/core', 'TemplateRef', [DYNAMIC_TYPE]));
+                initializer = ts.createParen(initializer);
+            }
+            addParseSpanInfo(initializer, this.node.sourceSpan);
+            this.scope.addStatement(tsCreateVariable(id, initializer));
             return id;
         }
     }
@@ -32897,6 +33114,8 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute() {
             const id = this.tcb.allocateId();
+            addExpressionIdentifier(id, ExpressionIdentifier.DIRECTIVE);
+            addParseSpanInfo(id, this.node.startSourceSpan || this.node.sourceSpan);
             const genericInputs = new Map();
             const inputs = getBoundInputs(this.dir, this.node, this.tcb);
             for (const input of inputs) {
@@ -32924,7 +33143,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Call the type constructor of the directive to infer a type, and assign the directive
             // instance.
             const typeCtor = tcbCallTypeCtor(this.dir, this.tcb, Array.from(genericInputs.values()));
-            ignoreDiagnostics(typeCtor);
+            markIgnoreDiagnostics(typeCtor);
             this.scope.addStatement(tsCreateVariable(id, typeCtor));
             return id;
         }
@@ -33241,6 +33460,35 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return null;
         }
+        /**
+         * Outputs are a `ts.CallExpression` that look like one of the two:
+         *  - `_outputHelper(_t1["outputField"]).subscribe(handler);`
+         *  - `_t1.addEventListener(handler);`
+         * This method reverses the operations to create a call expression for a directive output.
+         * It unpacks the given call expression and returns the original element access (i.e.
+         * `_t1["outputField"]` in the example above). Returns `null` if the given call expression is not
+         * the expected structure of an output binding
+         */
+        static decodeOutputCallExpression(node) {
+            // `node.expression` === `_outputHelper(_t1["outputField"]).subscribe` or `_t1.addEventListener`
+            if (!ts.isPropertyAccessExpression(node.expression) ||
+                node.expression.name.text === 'addEventListener') {
+                // `addEventListener` outputs do not have an `ElementAccessExpression` for the output field.
+                return null;
+            }
+            if (!ts.isCallExpression(node.expression.expression)) {
+                return null;
+            }
+            // `node.expression.expression` === `_outputHelper(_t1["outputField"])`
+            if (node.expression.expression.arguments.length === 0) {
+                return null;
+            }
+            const [outputFieldAccess] = node.expression.expression.arguments;
+            if (!ts.isElementAccessExpression(outputFieldAccess)) {
+                return null;
+            }
+            return outputFieldAccess;
+        }
     }
     /**
      * A `TcbOp` which generates code to check "unclaimed outputs" - event bindings on an element which
@@ -33388,6 +33636,10 @@ Either add the @Injectable() decorator to '${provider.node.name
              */
             this.directiveOpMap = new Map();
             /**
+             * A map of `TmplAstReference`s to the index of their `TcbReferenceOp` in the `opQueue`
+             */
+            this.referenceOpMap = new Map();
+            /**
              * Map of immediately nested <ng-template>s (within this `Scope`) represented by `TmplAstTemplate`
              * nodes to the index of their `TcbTemplateContextOp`s in the `opQueue`.
              */
@@ -33456,6 +33708,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          * * `TmplAstElement` - retrieve the expression for the element DOM node
          * * `TmplAstTemplate` - retrieve the template context variable
          * * `TmplAstVariable` - retrieve a template let- variable
+         * * `TmplAstReference` - retrieve variable created for the local ref
          *
          * @param directive if present, a directive type on a `TmplAstElement` or `TmplAstTemplate` to
          * look up instead of the default for an element or template node.
@@ -33485,7 +33738,10 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         render() {
             for (let i = 0; i < this.opQueue.length; i++) {
-                this.executeOp(i, /* skipOptional */ true);
+                // Optional statements cannot be skipped when we are generating the TCB for use
+                // by the TemplateTypeChecker.
+                const skipOptional = !this.tcb.env.config.enableTemplateTypeChecker;
+                this.executeOp(i, skipOptional);
             }
             return this.statements;
         }
@@ -33516,7 +33772,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         resolveLocal(ref, directive) {
-            if (ref instanceof Variable && this.varMap.has(ref)) {
+            if (ref instanceof Reference && this.referenceOpMap.has(ref)) {
+                return this.resolveOp(this.referenceOpMap.get(ref));
+            }
+            else if (ref instanceof Variable && this.varMap.has(ref)) {
                 // Resolving a context variable for this template.
                 // Execute the `TcbVariableOp` associated with the `TmplAstVariable`.
                 return this.resolveOp(this.varMap.get(ref));
@@ -33589,28 +33848,39 @@ Either add the @Injectable() decorator to '${provider.node.name
                 for (const child of node.children) {
                     this.appendNode(child);
                 }
-                this.checkReferencesOfNode(node);
+                this.checkAndAppendReferencesOfNode(node);
             }
             else if (node instanceof Template) {
                 // Template children are rendered in a child scope.
                 this.appendDirectivesAndInputsOfNode(node);
                 this.appendOutputsOfNode(node);
+                const ctxIndex = this.opQueue.push(new TcbTemplateContextOp(this.tcb, this)) - 1;
+                this.templateCtxOpMap.set(node, ctxIndex);
                 if (this.tcb.env.config.checkTemplateBodies) {
-                    const ctxIndex = this.opQueue.push(new TcbTemplateContextOp(this.tcb, this)) - 1;
-                    this.templateCtxOpMap.set(node, ctxIndex);
                     this.opQueue.push(new TcbTemplateBodyOp(this.tcb, this, node));
                 }
-                this.checkReferencesOfNode(node);
+                this.checkAndAppendReferencesOfNode(node);
             }
             else if (node instanceof BoundText) {
                 this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, node));
             }
         }
-        checkReferencesOfNode(node) {
+        checkAndAppendReferencesOfNode(node) {
             for (const ref of node.references) {
-                if (this.tcb.boundTarget.getReferenceTarget(ref) === null) {
+                const target = this.tcb.boundTarget.getReferenceTarget(ref);
+                if (target === null) {
                     this.tcb.oobRecorder.missingReferenceTarget(this.tcb.id, ref);
+                    continue;
                 }
+                let ctxIndex;
+                if (target instanceof Template || target instanceof Element) {
+                    ctxIndex = this.opQueue.push(new TcbReferenceOp(this.tcb, this, ref, node, target)) - 1;
+                }
+                else {
+                    ctxIndex =
+                        this.opQueue.push(new TcbReferenceOp(this.tcb, this, ref, node, target.directive)) - 1;
+                }
+                this.referenceOpMap.set(ref, ctxIndex);
             }
         }
         appendDirectivesAndInputsOfNode(node) {
@@ -33829,59 +34099,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (binding === null) {
                 return null;
             }
-            // This expression has a binding to some variable or reference in the template. Resolve it.
-            if (binding instanceof Variable) {
-                const expr = ts.getMutableClone(this.scope.resolve(binding));
-                addParseSpanInfo(expr, ast.sourceSpan);
-                return expr;
-            }
-            else if (binding instanceof Reference) {
-                const target = this.tcb.boundTarget.getReferenceTarget(binding);
-                if (target === null) {
-                    // This reference is unbound. Traversal of the `TmplAstReference` itself should have
-                    // recorded the error in the `OutOfBandDiagnosticRecorder`.
-                    // Still check the rest of the expression if possible by using an `any` value.
-                    return NULL_AS_ANY;
-                }
-                // The reference is either to an element, an <ng-template> node, or to a directive on an
-                // element or template.
-                if (target instanceof Element) {
-                    if (!this.tcb.env.config.checkTypeOfDomReferences) {
-                        // References to DOM nodes are pinned to 'any'.
-                        return NULL_AS_ANY;
-                    }
-                    const expr = ts.getMutableClone(this.scope.resolve(target));
-                    addParseSpanInfo(expr, ast.sourceSpan);
-                    return expr;
-                }
-                else if (target instanceof Template) {
-                    if (!this.tcb.env.config.checkTypeOfNonDomReferences) {
-                        // References to `TemplateRef`s pinned to 'any'.
-                        return NULL_AS_ANY;
-                    }
-                    // Direct references to an <ng-template> node simply require a value of type
-                    // `TemplateRef<any>`. To get this, an expression of the form
-                    // `(null as any as TemplateRef<any>)` is constructed.
-                    let value = ts.createNull();
-                    value = ts.createAsExpression(value, ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
-                    value = ts.createAsExpression(value, this.tcb.env.referenceExternalType('@angular/core', 'TemplateRef', [DYNAMIC_TYPE]));
-                    value = ts.createParen(value);
-                    addParseSpanInfo(value, ast.sourceSpan);
-                    return value;
-                }
-                else {
-                    if (!this.tcb.env.config.checkTypeOfNonDomReferences) {
-                        // References to directives are pinned to 'any'.
-                        return NULL_AS_ANY;
-                    }
-                    const expr = ts.getMutableClone(this.scope.resolve(target.node, target.directive));
-                    addParseSpanInfo(expr, ast.sourceSpan);
-                    return expr;
-                }
-            }
-            else {
-                throw new Error(`Unreachable: ${binding}`);
-            }
+            const expr = ts.getMutableClone(this.scope.resolve(binding));
+            addParseSpanInfo(expr, ast.sourceSpan);
+            return expr;
         }
     }
     /**
@@ -34562,6 +34782,322 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * A class which extracts information from a type check block.
+     * This class is essentially used as just a closure around the constructor parameters.
+     */
+    class SymbolBuilder {
+        constructor(typeChecker, shimPath, typeCheckBlock, templateData) {
+            this.typeChecker = typeChecker;
+            this.shimPath = shimPath;
+            this.typeCheckBlock = typeCheckBlock;
+            this.templateData = templateData;
+        }
+        getSymbol(node) {
+            if (node instanceof BoundAttribute) {
+                // TODO(atscott): input and output bindings only return the first directive match but should
+                // return a list of bindings for all of them.
+                return this.getSymbolOfInputBinding(node);
+            }
+            else if (node instanceof BoundEvent) {
+                return this.getSymbolOfBoundEvent(node);
+            }
+            else if (node instanceof Element) {
+                return this.getSymbolOfElement(node);
+            }
+            else if (node instanceof Template) {
+                return this.getSymbolOfAstTemplate(node);
+            }
+            else if (node instanceof Variable) {
+                return this.getSymbolOfVariable(node);
+            }
+            else if (node instanceof Reference) {
+                return this.getSymbolOfReference(node);
+            }
+            else if (node instanceof AST) {
+                return this.getSymbolOfTemplateExpression(node);
+            }
+            // TODO(atscott): TmplAstContent, TmplAstIcu
+            return null;
+        }
+        getSymbolOfAstTemplate(template) {
+            const directives = this.getDirectivesOfNode(template);
+            return { kind: SymbolKind.Template, directives };
+        }
+        getSymbolOfElement(element) {
+            var _a;
+            const elementSourceSpan = (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan;
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: ts.isVariableDeclaration });
+            if (node === null) {
+                return null;
+            }
+            const symbolFromDeclaration = this.getSymbolOfVariableDeclaration(node);
+            if (symbolFromDeclaration === null || symbolFromDeclaration.tsSymbol === null) {
+                return null;
+            }
+            const directives = this.getDirectivesOfNode(element);
+            // All statements in the TCB are `Expression`s that optionally include more information.
+            // An `ElementSymbol` uses the information returned for the variable declaration expression,
+            // adds the directives for the element, and updates the `kind` to be `SymbolKind.Element`.
+            return Object.assign(Object.assign({}, symbolFromDeclaration), { kind: SymbolKind.Element, directives });
+        }
+        getDirectivesOfNode(element) {
+            var _a;
+            const elementSourceSpan = (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan;
+            const tcbSourceFile = this.typeCheckBlock.getSourceFile();
+            const isDirectiveDeclaration = (node) => ts.isTypeNode(node) &&
+                hasExpressionIdentifier(tcbSourceFile, node, ExpressionIdentifier.DIRECTIVE);
+            const nodes = findAllMatchingNodes(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: isDirectiveDeclaration });
+            return nodes
+                .map(node => {
+                const symbol = this.getSymbolOfTsNode(node);
+                if (symbol === null || symbol.tsSymbol === null) {
+                    return null;
+                }
+                const directiveSymbol = Object.assign(Object.assign({}, symbol), { tsSymbol: symbol.tsSymbol, kind: SymbolKind.Directive });
+                return directiveSymbol;
+            })
+                .filter((d) => d !== null);
+        }
+        getSymbolOfBoundEvent(eventBinding) {
+            // Outputs are a `ts.CallExpression` that look like one of the two:
+            // * _outputHelper(_t1["outputField"]).subscribe(handler);
+            // * _t1.addEventListener(handler);
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: eventBinding.sourceSpan, filter: ts.isCallExpression });
+            if (node === null) {
+                return null;
+            }
+            const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
+            if (consumer instanceof Template || consumer instanceof Element) {
+                // Bindings to element or template events produce `addEventListener` which
+                // we cannot get the field for.
+                return null;
+            }
+            const outputFieldAccess = TcbDirectiveOutputsOp.decodeOutputCallExpression(node);
+            if (outputFieldAccess === null) {
+                return null;
+            }
+            const tsSymbol = this.typeChecker.getSymbolAtLocation(outputFieldAccess.argumentExpression);
+            if (tsSymbol === undefined) {
+                return null;
+            }
+            const target = this.getDirectiveSymbolForAccessExpression(outputFieldAccess);
+            if (target === null) {
+                return null;
+            }
+            const positionInShimFile = outputFieldAccess.argumentExpression.getStart();
+            const tsType = this.typeChecker.getTypeAtLocation(node);
+            return {
+                kind: SymbolKind.Output,
+                bindings: [{
+                        kind: SymbolKind.Binding,
+                        tsSymbol,
+                        tsType,
+                        target,
+                        shimLocation: { shimPath: this.shimPath, positionInShimFile },
+                    }],
+            };
+        }
+        getSymbolOfInputBinding(attributeBinding) {
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: attributeBinding.sourceSpan, filter: isAssignment });
+            if (node === null) {
+                return null;
+            }
+            let tsSymbol;
+            let positionInShimFile = null;
+            let tsType;
+            if (ts.isElementAccessExpression(node.left)) {
+                tsSymbol = this.typeChecker.getSymbolAtLocation(node.left.argumentExpression);
+                positionInShimFile = node.left.argumentExpression.getStart();
+                tsType = this.typeChecker.getTypeAtLocation(node.left.argumentExpression);
+            }
+            else if (ts.isPropertyAccessExpression(node.left)) {
+                tsSymbol = this.typeChecker.getSymbolAtLocation(node.left.name);
+                positionInShimFile = node.left.name.getStart();
+                tsType = this.typeChecker.getTypeAtLocation(node.left.name);
+            }
+            else {
+                return null;
+            }
+            if (tsSymbol === undefined || positionInShimFile === null) {
+                return null;
+            }
+            const consumer = this.templateData.boundTarget.getConsumerOfBinding(attributeBinding);
+            let target;
+            if (consumer instanceof Template || consumer instanceof Element) {
+                target = this.getSymbol(consumer);
+            }
+            else {
+                target = this.getDirectiveSymbolForAccessExpression(node.left);
+            }
+            if (target === null) {
+                return null;
+            }
+            return {
+                kind: SymbolKind.Input,
+                bindings: [{
+                        kind: SymbolKind.Binding,
+                        tsSymbol,
+                        tsType,
+                        target,
+                        shimLocation: { shimPath: this.shimPath, positionInShimFile },
+                    }],
+            };
+        }
+        getDirectiveSymbolForAccessExpression(node) {
+            var _a;
+            // In either case, `_t1["index"]` or `_t1.index`, `node.expression` is _t1.
+            // The retrieved symbol for _t1 will be the variable declaration.
+            const tsSymbol = this.typeChecker.getSymbolAtLocation(node.expression);
+            if (tsSymbol === undefined || tsSymbol.declarations.length === 0) {
+                return null;
+            }
+            const [declaration] = tsSymbol.declarations;
+            if (!ts.isVariableDeclaration(declaration) ||
+                !hasExpressionIdentifier(
+                // The expression identifier could be on the type (for regular directives) or the name
+                // (for generic directives and the ctor op).
+                declaration.getSourceFile(), (_a = declaration.type) !== null && _a !== void 0 ? _a : declaration.name, ExpressionIdentifier.DIRECTIVE)) {
+                return null;
+            }
+            const symbol = this.getSymbolOfVariableDeclaration(declaration);
+            if (symbol === null || symbol.tsSymbol === null) {
+                return null;
+            }
+            return {
+                kind: SymbolKind.Directive,
+                tsSymbol: symbol.tsSymbol,
+                tsType: symbol.tsType,
+                shimLocation: symbol.shimLocation,
+            };
+        }
+        getSymbolOfVariable(variable) {
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: variable.sourceSpan, filter: ts.isVariableDeclaration });
+            if (node === null) {
+                return null;
+            }
+            const expressionSymbol = this.getSymbolOfVariableDeclaration(node);
+            if (expressionSymbol === null) {
+                return null;
+            }
+            return Object.assign(Object.assign({}, expressionSymbol), { kind: SymbolKind.Variable, declaration: variable });
+        }
+        getSymbolOfReference(ref) {
+            const target = this.templateData.boundTarget.getReferenceTarget(ref);
+            // Find the node for the reference declaration, i.e. `var _t2 = _t1;`
+            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: ref.sourceSpan, filter: ts.isVariableDeclaration });
+            if (node === null || target === null || node.initializer === undefined) {
+                return null;
+            }
+            // TODO(atscott): Shim location will need to be adjusted
+            const symbol = this.getSymbolOfTsNode(node.name);
+            if (symbol === null || symbol.tsSymbol === null) {
+                return null;
+            }
+            if (target instanceof Template || target instanceof Element) {
+                return Object.assign(Object.assign({}, symbol), { tsSymbol: symbol.tsSymbol, kind: SymbolKind.Reference, target, declaration: ref });
+            }
+            else {
+                if (!ts.isClassDeclaration(target.directive.ref.node)) {
+                    return null;
+                }
+                return Object.assign(Object.assign({}, symbol), { kind: SymbolKind.Reference, tsSymbol: symbol.tsSymbol, declaration: ref, target: target.directive.ref.node });
+            }
+        }
+        getSymbolOfTemplateExpression(expression) {
+            if (expression instanceof ASTWithSource) {
+                expression = expression.ast;
+            }
+            const expressionTarget = this.templateData.boundTarget.getExpressionTarget(expression);
+            if (expressionTarget !== null) {
+                return this.getSymbol(expressionTarget);
+            }
+            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: expression.sourceSpan, filter: (n) => true });
+            if (node === null) {
+                return null;
+            }
+            while (ts.isParenthesizedExpression(node)) {
+                node = node.expression;
+            }
+            // - If we have safe property read ("a?.b") we want to get the Symbol for b, the `whenTrue`
+            // expression.
+            // - If our expression is a pipe binding ("a | test:b:c"), we want the Symbol for the
+            // `transform` on the pipe.
+            // - Otherwise, we retrieve the symbol for the node itself with no special considerations
+            if ((expression instanceof SafePropertyRead || expression instanceof SafeMethodCall) &&
+                ts.isConditionalExpression(node)) {
+                const whenTrueSymbol = (expression instanceof SafeMethodCall && ts.isCallExpression(node.whenTrue)) ?
+                    this.getSymbolOfTsNode(node.whenTrue.expression) :
+                    this.getSymbolOfTsNode(node.whenTrue);
+                if (whenTrueSymbol === null) {
+                    return null;
+                }
+                return Object.assign(Object.assign({}, whenTrueSymbol), { kind: SymbolKind.Expression, 
+                    // Rather than using the type of only the `whenTrue` part of the expression, we should
+                    // still get the type of the whole conditional expression to include `|undefined`.
+                    tsType: this.typeChecker.getTypeAtLocation(node) });
+            }
+            else if (expression instanceof BindingPipe && ts.isCallExpression(node)) {
+                // TODO(atscott): Create a PipeSymbol to include symbol for the Pipe class
+                const symbolInfo = this.getSymbolOfTsNode(node.expression);
+                return symbolInfo === null ? null : Object.assign(Object.assign({}, symbolInfo), { kind: SymbolKind.Expression });
+            }
+            else {
+                const symbolInfo = this.getSymbolOfTsNode(node);
+                return symbolInfo === null ? null : Object.assign(Object.assign({}, symbolInfo), { kind: SymbolKind.Expression });
+            }
+        }
+        getSymbolOfTsNode(node) {
+            var _a;
+            while (ts.isParenthesizedExpression(node)) {
+                node = node.expression;
+            }
+            let tsSymbol;
+            let positionInShimFile;
+            if (ts.isPropertyAccessExpression(node)) {
+                tsSymbol = this.typeChecker.getSymbolAtLocation(node.name);
+                positionInShimFile = node.name.getStart();
+            }
+            else {
+                tsSymbol = this.typeChecker.getSymbolAtLocation(node);
+                positionInShimFile = node.getStart();
+            }
+            const type = this.typeChecker.getTypeAtLocation(node);
+            return {
+                // If we could not find a symbol, fall back to the symbol on the type for the node.
+                // Some nodes won't have a "symbol at location" but will have a symbol for the type.
+                // One example of this would be literals.
+                tsSymbol: (_a = tsSymbol !== null && tsSymbol !== void 0 ? tsSymbol : type.symbol) !== null && _a !== void 0 ? _a : null,
+                tsType: type,
+                shimLocation: { shimPath: this.shimPath, positionInShimFile },
+            };
+        }
+        getSymbolOfVariableDeclaration(declaration) {
+            // Instead of returning the Symbol for the temporary variable, we want to get the `ts.Symbol`
+            // for:
+            // - The type reference for `var _t2: MyDir = xyz` (prioritize/trust the declared type)
+            // - The initializer for `var _t2 = _t1.index`.
+            if (declaration.type && ts.isTypeReferenceNode(declaration.type)) {
+                return this.getSymbolOfTsNode(declaration.type.typeName);
+            }
+            if (declaration.initializer === undefined) {
+                return null;
+            }
+            const symbol = this.getSymbolOfTsNode(declaration.initializer);
+            if (symbol === null) {
+                return null;
+            }
+            return symbol;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Primary template type-checking engine, which performs type-checking using a
      * `TypeCheckingProgramStrategy` for type-checking program maintenance, and the
      * `ProgramTypeCheckAdapter` for generation of template type-checking code.
@@ -34589,20 +35125,27 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         getTemplate(component) {
+            const templateData = this.getTemplateData(component);
+            if (templateData === null) {
+                return null;
+            }
+            return templateData.template;
+        }
+        getTemplateData(component) {
             this.ensureShimForComponent(component);
             const sf = component.getSourceFile();
             const sfPath = absoluteFromSourceFile(sf);
             const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
             const fileRecord = this.getFileData(sfPath);
             if (!fileRecord.shimData.has(shimPath)) {
-                return [];
+                return null;
             }
             const templateId = fileRecord.sourceManager.getTemplateId(component);
             const shimRecord = fileRecord.shimData.get(shimPath);
             if (!shimRecord.templates.has(templateId)) {
                 return null;
             }
-            return shimRecord.templates.get(templateId).template;
+            return shimRecord.templates.get(templateId);
         }
         overrideComponentTemplate(component, template) {
             const { nodes, errors } = parseTemplate(template, 'override.html', {
@@ -34812,6 +35355,19 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return this.state.get(path);
         }
+        getSymbolOfNode(node, component) {
+            const tcb = this.getTypeCheckBlock(component);
+            if (tcb === null) {
+                return null;
+            }
+            const typeChecker = this.typeCheckingStrategy.getProgram().getTypeChecker();
+            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+            const data = this.getTemplateData(component);
+            if (data === null) {
+                return null;
+            }
+            return new SymbolBuilder(typeChecker, shimPath, tcb, data).getSymbol(node);
+        }
     }
     function convertDiagnostic(diag, sourceResolver) {
         if (!shouldReportDiagnostic(diag)) {
@@ -34962,12 +35518,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      * See the README.md for more information.
      */
     class NgCompiler {
-        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, oldProgram = null, perfRecorder = NOOP_PERF_RECORDER) {
+        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, enableTemplateTypeChecker, oldProgram = null, perfRecorder = NOOP_PERF_RECORDER) {
             this.adapter = adapter;
             this.options = options;
             this.tsProgram = tsProgram;
             this.typeCheckingProgramStrategy = typeCheckingProgramStrategy;
             this.incrementalStrategy = incrementalStrategy;
+            this.enableTemplateTypeChecker = enableTemplateTypeChecker;
             this.perfRecorder = perfRecorder;
             /**
              * Lazily evaluated state of the compilation.
@@ -35086,6 +35643,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.nextProgram;
         }
         getTemplateTypeChecker() {
+            if (!this.enableTemplateTypeChecker) {
+                throw new Error('The `TemplateTypeChecker` does not work without `enableTemplateTypeChecker`.');
+            }
             return this.ensureAnalyzed().templateTypeChecker;
         }
         /**
@@ -35278,6 +35838,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     strictSafeNavigationTypes: strictTemplates,
                     useContextGenericType: strictTemplates,
                     strictLiteralTypes: true,
+                    enableTemplateTypeChecker: this.enableTemplateTypeChecker,
                 };
             }
             else {
@@ -35299,6 +35860,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     strictSafeNavigationTypes: false,
                     useContextGenericType: false,
                     strictLiteralTypes: false,
+                    enableTemplateTypeChecker: this.enableTemplateTypeChecker,
                 };
             }
             // Apply explicitly configured strictness flags on top of the default configuration
@@ -35709,7 +36271,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             throw new Error('Ivy LS currently does not support external template');
         }
         createCompiler(program) {
-            return new NgCompiler(this.adapter, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), this.lastKnownProgram);
+            return new NgCompiler(this.adapter, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), 
+            /** enableTemplateTypeChecker */ true, this.lastKnownProgram, 
+            /** perfRecorder (use default) */ undefined);
         }
         watchConfigFile(project) {
             // TODO: Check the case when the project is disposed. An InferredProject
