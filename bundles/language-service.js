@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.1+5.sha-7669bd8
+ * @license Angular v10.1.1+9.sha-edb7f90
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17841,7 +17841,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.1+5.sha-7669bd8');
+    const VERSION$1 = new Version('10.1.1+9.sha-edb7f90');
 
     /**
      * @license
@@ -30881,6 +30881,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // would be cleared and the counter decremented), we need to decrement the view counter here
         // instead.
         if (lView[FLAGS] & 1024 /* RefreshTransplantedView */) {
+            lView[FLAGS] &= ~1024 /* RefreshTransplantedView */;
             updateTransplantedViewCount(insertionLContainer, -1);
         }
         movedViews.splice(declarationViewIndex, 1);
@@ -33822,7 +33823,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.1+5.sha-7669bd8');
+    const VERSION$2 = new Version$1('10.1.1+9.sha-edb7f90');
 
     /**
      * @license
@@ -34036,7 +34037,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _reset() {
             if (this.isDirty) {
                 let record;
-                let nextRecord;
                 for (record = this._previousItHead = this._itHead; record !== null; record = record._next) {
                     record._nextPrevious = record._next;
                 }
@@ -34044,9 +34044,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     record.previousIndex = record.currentIndex;
                 }
                 this._additionsHead = this._additionsTail = null;
-                for (record = this._movesHead; record !== null; record = nextRecord) {
+                for (record = this._movesHead; record !== null; record = record._nextMoved) {
                     record.previousIndex = record.currentIndex;
-                    nextRecord = record._nextMoved;
                 }
                 this._movesHead = this._movesTail = null;
                 this._removalsHead = this._removalsTail = null;
