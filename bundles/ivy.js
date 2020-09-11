@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.1+26.sha-66129f8
+ * @license Angular v11.0.0-next.1+27.sha-15207e3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19066,7 +19066,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.1+26.sha-66129f8');
+    const VERSION$1 = new Version('11.0.0-next.1+27.sha-15207e3');
 
     /**
      * @license
@@ -19542,7 +19542,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitText(text) { }
         visitContent(content) { }
         visitTextAttribute(attribute) { }
-        visitIcu(icu) { }
+        visitIcu(icu) {
+            Object.keys(icu.vars).forEach(key => icu.vars[key].visit(this));
+            Object.keys(icu.placeholders).forEach(key => icu.placeholders[key].visit(this));
+        }
         // The remaining visitors are concerned with processing AST expressions within template bindings
         visitBoundAttribute(attribute) {
             attribute.value.visit(this);
@@ -19656,7 +19659,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.1+26.sha-66129f8');
+    const VERSION$2 = new Version('11.0.0-next.1+27.sha-15207e3');
 
     /**
      * @license
