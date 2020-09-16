@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.2+11.sha-722699f
+ * @license Angular v11.0.0-next.2+13.sha-dd8d8c8
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19066,7 +19066,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.2+11.sha-722699f');
+    const VERSION$1 = new Version('11.0.0-next.2+13.sha-dd8d8c8');
 
     /**
      * @license
@@ -19659,7 +19659,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.2+11.sha-722699f');
+    const VERSION$2 = new Version('11.0.0-next.2+13.sha-dd8d8c8');
 
     /**
      * @license
@@ -33104,9 +33104,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute() {
             const id = this.tcb.allocateId();
-            let initializer = ts.getMutableClone(this.target instanceof Template || this.target instanceof Element ?
+            let initializer = this.target instanceof Template || this.target instanceof Element ?
                 this.scope.resolve(this.target) :
-                this.scope.resolve(this.host, this.target));
+                this.scope.resolve(this.host, this.target);
             // The reference is either to an element, an <ng-template> node, or to a directive on an
             // element or template.
             if ((this.target instanceof Element && !this.tcb.env.config.checkTypeOfDomReferences) ||
@@ -33742,7 +33742,8 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         /**
          * Look up a `ts.Expression` representing the value of some operation in the current `Scope`,
-         * including any parent scope(s).
+         * including any parent scope(s). This method always returns a mutable clone of the
+         * `ts.Expression` with the comments cleared.
          *
          * @param node a `TmplAstNode` of the operation in question. The lookup performed will depend on
          * the type of this node:
@@ -33761,7 +33762,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Attempt to resolve the operation locally.
             const res = this.resolveLocal(node, directive);
             if (res !== null) {
-                return res;
+                // We want to get a clone of the resolved expression and clear the trailing comments
+                // so they don't continue to appear in every place the expression is used.
+                // As an example, this would otherwise produce:
+                // var _t1 /**T:DIR*/ /*1,2*/ = _ctor1();
+                // _t1 /**T:DIR*/ /*1,2*/.input = 'value';
+                //
+                // In addition, returning a clone prevents the consumer of `Scope#resolve` from
+                // attaching comments at the declaration site.
+                const clone = ts.getMutableClone(res);
+                ts.setSyntheticTrailingComments(clone, []);
+                return clone;
             }
             else if (this.parent !== null) {
                 // Check with the parent.
@@ -34143,7 +34154,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (binding === null) {
                 return null;
             }
-            const expr = ts.getMutableClone(this.scope.resolve(binding));
+            const expr = this.scope.resolve(binding);
             addParseSpanInfo(expr, ast.sourceSpan);
             return expr;
         }
