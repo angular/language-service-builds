@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.2+17.sha-02c6bff
+ * @license Angular v11.0.0-next.2+21.sha-d3169c5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -924,11 +924,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         TypeModifier[TypeModifier["Const"] = 0] = "Const";
     })(TypeModifier || (TypeModifier = {}));
     class Type$1 {
-        constructor(modifiers = null) {
+        constructor(modifiers = []) {
             this.modifiers = modifiers;
-            if (!modifiers) {
-                this.modifiers = [];
-            }
         }
         hasModifier(modifier) {
             return this.modifiers.indexOf(modifier) !== -1;
@@ -946,7 +943,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         BuiltinTypeName[BuiltinTypeName["None"] = 7] = "None";
     })(BuiltinTypeName || (BuiltinTypeName = {}));
     class BuiltinType extends Type$1 {
-        constructor(name, modifiers = null) {
+        constructor(name, modifiers) {
             super(modifiers);
             this.name = name;
         }
@@ -955,7 +952,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class ExpressionType extends Type$1 {
-        constructor(value, modifiers = null, typeParams = null) {
+        constructor(value, modifiers, typeParams = null) {
             super(modifiers);
             this.value = value;
             this.typeParams = typeParams;
@@ -1515,7 +1512,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitExpression(visitor, context) {
             return visitor.visitFunctionExpr(this, context);
         }
-        toDeclStmt(name, modifiers = null) {
+        toDeclStmt(name, modifiers) {
             return new DeclareFunctionStmt(name, this.params, this.statements, this.type, modifiers, this.sourceSpan);
         }
     }
@@ -1654,18 +1651,43 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         StmtModifier[StmtModifier["Exported"] = 2] = "Exported";
         StmtModifier[StmtModifier["Static"] = 3] = "Static";
     })(StmtModifier || (StmtModifier = {}));
+    class LeadingComment {
+        constructor(text, multiline, trailingNewline) {
+            this.text = text;
+            this.multiline = multiline;
+            this.trailingNewline = trailingNewline;
+        }
+        toString() {
+            return this.multiline ? ` ${this.text} ` : this.text;
+        }
+    }
+    class JSDocComment extends LeadingComment {
+        constructor(tags) {
+            super('', /* multiline */ true, /* trailingNewline */ true);
+            this.tags = tags;
+        }
+        toString() {
+            return serializeTags(this.tags);
+        }
+    }
     class Statement {
-        constructor(modifiers, sourceSpan) {
-            this.modifiers = modifiers || [];
-            this.sourceSpan = sourceSpan || null;
+        constructor(modifiers = [], sourceSpan = null, leadingComments) {
+            this.modifiers = modifiers;
+            this.sourceSpan = sourceSpan;
+            this.leadingComments = leadingComments;
         }
         hasModifier(modifier) {
             return this.modifiers.indexOf(modifier) !== -1;
         }
+        addLeadingComment(leadingComment) {
+            var _a;
+            this.leadingComments = (_a = this.leadingComments) !== null && _a !== void 0 ? _a : [];
+            this.leadingComments.push(leadingComment);
+        }
     }
     class DeclareVarStmt extends Statement {
-        constructor(name, value, type, modifiers = null, sourceSpan) {
-            super(modifiers, sourceSpan);
+        constructor(name, value, type, modifiers, sourceSpan, leadingComments) {
+            super(modifiers, sourceSpan, leadingComments);
             this.name = name;
             this.value = value;
             this.type = type || (value && value.type) || null;
@@ -1679,8 +1701,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class DeclareFunctionStmt extends Statement {
-        constructor(name, params, statements, type, modifiers = null, sourceSpan) {
-            super(modifiers, sourceSpan);
+        constructor(name, params, statements, type, modifiers, sourceSpan, leadingComments) {
+            super(modifiers, sourceSpan, leadingComments);
             this.name = name;
             this.params = params;
             this.statements = statements;
@@ -1695,8 +1717,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class ExpressionStatement extends Statement {
-        constructor(expr, sourceSpan) {
-            super(null, sourceSpan);
+        constructor(expr, sourceSpan, leadingComments) {
+            super([], sourceSpan, leadingComments);
             this.expr = expr;
         }
         isEquivalent(stmt) {
@@ -1707,8 +1729,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class ReturnStatement extends Statement {
-        constructor(value, sourceSpan) {
-            super(null, sourceSpan);
+        constructor(value, sourceSpan = null, leadingComments) {
+            super([], sourceSpan, leadingComments);
             this.value = value;
         }
         isEquivalent(stmt) {
@@ -1719,8 +1741,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class IfStmt extends Statement {
-        constructor(condition, trueCase, falseCase = [], sourceSpan) {
-            super(null, sourceSpan);
+        constructor(condition, trueCase, falseCase = [], sourceSpan, leadingComments) {
+            super([], sourceSpan, leadingComments);
             this.condition = condition;
             this.trueCase = trueCase;
             this.falseCase = falseCase;
@@ -1734,20 +1756,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitIfStmt(this, context);
         }
     }
-    class JSDocCommentStmt extends Statement {
-        constructor(tags = [], sourceSpan) {
-            super(null, sourceSpan);
-            this.tags = tags;
-        }
-        isEquivalent(stmt) {
-            return stmt instanceof JSDocCommentStmt && this.toString() === stmt.toString();
-        }
-        visitStatement(visitor, context) {
-            return visitor.visitJSDocCommentStmt(this, context);
-        }
-        toString() {
-            return serializeTags(this.tags);
-        }
+    function jsDocComment(tags = []) {
+        return new JSDocComment(tags);
     }
     function variable(name, type, sourceSpan) {
         return new ReadVarExpr(name, type, sourceSpan);
@@ -1755,7 +1765,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function importExpr(id, typeParams = null, sourceSpan) {
         return new ExternalExpr(id, null, typeParams, sourceSpan);
     }
-    function expressionType(expr, typeModifiers = null, typeParams = null) {
+    function expressionType(expr, typeModifiers, typeParams) {
         return new ExpressionType(expr, typeModifiers, typeParams);
     }
     function typeofExpr(expr) {
@@ -1776,8 +1786,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function fn(params, body, type, sourceSpan, name) {
         return new FunctionExpr(params, body, type, sourceSpan, name);
     }
-    function ifStmt(condition, thenClause, elseClause) {
-        return new IfStmt(condition, thenClause, elseClause);
+    function ifStmt(condition, thenClause, elseClause, sourceSpan, leadingComments) {
+        return new IfStmt(condition, thenClause, elseClause, sourceSpan, leadingComments);
     }
     function literal(value, type, sourceSpan) {
         return new LiteralExpr(value, type, sourceSpan);
@@ -1808,10 +1818,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function serializeTags(tags) {
         if (tags.length === 0)
             return '';
+        if (tags.length === 1 && tags[0].tagName && !tags[0].text) {
+            // The JSDOC comment is a single simple tag: e.g `/** @tagname */`.
+            return `*${tagToString(tags[0])} `;
+        }
         let out = '*\n';
         for (const tag of tags) {
             out += ' *';
-            // If the tagToString is multi-line, insert " * " prefixes on subsequent lines.
+            // If the tagToString is multi-line, insert " * " prefixes on lines.
             out += tagToString(tag).replace(/\n/g, '\n * ');
             out += '\n';
         }
@@ -3072,14 +3086,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return literalMap(result);
     }
     function typeWithParameters(type, numParams) {
-        let params = null;
-        if (numParams > 0) {
-            params = [];
-            for (let i = 0; i < numParams; i++) {
-                params.push(DYNAMIC_TYPE);
-            }
+        if (numParams === 0) {
+            return expressionType(type);
         }
-        return expressionType(type, null, params);
+        const params = [];
+        for (let i = 0; i < numParams; i++) {
+            params.push(DYNAMIC_TYPE);
+        }
+        return expressionType(type, undefined, params);
     }
     const ANIMATE_SYMBOL_PREFIX = '@';
     function prepareSyntheticPropertyName(name) {
@@ -3870,7 +3884,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param variable the name of the variable to declare.
      */
     function declareI18nVariable(variable) {
-        return new DeclareVarStmt(variable.name, undefined, INFERRED_TYPE, null, variable.sourceSpan);
+        return new DeclareVarStmt(variable.name, undefined, INFERRED_TYPE, undefined, variable.sourceSpan);
     }
 
     /**
@@ -4758,18 +4772,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         constructor(_escapeDollarInStrings) {
             this._escapeDollarInStrings = _escapeDollarInStrings;
         }
+        printLeadingComments(stmt, ctx) {
+            if (stmt.leadingComments === undefined) {
+                return;
+            }
+            for (const comment of stmt.leadingComments) {
+                if (comment instanceof JSDocComment) {
+                    ctx.print(stmt, `/*${comment.toString()}*/`, comment.trailingNewline);
+                }
+                else {
+                    if (comment.multiline) {
+                        ctx.print(stmt, `/* ${comment.text} */`, comment.trailingNewline);
+                    }
+                    else {
+                        comment.text.split('\n').forEach((line) => {
+                            ctx.println(stmt, `// ${line}`);
+                        });
+                    }
+                }
+            }
+        }
         visitExpressionStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
             stmt.expr.visitExpression(this, ctx);
             ctx.println(stmt, ';');
             return null;
         }
         visitReturnStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
             ctx.print(stmt, `return `);
             stmt.value.visitExpression(this, ctx);
             ctx.println(stmt, ';');
             return null;
         }
         visitIfStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
             ctx.print(stmt, `if (`);
             stmt.condition.visitExpression(this, ctx);
             ctx.print(stmt, `) {`);
@@ -4796,24 +4833,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return null;
         }
         visitThrowStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
             ctx.print(stmt, `throw `);
             stmt.error.visitExpression(this, ctx);
             ctx.println(stmt, `;`);
-            return null;
-        }
-        visitCommentStmt(stmt, ctx) {
-            if (stmt.multiline) {
-                ctx.println(stmt, `/* ${stmt.comment} */`);
-            }
-            else {
-                stmt.comment.split('\n').forEach((line) => {
-                    ctx.println(stmt, `// ${line}`);
-                });
-            }
-            return null;
-        }
-        visitJSDocCommentStmt(stmt, ctx) {
-            ctx.println(stmt, `/*${stmt.toString()}*/`);
             return null;
         }
         visitWriteVarExpr(expr, ctx) {
@@ -15122,7 +15145,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     // Converts i18n meta information for a message (id, description, meaning)
     // to a JsDoc statement formatted as expected by the Closure compiler.
-    function i18nMetaToDocStmt(meta) {
+    function i18nMetaToJSDoc(meta) {
         const tags = [];
         if (meta.description) {
             tags.push({ tagName: "desc" /* Desc */, text: meta.description });
@@ -15130,7 +15153,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (meta.meaning) {
             tags.push({ tagName: "meaning" /* Meaning */, text: meta.meaning });
         }
-        return tags.length == 0 ? null : new JSDocCommentStmt(tags);
+        return tags.length == 0 ? null : jsDocComment(tags);
     }
 
     /** Closure uses `goog.getMsg(message)` to lookup translations */
@@ -15147,14 +15170,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         //  */
         // const MSG_... = goog.getMsg(..);
         // I18N_X = MSG_...;
-        const statements = [];
-        const jsdocComment = i18nMetaToDocStmt(message);
-        if (jsdocComment !== null) {
-            statements.push(jsdocComment);
+        const googGetMsgStmt = closureVar.set(variable(GOOG_GET_MSG).callFn(args)).toConstDecl();
+        const metaComment = i18nMetaToJSDoc(message);
+        if (metaComment !== null) {
+            googGetMsgStmt.addLeadingComment(metaComment);
         }
-        statements.push(closureVar.set(variable(GOOG_GET_MSG).callFn(args)).toConstDecl());
-        statements.push(new ExpressionStatement(variable$1.set(closureVar)));
-        return statements;
+        const i18nAssignmentStmt = new ExpressionStatement(variable$1.set(closureVar));
+        return [googGetMsgStmt, i18nAssignmentStmt];
     }
     /**
      * This visitor walks over i18n tree and generates its string representation, including ICUs and
@@ -16009,7 +16031,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // template definition. e.g. <div *ngIf="showing">{{ foo }}</div>  <div #foo></div>
             this._nestedTemplateFns.push(() => {
                 const templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables, this._ngContentReservedSlots.length + this._ngContentSelectorsOffset, template.i18n);
-                this.constantPool.statements.push(templateFunctionExpr.toDeclStmt(templateName, null));
+                this.constantPool.statements.push(templateFunctionExpr.toDeclStmt(templateName));
                 if (templateVisitor._ngContentReservedSlots.length) {
                     this._ngContentReservedSlots.push(...templateVisitor._ngContentReservedSlots);
                 }
@@ -17863,7 +17885,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.2+17.sha-02c6bff');
+    const VERSION$1 = new Version('11.0.0-next.2+21.sha-d3169c5');
 
     /**
      * @license
@@ -43898,7 +43920,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.2+17.sha-02c6bff');
+    const VERSION$2 = new Version$1('11.0.0-next.2+21.sha-d3169c5');
 
     /**
      * @license
