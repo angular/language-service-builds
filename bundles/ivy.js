@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.2+21.sha-d3169c5
+ * @license Angular v11.0.0-next.2+18.sha-7fb388f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4114,8 +4114,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         TypeModifier[TypeModifier["Const"] = 0] = "Const";
     })(TypeModifier || (TypeModifier = {}));
     class Type {
-        constructor(modifiers = []) {
+        constructor(modifiers = null) {
             this.modifiers = modifiers;
+            if (!modifiers) {
+                this.modifiers = [];
+            }
         }
         hasModifier(modifier) {
             return this.modifiers.indexOf(modifier) !== -1;
@@ -4133,7 +4136,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         BuiltinTypeName[BuiltinTypeName["None"] = 7] = "None";
     })(BuiltinTypeName || (BuiltinTypeName = {}));
     class BuiltinType extends Type {
-        constructor(name, modifiers) {
+        constructor(name, modifiers = null) {
             super(modifiers);
             this.name = name;
         }
@@ -4142,7 +4145,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class ExpressionType extends Type {
-        constructor(value, modifiers, typeParams = null) {
+        constructor(value, modifiers = null, typeParams = null) {
             super(modifiers);
             this.value = value;
             this.typeParams = typeParams;
@@ -4709,7 +4712,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitExpression(visitor, context) {
             return visitor.visitFunctionExpr(this, context);
         }
-        toDeclStmt(name, modifiers) {
+        toDeclStmt(name, modifiers = null) {
             return new DeclareFunctionStmt(name, this.params, this.statements, this.type, modifiers, this.sourceSpan);
         }
     }
@@ -4848,43 +4851,18 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         StmtModifier[StmtModifier["Exported"] = 2] = "Exported";
         StmtModifier[StmtModifier["Static"] = 3] = "Static";
     })(StmtModifier || (StmtModifier = {}));
-    class LeadingComment {
-        constructor(text, multiline, trailingNewline) {
-            this.text = text;
-            this.multiline = multiline;
-            this.trailingNewline = trailingNewline;
-        }
-        toString() {
-            return this.multiline ? ` ${this.text} ` : this.text;
-        }
-    }
-    class JSDocComment extends LeadingComment {
-        constructor(tags) {
-            super('', /* multiline */ true, /* trailingNewline */ true);
-            this.tags = tags;
-        }
-        toString() {
-            return serializeTags(this.tags);
-        }
-    }
     class Statement {
-        constructor(modifiers = [], sourceSpan = null, leadingComments) {
-            this.modifiers = modifiers;
-            this.sourceSpan = sourceSpan;
-            this.leadingComments = leadingComments;
+        constructor(modifiers, sourceSpan) {
+            this.modifiers = modifiers || [];
+            this.sourceSpan = sourceSpan || null;
         }
         hasModifier(modifier) {
             return this.modifiers.indexOf(modifier) !== -1;
         }
-        addLeadingComment(leadingComment) {
-            var _a;
-            this.leadingComments = (_a = this.leadingComments) !== null && _a !== void 0 ? _a : [];
-            this.leadingComments.push(leadingComment);
-        }
     }
     class DeclareVarStmt extends Statement {
-        constructor(name, value, type, modifiers, sourceSpan, leadingComments) {
-            super(modifiers, sourceSpan, leadingComments);
+        constructor(name, value, type, modifiers = null, sourceSpan) {
+            super(modifiers, sourceSpan);
             this.name = name;
             this.value = value;
             this.type = type || (value && value.type) || null;
@@ -4898,8 +4876,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class DeclareFunctionStmt extends Statement {
-        constructor(name, params, statements, type, modifiers, sourceSpan, leadingComments) {
-            super(modifiers, sourceSpan, leadingComments);
+        constructor(name, params, statements, type, modifiers = null, sourceSpan) {
+            super(modifiers, sourceSpan);
             this.name = name;
             this.params = params;
             this.statements = statements;
@@ -4914,8 +4892,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class ExpressionStatement extends Statement {
-        constructor(expr, sourceSpan, leadingComments) {
-            super([], sourceSpan, leadingComments);
+        constructor(expr, sourceSpan) {
+            super(null, sourceSpan);
             this.expr = expr;
         }
         isEquivalent(stmt) {
@@ -4926,8 +4904,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class ReturnStatement extends Statement {
-        constructor(value, sourceSpan = null, leadingComments) {
-            super([], sourceSpan, leadingComments);
+        constructor(value, sourceSpan) {
+            super(null, sourceSpan);
             this.value = value;
         }
         isEquivalent(stmt) {
@@ -4938,8 +4916,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class IfStmt extends Statement {
-        constructor(condition, trueCase, falseCase = [], sourceSpan, leadingComments) {
-            super([], sourceSpan, leadingComments);
+        constructor(condition, trueCase, falseCase = [], sourceSpan) {
+            super(null, sourceSpan);
             this.condition = condition;
             this.trueCase = trueCase;
             this.falseCase = falseCase;
@@ -4953,8 +4931,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return visitor.visitIfStmt(this, context);
         }
     }
-    function jsDocComment(tags = []) {
-        return new JSDocComment(tags);
+    class JSDocCommentStmt extends Statement {
+        constructor(tags = [], sourceSpan) {
+            super(null, sourceSpan);
+            this.tags = tags;
+        }
+        isEquivalent(stmt) {
+            return stmt instanceof JSDocCommentStmt && this.toString() === stmt.toString();
+        }
+        visitStatement(visitor, context) {
+            return visitor.visitJSDocCommentStmt(this, context);
+        }
+        toString() {
+            return serializeTags(this.tags);
+        }
     }
     function variable(name, type, sourceSpan) {
         return new ReadVarExpr(name, type, sourceSpan);
@@ -4962,7 +4952,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function importExpr(id, typeParams = null, sourceSpan) {
         return new ExternalExpr(id, null, typeParams, sourceSpan);
     }
-    function expressionType(expr, typeModifiers, typeParams) {
+    function expressionType(expr, typeModifiers = null, typeParams = null) {
         return new ExpressionType(expr, typeModifiers, typeParams);
     }
     function typeofExpr(expr) {
@@ -4983,8 +4973,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function fn(params, body, type, sourceSpan, name) {
         return new FunctionExpr(params, body, type, sourceSpan, name);
     }
-    function ifStmt(condition, thenClause, elseClause, sourceSpan, leadingComments) {
-        return new IfStmt(condition, thenClause, elseClause, sourceSpan, leadingComments);
+    function ifStmt(condition, thenClause, elseClause) {
+        return new IfStmt(condition, thenClause, elseClause);
     }
     function literal(value, type, sourceSpan) {
         return new LiteralExpr(value, type, sourceSpan);
@@ -5015,14 +5005,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function serializeTags(tags) {
         if (tags.length === 0)
             return '';
-        if (tags.length === 1 && tags[0].tagName && !tags[0].text) {
-            // The JSDOC comment is a single simple tag: e.g `/** @tagname */`.
-            return `*${tagToString(tags[0])} `;
-        }
         let out = '*\n';
         for (const tag of tags) {
             out += ' *';
-            // If the tagToString is multi-line, insert " * " prefixes on lines.
+            // If the tagToString is multi-line, insert " * " prefixes on subsequent lines.
             out += tagToString(tag).replace(/\n/g, '\n * ');
             out += '\n';
         }
@@ -5853,14 +5839,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return literalMap(result);
     }
     function typeWithParameters(type, numParams) {
-        if (numParams === 0) {
-            return expressionType(type);
+        let params = null;
+        if (numParams > 0) {
+            params = [];
+            for (let i = 0; i < numParams; i++) {
+                params.push(DYNAMIC_TYPE);
+            }
         }
-        const params = [];
-        for (let i = 0; i < numParams; i++) {
-            params.push(DYNAMIC_TYPE);
-        }
-        return expressionType(type, undefined, params);
+        return expressionType(type, null, params);
     }
     const ANIMATE_SYMBOL_PREFIX = '@';
     function prepareSyntheticPropertyName(name) {
@@ -6673,7 +6659,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * @param variable the name of the variable to declare.
      */
     function declareI18nVariable(variable) {
-        return new DeclareVarStmt(variable.name, undefined, INFERRED_TYPE, undefined, variable.sourceSpan);
+        return new DeclareVarStmt(variable.name, undefined, INFERRED_TYPE, null, variable.sourceSpan);
     }
 
     /**
@@ -7548,41 +7534,18 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         constructor(_escapeDollarInStrings) {
             this._escapeDollarInStrings = _escapeDollarInStrings;
         }
-        printLeadingComments(stmt, ctx) {
-            if (stmt.leadingComments === undefined) {
-                return;
-            }
-            for (const comment of stmt.leadingComments) {
-                if (comment instanceof JSDocComment) {
-                    ctx.print(stmt, `/*${comment.toString()}*/`, comment.trailingNewline);
-                }
-                else {
-                    if (comment.multiline) {
-                        ctx.print(stmt, `/* ${comment.text} */`, comment.trailingNewline);
-                    }
-                    else {
-                        comment.text.split('\n').forEach((line) => {
-                            ctx.println(stmt, `// ${line}`);
-                        });
-                    }
-                }
-            }
-        }
         visitExpressionStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
             stmt.expr.visitExpression(this, ctx);
             ctx.println(stmt, ';');
             return null;
         }
         visitReturnStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
             ctx.print(stmt, `return `);
             stmt.value.visitExpression(this, ctx);
             ctx.println(stmt, ';');
             return null;
         }
         visitIfStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
             ctx.print(stmt, `if (`);
             stmt.condition.visitExpression(this, ctx);
             ctx.print(stmt, `) {`);
@@ -7609,10 +7572,24 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return null;
         }
         visitThrowStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
             ctx.print(stmt, `throw `);
             stmt.error.visitExpression(this, ctx);
             ctx.println(stmt, `;`);
+            return null;
+        }
+        visitCommentStmt(stmt, ctx) {
+            if (stmt.multiline) {
+                ctx.println(stmt, `/* ${stmt.comment} */`);
+            }
+            else {
+                stmt.comment.split('\n').forEach((line) => {
+                    ctx.println(stmt, `// ${line}`);
+                });
+            }
+            return null;
+        }
+        visitJSDocCommentStmt(stmt, ctx) {
+            ctx.println(stmt, `/*${stmt.toString()}*/`);
             return null;
         }
         visitWriteVarExpr(expr, ctx) {
@@ -16348,7 +16325,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     // Converts i18n meta information for a message (id, description, meaning)
     // to a JsDoc statement formatted as expected by the Closure compiler.
-    function i18nMetaToJSDoc(meta) {
+    function i18nMetaToDocStmt(meta) {
         const tags = [];
         if (meta.description) {
             tags.push({ tagName: "desc" /* Desc */, text: meta.description });
@@ -16356,7 +16333,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (meta.meaning) {
             tags.push({ tagName: "meaning" /* Meaning */, text: meta.meaning });
         }
-        return tags.length == 0 ? null : jsDocComment(tags);
+        return tags.length == 0 ? null : new JSDocCommentStmt(tags);
     }
 
     /** Closure uses `goog.getMsg(message)` to lookup translations */
@@ -16373,13 +16350,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         //  */
         // const MSG_... = goog.getMsg(..);
         // I18N_X = MSG_...;
-        const googGetMsgStmt = closureVar.set(variable(GOOG_GET_MSG).callFn(args)).toConstDecl();
-        const metaComment = i18nMetaToJSDoc(message);
-        if (metaComment !== null) {
-            googGetMsgStmt.addLeadingComment(metaComment);
+        const statements = [];
+        const jsdocComment = i18nMetaToDocStmt(message);
+        if (jsdocComment !== null) {
+            statements.push(jsdocComment);
         }
-        const i18nAssignmentStmt = new ExpressionStatement(variable$1.set(closureVar));
-        return [googGetMsgStmt, i18nAssignmentStmt];
+        statements.push(closureVar.set(variable(GOOG_GET_MSG).callFn(args)).toConstDecl());
+        statements.push(new ExpressionStatement(variable$1.set(closureVar)));
+        return statements;
     }
     /**
      * This visitor walks over i18n tree and generates its string representation, including ICUs and
@@ -17234,7 +17212,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // template definition. e.g. <div *ngIf="showing">{{ foo }}</div>  <div #foo></div>
             this._nestedTemplateFns.push(() => {
                 const templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables, this._ngContentReservedSlots.length + this._ngContentSelectorsOffset, template.i18n);
-                this.constantPool.statements.push(templateFunctionExpr.toDeclStmt(templateName));
+                this.constantPool.statements.push(templateFunctionExpr.toDeclStmt(templateName, null));
                 if (templateVisitor._ngContentReservedSlots.length) {
                     this._ngContentReservedSlots.push(...templateVisitor._ngContentReservedSlots);
                 }
@@ -19088,7 +19066,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.2+21.sha-d3169c5');
+    const VERSION$1 = new Version('11.0.0-next.2+18.sha-7fb388f');
 
     /**
      * @license
@@ -19681,7 +19659,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.2+21.sha-d3169c5');
+    const VERSION$2 = new Version('11.0.0-next.2+18.sha-7fb388f');
 
     /**
      * @license
@@ -24082,37 +24060,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.externalSourceFiles = new Map();
         }
         visitDeclareVarStmt(stmt, context) {
-            var _a;
-            const isConst = this.scriptTarget >= ts.ScriptTarget.ES2015 && stmt.hasModifier(StmtModifier.Final);
-            const varDeclaration = ts.createVariableDeclaration(
-            /* name */ stmt.name, 
-            /* type */ undefined, (_a = 
-            /* initializer */ stmt.value) === null || _a === void 0 ? void 0 : _a.visitExpression(this, context.withExpressionMode));
-            const declarationList = ts.createVariableDeclarationList(
-            /* declarations */ [varDeclaration], 
-            /* flags */ isConst ? ts.NodeFlags.Const : ts.NodeFlags.None);
-            const varStatement = ts.createVariableStatement(undefined, declarationList);
-            return attachComments(varStatement, stmt.leadingComments);
+            const nodeFlags = ((this.scriptTarget >= ts.ScriptTarget.ES2015) && stmt.hasModifier(StmtModifier.Final)) ?
+                ts.NodeFlags.Const :
+                ts.NodeFlags.None;
+            return ts.createVariableStatement(undefined, ts.createVariableDeclarationList([ts.createVariableDeclaration(stmt.name, undefined, stmt.value && stmt.value.visitExpression(this, context.withExpressionMode))], nodeFlags));
         }
         visitDeclareFunctionStmt(stmt, context) {
-            const fnDeclaration = ts.createFunctionDeclaration(
-            /* decorators */ undefined, 
-            /* modifiers */ undefined, 
-            /* asterisk */ undefined, 
-            /* name */ stmt.name, 
-            /* typeParameters */ undefined, 
-            /* parameters */
-            stmt.params.map(param => ts.createParameter(undefined, undefined, undefined, param.name)), 
-            /* type */ undefined, 
-            /* body */
-            ts.createBlock(stmt.statements.map(child => child.visitStatement(this, context.withStatementMode))));
-            return attachComments(fnDeclaration, stmt.leadingComments);
+            return ts.createFunctionDeclaration(undefined, undefined, undefined, stmt.name, undefined, stmt.params.map(param => ts.createParameter(undefined, undefined, undefined, param.name)), undefined, ts.createBlock(stmt.statements.map(child => child.visitStatement(this, context.withStatementMode))));
         }
         visitExpressionStmt(stmt, context) {
-            return attachComments(ts.createStatement(stmt.expr.visitExpression(this, context.withStatementMode)), stmt.leadingComments);
+            return ts.createStatement(stmt.expr.visitExpression(this, context.withStatementMode));
         }
         visitReturnStmt(stmt, context) {
-            return attachComments(ts.createReturn(stmt.value.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
+            return ts.createReturn(stmt.value.visitExpression(this, context.withExpressionMode));
         }
         visitDeclareClassStmt(stmt, context) {
             if (this.scriptTarget < ts.ScriptTarget.ES2015) {
@@ -24122,18 +24082,28 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             throw new Error('Method not implemented.');
         }
         visitIfStmt(stmt, context) {
-            const thenBlock = ts.createBlock(stmt.trueCase.map(child => child.visitStatement(this, context.withStatementMode)));
-            const elseBlock = stmt.falseCase.length > 0 ?
+            return ts.createIf(stmt.condition.visitExpression(this, context), ts.createBlock(stmt.trueCase.map(child => child.visitStatement(this, context.withStatementMode))), stmt.falseCase.length > 0 ?
                 ts.createBlock(stmt.falseCase.map(child => child.visitStatement(this, context.withStatementMode))) :
-                undefined;
-            const ifStatement = ts.createIf(stmt.condition.visitExpression(this, context), thenBlock, elseBlock);
-            return attachComments(ifStatement, stmt.leadingComments);
+                undefined);
         }
         visitTryCatchStmt(stmt, context) {
             throw new Error('Method not implemented.');
         }
         visitThrowStmt(stmt, context) {
-            return attachComments(ts.createThrow(stmt.error.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
+            return ts.createThrow(stmt.error.visitExpression(this, context.withExpressionMode));
+        }
+        visitCommentStmt(stmt, context) {
+            const commentStmt = ts.createNotEmittedStatement(ts.createLiteral(''));
+            ts.addSyntheticLeadingComment(commentStmt, stmt.multiline ? ts.SyntaxKind.MultiLineCommentTrivia :
+                ts.SyntaxKind.SingleLineCommentTrivia, stmt.comment, /** hasTrailingNewLine */ false);
+            return commentStmt;
+        }
+        visitJSDocCommentStmt(stmt, context) {
+            const commentStmt = ts.createNotEmittedStatement(ts.createLiteral(''));
+            const text = stmt.toString();
+            const kind = ts.SyntaxKind.MultiLineCommentTrivia;
+            ts.setSyntheticLeadingComments(commentStmt, [{ kind, text, pos: -1, end: -1 }]);
+            return commentStmt;
         }
         visitReadVarExpr(ast, context) {
             const identifier = ts.createIdentifier(ast.name);
@@ -24608,30 +24578,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const node = ts.createTemplateHead(cooked, raw);
         node.kind = ts.SyntaxKind.TemplateTail;
         return node;
-    }
-    /**
-     * Attach the given `leadingComments` to the `statement` node.
-     *
-     * @param statement The statement that will have comments attached.
-     * @param leadingComments The comments to attach to the statement.
-     */
-    function attachComments(statement, leadingComments) {
-        if (leadingComments === undefined) {
-            return statement;
-        }
-        for (const comment of leadingComments) {
-            const commentKind = comment.multiline ? ts.SyntaxKind.MultiLineCommentTrivia :
-                ts.SyntaxKind.SingleLineCommentTrivia;
-            if (comment.multiline) {
-                ts.addSyntheticLeadingComment(statement, commentKind, comment.toString(), comment.trailingNewline);
-            }
-            else {
-                for (const line of comment.text.split('\n')) {
-                    ts.addSyntheticLeadingComment(statement, commentKind, line, comment.trailingNewline);
-                }
-            }
-        }
-        return statement;
     }
 
     /**
@@ -29541,7 +29487,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const ngModuleExpr = this.emitter.emit(ngModule, decl.getSourceFile(), ImportFlags.ForceNewImport);
             const ngModuleType = new ExpressionType(ngModuleExpr);
-            const mwpNgType = new ExpressionType(new ExternalExpr(Identifiers$1.ModuleWithProviders), [ /* modifiers */], [ngModuleType]);
+            const mwpNgType = new ExpressionType(new ExternalExpr(Identifiers$1.ModuleWithProviders), /* modifiers */ null, [ngModuleType]);
             dts.addTypeReplacement(decl, mwpNgType);
         }
         returnTypeOf(decl) {
@@ -32014,7 +31960,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         referenceExternalType(moduleName, name, typeParams) {
             const external = new ExternalExpr({ moduleName, name });
-            return translateType(new ExpressionType(external, [ /* modifiers */], typeParams), this.importManager);
+            return translateType(new ExpressionType(external, null, typeParams), this.importManager);
         }
         getPreludeStatements() {
             return [
