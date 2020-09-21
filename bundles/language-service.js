@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.2+40.sha-6ae3b68
+ * @license Angular v11.0.0-next.2+47.sha-297b123
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1351,7 +1351,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     metaBlock = `${metaBlock}${LEGACY_ID_INDICATOR}${legacyId}`;
                 });
             }
-            return createCookedRawString(metaBlock, this.messageParts[0].text);
+            return createCookedRawString(metaBlock, this.messageParts[0].text, this.getMessagePartSourceSpan(0));
         }
         getMessagePartSourceSpan(i) {
             var _a, _b;
@@ -1371,7 +1371,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         serializeI18nTemplatePart(partIndex) {
             const placeholderName = this.placeHolderNames[partIndex - 1].text;
             const messagePart = this.messageParts[partIndex];
-            return createCookedRawString(placeholderName, messagePart.text);
+            return createCookedRawString(placeholderName, messagePart.text, this.getMessagePartSourceSpan(partIndex));
         }
     }
     const escapeSlashes = (str) => str.replace(/\\/g, '\\\\');
@@ -1392,17 +1392,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param metaBlock Any metadata that should be prepended to the string
      * @param messagePart The message part of the string
      */
-    function createCookedRawString(metaBlock, messagePart) {
+    function createCookedRawString(metaBlock, messagePart, range) {
         if (metaBlock === '') {
             return {
                 cooked: messagePart,
-                raw: escapeForMessagePart(escapeStartingColon(escapeSlashes(messagePart)))
+                raw: escapeForMessagePart(escapeStartingColon(escapeSlashes(messagePart))),
+                range,
             };
         }
         else {
             return {
                 cooked: `:${metaBlock}:${messagePart}`,
-                raw: escapeForMessagePart(`:${escapeColons(escapeSlashes(metaBlock))}:${escapeSlashes(messagePart)}`)
+                raw: escapeForMessagePart(`:${escapeColons(escapeSlashes(metaBlock))}:${escapeSlashes(messagePart)}`),
+                range,
             };
         }
     }
@@ -17899,7 +17901,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.2+40.sha-6ae3b68');
+    const VERSION$1 = new Version('11.0.0-next.2+47.sha-297b123');
 
     /**
      * @license
@@ -43934,7 +43936,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.2+40.sha-6ae3b68');
+    const VERSION$2 = new Version$1('11.0.0-next.2+47.sha-297b123');
 
     /**
      * @license
