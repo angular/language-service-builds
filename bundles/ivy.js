@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+4.sha-f979914
+ * @license Angular v11.0.0-next.3+1.sha-15ea811
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19145,7 +19145,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+4.sha-f979914');
+    const VERSION$1 = new Version('11.0.0-next.3+1.sha-15ea811');
 
     /**
      * @license
@@ -19738,7 +19738,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.3+4.sha-f979914');
+    const VERSION$2 = new Version('11.0.0-next.3+1.sha-15ea811');
 
     /**
      * @license
@@ -34146,9 +34146,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (this.tcb.env.config.checkTemplateBodies) {
                     this.opQueue.push(new TcbTemplateBodyOp(this.tcb, this, node));
                 }
-                else if (this.tcb.env.config.alwaysCheckSchemaInTemplateBodies) {
-                    this.appendDeepSchemaChecks(node.children);
-                }
                 this.checkAndAppendReferencesOfNode(node);
             }
             else if (node instanceof BoundText) {
@@ -34239,31 +34236,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }
                 }
                 this.opQueue.push(new TcbUnclaimedOutputsOp(this.tcb, this, node, claimedOutputs));
-            }
-        }
-        appendDeepSchemaChecks(nodes) {
-            for (const node of nodes) {
-                if (!(node instanceof Element || node instanceof Template)) {
-                    continue;
-                }
-                if (node instanceof Element) {
-                    const claimedInputs = new Set();
-                    const directives = this.tcb.boundTarget.getDirectivesOfNode(node);
-                    let hasDirectives;
-                    if (directives === null || directives.length === 0) {
-                        hasDirectives = false;
-                    }
-                    else {
-                        hasDirectives = true;
-                        for (const dir of directives) {
-                            for (const propertyName of dir.inputs.propertyNames) {
-                                claimedInputs.add(propertyName);
-                            }
-                        }
-                    }
-                    this.opQueue.push(new TcbDomSchemaCheckerOp(this.tcb, node, !hasDirectives, claimedInputs));
-                }
-                this.appendDeepSchemaChecks(node.children);
             }
         }
     }
@@ -36132,7 +36104,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                     applyTemplateContextGuards: strictTemplates,
                     checkQueries: false,
                     checkTemplateBodies: true,
-                    alwaysCheckSchemaInTemplateBodies: true,
                     checkTypeOfInputBindings: strictTemplates,
                     honorAccessModifiersForInputBindings: false,
                     strictNullInputBindings: strictTemplates,
@@ -36162,9 +36133,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                     applyTemplateContextGuards: false,
                     checkQueries: false,
                     checkTemplateBodies: false,
-                    // Enable deep schema checking in "basic" template type-checking mode only if Closure
-                    // compilation is requested, which is a good proxy for "only in google3".
-                    alwaysCheckSchemaInTemplateBodies: this.closureCompilerEnabled,
                     checkTypeOfInputBindings: false,
                     strictNullInputBindings: false,
                     honorAccessModifiersForInputBindings: false,
