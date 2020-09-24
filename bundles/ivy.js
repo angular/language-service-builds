@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+8.sha-4c87665
+ * @license Angular v11.0.0-next.3+10.sha-837889f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19145,7 +19145,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+8.sha-4c87665');
+    const VERSION$1 = new Version('11.0.0-next.3+10.sha-837889f');
 
     /**
      * @license
@@ -19738,7 +19738,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.3+8.sha-4c87665');
+    const VERSION$2 = new Version('11.0.0-next.3+10.sha-837889f');
 
     /**
      * @license
