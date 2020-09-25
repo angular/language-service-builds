@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+14.sha-e790c85
+ * @license Angular v11.0.0-next.3+20.sha-239968d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3243,10 +3243,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class Variable {
-        constructor(name, value, sourceSpan, valueSpan) {
+        constructor(name, value, sourceSpan, keySpan, valueSpan) {
             this.name = name;
             this.value = value;
             this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
             this.valueSpan = valueSpan;
         }
         visit(visitor) {
@@ -14238,7 +14239,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         // the attribute name.
                         attribute.sourceSpan.start.offset + attribute.name.length;
                     this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteValueOffset, [], templateParsedProperties, parsedVariables);
-                    templateVariables.push(...parsedVariables.map(v => new Variable(v.name, v.value, v.sourceSpan, v.valueSpan)));
+                    templateVariables.push(...parsedVariables.map(v => new Variable(v.name, v.value, v.sourceSpan, v.keySpan, v.valueSpan)));
                 }
                 else {
                     // Check for variables, events, property bindings, interpolation
@@ -14392,7 +14393,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 else if (bindParts[KW_LET_IDX$1]) {
                     if (isTemplateElement) {
                         const identifier = bindParts[IDENT_KW_IDX$1];
-                        this.parseVariable(identifier, value, srcSpan, attribute.valueSpan, variables);
+                        const keySpan = createKeySpan(srcSpan, bindParts[KW_LET_IDX$1], identifier);
+                        this.parseVariable(identifier, value, srcSpan, keySpan, attribute.valueSpan, variables);
                     }
                     else {
                         this.reportError(`"let-" is only supported on ng-template elements.`, srcSpan);
@@ -14444,14 +14446,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const expr = this.bindingParser.parseInterpolation(valueNoNgsp, sourceSpan);
             return expr ? new BoundText(expr, sourceSpan, i18n) : new Text(valueNoNgsp, sourceSpan);
         }
-        parseVariable(identifier, value, sourceSpan, valueSpan, variables) {
+        parseVariable(identifier, value, sourceSpan, keySpan, valueSpan, variables) {
             if (identifier.indexOf('-') > -1) {
                 this.reportError(`"-" is not allowed in variable names`, sourceSpan);
             }
             else if (identifier.length === 0) {
                 this.reportError(`Variable does not have a name`, sourceSpan);
             }
-            variables.push(new Variable(identifier, value, sourceSpan, valueSpan));
+            variables.push(new Variable(identifier, value, sourceSpan, keySpan, valueSpan));
         }
         parseReference(identifier, value, sourceSpan, valueSpan, references) {
             if (identifier.indexOf('-') > -1) {
@@ -17942,7 +17944,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+14.sha-e790c85');
+    const VERSION$1 = new Version('11.0.0-next.3+20.sha-239968d');
 
     /**
      * @license
@@ -33924,7 +33926,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.3+14.sha-e790c85');
+    const VERSION$2 = new Version$1('11.0.0-next.3+20.sha-239968d');
 
     /**
      * @license
