@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+89.sha-2aeaedc
+ * @license Angular v11.0.0-next.3+94.sha-1e3f810
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -10546,7 +10546,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * @param targetProps target property bindings in the template
          * @param targetVars target variables in the template
          */
-        parseInlineTemplateBinding(tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars) {
+        parseInlineTemplateBinding(tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars, isIvyAst) {
             const absoluteKeyOffset = sourceSpan.start.offset + TEMPLATE_ATTR_PREFIX.length;
             const bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteKeyOffset, absoluteValueOffset);
             for (const binding of bindings) {
@@ -10561,8 +10561,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     targetVars.push(new ParsedVariable(key, value, bindingSpan, keySpan, valueSpan));
                 }
                 else if (binding.value) {
+                    const srcSpan = isIvyAst ? bindingSpan : sourceSpan;
                     const valueSpan = moveParseSourceSpan(sourceSpan, binding.value.ast.sourceSpan);
-                    this._parsePropertyAst(key, binding.value, sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
+                    this._parsePropertyAst(key, binding.value, srcSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
                 }
                 else {
                     targetMatchableAttrs.push([key, '' /* value */]);
@@ -11200,7 +11201,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     hasInlineTemplates = true;
                     const parsedVariables = [];
                     const absoluteOffset = (attr.valueSpan || attr.sourceSpan).start.offset;
-                    this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, absoluteOffset, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables);
+                    this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, absoluteOffset, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables, false /* isIvyAst */);
                     templateElementVars.push(...parsedVariables.map(v => VariableAst.fromParsedVariable(v)));
                 }
                 if (!hasBinding && !hasTemplateBinding) {
@@ -14238,7 +14239,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         //`<div attr></div>`. In this case, point to one character beyond the last character of
                         // the attribute name.
                         attribute.sourceSpan.start.offset + attribute.name.length;
-                    this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteValueOffset, [], templateParsedProperties, parsedVariables);
+                    this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteValueOffset, [], templateParsedProperties, parsedVariables, true /* isIvyAst */);
                     templateVariables.push(...parsedVariables.map(v => new Variable(v.name, v.value, v.sourceSpan, v.keySpan, v.valueSpan)));
                 }
                 else {
@@ -17944,7 +17945,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+89.sha-2aeaedc');
+    const VERSION$1 = new Version('11.0.0-next.3+94.sha-1e3f810');
 
     /**
      * @license
@@ -33979,7 +33980,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.3+89.sha-2aeaedc');
+    const VERSION$2 = new Version$1('11.0.0-next.3+94.sha-1e3f810');
 
     /**
      * @license
