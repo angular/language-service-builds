@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+82.sha-ded9aeb
+ * @license Angular v11.0.0-next.3+88.sha-8f66540
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19147,7 +19147,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+82.sha-ded9aeb');
+    const VERSION$1 = new Version('11.0.0-next.3+88.sha-8f66540');
 
     /**
      * @license
@@ -19740,7 +19740,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.3+82.sha-ded9aeb');
+    const VERSION$2 = new Version('11.0.0-next.3+88.sha-8f66540');
 
     /**
      * @license
@@ -22291,6 +22291,38 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // fall back to looking at its members since we might not have been able register the class
             // if it was compiled already.
             return this.classes.has(declaration) || hasInjectableFields(declaration, this.host);
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Tracks the mapping between external template files and the component(s) which use them.
+     *
+     * This information is produced during analysis of the program and is used mainly to support
+     * external tooling, for which such a mapping is challenging to determine without compiler
+     * assistance.
+     */
+    class TemplateRegistry {
+        constructor() {
+            this.map = new Map();
+        }
+        getComponentsWithTemplate(template) {
+            if (!this.map.has(template)) {
+                return new Set();
+            }
+            return this.map.get(template);
+        }
+        register(template, component) {
+            if (!this.map.has(template)) {
+                this.map.set(template, new Set());
+            }
+            this.map.get(template).add(component);
         }
     }
 
@@ -27080,13 +27112,14 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `DecoratorHandler` which handles the `@Component` annotation.
      */
     class ComponentDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
+        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
             this.metaReader = metaReader;
             this.scopeReader = scopeReader;
             this.scopeRegistry = scopeRegistry;
+            this.templateMapping = templateMapping;
             this.isCore = isCore;
             this.resourceLoader = resourceLoader;
             this.rootDirs = rootDirs;
@@ -27334,6 +27367,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             // the information about the component is available during the compile() phase.
             const ref = new Reference$1(node);
             this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
+            if (!analysis.template.isInline) {
+                this.templateMapping.register(resolve(analysis.template.templateUrl), node);
+            }
             this.injectableRegistry.registerInjectable(node);
         }
         index(context, node, analysis) {
@@ -35998,6 +36034,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.ensureAnalyzed().templateTypeChecker;
         }
         /**
+         * Retrieves the `ts.Declaration`s for any component(s) which use the given template file.
+         */
+        getComponentsWithTemplateFile(templateFilePath) {
+            const { templateMapping } = this.ensureAnalyzed();
+            return templateMapping.getComponentsWithTemplate(resolve(templateFilePath));
+        }
+        /**
          * Perform Angular's analysis step (as a precursor to `getDiagnostics` or `prepareEmit`)
          * asynchronously.
          *
@@ -36427,9 +36470,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             const mwpScanner = new ModuleWithProvidersScanner(reflector, evaluator, refEmitter);
             const isCore = isAngularCorePackage(this.tsProgram);
             const defaultImportTracker = new DefaultImportTracker();
+            const templateMapping = new TemplateRegistry();
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
@@ -36461,6 +36505,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 aliasingHost,
                 refEmitter,
                 templateTypeChecker,
+                templateMapping,
             };
         }
     }
