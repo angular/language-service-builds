@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+92.sha-827245f
+ * @license Angular v11.0.0-next.3+95.sha-ddc9e8e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19148,7 +19148,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+92.sha-827245f');
+    const VERSION$1 = new Version('11.0.0-next.3+95.sha-ddc9e8e');
 
     /**
      * @license
@@ -19741,7 +19741,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.3+92.sha-827245f');
+    const VERSION$2 = new Version('11.0.0-next.3+95.sha-ddc9e8e');
 
     /**
      * @license
@@ -35179,7 +35179,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         getSymbolOfAstTemplate(template) {
             const directives = this.getDirectivesOfNode(template);
-            return { kind: SymbolKind.Template, directives };
+            return { kind: SymbolKind.Template, directives, templateNode: template };
         }
         getSymbolOfElement(element) {
             var _a;
@@ -35188,7 +35188,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node === null) {
                 return null;
             }
-            const symbolFromDeclaration = this.getSymbolOfVariableDeclaration(node);
+            const symbolFromDeclaration = this.getSymbolOfTsNode(node);
             if (symbolFromDeclaration === null || symbolFromDeclaration.tsSymbol === null) {
                 return null;
             }
@@ -35196,7 +35196,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // All statements in the TCB are `Expression`s that optionally include more information.
             // An `ElementSymbol` uses the information returned for the variable declaration expression,
             // adds the directives for the element, and updates the `kind` to be `SymbolKind.Element`.
-            return Object.assign(Object.assign({}, symbolFromDeclaration), { kind: SymbolKind.Element, directives });
+            return Object.assign(Object.assign({}, symbolFromDeclaration), { kind: SymbolKind.Element, directives, templateNode: element });
         }
         getDirectivesOfNode(element) {
             var _a;
@@ -35205,15 +35205,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             // directives could be either:
             // - var _t1: TestDir /*T:D*/ = (null!);
             // - var _t1 /*T:D*/ = _ctor1({});
-            const isDirectiveDeclaration = (node) => (ts.isTypeNode(node) || ts.isIdentifier(node)) &&
+            const isDirectiveDeclaration = (node) => (ts.isTypeNode(node) || ts.isIdentifier(node)) && ts.isVariableDeclaration(node.parent) &&
                 hasExpressionIdentifier(tcbSourceFile, node, ExpressionIdentifier.DIRECTIVE);
             const nodes = findAllMatchingNodes(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: isDirectiveDeclaration });
             return nodes
                 .map(node => {
                 var _a, _b;
-                const symbol = (ts.isIdentifier(node) && ts.isVariableDeclaration(node.parent)) ?
-                    this.getSymbolOfVariableDeclaration(node.parent) :
-                    this.getSymbolOfTsNode(node);
+                const symbol = this.getSymbolOfTsNode(node.parent);
                 if (symbol === null || symbol.tsSymbol === null ||
                     symbol.tsSymbol.declarations.length === 0) {
                     return null;
@@ -35320,7 +35318,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 declaration.getSourceFile(), (_a = declaration.type) !== null && _a !== void 0 ? _a : declaration.name, ExpressionIdentifier.DIRECTIVE)) {
                 return null;
             }
-            const symbol = this.getSymbolOfVariableDeclaration(declaration);
+            const symbol = this.getSymbolOfTsNode(declaration);
             if (symbol === null || symbol.tsSymbol === null) {
                 return null;
             }
@@ -35335,10 +35333,10 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         getSymbolOfVariable(variable) {
             const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: variable.sourceSpan, filter: ts.isVariableDeclaration });
-            if (node === null) {
+            if (node === null || node.initializer === undefined) {
                 return null;
             }
-            const expressionSymbol = this.getSymbolOfVariableDeclaration(node);
+            const expressionSymbol = this.getSymbolOfTsNode(node.initializer);
             if (expressionSymbol === null) {
                 return null;
             }
@@ -35351,8 +35349,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node === null || target === null || node.initializer === undefined) {
                 return null;
             }
-            // TODO(atscott): Shim location will need to be adjusted
-            const symbol = this.getSymbolOfTsNode(node.name);
+            // Get the original declaration for the references variable, with the exception of template refs
+            // which are of the form var _t3 = (_t2 as any as i2.TemplateRef<any>)
+            // TODO(atscott): Consider adding an `ExpressionIdentifier` to tag variable declaration
+            // initializers as invalid for symbol retrieval.
+            const originalDeclaration = ts.isParenthesizedExpression(node.initializer) &&
+                ts.isAsExpression(node.initializer.expression) ?
+                this.typeChecker.getSymbolAtLocation(node.name) :
+                this.typeChecker.getSymbolAtLocation(node.initializer);
+            if (originalDeclaration === undefined || originalDeclaration.valueDeclaration === undefined) {
+                return null;
+            }
+            const symbol = this.getSymbolOfTsNode(originalDeclaration.valueDeclaration);
             if (symbol === null || symbol.tsSymbol === null) {
                 return null;
             }
@@ -35439,23 +35447,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 tsType: type,
                 shimLocation: { shimPath: this.shimPath, positionInShimFile },
             };
-        }
-        getSymbolOfVariableDeclaration(declaration) {
-            // Instead of returning the Symbol for the temporary variable, we want to get the `ts.Symbol`
-            // for:
-            // - The type reference for `var _t2: MyDir = xyz` (prioritize/trust the declared type)
-            // - The initializer for `var _t2 = _t1.index`.
-            if (declaration.type && ts.isTypeReferenceNode(declaration.type)) {
-                return this.getSymbolOfTsNode(declaration.type.typeName);
-            }
-            if (declaration.initializer === undefined) {
-                return null;
-            }
-            const symbol = this.getSymbolOfTsNode(declaration.initializer);
-            if (symbol === null) {
-                return null;
-            }
-            return symbol;
         }
         getShimPositionForNode(node) {
             if (ts.isTypeReferenceNode(node)) {
