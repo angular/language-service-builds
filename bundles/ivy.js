@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+89.sha-2aeaedc
+ * @license Angular v11.0.0-next.3+94.sha-1e3f810
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -12433,7 +12433,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * @param targetProps target property bindings in the template
          * @param targetVars target variables in the template
          */
-        parseInlineTemplateBinding(tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars) {
+        parseInlineTemplateBinding(tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars, isIvyAst) {
             const absoluteKeyOffset = sourceSpan.start.offset + TEMPLATE_ATTR_PREFIX.length;
             const bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteKeyOffset, absoluteValueOffset);
             for (const binding of bindings) {
@@ -12448,8 +12448,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     targetVars.push(new ParsedVariable(key, value, bindingSpan, keySpan, valueSpan));
                 }
                 else if (binding.value) {
+                    const srcSpan = isIvyAst ? bindingSpan : sourceSpan;
                     const valueSpan = moveParseSourceSpan(sourceSpan, binding.value.ast.sourceSpan);
-                    this._parsePropertyAst(key, binding.value, sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
+                    this._parsePropertyAst(key, binding.value, srcSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
                 }
                 else {
                     targetMatchableAttrs.push([key, '' /* value */]);
@@ -15441,7 +15442,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                         //`<div attr></div>`. In this case, point to one character beyond the last character of
                         // the attribute name.
                         attribute.sourceSpan.start.offset + attribute.name.length;
-                    this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteValueOffset, [], templateParsedProperties, parsedVariables);
+                    this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteValueOffset, [], templateParsedProperties, parsedVariables, true /* isIvyAst */);
                     templateVariables.push(...parsedVariables.map(v => new Variable(v.name, v.value, v.sourceSpan, v.keySpan, v.valueSpan)));
                 }
                 else {
@@ -19147,7 +19148,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+89.sha-2aeaedc');
+    const VERSION$1 = new Version('11.0.0-next.3+94.sha-1e3f810');
 
     /**
      * @license
@@ -19740,7 +19741,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.3+89.sha-2aeaedc');
+    const VERSION$2 = new Version('11.0.0-next.3+94.sha-1e3f810');
 
     /**
      * @license
