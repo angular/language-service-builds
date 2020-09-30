@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+95.sha-ddc9e8e
+ * @license Angular v11.0.0-next.3+96.sha-31e42f0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17945,7 +17945,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+95.sha-ddc9e8e');
+    const VERSION$1 = new Version('11.0.0-next.3+96.sha-31e42f0');
 
     /**
      * @license
@@ -43996,7 +43996,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.3+95.sha-ddc9e8e');
+    const VERSION$2 = new Version$1('11.0.0-next.3+96.sha-31e42f0');
 
     /**
      * @license
@@ -55452,18 +55452,18 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
             return ngLS.getDefinitionAndBoundSpan(fileName, position);
         }
-        const proxy = Object.assign(
-        // First clone the original TS language service
-        {}, tsLS, 
-        // Then override the methods supported by Angular language service
-        {
+        function getTypeDefinitionAtPosition(fileName, position) {
+            // Not implemented in VE Language Service
+            return undefined;
+        }
+        return Object.assign(Object.assign({}, tsLS), { 
+            // Then override the methods supported by Angular language service
             getCompletionsAtPosition,
             getQuickInfoAtPosition,
             getSemanticDiagnostics,
             getDefinitionAtPosition,
             getDefinitionAndBoundSpan,
-        });
-        return proxy;
+            getTypeDefinitionAtPosition });
     }
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;

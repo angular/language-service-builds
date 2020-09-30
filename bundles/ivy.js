@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.3+95.sha-ddc9e8e
+ * @license Angular v11.0.0-next.3+96.sha-31e42f0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19148,7 +19148,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.3+95.sha-ddc9e8e');
+    const VERSION$1 = new Version('11.0.0-next.3+96.sha-31e42f0');
 
     /**
      * @license
@@ -19741,7 +19741,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.3+95.sha-ddc9e8e');
+    const VERSION$2 = new Version('11.0.0-next.3+96.sha-31e42f0');
 
     /**
      * @license
@@ -36784,7 +36784,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             diagnostics.push(...ngLS.getSemanticDiagnostics(fileName));
             return diagnostics;
         }
-        return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics });
+        function getTypeDefinitionAtPosition(fileName, position) {
+            return undefined;
+        }
+        return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics,
+            getTypeDefinitionAtPosition });
     }
 
     exports.create = create;
