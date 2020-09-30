@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+2.sha-8e37103
+ * @license Angular v11.0.0-next.4+9.sha-bd5e425
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19148,7 +19148,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+2.sha-8e37103');
+    const VERSION$1 = new Version('11.0.0-next.4+9.sha-bd5e425');
 
     /**
      * @license
@@ -19741,7 +19741,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+2.sha-8e37103');
+    const VERSION$2 = new Version('11.0.0-next.4+9.sha-bd5e425');
 
     /**
      * @license
@@ -23459,6 +23459,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Specifies the compilation mode that is used for the compilation.
+     */
+    var CompilationMode;
+    (function (CompilationMode) {
+        /**
+         * Generates fully AOT compiled code using Ivy instructions.
+         */
+        CompilationMode[CompilationMode["FULL"] = 0] = "FULL";
+        /**
+         * Generates code using a stable, but intermediate format suitable to be published to NPM.
+         */
+        CompilationMode[CompilationMode["PARTIAL"] = 1] = "PARTIAL";
+    })(CompilationMode || (CompilationMode = {}));
     var HandlerPrecedence;
     (function (HandlerPrecedence) {
         /**
@@ -23650,12 +23664,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * class (like adding fields or type declarations).
      */
     class TraitCompiler {
-        constructor(handlers, reflector, perf, incrementalBuild, compileNonExportedClasses, dtsTransforms) {
+        constructor(handlers, reflector, perf, incrementalBuild, compileNonExportedClasses, compilationMode, dtsTransforms) {
             this.handlers = handlers;
             this.reflector = reflector;
             this.perf = perf;
             this.incrementalBuild = incrementalBuild;
             this.compileNonExportedClasses = compileNonExportedClasses;
+            this.compilationMode = compilationMode;
             this.dtsTransforms = dtsTransforms;
             /**
              * Maps class declarations to their `ClassRecord`, which tracks the Ivy traits being applied to
@@ -24018,7 +24033,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     continue;
                 }
                 const compileSpan = this.perf.start('compileClass', original);
-                const compileMatchRes = trait.handler.compile(clazz, trait.analysis, trait.resolution, constantPool);
+                let compileRes;
+                if (this.compilationMode === CompilationMode.PARTIAL &&
+                    trait.handler.compilePartial !== undefined) {
+                    compileRes = trait.handler.compilePartial(clazz, trait.analysis, trait.resolution);
+                }
+                else {
+                    compileRes =
+                        trait.handler.compileFull(clazz, trait.analysis, trait.resolution, constantPool);
+                }
+                const compileMatchRes = compileRes;
                 this.perf.stop(compileSpan);
                 if (Array.isArray(compileMatchRes)) {
                     for (const result of compileMatchRes) {
@@ -26587,7 +26611,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return { diagnostics: diagnostics.length > 0 ? diagnostics : undefined };
         }
-        compile(node, analysis, resolution, pool) {
+        compileFull(node, analysis, resolution, pool) {
             const meta = analysis.meta;
             const res = compileDirectiveFromMetadata(meta, pool, makeBindingParser());
             const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Directive }));
@@ -27505,7 +27529,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return { data };
         }
-        compile(node, analysis, resolution, pool) {
+        compileFull(node, analysis, resolution, pool) {
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
             const res = compileComponentFromMetadata(meta, pool, makeBindingParser());
             const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Component }));
@@ -27805,7 +27829,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         register(node) {
             this.injectableRegistry.registerInjectable(node);
         }
-        compile(node, analysis) {
+        compileFull(node, analysis) {
             const res = compileInjectable(analysis.meta);
             const statements = res.statements;
             const results = [];
@@ -28291,7 +28315,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
         }
-        compile(node, analysis, resolution) {
+        compileFull(node, analysis, resolution) {
             //  Merge the injector imports (which are 'exports' that were later found to be NgModules)
             //  computed during resolution with the ones from analysis.
             const ngInjectorDef = compileInjector(Object.assign(Object.assign({}, analysis.inj), { imports: [...analysis.inj.imports, ...resolution.injectorImports] }));
@@ -28571,7 +28595,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return {};
         }
-        compile(node, analysis) {
+        compileFull(node, analysis) {
             const meta = analysis.meta;
             const res = compilePipeFromMetadata(meta);
             const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Pipe }));
@@ -36481,7 +36505,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 new InjectableDecoratorHandler(reflector, defaultImportTracker, isCore, this.options.strictInjectionParameters || false, injectableRegistry),
                 new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.options.i18nInLocale),
             ];
-            const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, dtsTransforms);
+            const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
+            const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms);
             const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver);
             return {
                 isCore,
