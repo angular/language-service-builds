@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+32.sha-4fe673d
+ * @license Angular v11.0.0-next.4+34.sha-3bbbf39
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -14085,6 +14085,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.simpleExpressionChecker = IvySimpleExpressionChecker; //
         }
     }
+    /** Describes a stateful context an expression parser is in. */
+    var ParseContextFlags;
+    (function (ParseContextFlags) {
+        ParseContextFlags[ParseContextFlags["None"] = 0] = "None";
+        /**
+         * A Writable context is one in which a value may be written to an lvalue.
+         * For example, after we see a property access, we may expect a write to the
+         * property via the "=" operator.
+         *   prop
+         *        ^ possible "=" after
+         */
+        ParseContextFlags[ParseContextFlags["Writable"] = 1] = "Writable";
+    })(ParseContextFlags || (ParseContextFlags = {}));
     class _ParseAST {
         constructor(input, location, absoluteOffset, tokens, inputLength, parseAction, errors, offset) {
             this.input = input;
@@ -14098,6 +14111,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.rparensExpected = 0;
             this.rbracketsExpected = 0;
             this.rbracesExpected = 0;
+            this.context = ParseContextFlags.None;
             // Cache of expression start and input indeces to the absolute source span they map to, used to
             // prevent creating superfluous source spans in `sourceSpan`.
             // A serial of the expression start and input index is used for mapping because both are stateful
@@ -14158,6 +14172,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         advance() {
             this.index++;
         }
+        /**
+         * Executes a callback in the provided context.
+         */
+        withContext(context, cb) {
+            this.context |= context;
+            const ret = cb();
+            this.context ^= context;
+            return ret;
+        }
         consumeOptionalCharacter(code) {
             if (this.next.isCharacter(code)) {
                 this.advance();
@@ -14173,6 +14196,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         peekKeywordAs() {
             return this.next.isKeywordAs();
         }
+        /**
+         * Consumes an expected character, otherwise emits an error about the missing expected character
+         * and skips over the token stream until reaching a recoverable point.
+         *
+         * See `this.error` and `this.skip` for more details.
+         */
         expectCharacter(code) {
             if (this.consumeOptionalCharacter(code))
                 return;
@@ -14408,17 +14437,23 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     result = this.parseAccessMemberOrMethodCall(result, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
-                    this.rbracketsExpected++;
-                    const key = this.parsePipe();
-                    this.rbracketsExpected--;
-                    this.expectCharacter($RBRACKET);
-                    if (this.consumeOptionalOperator('=')) {
-                        const value = this.parseConditional();
-                        result = new KeyedWrite(this.span(resultStart), this.sourceSpan(resultStart), result, key, value);
-                    }
-                    else {
-                        result = new KeyedRead(this.span(resultStart), this.sourceSpan(resultStart), result, key);
-                    }
+                    this.withContext(ParseContextFlags.Writable, () => {
+                        this.rbracketsExpected++;
+                        const key = this.parsePipe();
+                        if (key instanceof EmptyExpr) {
+                            this.error(`Key access cannot be empty`);
+                        }
+                        this.rbracketsExpected--;
+                        this.expectCharacter($RBRACKET);
+                        if (this.consumeOptionalOperator('=')) {
+                            const value = this.parseConditional();
+                            result = new KeyedWrite(this.span(resultStart), this.sourceSpan(resultStart), result, key, value);
+                        }
+                        else {
+                            result =
+                                new KeyedRead(this.span(resultStart), this.sourceSpan(resultStart), result, key);
+                        }
+                    });
                 }
                 else if (this.consumeOptionalCharacter($LPAREN)) {
                     this.rparensExpected++;
@@ -14757,6 +14792,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         consumeStatementTerminator() {
             this.consumeOptionalCharacter($SEMICOLON) || this.consumeOptionalCharacter($COMMA);
         }
+        /**
+         * Records an error and skips over the token stream until reaching a recoverable point. See
+         * `this.skip` for more details on token skipping.
+         */
         error(message, index = null) {
             this.errors.push(new ParserError(message, this.input, this.locationText(index), this.location));
             this.skip();
@@ -14767,24 +14806,32 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return (index < this.tokens.length) ? `at column ${this.tokens[index].index + 1} in` :
                 `at the end of the expression`;
         }
-        // Error recovery should skip tokens until it encounters a recovery point. skip() treats
-        // the end of input and a ';' as unconditionally a recovery point. It also treats ')',
-        // '}' and ']' as conditional recovery points if one of calling productions is expecting
-        // one of these symbols. This allows skip() to recover from errors such as '(a.) + 1' allowing
-        // more of the AST to be retained (it doesn't skip any tokens as the ')' is retained because
-        // of the '(' begins an '(' <expr> ')' production). The recovery points of grouping symbols
-        // must be conditional as they must be skipped if none of the calling productions are not
-        // expecting the closing token else we will never make progress in the case of an
-        // extraneous group closing symbol (such as a stray ')'). This is not the case for ';' because
-        // parseChain() is always the root production and it expects a ';'.
-        // If a production expects one of these token it increments the corresponding nesting count,
-        // and then decrements it just prior to checking if the token is in the input.
+        /**
+         * Error recovery should skip tokens until it encounters a recovery point. skip() treats
+         * the end of input and a ';' as unconditionally a recovery point. It also treats ')',
+         * '}' and ']' as conditional recovery points if one of calling productions is expecting
+         * one of these symbols. This allows skip() to recover from errors such as '(a.) + 1' allowing
+         * more of the AST to be retained (it doesn't skip any tokens as the ')' is retained because
+         * of the '(' begins an '(' <expr> ')' production). The recovery points of grouping symbols
+         * must be conditional as they must be skipped if none of the calling productions are not
+         * expecting the closing token else we will never make progress in the case of an
+         * extraneous group closing symbol (such as a stray ')'). This is not the case for ';' because
+         * parseChain() is always the root production and it expects a ';'.
+         *
+         * Furthermore, the presence of a stateful context can add more recovery points.
+         *   - in a `Writable` context, we are able to recover after seeing the `=` operator, which
+         *     signals the presence of an independent rvalue expression following the `=` operator.
+         *
+         * If a production expects one of these token it increments the corresponding nesting count,
+         * and then decrements it just prior to checking if the token is in the input.
+         */
         skip() {
             let n = this.next;
             while (this.index < this.tokens.length && !n.isCharacter($SEMICOLON) &&
                 (this.rparensExpected <= 0 || !n.isCharacter($RPAREN)) &&
                 (this.rbracesExpected <= 0 || !n.isCharacter($RBRACE)) &&
-                (this.rbracketsExpected <= 0 || !n.isCharacter($RBRACKET))) {
+                (this.rbracketsExpected <= 0 || !n.isCharacter($RBRACKET)) &&
+                (!(this.context & ParseContextFlags.Writable) || !n.isOperator('='))) {
                 if (this.next.isError()) {
                     this.errors.push(new ParserError(this.next.toString(), this.input, this.locationText(), this.location));
                 }
@@ -19148,7 +19195,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+32.sha-4fe673d');
+    const VERSION$1 = new Version('11.0.0-next.4+34.sha-3bbbf39');
 
     /**
      * @license
@@ -19741,7 +19788,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+32.sha-4fe673d');
+    const VERSION$2 = new Version('11.0.0-next.4+34.sha-3bbbf39');
 
     /**
      * @license
@@ -36661,6 +36708,677 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * An enumeration of basic types.
+     *
+     * @publicApi
+     */
+    var BuiltinType$1;
+    (function (BuiltinType) {
+        /**
+         * The type is a type that can hold any other type.
+         */
+        BuiltinType[BuiltinType["Any"] = -1] = "Any";
+        /** Unknown types are functionally identical to any. */
+        BuiltinType[BuiltinType["Unknown"] = -1] = "Unknown";
+        /**
+         * The type of a string literal.
+         */
+        BuiltinType[BuiltinType["String"] = 1] = "String";
+        /**
+         * The type of a numeric literal.
+         */
+        BuiltinType[BuiltinType["Number"] = 2] = "Number";
+        /**
+         * The type of the `true` and `false` literals.
+         */
+        BuiltinType[BuiltinType["Boolean"] = 4] = "Boolean";
+        /**
+         * The type of the `undefined` literal.
+         */
+        BuiltinType[BuiltinType["Undefined"] = 8] = "Undefined";
+        /**
+         * the type of the `null` literal.
+         */
+        BuiltinType[BuiltinType["Null"] = 16] = "Null";
+        /**
+         * the type is an unbound type parameter.
+         */
+        BuiltinType[BuiltinType["Unbound"] = 32] = "Unbound";
+        /**
+         * Not a built-in type.
+         */
+        BuiltinType[BuiltinType["Other"] = 64] = "Other";
+        BuiltinType[BuiltinType["Object"] = 128] = "Object";
+    })(BuiltinType$1 || (BuiltinType$1 = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The type of Angular directive. Used for QuickInfo in template.
+     */
+    var DirectiveKind;
+    (function (DirectiveKind) {
+        DirectiveKind["COMPONENT"] = "component";
+        DirectiveKind["DIRECTIVE"] = "directive";
+        DirectiveKind["EVENT"] = "event";
+    })(DirectiveKind || (DirectiveKind = {}));
+    /**
+     * ScriptElementKind for completion.
+     */
+    var CompletionKind;
+    (function (CompletionKind) {
+        CompletionKind["ANGULAR_ELEMENT"] = "angular element";
+        CompletionKind["ATTRIBUTE"] = "attribute";
+        CompletionKind["COMPONENT"] = "component";
+        CompletionKind["ELEMENT"] = "element";
+        CompletionKind["ENTITY"] = "entity";
+        CompletionKind["HTML_ATTRIBUTE"] = "html attribute";
+        CompletionKind["HTML_ELEMENT"] = "html element";
+        CompletionKind["KEY"] = "key";
+        CompletionKind["METHOD"] = "method";
+        CompletionKind["PIPE"] = "pipe";
+        CompletionKind["PROPERTY"] = "property";
+        CompletionKind["REFERENCE"] = "reference";
+        CompletionKind["TYPE"] = "type";
+        CompletionKind["VARIABLE"] = "variable";
+    })(CompletionKind || (CompletionKind = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // Reverse mappings of enum would generate strings
+    const SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
+    const SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
+    const SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
+    const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
+    const ALIAS_NAME = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.aliasName];
+    /**
+     * Construct a QuickInfo object taking into account its container and type.
+     * @param name Name of the QuickInfo target
+     * @param kind component, directive, pipe, etc.
+     * @param textSpan span of the target
+     * @param containerName either the Symbol's container or the NgModule that contains the directive
+     * @param type user-friendly name of the type
+     * @param documentation docstring or comment
+     */
+    function createQuickInfo(name, kind, textSpan, containerName, type, documentation) {
+        const containerDisplayParts = containerName ?
+            [
+                { text: containerName, kind: SYMBOL_INTERFACE },
+                { text: '.', kind: SYMBOL_PUNC },
+            ] :
+            [];
+        const typeDisplayParts = type ?
+            [
+                { text: ':', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                { text: type, kind: SYMBOL_INTERFACE },
+            ] :
+            [];
+        return {
+            kind: kind,
+            kindModifiers: ts.ScriptElementKindModifier.none,
+            textSpan: textSpan,
+            displayParts: [
+                { text: '(', kind: SYMBOL_PUNC },
+                { text: kind, kind: SYMBOL_TEXT },
+                { text: ')', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                ...containerDisplayParts,
+                { text: name, kind: SYMBOL_INTERFACE },
+                ...typeDisplayParts,
+            ],
+            documentation,
+        };
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Given a list of directives and a text to use as a selector, returns the directives which match
+     * for the selector.
+     */
+    function getDirectiveMatches(directives, selector) {
+        const selectorToMatch = CssSelector.parse(selector);
+        if (selectorToMatch.length === 0) {
+            return new Set();
+        }
+        return new Set(directives.filter((dir) => {
+            if (dir.selector === null) {
+                return false;
+            }
+            const matcher = new SelectorMatcher();
+            matcher.addSelectables(CssSelector.parse(dir.selector));
+            return matcher.match(selectorToMatch[0], null);
+        }));
+    }
+    function getTextSpanOfNode(node) {
+        if (isTemplateNodeWithKeyAndValue(node)) {
+            return toTextSpan(node.keySpan);
+        }
+        else if (node instanceof PropertyWrite || node instanceof MethodCall ||
+            node instanceof BindingPipe || node instanceof PropertyRead) {
+            // The `name` part of a `PropertyWrite`, `MethodCall`, and `BindingPipe` does not
+            // have its own AST so there is no way to retrieve a `Symbol` for just the `name` via a specific
+            // node.
+            return toTextSpan(node.nameSpan);
+        }
+        else {
+            return toTextSpan(node.sourceSpan);
+        }
+    }
+    function toTextSpan(span) {
+        let start, end;
+        if (span instanceof AbsoluteSourceSpan) {
+            start = span.start;
+            end = span.end;
+        }
+        else {
+            start = span.start.offset;
+            end = span.end.offset;
+        }
+        return { start, length: end - start };
+    }
+    function isTemplateNodeWithKeyAndValue(node) {
+        return isTemplateNode(node) && node.hasOwnProperty('keySpan');
+    }
+    function isTemplateNode(node) {
+        // Template node implements the Node interface so we cannot use instanceof.
+        return node.sourceSpan instanceof ParseSourceSpan;
+    }
+    /**
+     * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
+     */
+    function getTemplateInfoAtPosition(fileName, position, compiler) {
+        if (fileName.endsWith('.ts')) {
+            return getInlineTemplateInfoAtPosition(fileName, position, compiler);
+        }
+        else {
+            return getFirstComponentForTemplateFile(fileName, compiler);
+        }
+    }
+    /**
+     * First, attempt to sort component declarations by file name.
+     * If the files are the same, sort by start location of the declaration.
+     */
+    function tsDeclarationSortComparator(a, b) {
+        const aFile = a.getSourceFile().fileName;
+        const bFile = b.getSourceFile().fileName;
+        if (aFile < bFile) {
+            return -1;
+        }
+        else if (aFile > bFile) {
+            return 1;
+        }
+        else {
+            return b.getFullStart() - a.getFullStart();
+        }
+    }
+    function getFirstComponentForTemplateFile(fileName, compiler) {
+        const templateTypeChecker = compiler.getTemplateTypeChecker();
+        const components = compiler.getComponentsWithTemplateFile(fileName);
+        const sortedComponents = Array.from(components).sort(tsDeclarationSortComparator);
+        for (const component of sortedComponents) {
+            if (!ts.isClassDeclaration(component)) {
+                continue;
+            }
+            const template = templateTypeChecker.getTemplate(component);
+            if (template === null) {
+                continue;
+            }
+            return { template, component };
+        }
+        return undefined;
+    }
+    /**
+     * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
+     */
+    function getInlineTemplateInfoAtPosition(fileName, position, compiler) {
+        const sourceFile = compiler.getNextProgram().getSourceFile(fileName);
+        if (!sourceFile) {
+            return undefined;
+        }
+        // We only support top level statements / class declarations
+        for (const statement of sourceFile.statements) {
+            if (!ts.isClassDeclaration(statement) || position < statement.pos || position > statement.end) {
+                continue;
+            }
+            const template = compiler.getTemplateTypeChecker().getTemplate(statement);
+            if (template === null) {
+                return undefined;
+            }
+            return { template, component: statement };
+        }
+        return undefined;
+    }
+    /**
+     * Given an attribute name and the element or template the attribute appears on, determines which
+     * directives match because the attribute is present. That is, we find which directives are applied
+     * because of this attribute by elimination: compare the directive matches with the attribute
+     * present against the directive matches without it. The difference would be the directives which
+     * match because the attribute is present.
+     *
+     * @param attribute The attribute name to use for directive matching.
+     * @param hostNode The element or template node that the attribute is on.
+     * @param directives The list of directives to match against.
+     * @returns The list of directives matching the attribute via the strategy described above.
+     */
+    function getDirectiveMatchesForAttribute(attribute, hostNode, directives) {
+        const attributes = [...hostNode.attributes, ...hostNode.inputs];
+        if (hostNode instanceof Template) {
+            attributes.push(...hostNode.templateAttrs);
+        }
+        function toAttributeString(a) {
+            var _a, _b;
+            return `[${a.name}=${(_b = (_a = a.valueSpan) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : ''}]`;
+        }
+        const attrs = attributes.map(toAttributeString);
+        const attrsOmit = attributes.map(a => a.name === attribute ? '' : toAttributeString(a));
+        const hostNodeName = hostNode instanceof Template ? hostNode.tagName : hostNode.name;
+        const directivesWithAttribute = getDirectiveMatches(directives, hostNodeName + attrs.join(''));
+        const directivesWithoutAttribute = getDirectiveMatches(directives, hostNodeName + attrsOmit.join(''));
+        const result = new Set();
+        for (const dir of directivesWithAttribute) {
+            if (!directivesWithoutAttribute.has(dir)) {
+                result.add(dir);
+            }
+        }
+        return result;
+    }
+    /**
+     * Returns a new `ts.SymbolDisplayPart` array which has the alias imports from the tcb filtered
+     * out, i.e. `i0.NgForOf`.
+     */
+    function filterAliasImports(displayParts) {
+        const tcbAliasImportRegex = /i\d+/;
+        function isImportAlias(part) {
+            return part.kind === ALIAS_NAME && tcbAliasImportRegex.test(part.text);
+        }
+        function isDotPunctuation(part) {
+            return part.kind === SYMBOL_PUNC && part.text === '.';
+        }
+        return displayParts.filter((part, i) => {
+            const previousPart = displayParts[i - 1];
+            const nextPart = displayParts[i + 1];
+            const aliasNameFollowedByDot = isImportAlias(part) && nextPart !== undefined && isDotPunctuation(nextPart);
+            const dotPrecededByAlias = isDotPunctuation(part) && previousPart !== undefined && isImportAlias(previousPart);
+            return !aliasNameFollowedByDot && !dotPrecededByAlias;
+        });
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Return the template AST node or expression AST node that most accurately
+     * represents the node at the specified cursor `position`.
+     * @param ast AST tree
+     * @param position cursor position
+     */
+    function findNodeAtPosition(ast, position) {
+        const visitor = new R3Visitor(position);
+        visitor.visitAll(ast);
+        const candidate = visitor.path[visitor.path.length - 1];
+        if (!candidate) {
+            return;
+        }
+        if (isTemplateNodeWithKeyAndValue(candidate)) {
+            const { keySpan, valueSpan } = candidate;
+            // If cursor is within source span but not within key span or value span,
+            // do not return the node.
+            if (!isWithin(position, keySpan) && (valueSpan && !isWithin(position, valueSpan))) {
+                return;
+            }
+        }
+        return candidate;
+    }
+    class R3Visitor {
+        // Position must be absolute in the source file.
+        constructor(position) {
+            this.position = position;
+            // We need to keep a path instead of the last node because we might need more
+            // context for the last node, for example what is the parent node?
+            this.path = [];
+        }
+        visit(node) {
+            const { start, end } = getSpanIncludingEndTag(node);
+            if (isWithin(this.position, { start, end })) {
+                const length = end - start;
+                const last = this.path[this.path.length - 1];
+                if (last) {
+                    const { start, end } = isTemplateNode(last) ? getSpanIncludingEndTag(last) : last.sourceSpan;
+                    const lastLength = end - start;
+                    if (length > lastLength) {
+                        // The current node has a span that is larger than the last node found
+                        // so we do not descend into it. This typically means we have found
+                        // a candidate in one of the root nodes so we do not need to visit
+                        // other root nodes.
+                        return;
+                    }
+                }
+                this.path.push(node);
+                node.visit(this);
+            }
+        }
+        visitElement(element) {
+            this.visitAll(element.attributes);
+            this.visitAll(element.inputs);
+            this.visitAll(element.outputs);
+            this.visitAll(element.references);
+            this.visitAll(element.children);
+        }
+        visitTemplate(template) {
+            this.visitAll(template.attributes);
+            this.visitAll(template.inputs);
+            this.visitAll(template.outputs);
+            this.visitAll(template.templateAttrs);
+            this.visitAll(template.references);
+            this.visitAll(template.variables);
+            this.visitAll(template.children);
+        }
+        visitContent(content) {
+            visitAll(this, content.attributes);
+        }
+        visitVariable(variable) {
+            // Variable has no template nodes or expression nodes.
+        }
+        visitReference(reference) {
+            // Reference has no template nodes or expression nodes.
+        }
+        visitTextAttribute(attribute) {
+            // Text attribute has no template nodes or expression nodes.
+        }
+        visitBoundAttribute(attribute) {
+            const visitor = new ExpressionVisitor$1(this.position);
+            visitor.visit(attribute.value, this.path);
+        }
+        visitBoundEvent(event) {
+            const isTwoWayBinding = this.path.some(n => n instanceof BoundAttribute && event.name === n.name + 'Change');
+            if (isTwoWayBinding) {
+                // For two-way binding aka banana-in-a-box, there are two matches:
+                // BoundAttribute and BoundEvent. Both have the same spans. We choose to
+                // return BoundAttribute because it matches the identifier name verbatim.
+                // TODO: For operations like go to definition, ideally we want to return
+                // both.
+                this.path.pop(); // remove bound event from the AST path
+                return;
+            }
+            const visitor = new ExpressionVisitor$1(this.position);
+            visitor.visit(event.handler, this.path);
+        }
+        visitText(text) {
+            // Text has no template nodes or expression nodes.
+        }
+        visitBoundText(text) {
+            const visitor = new ExpressionVisitor$1(this.position);
+            visitor.visit(text.value, this.path);
+        }
+        visitIcu(icu) {
+            for (const boundText of Object.values(icu.vars)) {
+                this.visit(boundText);
+            }
+            for (const boundTextOrText of Object.values(icu.placeholders)) {
+                this.visit(boundTextOrText);
+            }
+        }
+        visitAll(nodes) {
+            for (const node of nodes) {
+                this.visit(node);
+            }
+        }
+    }
+    class ExpressionVisitor$1 extends RecursiveAstVisitor {
+        // Position must be absolute in the source file.
+        constructor(position) {
+            super();
+            this.position = position;
+        }
+        visit(node, path) {
+            if (node instanceof ASTWithSource) {
+                // In order to reduce noise, do not include `ASTWithSource` in the path.
+                // For the purpose of source spans, there is no difference between
+                // `ASTWithSource` and and underlying node that it wraps.
+                node = node.ast;
+            }
+            // The third condition is to account for the implicit receiver, which should
+            // not be visited.
+            if (isWithin(this.position, node.sourceSpan) && !(node instanceof ImplicitReceiver)) {
+                path.push(node);
+                node.visit(this, path);
+            }
+        }
+    }
+    function getSpanIncludingEndTag(ast) {
+        const result = {
+            start: ast.sourceSpan.start.offset,
+            end: ast.sourceSpan.end.offset,
+        };
+        // For Element and Template node, sourceSpan.end is the end of the opening
+        // tag. For the purpose of language service, we need to actually recognize
+        // the end of the closing tag. Otherwise, for situation like
+        // <my-component></my-comp¦onent> where the cursor is in the closing tag
+        // we will not be able to return any information.
+        if ((ast instanceof Element || ast instanceof Template) && ast.endSourceSpan) {
+            result.end = ast.endSourceSpan.end.offset;
+        }
+        return result;
+    }
+    function isWithin(position, span) {
+        let start, end;
+        if (span instanceof ParseSourceSpan) {
+            start = span.start.offset;
+            end = span.end.offset;
+        }
+        else {
+            start = span.start;
+            end = span.end;
+        }
+        // Note both start and end are inclusive because we want to match conditions
+        // like ¦start and end¦ where ¦ is the cursor.
+        return start <= position && position <= end;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The type of Angular directive. Used for QuickInfo in template.
+     */
+    var QuickInfoKind;
+    (function (QuickInfoKind) {
+        QuickInfoKind["COMPONENT"] = "component";
+        QuickInfoKind["DIRECTIVE"] = "directive";
+        QuickInfoKind["EVENT"] = "event";
+        QuickInfoKind["REFERENCE"] = "reference";
+        QuickInfoKind["ELEMENT"] = "element";
+        QuickInfoKind["VARIABLE"] = "variable";
+        QuickInfoKind["PIPE"] = "pipe";
+        QuickInfoKind["PROPERTY"] = "property";
+        QuickInfoKind["METHOD"] = "method";
+        QuickInfoKind["TEMPLATE"] = "template";
+    })(QuickInfoKind || (QuickInfoKind = {}));
+    class QuickInfoBuilder {
+        constructor(tsLS, compiler) {
+            this.tsLS = tsLS;
+            this.compiler = compiler;
+            this.typeChecker = this.compiler.getNextProgram().getTypeChecker();
+        }
+        get(fileName, position) {
+            const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
+            if (templateInfo === undefined) {
+                return undefined;
+            }
+            const { template, component } = templateInfo;
+            const node = findNodeAtPosition(template, position);
+            if (node === undefined) {
+                return undefined;
+            }
+            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
+            if (symbol === null) {
+                return isDollarAny(node) ? createDollarAnyQuickInfo(node) : undefined;
+            }
+            return this.getQuickInfoForSymbol(symbol, node);
+        }
+        getQuickInfoForSymbol(symbol, node) {
+            switch (symbol.kind) {
+                case SymbolKind.Input:
+                case SymbolKind.Output:
+                    return this.getQuickInfoForBindingSymbol(symbol, node);
+                case SymbolKind.Template:
+                    return createNgTemplateQuickInfo(node);
+                case SymbolKind.Element:
+                    return this.getQuickInfoForElementSymbol(symbol);
+                case SymbolKind.Variable:
+                    return this.getQuickInfoForVariableSymbol(symbol, node);
+                case SymbolKind.Reference:
+                    return this.getQuickInfoForReferenceSymbol(symbol, node);
+                case SymbolKind.DomBinding:
+                    return this.getQuickInfoForDomBinding(node, symbol);
+                case SymbolKind.Directive:
+                    return this.getQuickInfoAtShimLocation(symbol.shimLocation, node);
+                case SymbolKind.Expression:
+                    return node instanceof BindingPipe ?
+                        this.getQuickInfoForPipeSymbol(symbol, node) :
+                        this.getQuickInfoAtShimLocation(symbol.shimLocation, node);
+            }
+        }
+        getQuickInfoForBindingSymbol(symbol, node) {
+            if (symbol.bindings.length === 0) {
+                return undefined;
+            }
+            const kind = symbol.kind === SymbolKind.Input ? QuickInfoKind.PROPERTY : QuickInfoKind.EVENT;
+            const quickInfo = this.getQuickInfoAtShimLocation(symbol.bindings[0].shimLocation, node);
+            return quickInfo === undefined ? undefined : updateQuickInfoKind(quickInfo, kind);
+        }
+        getQuickInfoForElementSymbol(symbol) {
+            const { templateNode } = symbol;
+            const matches = getDirectiveMatches(symbol.directives, templateNode.name);
+            if (matches.size > 0) {
+                return this.getQuickInfoForDirectiveSymbol(matches.values().next().value, templateNode);
+            }
+            return createQuickInfo(templateNode.name, QuickInfoKind.ELEMENT, getTextSpanOfNode(templateNode), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType));
+        }
+        getQuickInfoForVariableSymbol(symbol, node) {
+            const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.shimLocation);
+            return createQuickInfo(symbol.declaration.name, QuickInfoKind.VARIABLE, getTextSpanOfNode(node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
+        }
+        getQuickInfoForReferenceSymbol(symbol, node) {
+            const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.shimLocation);
+            return createQuickInfo(symbol.declaration.name, QuickInfoKind.REFERENCE, getTextSpanOfNode(node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
+        }
+        getQuickInfoForPipeSymbol(symbol, node) {
+            const quickInfo = this.getQuickInfoAtShimLocation(symbol.shimLocation, node);
+            return quickInfo === undefined ? undefined : updateQuickInfoKind(quickInfo, QuickInfoKind.PIPE);
+        }
+        getQuickInfoForDomBinding(node, symbol) {
+            if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
+                return undefined;
+            }
+            const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
+            if (directives.size === 0) {
+                return undefined;
+            }
+            return this.getQuickInfoForDirectiveSymbol(directives.values().next().value, node);
+        }
+        getQuickInfoForDirectiveSymbol(dir, node) {
+            const kind = dir.isComponent ? QuickInfoKind.COMPONENT : QuickInfoKind.DIRECTIVE;
+            const documentation = this.getDocumentationFromTypeDefAtLocation(dir.shimLocation);
+            return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(node), undefined /* containerName */, undefined, documentation);
+        }
+        getDocumentationFromTypeDefAtLocation(shimLocation) {
+            var _a;
+            const typeDefs = this.tsLS.getTypeDefinitionAtPosition(shimLocation.shimPath, shimLocation.positionInShimFile);
+            if (typeDefs === undefined || typeDefs.length === 0) {
+                return undefined;
+            }
+            return (_a = this.tsLS.getQuickInfoAtPosition(typeDefs[0].fileName, typeDefs[0].textSpan.start)) === null || _a === void 0 ? void 0 : _a.documentation;
+        }
+        getQuickInfoAtShimLocation(location, node) {
+            const quickInfo = this.tsLS.getQuickInfoAtPosition(location.shimPath, location.positionInShimFile);
+            if (quickInfo === undefined || quickInfo.displayParts === undefined) {
+                return quickInfo;
+            }
+            quickInfo.displayParts = filterAliasImports(quickInfo.displayParts);
+            const textSpan = getTextSpanOfNode(node);
+            return Object.assign(Object.assign({}, quickInfo), { textSpan });
+        }
+    }
+    function updateQuickInfoKind(quickInfo, kind) {
+        if (quickInfo.displayParts === undefined) {
+            return quickInfo;
+        }
+        const startsWithKind = quickInfo.displayParts.length >= 3 &&
+            displayPartsEqual(quickInfo.displayParts[0], { text: '(', kind: SYMBOL_PUNC }) &&
+            quickInfo.displayParts[1].kind === SYMBOL_TEXT &&
+            displayPartsEqual(quickInfo.displayParts[2], { text: ')', kind: SYMBOL_PUNC });
+        if (startsWithKind) {
+            quickInfo.displayParts[1].text = kind;
+        }
+        else {
+            quickInfo.displayParts = [
+                { text: '(', kind: SYMBOL_PUNC },
+                { text: kind, kind: SYMBOL_TEXT },
+                { text: ')', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                ...quickInfo.displayParts,
+            ];
+        }
+        return quickInfo;
+    }
+    function displayPartsEqual(a, b) {
+        return a.text === b.text && a.kind === b.kind;
+    }
+    function isDollarAny(node) {
+        return node instanceof MethodCall && node.receiver instanceof ImplicitReceiver &&
+            node.name === '$any' && node.args.length === 1;
+    }
+    function createDollarAnyQuickInfo(node) {
+        return createQuickInfo('$any', QuickInfoKind.METHOD, getTextSpanOfNode(node), 
+        /** containerName */ undefined, 'any', [{
+                kind: SYMBOL_TEXT,
+                text: 'function to cast an expression to the `any` type',
+            }]);
+    }
+    // TODO(atscott): Create special `ts.QuickInfo` for `ng-template` and `ng-container` as well.
+    function createNgTemplateQuickInfo(node) {
+        return createQuickInfo('ng-template', QuickInfoKind.TEMPLATE, getTextSpanOfNode(node), 
+        /** containerName */ undefined, 
+        /** type */ undefined, [{
+                kind: SYMBOL_TEXT,
+                text: 'The `<ng-template>` is an Angular element for rendering HTML. It is never displayed directly.',
+            }]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     class LanguageService {
         constructor(project, tsLS) {
             this.tsLS = tsLS;
@@ -36684,6 +37402,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return diagnostics;
             }
             throw new Error('Ivy LS currently does not support external template');
+        }
+        getQuickInfoAtPosition(fileName, position) {
+            const program = this.strategy.getProgram();
+            const compiler = this.createCompiler(program);
+            return new QuickInfoBuilder(this.tsLS, compiler).get(fileName, position);
         }
         createCompiler(program) {
             return new NgCompiler(this.adapter, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), 
@@ -36812,8 +37535,19 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         function getTypeDefinitionAtPosition(fileName, position) {
             return undefined;
         }
+        function getQuickInfoAtPosition(fileName, position) {
+            var _a;
+            if (angularOnly) {
+                return ngLS.getQuickInfoAtPosition(fileName, position);
+            }
+            else {
+                // If TS could answer the query, then return that result. Otherwise, return from Angular LS.
+                return (_a = tsLS.getQuickInfoAtPosition(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getQuickInfoAtPosition(fileName, position);
+            }
+        }
         return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics,
-            getTypeDefinitionAtPosition });
+            getTypeDefinitionAtPosition,
+            getQuickInfoAtPosition });
     }
 
     exports.create = create;
