@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+34.sha-3bbbf39
+ * @license Angular v11.0.0-next.4+35.sha-5dbf357
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19195,7 +19195,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+34.sha-3bbbf39');
+    const VERSION$1 = new Version('11.0.0-next.4+35.sha-5dbf357');
 
     /**
      * @license
@@ -19788,7 +19788,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+34.sha-3bbbf39');
+    const VERSION$2 = new Version('11.0.0-next.4+35.sha-5dbf357');
 
     /**
      * @license
@@ -29022,6 +29022,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 nodeFrom.usesResources.add(dep);
             }
         }
+        getResourceDependencies(from) {
+            const node = this.nodes.get(from);
+            return node ? [...node.usesResources] : [];
+        }
         isStale(sf, changedTsPaths, changedResources) {
             return isLogicallyChanged(sf, this.nodeFor(sf), changedTsPaths, EMPTY_SET, changedResources);
         }
@@ -36037,6 +36041,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.ignoreForDiagnostics =
                 new Set(tsProgram.getSourceFiles().filter(sf => this.adapter.isShim(sf)));
             this.ignoreForEmit = this.adapter.ignoreForEmit;
+        }
+        /**
+         * Get the resource dependencies of a file.
+         *
+         * If the file is not part of the compilation, an empty array will be returned.
+         */
+        getResourceDependencies(file) {
+            this.ensureAnalyzed();
+            return this.incrementalDriver.depGraph.getResourceDependencies(file);
         }
         /**
          * Get all Angular-related diagnostics for this compilation.
