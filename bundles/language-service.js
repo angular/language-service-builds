@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+46.sha-e10b3e2
+ * @license Angular v11.0.0-next.4+47.sha-faa81dc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18026,7 +18026,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+46.sha-e10b3e2');
+    const VERSION$1 = new Version('11.0.0-next.4+47.sha-faa81dc');
 
     /**
      * @license
@@ -25866,11 +25866,58 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     // Reverse mappings of enum would generate strings
-    const SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
-    const SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
-    const SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
-    const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
     const ALIAS_NAME = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.aliasName];
+    const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
+    const SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
+    const SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
+    const SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
+    /**
+     * Construct a QuickInfo object taking into account its container and type.
+     * @param name Name of the QuickInfo target
+     * @param kind component, directive, pipe, etc.
+     * @param textSpan span of the target
+     * @param containerName either the Symbol's container or the NgModule that contains the directive
+     * @param type user-friendly name of the type
+     * @param documentation docstring or comment
+     */
+    function createQuickInfo(name, kind, textSpan, containerName, type, documentation) {
+        const containerDisplayParts = containerName ?
+            [
+                { text: containerName, kind: SYMBOL_INTERFACE },
+                { text: '.', kind: SYMBOL_PUNC },
+            ] :
+            [];
+        const typeDisplayParts = type ?
+            [
+                { text: ':', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                { text: type, kind: SYMBOL_INTERFACE },
+            ] :
+            [];
+        return {
+            kind: kind,
+            kindModifiers: ts.ScriptElementKindModifier.none,
+            textSpan: textSpan,
+            displayParts: [
+                { text: '(', kind: SYMBOL_PUNC },
+                { text: kind, kind: SYMBOL_TEXT },
+                { text: ')', kind: SYMBOL_PUNC },
+                { text: ' ', kind: SYMBOL_SPACE },
+                ...containerDisplayParts,
+                { text: name, kind: SYMBOL_INTERFACE },
+                ...typeDisplayParts,
+            ],
+            documentation,
+        };
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Traverse the template AST and look for the symbol located at `position`, then
      * return the corresponding quick info.
@@ -25914,45 +25961,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return createQuickInfo(directiveName, kind, textSpan, moduleName, ts.ScriptElementKind.classElement);
             }
         }
-    }
-    /**
-     * Construct a QuickInfo object taking into account its container and type.
-     * @param name Name of the QuickInfo target
-     * @param kind component, directive, pipe, etc.
-     * @param textSpan span of the target
-     * @param containerName either the Symbol's container or the NgModule that contains the directive
-     * @param type user-friendly name of the type
-     * @param documentation docstring or comment
-     */
-    function createQuickInfo(name, kind, textSpan, containerName, type, documentation) {
-        const containerDisplayParts = containerName ?
-            [
-                { text: containerName, kind: SYMBOL_INTERFACE },
-                { text: '.', kind: SYMBOL_PUNC },
-            ] :
-            [];
-        const typeDisplayParts = type ?
-            [
-                { text: ':', kind: SYMBOL_PUNC },
-                { text: ' ', kind: SYMBOL_SPACE },
-                { text: type, kind: SYMBOL_INTERFACE },
-            ] :
-            [];
-        return {
-            kind: kind,
-            kindModifiers: ts.ScriptElementKindModifier.none,
-            textSpan: textSpan,
-            displayParts: [
-                { text: '(', kind: SYMBOL_PUNC },
-                { text: kind, kind: SYMBOL_TEXT },
-                { text: ')', kind: SYMBOL_PUNC },
-                { text: ' ', kind: SYMBOL_SPACE },
-                ...containerDisplayParts,
-                { text: name, kind: SYMBOL_INTERFACE },
-                ...typeDisplayParts,
-            ],
-            documentation,
-        };
     }
 
     /**
@@ -34062,7 +34070,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.4+46.sha-e10b3e2');
+    const VERSION$2 = new Version$1('11.0.0-next.4+47.sha-faa81dc');
 
     /**
      * @license

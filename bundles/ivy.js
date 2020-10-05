@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+46.sha-e10b3e2
+ * @license Angular v11.0.0-next.4+47.sha-faa81dc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+46.sha-e10b3e2');
+    const VERSION$1 = new Version('11.0.0-next.4+47.sha-faa81dc');
 
     /**
      * @license
@@ -19822,7 +19822,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+46.sha-e10b3e2');
+    const VERSION$2 = new Version('11.0.0-next.4+47.sha-faa81dc');
 
     /**
      * @license
@@ -36772,100 +36772,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * An enumeration of basic types.
-     *
-     * @publicApi
-     */
-    var BuiltinType$1;
-    (function (BuiltinType) {
-        /**
-         * The type is a type that can hold any other type.
-         */
-        BuiltinType[BuiltinType["Any"] = -1] = "Any";
-        /** Unknown types are functionally identical to any. */
-        BuiltinType[BuiltinType["Unknown"] = -1] = "Unknown";
-        /**
-         * The type of a string literal.
-         */
-        BuiltinType[BuiltinType["String"] = 1] = "String";
-        /**
-         * The type of a numeric literal.
-         */
-        BuiltinType[BuiltinType["Number"] = 2] = "Number";
-        /**
-         * The type of the `true` and `false` literals.
-         */
-        BuiltinType[BuiltinType["Boolean"] = 4] = "Boolean";
-        /**
-         * The type of the `undefined` literal.
-         */
-        BuiltinType[BuiltinType["Undefined"] = 8] = "Undefined";
-        /**
-         * the type of the `null` literal.
-         */
-        BuiltinType[BuiltinType["Null"] = 16] = "Null";
-        /**
-         * the type is an unbound type parameter.
-         */
-        BuiltinType[BuiltinType["Unbound"] = 32] = "Unbound";
-        /**
-         * Not a built-in type.
-         */
-        BuiltinType[BuiltinType["Other"] = 64] = "Other";
-        BuiltinType[BuiltinType["Object"] = 128] = "Object";
-    })(BuiltinType$1 || (BuiltinType$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * The type of Angular directive. Used for QuickInfo in template.
-     */
-    var DirectiveKind;
-    (function (DirectiveKind) {
-        DirectiveKind["COMPONENT"] = "component";
-        DirectiveKind["DIRECTIVE"] = "directive";
-        DirectiveKind["EVENT"] = "event";
-    })(DirectiveKind || (DirectiveKind = {}));
-    /**
-     * ScriptElementKind for completion.
-     */
-    var CompletionKind;
-    (function (CompletionKind) {
-        CompletionKind["ANGULAR_ELEMENT"] = "angular element";
-        CompletionKind["ATTRIBUTE"] = "attribute";
-        CompletionKind["COMPONENT"] = "component";
-        CompletionKind["ELEMENT"] = "element";
-        CompletionKind["ENTITY"] = "entity";
-        CompletionKind["HTML_ATTRIBUTE"] = "html attribute";
-        CompletionKind["HTML_ELEMENT"] = "html element";
-        CompletionKind["KEY"] = "key";
-        CompletionKind["METHOD"] = "method";
-        CompletionKind["PIPE"] = "pipe";
-        CompletionKind["PROPERTY"] = "property";
-        CompletionKind["REFERENCE"] = "reference";
-        CompletionKind["TYPE"] = "type";
-        CompletionKind["VARIABLE"] = "variable";
-    })(CompletionKind || (CompletionKind = {}));
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // Reverse mappings of enum would generate strings
-    const SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
-    const SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
-    const SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
-    const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
     const ALIAS_NAME = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.aliasName];
+    const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
+    const SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
+    const SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
+    const SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
     /**
      * Construct a QuickInfo object taking into account its container and type.
      * @param name Name of the QuickInfo target
