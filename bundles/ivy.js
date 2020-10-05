@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+45.sha-57f8dd2
+ * @license Angular v11.0.0-next.4+46.sha-e10b3e2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+45.sha-57f8dd2');
+    const VERSION$1 = new Version('11.0.0-next.4+46.sha-e10b3e2');
 
     /**
      * @license
@@ -19822,7 +19822,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+45.sha-57f8dd2');
+    const VERSION$2 = new Version('11.0.0-next.4+46.sha-e10b3e2');
 
     /**
      * @license
@@ -35253,11 +35253,12 @@ Either add the @Injectable() decorator to '${provider.node.name
      * This class is essentially used as just a closure around the constructor parameters.
      */
     class SymbolBuilder {
-        constructor(typeChecker, shimPath, typeCheckBlock, templateData) {
+        constructor(typeChecker, shimPath, typeCheckBlock, templateData, componentScopeReader) {
             this.typeChecker = typeChecker;
             this.shimPath = shimPath;
             this.typeCheckBlock = typeCheckBlock;
             this.templateData = templateData;
+            this.componentScopeReader = componentScopeReader;
         }
         getSymbol(node) {
             if (node instanceof BoundAttribute || node instanceof TextAttribute) {
@@ -35322,17 +35323,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                 var _a, _b;
                 const symbol = this.getSymbolOfTsNode(node.parent);
                 if (symbol === null || symbol.tsSymbol === null ||
-                    symbol.tsSymbol.declarations.length === 0) {
+                    symbol.tsSymbol.valueDeclaration === undefined ||
+                    !ts.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                     return null;
                 }
-                const meta = this.getDirectiveMeta(element, symbol.tsSymbol.declarations[0]);
+                const meta = this.getDirectiveMeta(element, symbol.tsSymbol.valueDeclaration);
                 if (meta === null) {
                     return null;
                 }
+                const ngModule = this.getDirectiveModule(symbol.tsSymbol.valueDeclaration);
                 const selector = (_a = meta.selector) !== null && _a !== void 0 ? _a : null;
                 const isComponent = (_b = meta.isComponent) !== null && _b !== void 0 ? _b : null;
                 const directiveSymbol = Object.assign(Object.assign({}, symbol), { tsSymbol: symbol.tsSymbol, selector,
-                    isComponent, kind: SymbolKind.Directive });
+                    isComponent,
+                    ngModule, kind: SymbolKind.Directive });
                 return directiveSymbol;
             })
                 .filter((d) => d !== null);
@@ -35344,6 +35348,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             return (_a = directives.find(m => m.ref.node === directiveDeclaration)) !== null && _a !== void 0 ? _a : null;
+        }
+        getDirectiveModule(declaration) {
+            const scope = this.componentScopeReader.getScopeForComponent(declaration);
+            if (scope === null || scope === 'error') {
+                return null;
+            }
+            return scope.ngModule;
         }
         getSymbolOfBoundEvent(eventBinding) {
             // Outputs are a `ts.CallExpression` that look like one of the two:
@@ -35428,9 +35439,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             const symbol = this.getSymbolOfTsNode(declaration);
-            if (symbol === null || symbol.tsSymbol === null) {
+            if (symbol === null || symbol.tsSymbol === null ||
+                symbol.tsSymbol.valueDeclaration === undefined ||
+                !ts.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                 return null;
             }
+            const ngModule = this.getDirectiveModule(symbol.tsSymbol.valueDeclaration);
             return {
                 kind: SymbolKind.Directive,
                 tsSymbol: symbol.tsSymbol,
@@ -35438,6 +35452,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 shimLocation: symbol.shimLocation,
                 isComponent,
                 selector,
+                ngModule,
             };
         }
         getSymbolOfVariable(variable) {
@@ -35589,7 +35604,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `ProgramTypeCheckAdapter` for generation of template type-checking code.
      */
     class TemplateTypeCheckerImpl {
-        constructor(originalProgram, typeCheckingStrategy, typeCheckAdapter, config, refEmitter, reflector, compilerHost, priorBuild) {
+        constructor(originalProgram, typeCheckingStrategy, typeCheckAdapter, config, refEmitter, reflector, compilerHost, priorBuild, componentScopeReader) {
             this.originalProgram = originalProgram;
             this.typeCheckingStrategy = typeCheckingStrategy;
             this.typeCheckAdapter = typeCheckAdapter;
@@ -35598,6 +35613,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.reflector = reflector;
             this.compilerHost = compilerHost;
             this.priorBuild = priorBuild;
+            this.componentScopeReader = componentScopeReader;
             this.state = new Map();
             this.isComplete = false;
         }
@@ -35852,7 +35868,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (data === null) {
                 return null;
             }
-            return new SymbolBuilder(typeChecker, shimPath, tcb, data).getSymbol(node);
+            return new SymbolBuilder(typeChecker, shimPath, tcb, data, this.componentScopeReader)
+                .getSymbol(node);
         }
     }
     function convertDiagnostic(diag, sourceResolver) {
@@ -36601,7 +36618,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             ];
             const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
             const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms);
-            const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver);
+            const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry);
             return {
                 isCore,
                 traitCompiler,
