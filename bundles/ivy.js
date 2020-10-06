@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+56.sha-05672ab
+ * @license Angular v11.0.0-next.4+57.sha-3975dd9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+56.sha-05672ab');
+    const VERSION$1 = new Version('11.0.0-next.4+57.sha-3975dd9');
 
     /**
      * @license
@@ -19822,7 +19822,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+56.sha-05672ab');
+    const VERSION$2 = new Version('11.0.0-next.4+57.sha-3975dd9');
 
     /**
      * @license
@@ -36998,6 +36998,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return !aliasNameFollowedByDot && !dotPrecededByAlias;
         });
     }
+    function isDollarEvent(n) {
+        return n instanceof PropertyRead && n.name === '$event' &&
+            n.receiver instanceof ImplicitReceiver;
+    }
 
     /**
      * @license
@@ -37174,6 +37178,98 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         // Note both start and end are inclusive because we want to match conditions
         // like ¦start and end¦ where ¦ is the cursor.
         return start <= position && position <= end;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class DefinitionBuilder {
+        constructor(tsLS, compiler) {
+            this.tsLS = tsLS;
+            this.compiler = compiler;
+        }
+        // TODO(atscott): getTypeDefinitionAtPosition
+        getDefinitionAndBoundSpan(fileName, position) {
+            const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
+            if (templateInfo === undefined) {
+                return undefined;
+            }
+            const { template, component } = templateInfo;
+            const node = findNodeAtPosition(template, position);
+            // The `$event` of event handlers would point to the $event parameter in the shim file, as in
+            // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
+            // If we wanted to return something for this, it would be more appropriate for something like
+            // `getTypeDefinition`.
+            if (node === undefined || isDollarEvent(node)) {
+                return undefined;
+            }
+            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
+            if (symbol === null) {
+                return undefined;
+            }
+            const definitions = this.getDefinitionsForSymbol(symbol, node);
+            return { definitions, textSpan: getTextSpanOfNode(node) };
+        }
+        getDefinitionsForSymbol(symbol, node) {
+            switch (symbol.kind) {
+                case SymbolKind.Directive:
+                case SymbolKind.Element:
+                case SymbolKind.Template:
+                case SymbolKind.DomBinding:
+                    // `Template` and `Element` types should not return anything because their "definitions" are
+                    // the template locations themselves. Instead, `getTypeDefinitionAtPosition` should return
+                    // the directive class / native element interface. `Directive` would have similar reasoning,
+                    // though the `TemplateTypeChecker` only returns it as a list on `DomBinding`, `Element`, or
+                    // `Template` so it's really only here for switch case completeness (it wouldn't ever appear
+                    // here).
+                    //
+                    // `DomBinding` also does not return anything because the value assignment is internal to
+                    // the TCB. Again, `getTypeDefinitionAtPosition` could return a possible directive the
+                    // attribute binds to or the property in the native interface.
+                    return [];
+                case SymbolKind.Input:
+                case SymbolKind.Output:
+                    return this.getDefinitionsForSymbols(symbol.bindings);
+                case SymbolKind.Variable:
+                case SymbolKind.Reference: {
+                    const definitions = [];
+                    if (symbol.declaration !== node) {
+                        definitions.push({
+                            name: symbol.declaration.name,
+                            containerName: '',
+                            containerKind: ts.ScriptElementKind.unknown,
+                            kind: ts.ScriptElementKind.variableElement,
+                            textSpan: getTextSpanOfNode(symbol.declaration),
+                            contextSpan: toTextSpan(symbol.declaration.sourceSpan),
+                            fileName: symbol.declaration.sourceSpan.start.file.url,
+                        });
+                    }
+                    if (symbol.kind === SymbolKind.Variable) {
+                        definitions.push(...this.getDefinitionInfos(symbol.shimLocation));
+                    }
+                    return definitions;
+                }
+                case SymbolKind.Expression: {
+                    const { shimLocation } = symbol;
+                    return this.getDefinitionInfos(shimLocation);
+                }
+            }
+        }
+        getDefinitionsForSymbols(symbols) {
+            const definitions = [];
+            for (const { shimLocation } of symbols) {
+                definitions.push(...this.getDefinitionInfos(shimLocation));
+            }
+            return definitions;
+        }
+        getDefinitionInfos({ shimPath, positionInShimFile }) {
+            var _a;
+            return (_a = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+        }
     }
 
     /**
@@ -37382,6 +37478,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
             throw new Error('Ivy LS currently does not support external template');
         }
+        getDefinitionAndBoundSpan(fileName, position) {
+            const program = this.strategy.getProgram();
+            const compiler = this.createCompiler(program);
+            return new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
+        }
         getQuickInfoAtPosition(fileName, position) {
             const program = this.strategy.getProgram();
             const compiler = this.createCompiler(program);
@@ -37524,9 +37625,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return (_a = tsLS.getQuickInfoAtPosition(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getQuickInfoAtPosition(fileName, position);
             }
         }
+        function getDefinitionAndBoundSpan(fileName, position) {
+            var _a;
+            if (angularOnly) {
+                return ngLS.getDefinitionAndBoundSpan(fileName, position);
+            }
+            else {
+                // If TS could answer the query, then return that result. Otherwise, return from Angular LS.
+                return (_a = tsLS.getDefinitionAndBoundSpan(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getDefinitionAndBoundSpan(fileName, position);
+            }
+        }
         return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics,
             getTypeDefinitionAtPosition,
-            getQuickInfoAtPosition });
+            getQuickInfoAtPosition,
+            getDefinitionAndBoundSpan });
     }
 
     exports.create = create;
