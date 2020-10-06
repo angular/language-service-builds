@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+54.sha-246de9a
+ * @license Angular v11.0.0-next.4+55.sha-70e13dc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+54.sha-246de9a');
+    const VERSION$1 = new Version('11.0.0-next.4+55.sha-70e13dc');
 
     /**
      * @license
@@ -19822,7 +19822,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+54.sha-246de9a');
+    const VERSION$2 = new Version('11.0.0-next.4+55.sha-70e13dc');
 
     /**
      * @license
@@ -37019,9 +37019,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         if (isTemplateNodeWithKeyAndValue(candidate)) {
             const { keySpan, valueSpan } = candidate;
-            // If cursor is within source span but not within key span or value span,
-            // do not return the node.
-            if (!isWithin(position, keySpan) && (valueSpan && !isWithin(position, valueSpan))) {
+            const isWithinKeyValue = isWithin(position, keySpan) || (valueSpan && isWithin(position, valueSpan));
+            if (!isWithinKeyValue) {
+                // If cursor is within source span but not within key span or value span,
+                // do not return the node.
                 return;
             }
         }
