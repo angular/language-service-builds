@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+55.sha-70e13dc
+ * @license Angular v11.0.0-next.4+56.sha-05672ab
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+55.sha-70e13dc');
+    const VERSION$1 = new Version('11.0.0-next.4+56.sha-05672ab');
 
     /**
      * @license
@@ -19822,7 +19822,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+55.sha-70e13dc');
+    const VERSION$2 = new Version('11.0.0-next.4+56.sha-05672ab');
 
     /**
      * @license
@@ -24628,9 +24628,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * @param leadingComments The comments to attach to the statement.
      */
     function attachComments(statement, leadingComments) {
-        if (leadingComments === undefined) {
-            return statement;
-        }
         for (const comment of leadingComments) {
             const commentKind = comment.multiline ? ts.SyntaxKind.MultiLineCommentTrivia :
                 ts.SyntaxKind.SingleLineCommentTrivia;
@@ -24643,7 +24640,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
             }
         }
-        return statement;
     }
 
     /**
@@ -24688,29 +24684,29 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const varType = this.downlevelVariableDeclarations ?
                 'var' :
                 stmt.hasModifier(StmtModifier.Final) ? 'const' : 'let';
-            return this.factory.attachComments(this.factory.createVariableDeclaration(stmt.name, (_a = stmt.value) === null || _a === void 0 ? void 0 : _a.visitExpression(this, context.withExpressionMode), varType), stmt.leadingComments);
+            return this.attachComments(this.factory.createVariableDeclaration(stmt.name, (_a = stmt.value) === null || _a === void 0 ? void 0 : _a.visitExpression(this, context.withExpressionMode), varType), stmt.leadingComments);
         }
         visitDeclareFunctionStmt(stmt, context) {
-            return this.factory.attachComments(this.factory.createFunctionDeclaration(stmt.name, stmt.params.map(param => param.name), this.factory.createBlock(this.visitStatements(stmt.statements, context.withStatementMode))), stmt.leadingComments);
+            return this.attachComments(this.factory.createFunctionDeclaration(stmt.name, stmt.params.map(param => param.name), this.factory.createBlock(this.visitStatements(stmt.statements, context.withStatementMode))), stmt.leadingComments);
         }
         visitExpressionStmt(stmt, context) {
-            return this.factory.attachComments(this.factory.createExpressionStatement(stmt.expr.visitExpression(this, context.withStatementMode)), stmt.leadingComments);
+            return this.attachComments(this.factory.createExpressionStatement(stmt.expr.visitExpression(this, context.withStatementMode)), stmt.leadingComments);
         }
         visitReturnStmt(stmt, context) {
-            return this.factory.attachComments(this.factory.createReturnStatement(stmt.value.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
+            return this.attachComments(this.factory.createReturnStatement(stmt.value.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
         }
         visitDeclareClassStmt(_stmt, _context) {
             throw new Error('Method not implemented.');
         }
         visitIfStmt(stmt, context) {
-            return this.factory.attachComments(this.factory.createIfStatement(stmt.condition.visitExpression(this, context), this.factory.createBlock(this.visitStatements(stmt.trueCase, context.withStatementMode)), stmt.falseCase.length > 0 ? this.factory.createBlock(this.visitStatements(stmt.falseCase, context.withStatementMode)) :
+            return this.attachComments(this.factory.createIfStatement(stmt.condition.visitExpression(this, context), this.factory.createBlock(this.visitStatements(stmt.trueCase, context.withStatementMode)), stmt.falseCase.length > 0 ? this.factory.createBlock(this.visitStatements(stmt.falseCase, context.withStatementMode)) :
                 null), stmt.leadingComments);
         }
         visitTryCatchStmt(_stmt, _context) {
             throw new Error('Method not implemented.');
         }
         visitThrowStmt(stmt, context) {
-            return this.factory.attachComments(this.factory.createThrowStatement(stmt.error.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
+            return this.attachComments(this.factory.createThrowStatement(stmt.error.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
         }
         visitReadVarExpr(ast, _context) {
             const identifier = this.factory.createIdentifier(ast.name);
@@ -24911,6 +24907,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         setSourceMapRange(ast, span) {
             return this.factory.setSourceMapRange(ast, createRange(span));
+        }
+        attachComments(statement, leadingComments) {
+            if (leadingComments !== undefined) {
+                this.factory.attachComments(statement, leadingComments);
+            }
+            return statement;
         }
     }
     /**
