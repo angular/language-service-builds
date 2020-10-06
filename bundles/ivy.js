@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+57.sha-3975dd9
+ * @license Angular v11.0.0-next.4+60.sha-aeec223
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+57.sha-3975dd9');
+    const VERSION$1 = new Version('11.0.0-next.4+60.sha-aeec223');
 
     /**
      * @license
@@ -19366,6 +19366,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // First, parse the template into a `Scope` structure. This operation captures the syntactic
             // scopes in the template and makes them available for later use.
             const scope = Scope.apply(target.template);
+            // Use the `Scope` to extract the entities present at every level of the template.
+            const templateEntities = extractTemplateEntities(scope);
             // Next, perform directive matching on the template using the `DirectiveBinder`. This returns:
             //   - directives: Map of nodes (elements & ng-templates) to the directives on them.
             //   - bindings: Map of inputs, outputs, and attributes to the directive/element that claims
@@ -19375,7 +19377,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // Finally, run the TemplateBinder to bind references, variables, and other entities within the
             // template. This extracts all the metadata that doesn't depend on directive matching.
             const { expressions, symbols, nestingLevel, usedPipes } = TemplateBinder.apply(target.template, scope);
-            return new R3BoundTarget(target, directives, bindings, references, expressions, symbols, nestingLevel, usedPipes);
+            return new R3BoundTarget(target, directives, bindings, references, expressions, symbols, nestingLevel, templateEntities, usedPipes);
         }
     }
     /**
@@ -19386,8 +19388,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * be analyzed and have their child `Scope`s available in `childScopes`.
      */
     class Scope {
-        constructor(parentScope) {
+        constructor(parentScope, template) {
             this.parentScope = parentScope;
+            this.template = template;
             /**
              * Named members of the `Scope`, such as `Reference`s or `Variable`s.
              */
@@ -19397,12 +19400,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
              */
             this.childScopes = new Map();
         }
+        static newRootScope() {
+            return new Scope(null, null);
+        }
         /**
          * Process a template (either as a `Template` sub-template with variables, or a plain array of
          * template `Node`s) and construct its `Scope`.
          */
         static apply(template) {
-            const scope = new Scope();
+            const scope = Scope.newRootScope();
             scope.ingest(template);
             return scope;
         }
@@ -19432,7 +19438,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // processing the template's child scope.
             template.references.forEach(node => this.visitReference(node));
             // Next, create an inner scope and process the template within it.
-            const scope = new Scope(this);
+            const scope = new Scope(this, template);
             scope.ingest(template);
             this.childScopes.set(template, scope);
         }
@@ -19468,7 +19474,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // Found in the local scope.
                 return this.namedEntities.get(name);
             }
-            else if (this.parentScope !== undefined) {
+            else if (this.parentScope !== null) {
                 // Not in the local scope, but there's a parent scope so check there.
                 return this.parentScope.lookup(name);
             }
@@ -19765,7 +19771,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * See `BoundTarget` for documentation on the individual methods.
      */
     class R3BoundTarget {
-        constructor(target, directives, bindings, references, exprTargets, symbols, nestingLevel, usedPipes) {
+        constructor(target, directives, bindings, references, exprTargets, symbols, nestingLevel, templateEntities, usedPipes) {
             this.target = target;
             this.directives = directives;
             this.bindings = bindings;
@@ -19773,7 +19779,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.exprTargets = exprTargets;
             this.symbols = symbols;
             this.nestingLevel = nestingLevel;
+            this.templateEntities = templateEntities;
             this.usedPipes = usedPipes;
+        }
+        getEntitiesInTemplateScope(template) {
+            var _a;
+            return (_a = this.templateEntities.get(template)) !== null && _a !== void 0 ? _a : new Set();
         }
         getDirectivesOfNode(node) {
             return this.directives.get(node) || null;
@@ -19802,6 +19813,37 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return Array.from(this.usedPipes);
         }
     }
+    function extractTemplateEntities(rootScope) {
+        const entityMap = new Map();
+        function extractScopeEntities(scope) {
+            if (entityMap.has(scope.template)) {
+                return entityMap.get(scope.template);
+            }
+            const currentEntities = scope.namedEntities;
+            let templateEntities;
+            if (scope.parentScope !== null) {
+                templateEntities = new Map([...extractScopeEntities(scope.parentScope), ...currentEntities]);
+            }
+            else {
+                templateEntities = new Map(currentEntities);
+            }
+            entityMap.set(scope.template, templateEntities);
+            return templateEntities;
+        }
+        const scopesToProcess = [rootScope];
+        while (scopesToProcess.length > 0) {
+            const scope = scopesToProcess.pop();
+            for (const childScope of scope.childScopes.values()) {
+                scopesToProcess.push(childScope);
+            }
+            extractScopeEntities(scope);
+        }
+        const templateEntities = new Map();
+        for (const [template, entities] of entityMap) {
+            templateEntities.set(template, new Set(entities.values()));
+        }
+        return templateEntities;
+    }
 
     /**
      * @license
@@ -19822,7 +19864,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+57.sha-3975dd9');
+    const VERSION$2 = new Version('11.0.0-next.4+60.sha-aeec223');
 
     /**
      * @license
@@ -31424,6 +31466,23 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Discriminant of an autocompletion source (a `Completion`).
+     */
+    var CompletionKind;
+    (function (CompletionKind) {
+        CompletionKind[CompletionKind["ContextComponent"] = 0] = "ContextComponent";
+        CompletionKind[CompletionKind["Reference"] = 1] = "Reference";
+        CompletionKind[CompletionKind["Variable"] = 2] = "Variable";
+    })(CompletionKind || (CompletionKind = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var SymbolKind;
     (function (SymbolKind) {
         SymbolKind[SymbolKind["Input"] = 0] = "Input";
@@ -31471,6 +31530,161 @@ Either add the @Injectable() decorator to '${provider.node.name
         static shimFor(fileName) {
             return absoluteFrom(fileName.replace(/\.tsx?$/, '.ngtypecheck.ts'));
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const parseSpanComment = /^(\d+),(\d+)$/;
+    /**
+     * Reads the trailing comments and finds the first match which is a span comment (i.e. 4,10) on a
+     * node and returns it as an `AbsoluteSourceSpan`.
+     *
+     * Will return `null` if no trailing comments on the node match the expected form of a source span.
+     */
+    function readSpanComment(node, sourceFile = node.getSourceFile()) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            const match = commentText.match(parseSpanComment);
+            if (match === null) {
+                return null;
+            }
+            return new AbsoluteSourceSpan(+match[1], +match[2]);
+        }) || null;
+    }
+    /** Used to identify what type the comment is. */
+    var CommentTriviaType;
+    (function (CommentTriviaType) {
+        CommentTriviaType["DIAGNOSTIC"] = "D";
+        CommentTriviaType["EXPRESSION_TYPE_IDENTIFIER"] = "T";
+    })(CommentTriviaType || (CommentTriviaType = {}));
+    /** Identifies what the TCB expression is for (for example, a directive declaration). */
+    var ExpressionIdentifier;
+    (function (ExpressionIdentifier) {
+        ExpressionIdentifier["DIRECTIVE"] = "DIR";
+        ExpressionIdentifier["COMPONENT_COMPLETION"] = "COMPCOMP";
+    })(ExpressionIdentifier || (ExpressionIdentifier = {}));
+    /** Tags the node with the given expression identifier. */
+    function addExpressionIdentifier(node, identifier) {
+        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
+        /* hasTrailingNewLine */ false);
+    }
+    const IGNORE_MARKER = `${CommentTriviaType.DIAGNOSTIC}:ignore`;
+    /**
+     * Tag the `ts.Node` with an indication that any errors arising from the evaluation of the node
+     * should be ignored.
+     */
+    function markIgnoreDiagnostics(node) {
+        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_MARKER, /* hasTrailingNewLine */ false);
+    }
+    /** Returns true if the node has a marker that indicates diagnostics errors should be ignored.  */
+    function hasIgnoreMarker(node, sourceFile) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText === IGNORE_MARKER;
+        }) === true;
+    }
+    function makeRecursiveVisitor(visitor) {
+        function recursiveVisitor(node) {
+            const res = visitor(node);
+            return res !== null ? res : node.forEachChild(recursiveVisitor);
+        }
+        return recursiveVisitor;
+    }
+    function getSpanFromOptions(opts) {
+        let withSpan = null;
+        if (opts.withSpan !== undefined) {
+            if (opts.withSpan instanceof AbsoluteSourceSpan) {
+                withSpan = opts.withSpan;
+            }
+            else {
+                withSpan = { start: opts.withSpan.start.offset, end: opts.withSpan.end.offset };
+            }
+        }
+        return withSpan;
+    }
+    /**
+     * Given a `ts.Node` with finds the first node whose matching the criteria specified
+     * by the `FindOptions`.
+     *
+     * Returns `null` when no `ts.Node` matches the given conditions.
+     */
+    function findFirstMatchingNode(tcb, opts) {
+        var _a;
+        const withSpan = getSpanFromOptions(opts);
+        const withExpressionIdentifier = opts.withExpressionIdentifier;
+        const sf = tcb.getSourceFile();
+        const visitor = makeRecursiveVisitor(node => {
+            if (!opts.filter(node)) {
+                return null;
+            }
+            if (withSpan !== null) {
+                const comment = readSpanComment(node, sf);
+                if (comment === null || withSpan.start !== comment.start || withSpan.end !== comment.end) {
+                    return null;
+                }
+            }
+            if (withExpressionIdentifier !== undefined &&
+                !hasExpressionIdentifier(sf, node, withExpressionIdentifier)) {
+                return null;
+            }
+            return node;
+        });
+        return (_a = tcb.forEachChild(visitor)) !== null && _a !== void 0 ? _a : null;
+    }
+    /**
+     * Given a `ts.Node` with source span comments, finds the first node whose source span comment
+     * matches the given `sourceSpan`. Additionally, the `filter` function allows matching only
+     * `ts.Nodes` of a given type, which provides the ability to select only matches of a given type
+     * when there may be more than one.
+     *
+     * Returns `null` when no `ts.Node` matches the given conditions.
+     */
+    function findAllMatchingNodes(tcb, opts) {
+        const withSpan = getSpanFromOptions(opts);
+        const withExpressionIdentifier = opts.withExpressionIdentifier;
+        const results = [];
+        const stack = [tcb];
+        const sf = tcb.getSourceFile();
+        while (stack.length > 0) {
+            const node = stack.pop();
+            if (!opts.filter(node)) {
+                stack.push(...node.getChildren());
+                continue;
+            }
+            if (withSpan !== null) {
+                const comment = readSpanComment(node, sf);
+                if (comment === null || withSpan.start !== comment.start || withSpan.end !== comment.end) {
+                    stack.push(...node.getChildren());
+                    continue;
+                }
+            }
+            if (withExpressionIdentifier !== undefined &&
+                !hasExpressionIdentifier(sf, node, withExpressionIdentifier)) {
+                continue;
+            }
+            results.push(node);
+        }
+        return results;
+    }
+    function hasExpressionIdentifier(sourceFile, node, identifier) {
+        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return false;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText === `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`;
+        }) || false;
     }
 
     /**
@@ -32431,150 +32645,6 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function makeInlineDiagnostic(templateId, code, node, messageText, relatedInformation) {
         return Object.assign(Object.assign({}, makeDiagnostic(code, node, messageText, relatedInformation)), { componentFile: node.getSourceFile(), templateId });
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const parseSpanComment = /^(\d+),(\d+)$/;
-    /**
-     * Reads the trailing comments and finds the first match which is a span comment (i.e. 4,10) on a
-     * node and returns it as an `AbsoluteSourceSpan`.
-     *
-     * Will return `null` if no trailing comments on the node match the expected form of a source span.
-     */
-    function readSpanComment(node, sourceFile = node.getSourceFile()) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            const match = commentText.match(parseSpanComment);
-            if (match === null) {
-                return null;
-            }
-            return new AbsoluteSourceSpan(+match[1], +match[2]);
-        }) || null;
-    }
-    /** Used to identify what type the comment is. */
-    var CommentTriviaType;
-    (function (CommentTriviaType) {
-        CommentTriviaType["DIAGNOSTIC"] = "D";
-        CommentTriviaType["EXPRESSION_TYPE_IDENTIFIER"] = "T";
-    })(CommentTriviaType || (CommentTriviaType = {}));
-    /** Identifies what the TCB expression is for (for example, a directive declaration). */
-    var ExpressionIdentifier;
-    (function (ExpressionIdentifier) {
-        ExpressionIdentifier["DIRECTIVE"] = "DIR";
-    })(ExpressionIdentifier || (ExpressionIdentifier = {}));
-    /** Tags the node with the given expression identifier. */
-    function addExpressionIdentifier(node, identifier) {
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
-        /* hasTrailingNewLine */ false);
-    }
-    const IGNORE_MARKER = `${CommentTriviaType.DIAGNOSTIC}:ignore`;
-    /**
-     * Tag the `ts.Node` with an indication that any errors arising from the evaluation of the node
-     * should be ignored.
-     */
-    function markIgnoreDiagnostics(node) {
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_MARKER, /* hasTrailingNewLine */ false);
-    }
-    /** Returns true if the node has a marker that indicates diagnostics errors should be ignored.  */
-    function hasIgnoreMarker(node, sourceFile) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText === IGNORE_MARKER;
-        }) === true;
-    }
-    function makeRecursiveVisitor(visitor) {
-        function recursiveVisitor(node) {
-            const res = visitor(node);
-            return res !== null ? res : node.forEachChild(recursiveVisitor);
-        }
-        return recursiveVisitor;
-    }
-    function getSpanFromOptions(opts) {
-        let withSpan = null;
-        if (opts.withSpan !== undefined) {
-            if (opts.withSpan instanceof AbsoluteSourceSpan) {
-                withSpan = opts.withSpan;
-            }
-            else {
-                withSpan = { start: opts.withSpan.start.offset, end: opts.withSpan.end.offset };
-            }
-        }
-        return withSpan;
-    }
-    /**
-     * Given a `ts.Node` with finds the first node whose matching the criteria specified
-     * by the `FindOptions`.
-     *
-     * Returns `null` when no `ts.Node` matches the given conditions.
-     */
-    function findFirstMatchingNode(tcb, opts) {
-        var _a;
-        const withSpan = getSpanFromOptions(opts);
-        const sf = tcb.getSourceFile();
-        const visitor = makeRecursiveVisitor(node => {
-            if (!opts.filter(node)) {
-                return null;
-            }
-            if (withSpan !== null) {
-                const comment = readSpanComment(node, sf);
-                if (comment === null || withSpan.start !== comment.start || withSpan.end !== comment.end) {
-                    return null;
-                }
-            }
-            return node;
-        });
-        return (_a = tcb.forEachChild(visitor)) !== null && _a !== void 0 ? _a : null;
-    }
-    /**
-     * Given a `ts.Node` with source span comments, finds the first node whose source span comment
-     * matches the given `sourceSpan`. Additionally, the `filter` function allows matching only
-     * `ts.Nodes` of a given type, which provides the ability to select only matches of a given type
-     * when there may be more than one.
-     *
-     * Returns `null` when no `ts.Node` matches the given conditions.
-     */
-    function findAllMatchingNodes(tcb, opts) {
-        const withSpan = getSpanFromOptions(opts);
-        const results = [];
-        const stack = [tcb];
-        const sf = tcb.getSourceFile();
-        while (stack.length > 0) {
-            const node = stack.pop();
-            if (!opts.filter(node)) {
-                stack.push(...node.getChildren());
-                continue;
-            }
-            if (withSpan !== null) {
-                const comment = readSpanComment(node, sf);
-                if (comment === null || withSpan.start !== comment.start || withSpan.end !== comment.end) {
-                    stack.push(...node.getChildren());
-                    continue;
-                }
-            }
-            results.push(node);
-        }
-        return results;
-    }
-    function hasExpressionIdentifier(sourceFile, node, identifier) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return false;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText === `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`;
-        }) || false;
     }
 
     /**
@@ -33983,6 +34053,28 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     /**
+     * A `TcbOp` which generates a completion point for the component context.
+     *
+     * This completion point looks like `ctx. ;` in the TCB output, and does not produce diagnostics.
+     * TypeScript autocompletion APIs can be used at this completion point (after the '.') to produce
+     * autocompletion results of properties and methods from the template's component context.
+     */
+    class TcbComponentContextCompletionOp extends TcbOp {
+        constructor(scope) {
+            super();
+            this.scope = scope;
+            this.optional = false;
+        }
+        execute() {
+            const ctx = ts.createIdentifier('ctx');
+            const ctxDot = ts.createPropertyAccess(ctx, '');
+            markIgnoreDiagnostics(ctxDot);
+            addExpressionIdentifier(ctxDot, ExpressionIdentifier.COMPONENT_COMPLETION);
+            this.scope.addStatement(ts.createExpressionStatement(ctxDot));
+            return null;
+        }
+    }
+    /**
      * Value used to break a circular reference between `TcbOp`s.
      *
      * This value is returned whenever `TcbOp`s have a circular dependency. The expression is a non-null
@@ -34098,6 +34190,10 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         static forNodes(tcb, parent, templateOrNodes, guard) {
             const scope = new Scope$1(tcb, parent, guard);
+            if (parent === null && tcb.env.config.enableTemplateTypeChecker) {
+                // Add an autocompletion point for the component context.
+                scope.opQueue.push(new TcbComponentContextCompletionOp(scope));
+            }
             let children;
             // If given an actual `TmplAstTemplate` instance, then process any additional information it
             // has.
@@ -35629,27 +35725,40 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         getTemplate(component) {
-            const templateData = this.getTemplateData(component);
-            if (templateData === null) {
+            const { data } = this.getLatestComponentState(component);
+            if (data === null) {
                 return null;
             }
-            return templateData.template;
+            return data.template;
         }
-        getTemplateData(component) {
+        getLatestComponentState(component) {
             this.ensureShimForComponent(component);
             const sf = component.getSourceFile();
             const sfPath = absoluteFromSourceFile(sf);
             const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
             const fileRecord = this.getFileData(sfPath);
             if (!fileRecord.shimData.has(shimPath)) {
-                return null;
+                return { data: null, tcb: null, shimPath };
             }
             const templateId = fileRecord.sourceManager.getTemplateId(component);
             const shimRecord = fileRecord.shimData.get(shimPath);
-            if (!shimRecord.templates.has(templateId)) {
-                return null;
+            const id = fileRecord.sourceManager.getTemplateId(component);
+            const program = this.typeCheckingStrategy.getProgram();
+            const shimSf = getSourceFileOrNull(program, shimPath);
+            if (shimSf === null || !fileRecord.shimData.has(shimPath)) {
+                throw new Error(`Error: no shim file in program: ${shimPath}`);
             }
-            return shimRecord.templates.get(templateId);
+            let tcb = findTypeCheckBlock(shimSf, id);
+            if (tcb === null) {
+                // Try for an inline block.
+                const inlineSf = getSourceFileOrError(program, sfPath);
+                tcb = findTypeCheckBlock(inlineSf, id);
+            }
+            let data = null;
+            if (shimRecord.templates.has(templateId)) {
+                data = shimRecord.templates.get(templateId);
+            }
+            return { data, tcb, shimPath };
         }
         overrideComponentTemplate(component, template) {
             const { nodes, errors } = parseTemplate(template, 'override.html', {
@@ -35724,26 +35833,47 @@ Either add the @Injectable() decorator to '${provider.node.name
             return diagnostics.filter((diag) => diag !== null && diag.templateId === templateId);
         }
         getTypeCheckBlock(component) {
-            this.ensureAllShimsForOneFile(component.getSourceFile());
-            const program = this.typeCheckingStrategy.getProgram();
-            const filePath = absoluteFromSourceFile(component.getSourceFile());
-            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
-            if (!this.state.has(filePath)) {
-                throw new Error(`Error: no data for source file: ${filePath}`);
+            return this.getLatestComponentState(component).tcb;
+        }
+        getGlobalCompletions(context, component) {
+            const { tcb, data, shimPath } = this.getLatestComponentState(component);
+            if (tcb === null || data === null) {
+                return [];
             }
-            const fileRecord = this.state.get(filePath);
-            const id = fileRecord.sourceManager.getTemplateId(component);
-            const shimSf = getSourceFileOrNull(program, shimPath);
-            if (shimSf === null || !fileRecord.shimData.has(shimPath)) {
-                throw new Error(`Error: no shim file in program: ${shimPath}`);
+            const { boundTarget } = data;
+            // Global completions are the union of two separate pieces: a `ContextComponentCompletion` which
+            // is created from an expression within the TCB, and a list of named entities (variables and
+            // references) which are visible within the given `context` template.
+            const completions = [];
+            const globalRead = findFirstMatchingNode(tcb, {
+                filter: ts.isPropertyAccessExpression,
+                withExpressionIdentifier: ExpressionIdentifier.COMPONENT_COMPLETION
+            });
+            if (globalRead === null) {
+                return [];
             }
-            let node = findTypeCheckBlock(shimSf, id);
-            if (node === null) {
-                // Try for an inline block.
-                const inlineSf = getSourceFileOrError(program, filePath);
-                node = findTypeCheckBlock(inlineSf, id);
+            completions.push({
+                kind: CompletionKind.ContextComponent,
+                shimPath,
+                positionInShimFile: globalRead.name.getStart(),
+            });
+            // Add completions for each entity in the template scope. Since each entity is uniquely named,
+            // there is no special ordering applied here.
+            for (const node of boundTarget.getEntitiesInTemplateScope(context)) {
+                if (node instanceof Reference) {
+                    completions.push({
+                        kind: CompletionKind.Reference,
+                        node: node,
+                    });
+                }
+                else {
+                    completions.push({
+                        kind: CompletionKind.Variable,
+                        node: node,
+                    });
+                }
             }
-            return node;
+            return completions;
         }
         maybeAdoptPriorResultsForFile(sf) {
             const sfPath = absoluteFromSourceFile(sf);
@@ -35860,16 +35990,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.state.get(path);
         }
         getSymbolOfNode(node, component) {
-            const tcb = this.getTypeCheckBlock(component);
-            if (tcb === null) {
+            const { tcb, data, shimPath } = this.getLatestComponentState(component);
+            if (tcb === null || data === null) {
                 return null;
             }
             const typeChecker = this.typeCheckingStrategy.getProgram().getTypeChecker();
-            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
-            const data = this.getTemplateData(component);
-            if (data === null) {
-                return null;
-            }
             return new SymbolBuilder(typeChecker, shimPath, tcb, data, this.componentScopeReader)
                 .getSymbol(node);
         }
