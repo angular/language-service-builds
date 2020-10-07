@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.4+63.sha-2932706
+ * @license Angular v11.0.0-next.5+1.sha-4ede190
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.4+63.sha-2932706');
+    const VERSION$1 = new Version('11.0.0-next.5+1.sha-4ede190');
 
     /**
      * @license
@@ -19864,7 +19864,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.4+63.sha-2932706');
+    const VERSION$2 = new Version('11.0.0-next.5+1.sha-4ede190');
 
     /**
      * @license
@@ -33017,7 +33017,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             //     ^     nameSpan
             const leftWithPath = wrapForDiagnostics(left);
             addParseSpanInfo(leftWithPath, ast.sourceSpan);
-            const right = this.translate(ast.value);
+            let right = this.translate(ast.value);
+            // The right needs to be wrapped in parens as well or we cannot accurately match its
+            // span to just the RHS. For example, the span in `e = $event /*0,10*/` is ambiguous.
+            // It could refer to either the whole binary expression or just the RHS.
+            // We should instead generate `e = ($event /*0,10*/)` so we know the span 0,10 matches RHS.
+            if (!ts.isParenthesizedExpression(right)) {
+                right = wrapForTypeChecker(right);
+            }
             const node = wrapForDiagnostics(ts.createBinary(leftWithPath, ts.SyntaxKind.EqualsToken, right));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
