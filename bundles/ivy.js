@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+4.sha-4604fe9
+ * @license Angular v11.0.0-next.5+5.sha-63624a2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+4.sha-4604fe9');
+    const VERSION$1 = new Version('11.0.0-next.5+5.sha-63624a2');
 
     /**
      * @license
@@ -19864,7 +19864,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.5+4.sha-4604fe9');
+    const VERSION$2 = new Version('11.0.0-next.5+5.sha-63624a2');
 
     /**
      * @license
@@ -37411,6 +37411,102 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    class LanguageServiceAdapter {
+        constructor(project) {
+            var _a;
+            this.project = project;
+            this.entryPoint = null;
+            this.constructionDiagnostics = [];
+            this.ignoreForEmit = new Set();
+            this.factoryTracker = null; // no .ngfactory shims
+            this.unifiedModulesHost = null; // only used in Bazel
+            this.templateVersion = new Map();
+            this.modifiedTemplates = new Set();
+            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
+        }
+        isShim(sf) {
+            return isShim(sf);
+        }
+        fileExists(fileName) {
+            return this.project.fileExists(fileName);
+        }
+        readFile(fileName) {
+            return this.project.readFile(fileName);
+        }
+        getCurrentDirectory() {
+            return this.project.getCurrentDirectory();
+        }
+        getCanonicalFileName(fileName) {
+            return this.project.projectService.toCanonicalFileName(fileName);
+        }
+        /**
+         * readResource() is an Angular-specific method for reading files that are not
+         * managed by the TS compiler host, namely templates and stylesheets.
+         * It is a method on ExtendedTsCompilerHost, see
+         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
+         */
+        readResource(fileName) {
+            if (isTypeScriptFile(fileName)) {
+                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
+            }
+            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
+            // not exist! The same applies for getScriptVersion().
+            // getScriptInfo() will not create one if it does not exist.
+            // In this case, we *want* a script info to be created so that we could
+            // keep track of its version.
+            const snapshot = this.project.getScriptSnapshot(fileName);
+            if (!snapshot) {
+                // This would fail if the file does not exist, or readFile() fails for
+                // whatever reasons.
+                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
+            }
+            const version = this.project.getScriptVersion(fileName);
+            this.templateVersion.set(fileName, version);
+            this.modifiedTemplates.delete(fileName);
+            return snapshot.getText(0, snapshot.getLength());
+        }
+        /**
+         * getModifiedResourceFiles() is an Angular-specific method for notifying
+         * the Angular compiler templates that have changed since it last read them.
+         * It is a method on ExtendedTsCompilerHost, see
+         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
+         */
+        getModifiedResourceFiles() {
+            return this.modifiedTemplates;
+        }
+        /**
+         * Check whether the specified `fileName` is newer than the last time it was
+         * read. If it is newer, register it and return true, otherwise do nothing and
+         * return false.
+         * @param fileName path to external template
+         */
+        registerTemplateUpdate(fileName) {
+            if (!isExternalTemplate(fileName)) {
+                return false;
+            }
+            const lastVersion = this.templateVersion.get(fileName);
+            const latestVersion = this.project.getScriptVersion(fileName);
+            if (lastVersion !== latestVersion) {
+                this.modifiedTemplates.add(fileName);
+                return true;
+            }
+            return false;
+        }
+    }
+    function isTypeScriptFile(fileName) {
+        return fileName.endsWith('.ts');
+    }
+    function isExternalTemplate(fileName) {
+        return !isTypeScriptFile(fileName);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * The type of Angular directive. Used for QuickInfo in template.
      */
@@ -37596,35 +37692,51 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.lastKnownProgram = null;
             this.options = parseNgCompilerOptions(project);
             this.strategy = createTypeCheckingProgramStrategy(project);
-            this.adapter = createNgCompilerAdapter(project);
+            this.adapter = new LanguageServiceAdapter(project);
             this.watchConfigFile(project);
         }
         getSemanticDiagnostics(fileName) {
             const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program);
-            if (fileName.endsWith('.ts')) {
+            const compiler = this.createCompiler(program, fileName);
+            const ttc = compiler.getTemplateTypeChecker();
+            const diagnostics = [];
+            if (isTypeScriptFile(fileName)) {
                 const sourceFile = program.getSourceFile(fileName);
-                if (!sourceFile) {
-                    return [];
+                if (sourceFile) {
+                    diagnostics.push(...ttc.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile));
                 }
-                const ttc = compiler.getTemplateTypeChecker();
-                const diagnostics = ttc.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile);
-                this.lastKnownProgram = compiler.getNextProgram();
-                return diagnostics;
             }
-            throw new Error('Ivy LS currently does not support external template');
+            else {
+                const components = compiler.getComponentsWithTemplateFile(fileName);
+                for (const component of components) {
+                    if (ts$1.isClassDeclaration(component)) {
+                        diagnostics.push(...ttc.getDiagnosticsForComponent(component));
+                    }
+                }
+            }
+            this.lastKnownProgram = compiler.getNextProgram();
+            return diagnostics;
         }
         getDefinitionAndBoundSpan(fileName, position) {
             const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program);
+            const compiler = this.createCompiler(program, fileName);
             return new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
         }
         getQuickInfoAtPosition(fileName, position) {
             const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program);
+            const compiler = this.createCompiler(program, fileName);
             return new QuickInfoBuilder(this.tsLS, compiler).get(fileName, position);
         }
-        createCompiler(program) {
+        /**
+         * Create a new instance of Ivy compiler.
+         * If the specified `fileName` refers to an external template, check if it has
+         * changed since the last time it was read. If it has changed, signal the
+         * compiler to reload the file via the adapter.
+         */
+        createCompiler(program, fileName) {
+            if (isExternalTemplate(fileName)) {
+                this.adapter.registerTemplateUpdate(fileName);
+            }
             return new NgCompiler(this.adapter, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), 
             /** enableTemplateTypeChecker */ true, this.lastKnownProgram, 
             /** perfRecorder (use default) */ undefined);
@@ -37658,30 +37770,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         const basePath = project.getCurrentDirectory();
         return createNgCompilerOptions(basePath, config, project.getCompilationSettings());
-    }
-    function createNgCompilerAdapter(project) {
-        var _a;
-        return {
-            entryPoint: null,
-            constructionDiagnostics: [],
-            ignoreForEmit: new Set(),
-            factoryTracker: null,
-            unifiedModulesHost: null,
-            rootDirs: ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [],
-            isShim,
-            fileExists(fileName) {
-                return project.fileExists(fileName);
-            },
-            readFile(fileName) {
-                return project.readFile(fileName);
-            },
-            getCurrentDirectory() {
-                return project.getCurrentDirectory();
-            },
-            getCanonicalFileName(fileName) {
-                return project.projectService.toCanonicalFileName(fileName);
-            },
-        };
     }
     function createTypeCheckingProgramStrategy(project) {
         return {
