@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+2.sha-de66818
+ * @license Angular v11.0.0-next.5+4.sha-4604fe9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19229,7 +19229,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+2.sha-de66818');
+    const VERSION$1 = new Version('11.0.0-next.5+4.sha-4604fe9');
 
     /**
      * @license
@@ -19864,7 +19864,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.5+2.sha-de66818');
+    const VERSION$2 = new Version('11.0.0-next.5+4.sha-4604fe9');
 
     /**
      * @license
@@ -37513,7 +37513,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         getQuickInfoForDirectiveSymbol(dir, node) {
             const kind = dir.isComponent ? QuickInfoKind.COMPONENT : QuickInfoKind.DIRECTIVE;
             const documentation = this.getDocumentationFromTypeDefAtLocation(dir.shimLocation);
-            return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(node), undefined /* containerName */, undefined, documentation);
+            let containerName;
+            if (ts.isClassDeclaration(dir.tsSymbol.valueDeclaration) && dir.ngModule !== null) {
+                containerName = dir.ngModule.name.getText();
+            }
+            return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(node), containerName, undefined, documentation);
         }
         getDocumentationFromTypeDefAtLocation(shimLocation) {
             var _a;
