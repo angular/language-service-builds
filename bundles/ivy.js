@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+8.sha-42a164f
+ * @license Angular v11.0.0-next.5+13.sha-4a1c12c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4035,7 +4035,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     var ViewEncapsulation;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
         ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation || (ViewEncapsulation = {}));
@@ -6093,7 +6093,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     class Message {
         /**
          * @param nodes message AST
-         * @param placeholders maps placeholder names to static content
+         * @param placeholders maps placeholder names to static content and their source spans
          * @param placeholderToMessage maps placeholder names to messages (used for nested ICU messages)
          * @param meaning
          * @param description
@@ -12422,6 +12422,25 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
         }
         /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, sourceSpan) {
+            const sourceInfo = sourceSpan.start.toString();
+            try {
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, sourceSpan.start.offset);
+                if (ast)
+                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
+                this._checkPipes(ast, sourceSpan);
+                return ast;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+            }
+        }
+        /**
          * Parses the bindings in a microsyntax expression, and converts them to
          * `ParsedProperty` or `ParsedVariable`.
          *
@@ -13997,8 +14016,26 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     .parseChain();
                 expressions.push(ast);
             }
-            const span = new ParseSpan(0, input == null ? 0 : input.length);
-            return new ASTWithSource(new Interpolation(span, span.toAbsolute(absoluteOffset), split.strings, expressions), input, location, absoluteOffset, this.errors);
+            return this.createInterpolationAst(split.strings, expressions, input, location, absoluteOffset);
+        }
+        /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, location, absoluteOffset) {
+            const sourceToLex = this._stripComments(expression);
+            const tokens = this._lexer.tokenize(sourceToLex);
+            const ast = new _ParseAST(expression, location, absoluteOffset, tokens, sourceToLex.length, 
+            /* parseAction */ false, this.errors, 0)
+                .parseChain();
+            const strings = ['', '']; // The prefix and suffix strings are both empty
+            return this.createInterpolationAst(strings, [ast], expression, location, absoluteOffset);
+        }
+        createInterpolationAst(strings, expressions, input, location, absoluteOffset) {
+            const span = new ParseSpan(0, input.length);
+            const interpolation = new Interpolation(span, span.toAbsolute(absoluteOffset), strings, expressions);
+            return new ASTWithSource(interpolation, input, location, absoluteOffset, this.errors);
         }
         /**
          * Splits a string of text into "raw" text segments and expressions present in interpolations in
@@ -15609,21 +15646,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             Object.keys(message.placeholders).forEach(key => {
                 const value = message.placeholders[key];
                 if (key.startsWith(I18N_ICU_VAR_PREFIX)) {
-                    const config = this.bindingParser.interpolationConfig;
-                    // ICU expression is a plain string, not wrapped into start
-                    // and end tags, so we wrap it before passing to binding parser
-                    const wrapped = `${config.start}${value}${config.end}`;
                     // Currently when the `plural` or `select` keywords in an ICU contain trailing spaces (e.g.
                     // `{count, select , ...}`), these spaces are also included into the key names in ICU vars
                     // (e.g. "VAR_SELECT "). These trailing spaces are not desirable, since they will later be
                     // converted into `_` symbols while normalizing placeholder names, which might lead to
                     // mismatches at runtime (i.e. placeholder will not be replaced with the correct value).
                     const formattedKey = key.trim();
-                    vars[formattedKey] =
-                        this._visitTextWithInterpolation(wrapped, expansion.sourceSpan);
+                    const ast = this.bindingParser.parseInterpolationExpression(value.text, value.sourceSpan);
+                    vars[formattedKey] = new BoundText(ast, value.sourceSpan);
                 }
                 else {
-                    placeholders[key] = this._visitTextWithInterpolation(value, expansion.sourceSpan);
+                    placeholders[key] = this._visitTextWithInterpolation(value.text, value.sourceSpan);
                 }
             });
             return new Icu(vars, placeholders, expansion.sourceSpan, message);
@@ -16195,6 +16228,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return new Message(i18nodes, context.placeholderToContent, context.placeholderToMessage, meaning, description, customId);
         }
         visitElement(el, context) {
+            var _a;
             const children = visitAll$1(this, el.children, context);
             const attrs = {};
             el.attrs.forEach(attr => {
@@ -16203,11 +16237,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             });
             const isVoid = getHtmlTagDefinition(el.name).isVoid;
             const startPhName = context.placeholderRegistry.getStartTagPlaceholderName(el.name, attrs, isVoid);
-            context.placeholderToContent[startPhName] = el.startSourceSpan.toString();
+            context.placeholderToContent[startPhName] = {
+                text: el.startSourceSpan.toString(),
+                sourceSpan: el.startSourceSpan,
+            };
             let closePhName = '';
             if (!isVoid) {
                 closePhName = context.placeholderRegistry.getCloseTagPlaceholderName(el.name);
-                context.placeholderToContent[closePhName] = `</${el.name}>`;
+                context.placeholderToContent[closePhName] = {
+                    text: `</${el.name}>`,
+                    sourceSpan: (_a = el.endSourceSpan) !== null && _a !== void 0 ? _a : el.sourceSpan,
+                };
             }
             const node = new TagPlaceholder(el.name, attrs, startPhName, closePhName, children, isVoid, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
             return context.visitNodeFn(el, node);
@@ -16237,7 +16277,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // - the ICU message is nested.
                 const expPh = context.placeholderRegistry.getUniquePlaceholder(`VAR_${icu.type}`);
                 i18nIcu.expressionPlaceholder = expPh;
-                context.placeholderToContent[expPh] = icu.switchValue;
+                context.placeholderToContent[expPh] = {
+                    text: icu.switchValue,
+                    sourceSpan: icu.switchValueSourceSpan,
+                };
                 return context.visitNodeFn(icu, i18nIcu);
             }
             // Else returns a placeholder
@@ -16273,7 +16316,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
                 const expressionSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.expressionsSpans[i]);
                 nodes.push(new Placeholder(expression, phName, expressionSpan));
-                context.placeholderToContent[phName] = sDelimiter + expression + eDelimiter;
+                context.placeholderToContent[phName] = {
+                    text: sDelimiter + expression + eDelimiter,
+                    sourceSpan: expressionSpan,
+                };
             }
             // The last index contains no expression
             const lastStringIdx = splitInterpolation.strings.length - 1;
@@ -19229,7 +19275,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+8.sha-42a164f');
+    const VERSION$1 = new Version('11.0.0-next.5+13.sha-4a1c12c');
 
     /**
      * @license
@@ -19864,7 +19910,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.5+8.sha-42a164f');
+    const VERSION$2 = new Version('11.0.0-next.5+13.sha-4a1c12c');
 
     /**
      * @license
@@ -34411,6 +34457,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             else if (node instanceof BoundText) {
                 this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, node));
             }
+            else if (node instanceof Icu) {
+                this.appendIcuExpressions(node);
+            }
         }
         checkAndAppendReferencesOfNode(node) {
             for (const ref of node.references) {
@@ -34521,6 +34570,16 @@ Either add the @Injectable() decorator to '${provider.node.name
                     this.opQueue.push(new TcbDomSchemaCheckerOp(this.tcb, node, !hasDirectives, claimedInputs));
                 }
                 this.appendDeepSchemaChecks(node.children);
+            }
+        }
+        appendIcuExpressions(node) {
+            for (const variable of Object.values(node.vars)) {
+                this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, variable));
+            }
+            for (const placeholder of Object.values(node.placeholders)) {
+                if (placeholder instanceof BoundText) {
+                    this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, placeholder));
+                }
             }
         }
     }
