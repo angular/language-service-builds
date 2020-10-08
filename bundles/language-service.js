@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+13.sha-4a1c12c
+ * @license Angular v11.0.0-next.5+11.sha-0a16e60
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -819,7 +819,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ViewEncapsulation;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
+        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
         ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation || (ViewEncapsulation = {}));
@@ -18072,7 +18072,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+13.sha-4a1c12c');
+    const VERSION$1 = new Version('11.0.0-next.5+11.sha-0a16e60');
 
     /**
      * @license
@@ -26571,7 +26571,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ViewEncapsulation$1;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
+        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
         ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
@@ -27102,7 +27102,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * This is the default option.
          */
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
+        /**
+         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
+         * Use the native encapsulation mechanism of the renderer.
+         *
+         * For the DOM this means using the deprecated [Shadow DOM
+         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * creating a ShadowRoot for Component's Host Element.
+         */
+        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
         /**
          * Don't provide any template or style encapsulation.
          */
@@ -34108,7 +34116,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.5+13.sha-4a1c12c');
+    const VERSION$2 = new Version$1('11.0.0-next.5+11.sha-0a16e60');
 
     /**
      * @license
