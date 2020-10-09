@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+14.sha-ca4ef61
+ * @license Angular v11.0.0-next.5+15.sha-7f689a2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -10788,11 +10788,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function extractCommentsWithHash(input) {
         return input.match(_commentWithHashRe) || [];
     }
-    const _ruleRe = /(\s*)([^;\{\}]+?)(\s*)((?:{%BLOCK%}?\s*;?)|(?:\s*;))/g;
-    const _curlyRe = /([{}])/g;
-    const OPEN_CURLY = '{';
-    const CLOSE_CURLY = '}';
     const BLOCK_PLACEHOLDER = '%BLOCK%';
+    const QUOTE_PLACEHOLDER = '%QUOTED%';
+    const _ruleRe = /(\s*)([^;\{\}]+?)(\s*)((?:{%BLOCK%}?\s*;?)|(?:\s*;))/g;
+    const _quotedRe = /%QUOTED%/g;
+    const CONTENT_PAIRS = new Map([['{', '}']]);
+    const QUOTE_PAIRS = new Map([[`"`, `"`], [`'`, `'`]]);
     class CssRule {
         constructor(selector, content) {
             this.selector = selector;
@@ -10800,9 +10801,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function processRules(input, ruleCallback) {
-        const inputWithEscapedBlocks = escapeBlocks(input);
+        const inputWithEscapedQuotes = escapeBlocks(input, QUOTE_PAIRS, QUOTE_PLACEHOLDER);
+        const inputWithEscapedBlocks = escapeBlocks(inputWithEscapedQuotes.escapedString, CONTENT_PAIRS, BLOCK_PLACEHOLDER);
         let nextBlockIndex = 0;
-        return inputWithEscapedBlocks.escapedString.replace(_ruleRe, function (...m) {
+        let nextQuoteIndex = 0;
+        return inputWithEscapedBlocks.escapedString
+            .replace(_ruleRe, (...m) => {
             const selector = m[2];
             let content = '';
             let suffix = m[4];
@@ -10814,7 +10818,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             const rule = ruleCallback(new CssRule(selector, content));
             return `${m[1]}${rule.selector}${m[3]}${contentPrefix}${rule.content}${suffix}`;
-        });
+        })
+            .replace(_quotedRe, () => inputWithEscapedQuotes.blocks[nextQuoteIndex++]);
     }
     class StringWithEscapedBlocks {
         constructor(escapedString, blocks) {
@@ -10822,35 +10827,46 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.blocks = blocks;
         }
     }
-    function escapeBlocks(input) {
-        const inputParts = input.split(_curlyRe);
+    function escapeBlocks(input, charPairs, placeholder) {
         const resultParts = [];
         const escapedBlocks = [];
-        let bracketCount = 0;
-        let currentBlockParts = [];
-        for (let partIndex = 0; partIndex < inputParts.length; partIndex++) {
-            const part = inputParts[partIndex];
-            if (part == CLOSE_CURLY) {
-                bracketCount--;
+        let openCharCount = 0;
+        let nonBlockStartIndex = 0;
+        let blockStartIndex = -1;
+        let openChar;
+        let closeChar;
+        for (let i = 0; i < input.length; i++) {
+            const char = input[i];
+            if (char === '\\') {
+                i++;
             }
-            if (bracketCount > 0) {
-                currentBlockParts.push(part);
-            }
-            else {
-                if (currentBlockParts.length > 0) {
-                    escapedBlocks.push(currentBlockParts.join(''));
-                    resultParts.push(BLOCK_PLACEHOLDER);
-                    currentBlockParts = [];
+            else if (char === closeChar) {
+                openCharCount--;
+                if (openCharCount === 0) {
+                    escapedBlocks.push(input.substring(blockStartIndex, i));
+                    resultParts.push(placeholder);
+                    nonBlockStartIndex = i;
+                    blockStartIndex = -1;
+                    openChar = closeChar = undefined;
                 }
-                resultParts.push(part);
             }
-            if (part == OPEN_CURLY) {
-                bracketCount++;
+            else if (char === openChar) {
+                openCharCount++;
+            }
+            else if (openCharCount === 0 && charPairs.has(char)) {
+                openChar = char;
+                closeChar = charPairs.get(char);
+                openCharCount = 1;
+                blockStartIndex = i + 1;
+                resultParts.push(input.substring(nonBlockStartIndex, blockStartIndex));
             }
         }
-        if (currentBlockParts.length > 0) {
-            escapedBlocks.push(currentBlockParts.join(''));
-            resultParts.push(BLOCK_PLACEHOLDER);
+        if (blockStartIndex !== -1) {
+            escapedBlocks.push(input.substring(blockStartIndex));
+            resultParts.push(placeholder);
+        }
+        else {
+            resultParts.push(input.substring(nonBlockStartIndex));
         }
         return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
     }
@@ -19275,7 +19291,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+14.sha-ca4ef61');
+    const VERSION$1 = new Version('11.0.0-next.5+15.sha-7f689a2');
 
     /**
      * @license
@@ -19910,7 +19926,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.5+14.sha-ca4ef61');
+    const VERSION$2 = new Version('11.0.0-next.5+15.sha-7f689a2');
 
     /**
      * @license
