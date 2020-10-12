@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+17.sha-9f3388e
+ * @license Angular v11.0.0-next.5+19.sha-a84976f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19291,7 +19291,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+17.sha-9f3388e');
+    const VERSION$1 = new Version('11.0.0-next.5+19.sha-a84976f');
 
     /**
      * @license
@@ -19926,7 +19926,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.5+17.sha-9f3388e');
+    const VERSION$2 = new Version('11.0.0-next.5+19.sha-a84976f');
 
     /**
      * @license
@@ -37034,24 +37034,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Given a list of directives and a text to use as a selector, returns the directives which match
-     * for the selector.
-     */
-    function getDirectiveMatches(directives, selector) {
-        const selectorToMatch = CssSelector.parse(selector);
-        if (selectorToMatch.length === 0) {
-            return new Set();
-        }
-        return new Set(directives.filter((dir) => {
-            if (dir.selector === null) {
-                return false;
-            }
-            const matcher = new SelectorMatcher();
-            matcher.addSelectables(CssSelector.parse(dir.selector));
-            return matcher.match(selectorToMatch[0], null);
-        }));
-    }
     function getTextSpanOfNode(node) {
         if (isTemplateNodeWithKeyAndValue(node)) {
             return toTextSpan(node.keySpan);
@@ -37152,38 +37134,92 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         return undefined;
     }
     /**
-     * Given an attribute name and the element or template the attribute appears on, determines which
-     * directives match because the attribute is present. That is, we find which directives are applied
-     * because of this attribute by elimination: compare the directive matches with the attribute
-     * present against the directive matches without it. The difference would be the directives which
-     * match because the attribute is present.
-     *
-     * @param attribute The attribute name to use for directive matching.
-     * @param hostNode The element or template node that the attribute is on.
-     * @param directives The list of directives to match against.
-     * @returns The list of directives matching the attribute via the strategy described above.
+     * Given an attribute node, converts it to string form.
      */
-    function getDirectiveMatchesForAttribute(attribute, hostNode, directives) {
-        const attributes = [...hostNode.attributes, ...hostNode.inputs];
-        if (hostNode instanceof Template) {
-            attributes.push(...hostNode.templateAttrs);
+    function toAttributeString(attribute) {
+        var _a, _b;
+        return `[${attribute.name}=${(_b = (_a = attribute.valueSpan) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : ''}]`;
+    }
+    function getNodeName(node) {
+        return node instanceof Template ? node.tagName : node.name;
+    }
+    /**
+     * Given a template or element node, returns all attributes on the node.
+     */
+    function getAttributes(node) {
+        const attributes = [...node.attributes, ...node.inputs];
+        if (node instanceof Template) {
+            attributes.push(...node.templateAttrs);
         }
-        function toAttributeString(a) {
-            var _a, _b;
-            return `[${a.name}=${(_b = (_a = a.valueSpan) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : ''}]`;
-        }
-        const attrs = attributes.map(toAttributeString);
-        const attrsOmit = attributes.map(a => a.name === attribute ? '' : toAttributeString(a));
-        const hostNodeName = hostNode instanceof Template ? hostNode.tagName : hostNode.name;
-        const directivesWithAttribute = getDirectiveMatches(directives, hostNodeName + attrs.join(''));
-        const directivesWithoutAttribute = getDirectiveMatches(directives, hostNodeName + attrsOmit.join(''));
+        return attributes;
+    }
+    /**
+     * Given two `Set`s, returns all items in the `left` which do not appear in the `right`.
+     */
+    function difference(left, right) {
         const result = new Set();
-        for (const dir of directivesWithAttribute) {
-            if (!directivesWithoutAttribute.has(dir)) {
+        for (const dir of left) {
+            if (!right.has(dir)) {
                 result.add(dir);
             }
         }
         return result;
+    }
+    /**
+     * Given an element or template, determines which directives match because the tag is present. For
+     * example, if a directive selector is `div[myAttr]`, this would match div elements but would not if
+     * the selector were just `[myAttr]`. We find which directives are applied because of this tag by
+     * elimination: compare the directive matches with the tag present against the directive matches
+     * without it. The difference would be the directives which match because the tag is present.
+     *
+     * @param element The element or template node that the attribute/tag is part of.
+     * @param directives The list of directives to match against.
+     * @returns The list of directives matching the tag name via the strategy described above.
+     */
+    // TODO(atscott): Add unit tests for this and the one for attributes
+    function getDirectiveMatchesForElementTag(element, directives) {
+        const attributes = getAttributes(element);
+        const allAttrs = attributes.map(toAttributeString);
+        const allDirectiveMatches = getDirectiveMatchesForSelector(directives, getNodeName(element) + allAttrs.join(''));
+        const matchesWithoutElement = getDirectiveMatchesForSelector(directives, allAttrs.join(''));
+        return difference(allDirectiveMatches, matchesWithoutElement);
+    }
+    /**
+     * Given an attribute name, determines which directives match because the attribute is present. We
+     * find which directives are applied because of this attribute by elimination: compare the directive
+     * matches with the attribute present against the directive matches without it. The difference would
+     * be the directives which match because the attribute is present.
+     *
+     * @param name The name of the attribute
+     * @param hostNode The node which the attribute appears on
+     * @param directives The list of directives to match against.
+     * @returns The list of directives matching the tag name via the strategy described above.
+     */
+    function getDirectiveMatchesForAttribute(name, hostNode, directives) {
+        const attributes = getAttributes(hostNode);
+        const allAttrs = attributes.map(toAttributeString);
+        const allDirectiveMatches = getDirectiveMatchesForSelector(directives, getNodeName(hostNode) + allAttrs.join(''));
+        const attrsExcludingName = attributes.filter(a => a.name !== name).map(toAttributeString);
+        const matchesWithoutAttr = getDirectiveMatchesForSelector(directives, attrsExcludingName.join(''));
+        return difference(allDirectiveMatches, matchesWithoutAttr);
+    }
+    /**
+     * Given a list of directives and a text to use as a selector, returns the directives which match
+     * for the selector.
+     */
+    function getDirectiveMatchesForSelector(directives, selector) {
+        const selectors = CssSelector.parse(selector);
+        if (selectors.length === 0) {
+            return new Set();
+        }
+        return new Set(directives.filter((dir) => {
+            if (dir.selector === null) {
+                return false;
+            }
+            const matcher = new SelectorMatcher();
+            matcher.addSelectables(CssSelector.parse(dir.selector));
+            return selectors.some(selector => matcher.match(selector, null));
+        }));
     }
     /**
      * Returns a new `ts.SymbolDisplayPart` array which has the alias imports from the tcb filtered
@@ -37208,6 +37244,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function isDollarEvent(n) {
         return n instanceof PropertyRead && n.name === '$event' &&
             n.receiver instanceof ImplicitReceiver;
+    }
+    /**
+     * Returns a new array formed by applying a given callback function to each element of the array,
+     * and then flattening the result by one level.
+     */
+    function flatMap(items, f) {
+        const results = [];
+        for (const x of items) {
+            results.push(...f(x));
+        }
+        return results;
     }
 
     /**
@@ -37399,27 +37446,21 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.tsLS = tsLS;
             this.compiler = compiler;
         }
-        // TODO(atscott): getTypeDefinitionAtPosition
         getDefinitionAndBoundSpan(fileName, position) {
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
             if (templateInfo === undefined) {
-                return undefined;
+                return;
             }
-            const { template, component } = templateInfo;
-            const node = findNodeAtPosition(template, position);
+            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
             // The `$event` of event handlers would point to the $event parameter in the shim file, as in
             // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
             // If we wanted to return something for this, it would be more appropriate for something like
             // `getTypeDefinition`.
-            if (node === undefined || isDollarEvent(node)) {
+            if (definitionMeta === undefined || isDollarEvent(definitionMeta.node)) {
                 return undefined;
             }
-            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
-            if (symbol === null) {
-                return undefined;
-            }
-            const definitions = this.getDefinitionsForSymbol(symbol, node);
-            return { definitions, textSpan: getTextSpanOfNode(node) };
+            const definitions = this.getDefinitionsForSymbol(definitionMeta.symbol, definitionMeta.node);
+            return { definitions, textSpan: getTextSpanOfNode(definitionMeta.node) };
         }
         getDefinitionsForSymbol(symbol, node) {
             switch (symbol.kind) {
@@ -37440,7 +37481,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return [];
                 case SymbolKind.Input:
                 case SymbolKind.Output:
-                    return this.getDefinitionsForSymbols(symbol.bindings);
+                    return this.getDefinitionsForSymbols(...symbol.bindings);
                 case SymbolKind.Variable:
                 case SymbolKind.Reference: {
                     const definitions = [];
@@ -37456,26 +37497,79 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         });
                     }
                     if (symbol.kind === SymbolKind.Variable) {
-                        definitions.push(...this.getDefinitionInfos(symbol.shimLocation));
+                        definitions.push(...this.getDefinitionsForSymbols(symbol));
                     }
                     return definitions;
                 }
                 case SymbolKind.Expression: {
-                    const { shimLocation } = symbol;
-                    return this.getDefinitionInfos(shimLocation);
+                    return this.getDefinitionsForSymbols(symbol);
                 }
             }
         }
-        getDefinitionsForSymbols(symbols) {
-            const definitions = [];
-            for (const { shimLocation } of symbols) {
-                definitions.push(...this.getDefinitionInfos(shimLocation));
-            }
-            return definitions;
+        getDefinitionsForSymbols(...symbols) {
+            return flatMap(symbols, ({ shimLocation }) => {
+                var _a;
+                const { shimPath, positionInShimFile } = shimLocation;
+                return (_a = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+            });
         }
-        getDefinitionInfos({ shimPath, positionInShimFile }) {
-            var _a;
-            return (_a = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+        getTypeDefinitionsAtPosition(fileName, position) {
+            const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
+            if (templateInfo === undefined) {
+                return;
+            }
+            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
+            if (definitionMeta === undefined) {
+                return undefined;
+            }
+            const { symbol, node } = definitionMeta;
+            switch (symbol.kind) {
+                case SymbolKind.Template: {
+                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
+                    return this.getTypeDefinitionsForSymbols(...matches);
+                }
+                case SymbolKind.Element: {
+                    const matches = getDirectiveMatchesForAttribute(symbol.templateNode.name, symbol.templateNode, symbol.directives);
+                    // If one of the directive matches is a component, we should not include the native element
+                    // in the results because it is replaced by the component.
+                    return Array.from(matches).some(dir => dir.isComponent) ?
+                        this.getTypeDefinitionsForSymbols(...matches) :
+                        this.getTypeDefinitionsForSymbols(...matches, symbol);
+                }
+                case SymbolKind.DomBinding: {
+                    if (!(node instanceof TextAttribute)) {
+                        return [];
+                    }
+                    const dirs = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
+                    return this.getTypeDefinitionsForSymbols(...dirs);
+                }
+                case SymbolKind.Output:
+                case SymbolKind.Input:
+                    return this.getTypeDefinitionsForSymbols(...symbol.bindings);
+                case SymbolKind.Reference:
+                case SymbolKind.Directive:
+                case SymbolKind.Expression:
+                case SymbolKind.Variable:
+                    return this.getTypeDefinitionsForSymbols(symbol);
+            }
+        }
+        getTypeDefinitionsForSymbols(...symbols) {
+            return flatMap(symbols, ({ shimLocation }) => {
+                var _a;
+                const { shimPath, positionInShimFile } = shimLocation;
+                return (_a = this.tsLS.getTypeDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+            });
+        }
+        getDefinitionMetaAtPosition({ template, component }, position) {
+            const node = findNodeAtPosition(template, position);
+            if (node === undefined) {
+                return;
+            }
+            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
+            if (symbol === null) {
+                return;
+            }
+            return { node, symbol };
         }
     }
 
@@ -37653,7 +37747,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getQuickInfoForElementSymbol(symbol) {
             const { templateNode } = symbol;
-            const matches = getDirectiveMatches(symbol.directives, templateNode.name);
+            const matches = getDirectiveMatchesForElementTag(templateNode, symbol.directives);
             if (matches.size > 0) {
                 return this.getQuickInfoForDirectiveSymbol(matches.values().next().value, templateNode);
             }
@@ -37797,6 +37891,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const compiler = this.createCompiler(program, fileName);
             return new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
         }
+        getTypeDefinitionAtPosition(fileName, position) {
+            const program = this.strategy.getProgram();
+            const compiler = this.createCompiler(program, fileName);
+            return new DefinitionBuilder(this.tsLS, compiler)
+                .getTypeDefinitionsAtPosition(fileName, position);
+        }
         getQuickInfoAtPosition(fileName, position) {
             const program = this.strategy.getProgram();
             const compiler = this.createCompiler(program, fileName);
@@ -37911,9 +38011,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             diagnostics.push(...ngLS.getSemanticDiagnostics(fileName));
             return diagnostics;
         }
-        function getTypeDefinitionAtPosition(fileName, position) {
-            return undefined;
-        }
         function getQuickInfoAtPosition(fileName, position) {
             var _a;
             if (angularOnly) {
@@ -37922,6 +38019,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             else {
                 // If TS could answer the query, then return that result. Otherwise, return from Angular LS.
                 return (_a = tsLS.getQuickInfoAtPosition(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getQuickInfoAtPosition(fileName, position);
+            }
+        }
+        function getTypeDefinitionAtPosition(fileName, position) {
+            var _a;
+            if (angularOnly) {
+                return ngLS.getTypeDefinitionAtPosition(fileName, position);
+            }
+            else {
+                // If TS could answer the query, then return that result. Otherwise, return from Angular LS.
+                return (_a = tsLS.getTypeDefinitionAtPosition(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getTypeDefinitionAtPosition(fileName, position);
             }
         }
         function getDefinitionAndBoundSpan(fileName, position) {
