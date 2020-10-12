@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+22.sha-e930b0c
+ * @license Angular v11.0.0-next.5+40.sha-952710b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19291,7 +19291,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+22.sha-e930b0c');
+    const VERSION$1 = new Version('11.0.0-next.5+40.sha-952710b');
 
     /**
      * @license
@@ -19926,7 +19926,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.5+22.sha-e930b0c');
+    const VERSION$2 = new Version('11.0.0-next.5+40.sha-952710b');
 
     /**
      * @license
@@ -20437,11 +20437,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             const exportMap = new Map();
             exports.forEach((declaration, name) => {
-                // It's okay to skip inline declarations, since by definition they're not target-able with a
-                // ts.Declaration anyway.
-                if (declaration.node !== null) {
-                    exportMap.set(declaration.node, name);
-                }
+                exportMap.set(declaration.node, name);
             });
             return exportMap;
         }
@@ -21103,6 +21099,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          */
         KnownDeclaration[KnownDeclaration["TsHelperSpreadArrays"] = 3] = "TsHelperSpreadArrays";
     })(KnownDeclaration || (KnownDeclaration = {}));
+    /**
+     * Returns true if the `decl` is a `ConcreteDeclaration` (ie. that its `node` property is a
+     * `ts.Declaration`).
+     */
+    function isConcreteDeclaration(decl) {
+        return decl.kind === 0 /* Concrete */;
+    }
 
     /**
      * @license
@@ -21354,7 +21357,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     function isNamedClassDeclaration(node) {
-        return ts.isClassDeclaration(node) && (node.name !== undefined);
+        return ts.isClassDeclaration(node) && isIdentifier$1(node.name);
+    }
+    function isIdentifier$1(node) {
+        return node !== undefined && ts.isIdentifier(node);
     }
 
     /**
@@ -21445,13 +21451,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (!ts.isSourceFile(node)) {
                 throw new Error(`getExportsOfModule() called on non-SourceFile in TS code`);
             }
-            const map = new Map();
             // Reflect the module to a Symbol, and use getExportsOfModule() to get a list of exported
             // Symbols.
             const symbol = this.checker.getSymbolAtLocation(node);
             if (symbol === undefined) {
                 return null;
             }
+            const map = new Map();
             this.checker.getExportsOfModule(symbol).forEach(exportSymbol => {
                 // Map each exported Symbol to a Declaration and add it to the map.
                 const decl = this.getDeclarationOfSymbol(exportSymbol, null);
@@ -21630,6 +21636,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     known: null,
                     viaModule,
                     identity: null,
+                    kind: 0 /* Concrete */,
                 };
             }
             else if (symbol.declarations !== undefined && symbol.declarations.length > 0) {
@@ -21638,6 +21645,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     known: null,
                     viaModule,
                     identity: null,
+                    kind: 0 /* Concrete */,
                 };
             }
             else {
@@ -23144,12 +23152,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return this.getResolvedEnum(decl.node, decl.identity.enumMembers, context);
             }
             const declContext = Object.assign(Object.assign({}, context), joinModuleContext(context, node, decl));
-            // The identifier's declaration is either concrete (a ts.Declaration exists for it) or inline
-            // (a direct reference to a ts.Expression).
-            // TODO(alxhub): remove cast once TS is upgraded in g3.
-            const result = decl.node !== null ?
-                this.visitDeclaration(decl.node, declContext) :
-                this.visitExpression(decl.expression, declContext);
+            const result = this.visitDeclaration(decl.node, declContext);
             if (result instanceof Reference$1) {
                 // Only record identifiers to non-synthetic references. Synthetic references may not have the
                 // same value at runtime as they do at compile time, so it's not legal to refer to them by the
@@ -23250,10 +23253,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
                 const declContext = Object.assign(Object.assign({}, context), joinModuleContext(context, node, decl));
                 // Visit both concrete and inline declarations.
-                // TODO(alxhub): remove cast once TS is upgraded in g3.
-                return decl.node !== null ?
-                    this.visitDeclaration(decl.node, declContext) :
-                    this.visitExpression(decl.expression, declContext);
+                return this.visitDeclaration(decl.node, declContext);
             });
         }
         accessHelper(node, lhs, rhs, context) {
@@ -23602,13 +23602,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         else {
             return null;
         }
-    }
-    /**
-     * Helper type guard to workaround a narrowing limitation in g3, where testing for
-     * `decl.node !== null` would not narrow `decl` to be of type `ConcreteDeclaration`.
-     */
-    function isConcreteDeclaration(decl) {
-        return decl.node !== null;
     }
 
     /**
@@ -27035,10 +27028,16 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         reflectObjectLiteral(queryData).forEach((queryExpr, propertyName) => {
             queryExpr = unwrapExpression(queryExpr);
-            if (!ts.isNewExpression(queryExpr) || !ts.isIdentifier(queryExpr.expression)) {
+            if (!ts.isNewExpression(queryExpr)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
             }
-            const type = reflector.getImportOfIdentifier(queryExpr.expression);
+            const queryType = ts.isPropertyAccessExpression(queryExpr.expression) ?
+                queryExpr.expression.name :
+                queryExpr.expression;
+            if (!ts.isIdentifier(queryType)) {
+                throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
+            }
+            const type = reflector.getImportOfIdentifier(queryType);
             if (type === null || (!isCore && type.from !== '@angular/core') ||
                 !QUERY_TYPES.has(type.name)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
@@ -28559,7 +28558,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             else {
                 let typeRef = valueRef;
                 let typeNode = this.reflector.getDtsDeclaration(typeRef.node);
-                if (typeNode !== null && ts.isClassDeclaration(typeNode)) {
+                if (typeNode !== null && isNamedClassDeclaration(typeNode)) {
                     typeRef = new Reference$1(typeNode);
                 }
                 return toR3Reference(valueRef, typeRef, valueContext, typeContext, this.refEmitter);
@@ -28639,7 +28638,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return null;
         }
-        // Verify that a `ts.Declaration` reference is a `ClassDeclaration` reference.
+        // Verify that a "Declaration" reference is a `ClassDeclaration` reference.
         isClassDeclarationReference(ref) {
             return this.reflector.isClass(ref.node);
         }
@@ -28661,7 +28660,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // Recurse into nested arrays.
                     refList.push(...this.resolveTypeList(expr, entry, className, arrayName));
                 }
-                else if (isDeclarationReference(entry)) {
+                else if (entry instanceof Reference$1) {
                     if (!this.isClassDeclarationReference(entry)) {
                         throw createValueHasWrongTypeError(entry.node, entry, `Value at position ${idx} in the NgModule.${arrayName} of ${className} is not a class`);
                     }
@@ -28678,11 +28677,6 @@ Either add the @Injectable() decorator to '${provider.node.name
     function isNgModule(node, compilation) {
         return !compilation.directives.some(directive => directive.ref.node === node) &&
             !compilation.pipes.some(pipe => pipe.ref.node === node);
-    }
-    function isDeclarationReference(ref) {
-        return ref instanceof Reference$1 &&
-            (ts.isClassDeclaration(ref.node) || ts.isFunctionDeclaration(ref.node) ||
-                ts.isVariableDeclaration(ref.node));
     }
 
     /**
@@ -30030,13 +30024,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             node.modifiers.some(mod => mod.kind === ts.SyntaxKind.StaticKeyword);
     }
 
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const NOOP_PERF_RECORDER = {
         enabled: false,
         mark: (name, node, category, detail) => { },
