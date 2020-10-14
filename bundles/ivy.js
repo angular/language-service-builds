@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6
+ * @license Angular v11.0.0-next.6+7.sha-aee2d3f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19291,7 +19291,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6');
+    const VERSION$1 = new Version('11.0.0-next.6+7.sha-aee2d3f');
 
     /**
      * @license
@@ -19926,7 +19926,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6');
+    const VERSION$2 = new Version('11.0.0-next.6+7.sha-aee2d3f');
 
     /**
      * @license
@@ -29451,35 +29451,27 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Manages the `IncrementalDriver` associated with a `ts.Program` by monkey-patching it onto the
-     * program under `SYM_INCREMENTAL_DRIVER`.
+     * Tracks an `IncrementalDriver` within the strategy itself.
      */
-    class PatchedProgramIncrementalBuildStrategy {
-        getIncrementalDriver(program) {
-            const driver = program[SYM_INCREMENTAL_DRIVER];
-            if (driver === undefined || !(driver instanceof IncrementalDriver)) {
-                return null;
-            }
-            return driver;
+    class TrackedIncrementalBuildStrategy {
+        constructor() {
+            this.driver = null;
+            this.isSet = false;
         }
-        setIncrementalDriver(driver, program) {
-            program[SYM_INCREMENTAL_DRIVER] = driver;
+        getIncrementalDriver() {
+            return this.driver;
+        }
+        setIncrementalDriver(driver) {
+            this.driver = driver;
+            this.isSet = true;
+        }
+        toNextBuildStrategy() {
+            const strategy = new TrackedIncrementalBuildStrategy();
+            // Only reuse a driver that was explicitly set via `setIncrementalDriver`.
+            strategy.driver = this.isSet ? this.driver : null;
+            return strategy;
         }
     }
-    /**
-     * Symbol under which the `IncrementalDriver` is stored on a `ts.Program`.
-     *
-     * The TS model of incremental compilation is based around reuse of a previous `ts.Program` in the
-     * construction of a new one. The `NgCompiler` follows this abstraction - passing in a previous
-     * `ts.Program` is sufficient to trigger incremental compilation. This previous `ts.Program` need
-     * not be from an Angular compilation (that is, it need not have been created from `NgCompiler`).
-     *
-     * If it is, though, Angular can benefit from reusing previous analysis work. This reuse is managed
-     * by the `IncrementalDriver`, which is inherited from the old program to the new program. To
-     * support this behind the API of passing an old `ts.Program`, the `IncrementalDriver` is stored on
-     * the `ts.Program` under this symbol.
-     */
-    const SYM_INCREMENTAL_DRIVER = Symbol('NgIncrementalDriver');
 
     /**
      * @license
@@ -36968,6 +36960,135 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    class LanguageServiceAdapter {
+        constructor(project) {
+            var _a;
+            this.project = project;
+            this.entryPoint = null;
+            this.constructionDiagnostics = [];
+            this.ignoreForEmit = new Set();
+            this.factoryTracker = null; // no .ngfactory shims
+            this.unifiedModulesHost = null; // only used in Bazel
+            this.templateVersion = new Map();
+            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
+        }
+        isShim(sf) {
+            return isShim(sf);
+        }
+        fileExists(fileName) {
+            return this.project.fileExists(fileName);
+        }
+        readFile(fileName) {
+            return this.project.readFile(fileName);
+        }
+        getCurrentDirectory() {
+            return this.project.getCurrentDirectory();
+        }
+        getCanonicalFileName(fileName) {
+            return this.project.projectService.toCanonicalFileName(fileName);
+        }
+        /**
+         * readResource() is an Angular-specific method for reading files that are not
+         * managed by the TS compiler host, namely templates and stylesheets.
+         * It is a method on ExtendedTsCompilerHost, see
+         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
+         */
+        readResource(fileName) {
+            if (isTypeScriptFile(fileName)) {
+                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
+            }
+            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
+            // not exist! The same applies for getScriptVersion().
+            // getScriptInfo() will not create one if it does not exist.
+            // In this case, we *want* a script info to be created so that we could
+            // keep track of its version.
+            const snapshot = this.project.getScriptSnapshot(fileName);
+            if (!snapshot) {
+                // This would fail if the file does not exist, or readFile() fails for
+                // whatever reasons.
+                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
+            }
+            const version = this.project.getScriptVersion(fileName);
+            this.templateVersion.set(fileName, version);
+            return snapshot.getText(0, snapshot.getLength());
+        }
+        isTemplateDirty(fileName) {
+            const lastVersion = this.templateVersion.get(fileName);
+            const latestVersion = this.project.getScriptVersion(fileName);
+            return lastVersion !== latestVersion;
+        }
+    }
+    function isTypeScriptFile(fileName) {
+        return fileName.endsWith('.ts');
+    }
+    function isExternalTemplate(fileName) {
+        return !isTypeScriptFile(fileName);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class CompilerFactory {
+        constructor(adapter, programStrategy) {
+            this.adapter = adapter;
+            this.programStrategy = programStrategy;
+            this.incrementalStrategy = new TrackedIncrementalBuildStrategy();
+            this.compiler = null;
+            this.lastKnownProgram = null;
+        }
+        /**
+         * Create a new instance of the Ivy compiler if the program has changed since
+         * the last time the compiler was instantiated. If the program has not changed,
+         * return the existing instance.
+         * @param fileName override the template if this is an external template file
+         * @param options angular compiler options
+         */
+        getOrCreateWithChangedFile(fileName, options) {
+            const program = this.programStrategy.getProgram();
+            if (!this.compiler || program !== this.lastKnownProgram) {
+                this.compiler = new NgCompiler(this.adapter, // like compiler host
+                options, // angular compiler options
+                program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
+                this.lastKnownProgram, undefined);
+                this.lastKnownProgram = program;
+            }
+            if (isExternalTemplate(fileName)) {
+                this.overrideTemplate(fileName, this.compiler);
+            }
+            return this.compiler;
+        }
+        overrideTemplate(fileName, compiler) {
+            if (!this.adapter.isTemplateDirty(fileName)) {
+                return;
+            }
+            // 1. Get the latest snapshot
+            const latestTemplate = this.adapter.readResource(fileName);
+            // 2. Find all components that use the template
+            const ttc = compiler.getTemplateTypeChecker();
+            const components = compiler.getComponentsWithTemplateFile(fileName);
+            // 3. Update component template
+            for (const component of components) {
+                if (ts$1.isClassDeclaration(component)) {
+                    ttc.overrideComponentTemplate(component, latestTemplate);
+                }
+            }
+        }
+        registerLastKnownProgram() {
+            this.lastKnownProgram = this.programStrategy.getProgram();
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // Reverse mappings of enum would generate strings
     const ALIAS_NAME = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.aliasName];
     const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
@@ -37572,102 +37693,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    class LanguageServiceAdapter {
-        constructor(project) {
-            var _a;
-            this.project = project;
-            this.entryPoint = null;
-            this.constructionDiagnostics = [];
-            this.ignoreForEmit = new Set();
-            this.factoryTracker = null; // no .ngfactory shims
-            this.unifiedModulesHost = null; // only used in Bazel
-            this.templateVersion = new Map();
-            this.modifiedTemplates = new Set();
-            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
-        }
-        isShim(sf) {
-            return isShim(sf);
-        }
-        fileExists(fileName) {
-            return this.project.fileExists(fileName);
-        }
-        readFile(fileName) {
-            return this.project.readFile(fileName);
-        }
-        getCurrentDirectory() {
-            return this.project.getCurrentDirectory();
-        }
-        getCanonicalFileName(fileName) {
-            return this.project.projectService.toCanonicalFileName(fileName);
-        }
-        /**
-         * readResource() is an Angular-specific method for reading files that are not
-         * managed by the TS compiler host, namely templates and stylesheets.
-         * It is a method on ExtendedTsCompilerHost, see
-         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
-         */
-        readResource(fileName) {
-            if (isTypeScriptFile(fileName)) {
-                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
-            }
-            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
-            // not exist! The same applies for getScriptVersion().
-            // getScriptInfo() will not create one if it does not exist.
-            // In this case, we *want* a script info to be created so that we could
-            // keep track of its version.
-            const snapshot = this.project.getScriptSnapshot(fileName);
-            if (!snapshot) {
-                // This would fail if the file does not exist, or readFile() fails for
-                // whatever reasons.
-                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
-            }
-            const version = this.project.getScriptVersion(fileName);
-            this.templateVersion.set(fileName, version);
-            this.modifiedTemplates.delete(fileName);
-            return snapshot.getText(0, snapshot.getLength());
-        }
-        /**
-         * getModifiedResourceFiles() is an Angular-specific method for notifying
-         * the Angular compiler templates that have changed since it last read them.
-         * It is a method on ExtendedTsCompilerHost, see
-         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
-         */
-        getModifiedResourceFiles() {
-            return this.modifiedTemplates;
-        }
-        /**
-         * Check whether the specified `fileName` is newer than the last time it was
-         * read. If it is newer, register it and return true, otherwise do nothing and
-         * return false.
-         * @param fileName path to external template
-         */
-        registerTemplateUpdate(fileName) {
-            if (!isExternalTemplate(fileName)) {
-                return false;
-            }
-            const lastVersion = this.templateVersion.get(fileName);
-            const latestVersion = this.project.getScriptVersion(fileName);
-            if (lastVersion !== latestVersion) {
-                this.modifiedTemplates.add(fileName);
-                return true;
-            }
-            return false;
-        }
-    }
-    function isTypeScriptFile(fileName) {
-        return fileName.endsWith('.ts');
-    }
-    function isExternalTemplate(fileName) {
-        return !isTypeScriptFile(fileName);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * The type of Angular directive. Used for QuickInfo in template.
      */
@@ -37850,18 +37875,18 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     class LanguageService {
         constructor(project, tsLS) {
             this.tsLS = tsLS;
-            this.lastKnownProgram = null;
             this.options = parseNgCompilerOptions(project);
             this.strategy = createTypeCheckingProgramStrategy(project);
             this.adapter = new LanguageServiceAdapter(project);
+            this.compilerFactory = new CompilerFactory(this.adapter, this.strategy);
             this.watchConfigFile(project);
         }
         getSemanticDiagnostics(fileName) {
-            const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program, fileName);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
             const ttc = compiler.getTemplateTypeChecker();
             const diagnostics = [];
             if (isTypeScriptFile(fileName)) {
+                const program = compiler.getNextProgram();
                 const sourceFile = program.getSourceFile(fileName);
                 if (sourceFile) {
                     diagnostics.push(...ttc.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile));
@@ -37875,38 +37900,26 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     }
                 }
             }
-            this.lastKnownProgram = compiler.getNextProgram();
+            this.compilerFactory.registerLastKnownProgram();
             return diagnostics;
         }
         getDefinitionAndBoundSpan(fileName, position) {
-            const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program, fileName);
-            return new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const results = new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
+            this.compilerFactory.registerLastKnownProgram();
+            return results;
         }
         getTypeDefinitionAtPosition(fileName, position) {
-            const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program, fileName);
-            return new DefinitionBuilder(this.tsLS, compiler)
-                .getTypeDefinitionsAtPosition(fileName, position);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const results = new DefinitionBuilder(this.tsLS, compiler).getTypeDefinitionsAtPosition(fileName, position);
+            this.compilerFactory.registerLastKnownProgram();
+            return results;
         }
         getQuickInfoAtPosition(fileName, position) {
-            const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program, fileName);
-            return new QuickInfoBuilder(this.tsLS, compiler).get(fileName, position);
-        }
-        /**
-         * Create a new instance of Ivy compiler.
-         * If the specified `fileName` refers to an external template, check if it has
-         * changed since the last time it was read. If it has changed, signal the
-         * compiler to reload the file via the adapter.
-         */
-        createCompiler(program, fileName) {
-            if (isExternalTemplate(fileName)) {
-                this.adapter.registerTemplateUpdate(fileName);
-            }
-            return new NgCompiler(this.adapter, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), 
-            /** enableTemplateTypeChecker */ true, this.lastKnownProgram, 
-            /** perfRecorder (use default) */ undefined);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const results = new QuickInfoBuilder(this.tsLS, compiler).get(fileName, position);
+            this.compilerFactory.registerLastKnownProgram();
+            return results;
         }
         watchConfigFile(project) {
             // TODO: Check the case when the project is disposed. An InferredProject
