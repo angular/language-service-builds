@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+13.sha-6e18d2d
+ * @license Angular v11.0.0-next.6+11.sha-497af77
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3066,9 +3066,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
-    Identifiers$1.trustConstantHtml = { name: 'ɵɵtrustConstantHtml', moduleName: CORE$1 };
-    Identifiers$1.trustConstantScript = { name: 'ɵɵtrustConstantScript', moduleName: CORE$1 };
-    Identifiers$1.trustConstantResourceUrl = { name: 'ɵɵtrustConstantResourceUrl', moduleName: CORE$1 };
 
     /**
      * @license
@@ -15964,7 +15961,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const parameters = [literal(slot)];
             this._ngContentReservedSlots.push(ngContent.selector);
             const nonContentSelectAttributes = ngContent.attributes.filter(attr => attr.name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1);
-            const attributes = this.getAttributeExpressions(ngContent.name, nonContentSelectAttributes, [], []);
+            const attributes = this.getAttributeExpressions(nonContentSelectAttributes, [], []);
             if (attributes.length > 0) {
                 parameters.push(literal(projectionSlotIdx), literalArr(attributes));
             }
@@ -16023,7 +16020,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             // add attributes for directive and projection matching purposes
-            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
+            const attributes = this.getAttributeExpressions(outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
             parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             const refs = this.prepareRefsArray(element.references);
@@ -16222,7 +16219,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
             const [i18nStaticAttrs, staticAttrs] = partitionArray(template.attributes, hasI18nMeta);
-            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
+            const attrsExprs = this.getAttributeExpressions(staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -16541,7 +16538,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
+        getAttributeExpressions(renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
             const alreadySeen = new Set();
             const attrExprs = [];
             let ngProjectAsAttr;
@@ -16549,7 +16546,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
                     ngProjectAsAttr = attr;
                 }
-                attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
+                attrExprs.push(...getAttributeNameLiterals(attr.name), asLiteral(attr.value));
             });
             // Keep ngProjectAs next to the other name, value pairs so we can verify that we match
             // ngProjectAs marker in the attribute name slot.
@@ -17172,19 +17169,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return importExpr(Identifiers$1.sanitizeResourceUrl);
             default:
                 return null;
-        }
-    }
-    function trustedConstAttribute(tagName, attr) {
-        const value = asLiteral(attr.value);
-        switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
-            case SecurityContext.HTML:
-                return importExpr(Identifiers$1.trustConstantHtml).callFn([value], attr.valueSpan);
-            case SecurityContext.SCRIPT:
-                return importExpr(Identifiers$1.trustConstantScript).callFn([value], attr.valueSpan);
-            case SecurityContext.RESOURCE_URL:
-                return importExpr(Identifiers$1.trustConstantResourceUrl).callFn([value], attr.valueSpan);
-            default:
-                return value;
         }
     }
     function isSingleElementTemplate(children) {
@@ -18104,7 +18088,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+13.sha-6e18d2d');
+    const VERSION$1 = new Version('11.0.0-next.6+11.sha-497af77');
 
     /**
      * @license
@@ -30280,6 +30264,66 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    class SafeValueImpl {
+        constructor(changingThisBreaksApplicationSecurity) {
+            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
+        }
+        toString() {
+            return `SafeValue must use [property]=binding: ${this.changingThisBreaksApplicationSecurity}` +
+                ` (see http://g.co/ng/security#xss)`;
+        }
+    }
+    function unwrapSafeValue(value) {
+        return value instanceof SafeValueImpl ? value.changingThisBreaksApplicationSecurity :
+            value;
+    }
+    function allowSanitizationBypassAndThrow(value, type) {
+        const actualType = getSanitizationBypassType(value);
+        if (actualType != null && actualType !== type) {
+            // Allow ResourceURLs in URL contexts, they are strictly more trusted.
+            if (actualType === "ResourceURL" /* ResourceUrl */ && type === "URL" /* Url */)
+                return true;
+            throw new Error(`Required a safe ${type}, got a ${actualType} (see http://g.co/ng/security#xss)`);
+        }
+        return actualType === type;
+    }
+    function getSanitizationBypassType(value) {
+        return value instanceof SafeValueImpl && value.getTypeName() || null;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * This file is used to control if the default rendering pipeline should be `ViewEngine` or `Ivy`.
+     *
+     * For more information on how to run and debug tests with either Ivy or View Engine (legacy),
+     * please see [BAZEL.md](./docs/BAZEL.md).
+     */
+    let _devMode = true;
+    /**
+     * Returns whether Angular is in development mode. After called once,
+     * the value is locked and won't change any more.
+     *
+     * By default, this is true, unless a user calls `enableProdMode` before calling this.
+     *
+     * @publicApi
+     */
+    function isDevMode() {
+        return _devMode;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * The Trusted Types policy, or null if Trusted Types are not
      * enabled/supported, or undefined if the policy has not been created yet.
@@ -30335,19 +30379,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
     }
     /**
-     * Unsafely promote a string to a TrustedScriptURL, falling back to strings
-     * when Trusted Types are not available.
-     * @security This is a security-sensitive function; any use of this function
-     * must go through security review. In particular, it must be assured that the
-     * provided string will never cause an XSS vulnerability if used in a context
-     * that will cause a browser to load and execute a resource, e.g. when
-     * assigning to script.src.
-     */
-    function trustedScriptURLFromString(url) {
-        var _a;
-        return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScriptURL(url)) || url;
-    }
-    /**
      * Unsafely call the Function constructor with the given string arguments. It
      * is only available in development mode, and should be stripped out of
      * production code.
@@ -30387,66 +30418,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // When Trusted Types support in Function constructors is widely available,
         // the implementation of this function can be simplified to:
         // return new Function(...args.map(a => trustedScriptFromString(a)));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class SafeValueImpl {
-        constructor(changingThisBreaksApplicationSecurity) {
-            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
-        }
-        toString() {
-            return `SafeValue must use [property]=binding: ${this.changingThisBreaksApplicationSecurity}` +
-                ` (see http://g.co/ng/security#xss)`;
-        }
-    }
-    function unwrapSafeValue(value) {
-        return value instanceof SafeValueImpl ? value.changingThisBreaksApplicationSecurity :
-            value;
-    }
-    function allowSanitizationBypassAndThrow(value, type) {
-        const actualType = getSanitizationBypassType(value);
-        if (actualType != null && actualType !== type) {
-            // Allow ResourceURLs in URL contexts, they are strictly more trusted.
-            if (actualType === "ResourceURL" /* ResourceUrl */ && type === "URL" /* Url */)
-                return true;
-            throw new Error(`Required a safe ${type}, got a ${actualType} (see http://g.co/ng/security#xss)`);
-        }
-        return actualType === type;
-    }
-    function getSanitizationBypassType(value) {
-        return value instanceof SafeValueImpl && value.getTypeName() || null;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * This file is used to control if the default rendering pipeline should be `ViewEngine` or `Ivy`.
-     *
-     * For more information on how to run and debug tests with either Ivy or View Engine (legacy),
-     * please see [BAZEL.md](./docs/BAZEL.md).
-     */
-    let _devMode = true;
-    /**
-     * Returns whether Angular is in development mode. After called once,
-     * the value is locked and won't change any more.
-     *
-     * By default, this is true, unless a user calls `enableProdMode` before calling this.
-     *
-     * @publicApi
-     */
-    function isDevMode() {
-        return _devMode;
     }
 
     /**
@@ -31019,48 +30990,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return unwrapSafeValue(unsafeScript);
         }
         throw new Error('unsafe value used in a script context');
-    }
-    /**
-     * Promotes the given constant string to a TrustedHTML.
-     * @param html constant string containing trusted HTML.
-     * @returns TrustedHTML wrapping `html`.
-     *
-     * @security This is a security-sensitive function and should only be used to
-     * convert constant values of attributes and properties found in
-     * application-provided Angular templates to TrustedHTML.
-     *
-     * @codeGenApi
-     */
-    function ɵɵtrustConstantHtml(html) {
-        return trustedHTMLFromString(html);
-    }
-    /**
-     * Promotes the given constant string to a TrustedScript.
-     * @param script constant string containing a trusted script.
-     * @returns TrustedScript wrapping `script`.
-     *
-     * @security This is a security-sensitive function and should only be used to
-     * convert constant values of attributes and properties found in
-     * application-provided Angular templates to TrustedScript.
-     *
-     * @codeGenApi
-     */
-    function ɵɵtrustConstantScript(script) {
-        return trustedScriptFromString(script);
-    }
-    /**
-     * Promotes the given constant string to a TrustedScriptURL.
-     * @param url constant string containing a trusted script URL.
-     * @returns TrustedScriptURL wrapping `url`.
-     *
-     * @security This is a security-sensitive function and should only be used to
-     * convert constant values of attributes and properties found in
-     * application-provided Angular templates to TrustedScriptURL.
-     *
-     * @codeGenApi
-     */
-    function ɵɵtrustConstantResourceUrl(url) {
-        return trustedScriptURLFromString(url);
     }
     /**
      * Detects which sanitizer to use for URL property, based on tag name and prop name.
@@ -46056,7 +45985,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+13.sha-6e18d2d');
+    const VERSION$2 = new Version$1('11.0.0-next.6+11.sha-497af77');
 
     /**
      * @license
@@ -50438,9 +50367,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         'ɵɵsanitizeScript': ɵɵsanitizeScript,
         'ɵɵsanitizeUrl': ɵɵsanitizeUrl,
         'ɵɵsanitizeUrlOrResourceUrl': ɵɵsanitizeUrlOrResourceUrl,
-        'ɵɵtrustConstantHtml': ɵɵtrustConstantHtml,
-        'ɵɵtrustConstantScript': ɵɵtrustConstantScript,
-        'ɵɵtrustConstantResourceUrl': ɵɵtrustConstantResourceUrl,
     }))();
 
     let jitOptions = null;
