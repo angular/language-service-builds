@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+10.sha-822b838
+ * @license Angular v11.0.0-next.6+13.sha-6e18d2d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5833,6 +5833,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
+    Identifiers$1.trustConstantHtml = { name: 'ɵɵtrustConstantHtml', moduleName: CORE$1 };
+    Identifiers$1.trustConstantScript = { name: 'ɵɵtrustConstantScript', moduleName: CORE$1 };
+    Identifiers$1.trustConstantResourceUrl = { name: 'ɵɵtrustConstantResourceUrl', moduleName: CORE$1 };
 
     /**
      * @license
@@ -17164,7 +17167,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const parameters = [literal(slot)];
             this._ngContentReservedSlots.push(ngContent.selector);
             const nonContentSelectAttributes = ngContent.attributes.filter(attr => attr.name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1);
-            const attributes = this.getAttributeExpressions(nonContentSelectAttributes, [], []);
+            const attributes = this.getAttributeExpressions(ngContent.name, nonContentSelectAttributes, [], []);
             if (attributes.length > 0) {
                 parameters.push(literal(projectionSlotIdx), literalArr(attributes));
             }
@@ -17223,7 +17226,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
             });
             // add attributes for directive and projection matching purposes
-            const attributes = this.getAttributeExpressions(outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
+            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
             parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             const refs = this.prepareRefsArray(element.references);
@@ -17422,7 +17425,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
             const [i18nStaticAttrs, staticAttrs] = partitionArray(template.attributes, hasI18nMeta);
-            const attrsExprs = this.getAttributeExpressions(staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
+            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -17741,7 +17744,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        getAttributeExpressions(renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
+        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
             const alreadySeen = new Set();
             const attrExprs = [];
             let ngProjectAsAttr;
@@ -17749,7 +17752,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
                     ngProjectAsAttr = attr;
                 }
-                attrExprs.push(...getAttributeNameLiterals(attr.name), asLiteral(attr.value));
+                attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
             });
             // Keep ngProjectAs next to the other name, value pairs so we can verify that we match
             // ngProjectAs marker in the attribute name slot.
@@ -18372,6 +18375,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return importExpr(Identifiers$1.sanitizeResourceUrl);
             default:
                 return null;
+        }
+    }
+    function trustedConstAttribute(tagName, attr) {
+        const value = asLiteral(attr.value);
+        switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
+            case SecurityContext.HTML:
+                return importExpr(Identifiers$1.trustConstantHtml).callFn([value], attr.valueSpan);
+            case SecurityContext.SCRIPT:
+                return importExpr(Identifiers$1.trustConstantScript).callFn([value], attr.valueSpan);
+            case SecurityContext.RESOURCE_URL:
+                return importExpr(Identifiers$1.trustConstantResourceUrl).callFn([value], attr.valueSpan);
+            default:
+                return value;
         }
     }
     function isSingleElementTemplate(children) {
@@ -19291,7 +19307,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+10.sha-822b838');
+    const VERSION$1 = new Version('11.0.0-next.6+13.sha-6e18d2d');
 
     /**
      * @license
@@ -19926,7 +19942,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+10.sha-822b838');
+    const VERSION$2 = new Version('11.0.0-next.6+13.sha-6e18d2d');
 
     /**
      * @license
