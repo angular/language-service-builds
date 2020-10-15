@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+15.sha-14f15ec
+ * @license Angular v11.0.0-next.6+22.sha-6acddb9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19307,7 +19307,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+15.sha-14f15ec');
+    const VERSION$1 = new Version('11.0.0-next.6+22.sha-6acddb9');
 
     /**
      * @license
@@ -19942,7 +19942,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+15.sha-14f15ec');
+    const VERSION$2 = new Version('11.0.0-next.6+22.sha-6acddb9');
 
     /**
      * @license
@@ -37269,7 +37269,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      */
     function toAttributeString(attribute) {
         var _a, _b;
-        return `[${attribute.name}=${(_b = (_a = attribute.valueSpan) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : ''}]`;
+        if (attribute instanceof BoundEvent) {
+            return `[${attribute.name}]`;
+        }
+        else {
+            return `[${attribute.name}=${(_b = (_a = attribute.valueSpan) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : ''}]`;
+        }
     }
     function getNodeName(node) {
         return node instanceof Template ? node.tagName : node.name;
@@ -37278,7 +37283,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Given a template or element node, returns all attributes on the node.
      */
     function getAttributes(node) {
-        const attributes = [...node.attributes, ...node.inputs];
+        const attributes = [...node.attributes, ...node.inputs, ...node.outputs];
         if (node instanceof Template) {
             attributes.push(...node.templateAttrs);
         }
@@ -37331,7 +37336,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const allAttrs = attributes.map(toAttributeString);
         const allDirectiveMatches = getDirectiveMatchesForSelector(directives, getNodeName(hostNode) + allAttrs.join(''));
         const attrsExcludingName = attributes.filter(a => a.name !== name).map(toAttributeString);
-        const matchesWithoutAttr = getDirectiveMatchesForSelector(directives, attrsExcludingName.join(''));
+        const matchesWithoutAttr = getDirectiveMatchesForSelector(directives, getNodeName(hostNode) + attrsExcludingName.join(''));
         return difference(allDirectiveMatches, matchesWithoutAttr);
     }
     /**
@@ -37396,12 +37401,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Return the template AST node or expression AST node that most accurately
+     * Return the path to the template AST node or expression AST node that most accurately
      * represents the node at the specified cursor `position`.
+     *
      * @param ast AST tree
      * @param position cursor position
      */
-    function findNodeAtPosition(ast, position) {
+    function getPathToNodeAtPosition(ast, position) {
         const visitor = new R3Visitor(position);
         visitor.visitAll(ast);
         const candidate = visitor.path[visitor.path.length - 1];
@@ -37417,7 +37423,21 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return;
             }
         }
-        return candidate;
+        return visitor.path;
+    }
+    /**
+     * Return the template AST node or expression AST node that most accurately
+     * represents the node at the specified cursor `position`.
+     *
+     * @param ast AST tree
+     * @param position cursor position
+     */
+    function findNodeAtPosition(ast, position) {
+        const path = getPathToNodeAtPosition(ast, position);
+        if (!path) {
+            return;
+        }
+        return path[path.length - 1];
     }
     class R3Visitor {
         // Position must be absolute in the source file.
@@ -37590,10 +37610,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (definitionMeta === undefined || isDollarEvent(definitionMeta.node)) {
                 return undefined;
             }
-            const definitions = this.getDefinitionsForSymbol(definitionMeta.symbol, definitionMeta.node);
+            const definitions = this.getDefinitionsForSymbol(Object.assign(Object.assign({}, definitionMeta), templateInfo));
             return { definitions, textSpan: getTextSpanOfNode(definitionMeta.node) };
         }
-        getDefinitionsForSymbol(symbol, node) {
+        getDefinitionsForSymbol({ symbol, node, path, component }) {
             switch (symbol.kind) {
                 case SymbolKind.Directive:
                 case SymbolKind.Element:
@@ -37605,9 +37625,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     // LS users to "go to definition" on an item in the template that maps to a class and be
                     // taken to the directive or HTML class.
                     return this.getTypeDefinitionsForTemplateInstance(symbol, node);
-                case SymbolKind.Input:
                 case SymbolKind.Output:
-                    return this.getDefinitionsForSymbols(...symbol.bindings);
+                case SymbolKind.Input: {
+                    const bindingDefs = this.getDefinitionsForSymbols(...symbol.bindings);
+                    // Also attempt to get directive matches for the input name. If there is a directive that
+                    // has the input name as part of the selector, we want to return that as well.
+                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, path, component);
+                    return [...bindingDefs, ...directiveDefs];
+                }
                 case SymbolKind.Variable:
                 case SymbolKind.Reference: {
                     const definitions = [];
@@ -37656,8 +37681,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 case SymbolKind.Template:
                     return this.getTypeDefinitionsForTemplateInstance(symbol, node);
                 case SymbolKind.Output:
-                case SymbolKind.Input:
-                    return this.getTypeDefinitionsForSymbols(...symbol.bindings);
+                case SymbolKind.Input: {
+                    const bindingDefs = this.getTypeDefinitionsForSymbols(...symbol.bindings);
+                    // Also attempt to get directive matches for the input name. If there is a directive that
+                    // has the input name as part of the selector, we want to return that as well.
+                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, definitionMeta.path, templateInfo.component);
+                    return [...bindingDefs, ...directiveDefs];
+                }
                 case SymbolKind.Reference:
                 case SymbolKind.Expression:
                 case SymbolKind.Variable:
@@ -37689,6 +37719,24 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return this.getTypeDefinitionsForSymbols(symbol);
             }
         }
+        getDirectiveTypeDefsForBindingNode(node, pathToNode, component) {
+            if (!(node instanceof BoundAttribute) && !(node instanceof TextAttribute) &&
+                !(node instanceof BoundEvent)) {
+                return [];
+            }
+            const parent = pathToNode[pathToNode.length - 2];
+            if (!(parent instanceof Template || parent instanceof Element)) {
+                return [];
+            }
+            const templateOrElementSymbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(parent, component);
+            if (templateOrElementSymbol === null ||
+                (templateOrElementSymbol.kind !== SymbolKind.Template &&
+                    templateOrElementSymbol.kind !== SymbolKind.Element)) {
+                return [];
+            }
+            const dirs = getDirectiveMatchesForAttribute(node.name, parent, templateOrElementSymbol.directives);
+            return this.getTypeDefinitionsForSymbols(...dirs);
+        }
         getTypeDefinitionsForSymbols(...symbols) {
             return flatMap(symbols, ({ shimLocation }) => {
                 var _a;
@@ -37697,15 +37745,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             });
         }
         getDefinitionMetaAtPosition({ template, component }, position) {
-            const node = findNodeAtPosition(template, position);
-            if (node === undefined) {
+            const path = getPathToNodeAtPosition(template, position);
+            if (path === undefined) {
                 return;
             }
+            const node = path[path.length - 1];
             const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
             if (symbol === null) {
                 return;
             }
-            return { node, symbol };
+            return { node, path, symbol };
         }
     }
 
