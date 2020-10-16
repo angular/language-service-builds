@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.6+16.sha-94d7ef3
+ * @license Angular v10.1.6+18.sha-4a5f17c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17960,7 +17960,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.6+16.sha-94d7ef3');
+    const VERSION$1 = new Version('10.1.6+18.sha-4a5f17c');
 
     /**
      * @license
@@ -26545,7 +26545,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (typeof ngDevMode !== 'object') {
                 ngDevModeResetPerfCounters();
             }
-            return !!ngDevMode;
+            return typeof ngDevMode !== 'undefined' && !!ngDevMode;
         }
         return false;
     }
@@ -34101,7 +34101,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.6+16.sha-94d7ef3');
+    const VERSION$2 = new Version$1('10.1.6+18.sha-4a5f17c');
 
     /**
      * @license
