@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.1.6+14.sha-af17038
+ * @license Angular v10.1.6+16.sha-94d7ef3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17960,7 +17960,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.1.6+14.sha-af17038');
+    const VERSION$1 = new Version('10.1.6+16.sha-94d7ef3');
 
     /**
      * @license
@@ -27528,7 +27528,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const instructionState = {
         lFrame: createLFrame(null),
         bindingsEnabled: true,
-        checkNoChangesMode: false,
+        isInCheckNoChangesMode: false,
     };
     /**
      * Return the current `TView`.
@@ -27547,12 +27547,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function isCurrentTNodeParent() {
         return instructionState.lFrame.isParent;
     }
-    function getCheckNoChangesMode() {
+    function isInCheckNoChangesMode() {
         // TODO(misko): remove this from the LView since it is ngDevMode=true mode only.
-        return instructionState.checkNoChangesMode;
+        return instructionState.isInCheckNoChangesMode;
     }
-    function setCheckNoChangesMode(mode) {
-        instructionState.checkNoChangesMode = mode;
+    function setIsInCheckNoChangesMode(mode) {
+        instructionState.isInCheckNoChangesMode = mode;
     }
     function setBindingIndex(value) {
         return instructionState.lFrame.bindingIndex = value;
@@ -27888,7 +27888,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function callHooks(currentView, arr, initPhase, currentNodeIndex) {
         ngDevMode &&
-            assertEqual(getCheckNoChangesMode(), false, 'Hooks should never be run in the check no changes mode.');
+            assertEqual(isInCheckNoChangesMode(), false, 'Hooks should never be run when in check no changes mode.');
         const startIndex = currentNodeIndex !== undefined ?
             (currentView[PREORDER_HOOK_FLAGS] & 65535 /* IndexOfTheNextPreOrderHookMaskMask */) :
             0;
@@ -30192,7 +30192,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if ((flags & 256 /* Destroyed */) === 256 /* Destroyed */)
             return;
         enterView(lView);
-        const checkNoChangesMode = getCheckNoChangesMode();
+        // Check no changes mode is a dev only mode used to verify that bindings have not changed
+        // since they were assigned. We do not want to execute lifecycle hooks in that mode.
+        const isInCheckNoChangesPass = isInCheckNoChangesMode();
         try {
             resetPreOrderHookFlags(lView);
             setBindingIndex(tView.bindingStartIndex);
@@ -30202,7 +30204,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const hooksInitPhaseCompleted = (flags & 3 /* InitPhaseStateMask */) === 3 /* InitPhaseCompleted */;
             // execute pre-order hooks (OnInit, OnChanges, DoCheck)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const preOrderCheckHooks = tView.preOrderCheckHooks;
                     if (preOrderCheckHooks !== null) {
@@ -30228,7 +30230,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             // execute content hooks (AfterContentInit, AfterContentChecked)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const contentCheckHooks = tView.contentCheckHooks;
                     if (contentCheckHooks !== null) {
@@ -30258,7 +30260,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             // execute view hooks (AfterViewInit, AfterViewChecked)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const viewCheckHooks = tView.viewCheckHooks;
                     if (viewCheckHooks !== null) {
@@ -30288,7 +30290,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // refresh a `NgClass` binding should work. If we would reset the dirty state in the check
             // no changes cycle, the component would be not be dirty for the next update pass. This would
             // be different in production mode where the component dirty state is not reset.
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 lView[FLAGS] &= ~(64 /* Dirty */ | 8 /* FirstLViewPass */);
             }
             if (lView[FLAGS] & 1024 /* RefreshTransplantedView */) {
@@ -30302,7 +30304,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function renderComponentOrTemplate(tView, lView, templateFn, context) {
         const rendererFactory = lView[RENDERER_FACTORY];
-        const normalExecutionPath = !getCheckNoChangesMode();
+        const normalExecutionPath = !isInCheckNoChangesMode();
         const creationModeIsActive = isCreationMode(lView);
         try {
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.begin) {
@@ -30326,7 +30328,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
-                selectIndexInternal(tView, lView, 0, getCheckNoChangesMode());
+                selectIndexInternal(tView, lView, 0, isInCheckNoChangesMode());
             }
             templateFn(rf, context);
         }
@@ -30934,12 +30936,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         tickRootContext(lView[CONTEXT]);
     }
     function checkNoChangesInternal(tView, view, context) {
-        setCheckNoChangesMode(true);
+        setIsInCheckNoChangesMode(true);
         try {
             detectChangesInternal(tView, view, context);
         }
         finally {
-            setCheckNoChangesMode(false);
+            setIsInCheckNoChangesMode(false);
         }
     }
     /**
@@ -30952,12 +30954,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param lView The view which the change detection should be checked on.
      */
     function checkNoChangesInRootView(lView) {
-        setCheckNoChangesMode(true);
+        setIsInCheckNoChangesMode(true);
         try {
             detectChangesInRootView(lView);
         }
         finally {
-            setCheckNoChangesMode(false);
+            setIsInCheckNoChangesMode(false);
         }
     }
     function executeViewQueryFn(flags, viewQueryFn, component) {
@@ -34099,7 +34101,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.1.6+14.sha-af17038');
+    const VERSION$2 = new Version$1('10.1.6+16.sha-94d7ef3');
 
     /**
      * @license
