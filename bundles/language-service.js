@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+26.sha-a3812c6
+ * @license Angular v11.0.0-next.6+29.sha-765fa33
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5371,6 +5371,92 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * The Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported, or undefined if the policy has not been created yet.
+     */
+    let policy;
+    /**
+     * Returns the Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported. The first call to this function will create the policy.
+     */
+    function getPolicy() {
+        if (policy === undefined) {
+            policy = null;
+            if (_global.trustedTypes) {
+                try {
+                    policy =
+                        _global.trustedTypes.createPolicy('angular#unsafe-jit', {
+                            createScript: (s) => s,
+                        });
+                }
+                catch (_a) {
+                    // trustedTypes.createPolicy throws if called with a name that is
+                    // already registered, even in report-only mode. Until the API changes,
+                    // catch the error not to break the applications functionally. In such
+                    // cases, the code will fall back to using strings.
+                }
+            }
+        }
+        return policy;
+    }
+    /**
+     * Unsafely promote a string to a TrustedScript, falling back to strings when
+     * Trusted Types are not available.
+     * @security In particular, it must be assured that the provided string will
+     * never cause an XSS vulnerability if used in a context that will be
+     * interpreted and executed as a script by a browser, e.g. when calling eval.
+     */
+    function trustedScriptFromString(script) {
+        var _a;
+        return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
+    }
+    /**
+     * Unsafely call the Function constructor with the given string arguments. It
+     * is only available in development mode, and should be stripped out of
+     * production code.
+     * @security This is a security-sensitive function; any use of this function
+     * must go through security review. In particular, it must be assured that it
+     * is only called from the JIT compiler, as use in other code can lead to XSS
+     * vulnerabilities.
+     */
+    function newTrustedFunctionForJIT(...args) {
+        if (!_global.trustedTypes) {
+            // In environments that don't support Trusted Types, fall back to the most
+            // straightforward implementation:
+            return new Function(...args);
+        }
+        // Chrome currently does not support passing TrustedScript to the Function
+        // constructor. The following implements the workaround proposed on the page
+        // below, where the Chromium bug is also referenced:
+        // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
+        const fnArgs = args.slice(0, -1).join(',');
+        const fnBody = args.pop().toString();
+        const body = `(function anonymous(${fnArgs}
+) { ${fnBody}
+})`;
+        // Using eval directly confuses the compiler and prevents this module from
+        // being stripped out of JS binaries even if not used. The global['eval']
+        // indirection fixes that.
+        const fn = _global['eval'](trustedScriptFromString(body));
+        // To completely mimic the behavior of calling "new Function", two more
+        // things need to happen:
+        // 1. Stringifying the resulting function should return its source code
+        fn.toString = () => body;
+        // 2. When calling the resulting function, `this` should refer to `global`
+        return fn.bind(_global);
+        // When Trusted Types support in Function constructors is widely available,
+        // the implementation of this function can be simplified to:
+        // return new Function(...args.map(a => trustedScriptFromString(a)));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * A helper class to manage the evaluation of JIT generated code.
      */
     class JitEvaluator {
@@ -5421,11 +5507,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // function anonymous(a,b,c
                 // /**/) { ... }```
                 // We don't want to hard code this fact, so we auto detect it via an empty function first.
-                const emptyFn = new Function(...fnArgNames.concat('return null;')).toString();
+                const emptyFn = newTrustedFunctionForJIT(...fnArgNames.concat('return null;')).toString();
                 const headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
                 fnBody += `\n${ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment()}`;
             }
-            const fn = new Function(...fnArgNames.concat(fnBody));
+            const fn = newTrustedFunctionForJIT(...fnArgNames.concat(fnBody));
             return this.executeFunction(fn, fnArgValues);
         }
         /**
@@ -18104,7 +18190,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+26.sha-a3812c6');
+    const VERSION$1 = new Version('11.0.0-next.6+29.sha-765fa33');
 
     /**
      * @license
@@ -26758,7 +26844,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (typeof ngDevMode !== 'object') {
                 ngDevModeResetPerfCounters();
             }
-            return !!ngDevMode;
+            return typeof ngDevMode !== 'undefined' && !!ngDevMode;
         }
         return false;
     }
@@ -30284,17 +30370,17 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * The Trusted Types policy, or null if Trusted Types are not
      * enabled/supported, or undefined if the policy has not been created yet.
      */
-    let policy;
+    let policy$1;
     /**
      * Returns the Trusted Types policy, or null if Trusted Types are not
      * enabled/supported. The first call to this function will create the policy.
      */
-    function getPolicy() {
-        if (policy === undefined) {
-            policy = null;
+    function getPolicy$1() {
+        if (policy$1 === undefined) {
+            policy$1 = null;
             if (_global$1.trustedTypes) {
                 try {
-                    policy = _global$1.trustedTypes.createPolicy('angular', {
+                    policy$1 = _global$1.trustedTypes.createPolicy('angular', {
                         createHTML: (s) => s,
                         createScript: (s) => s,
                         createScriptURL: (s) => s,
@@ -30308,7 +30394,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 }
             }
         }
-        return policy;
+        return policy$1;
     }
     /**
      * Unsafely promote a string to a TrustedHTML, falling back to strings when
@@ -30321,7 +30407,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function trustedHTMLFromString(html) {
         var _a;
-        return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createHTML(html)) || html;
+        return ((_a = getPolicy$1()) === null || _a === void 0 ? void 0 : _a.createHTML(html)) || html;
     }
     /**
      * Unsafely promote a string to a TrustedScript, falling back to strings when
@@ -30330,9 +30416,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * never cause an XSS vulnerability if used in a context that will be
      * interpreted and executed as a script by a browser, e.g. when calling eval.
      */
-    function trustedScriptFromString(script) {
+    function trustedScriptFromString$1(script) {
         var _a;
-        return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
+        return ((_a = getPolicy$1()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
     }
     /**
      * Unsafely promote a string to a TrustedScriptURL, falling back to strings
@@ -30345,7 +30431,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function trustedScriptURLFromString(url) {
         var _a;
-        return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScriptURL(url)) || url;
+        return ((_a = getPolicy$1()) === null || _a === void 0 ? void 0 : _a.createScriptURL(url)) || url;
     }
     /**
      * Unsafely call the Function constructor with the given string arguments. It
@@ -30377,7 +30463,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // Using eval directly confuses the compiler and prevents this module from
         // being stripped out of JS binaries even if not used. The global['eval']
         // indirection fixes that.
-        const fn = _global$1['eval'](trustedScriptFromString(body));
+        const fn = _global$1['eval'](trustedScriptFromString$1(body));
         // To completely mimic the behavior of calling "new Function", two more
         // things need to happen:
         // 1. Stringifying the resulting function should return its source code
@@ -31046,7 +31132,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @codeGenApi
      */
     function ɵɵtrustConstantScript(script) {
-        return trustedScriptFromString(script);
+        return trustedScriptFromString$1(script);
     }
     /**
      * Promotes the given constant string to a TrustedScriptURL.
@@ -46058,7 +46144,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+26.sha-a3812c6');
+    const VERSION$2 = new Version$1('11.0.0-next.6+29.sha-765fa33');
 
     /**
      * @license
