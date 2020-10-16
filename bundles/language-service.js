@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+25.sha-96f59f6
+ * @license Angular v11.0.0-next.6+26.sha-a3812c6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18104,7 +18104,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+25.sha-96f59f6');
+    const VERSION$1 = new Version('11.0.0-next.6+26.sha-a3812c6');
 
     /**
      * @license
@@ -28351,7 +28351,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     const instructionState = {
         lFrame: createLFrame(null),
         bindingsEnabled: true,
-        checkNoChangesMode: false,
+        isInCheckNoChangesMode: false,
     };
     function getElementDepthCount() {
         return instructionState.lFrame.elementDepthCount;
@@ -28452,12 +28452,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     function getContextLView() {
         return instructionState.lFrame.contextLView;
     }
-    function getCheckNoChangesMode() {
+    function isInCheckNoChangesMode() {
         // TODO(misko): remove this from the LView since it is ngDevMode=true mode only.
-        return instructionState.checkNoChangesMode;
+        return instructionState.isInCheckNoChangesMode;
     }
-    function setCheckNoChangesMode(mode) {
-        instructionState.checkNoChangesMode = mode;
+    function setIsInCheckNoChangesMode(mode) {
+        instructionState.isInCheckNoChangesMode = mode;
     }
     // top level variables should not be exported for performance reasons (PERF_NOTES.md)
     function getBindingRoot() {
@@ -28891,7 +28891,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function callHooks(currentView, arr, initPhase, currentNodeIndex) {
         ngDevMode &&
-            assertEqual(getCheckNoChangesMode(), false, 'Hooks should never be run in the check no changes mode.');
+            assertEqual(isInCheckNoChangesMode(), false, 'Hooks should never be run when in check no changes mode.');
         const startIndex = currentNodeIndex !== undefined ?
             (currentView[PREORDER_HOOK_FLAGS] & 65535 /* IndexOfTheNextPreOrderHookMaskMask */) :
             0;
@@ -32093,7 +32093,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function ɵɵadvance(delta) {
         ngDevMode && assertGreaterThan(delta, 0, 'Can only advance forward');
-        selectIndexInternal(getTView(), getLView(), getSelectedIndex() + delta, getCheckNoChangesMode());
+        selectIndexInternal(getTView(), getLView(), getSelectedIndex() + delta, isInCheckNoChangesMode());
     }
     function selectIndexInternal(tView, lView, index, checkNoChangesMode) {
         ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
@@ -33139,7 +33139,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         if ((flags & 256 /* Destroyed */) === 256 /* Destroyed */)
             return;
         enterView(lView);
-        const checkNoChangesMode = getCheckNoChangesMode();
+        // Check no changes mode is a dev only mode used to verify that bindings have not changed
+        // since they were assigned. We do not want to execute lifecycle hooks in that mode.
+        const isInCheckNoChangesPass = isInCheckNoChangesMode();
         try {
             resetPreOrderHookFlags(lView);
             setBindingIndex(tView.bindingStartIndex);
@@ -33149,7 +33151,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             const hooksInitPhaseCompleted = (flags & 3 /* InitPhaseStateMask */) === 3 /* InitPhaseCompleted */;
             // execute pre-order hooks (OnInit, OnChanges, DoCheck)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const preOrderCheckHooks = tView.preOrderCheckHooks;
                     if (preOrderCheckHooks !== null) {
@@ -33175,7 +33177,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
             // execute content hooks (AfterContentInit, AfterContentChecked)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const contentCheckHooks = tView.contentCheckHooks;
                     if (contentCheckHooks !== null) {
@@ -33205,7 +33207,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
             // execute view hooks (AfterViewInit, AfterViewChecked)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const viewCheckHooks = tView.viewCheckHooks;
                     if (viewCheckHooks !== null) {
@@ -33235,7 +33237,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             // refresh a `NgClass` binding should work. If we would reset the dirty state in the check
             // no changes cycle, the component would be not be dirty for the next update pass. This would
             // be different in production mode where the component dirty state is not reset.
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 lView[FLAGS] &= ~(64 /* Dirty */ | 8 /* FirstLViewPass */);
             }
             if (lView[FLAGS] & 1024 /* RefreshTransplantedView */) {
@@ -33249,7 +33251,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     function renderComponentOrTemplate(tView, lView, templateFn, context) {
         const rendererFactory = lView[RENDERER_FACTORY];
-        const normalExecutionPath = !getCheckNoChangesMode();
+        const normalExecutionPath = !isInCheckNoChangesMode();
         const creationModeIsActive = isCreationMode(lView);
         try {
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.begin) {
@@ -33273,7 +33275,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
-                selectIndexInternal(tView, lView, 0, getCheckNoChangesMode());
+                selectIndexInternal(tView, lView, 0, isInCheckNoChangesMode());
             }
             templateFn(rf, context);
         }
@@ -34491,12 +34493,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         tickRootContext(lView[CONTEXT]);
     }
     function checkNoChangesInternal(tView, view, context) {
-        setCheckNoChangesMode(true);
+        setIsInCheckNoChangesMode(true);
         try {
             detectChangesInternal(tView, view, context);
         }
         finally {
-            setCheckNoChangesMode(false);
+            setIsInCheckNoChangesMode(false);
         }
     }
     /**
@@ -34509,12 +34511,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @param lView The view which the change detection should be checked on.
      */
     function checkNoChangesInRootView(lView) {
-        setCheckNoChangesMode(true);
+        setIsInCheckNoChangesMode(true);
         try {
             detectChangesInRootView(lView);
         }
         finally {
-            setCheckNoChangesMode(false);
+            setIsInCheckNoChangesMode(false);
         }
     }
     function executeViewQueryFn(flags, viewQueryFn, component) {
@@ -39215,7 +39217,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return false;
         }
         else {
-            if (ngDevMode && getCheckNoChangesMode()) {
+            if (ngDevMode && isInCheckNoChangesMode()) {
                 // View engine didn't report undefined values as changed on the first checkNoChanges pass
                 // (before the change detection was run).
                 const oldValueToCompare = oldValue !== NO_CHANGE ? oldValue : undefined;
@@ -46056,7 +46058,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+25.sha-96f59f6');
+    const VERSION$2 = new Version$1('11.0.0-next.6+26.sha-a3812c6');
 
     /**
      * @license
