@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+37.sha-a38293d
+ * @license Angular v11.0.0-next.6+40.sha-0c01c4a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -27,7 +27,171 @@ module.exports = function(provided) {
   return results;
 };
 
-define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], function (exports, tss, ts, path) { 'use strict';
+define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], function (exports, path, tss, ts) { 'use strict';
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Return the node that most tightly encompass the specified `position`.
+     * @param node
+     * @param position
+     */
+    function findTightestNode(node, position) {
+        if (node.getStart() <= position && position < node.getEnd()) {
+            return node.forEachChild(c => findTightestNode(c, position)) || node;
+        }
+    }
+    /**
+     * Returns a property assignment from the assignment value if the property name
+     * matches the specified `key`, or `undefined` if there is no match.
+     */
+    function getPropertyAssignmentFromValue(value, key) {
+        const propAssignment = value.parent;
+        if (!propAssignment || !ts.isPropertyAssignment(propAssignment) ||
+            propAssignment.name.getText() !== key) {
+            return;
+        }
+        return propAssignment;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgnNode property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        const objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        const callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        const decorator = callExprNode.parent;
+        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        const classDeclNode = decorator.parent;
+        return classDeclNode;
+    }
+    /**
+     * Given the node which is the string of the inline template for a component, returns the
+     * `ts.ClassDeclaration` for the component.
+     */
+    function getClassDeclOfInlineTemplateNode(templateStringNode) {
+        if (!ts.isStringLiteralLike(templateStringNode)) {
+            return;
+        }
+        const tmplAsgn = getPropertyAssignmentFromValue(templateStringNode, 'template');
+        if (!tmplAsgn) {
+            return;
+        }
+        return getClassDeclFromDecoratorProp(tmplAsgn);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Gets an Angular-specific definition in a TypeScript source file.
+     */
+    function getTsDefinitionAndBoundSpan(sf, position, resourceResolver) {
+        const node = findTightestNode(sf, position);
+        if (!node)
+            return;
+        switch (node.kind) {
+            case ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+                // Attempt to extract definition of a URL in a property assignment.
+                return getUrlFromProperty(node, resourceResolver);
+            default:
+                return undefined;
+        }
+    }
+    /**
+     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
+     * directive decorator.
+     * Currently applies to `templateUrl` and `styleUrls` properties.
+     */
+    function getUrlFromProperty(urlNode, resourceResolver) {
+        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
+        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
+        // an array of strings:
+        //   {
+        //        templateUrl: './template.ng.html',
+        //        styleUrls: ['./style.css', './other-style.css']
+        //   }
+        // `templateUrl`'s property assignment can be found from the string literal node;
+        // `styleUrls`'s property assignment can be found from the array (parent) node.
+        //
+        // First search for `templateUrl`.
+        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
+        if (!asgn) {
+            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
+            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
+            if (!asgn) {
+                // Nothing found, bail.
+                return;
+            }
+        }
+        // If the property assignment is not a property of a class decorator, don't generate definitions
+        // for it.
+        if (!getClassDeclFromDecoratorProp(asgn)) {
+            return;
+        }
+        const sf = urlNode.getSourceFile();
+        let url;
+        try {
+            url = resourceResolver.resolve(urlNode.text, sf.fileName);
+        }
+        catch (_a) {
+            // If the file does not exist, bail.
+            return;
+        }
+        const templateDefinitions = [{
+                kind: ts.ScriptElementKind.externalModuleName,
+                name: url,
+                containerKind: ts.ScriptElementKind.unknown,
+                containerName: '',
+                // Reading the template is expensive, so don't provide a preview.
+                // TODO(ayazhafiz): Consider providing an actual span:
+                //  1. We're likely to read the template anyway
+                //  2. We could show just the first 100 chars or so
+                textSpan: { start: 0, length: 0 },
+                fileName: url,
+            }];
+        return {
+            definitions: templateDefinitions,
+            textSpan: {
+                // Exclude opening and closing quotes in the url span.
+                start: urlNode.getStart() + 1,
+                length: urlNode.getWidth() - 2,
+            },
+        };
+    }
 
     /**
      * @license
@@ -18190,7 +18354,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+37.sha-a38293d');
+    const VERSION$1 = new Version('11.0.0-next.6+40.sha-0c01c4a');
 
     /**
      * @license
@@ -25601,125 +25765,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Return the node that most tightly encompass the specified `position`.
-     * @param node
-     * @param position
-     */
-    function findTightestNode(node, position) {
-        if (node.getStart() <= position && position < node.getEnd()) {
-            return node.forEachChild(c => findTightestNode(c, position)) || node;
-        }
-    }
-    /**
-     * Returns a property assignment from the assignment value if the property name
-     * matches the specified `key`, or `undefined` if there is no match.
-     */
-    function getPropertyAssignmentFromValue(value, key) {
-        const propAssignment = value.parent;
-        if (!propAssignment || !tss.isPropertyAssignment(propAssignment) ||
-            propAssignment.name.getText() !== key) {
-            return;
-        }
-        return propAssignment;
-    }
-    /**
-     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
-     * directive class the property applies to.
-     * If the property assignment is not on a class decorator, no declaration is returned.
-     *
-     * For example,
-     *
-     * @Component({
-     *   template: '<div></div>'
-     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
-     * })
-     * class AppComponent {}
-     *           ^---- class declaration node
-     *
-     * @param propAsgn property assignment
-     */
-    function getClassDeclFromDecoratorProp(propAsgnNode) {
-        if (!propAsgnNode.parent || !tss.isObjectLiteralExpression(propAsgnNode.parent)) {
-            return;
-        }
-        const objLitExprNode = propAsgnNode.parent;
-        if (!objLitExprNode.parent || !tss.isCallExpression(objLitExprNode.parent)) {
-            return;
-        }
-        const callExprNode = objLitExprNode.parent;
-        if (!callExprNode.parent || !tss.isDecorator(callExprNode.parent)) {
-            return;
-        }
-        const decorator = callExprNode.parent;
-        if (!decorator.parent || !tss.isClassDeclaration(decorator.parent)) {
-            return;
-        }
-        const classDeclNode = decorator.parent;
-        return classDeclNode;
-    }
-    /**
-     * Return metadata about `node` if it looks like an Angular directive class.
-     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
-     * `@Pipe`, etc.
-     * These class declarations all share some common attributes, namely their
-     * decorator takes exactly one parameter and the parameter must be an object
-     * literal.
-     *
-     * For example,
-     *     v---------- `decoratorId`
-     * @NgModule({           <
-     *   declarations: [],   < classDecln-al
-     * })                    <
-     * class AppModule {}    <
-     *          ^----- `classId`
-     *
-     * @param node Potential node that represents an Angular directive.
-     */
-    function getDirectiveClassLike(node) {
-        if (!tss.isClassDeclaration(node) || !node.name || !node.decorators) {
-            return;
-        }
-        for (const d of node.decorators) {
-            const expr = d.expression;
-            if (!tss.isCallExpression(expr) || expr.arguments.length !== 1 ||
-                !tss.isIdentifier(expr.expression)) {
-                continue;
-            }
-            const arg = expr.arguments[0];
-            if (tss.isObjectLiteralExpression(arg)) {
-                return {
-                    decoratorId: expr.expression,
-                    classId: node.name,
-                };
-            }
-        }
-    }
-    /**
-     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
-     * type T.
-     *
-     * @param startNode node to start searching for nested property assignment from
-     * @param propName property assignment name
-     * @param predicate function to verify that a node is of type T.
-     * @return node property assignment value of type T, or undefined if none is found
-     */
-    function findPropertyValueOfType(startNode, propName, predicate) {
-        if (tss.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
-            const { initializer } = startNode;
-            if (predicate(initializer))
-                return initializer;
-        }
-        return startNode.forEachChild(c => findPropertyValueOfType(c, propName, predicate));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Convert Angular Span to TypeScript TextSpan. Angular Span has 'start' and
      * 'end' whereas TS TextSpan has 'start' and 'length'.
      * @param span Angular Span
@@ -25780,78 +25825,67 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             textSpan: symbols[0].span,
         };
     }
+
     /**
-     * Gets an Angular-specific definition in a TypeScript source file.
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
      */
-    function getTsDefinitionAndBoundSpan(sf, position, tsLsHost) {
-        const node = findTightestNode(sf, position);
-        if (!node)
+    /**
+     * Return metadata about `node` if it looks like an Angular directive class.
+     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
+     * `@Pipe`, etc.
+     * These class declarations all share some common attributes, namely their
+     * decorator takes exactly one parameter and the parameter must be an object
+     * literal.
+     *
+     * For example,
+     *     v---------- `decoratorId`
+     * @NgModule({           <
+     *   declarations: [],   < classDecln-al
+     * })                    <
+     * class AppModule {}    <
+     *          ^----- `classId`
+     *
+     * @param node Potential node that represents an Angular directive.
+     */
+    function getDirectiveClassLike(node) {
+        if (!tss.isClassDeclaration(node) || !node.name || !node.decorators) {
             return;
-        switch (node.kind) {
-            case ts.SyntaxKind.StringLiteral:
-            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
-                // Attempt to extract definition of a URL in a property assignment.
-                return getUrlFromProperty(node, tsLsHost);
-            default:
-                return undefined;
+        }
+        for (const d of node.decorators) {
+            const expr = d.expression;
+            if (!tss.isCallExpression(expr) || expr.arguments.length !== 1 ||
+                !tss.isIdentifier(expr.expression)) {
+                continue;
+            }
+            const arg = expr.arguments[0];
+            if (tss.isObjectLiteralExpression(arg)) {
+                return {
+                    decoratorId: expr.expression,
+                    classId: node.name,
+                };
+            }
         }
     }
     /**
-     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
-     * directive decorator.
-     * Currently applies to `templateUrl` and `styleUrls` properties.
+     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
+     * type T.
+     *
+     * @param startNode node to start searching for nested property assignment from
+     * @param propName property assignment name
+     * @param predicate function to verify that a node is of type T.
+     * @return node property assignment value of type T, or undefined if none is found
      */
-    function getUrlFromProperty(urlNode, tsLsHost) {
-        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
-        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
-        // an array of strings:
-        //   {
-        //        templateUrl: './template.ng.html',
-        //        styleUrls: ['./style.css', './other-style.css']
-        //   }
-        // `templateUrl`'s property assignment can be found from the string literal node;
-        // `styleUrls`'s property assignment can be found from the array (parent) node.
-        //
-        // First search for `templateUrl`.
-        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
-        if (!asgn) {
-            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
-            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
-            if (!asgn) {
-                // Nothing found, bail.
-                return;
-            }
+    function findPropertyValueOfType(startNode, propName, predicate) {
+        if (tss.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
+            const { initializer } = startNode;
+            if (predicate(initializer))
+                return initializer;
         }
-        // If the property assignment is not a property of a class decorator, don't generate definitions
-        // for it.
-        if (!getClassDeclFromDecoratorProp(asgn)) {
-            return;
-        }
-        const sf = urlNode.getSourceFile();
-        // Extract url path specified by the url node, which is relative to the TypeScript source file
-        // the url node is defined in.
-        const url = path.join(path.dirname(sf.fileName), urlNode.text);
-        // If the file does not exist, bail. It is possible that the TypeScript language service host
-        // does not have a `fileExists` method, in which case optimistically assume the file exists.
-        if (tsLsHost.fileExists && !tsLsHost.fileExists(url))
-            return;
-        const templateDefinitions = [{
-                kind: ts.ScriptElementKind.externalModuleName,
-                name: url,
-                containerKind: ts.ScriptElementKind.unknown,
-                containerName: '',
-                // Reading the template is expensive, so don't provide a preview.
-                textSpan: { start: 0, length: 0 },
-                fileName: url,
-            }];
-        return {
-            definitions: templateDefinitions,
-            textSpan: {
-                // Exclude opening and closing quotes in the url span.
-                start: urlNode.getStart() + 1,
-                length: urlNode.getWidth() - 2,
-            },
-        };
+        return startNode.forEachChild(c => findPropertyValueOfType(c, propName, predicate));
     }
 
     /**
@@ -26191,7 +26225,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (fileName.endsWith('.ts')) {
                 const sf = this.host.getSourceFile(fileName);
                 if (sf) {
-                    return getTsDefinitionAndBoundSpan(sf, position, this.host.tsLsHost);
+                    return getTsDefinitionAndBoundSpan(sf, position, new ViewEngineLSResourceResolver(this.host.tsLsHost));
                 }
             }
         }
@@ -26217,6 +26251,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return;
             }
             return this.host.tsLS.getReferencesAtPosition(tsDef.fileName, tsDef.textSpan.start);
+        }
+    }
+    class ViewEngineLSResourceResolver {
+        constructor(host) {
+            this.host = host;
+        }
+        resolve(file, basePath) {
+            // Extract url path specified by the url node, which is relative to the TypeScript source file
+            // the url node is defined in.
+            const url = path.join(path.dirname(basePath), file);
+            // If the file does not exist, bail. It is possible that the TypeScript language service host
+            // does not have a `fileExists` method, in which case optimistically assume the file exists.
+            if (this.host.fileExists && !this.host.fileExists(url)) {
+                throw new Error(`ResourceResolver: could not resolve ${url} in context of ${basePath})`);
+            }
+            return url;
         }
     }
 
@@ -46219,7 +46269,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+37.sha-a38293d');
+    const VERSION$2 = new Version$1('11.0.0-next.6+40.sha-0c01c4a');
 
     /**
      * @license
@@ -55578,11 +55628,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             if (!tss.isStringLiteralLike(node)) {
                 return;
             }
-            const tmplAsgn = getPropertyAssignmentFromValue(node, 'template');
-            if (!tmplAsgn) {
-                return;
-            }
-            const classDecl = getClassDeclFromDecoratorProp(tmplAsgn);
+            const classDecl = getClassDeclOfInlineTemplateNode(node);
             if (!classDecl || !classDecl.name) { // Does not handle anonymous class
                 return;
             }

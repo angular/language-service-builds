@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+37.sha-a38293d
+ * @license Angular v11.0.0-next.6+40.sha-0c01c4a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19393,7 +19393,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+37.sha-a38293d');
+    const VERSION$1 = new Version('11.0.0-next.6+40.sha-0c01c4a');
 
     /**
      * @license
@@ -20028,7 +20028,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+37.sha-a38293d');
+    const VERSION$2 = new Version('11.0.0-next.6+40.sha-0c01c4a');
 
     /**
      * @license
@@ -37069,135 +37069,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    class LanguageServiceAdapter {
-        constructor(project) {
-            var _a;
-            this.project = project;
-            this.entryPoint = null;
-            this.constructionDiagnostics = [];
-            this.ignoreForEmit = new Set();
-            this.factoryTracker = null; // no .ngfactory shims
-            this.unifiedModulesHost = null; // only used in Bazel
-            this.templateVersion = new Map();
-            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
-        }
-        isShim(sf) {
-            return isShim(sf);
-        }
-        fileExists(fileName) {
-            return this.project.fileExists(fileName);
-        }
-        readFile(fileName) {
-            return this.project.readFile(fileName);
-        }
-        getCurrentDirectory() {
-            return this.project.getCurrentDirectory();
-        }
-        getCanonicalFileName(fileName) {
-            return this.project.projectService.toCanonicalFileName(fileName);
-        }
-        /**
-         * readResource() is an Angular-specific method for reading files that are not
-         * managed by the TS compiler host, namely templates and stylesheets.
-         * It is a method on ExtendedTsCompilerHost, see
-         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
-         */
-        readResource(fileName) {
-            if (isTypeScriptFile(fileName)) {
-                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
-            }
-            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
-            // not exist! The same applies for getScriptVersion().
-            // getScriptInfo() will not create one if it does not exist.
-            // In this case, we *want* a script info to be created so that we could
-            // keep track of its version.
-            const snapshot = this.project.getScriptSnapshot(fileName);
-            if (!snapshot) {
-                // This would fail if the file does not exist, or readFile() fails for
-                // whatever reasons.
-                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
-            }
-            const version = this.project.getScriptVersion(fileName);
-            this.templateVersion.set(fileName, version);
-            return snapshot.getText(0, snapshot.getLength());
-        }
-        isTemplateDirty(fileName) {
-            const lastVersion = this.templateVersion.get(fileName);
-            const latestVersion = this.project.getScriptVersion(fileName);
-            return lastVersion !== latestVersion;
-        }
-    }
-    function isTypeScriptFile(fileName) {
-        return fileName.endsWith('.ts');
-    }
-    function isExternalTemplate(fileName) {
-        return !isTypeScriptFile(fileName);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class CompilerFactory {
-        constructor(adapter, programStrategy) {
-            this.adapter = adapter;
-            this.programStrategy = programStrategy;
-            this.incrementalStrategy = new TrackedIncrementalBuildStrategy();
-            this.compiler = null;
-            this.lastKnownProgram = null;
-        }
-        /**
-         * Create a new instance of the Ivy compiler if the program has changed since
-         * the last time the compiler was instantiated. If the program has not changed,
-         * return the existing instance.
-         * @param fileName override the template if this is an external template file
-         * @param options angular compiler options
-         */
-        getOrCreateWithChangedFile(fileName, options) {
-            const program = this.programStrategy.getProgram();
-            if (!this.compiler || program !== this.lastKnownProgram) {
-                this.compiler = new NgCompiler(this.adapter, // like compiler host
-                options, // angular compiler options
-                program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
-                this.lastKnownProgram, undefined);
-                this.lastKnownProgram = program;
-            }
-            if (isExternalTemplate(fileName)) {
-                this.overrideTemplate(fileName, this.compiler);
-            }
-            return this.compiler;
-        }
-        overrideTemplate(fileName, compiler) {
-            if (!this.adapter.isTemplateDirty(fileName)) {
-                return;
-            }
-            // 1. Get the latest snapshot
-            const latestTemplate = this.adapter.readResource(fileName);
-            // 2. Find all components that use the template
-            const ttc = compiler.getTemplateTypeChecker();
-            const components = compiler.getComponentsWithTemplateFile(fileName);
-            // 3. Update component template
-            for (const component of components) {
-                if (ts$1.isClassDeclaration(component)) {
-                    ttc.overrideComponentTemplate(component, latestTemplate);
-                }
-            }
-        }
-        registerLastKnownProgram() {
-            this.lastKnownProgram = this.programStrategy.getProgram();
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // Reverse mappings of enum would generate strings
     const ALIAS_NAME = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.aliasName];
     const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
@@ -37251,6 +37122,85 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Return the node that most tightly encompass the specified `position`.
+     * @param node
+     * @param position
+     */
+    function findTightestNode(node, position) {
+        if (node.getStart() <= position && position < node.getEnd()) {
+            return node.forEachChild(c => findTightestNode(c, position)) || node;
+        }
+    }
+    /**
+     * Returns a property assignment from the assignment value if the property name
+     * matches the specified `key`, or `undefined` if there is no match.
+     */
+    function getPropertyAssignmentFromValue(value, key) {
+        const propAssignment = value.parent;
+        if (!propAssignment || !ts.isPropertyAssignment(propAssignment) ||
+            propAssignment.name.getText() !== key) {
+            return;
+        }
+        return propAssignment;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgnNode property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        const objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        const callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        const decorator = callExprNode.parent;
+        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        const classDeclNode = decorator.parent;
+        return classDeclNode;
+    }
+    /**
+     * Given the node which is the string of the inline template for a component, returns the
+     * `ts.ClassDeclaration` for the component.
+     */
+    function getClassDeclOfInlineTemplateNode(templateStringNode) {
+        if (!ts.isStringLiteralLike(templateStringNode)) {
+            return;
+        }
+        const tmplAsgn = getPropertyAssignmentFromValue(templateStringNode, 'template');
+        if (!tmplAsgn) {
+            return;
+        }
+        return getClassDeclFromDecoratorProp(tmplAsgn);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function getTextSpanOfNode(node) {
         if (isTemplateNodeWithKeyAndValue(node)) {
             return toTextSpan(node.keySpan);
@@ -37289,8 +37239,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
      */
     function getTemplateInfoAtPosition(fileName, position, compiler) {
-        if (fileName.endsWith('.ts')) {
-            return getInlineTemplateInfoAtPosition(fileName, position, compiler);
+        if (isTypeScriptFile(fileName)) {
+            return getTemplateInfoFromClassMeta(fileName, position, compiler);
         }
         else {
             return getFirstComponentForTemplateFile(fileName, compiler);
@@ -37332,23 +37282,26 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     /**
      * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
      */
-    function getInlineTemplateInfoAtPosition(fileName, position, compiler) {
+    function getTemplateInfoFromClassMeta(fileName, position, compiler) {
+        const classDecl = getClassDeclForInlineTemplateAtPosition(fileName, position, compiler);
+        if (!classDecl || !classDecl.name) { // Does not handle anonymous class
+            return;
+        }
+        const template = compiler.getTemplateTypeChecker().getTemplate(classDecl);
+        if (template === null) {
+            return;
+        }
+        return { template, component: classDecl };
+    }
+    function getClassDeclForInlineTemplateAtPosition(fileName, position, compiler) {
         const sourceFile = compiler.getNextProgram().getSourceFile(fileName);
         if (!sourceFile) {
             return undefined;
         }
-        // We only support top level statements / class declarations
-        for (const statement of sourceFile.statements) {
-            if (!ts.isClassDeclaration(statement) || position < statement.pos || position > statement.end) {
-                continue;
-            }
-            const template = compiler.getTemplateTypeChecker().getTemplate(statement);
-            if (template === null) {
-                return undefined;
-            }
-            return { template, component: statement };
-        }
-        return undefined;
+        const node = findTightestNode(sourceFile, position);
+        if (!node)
+            return;
+        return getClassDeclOfInlineTemplateNode(node);
     }
     /**
      * Given an attribute node, converts it to string form.
@@ -37477,6 +37430,154 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             results.push(...f(x));
         }
         return results;
+    }
+    function isTypeScriptFile(fileName) {
+        return fileName.endsWith('.ts');
+    }
+    function isExternalTemplate(fileName) {
+        return !isTypeScriptFile(fileName);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class CompilerFactory {
+        constructor(adapter, programStrategy) {
+            this.adapter = adapter;
+            this.programStrategy = programStrategy;
+            this.incrementalStrategy = new TrackedIncrementalBuildStrategy();
+            this.compiler = null;
+            this.lastKnownProgram = null;
+        }
+        /**
+         * Create a new instance of the Ivy compiler if the program has changed since
+         * the last time the compiler was instantiated. If the program has not changed,
+         * return the existing instance.
+         * @param fileName override the template if this is an external template file
+         * @param options angular compiler options
+         */
+        getOrCreateWithChangedFile(fileName, options) {
+            const program = this.programStrategy.getProgram();
+            if (!this.compiler || program !== this.lastKnownProgram) {
+                this.compiler = new NgCompiler(this.adapter, // like compiler host
+                options, // angular compiler options
+                program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
+                this.lastKnownProgram, undefined);
+                this.lastKnownProgram = program;
+            }
+            if (isExternalTemplate(fileName)) {
+                this.overrideTemplate(fileName, this.compiler);
+            }
+            return this.compiler;
+        }
+        overrideTemplate(fileName, compiler) {
+            if (!this.adapter.isTemplateDirty(fileName)) {
+                return;
+            }
+            // 1. Get the latest snapshot
+            const latestTemplate = this.adapter.readResource(fileName);
+            // 2. Find all components that use the template
+            const ttc = compiler.getTemplateTypeChecker();
+            const components = compiler.getComponentsWithTemplateFile(fileName);
+            // 3. Update component template
+            for (const component of components) {
+                if (ts$1.isClassDeclaration(component)) {
+                    ttc.overrideComponentTemplate(component, latestTemplate);
+                }
+            }
+        }
+        registerLastKnownProgram() {
+            this.lastKnownProgram = this.programStrategy.getProgram();
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Gets an Angular-specific definition in a TypeScript source file.
+     */
+    function getTsDefinitionAndBoundSpan(sf, position, resourceResolver) {
+        const node = findTightestNode(sf, position);
+        if (!node)
+            return;
+        switch (node.kind) {
+            case ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+                // Attempt to extract definition of a URL in a property assignment.
+                return getUrlFromProperty(node, resourceResolver);
+            default:
+                return undefined;
+        }
+    }
+    /**
+     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
+     * directive decorator.
+     * Currently applies to `templateUrl` and `styleUrls` properties.
+     */
+    function getUrlFromProperty(urlNode, resourceResolver) {
+        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
+        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
+        // an array of strings:
+        //   {
+        //        templateUrl: './template.ng.html',
+        //        styleUrls: ['./style.css', './other-style.css']
+        //   }
+        // `templateUrl`'s property assignment can be found from the string literal node;
+        // `styleUrls`'s property assignment can be found from the array (parent) node.
+        //
+        // First search for `templateUrl`.
+        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
+        if (!asgn) {
+            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
+            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
+            if (!asgn) {
+                // Nothing found, bail.
+                return;
+            }
+        }
+        // If the property assignment is not a property of a class decorator, don't generate definitions
+        // for it.
+        if (!getClassDeclFromDecoratorProp(asgn)) {
+            return;
+        }
+        const sf = urlNode.getSourceFile();
+        let url;
+        try {
+            url = resourceResolver.resolve(urlNode.text, sf.fileName);
+        }
+        catch (_a) {
+            // If the file does not exist, bail.
+            return;
+        }
+        const templateDefinitions = [{
+                kind: ts.ScriptElementKind.externalModuleName,
+                name: url,
+                containerKind: ts.ScriptElementKind.unknown,
+                containerName: '',
+                // Reading the template is expensive, so don't provide a preview.
+                // TODO(ayazhafiz): Consider providing an actual span:
+                //  1. We're likely to read the template anyway
+                //  2. We could show just the first 100 chars or so
+                textSpan: { start: 0, length: 0 },
+                fileName: url,
+            }];
+        return {
+            definitions: templateDefinitions,
+            textSpan: {
+                // Exclude opening and closing quotes in the url span.
+                start: urlNode.getStart() + 1,
+                length: urlNode.getWidth() - 2,
+            },
+        };
     }
 
     /**
@@ -37679,14 +37780,25 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     class DefinitionBuilder {
-        constructor(tsLS, compiler) {
+        constructor(tsLS, compiler, resourceResolver) {
             this.tsLS = tsLS;
             this.compiler = compiler;
+            this.resourceResolver = resourceResolver;
         }
         getDefinitionAndBoundSpan(fileName, position) {
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
             if (templateInfo === undefined) {
-                return;
+                // We were unable to get a template at the given position. If we are in a TS file, instead
+                // attempt to get an Angular definition at the location inside a TS file (examples of this
+                // would be templateUrl or a url in styleUrls).
+                if (!isTypeScriptFile(fileName)) {
+                    return;
+                }
+                const sf = this.compiler.getNextProgram().getSourceFile(fileName);
+                if (!sf) {
+                    return;
+                }
+                return getTsDefinitionAndBoundSpan(sf, position, this.resourceResolver);
             }
             const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
             // The `$event` of event handlers would point to the $event parameter in the shim file, as in
@@ -37841,6 +37953,76 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return;
             }
             return { node, path, symbol };
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class LanguageServiceAdapter {
+        constructor(project) {
+            var _a;
+            this.project = project;
+            this.entryPoint = null;
+            this.constructionDiagnostics = [];
+            this.ignoreForEmit = new Set();
+            this.factoryTracker = null; // no .ngfactory shims
+            this.unifiedModulesHost = null; // only used in Bazel
+            this.templateVersion = new Map();
+            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
+        }
+        isShim(sf) {
+            return isShim(sf);
+        }
+        fileExists(fileName) {
+            return this.project.fileExists(fileName);
+        }
+        readFile(fileName) {
+            return this.project.readFile(fileName);
+        }
+        getCurrentDirectory() {
+            return this.project.getCurrentDirectory();
+        }
+        getCanonicalFileName(fileName) {
+            return this.project.projectService.toCanonicalFileName(fileName);
+        }
+        /**
+         * readResource() is an Angular-specific method for reading files that are not
+         * managed by the TS compiler host, namely templates and stylesheets.
+         * It is a method on ExtendedTsCompilerHost, see
+         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
+         */
+        readResource(fileName) {
+            if (isTypeScriptFile(fileName)) {
+                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
+            }
+            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
+            // not exist! The same applies for getScriptVersion().
+            // getScriptInfo() will not create one if it does not exist.
+            // In this case, we *want* a script info to be created so that we could
+            // keep track of its version.
+            const snapshot = this.project.getScriptSnapshot(fileName);
+            if (!snapshot) {
+                // This would fail if the file does not exist, or readFile() fails for
+                // whatever reasons.
+                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
+            }
+            const version = this.project.getScriptVersion(fileName);
+            this.templateVersion.set(fileName, version);
+            return snapshot.getText(0, snapshot.getLength());
+        }
+        isTemplateDirty(fileName) {
+            const lastVersion = this.templateVersion.get(fileName);
+            const latestVersion = this.project.getScriptVersion(fileName);
+            return lastVersion !== latestVersion;
+        }
+        resolve(file, basePath) {
+            const loader = new AdapterResourceLoader(this, this.project.getCompilationSettings());
+            return loader.resolve(file, basePath);
         }
     }
 
@@ -38063,13 +38245,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getDefinitionAndBoundSpan(fileName, position) {
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
-            const results = new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
+            const results = new DefinitionBuilder(this.tsLS, compiler, this.adapter)
+                .getDefinitionAndBoundSpan(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
         getTypeDefinitionAtPosition(fileName, position) {
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
-            const results = new DefinitionBuilder(this.tsLS, compiler).getTypeDefinitionsAtPosition(fileName, position);
+            const results = new DefinitionBuilder(this.tsLS, compiler, this.adapter)
+                .getTypeDefinitionsAtPosition(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
