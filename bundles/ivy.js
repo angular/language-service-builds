@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+2.sha-a8c0972
+ * @license Angular v11.0.0-next.6+52.sha-0f1a18e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4035,7 +4035,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     var ViewEncapsulation;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
         ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation || (ViewEncapsulation = {}));
@@ -5833,6 +5833,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
+    Identifiers$1.trustConstantHtml = { name: 'ɵɵtrustConstantHtml', moduleName: CORE$1 };
+    Identifiers$1.trustConstantScript = { name: 'ɵɵtrustConstantScript', moduleName: CORE$1 };
+    Identifiers$1.trustConstantResourceUrl = { name: 'ɵɵtrustConstantResourceUrl', moduleName: CORE$1 };
 
     /**
      * @license
@@ -6093,7 +6096,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     class Message {
         /**
          * @param nodes message AST
-         * @param placeholders maps placeholder names to static content
+         * @param placeholders maps placeholder names to static content and their source spans
          * @param placeholderToMessage maps placeholder names to messages (used for nested ICU messages)
          * @param meaning
          * @param description
@@ -8144,6 +8147,92 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * The Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported, or undefined if the policy has not been created yet.
+     */
+    let policy;
+    /**
+     * Returns the Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported. The first call to this function will create the policy.
+     */
+    function getPolicy() {
+        if (policy === undefined) {
+            policy = null;
+            if (_global.trustedTypes) {
+                try {
+                    policy =
+                        _global.trustedTypes.createPolicy('angular#unsafe-jit', {
+                            createScript: (s) => s,
+                        });
+                }
+                catch (_a) {
+                    // trustedTypes.createPolicy throws if called with a name that is
+                    // already registered, even in report-only mode. Until the API changes,
+                    // catch the error not to break the applications functionally. In such
+                    // cases, the code will fall back to using strings.
+                }
+            }
+        }
+        return policy;
+    }
+    /**
+     * Unsafely promote a string to a TrustedScript, falling back to strings when
+     * Trusted Types are not available.
+     * @security In particular, it must be assured that the provided string will
+     * never cause an XSS vulnerability if used in a context that will be
+     * interpreted and executed as a script by a browser, e.g. when calling eval.
+     */
+    function trustedScriptFromString(script) {
+        var _a;
+        return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
+    }
+    /**
+     * Unsafely call the Function constructor with the given string arguments. It
+     * is only available in development mode, and should be stripped out of
+     * production code.
+     * @security This is a security-sensitive function; any use of this function
+     * must go through security review. In particular, it must be assured that it
+     * is only called from the JIT compiler, as use in other code can lead to XSS
+     * vulnerabilities.
+     */
+    function newTrustedFunctionForJIT(...args) {
+        if (!_global.trustedTypes) {
+            // In environments that don't support Trusted Types, fall back to the most
+            // straightforward implementation:
+            return new Function(...args);
+        }
+        // Chrome currently does not support passing TrustedScript to the Function
+        // constructor. The following implements the workaround proposed on the page
+        // below, where the Chromium bug is also referenced:
+        // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
+        const fnArgs = args.slice(0, -1).join(',');
+        const fnBody = args.pop().toString();
+        const body = `(function anonymous(${fnArgs}
+) { ${fnBody}
+})`;
+        // Using eval directly confuses the compiler and prevents this module from
+        // being stripped out of JS binaries even if not used. The global['eval']
+        // indirection fixes that.
+        const fn = _global['eval'](trustedScriptFromString(body));
+        // To completely mimic the behavior of calling "new Function", two more
+        // things need to happen:
+        // 1. Stringifying the resulting function should return its source code
+        fn.toString = () => body;
+        // 2. When calling the resulting function, `this` should refer to `global`
+        return fn.bind(_global);
+        // When Trusted Types support in Function constructors is widely available,
+        // the implementation of this function can be simplified to:
+        // return new Function(...args.map(a => trustedScriptFromString(a)));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * A helper class to manage the evaluation of JIT generated code.
      */
     class JitEvaluator {
@@ -8194,11 +8283,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // function anonymous(a,b,c
                 // /**/) { ... }```
                 // We don't want to hard code this fact, so we auto detect it via an empty function first.
-                const emptyFn = new Function(...fnArgNames.concat('return null;')).toString();
+                const emptyFn = newTrustedFunctionForJIT(...fnArgNames.concat('return null;')).toString();
                 const headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
                 fnBody += `\n${ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment()}`;
             }
-            const fn = new Function(...fnArgNames.concat(fnBody));
+            const fn = newTrustedFunctionForJIT(...fnArgNames.concat(fnBody));
             return this.executeFunction(fn, fnArgValues);
         }
         /**
@@ -10788,11 +10877,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function extractCommentsWithHash(input) {
         return input.match(_commentWithHashRe) || [];
     }
-    const _ruleRe = /(\s*)([^;\{\}]+?)(\s*)((?:{%BLOCK%}?\s*;?)|(?:\s*;))/g;
-    const _curlyRe = /([{}])/g;
-    const OPEN_CURLY = '{';
-    const CLOSE_CURLY = '}';
     const BLOCK_PLACEHOLDER = '%BLOCK%';
+    const QUOTE_PLACEHOLDER = '%QUOTED%';
+    const _ruleRe = /(\s*)([^;\{\}]+?)(\s*)((?:{%BLOCK%}?\s*;?)|(?:\s*;))/g;
+    const _quotedRe = /%QUOTED%/g;
+    const CONTENT_PAIRS = new Map([['{', '}']]);
+    const QUOTE_PAIRS = new Map([[`"`, `"`], [`'`, `'`]]);
     class CssRule {
         constructor(selector, content) {
             this.selector = selector;
@@ -10800,9 +10890,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function processRules(input, ruleCallback) {
-        const inputWithEscapedBlocks = escapeBlocks(input);
+        const inputWithEscapedQuotes = escapeBlocks(input, QUOTE_PAIRS, QUOTE_PLACEHOLDER);
+        const inputWithEscapedBlocks = escapeBlocks(inputWithEscapedQuotes.escapedString, CONTENT_PAIRS, BLOCK_PLACEHOLDER);
         let nextBlockIndex = 0;
-        return inputWithEscapedBlocks.escapedString.replace(_ruleRe, function (...m) {
+        let nextQuoteIndex = 0;
+        return inputWithEscapedBlocks.escapedString
+            .replace(_ruleRe, (...m) => {
             const selector = m[2];
             let content = '';
             let suffix = m[4];
@@ -10814,7 +10907,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             const rule = ruleCallback(new CssRule(selector, content));
             return `${m[1]}${rule.selector}${m[3]}${contentPrefix}${rule.content}${suffix}`;
-        });
+        })
+            .replace(_quotedRe, () => inputWithEscapedQuotes.blocks[nextQuoteIndex++]);
     }
     class StringWithEscapedBlocks {
         constructor(escapedString, blocks) {
@@ -10822,35 +10916,46 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.blocks = blocks;
         }
     }
-    function escapeBlocks(input) {
-        const inputParts = input.split(_curlyRe);
+    function escapeBlocks(input, charPairs, placeholder) {
         const resultParts = [];
         const escapedBlocks = [];
-        let bracketCount = 0;
-        let currentBlockParts = [];
-        for (let partIndex = 0; partIndex < inputParts.length; partIndex++) {
-            const part = inputParts[partIndex];
-            if (part == CLOSE_CURLY) {
-                bracketCount--;
+        let openCharCount = 0;
+        let nonBlockStartIndex = 0;
+        let blockStartIndex = -1;
+        let openChar;
+        let closeChar;
+        for (let i = 0; i < input.length; i++) {
+            const char = input[i];
+            if (char === '\\') {
+                i++;
             }
-            if (bracketCount > 0) {
-                currentBlockParts.push(part);
-            }
-            else {
-                if (currentBlockParts.length > 0) {
-                    escapedBlocks.push(currentBlockParts.join(''));
-                    resultParts.push(BLOCK_PLACEHOLDER);
-                    currentBlockParts = [];
+            else if (char === closeChar) {
+                openCharCount--;
+                if (openCharCount === 0) {
+                    escapedBlocks.push(input.substring(blockStartIndex, i));
+                    resultParts.push(placeholder);
+                    nonBlockStartIndex = i;
+                    blockStartIndex = -1;
+                    openChar = closeChar = undefined;
                 }
-                resultParts.push(part);
             }
-            if (part == OPEN_CURLY) {
-                bracketCount++;
+            else if (char === openChar) {
+                openCharCount++;
+            }
+            else if (openCharCount === 0 && charPairs.has(char)) {
+                openChar = char;
+                closeChar = charPairs.get(char);
+                openCharCount = 1;
+                blockStartIndex = i + 1;
+                resultParts.push(input.substring(nonBlockStartIndex, blockStartIndex));
             }
         }
-        if (currentBlockParts.length > 0) {
-            escapedBlocks.push(currentBlockParts.join(''));
-            resultParts.push(BLOCK_PLACEHOLDER);
+        if (blockStartIndex !== -1) {
+            escapedBlocks.push(input.substring(blockStartIndex));
+            resultParts.push(placeholder);
+        }
+        else {
+            resultParts.push(input.substring(nonBlockStartIndex));
         }
         return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
     }
@@ -12411,6 +12516,25 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const sourceInfo = sourceSpan.start.toString();
             try {
                 const ast = this._exprParser.parseInterpolation(value, sourceInfo, sourceSpan.start.offset, this._interpolationConfig);
+                if (ast)
+                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
+                this._checkPipes(ast, sourceSpan);
+                return ast;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+            }
+        }
+        /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, sourceSpan) {
+            const sourceInfo = sourceSpan.start.toString();
+            try {
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, sourceSpan.start.offset);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -13997,8 +14121,26 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     .parseChain();
                 expressions.push(ast);
             }
-            const span = new ParseSpan(0, input == null ? 0 : input.length);
-            return new ASTWithSource(new Interpolation(span, span.toAbsolute(absoluteOffset), split.strings, expressions), input, location, absoluteOffset, this.errors);
+            return this.createInterpolationAst(split.strings, expressions, input, location, absoluteOffset);
+        }
+        /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, location, absoluteOffset) {
+            const sourceToLex = this._stripComments(expression);
+            const tokens = this._lexer.tokenize(sourceToLex);
+            const ast = new _ParseAST(expression, location, absoluteOffset, tokens, sourceToLex.length, 
+            /* parseAction */ false, this.errors, 0)
+                .parseChain();
+            const strings = ['', '']; // The prefix and suffix strings are both empty
+            return this.createInterpolationAst(strings, [ast], expression, location, absoluteOffset);
+        }
+        createInterpolationAst(strings, expressions, input, location, absoluteOffset) {
+            const span = new ParseSpan(0, input.length);
+            const interpolation = new Interpolation(span, span.toAbsolute(absoluteOffset), strings, expressions);
+            return new ASTWithSource(interpolation, input, location, absoluteOffset, this.errors);
         }
         /**
          * Splits a string of text into "raw" text segments and expressions present in interpolations in
@@ -15609,21 +15751,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             Object.keys(message.placeholders).forEach(key => {
                 const value = message.placeholders[key];
                 if (key.startsWith(I18N_ICU_VAR_PREFIX)) {
-                    const config = this.bindingParser.interpolationConfig;
-                    // ICU expression is a plain string, not wrapped into start
-                    // and end tags, so we wrap it before passing to binding parser
-                    const wrapped = `${config.start}${value}${config.end}`;
                     // Currently when the `plural` or `select` keywords in an ICU contain trailing spaces (e.g.
                     // `{count, select , ...}`), these spaces are also included into the key names in ICU vars
                     // (e.g. "VAR_SELECT "). These trailing spaces are not desirable, since they will later be
                     // converted into `_` symbols while normalizing placeholder names, which might lead to
                     // mismatches at runtime (i.e. placeholder will not be replaced with the correct value).
                     const formattedKey = key.trim();
-                    vars[formattedKey] =
-                        this._visitTextWithInterpolation(wrapped, expansion.sourceSpan);
+                    const ast = this.bindingParser.parseInterpolationExpression(value.text, value.sourceSpan);
+                    vars[formattedKey] = new BoundText(ast, value.sourceSpan);
                 }
                 else {
-                    placeholders[key] = this._visitTextWithInterpolation(value, expansion.sourceSpan);
+                    placeholders[key] = this._visitTextWithInterpolation(value.text, value.sourceSpan);
                 }
             });
             return new Icu(vars, placeholders, expansion.sourceSpan, message);
@@ -16195,6 +16333,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return new Message(i18nodes, context.placeholderToContent, context.placeholderToMessage, meaning, description, customId);
         }
         visitElement(el, context) {
+            var _a;
             const children = visitAll$1(this, el.children, context);
             const attrs = {};
             el.attrs.forEach(attr => {
@@ -16203,11 +16342,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             });
             const isVoid = getHtmlTagDefinition(el.name).isVoid;
             const startPhName = context.placeholderRegistry.getStartTagPlaceholderName(el.name, attrs, isVoid);
-            context.placeholderToContent[startPhName] = el.startSourceSpan.toString();
+            context.placeholderToContent[startPhName] = {
+                text: el.startSourceSpan.toString(),
+                sourceSpan: el.startSourceSpan,
+            };
             let closePhName = '';
             if (!isVoid) {
                 closePhName = context.placeholderRegistry.getCloseTagPlaceholderName(el.name);
-                context.placeholderToContent[closePhName] = `</${el.name}>`;
+                context.placeholderToContent[closePhName] = {
+                    text: `</${el.name}>`,
+                    sourceSpan: (_a = el.endSourceSpan) !== null && _a !== void 0 ? _a : el.sourceSpan,
+                };
             }
             const node = new TagPlaceholder(el.name, attrs, startPhName, closePhName, children, isVoid, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
             return context.visitNodeFn(el, node);
@@ -16237,7 +16382,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // - the ICU message is nested.
                 const expPh = context.placeholderRegistry.getUniquePlaceholder(`VAR_${icu.type}`);
                 i18nIcu.expressionPlaceholder = expPh;
-                context.placeholderToContent[expPh] = icu.switchValue;
+                context.placeholderToContent[expPh] = {
+                    text: icu.switchValue,
+                    sourceSpan: icu.switchValueSourceSpan,
+                };
                 return context.visitNodeFn(icu, i18nIcu);
             }
             // Else returns a placeholder
@@ -16273,7 +16421,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
                 const expressionSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.expressionsSpans[i]);
                 nodes.push(new Placeholder(expression, phName, expressionSpan));
-                context.placeholderToContent[phName] = sDelimiter + expression + eDelimiter;
+                context.placeholderToContent[phName] = {
+                    text: sDelimiter + expression + eDelimiter,
+                    sourceSpan: expressionSpan,
+                };
             }
             // The last index contains no expression
             const lastStringIdx = splitInterpolation.strings.length - 1;
@@ -17102,7 +17253,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const parameters = [literal(slot)];
             this._ngContentReservedSlots.push(ngContent.selector);
             const nonContentSelectAttributes = ngContent.attributes.filter(attr => attr.name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1);
-            const attributes = this.getAttributeExpressions(nonContentSelectAttributes, [], []);
+            const attributes = this.getAttributeExpressions(ngContent.name, nonContentSelectAttributes, [], []);
             if (attributes.length > 0) {
                 parameters.push(literal(projectionSlotIdx), literalArr(attributes));
             }
@@ -17161,7 +17312,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
             });
             // add attributes for directive and projection matching purposes
-            const attributes = this.getAttributeExpressions(outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
+            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
             parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             const refs = this.prepareRefsArray(element.references);
@@ -17360,7 +17511,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
             const [i18nStaticAttrs, staticAttrs] = partitionArray(template.attributes, hasI18nMeta);
-            const attrsExprs = this.getAttributeExpressions(staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
+            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -17679,7 +17830,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        getAttributeExpressions(renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
+        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
             const alreadySeen = new Set();
             const attrExprs = [];
             let ngProjectAsAttr;
@@ -17687,7 +17838,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
                     ngProjectAsAttr = attr;
                 }
-                attrExprs.push(...getAttributeNameLiterals(attr.name), asLiteral(attr.value));
+                attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
             });
             // Keep ngProjectAs next to the other name, value pairs so we can verify that we match
             // ngProjectAs marker in the attribute name slot.
@@ -18310,6 +18461,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return importExpr(Identifiers$1.sanitizeResourceUrl);
             default:
                 return null;
+        }
+    }
+    function trustedConstAttribute(tagName, attr) {
+        const value = asLiteral(attr.value);
+        switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
+            case SecurityContext.HTML:
+                return importExpr(Identifiers$1.trustConstantHtml).callFn([value], attr.valueSpan);
+            case SecurityContext.SCRIPT:
+                return importExpr(Identifiers$1.trustConstantScript).callFn([value], attr.valueSpan);
+            case SecurityContext.RESOURCE_URL:
+                return importExpr(Identifiers$1.trustConstantResourceUrl).callFn([value], attr.valueSpan);
+            default:
+                return value;
         }
     }
     function isSingleElementTemplate(children) {
@@ -19229,7 +19393,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+2.sha-a8c0972');
+    const VERSION$1 = new Version('11.0.0-next.6+52.sha-0f1a18e');
 
     /**
      * @license
@@ -19864,7 +20028,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.5+2.sha-a8c0972');
+    const VERSION$2 = new Version('11.0.0-next.6+52.sha-0f1a18e');
 
     /**
      * @license
@@ -20375,11 +20539,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             const exportMap = new Map();
             exports.forEach((declaration, name) => {
-                // It's okay to skip inline declarations, since by definition they're not target-able with a
-                // ts.Declaration anyway.
-                if (declaration.node !== null) {
-                    exportMap.set(declaration.node, name);
-                }
+                exportMap.set(declaration.node, name);
             });
             return exportMap;
         }
@@ -21041,6 +21201,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          */
         KnownDeclaration[KnownDeclaration["TsHelperSpreadArrays"] = 3] = "TsHelperSpreadArrays";
     })(KnownDeclaration || (KnownDeclaration = {}));
+    /**
+     * Returns true if the `decl` is a `ConcreteDeclaration` (ie. that its `node` property is a
+     * `ts.Declaration`).
+     */
+    function isConcreteDeclaration(decl) {
+        return decl.kind === 0 /* Concrete */;
+    }
 
     /**
      * @license
@@ -21292,7 +21459,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     function isNamedClassDeclaration(node) {
-        return ts.isClassDeclaration(node) && (node.name !== undefined);
+        return ts.isClassDeclaration(node) && isIdentifier$1(node.name);
+    }
+    function isIdentifier$1(node) {
+        return node !== undefined && ts.isIdentifier(node);
     }
 
     /**
@@ -21383,13 +21553,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (!ts.isSourceFile(node)) {
                 throw new Error(`getExportsOfModule() called on non-SourceFile in TS code`);
             }
-            const map = new Map();
             // Reflect the module to a Symbol, and use getExportsOfModule() to get a list of exported
             // Symbols.
             const symbol = this.checker.getSymbolAtLocation(node);
             if (symbol === undefined) {
                 return null;
             }
+            const map = new Map();
             this.checker.getExportsOfModule(symbol).forEach(exportSymbol => {
                 // Map each exported Symbol to a Declaration and add it to the map.
                 const decl = this.getDeclarationOfSymbol(exportSymbol, null);
@@ -21568,6 +21738,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     known: null,
                     viaModule,
                     identity: null,
+                    kind: 0 /* Concrete */,
                 };
             }
             else if (symbol.declarations !== undefined && symbol.declarations.length > 0) {
@@ -21576,6 +21747,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     known: null,
                     viaModule,
                     identity: null,
+                    kind: 0 /* Concrete */,
                 };
             }
             else {
@@ -23082,12 +23254,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return this.getResolvedEnum(decl.node, decl.identity.enumMembers, context);
             }
             const declContext = Object.assign(Object.assign({}, context), joinModuleContext(context, node, decl));
-            // The identifier's declaration is either concrete (a ts.Declaration exists for it) or inline
-            // (a direct reference to a ts.Expression).
-            // TODO(alxhub): remove cast once TS is upgraded in g3.
-            const result = decl.node !== null ?
-                this.visitDeclaration(decl.node, declContext) :
-                this.visitExpression(decl.expression, declContext);
+            const result = this.visitAmbiguousDeclaration(decl, declContext);
             if (result instanceof Reference$1) {
                 // Only record identifiers to non-synthetic references. Synthetic references may not have the
                 // same value at runtime as they do at compile time, so it's not legal to refer to them by the
@@ -23188,11 +23355,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
                 const declContext = Object.assign(Object.assign({}, context), joinModuleContext(context, node, decl));
                 // Visit both concrete and inline declarations.
-                // TODO(alxhub): remove cast once TS is upgraded in g3.
-                return decl.node !== null ?
-                    this.visitDeclaration(decl.node, declContext) :
-                    this.visitExpression(decl.expression, declContext);
+                return this.visitAmbiguousDeclaration(decl, declContext);
             });
+        }
+        visitAmbiguousDeclaration(decl, declContext) {
+            return decl.kind === 1 /* Inline */ && decl.implementation !== undefined ?
+                // Inline declarations with an `implementation` should be visited as expressions
+                this.visitExpression(decl.implementation, declContext) :
+                // Otherwise just visit the declaration `node`
+                this.visitDeclaration(decl.node, declContext);
         }
         accessHelper(node, lhs, rhs, context) {
             const strIndex = `${rhs}`;
@@ -23540,13 +23711,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         else {
             return null;
         }
-    }
-    /**
-     * Helper type guard to workaround a narrowing limitation in g3, where testing for
-     * `decl.node !== null` would not narrow `decl` to be of type `ConcreteDeclaration`.
-     */
-    function isConcreteDeclaration(decl) {
-        return decl.node !== null;
     }
 
     /**
@@ -24229,6 +24393,30 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * The current context of a translator visitor as it traverses the AST tree.
+     *
+     * It tracks whether we are in the process of outputting a statement or an expression.
+     */
+    class Context {
+        constructor(isStatement) {
+            this.isStatement = isStatement;
+        }
+        get withExpressionMode() {
+            return this.isStatement ? new Context(false) : this;
+        }
+        get withStatementMode() {
+            return !this.isStatement ? new Context(true) : this;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     class ImportManager {
         constructor(rewriter = new NoopImportRewriter(), prefix = 'i') {
             this.rewriter = rewriter;
@@ -24272,21 +24460,296 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const UNARY_OPERATORS$1 = new Map([
+        [UnaryOperator.Minus, '-'],
+        [UnaryOperator.Plus, '+'],
+    ]);
+    const BINARY_OPERATORS$1 = new Map([
+        [BinaryOperator.And, '&&'],
+        [BinaryOperator.Bigger, '>'],
+        [BinaryOperator.BiggerEquals, '>='],
+        [BinaryOperator.BitwiseAnd, '&'],
+        [BinaryOperator.Divide, '/'],
+        [BinaryOperator.Equals, '=='],
+        [BinaryOperator.Identical, '==='],
+        [BinaryOperator.Lower, '<'],
+        [BinaryOperator.LowerEquals, '<='],
+        [BinaryOperator.Minus, '-'],
+        [BinaryOperator.Modulo, '%'],
+        [BinaryOperator.Multiply, '*'],
+        [BinaryOperator.NotEquals, '!='],
+        [BinaryOperator.NotIdentical, '!=='],
+        [BinaryOperator.Or, '||'],
+        [BinaryOperator.Plus, '+'],
+    ]);
+    class ExpressionTranslatorVisitor {
+        constructor(factory, imports, options) {
+            this.factory = factory;
+            this.imports = imports;
+            this.downlevelLocalizedStrings = options.downlevelLocalizedStrings === true;
+            this.downlevelVariableDeclarations = options.downlevelVariableDeclarations === true;
+            this.recordWrappedNodeExpr = options.recordWrappedNodeExpr || (() => { });
+        }
+        visitDeclareVarStmt(stmt, context) {
+            var _a;
+            const varType = this.downlevelVariableDeclarations ?
+                'var' :
+                stmt.hasModifier(StmtModifier.Final) ? 'const' : 'let';
+            return this.attachComments(this.factory.createVariableDeclaration(stmt.name, (_a = stmt.value) === null || _a === void 0 ? void 0 : _a.visitExpression(this, context.withExpressionMode), varType), stmt.leadingComments);
+        }
+        visitDeclareFunctionStmt(stmt, context) {
+            return this.attachComments(this.factory.createFunctionDeclaration(stmt.name, stmt.params.map(param => param.name), this.factory.createBlock(this.visitStatements(stmt.statements, context.withStatementMode))), stmt.leadingComments);
+        }
+        visitExpressionStmt(stmt, context) {
+            return this.attachComments(this.factory.createExpressionStatement(stmt.expr.visitExpression(this, context.withStatementMode)), stmt.leadingComments);
+        }
+        visitReturnStmt(stmt, context) {
+            return this.attachComments(this.factory.createReturnStatement(stmt.value.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
+        }
+        visitDeclareClassStmt(_stmt, _context) {
+            throw new Error('Method not implemented.');
+        }
+        visitIfStmt(stmt, context) {
+            return this.attachComments(this.factory.createIfStatement(stmt.condition.visitExpression(this, context), this.factory.createBlock(this.visitStatements(stmt.trueCase, context.withStatementMode)), stmt.falseCase.length > 0 ? this.factory.createBlock(this.visitStatements(stmt.falseCase, context.withStatementMode)) :
+                null), stmt.leadingComments);
+        }
+        visitTryCatchStmt(_stmt, _context) {
+            throw new Error('Method not implemented.');
+        }
+        visitThrowStmt(stmt, context) {
+            return this.attachComments(this.factory.createThrowStatement(stmt.error.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
+        }
+        visitReadVarExpr(ast, _context) {
+            const identifier = this.factory.createIdentifier(ast.name);
+            this.setSourceMapRange(identifier, ast.sourceSpan);
+            return identifier;
+        }
+        visitWriteVarExpr(expr, context) {
+            const assignment = this.factory.createAssignment(this.setSourceMapRange(this.factory.createIdentifier(expr.name), expr.sourceSpan), expr.value.visitExpression(this, context));
+            return context.isStatement ? assignment :
+                this.factory.createParenthesizedExpression(assignment);
+        }
+        visitWriteKeyExpr(expr, context) {
+            const exprContext = context.withExpressionMode;
+            const target = this.factory.createElementAccess(expr.receiver.visitExpression(this, exprContext), expr.index.visitExpression(this, exprContext));
+            const assignment = this.factory.createAssignment(target, expr.value.visitExpression(this, exprContext));
+            return context.isStatement ? assignment :
+                this.factory.createParenthesizedExpression(assignment);
+        }
+        visitWritePropExpr(expr, context) {
+            const target = this.factory.createPropertyAccess(expr.receiver.visitExpression(this, context), expr.name);
+            return this.factory.createAssignment(target, expr.value.visitExpression(this, context));
+        }
+        visitInvokeMethodExpr(ast, context) {
+            const target = ast.receiver.visitExpression(this, context);
+            return this.setSourceMapRange(this.factory.createCallExpression(ast.name !== null ? this.factory.createPropertyAccess(target, ast.name) : target, ast.args.map(arg => arg.visitExpression(this, context)), 
+            /* pure */ false), ast.sourceSpan);
+        }
+        visitInvokeFunctionExpr(ast, context) {
+            return this.setSourceMapRange(this.factory.createCallExpression(ast.fn.visitExpression(this, context), ast.args.map(arg => arg.visitExpression(this, context)), ast.pure), ast.sourceSpan);
+        }
+        visitInstantiateExpr(ast, context) {
+            return this.factory.createNewExpression(ast.classExpr.visitExpression(this, context), ast.args.map(arg => arg.visitExpression(this, context)));
+        }
+        visitLiteralExpr(ast, _context) {
+            return this.setSourceMapRange(this.factory.createLiteral(ast.value), ast.sourceSpan);
+        }
+        visitLocalizedString(ast, context) {
+            // A `$localize` message consists of `messageParts` and `expressions`, which get interleaved
+            // together. The interleaved pieces look like:
+            // `[messagePart0, expression0, messagePart1, expression1, messagePart2]`
+            //
+            // Note that there is always a message part at the start and end, and so therefore
+            // `messageParts.length === expressions.length + 1`.
+            //
+            // Each message part may be prefixed with "metadata", which is wrapped in colons (:) delimiters.
+            // The metadata is attached to the first and subsequent message parts by calls to
+            // `serializeI18nHead()` and `serializeI18nTemplatePart()` respectively.
+            //
+            // The first message part (i.e. `ast.messageParts[0]`) is used to initialize `messageParts`
+            // array.
+            const elements = [createTemplateElement(ast.serializeI18nHead())];
+            const expressions = [];
+            for (let i = 0; i < ast.expressions.length; i++) {
+                const placeholder = this.setSourceMapRange(ast.expressions[i].visitExpression(this, context), ast.getPlaceholderSourceSpan(i));
+                expressions.push(placeholder);
+                elements.push(createTemplateElement(ast.serializeI18nTemplatePart(i + 1)));
+            }
+            const localizeTag = this.factory.createIdentifier('$localize');
+            // Now choose which implementation to use to actually create the necessary AST nodes.
+            const localizeCall = this.downlevelLocalizedStrings ?
+                this.createES5TaggedTemplateFunctionCall(localizeTag, { elements, expressions }) :
+                this.factory.createTaggedTemplate(localizeTag, { elements, expressions });
+            return this.setSourceMapRange(localizeCall, ast.sourceSpan);
+        }
+        /**
+         * Translate the tagged template literal into a call that is compatible with ES5, using the
+         * imported `__makeTemplateObject` helper for ES5 formatted output.
+         */
+        createES5TaggedTemplateFunctionCall(tagHandler, { elements, expressions }) {
+            // Ensure that the `__makeTemplateObject()` helper has been imported.
+            const { moduleImport, symbol } = this.imports.generateNamedImport('tslib', '__makeTemplateObject');
+            const __makeTemplateObjectHelper = (moduleImport === null) ?
+                this.factory.createIdentifier(symbol) :
+                this.factory.createPropertyAccess(moduleImport, symbol);
+            // Collect up the cooked and raw strings into two separate arrays.
+            const cooked = [];
+            const raw = [];
+            for (const element of elements) {
+                cooked.push(this.factory.setSourceMapRange(this.factory.createLiteral(element.cooked), element.range));
+                raw.push(this.factory.setSourceMapRange(this.factory.createLiteral(element.raw), element.range));
+            }
+            // Generate the helper call in the form: `__makeTemplateObject([cooked], [raw]);`
+            const templateHelperCall = this.factory.createCallExpression(__makeTemplateObjectHelper, [this.factory.createArrayLiteral(cooked), this.factory.createArrayLiteral(raw)], 
+            /* pure */ false);
+            // Finally create the tagged handler call in the form:
+            // `tag(__makeTemplateObject([cooked], [raw]), ...expressions);`
+            return this.factory.createCallExpression(tagHandler, [templateHelperCall, ...expressions], 
+            /* pure */ false);
+        }
+        visitExternalExpr(ast, _context) {
+            if (ast.value.name === null) {
+                throw new Error(`Import unknown module or symbol ${ast.value}`);
+            }
+            // If a moduleName is specified, this is a normal import. If there's no module name, it's a
+            // reference to a global/ambient symbol.
+            if (ast.value.moduleName !== null) {
+                // This is a normal import. Find the imported module.
+                const { moduleImport, symbol } = this.imports.generateNamedImport(ast.value.moduleName, ast.value.name);
+                if (moduleImport === null) {
+                    // The symbol was ambient after all.
+                    return this.factory.createIdentifier(symbol);
+                }
+                else {
+                    return this.factory.createPropertyAccess(moduleImport, symbol);
+                }
+            }
+            else {
+                // The symbol is ambient, so just reference it.
+                return this.factory.createIdentifier(ast.value.name);
+            }
+        }
+        visitConditionalExpr(ast, context) {
+            let cond = ast.condition.visitExpression(this, context);
+            // Ordinarily the ternary operator is right-associative. The following are equivalent:
+            //   `a ? b : c ? d : e` => `a ? b : (c ? d : e)`
+            //
+            // However, occasionally Angular needs to produce a left-associative conditional, such as in
+            // the case of a null-safe navigation production: `{{a?.b ? c : d}}`. This template produces
+            // a ternary of the form:
+            //   `a == null ? null : rest of expression`
+            // If the rest of the expression is also a ternary though, this would produce the form:
+            //   `a == null ? null : a.b ? c : d`
+            // which, if left as right-associative, would be incorrectly associated as:
+            //   `a == null ? null : (a.b ? c : d)`
+            //
+            // In such cases, the left-associativity needs to be enforced with parentheses:
+            //   `(a == null ? null : a.b) ? c : d`
+            //
+            // Such parentheses could always be included in the condition (guaranteeing correct behavior) in
+            // all cases, but this has a code size cost. Instead, parentheses are added only when a
+            // conditional expression is directly used as the condition of another.
+            //
+            // TODO(alxhub): investigate better logic for precendence of conditional operators
+            if (ast.condition instanceof ConditionalExpr) {
+                // The condition of this ternary needs to be wrapped in parentheses to maintain
+                // left-associativity.
+                cond = this.factory.createParenthesizedExpression(cond);
+            }
+            return this.factory.createConditional(cond, ast.trueCase.visitExpression(this, context), ast.falseCase.visitExpression(this, context));
+        }
+        visitNotExpr(ast, context) {
+            return this.factory.createUnaryExpression('!', ast.condition.visitExpression(this, context));
+        }
+        visitAssertNotNullExpr(ast, context) {
+            return ast.condition.visitExpression(this, context);
+        }
+        visitCastExpr(ast, context) {
+            return ast.value.visitExpression(this, context);
+        }
+        visitFunctionExpr(ast, context) {
+            var _a;
+            return this.factory.createFunctionExpression((_a = ast.name) !== null && _a !== void 0 ? _a : null, ast.params.map(param => param.name), this.factory.createBlock(this.visitStatements(ast.statements, context)));
+        }
+        visitBinaryOperatorExpr(ast, context) {
+            if (!BINARY_OPERATORS$1.has(ast.operator)) {
+                throw new Error(`Unknown binary operator: ${BinaryOperator[ast.operator]}`);
+            }
+            return this.factory.createBinaryExpression(ast.lhs.visitExpression(this, context), BINARY_OPERATORS$1.get(ast.operator), ast.rhs.visitExpression(this, context));
+        }
+        visitReadPropExpr(ast, context) {
+            return this.factory.createPropertyAccess(ast.receiver.visitExpression(this, context), ast.name);
+        }
+        visitReadKeyExpr(ast, context) {
+            return this.factory.createElementAccess(ast.receiver.visitExpression(this, context), ast.index.visitExpression(this, context));
+        }
+        visitLiteralArrayExpr(ast, context) {
+            return this.factory.createArrayLiteral(ast.entries.map(expr => this.setSourceMapRange(expr.visitExpression(this, context), ast.sourceSpan)));
+        }
+        visitLiteralMapExpr(ast, context) {
+            const properties = ast.entries.map(entry => {
+                return {
+                    propertyName: entry.key,
+                    quoted: entry.quoted,
+                    value: entry.value.visitExpression(this, context)
+                };
+            });
+            return this.setSourceMapRange(this.factory.createObjectLiteral(properties), ast.sourceSpan);
+        }
+        visitCommaExpr(ast, context) {
+            throw new Error('Method not implemented.');
+        }
+        visitWrappedNodeExpr(ast, _context) {
+            this.recordWrappedNodeExpr(ast.node);
+            return ast.node;
+        }
+        visitTypeofExpr(ast, context) {
+            return this.factory.createTypeOfExpression(ast.expr.visitExpression(this, context));
+        }
+        visitUnaryOperatorExpr(ast, context) {
+            if (!UNARY_OPERATORS$1.has(ast.operator)) {
+                throw new Error(`Unknown unary operator: ${UnaryOperator[ast.operator]}`);
+            }
+            return this.factory.createUnaryExpression(UNARY_OPERATORS$1.get(ast.operator), ast.expr.visitExpression(this, context));
+        }
+        visitStatements(statements, context) {
+            return statements.map(stmt => stmt.visitStatement(this, context))
+                .filter(stmt => stmt !== undefined);
+        }
+        setSourceMapRange(ast, span) {
+            return this.factory.setSourceMapRange(ast, createRange(span));
+        }
+        attachComments(statement, leadingComments) {
+            if (leadingComments !== undefined) {
+                this.factory.attachComments(statement, leadingComments);
+            }
+            return statement;
+        }
+    }
     /**
-     * The current context of a translator visitor as it traverses the AST tree.
-     *
-     * It tracks whether we are in the process of outputting a statement or an expression.
+     * Convert a cooked-raw string object into one that can be used by the AST factories.
      */
-    class Context {
-        constructor(isStatement) {
-            this.isStatement = isStatement;
+    function createTemplateElement({ cooked, raw, range }) {
+        return { cooked, raw, range: createRange(range) };
+    }
+    /**
+     * Convert an OutputAST source-span into a range that can be used by the AST factories.
+     */
+    function createRange(span) {
+        if (span === null) {
+            return null;
         }
-        get withExpressionMode() {
-            return this.isStatement ? new Context(false) : this;
+        const { start, end } = span;
+        const { url, content } = start.file;
+        if (!url) {
+            return null;
         }
-        get withStatementMode() {
-            return !this.isStatement ? new Context(true) : this;
-        }
+        return {
+            url,
+            content,
+            start: { offset: start.offset, line: start.line, column: start.col },
+            end: { offset: end.offset, line: end.line, column: end.col },
+        };
     }
 
     /**
@@ -24498,12 +24961,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const UNARY_OPERATORS$1 = {
+    const UNARY_OPERATORS$2 = {
         '+': ts.SyntaxKind.PlusToken,
         '-': ts.SyntaxKind.MinusToken,
         '!': ts.SyntaxKind.ExclamationToken,
     };
-    const BINARY_OPERATORS$1 = {
+    const BINARY_OPERATORS$2 = {
         '&&': ts.SyntaxKind.AmpersandAmpersandToken,
         '>': ts.SyntaxKind.GreaterThanToken,
         '>=': ts.SyntaxKind.GreaterThanEqualsToken,
@@ -24547,7 +25010,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return ts.createBinary(target, ts.SyntaxKind.EqualsToken, value);
         }
         createBinaryExpression(leftOperand, operator, rightOperand) {
-            return ts.createBinary(leftOperand, BINARY_OPERATORS$1[operator], rightOperand);
+            return ts.createBinary(leftOperand, BINARY_OPERATORS$2[operator], rightOperand);
         }
         createBlock(body) {
             return ts.createBlock(body);
@@ -24631,7 +25094,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return ts.createTaggedTemplate(tag, templateLiteral);
         }
         createUnaryExpression(operator, operand) {
-            return ts.createPrefix(UNARY_OPERATORS$1[operator], operand);
+            return ts.createPrefix(UNARY_OPERATORS$2[operator], operand);
         }
         createVariableDeclaration(variableName, initializer, type) {
             return ts.createVariableStatement(undefined, ts.createVariableDeclarationList([ts.createVariableDeclaration(variableName, undefined, initializer !== null && initializer !== void 0 ? initializer : undefined)], VAR_TYPES[type]));
@@ -24682,305 +25145,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
             }
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const UNARY_OPERATORS$2 = new Map([
-        [UnaryOperator.Minus, '-'],
-        [UnaryOperator.Plus, '+'],
-    ]);
-    const BINARY_OPERATORS$2 = new Map([
-        [BinaryOperator.And, '&&'],
-        [BinaryOperator.Bigger, '>'],
-        [BinaryOperator.BiggerEquals, '>='],
-        [BinaryOperator.BitwiseAnd, '&'],
-        [BinaryOperator.Divide, '/'],
-        [BinaryOperator.Equals, '=='],
-        [BinaryOperator.Identical, '==='],
-        [BinaryOperator.Lower, '<'],
-        [BinaryOperator.LowerEquals, '<='],
-        [BinaryOperator.Minus, '-'],
-        [BinaryOperator.Modulo, '%'],
-        [BinaryOperator.Multiply, '*'],
-        [BinaryOperator.NotEquals, '!='],
-        [BinaryOperator.NotIdentical, '!=='],
-        [BinaryOperator.Or, '||'],
-        [BinaryOperator.Plus, '+'],
-    ]);
-    class ExpressionTranslatorVisitor {
-        constructor(factory, imports, options) {
-            this.factory = factory;
-            this.imports = imports;
-            this.downlevelLocalizedStrings = options.downlevelLocalizedStrings === true;
-            this.downlevelVariableDeclarations = options.downlevelVariableDeclarations === true;
-            this.recordWrappedNodeExpr = options.recordWrappedNodeExpr || (() => { });
-        }
-        visitDeclareVarStmt(stmt, context) {
-            var _a;
-            const varType = this.downlevelVariableDeclarations ?
-                'var' :
-                stmt.hasModifier(StmtModifier.Final) ? 'const' : 'let';
-            return this.attachComments(this.factory.createVariableDeclaration(stmt.name, (_a = stmt.value) === null || _a === void 0 ? void 0 : _a.visitExpression(this, context.withExpressionMode), varType), stmt.leadingComments);
-        }
-        visitDeclareFunctionStmt(stmt, context) {
-            return this.attachComments(this.factory.createFunctionDeclaration(stmt.name, stmt.params.map(param => param.name), this.factory.createBlock(this.visitStatements(stmt.statements, context.withStatementMode))), stmt.leadingComments);
-        }
-        visitExpressionStmt(stmt, context) {
-            return this.attachComments(this.factory.createExpressionStatement(stmt.expr.visitExpression(this, context.withStatementMode)), stmt.leadingComments);
-        }
-        visitReturnStmt(stmt, context) {
-            return this.attachComments(this.factory.createReturnStatement(stmt.value.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
-        }
-        visitDeclareClassStmt(_stmt, _context) {
-            throw new Error('Method not implemented.');
-        }
-        visitIfStmt(stmt, context) {
-            return this.attachComments(this.factory.createIfStatement(stmt.condition.visitExpression(this, context), this.factory.createBlock(this.visitStatements(stmt.trueCase, context.withStatementMode)), stmt.falseCase.length > 0 ? this.factory.createBlock(this.visitStatements(stmt.falseCase, context.withStatementMode)) :
-                null), stmt.leadingComments);
-        }
-        visitTryCatchStmt(_stmt, _context) {
-            throw new Error('Method not implemented.');
-        }
-        visitThrowStmt(stmt, context) {
-            return this.attachComments(this.factory.createThrowStatement(stmt.error.visitExpression(this, context.withExpressionMode)), stmt.leadingComments);
-        }
-        visitReadVarExpr(ast, _context) {
-            const identifier = this.factory.createIdentifier(ast.name);
-            this.setSourceMapRange(identifier, ast.sourceSpan);
-            return identifier;
-        }
-        visitWriteVarExpr(expr, context) {
-            const assignment = this.factory.createAssignment(this.setSourceMapRange(this.factory.createIdentifier(expr.name), expr.sourceSpan), expr.value.visitExpression(this, context));
-            return context.isStatement ? assignment :
-                this.factory.createParenthesizedExpression(assignment);
-        }
-        visitWriteKeyExpr(expr, context) {
-            const exprContext = context.withExpressionMode;
-            const target = this.factory.createElementAccess(expr.receiver.visitExpression(this, exprContext), expr.index.visitExpression(this, exprContext));
-            const assignment = this.factory.createAssignment(target, expr.value.visitExpression(this, exprContext));
-            return context.isStatement ? assignment :
-                this.factory.createParenthesizedExpression(assignment);
-        }
-        visitWritePropExpr(expr, context) {
-            const target = this.factory.createPropertyAccess(expr.receiver.visitExpression(this, context), expr.name);
-            return this.factory.createAssignment(target, expr.value.visitExpression(this, context));
-        }
-        visitInvokeMethodExpr(ast, context) {
-            const target = ast.receiver.visitExpression(this, context);
-            return this.setSourceMapRange(this.factory.createCallExpression(ast.name !== null ? this.factory.createPropertyAccess(target, ast.name) : target, ast.args.map(arg => arg.visitExpression(this, context)), 
-            /* pure */ false), ast.sourceSpan);
-        }
-        visitInvokeFunctionExpr(ast, context) {
-            return this.setSourceMapRange(this.factory.createCallExpression(ast.fn.visitExpression(this, context), ast.args.map(arg => arg.visitExpression(this, context)), ast.pure), ast.sourceSpan);
-        }
-        visitInstantiateExpr(ast, context) {
-            return this.factory.createNewExpression(ast.classExpr.visitExpression(this, context), ast.args.map(arg => arg.visitExpression(this, context)));
-        }
-        visitLiteralExpr(ast, _context) {
-            return this.setSourceMapRange(this.factory.createLiteral(ast.value), ast.sourceSpan);
-        }
-        visitLocalizedString(ast, context) {
-            // A `$localize` message consists of `messageParts` and `expressions`, which get interleaved
-            // together. The interleaved pieces look like:
-            // `[messagePart0, expression0, messagePart1, expression1, messagePart2]`
-            //
-            // Note that there is always a message part at the start and end, and so therefore
-            // `messageParts.length === expressions.length + 1`.
-            //
-            // Each message part may be prefixed with "metadata", which is wrapped in colons (:) delimiters.
-            // The metadata is attached to the first and subsequent message parts by calls to
-            // `serializeI18nHead()` and `serializeI18nTemplatePart()` respectively.
-            //
-            // The first message part (i.e. `ast.messageParts[0]`) is used to initialize `messageParts`
-            // array.
-            const elements = [createTemplateElement(ast.serializeI18nHead())];
-            const expressions = [];
-            for (let i = 0; i < ast.expressions.length; i++) {
-                const placeholder = this.setSourceMapRange(ast.expressions[i].visitExpression(this, context), ast.getPlaceholderSourceSpan(i));
-                expressions.push(placeholder);
-                elements.push(createTemplateElement(ast.serializeI18nTemplatePart(i + 1)));
-            }
-            const localizeTag = this.factory.createIdentifier('$localize');
-            // Now choose which implementation to use to actually create the necessary AST nodes.
-            const localizeCall = this.downlevelLocalizedStrings ?
-                this.createES5TaggedTemplateFunctionCall(localizeTag, { elements, expressions }) :
-                this.factory.createTaggedTemplate(localizeTag, { elements, expressions });
-            return this.setSourceMapRange(localizeCall, ast.sourceSpan);
-        }
-        /**
-         * Translate the tagged template literal into a call that is compatible with ES5, using the
-         * imported `__makeTemplateObject` helper for ES5 formatted output.
-         */
-        createES5TaggedTemplateFunctionCall(tagHandler, { elements, expressions }) {
-            // Ensure that the `__makeTemplateObject()` helper has been imported.
-            const { moduleImport, symbol } = this.imports.generateNamedImport('tslib', '__makeTemplateObject');
-            const __makeTemplateObjectHelper = (moduleImport === null) ?
-                this.factory.createIdentifier(symbol) :
-                this.factory.createPropertyAccess(moduleImport, symbol);
-            // Collect up the cooked and raw strings into two separate arrays.
-            const cooked = [];
-            const raw = [];
-            for (const element of elements) {
-                cooked.push(this.factory.setSourceMapRange(this.factory.createLiteral(element.cooked), element.range));
-                raw.push(this.factory.setSourceMapRange(this.factory.createLiteral(element.raw), element.range));
-            }
-            // Generate the helper call in the form: `__makeTemplateObject([cooked], [raw]);`
-            const templateHelperCall = this.factory.createCallExpression(__makeTemplateObjectHelper, [this.factory.createArrayLiteral(cooked), this.factory.createArrayLiteral(raw)], 
-            /* pure */ false);
-            // Finally create the tagged handler call in the form:
-            // `tag(__makeTemplateObject([cooked], [raw]), ...expressions);`
-            return this.factory.createCallExpression(tagHandler, [templateHelperCall, ...expressions], 
-            /* pure */ false);
-        }
-        visitExternalExpr(ast, _context) {
-            if (ast.value.name === null) {
-                throw new Error(`Import unknown module or symbol ${ast.value}`);
-            }
-            // If a moduleName is specified, this is a normal import. If there's no module name, it's a
-            // reference to a global/ambient symbol.
-            if (ast.value.moduleName !== null) {
-                // This is a normal import. Find the imported module.
-                const { moduleImport, symbol } = this.imports.generateNamedImport(ast.value.moduleName, ast.value.name);
-                if (moduleImport === null) {
-                    // The symbol was ambient after all.
-                    return this.factory.createIdentifier(symbol);
-                }
-                else {
-                    return this.factory.createPropertyAccess(moduleImport, symbol);
-                }
-            }
-            else {
-                // The symbol is ambient, so just reference it.
-                return this.factory.createIdentifier(ast.value.name);
-            }
-        }
-        visitConditionalExpr(ast, context) {
-            let cond = ast.condition.visitExpression(this, context);
-            // Ordinarily the ternary operator is right-associative. The following are equivalent:
-            //   `a ? b : c ? d : e` => `a ? b : (c ? d : e)`
-            //
-            // However, occasionally Angular needs to produce a left-associative conditional, such as in
-            // the case of a null-safe navigation production: `{{a?.b ? c : d}}`. This template produces
-            // a ternary of the form:
-            //   `a == null ? null : rest of expression`
-            // If the rest of the expression is also a ternary though, this would produce the form:
-            //   `a == null ? null : a.b ? c : d`
-            // which, if left as right-associative, would be incorrectly associated as:
-            //   `a == null ? null : (a.b ? c : d)`
-            //
-            // In such cases, the left-associativity needs to be enforced with parentheses:
-            //   `(a == null ? null : a.b) ? c : d`
-            //
-            // Such parentheses could always be included in the condition (guaranteeing correct behavior) in
-            // all cases, but this has a code size cost. Instead, parentheses are added only when a
-            // conditional expression is directly used as the condition of another.
-            //
-            // TODO(alxhub): investigate better logic for precendence of conditional operators
-            if (ast.condition instanceof ConditionalExpr) {
-                // The condition of this ternary needs to be wrapped in parentheses to maintain
-                // left-associativity.
-                cond = this.factory.createParenthesizedExpression(cond);
-            }
-            return this.factory.createConditional(cond, ast.trueCase.visitExpression(this, context), ast.falseCase.visitExpression(this, context));
-        }
-        visitNotExpr(ast, context) {
-            return this.factory.createUnaryExpression('!', ast.condition.visitExpression(this, context));
-        }
-        visitAssertNotNullExpr(ast, context) {
-            return ast.condition.visitExpression(this, context);
-        }
-        visitCastExpr(ast, context) {
-            return ast.value.visitExpression(this, context);
-        }
-        visitFunctionExpr(ast, context) {
-            var _a;
-            return this.factory.createFunctionExpression((_a = ast.name) !== null && _a !== void 0 ? _a : null, ast.params.map(param => param.name), this.factory.createBlock(this.visitStatements(ast.statements, context)));
-        }
-        visitBinaryOperatorExpr(ast, context) {
-            if (!BINARY_OPERATORS$2.has(ast.operator)) {
-                throw new Error(`Unknown binary operator: ${BinaryOperator[ast.operator]}`);
-            }
-            return this.factory.createBinaryExpression(ast.lhs.visitExpression(this, context), BINARY_OPERATORS$2.get(ast.operator), ast.rhs.visitExpression(this, context));
-        }
-        visitReadPropExpr(ast, context) {
-            return this.factory.createPropertyAccess(ast.receiver.visitExpression(this, context), ast.name);
-        }
-        visitReadKeyExpr(ast, context) {
-            return this.factory.createElementAccess(ast.receiver.visitExpression(this, context), ast.index.visitExpression(this, context));
-        }
-        visitLiteralArrayExpr(ast, context) {
-            return this.factory.createArrayLiteral(ast.entries.map(expr => this.setSourceMapRange(expr.visitExpression(this, context), ast.sourceSpan)));
-        }
-        visitLiteralMapExpr(ast, context) {
-            const properties = ast.entries.map(entry => {
-                return {
-                    propertyName: entry.key,
-                    quoted: entry.quoted,
-                    value: entry.value.visitExpression(this, context)
-                };
-            });
-            return this.setSourceMapRange(this.factory.createObjectLiteral(properties), ast.sourceSpan);
-        }
-        visitCommaExpr(ast, context) {
-            throw new Error('Method not implemented.');
-        }
-        visitWrappedNodeExpr(ast, _context) {
-            this.recordWrappedNodeExpr(ast.node);
-            return ast.node;
-        }
-        visitTypeofExpr(ast, context) {
-            return this.factory.createTypeOfExpression(ast.expr.visitExpression(this, context));
-        }
-        visitUnaryOperatorExpr(ast, context) {
-            if (!UNARY_OPERATORS$2.has(ast.operator)) {
-                throw new Error(`Unknown unary operator: ${UnaryOperator[ast.operator]}`);
-            }
-            return this.factory.createUnaryExpression(UNARY_OPERATORS$2.get(ast.operator), ast.expr.visitExpression(this, context));
-        }
-        visitStatements(statements, context) {
-            return statements.map(stmt => stmt.visitStatement(this, context))
-                .filter(stmt => stmt !== undefined);
-        }
-        setSourceMapRange(ast, span) {
-            return this.factory.setSourceMapRange(ast, createRange(span));
-        }
-        attachComments(statement, leadingComments) {
-            if (leadingComments !== undefined) {
-                this.factory.attachComments(statement, leadingComments);
-            }
-            return statement;
-        }
-    }
-    /**
-     * Convert a cooked-raw string object into one that can be used by the AST factories.
-     */
-    function createTemplateElement({ cooked, raw, range }) {
-        return { cooked, raw, range: createRange(range) };
-    }
-    /**
-     * Convert an OutputAST source-span into a range that can be used by the AST factories.
-     */
-    function createRange(span) {
-        if (span === null) {
-            return null;
-        }
-        const { start, end } = span;
-        const { url, content } = start.file;
-        if (!url) {
-            return null;
-        }
-        return {
-            url,
-            content,
-            start: { offset: start.offset, line: start.line, column: start.col },
-            end: { offset: end.offset, line: end.line, column: end.col },
-        };
     }
 
     /**
@@ -26973,10 +27137,16 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         reflectObjectLiteral(queryData).forEach((queryExpr, propertyName) => {
             queryExpr = unwrapExpression(queryExpr);
-            if (!ts.isNewExpression(queryExpr) || !ts.isIdentifier(queryExpr.expression)) {
+            if (!ts.isNewExpression(queryExpr)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
             }
-            const type = reflector.getImportOfIdentifier(queryExpr.expression);
+            const queryType = ts.isPropertyAccessExpression(queryExpr.expression) ?
+                queryExpr.expression.name :
+                queryExpr.expression;
+            if (!ts.isIdentifier(queryType)) {
+                throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
+            }
+            const type = reflector.getImportOfIdentifier(queryType);
             if (type === null || (!isCore && type.from !== '@angular/core') ||
                 !QUERY_TYPES.has(type.name)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
@@ -28497,7 +28667,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             else {
                 let typeRef = valueRef;
                 let typeNode = this.reflector.getDtsDeclaration(typeRef.node);
-                if (typeNode !== null && ts.isClassDeclaration(typeNode)) {
+                if (typeNode !== null && isNamedClassDeclaration(typeNode)) {
                     typeRef = new Reference$1(typeNode);
                 }
                 return toR3Reference(valueRef, typeRef, valueContext, typeContext, this.refEmitter);
@@ -28577,7 +28747,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return null;
         }
-        // Verify that a `ts.Declaration` reference is a `ClassDeclaration` reference.
+        // Verify that a "Declaration" reference is a `ClassDeclaration` reference.
         isClassDeclarationReference(ref) {
             return this.reflector.isClass(ref.node);
         }
@@ -28599,7 +28769,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // Recurse into nested arrays.
                     refList.push(...this.resolveTypeList(expr, entry, className, arrayName));
                 }
-                else if (isDeclarationReference(entry)) {
+                else if (entry instanceof Reference$1) {
                     if (!this.isClassDeclarationReference(entry)) {
                         throw createValueHasWrongTypeError(entry.node, entry, `Value at position ${idx} in the NgModule.${arrayName} of ${className} is not a class`);
                     }
@@ -28616,11 +28786,6 @@ Either add the @Injectable() decorator to '${provider.node.name
     function isNgModule(node, compilation) {
         return !compilation.directives.some(directive => directive.ref.node === node) &&
             !compilation.pipes.some(pipe => pipe.ref.node === node);
-    }
-    function isDeclarationReference(ref) {
-        return ref instanceof Reference$1 &&
-            (ts.isClassDeclaration(ref.node) || ts.isFunctionDeclaration(ref.node) ||
-                ts.isVariableDeclaration(ref.node));
     }
 
     /**
@@ -29395,35 +29560,27 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Manages the `IncrementalDriver` associated with a `ts.Program` by monkey-patching it onto the
-     * program under `SYM_INCREMENTAL_DRIVER`.
+     * Tracks an `IncrementalDriver` within the strategy itself.
      */
-    class PatchedProgramIncrementalBuildStrategy {
-        getIncrementalDriver(program) {
-            const driver = program[SYM_INCREMENTAL_DRIVER];
-            if (driver === undefined || !(driver instanceof IncrementalDriver)) {
-                return null;
-            }
-            return driver;
+    class TrackedIncrementalBuildStrategy {
+        constructor() {
+            this.driver = null;
+            this.isSet = false;
         }
-        setIncrementalDriver(driver, program) {
-            program[SYM_INCREMENTAL_DRIVER] = driver;
+        getIncrementalDriver() {
+            return this.driver;
+        }
+        setIncrementalDriver(driver) {
+            this.driver = driver;
+            this.isSet = true;
+        }
+        toNextBuildStrategy() {
+            const strategy = new TrackedIncrementalBuildStrategy();
+            // Only reuse a driver that was explicitly set via `setIncrementalDriver`.
+            strategy.driver = this.isSet ? this.driver : null;
+            return strategy;
         }
     }
-    /**
-     * Symbol under which the `IncrementalDriver` is stored on a `ts.Program`.
-     *
-     * The TS model of incremental compilation is based around reuse of a previous `ts.Program` in the
-     * construction of a new one. The `NgCompiler` follows this abstraction - passing in a previous
-     * `ts.Program` is sufficient to trigger incremental compilation. This previous `ts.Program` need
-     * not be from an Angular compilation (that is, it need not have been created from `NgCompiler`).
-     *
-     * If it is, though, Angular can benefit from reusing previous analysis work. This reuse is managed
-     * by the `IncrementalDriver`, which is inherited from the old program to the new program. To
-     * support this behind the API of passing an old `ts.Program`, the `IncrementalDriver` is stored on
-     * the `ts.Program` under this symbol.
-     */
-    const SYM_INCREMENTAL_DRIVER = Symbol('NgIncrementalDriver');
 
     /**
      * @license
@@ -29968,13 +30125,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             node.modifiers.some(mod => mod.kind === ts.SyntaxKind.StaticKeyword);
     }
 
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const NOOP_PERF_RECORDER = {
         enabled: false,
         mark: (name, node, category, detail) => { },
@@ -34411,6 +34561,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             else if (node instanceof BoundText) {
                 this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, node));
             }
+            else if (node instanceof Icu) {
+                this.appendIcuExpressions(node);
+            }
         }
         checkAndAppendReferencesOfNode(node) {
             for (const ref of node.references) {
@@ -34521,6 +34674,16 @@ Either add the @Injectable() decorator to '${provider.node.name
                     this.opQueue.push(new TcbDomSchemaCheckerOp(this.tcb, node, !hasDirectives, claimedInputs));
                 }
                 this.appendDeepSchemaChecks(node.children);
+            }
+        }
+        appendIcuExpressions(node) {
+            for (const variable of Object.values(node.vars)) {
+                this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, variable));
+            }
+            for (const placeholder of Object.values(node.placeholders)) {
+                if (placeholder instanceof BoundText) {
+                    this.opQueue.push(new TcbTextInterpolationOp(this.tcb, this, placeholder));
+                }
             }
         }
     }
@@ -36960,23 +37123,84 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Given a list of directives and a text to use as a selector, returns the directives which match
-     * for the selector.
+     * Return the node that most tightly encompass the specified `position`.
+     * @param node
+     * @param position
      */
-    function getDirectiveMatches(directives, selector) {
-        const selectorToMatch = CssSelector.parse(selector);
-        if (selectorToMatch.length === 0) {
-            return new Set();
+    function findTightestNode(node, position) {
+        if (node.getStart() <= position && position < node.getEnd()) {
+            return node.forEachChild(c => findTightestNode(c, position)) || node;
         }
-        return new Set(directives.filter((dir) => {
-            if (dir.selector === null) {
-                return false;
-            }
-            const matcher = new SelectorMatcher();
-            matcher.addSelectables(CssSelector.parse(dir.selector));
-            return matcher.match(selectorToMatch[0], null);
-        }));
     }
+    /**
+     * Returns a property assignment from the assignment value if the property name
+     * matches the specified `key`, or `undefined` if there is no match.
+     */
+    function getPropertyAssignmentFromValue(value, key) {
+        const propAssignment = value.parent;
+        if (!propAssignment || !ts.isPropertyAssignment(propAssignment) ||
+            propAssignment.name.getText() !== key) {
+            return;
+        }
+        return propAssignment;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgnNode property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        const objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        const callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        const decorator = callExprNode.parent;
+        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        const classDeclNode = decorator.parent;
+        return classDeclNode;
+    }
+    /**
+     * Given the node which is the string of the inline template for a component, returns the
+     * `ts.ClassDeclaration` for the component.
+     */
+    function getClassDeclOfInlineTemplateNode(templateStringNode) {
+        if (!ts.isStringLiteralLike(templateStringNode)) {
+            return;
+        }
+        const tmplAsgn = getPropertyAssignmentFromValue(templateStringNode, 'template');
+        if (!tmplAsgn) {
+            return;
+        }
+        return getClassDeclFromDecoratorProp(tmplAsgn);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function getTextSpanOfNode(node) {
         if (isTemplateNodeWithKeyAndValue(node)) {
             return toTextSpan(node.keySpan);
@@ -37015,8 +37239,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
      */
     function getTemplateInfoAtPosition(fileName, position, compiler) {
-        if (fileName.endsWith('.ts')) {
-            return getInlineTemplateInfoAtPosition(fileName, position, compiler);
+        if (isTypeScriptFile(fileName)) {
+            return getTemplateInfoFromClassMeta(fileName, position, compiler);
         }
         else {
             return getFirstComponentForTemplateFile(fileName, compiler);
@@ -37058,57 +37282,119 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     /**
      * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
      */
-    function getInlineTemplateInfoAtPosition(fileName, position, compiler) {
+    function getTemplateInfoFromClassMeta(fileName, position, compiler) {
+        const classDecl = getClassDeclForInlineTemplateAtPosition(fileName, position, compiler);
+        if (!classDecl || !classDecl.name) { // Does not handle anonymous class
+            return;
+        }
+        const template = compiler.getTemplateTypeChecker().getTemplate(classDecl);
+        if (template === null) {
+            return;
+        }
+        return { template, component: classDecl };
+    }
+    function getClassDeclForInlineTemplateAtPosition(fileName, position, compiler) {
         const sourceFile = compiler.getNextProgram().getSourceFile(fileName);
         if (!sourceFile) {
             return undefined;
         }
-        // We only support top level statements / class declarations
-        for (const statement of sourceFile.statements) {
-            if (!ts.isClassDeclaration(statement) || position < statement.pos || position > statement.end) {
-                continue;
-            }
-            const template = compiler.getTemplateTypeChecker().getTemplate(statement);
-            if (template === null) {
-                return undefined;
-            }
-            return { template, component: statement };
-        }
-        return undefined;
+        const node = findTightestNode(sourceFile, position);
+        if (!node)
+            return;
+        return getClassDeclOfInlineTemplateNode(node);
     }
     /**
-     * Given an attribute name and the element or template the attribute appears on, determines which
-     * directives match because the attribute is present. That is, we find which directives are applied
-     * because of this attribute by elimination: compare the directive matches with the attribute
-     * present against the directive matches without it. The difference would be the directives which
-     * match because the attribute is present.
-     *
-     * @param attribute The attribute name to use for directive matching.
-     * @param hostNode The element or template node that the attribute is on.
-     * @param directives The list of directives to match against.
-     * @returns The list of directives matching the attribute via the strategy described above.
+     * Given an attribute node, converts it to string form.
      */
-    function getDirectiveMatchesForAttribute(attribute, hostNode, directives) {
-        const attributes = [...hostNode.attributes, ...hostNode.inputs];
-        if (hostNode instanceof Template) {
-            attributes.push(...hostNode.templateAttrs);
+    function toAttributeString(attribute) {
+        var _a, _b;
+        if (attribute instanceof BoundEvent) {
+            return `[${attribute.name}]`;
         }
-        function toAttributeString(a) {
-            var _a, _b;
-            return `[${a.name}=${(_b = (_a = a.valueSpan) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : ''}]`;
+        else {
+            return `[${attribute.name}=${(_b = (_a = attribute.valueSpan) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : ''}]`;
         }
-        const attrs = attributes.map(toAttributeString);
-        const attrsOmit = attributes.map(a => a.name === attribute ? '' : toAttributeString(a));
-        const hostNodeName = hostNode instanceof Template ? hostNode.tagName : hostNode.name;
-        const directivesWithAttribute = getDirectiveMatches(directives, hostNodeName + attrs.join(''));
-        const directivesWithoutAttribute = getDirectiveMatches(directives, hostNodeName + attrsOmit.join(''));
+    }
+    function getNodeName(node) {
+        return node instanceof Template ? node.tagName : node.name;
+    }
+    /**
+     * Given a template or element node, returns all attributes on the node.
+     */
+    function getAttributes(node) {
+        const attributes = [...node.attributes, ...node.inputs, ...node.outputs];
+        if (node instanceof Template) {
+            attributes.push(...node.templateAttrs);
+        }
+        return attributes;
+    }
+    /**
+     * Given two `Set`s, returns all items in the `left` which do not appear in the `right`.
+     */
+    function difference(left, right) {
         const result = new Set();
-        for (const dir of directivesWithAttribute) {
-            if (!directivesWithoutAttribute.has(dir)) {
+        for (const dir of left) {
+            if (!right.has(dir)) {
                 result.add(dir);
             }
         }
         return result;
+    }
+    /**
+     * Given an element or template, determines which directives match because the tag is present. For
+     * example, if a directive selector is `div[myAttr]`, this would match div elements but would not if
+     * the selector were just `[myAttr]`. We find which directives are applied because of this tag by
+     * elimination: compare the directive matches with the tag present against the directive matches
+     * without it. The difference would be the directives which match because the tag is present.
+     *
+     * @param element The element or template node that the attribute/tag is part of.
+     * @param directives The list of directives to match against.
+     * @returns The list of directives matching the tag name via the strategy described above.
+     */
+    // TODO(atscott): Add unit tests for this and the one for attributes
+    function getDirectiveMatchesForElementTag(element, directives) {
+        const attributes = getAttributes(element);
+        const allAttrs = attributes.map(toAttributeString);
+        const allDirectiveMatches = getDirectiveMatchesForSelector(directives, getNodeName(element) + allAttrs.join(''));
+        const matchesWithoutElement = getDirectiveMatchesForSelector(directives, allAttrs.join(''));
+        return difference(allDirectiveMatches, matchesWithoutElement);
+    }
+    /**
+     * Given an attribute name, determines which directives match because the attribute is present. We
+     * find which directives are applied because of this attribute by elimination: compare the directive
+     * matches with the attribute present against the directive matches without it. The difference would
+     * be the directives which match because the attribute is present.
+     *
+     * @param name The name of the attribute
+     * @param hostNode The node which the attribute appears on
+     * @param directives The list of directives to match against.
+     * @returns The list of directives matching the tag name via the strategy described above.
+     */
+    function getDirectiveMatchesForAttribute(name, hostNode, directives) {
+        const attributes = getAttributes(hostNode);
+        const allAttrs = attributes.map(toAttributeString);
+        const allDirectiveMatches = getDirectiveMatchesForSelector(directives, getNodeName(hostNode) + allAttrs.join(''));
+        const attrsExcludingName = attributes.filter(a => a.name !== name).map(toAttributeString);
+        const matchesWithoutAttr = getDirectiveMatchesForSelector(directives, getNodeName(hostNode) + attrsExcludingName.join(''));
+        return difference(allDirectiveMatches, matchesWithoutAttr);
+    }
+    /**
+     * Given a list of directives and a text to use as a selector, returns the directives which match
+     * for the selector.
+     */
+    function getDirectiveMatchesForSelector(directives, selector) {
+        const selectors = CssSelector.parse(selector);
+        if (selectors.length === 0) {
+            return new Set();
+        }
+        return new Set(directives.filter((dir) => {
+            if (dir.selector === null) {
+                return false;
+            }
+            const matcher = new SelectorMatcher();
+            matcher.addSelectables(CssSelector.parse(dir.selector));
+            return selectors.some(selector => matcher.match(selector, null));
+        }));
     }
     /**
      * Returns a new `ts.SymbolDisplayPart` array which has the alias imports from the tcb filtered
@@ -37134,6 +37420,80 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         return n instanceof PropertyRead && n.name === '$event' &&
             n.receiver instanceof ImplicitReceiver;
     }
+    /**
+     * Returns a new array formed by applying a given callback function to each element of the array,
+     * and then flattening the result by one level.
+     */
+    function flatMap(items, f) {
+        const results = [];
+        for (const x of items) {
+            results.push(...f(x));
+        }
+        return results;
+    }
+    function isTypeScriptFile(fileName) {
+        return fileName.endsWith('.ts');
+    }
+    function isExternalTemplate(fileName) {
+        return !isTypeScriptFile(fileName);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class CompilerFactory {
+        constructor(adapter, programStrategy) {
+            this.adapter = adapter;
+            this.programStrategy = programStrategy;
+            this.incrementalStrategy = new TrackedIncrementalBuildStrategy();
+            this.compiler = null;
+            this.lastKnownProgram = null;
+        }
+        /**
+         * Create a new instance of the Ivy compiler if the program has changed since
+         * the last time the compiler was instantiated. If the program has not changed,
+         * return the existing instance.
+         * @param fileName override the template if this is an external template file
+         * @param options angular compiler options
+         */
+        getOrCreateWithChangedFile(fileName, options) {
+            const program = this.programStrategy.getProgram();
+            if (!this.compiler || program !== this.lastKnownProgram) {
+                this.compiler = new NgCompiler(this.adapter, // like compiler host
+                options, // angular compiler options
+                program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
+                this.lastKnownProgram, undefined);
+                this.lastKnownProgram = program;
+            }
+            if (isExternalTemplate(fileName)) {
+                this.overrideTemplate(fileName, this.compiler);
+            }
+            return this.compiler;
+        }
+        overrideTemplate(fileName, compiler) {
+            if (!this.adapter.isTemplateDirty(fileName)) {
+                return;
+            }
+            // 1. Get the latest snapshot
+            const latestTemplate = this.adapter.readResource(fileName);
+            // 2. Find all components that use the template
+            const ttc = compiler.getTemplateTypeChecker();
+            const components = compiler.getComponentsWithTemplateFile(fileName);
+            // 3. Update component template
+            for (const component of components) {
+                if (ts$1.isClassDeclaration(component)) {
+                    ttc.overrideComponentTemplate(component, latestTemplate);
+                }
+            }
+        }
+        registerLastKnownProgram() {
+            this.lastKnownProgram = this.programStrategy.getProgram();
+        }
+    }
 
     /**
      * @license
@@ -37143,12 +37503,98 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Return the template AST node or expression AST node that most accurately
+     * Gets an Angular-specific definition in a TypeScript source file.
+     */
+    function getTsDefinitionAndBoundSpan(sf, position, resourceResolver) {
+        const node = findTightestNode(sf, position);
+        if (!node)
+            return;
+        switch (node.kind) {
+            case ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+                // Attempt to extract definition of a URL in a property assignment.
+                return getUrlFromProperty(node, resourceResolver);
+            default:
+                return undefined;
+        }
+    }
+    /**
+     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
+     * directive decorator.
+     * Currently applies to `templateUrl` and `styleUrls` properties.
+     */
+    function getUrlFromProperty(urlNode, resourceResolver) {
+        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
+        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
+        // an array of strings:
+        //   {
+        //        templateUrl: './template.ng.html',
+        //        styleUrls: ['./style.css', './other-style.css']
+        //   }
+        // `templateUrl`'s property assignment can be found from the string literal node;
+        // `styleUrls`'s property assignment can be found from the array (parent) node.
+        //
+        // First search for `templateUrl`.
+        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
+        if (!asgn) {
+            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
+            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
+            if (!asgn) {
+                // Nothing found, bail.
+                return;
+            }
+        }
+        // If the property assignment is not a property of a class decorator, don't generate definitions
+        // for it.
+        if (!getClassDeclFromDecoratorProp(asgn)) {
+            return;
+        }
+        const sf = urlNode.getSourceFile();
+        let url;
+        try {
+            url = resourceResolver.resolve(urlNode.text, sf.fileName);
+        }
+        catch (_a) {
+            // If the file does not exist, bail.
+            return;
+        }
+        const templateDefinitions = [{
+                kind: ts.ScriptElementKind.externalModuleName,
+                name: url,
+                containerKind: ts.ScriptElementKind.unknown,
+                containerName: '',
+                // Reading the template is expensive, so don't provide a preview.
+                // TODO(ayazhafiz): Consider providing an actual span:
+                //  1. We're likely to read the template anyway
+                //  2. We could show just the first 100 chars or so
+                textSpan: { start: 0, length: 0 },
+                fileName: url,
+            }];
+        return {
+            definitions: templateDefinitions,
+            textSpan: {
+                // Exclude opening and closing quotes in the url span.
+                start: urlNode.getStart() + 1,
+                length: urlNode.getWidth() - 2,
+            },
+        };
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Return the path to the template AST node or expression AST node that most accurately
      * represents the node at the specified cursor `position`.
+     *
      * @param ast AST tree
      * @param position cursor position
      */
-    function findNodeAtPosition(ast, position) {
+    function getPathToNodeAtPosition(ast, position) {
         const visitor = new R3Visitor(position);
         visitor.visitAll(ast);
         const candidate = visitor.path[visitor.path.length - 1];
@@ -37164,7 +37610,21 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return;
             }
         }
-        return candidate;
+        return visitor.path;
+    }
+    /**
+     * Return the template AST node or expression AST node that most accurately
+     * represents the node at the specified cursor `position`.
+     *
+     * @param ast AST tree
+     * @param position cursor position
+     */
+    function findNodeAtPosition(ast, position) {
+        const path = getPathToNodeAtPosition(ast, position);
+        if (!path) {
+            return;
+        }
+        return path[path.length - 1];
     }
     class R3Visitor {
         // Position must be absolute in the source file.
@@ -37320,52 +37780,57 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     class DefinitionBuilder {
-        constructor(tsLS, compiler) {
+        constructor(tsLS, compiler, resourceResolver) {
             this.tsLS = tsLS;
             this.compiler = compiler;
+            this.resourceResolver = resourceResolver;
         }
-        // TODO(atscott): getTypeDefinitionAtPosition
         getDefinitionAndBoundSpan(fileName, position) {
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
             if (templateInfo === undefined) {
-                return undefined;
+                // We were unable to get a template at the given position. If we are in a TS file, instead
+                // attempt to get an Angular definition at the location inside a TS file (examples of this
+                // would be templateUrl or a url in styleUrls).
+                if (!isTypeScriptFile(fileName)) {
+                    return;
+                }
+                const sf = this.compiler.getNextProgram().getSourceFile(fileName);
+                if (!sf) {
+                    return;
+                }
+                return getTsDefinitionAndBoundSpan(sf, position, this.resourceResolver);
             }
-            const { template, component } = templateInfo;
-            const node = findNodeAtPosition(template, position);
+            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
             // The `$event` of event handlers would point to the $event parameter in the shim file, as in
             // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
             // If we wanted to return something for this, it would be more appropriate for something like
             // `getTypeDefinition`.
-            if (node === undefined || isDollarEvent(node)) {
+            if (definitionMeta === undefined || isDollarEvent(definitionMeta.node)) {
                 return undefined;
             }
-            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
-            if (symbol === null) {
-                return undefined;
-            }
-            const definitions = this.getDefinitionsForSymbol(symbol, node);
-            return { definitions, textSpan: getTextSpanOfNode(node) };
+            const definitions = this.getDefinitionsForSymbol(Object.assign(Object.assign({}, definitionMeta), templateInfo));
+            return { definitions, textSpan: getTextSpanOfNode(definitionMeta.node) };
         }
-        getDefinitionsForSymbol(symbol, node) {
+        getDefinitionsForSymbol({ symbol, node, path, component }) {
             switch (symbol.kind) {
                 case SymbolKind.Directive:
                 case SymbolKind.Element:
                 case SymbolKind.Template:
                 case SymbolKind.DomBinding:
-                    // `Template` and `Element` types should not return anything because their "definitions" are
-                    // the template locations themselves. Instead, `getTypeDefinitionAtPosition` should return
-                    // the directive class / native element interface. `Directive` would have similar reasoning,
-                    // though the `TemplateTypeChecker` only returns it as a list on `DomBinding`, `Element`, or
-                    // `Template` so it's really only here for switch case completeness (it wouldn't ever appear
-                    // here).
-                    //
-                    // `DomBinding` also does not return anything because the value assignment is internal to
-                    // the TCB. Again, `getTypeDefinitionAtPosition` could return a possible directive the
-                    // attribute binds to or the property in the native interface.
-                    return [];
-                case SymbolKind.Input:
+                    // Though it is generally more appropriate for the above symbol definitions to be
+                    // associated with "type definitions" since the location in the template is the
+                    // actual definition location, the better user experience would be to allow
+                    // LS users to "go to definition" on an item in the template that maps to a class and be
+                    // taken to the directive or HTML class.
+                    return this.getTypeDefinitionsForTemplateInstance(symbol, node);
                 case SymbolKind.Output:
-                    return this.getDefinitionsForSymbols(symbol.bindings);
+                case SymbolKind.Input: {
+                    const bindingDefs = this.getDefinitionsForSymbols(...symbol.bindings);
+                    // Also attempt to get directive matches for the input name. If there is a directive that
+                    // has the input name as part of the selector, we want to return that as well.
+                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, path, component);
+                    return [...bindingDefs, ...directiveDefs];
+                }
                 case SymbolKind.Variable:
                 case SymbolKind.Reference: {
                     const definitions = [];
@@ -37381,26 +37846,183 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         });
                     }
                     if (symbol.kind === SymbolKind.Variable) {
-                        definitions.push(...this.getDefinitionInfos(symbol.shimLocation));
+                        definitions.push(...this.getDefinitionsForSymbols(symbol));
                     }
                     return definitions;
                 }
                 case SymbolKind.Expression: {
-                    const { shimLocation } = symbol;
-                    return this.getDefinitionInfos(shimLocation);
+                    return this.getDefinitionsForSymbols(symbol);
                 }
             }
         }
-        getDefinitionsForSymbols(symbols) {
-            const definitions = [];
-            for (const { shimLocation } of symbols) {
-                definitions.push(...this.getDefinitionInfos(shimLocation));
-            }
-            return definitions;
+        getDefinitionsForSymbols(...symbols) {
+            return flatMap(symbols, ({ shimLocation }) => {
+                var _a;
+                const { shimPath, positionInShimFile } = shimLocation;
+                return (_a = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+            });
         }
-        getDefinitionInfos({ shimPath, positionInShimFile }) {
+        getTypeDefinitionsAtPosition(fileName, position) {
+            const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
+            if (templateInfo === undefined) {
+                return;
+            }
+            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
+            if (definitionMeta === undefined) {
+                return undefined;
+            }
+            const { symbol, node } = definitionMeta;
+            switch (symbol.kind) {
+                case SymbolKind.Directive:
+                case SymbolKind.DomBinding:
+                case SymbolKind.Element:
+                case SymbolKind.Template:
+                    return this.getTypeDefinitionsForTemplateInstance(symbol, node);
+                case SymbolKind.Output:
+                case SymbolKind.Input: {
+                    const bindingDefs = this.getTypeDefinitionsForSymbols(...symbol.bindings);
+                    // Also attempt to get directive matches for the input name. If there is a directive that
+                    // has the input name as part of the selector, we want to return that as well.
+                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, definitionMeta.path, templateInfo.component);
+                    return [...bindingDefs, ...directiveDefs];
+                }
+                case SymbolKind.Reference:
+                case SymbolKind.Expression:
+                case SymbolKind.Variable:
+                    return this.getTypeDefinitionsForSymbols(symbol);
+            }
+        }
+        getTypeDefinitionsForTemplateInstance(symbol, node) {
+            switch (symbol.kind) {
+                case SymbolKind.Template: {
+                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
+                    return this.getTypeDefinitionsForSymbols(...matches);
+                }
+                case SymbolKind.Element: {
+                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
+                    // If one of the directive matches is a component, we should not include the native element
+                    // in the results because it is replaced by the component.
+                    return Array.from(matches).some(dir => dir.isComponent) ?
+                        this.getTypeDefinitionsForSymbols(...matches) :
+                        this.getTypeDefinitionsForSymbols(...matches, symbol);
+                }
+                case SymbolKind.DomBinding: {
+                    if (!(node instanceof TextAttribute)) {
+                        return [];
+                    }
+                    const dirs = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
+                    return this.getTypeDefinitionsForSymbols(...dirs);
+                }
+                case SymbolKind.Directive:
+                    return this.getTypeDefinitionsForSymbols(symbol);
+            }
+        }
+        getDirectiveTypeDefsForBindingNode(node, pathToNode, component) {
+            if (!(node instanceof BoundAttribute) && !(node instanceof TextAttribute) &&
+                !(node instanceof BoundEvent)) {
+                return [];
+            }
+            const parent = pathToNode[pathToNode.length - 2];
+            if (!(parent instanceof Template || parent instanceof Element)) {
+                return [];
+            }
+            const templateOrElementSymbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(parent, component);
+            if (templateOrElementSymbol === null ||
+                (templateOrElementSymbol.kind !== SymbolKind.Template &&
+                    templateOrElementSymbol.kind !== SymbolKind.Element)) {
+                return [];
+            }
+            const dirs = getDirectiveMatchesForAttribute(node.name, parent, templateOrElementSymbol.directives);
+            return this.getTypeDefinitionsForSymbols(...dirs);
+        }
+        getTypeDefinitionsForSymbols(...symbols) {
+            return flatMap(symbols, ({ shimLocation }) => {
+                var _a;
+                const { shimPath, positionInShimFile } = shimLocation;
+                return (_a = this.tsLS.getTypeDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+            });
+        }
+        getDefinitionMetaAtPosition({ template, component }, position) {
+            const path = getPathToNodeAtPosition(template, position);
+            if (path === undefined) {
+                return;
+            }
+            const node = path[path.length - 1];
+            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
+            if (symbol === null) {
+                return;
+            }
+            return { node, path, symbol };
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class LanguageServiceAdapter {
+        constructor(project) {
             var _a;
-            return (_a = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+            this.project = project;
+            this.entryPoint = null;
+            this.constructionDiagnostics = [];
+            this.ignoreForEmit = new Set();
+            this.factoryTracker = null; // no .ngfactory shims
+            this.unifiedModulesHost = null; // only used in Bazel
+            this.templateVersion = new Map();
+            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
+        }
+        isShim(sf) {
+            return isShim(sf);
+        }
+        fileExists(fileName) {
+            return this.project.fileExists(fileName);
+        }
+        readFile(fileName) {
+            return this.project.readFile(fileName);
+        }
+        getCurrentDirectory() {
+            return this.project.getCurrentDirectory();
+        }
+        getCanonicalFileName(fileName) {
+            return this.project.projectService.toCanonicalFileName(fileName);
+        }
+        /**
+         * readResource() is an Angular-specific method for reading files that are not
+         * managed by the TS compiler host, namely templates and stylesheets.
+         * It is a method on ExtendedTsCompilerHost, see
+         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
+         */
+        readResource(fileName) {
+            if (isTypeScriptFile(fileName)) {
+                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
+            }
+            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
+            // not exist! The same applies for getScriptVersion().
+            // getScriptInfo() will not create one if it does not exist.
+            // In this case, we *want* a script info to be created so that we could
+            // keep track of its version.
+            const snapshot = this.project.getScriptSnapshot(fileName);
+            if (!snapshot) {
+                // This would fail if the file does not exist, or readFile() fails for
+                // whatever reasons.
+                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
+            }
+            const version = this.project.getScriptVersion(fileName);
+            this.templateVersion.set(fileName, version);
+            return snapshot.getText(0, snapshot.getLength());
+        }
+        isTemplateDirty(fileName) {
+            const lastVersion = this.templateVersion.get(fileName);
+            const latestVersion = this.project.getScriptVersion(fileName);
+            return lastVersion !== latestVersion;
+        }
+        resolve(file, basePath) {
+            const loader = new AdapterResourceLoader(this, this.project.getCompilationSettings());
+            return loader.resolve(file, basePath);
         }
     }
 
@@ -37482,7 +38104,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getQuickInfoForElementSymbol(symbol) {
             const { templateNode } = symbol;
-            const matches = getDirectiveMatches(symbol.directives, templateNode.name);
+            const matches = getDirectiveMatchesForElementTag(templateNode, symbol.directives);
             if (matches.size > 0) {
                 return this.getQuickInfoForDirectiveSymbol(matches.values().next().value, templateNode);
             }
@@ -37513,7 +38135,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         getQuickInfoForDirectiveSymbol(dir, node) {
             const kind = dir.isComponent ? QuickInfoKind.COMPONENT : QuickInfoKind.DIRECTIVE;
             const documentation = this.getDocumentationFromTypeDefAtLocation(dir.shimLocation);
-            return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(node), undefined /* containerName */, undefined, documentation);
+            let containerName;
+            if (ts.isClassDeclaration(dir.tsSymbol.valueDeclaration) && dir.ngModule !== null) {
+                containerName = dir.ngModule.name.getText();
+            }
+            return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(node), containerName, undefined, documentation);
         }
         getDocumentationFromTypeDefAtLocation(shimLocation) {
             var _a;
@@ -37589,41 +38215,53 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     class LanguageService {
         constructor(project, tsLS) {
             this.tsLS = tsLS;
-            this.lastKnownProgram = null;
             this.options = parseNgCompilerOptions(project);
             this.strategy = createTypeCheckingProgramStrategy(project);
-            this.adapter = createNgCompilerAdapter(project);
+            this.adapter = new LanguageServiceAdapter(project);
+            this.compilerFactory = new CompilerFactory(this.adapter, this.strategy);
             this.watchConfigFile(project);
         }
         getSemanticDiagnostics(fileName) {
-            const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program);
-            if (fileName.endsWith('.ts')) {
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const ttc = compiler.getTemplateTypeChecker();
+            const diagnostics = [];
+            if (isTypeScriptFile(fileName)) {
+                const program = compiler.getNextProgram();
                 const sourceFile = program.getSourceFile(fileName);
-                if (!sourceFile) {
-                    return [];
+                if (sourceFile) {
+                    diagnostics.push(...ttc.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile));
                 }
-                const ttc = compiler.getTemplateTypeChecker();
-                const diagnostics = ttc.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile);
-                this.lastKnownProgram = compiler.getNextProgram();
-                return diagnostics;
             }
-            throw new Error('Ivy LS currently does not support external template');
+            else {
+                const components = compiler.getComponentsWithTemplateFile(fileName);
+                for (const component of components) {
+                    if (ts$1.isClassDeclaration(component)) {
+                        diagnostics.push(...ttc.getDiagnosticsForComponent(component));
+                    }
+                }
+            }
+            this.compilerFactory.registerLastKnownProgram();
+            return diagnostics;
         }
         getDefinitionAndBoundSpan(fileName, position) {
-            const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program);
-            return new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const results = new DefinitionBuilder(this.tsLS, compiler, this.adapter)
+                .getDefinitionAndBoundSpan(fileName, position);
+            this.compilerFactory.registerLastKnownProgram();
+            return results;
+        }
+        getTypeDefinitionAtPosition(fileName, position) {
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const results = new DefinitionBuilder(this.tsLS, compiler, this.adapter)
+                .getTypeDefinitionsAtPosition(fileName, position);
+            this.compilerFactory.registerLastKnownProgram();
+            return results;
         }
         getQuickInfoAtPosition(fileName, position) {
-            const program = this.strategy.getProgram();
-            const compiler = this.createCompiler(program);
-            return new QuickInfoBuilder(this.tsLS, compiler).get(fileName, position);
-        }
-        createCompiler(program) {
-            return new NgCompiler(this.adapter, this.options, program, this.strategy, new PatchedProgramIncrementalBuildStrategy(), 
-            /** enableTemplateTypeChecker */ true, this.lastKnownProgram, 
-            /** perfRecorder (use default) */ undefined);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const results = new QuickInfoBuilder(this.tsLS, compiler).get(fileName, position);
+            this.compilerFactory.registerLastKnownProgram();
+            return results;
         }
         watchConfigFile(project) {
             // TODO: Check the case when the project is disposed. An InferredProject
@@ -37654,30 +38292,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         const basePath = project.getCurrentDirectory();
         return createNgCompilerOptions(basePath, config, project.getCompilationSettings());
-    }
-    function createNgCompilerAdapter(project) {
-        var _a;
-        return {
-            entryPoint: null,
-            constructionDiagnostics: [],
-            ignoreForEmit: new Set(),
-            factoryTracker: null,
-            unifiedModulesHost: null,
-            rootDirs: ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [],
-            isShim,
-            fileExists(fileName) {
-                return project.fileExists(fileName);
-            },
-            readFile(fileName) {
-                return project.readFile(fileName);
-            },
-            getCurrentDirectory() {
-                return project.getCurrentDirectory();
-            },
-            getCanonicalFileName(fileName) {
-                return project.projectService.toCanonicalFileName(fileName);
-            },
-        };
     }
     function createTypeCheckingProgramStrategy(project) {
         return {
@@ -37744,9 +38358,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             diagnostics.push(...ngLS.getSemanticDiagnostics(fileName));
             return diagnostics;
         }
-        function getTypeDefinitionAtPosition(fileName, position) {
-            return undefined;
-        }
         function getQuickInfoAtPosition(fileName, position) {
             var _a;
             if (angularOnly) {
@@ -37755,6 +38366,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             else {
                 // If TS could answer the query, then return that result. Otherwise, return from Angular LS.
                 return (_a = tsLS.getQuickInfoAtPosition(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getQuickInfoAtPosition(fileName, position);
+            }
+        }
+        function getTypeDefinitionAtPosition(fileName, position) {
+            var _a;
+            if (angularOnly) {
+                return ngLS.getTypeDefinitionAtPosition(fileName, position);
+            }
+            else {
+                // If TS could answer the query, then return that result. Otherwise, return from Angular LS.
+                return (_a = tsLS.getTypeDefinitionAtPosition(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getTypeDefinitionAtPosition(fileName, position);
             }
         }
         function getDefinitionAndBoundSpan(fileName, position) {

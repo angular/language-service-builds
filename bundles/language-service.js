@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.5+2.sha-a8c0972
+ * @license Angular v11.0.0-next.6+52.sha-0f1a18e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -27,7 +27,171 @@ module.exports = function(provided) {
   return results;
 };
 
-define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], function (exports, tss, ts, path) { 'use strict';
+define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], function (exports, path, tss, ts) { 'use strict';
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Return the node that most tightly encompass the specified `position`.
+     * @param node
+     * @param position
+     */
+    function findTightestNode(node, position) {
+        if (node.getStart() <= position && position < node.getEnd()) {
+            return node.forEachChild(c => findTightestNode(c, position)) || node;
+        }
+    }
+    /**
+     * Returns a property assignment from the assignment value if the property name
+     * matches the specified `key`, or `undefined` if there is no match.
+     */
+    function getPropertyAssignmentFromValue(value, key) {
+        const propAssignment = value.parent;
+        if (!propAssignment || !ts.isPropertyAssignment(propAssignment) ||
+            propAssignment.name.getText() !== key) {
+            return;
+        }
+        return propAssignment;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgnNode property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        const objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        const callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        const decorator = callExprNode.parent;
+        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        const classDeclNode = decorator.parent;
+        return classDeclNode;
+    }
+    /**
+     * Given the node which is the string of the inline template for a component, returns the
+     * `ts.ClassDeclaration` for the component.
+     */
+    function getClassDeclOfInlineTemplateNode(templateStringNode) {
+        if (!ts.isStringLiteralLike(templateStringNode)) {
+            return;
+        }
+        const tmplAsgn = getPropertyAssignmentFromValue(templateStringNode, 'template');
+        if (!tmplAsgn) {
+            return;
+        }
+        return getClassDeclFromDecoratorProp(tmplAsgn);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Gets an Angular-specific definition in a TypeScript source file.
+     */
+    function getTsDefinitionAndBoundSpan(sf, position, resourceResolver) {
+        const node = findTightestNode(sf, position);
+        if (!node)
+            return;
+        switch (node.kind) {
+            case ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+                // Attempt to extract definition of a URL in a property assignment.
+                return getUrlFromProperty(node, resourceResolver);
+            default:
+                return undefined;
+        }
+    }
+    /**
+     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
+     * directive decorator.
+     * Currently applies to `templateUrl` and `styleUrls` properties.
+     */
+    function getUrlFromProperty(urlNode, resourceResolver) {
+        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
+        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
+        // an array of strings:
+        //   {
+        //        templateUrl: './template.ng.html',
+        //        styleUrls: ['./style.css', './other-style.css']
+        //   }
+        // `templateUrl`'s property assignment can be found from the string literal node;
+        // `styleUrls`'s property assignment can be found from the array (parent) node.
+        //
+        // First search for `templateUrl`.
+        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
+        if (!asgn) {
+            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
+            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
+            if (!asgn) {
+                // Nothing found, bail.
+                return;
+            }
+        }
+        // If the property assignment is not a property of a class decorator, don't generate definitions
+        // for it.
+        if (!getClassDeclFromDecoratorProp(asgn)) {
+            return;
+        }
+        const sf = urlNode.getSourceFile();
+        let url;
+        try {
+            url = resourceResolver.resolve(urlNode.text, sf.fileName);
+        }
+        catch (_a) {
+            // If the file does not exist, bail.
+            return;
+        }
+        const templateDefinitions = [{
+                kind: ts.ScriptElementKind.externalModuleName,
+                name: url,
+                containerKind: ts.ScriptElementKind.unknown,
+                containerName: '',
+                // Reading the template is expensive, so don't provide a preview.
+                // TODO(ayazhafiz): Consider providing an actual span:
+                //  1. We're likely to read the template anyway
+                //  2. We could show just the first 100 chars or so
+                textSpan: { start: 0, length: 0 },
+                fileName: url,
+            }];
+        return {
+            definitions: templateDefinitions,
+            textSpan: {
+                // Exclude opening and closing quotes in the url span.
+                start: urlNode.getStart() + 1,
+                length: urlNode.getWidth() - 2,
+            },
+        };
+    }
 
     /**
      * @license
@@ -819,7 +983,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ViewEncapsulation;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
         ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation || (ViewEncapsulation = {}));
@@ -3066,6 +3230,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE$1 };
     Identifiers$1.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
+    Identifiers$1.trustConstantHtml = { name: 'ɵɵtrustConstantHtml', moduleName: CORE$1 };
+    Identifiers$1.trustConstantScript = { name: 'ɵɵtrustConstantScript', moduleName: CORE$1 };
+    Identifiers$1.trustConstantResourceUrl = { name: 'ɵɵtrustConstantResourceUrl', moduleName: CORE$1 };
 
     /**
      * @license
@@ -3304,7 +3471,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     class Message {
         /**
          * @param nodes message AST
-         * @param placeholders maps placeholder names to static content
+         * @param placeholders maps placeholder names to static content and their source spans
          * @param placeholderToMessage maps placeholder names to messages (used for nested ICU messages)
          * @param meaning
          * @param description
@@ -5368,6 +5535,92 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * The Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported, or undefined if the policy has not been created yet.
+     */
+    let policy;
+    /**
+     * Returns the Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported. The first call to this function will create the policy.
+     */
+    function getPolicy() {
+        if (policy === undefined) {
+            policy = null;
+            if (_global.trustedTypes) {
+                try {
+                    policy =
+                        _global.trustedTypes.createPolicy('angular#unsafe-jit', {
+                            createScript: (s) => s,
+                        });
+                }
+                catch (_a) {
+                    // trustedTypes.createPolicy throws if called with a name that is
+                    // already registered, even in report-only mode. Until the API changes,
+                    // catch the error not to break the applications functionally. In such
+                    // cases, the code will fall back to using strings.
+                }
+            }
+        }
+        return policy;
+    }
+    /**
+     * Unsafely promote a string to a TrustedScript, falling back to strings when
+     * Trusted Types are not available.
+     * @security In particular, it must be assured that the provided string will
+     * never cause an XSS vulnerability if used in a context that will be
+     * interpreted and executed as a script by a browser, e.g. when calling eval.
+     */
+    function trustedScriptFromString(script) {
+        var _a;
+        return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
+    }
+    /**
+     * Unsafely call the Function constructor with the given string arguments. It
+     * is only available in development mode, and should be stripped out of
+     * production code.
+     * @security This is a security-sensitive function; any use of this function
+     * must go through security review. In particular, it must be assured that it
+     * is only called from the JIT compiler, as use in other code can lead to XSS
+     * vulnerabilities.
+     */
+    function newTrustedFunctionForJIT(...args) {
+        if (!_global.trustedTypes) {
+            // In environments that don't support Trusted Types, fall back to the most
+            // straightforward implementation:
+            return new Function(...args);
+        }
+        // Chrome currently does not support passing TrustedScript to the Function
+        // constructor. The following implements the workaround proposed on the page
+        // below, where the Chromium bug is also referenced:
+        // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
+        const fnArgs = args.slice(0, -1).join(',');
+        const fnBody = args.pop().toString();
+        const body = `(function anonymous(${fnArgs}
+) { ${fnBody}
+})`;
+        // Using eval directly confuses the compiler and prevents this module from
+        // being stripped out of JS binaries even if not used. The global['eval']
+        // indirection fixes that.
+        const fn = _global['eval'](trustedScriptFromString(body));
+        // To completely mimic the behavior of calling "new Function", two more
+        // things need to happen:
+        // 1. Stringifying the resulting function should return its source code
+        fn.toString = () => body;
+        // 2. When calling the resulting function, `this` should refer to `global`
+        return fn.bind(_global);
+        // When Trusted Types support in Function constructors is widely available,
+        // the implementation of this function can be simplified to:
+        // return new Function(...args.map(a => trustedScriptFromString(a)));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * A helper class to manage the evaluation of JIT generated code.
      */
     class JitEvaluator {
@@ -5418,11 +5671,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // function anonymous(a,b,c
                 // /**/) { ... }```
                 // We don't want to hard code this fact, so we auto detect it via an empty function first.
-                const emptyFn = new Function(...fnArgNames.concat('return null;')).toString();
+                const emptyFn = newTrustedFunctionForJIT(...fnArgNames.concat('return null;')).toString();
                 const headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
                 fnBody += `\n${ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment()}`;
             }
-            const fn = new Function(...fnArgNames.concat(fnBody));
+            const fn = newTrustedFunctionForJIT(...fnArgNames.concat(fnBody));
             return this.executeFunction(fn, fnArgValues);
         }
         /**
@@ -8012,11 +8265,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function extractCommentsWithHash(input) {
         return input.match(_commentWithHashRe) || [];
     }
-    const _ruleRe = /(\s*)([^;\{\}]+?)(\s*)((?:{%BLOCK%}?\s*;?)|(?:\s*;))/g;
-    const _curlyRe = /([{}])/g;
-    const OPEN_CURLY = '{';
-    const CLOSE_CURLY = '}';
     const BLOCK_PLACEHOLDER = '%BLOCK%';
+    const QUOTE_PLACEHOLDER = '%QUOTED%';
+    const _ruleRe = /(\s*)([^;\{\}]+?)(\s*)((?:{%BLOCK%}?\s*;?)|(?:\s*;))/g;
+    const _quotedRe = /%QUOTED%/g;
+    const CONTENT_PAIRS = new Map([['{', '}']]);
+    const QUOTE_PAIRS = new Map([[`"`, `"`], [`'`, `'`]]);
     class CssRule {
         constructor(selector, content) {
             this.selector = selector;
@@ -8024,9 +8278,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function processRules(input, ruleCallback) {
-        const inputWithEscapedBlocks = escapeBlocks(input);
+        const inputWithEscapedQuotes = escapeBlocks(input, QUOTE_PAIRS, QUOTE_PLACEHOLDER);
+        const inputWithEscapedBlocks = escapeBlocks(inputWithEscapedQuotes.escapedString, CONTENT_PAIRS, BLOCK_PLACEHOLDER);
         let nextBlockIndex = 0;
-        return inputWithEscapedBlocks.escapedString.replace(_ruleRe, function (...m) {
+        let nextQuoteIndex = 0;
+        return inputWithEscapedBlocks.escapedString
+            .replace(_ruleRe, (...m) => {
             const selector = m[2];
             let content = '';
             let suffix = m[4];
@@ -8038,7 +8295,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             const rule = ruleCallback(new CssRule(selector, content));
             return `${m[1]}${rule.selector}${m[3]}${contentPrefix}${rule.content}${suffix}`;
-        });
+        })
+            .replace(_quotedRe, () => inputWithEscapedQuotes.blocks[nextQuoteIndex++]);
     }
     class StringWithEscapedBlocks {
         constructor(escapedString, blocks) {
@@ -8046,35 +8304,46 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.blocks = blocks;
         }
     }
-    function escapeBlocks(input) {
-        const inputParts = input.split(_curlyRe);
+    function escapeBlocks(input, charPairs, placeholder) {
         const resultParts = [];
         const escapedBlocks = [];
-        let bracketCount = 0;
-        let currentBlockParts = [];
-        for (let partIndex = 0; partIndex < inputParts.length; partIndex++) {
-            const part = inputParts[partIndex];
-            if (part == CLOSE_CURLY) {
-                bracketCount--;
+        let openCharCount = 0;
+        let nonBlockStartIndex = 0;
+        let blockStartIndex = -1;
+        let openChar;
+        let closeChar;
+        for (let i = 0; i < input.length; i++) {
+            const char = input[i];
+            if (char === '\\') {
+                i++;
             }
-            if (bracketCount > 0) {
-                currentBlockParts.push(part);
-            }
-            else {
-                if (currentBlockParts.length > 0) {
-                    escapedBlocks.push(currentBlockParts.join(''));
-                    resultParts.push(BLOCK_PLACEHOLDER);
-                    currentBlockParts = [];
+            else if (char === closeChar) {
+                openCharCount--;
+                if (openCharCount === 0) {
+                    escapedBlocks.push(input.substring(blockStartIndex, i));
+                    resultParts.push(placeholder);
+                    nonBlockStartIndex = i;
+                    blockStartIndex = -1;
+                    openChar = closeChar = undefined;
                 }
-                resultParts.push(part);
             }
-            if (part == OPEN_CURLY) {
-                bracketCount++;
+            else if (char === openChar) {
+                openCharCount++;
+            }
+            else if (openCharCount === 0 && charPairs.has(char)) {
+                openChar = char;
+                closeChar = charPairs.get(char);
+                openCharCount = 1;
+                blockStartIndex = i + 1;
+                resultParts.push(input.substring(nonBlockStartIndex, blockStartIndex));
             }
         }
-        if (currentBlockParts.length > 0) {
-            escapedBlocks.push(currentBlockParts.join(''));
-            resultParts.push(BLOCK_PLACEHOLDER);
+        if (blockStartIndex !== -1) {
+            escapedBlocks.push(input.substring(blockStartIndex));
+            resultParts.push(placeholder);
+        }
+        else {
+            resultParts.push(input.substring(nonBlockStartIndex));
         }
         return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
     }
@@ -10535,6 +10804,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, sourceSpan) {
+            const sourceInfo = sourceSpan.start.toString();
+            try {
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, sourceSpan.start.offset);
+                if (ast)
+                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
+                this._checkPipes(ast, sourceSpan);
+                return ast;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+            }
+        }
+        /**
          * Parses the bindings in a microsyntax expression, and converts them to
          * `ParsedProperty` or `ParsedVariable`.
          *
@@ -12794,8 +13082,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     .parseChain();
                 expressions.push(ast);
             }
-            const span = new ParseSpan(0, input == null ? 0 : input.length);
-            return new ASTWithSource(new Interpolation(span, span.toAbsolute(absoluteOffset), split.strings, expressions), input, location, absoluteOffset, this.errors);
+            return this.createInterpolationAst(split.strings, expressions, input, location, absoluteOffset);
+        }
+        /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, location, absoluteOffset) {
+            const sourceToLex = this._stripComments(expression);
+            const tokens = this._lexer.tokenize(sourceToLex);
+            const ast = new _ParseAST(expression, location, absoluteOffset, tokens, sourceToLex.length, 
+            /* parseAction */ false, this.errors, 0)
+                .parseChain();
+            const strings = ['', '']; // The prefix and suffix strings are both empty
+            return this.createInterpolationAst(strings, [ast], expression, location, absoluteOffset);
+        }
+        createInterpolationAst(strings, expressions, input, location, absoluteOffset) {
+            const span = new ParseSpan(0, input.length);
+            const interpolation = new Interpolation(span, span.toAbsolute(absoluteOffset), strings, expressions);
+            return new ASTWithSource(interpolation, input, location, absoluteOffset, this.errors);
         }
         /**
          * Splits a string of text into "raw" text segments and expressions present in interpolations in
@@ -14406,21 +14712,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             Object.keys(message.placeholders).forEach(key => {
                 const value = message.placeholders[key];
                 if (key.startsWith(I18N_ICU_VAR_PREFIX)) {
-                    const config = this.bindingParser.interpolationConfig;
-                    // ICU expression is a plain string, not wrapped into start
-                    // and end tags, so we wrap it before passing to binding parser
-                    const wrapped = `${config.start}${value}${config.end}`;
                     // Currently when the `plural` or `select` keywords in an ICU contain trailing spaces (e.g.
                     // `{count, select , ...}`), these spaces are also included into the key names in ICU vars
                     // (e.g. "VAR_SELECT "). These trailing spaces are not desirable, since they will later be
                     // converted into `_` symbols while normalizing placeholder names, which might lead to
                     // mismatches at runtime (i.e. placeholder will not be replaced with the correct value).
                     const formattedKey = key.trim();
-                    vars[formattedKey] =
-                        this._visitTextWithInterpolation(wrapped, expansion.sourceSpan);
+                    const ast = this.bindingParser.parseInterpolationExpression(value.text, value.sourceSpan);
+                    vars[formattedKey] = new BoundText(ast, value.sourceSpan);
                 }
                 else {
-                    placeholders[key] = this._visitTextWithInterpolation(value, expansion.sourceSpan);
+                    placeholders[key] = this._visitTextWithInterpolation(value.text, value.sourceSpan);
                 }
             });
             return new Icu(vars, placeholders, expansion.sourceSpan, message);
@@ -14992,6 +15294,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new Message(i18nodes, context.placeholderToContent, context.placeholderToMessage, meaning, description, customId);
         }
         visitElement(el, context) {
+            var _a;
             const children = visitAll$1(this, el.children, context);
             const attrs = {};
             el.attrs.forEach(attr => {
@@ -15000,11 +15303,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             const isVoid = getHtmlTagDefinition(el.name).isVoid;
             const startPhName = context.placeholderRegistry.getStartTagPlaceholderName(el.name, attrs, isVoid);
-            context.placeholderToContent[startPhName] = el.startSourceSpan.toString();
+            context.placeholderToContent[startPhName] = {
+                text: el.startSourceSpan.toString(),
+                sourceSpan: el.startSourceSpan,
+            };
             let closePhName = '';
             if (!isVoid) {
                 closePhName = context.placeholderRegistry.getCloseTagPlaceholderName(el.name);
-                context.placeholderToContent[closePhName] = `</${el.name}>`;
+                context.placeholderToContent[closePhName] = {
+                    text: `</${el.name}>`,
+                    sourceSpan: (_a = el.endSourceSpan) !== null && _a !== void 0 ? _a : el.sourceSpan,
+                };
             }
             const node = new TagPlaceholder(el.name, attrs, startPhName, closePhName, children, isVoid, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
             return context.visitNodeFn(el, node);
@@ -15034,7 +15343,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // - the ICU message is nested.
                 const expPh = context.placeholderRegistry.getUniquePlaceholder(`VAR_${icu.type}`);
                 i18nIcu.expressionPlaceholder = expPh;
-                context.placeholderToContent[expPh] = icu.switchValue;
+                context.placeholderToContent[expPh] = {
+                    text: icu.switchValue,
+                    sourceSpan: icu.switchValueSourceSpan,
+                };
                 return context.visitNodeFn(icu, i18nIcu);
             }
             // Else returns a placeholder
@@ -15070,7 +15382,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 const expressionSpan = getOffsetSourceSpan(sourceSpan, splitInterpolation.expressionsSpans[i]);
                 nodes.push(new Placeholder(expression, phName, expressionSpan));
-                context.placeholderToContent[phName] = sDelimiter + expression + eDelimiter;
+                context.placeholderToContent[phName] = {
+                    text: sDelimiter + expression + eDelimiter,
+                    sourceSpan: expressionSpan,
+                };
             }
             // The last index contains no expression
             const lastStringIdx = splitInterpolation.strings.length - 1;
@@ -15899,7 +16214,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const parameters = [literal(slot)];
             this._ngContentReservedSlots.push(ngContent.selector);
             const nonContentSelectAttributes = ngContent.attributes.filter(attr => attr.name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1);
-            const attributes = this.getAttributeExpressions(nonContentSelectAttributes, [], []);
+            const attributes = this.getAttributeExpressions(ngContent.name, nonContentSelectAttributes, [], []);
             if (attributes.length > 0) {
                 parameters.push(literal(projectionSlotIdx), literalArr(attributes));
             }
@@ -15958,7 +16273,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             // add attributes for directive and projection matching purposes
-            const attributes = this.getAttributeExpressions(outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
+            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
             parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             const refs = this.prepareRefsArray(element.references);
@@ -16157,7 +16472,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
             const [i18nStaticAttrs, staticAttrs] = partitionArray(template.attributes, hasI18nMeta);
-            const attrsExprs = this.getAttributeExpressions(staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
+            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -16476,7 +16791,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        getAttributeExpressions(renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
+        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
             const alreadySeen = new Set();
             const attrExprs = [];
             let ngProjectAsAttr;
@@ -16484,7 +16799,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
                     ngProjectAsAttr = attr;
                 }
-                attrExprs.push(...getAttributeNameLiterals(attr.name), asLiteral(attr.value));
+                attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
             });
             // Keep ngProjectAs next to the other name, value pairs so we can verify that we match
             // ngProjectAs marker in the attribute name slot.
@@ -17107,6 +17422,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return importExpr(Identifiers$1.sanitizeResourceUrl);
             default:
                 return null;
+        }
+    }
+    function trustedConstAttribute(tagName, attr) {
+        const value = asLiteral(attr.value);
+        switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
+            case SecurityContext.HTML:
+                return importExpr(Identifiers$1.trustConstantHtml).callFn([value], attr.valueSpan);
+            case SecurityContext.SCRIPT:
+                return importExpr(Identifiers$1.trustConstantScript).callFn([value], attr.valueSpan);
+            case SecurityContext.RESOURCE_URL:
+                return importExpr(Identifiers$1.trustConstantResourceUrl).callFn([value], attr.valueSpan);
+            default:
+                return value;
         }
     }
     function isSingleElementTemplate(children) {
@@ -18026,7 +18354,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.5+2.sha-a8c0972');
+    const VERSION$1 = new Version('11.0.0-next.6+52.sha-0f1a18e');
 
     /**
      * @license
@@ -25437,125 +25765,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Return the node that most tightly encompass the specified `position`.
-     * @param node
-     * @param position
-     */
-    function findTightestNode(node, position) {
-        if (node.getStart() <= position && position < node.getEnd()) {
-            return node.forEachChild(c => findTightestNode(c, position)) || node;
-        }
-    }
-    /**
-     * Returns a property assignment from the assignment value if the property name
-     * matches the specified `key`, or `undefined` if there is no match.
-     */
-    function getPropertyAssignmentFromValue(value, key) {
-        const propAssignment = value.parent;
-        if (!propAssignment || !tss.isPropertyAssignment(propAssignment) ||
-            propAssignment.name.getText() !== key) {
-            return;
-        }
-        return propAssignment;
-    }
-    /**
-     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
-     * directive class the property applies to.
-     * If the property assignment is not on a class decorator, no declaration is returned.
-     *
-     * For example,
-     *
-     * @Component({
-     *   template: '<div></div>'
-     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
-     * })
-     * class AppComponent {}
-     *           ^---- class declaration node
-     *
-     * @param propAsgn property assignment
-     */
-    function getClassDeclFromDecoratorProp(propAsgnNode) {
-        if (!propAsgnNode.parent || !tss.isObjectLiteralExpression(propAsgnNode.parent)) {
-            return;
-        }
-        const objLitExprNode = propAsgnNode.parent;
-        if (!objLitExprNode.parent || !tss.isCallExpression(objLitExprNode.parent)) {
-            return;
-        }
-        const callExprNode = objLitExprNode.parent;
-        if (!callExprNode.parent || !tss.isDecorator(callExprNode.parent)) {
-            return;
-        }
-        const decorator = callExprNode.parent;
-        if (!decorator.parent || !tss.isClassDeclaration(decorator.parent)) {
-            return;
-        }
-        const classDeclNode = decorator.parent;
-        return classDeclNode;
-    }
-    /**
-     * Return metadata about `node` if it looks like an Angular directive class.
-     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
-     * `@Pipe`, etc.
-     * These class declarations all share some common attributes, namely their
-     * decorator takes exactly one parameter and the parameter must be an object
-     * literal.
-     *
-     * For example,
-     *     v---------- `decoratorId`
-     * @NgModule({           <
-     *   declarations: [],   < classDecl
-     * })                    <
-     * class AppModule {}    <
-     *          ^----- `classId`
-     *
-     * @param node Potential node that represents an Angular directive.
-     */
-    function getDirectiveClassLike(node) {
-        if (!tss.isClassDeclaration(node) || !node.name || !node.decorators) {
-            return;
-        }
-        for (const d of node.decorators) {
-            const expr = d.expression;
-            if (!tss.isCallExpression(expr) || expr.arguments.length !== 1 ||
-                !tss.isIdentifier(expr.expression)) {
-                continue;
-            }
-            const arg = expr.arguments[0];
-            if (tss.isObjectLiteralExpression(arg)) {
-                return {
-                    decoratorId: expr.expression,
-                    classId: node.name,
-                };
-            }
-        }
-    }
-    /**
-     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
-     * type T.
-     *
-     * @param startNode node to start searching for nested property assignment from
-     * @param propName property assignment name
-     * @param predicate function to verify that a node is of type T.
-     * @return node property assignment value of type T, or undefined if none is found
-     */
-    function findPropertyValueOfType(startNode, propName, predicate) {
-        if (tss.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
-            const { initializer } = startNode;
-            if (predicate(initializer))
-                return initializer;
-        }
-        return startNode.forEachChild(c => findPropertyValueOfType(c, propName, predicate));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Convert Angular Span to TypeScript TextSpan. Angular Span has 'start' and
      * 'end' whereas TS TextSpan has 'start' and 'length'.
      * @param span Angular Span
@@ -25616,78 +25825,67 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             textSpan: symbols[0].span,
         };
     }
+
     /**
-     * Gets an Angular-specific definition in a TypeScript source file.
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
      */
-    function getTsDefinitionAndBoundSpan(sf, position, tsLsHost) {
-        const node = findTightestNode(sf, position);
-        if (!node)
+    /**
+     * Return metadata about `node` if it looks like an Angular directive class.
+     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
+     * `@Pipe`, etc.
+     * These class declarations all share some common attributes, namely their
+     * decorator takes exactly one parameter and the parameter must be an object
+     * literal.
+     *
+     * For example,
+     *     v---------- `decoratorId`
+     * @NgModule({           <
+     *   declarations: [],   < classDecln-al
+     * })                    <
+     * class AppModule {}    <
+     *          ^----- `classId`
+     *
+     * @param node Potential node that represents an Angular directive.
+     */
+    function getDirectiveClassLike(node) {
+        if (!tss.isClassDeclaration(node) || !node.name || !node.decorators) {
             return;
-        switch (node.kind) {
-            case ts.SyntaxKind.StringLiteral:
-            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
-                // Attempt to extract definition of a URL in a property assignment.
-                return getUrlFromProperty(node, tsLsHost);
-            default:
-                return undefined;
+        }
+        for (const d of node.decorators) {
+            const expr = d.expression;
+            if (!tss.isCallExpression(expr) || expr.arguments.length !== 1 ||
+                !tss.isIdentifier(expr.expression)) {
+                continue;
+            }
+            const arg = expr.arguments[0];
+            if (tss.isObjectLiteralExpression(arg)) {
+                return {
+                    decoratorId: expr.expression,
+                    classId: node.name,
+                };
+            }
         }
     }
     /**
-     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
-     * directive decorator.
-     * Currently applies to `templateUrl` and `styleUrls` properties.
+     * Finds the value of a property assignment that is nested in a TypeScript node and is of a certain
+     * type T.
+     *
+     * @param startNode node to start searching for nested property assignment from
+     * @param propName property assignment name
+     * @param predicate function to verify that a node is of type T.
+     * @return node property assignment value of type T, or undefined if none is found
      */
-    function getUrlFromProperty(urlNode, tsLsHost) {
-        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
-        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
-        // an array of strings:
-        //   {
-        //        templateUrl: './template.ng.html',
-        //        styleUrls: ['./style.css', './other-style.css']
-        //   }
-        // `templateUrl`'s property assignment can be found from the string literal node;
-        // `styleUrls`'s property assignment can be found from the array (parent) node.
-        //
-        // First search for `templateUrl`.
-        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
-        if (!asgn) {
-            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
-            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
-            if (!asgn) {
-                // Nothing found, bail.
-                return;
-            }
+    function findPropertyValueOfType(startNode, propName, predicate) {
+        if (tss.isPropertyAssignment(startNode) && startNode.name.getText() === propName) {
+            const { initializer } = startNode;
+            if (predicate(initializer))
+                return initializer;
         }
-        // If the property assignment is not a property of a class decorator, don't generate definitions
-        // for it.
-        if (!getClassDeclFromDecoratorProp(asgn)) {
-            return;
-        }
-        const sf = urlNode.getSourceFile();
-        // Extract url path specified by the url node, which is relative to the TypeScript source file
-        // the url node is defined in.
-        const url = path.join(path.dirname(sf.fileName), urlNode.text);
-        // If the file does not exist, bail. It is possible that the TypeScript language service host
-        // does not have a `fileExists` method, in which case optimistically assume the file exists.
-        if (tsLsHost.fileExists && !tsLsHost.fileExists(url))
-            return;
-        const templateDefinitions = [{
-                kind: ts.ScriptElementKind.externalModuleName,
-                name: url,
-                containerKind: ts.ScriptElementKind.unknown,
-                containerName: '',
-                // Reading the template is expensive, so don't provide a preview.
-                textSpan: { start: 0, length: 0 },
-                fileName: url,
-            }];
-        return {
-            definitions: templateDefinitions,
-            textSpan: {
-                // Exclude opening and closing quotes in the url span.
-                start: urlNode.getStart() + 1,
-                length: urlNode.getWidth() - 2,
-            },
-        };
+        return startNode.forEachChild(c => findPropertyValueOfType(c, propName, predicate));
     }
 
     /**
@@ -26027,7 +26225,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (fileName.endsWith('.ts')) {
                 const sf = this.host.getSourceFile(fileName);
                 if (sf) {
-                    return getTsDefinitionAndBoundSpan(sf, position, this.host.tsLsHost);
+                    return getTsDefinitionAndBoundSpan(sf, position, new ViewEngineLSResourceResolver(this.host.tsLsHost));
                 }
             }
         }
@@ -26053,6 +26251,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return;
             }
             return this.host.tsLS.getReferencesAtPosition(tsDef.fileName, tsDef.textSpan.start);
+        }
+    }
+    class ViewEngineLSResourceResolver {
+        constructor(host) {
+            this.host = host;
+        }
+        resolve(file, basePath) {
+            // Extract url path specified by the url node, which is relative to the TypeScript source file
+            // the url node is defined in.
+            const url = path.join(path.dirname(basePath), file);
+            // If the file does not exist, bail. It is possible that the TypeScript language service host
+            // does not have a `fileExists` method, in which case optimistically assume the file exists.
+            if (this.host.fileExists && !this.host.fileExists(url)) {
+                throw new Error(`ResourceResolver: could not resolve ${url} in context of ${basePath})`);
+            }
+            return url;
         }
     }
 
@@ -26360,32 +26574,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param type A type which may have its own (non-inherited) `ɵprov`.
      */
     function getInjectableDef(type) {
-        return getOwnDefinition(type, type[NG_PROV_DEF]) ||
-            getOwnDefinition(type, type[NG_INJECTABLE_DEF]);
+        return getOwnDefinition(type, NG_PROV_DEF) || getOwnDefinition(type, NG_INJECTABLE_DEF);
     }
     /**
-     * Return `def` only if it is defined directly on `type` and is not inherited from a base
+     * Return definition only if it is defined directly on `type` and is not inherited from a base
      * class of `type`.
-     *
-     * The function `Object.hasOwnProperty` is not sufficient to distinguish this case because in older
-     * browsers (e.g. IE10) static property inheritance is implemented by copying the properties.
-     *
-     * Instead, the definition's `token` is compared to the `type`, and if they don't match then the
-     * property was not defined directly on the type itself, and was likely inherited. The definition
-     * is only returned if the `type` matches the `def.token`.
      */
-    function getOwnDefinition(type, def) {
-        return def && def.token === type ? def : null;
+    function getOwnDefinition(type, field) {
+        return type.hasOwnProperty(field) ? type[field] : null;
     }
     const NG_PROV_DEF = getClosureSafeProperty({ ɵprov: getClosureSafeProperty });
     const NG_INJ_DEF = getClosureSafeProperty({ ɵinj: getClosureSafeProperty });
-    // On IE10 properties defined via `defineProperty` won't be inherited by child classes,
-    // which will break inheriting the injectable definition from a grandparent through an
-    // undecorated parent class. We work around it by defining a fallback method which will be
-    // used to retrieve the definition. This should only be a problem in JIT mode, because in
-    // AOT TypeScript seems to have a workaround for static properties. When inheriting from an
-    // undecorated parent is no longer supported in v10, this can safely be removed.
-    const NG_PROV_DEF_FALLBACK = getClosureSafeProperty({ ɵprovFallback: getClosureSafeProperty });
     // We need to keep these around so we can read off old defs if new defs are unavailable
     const NG_INJECTABLE_DEF = getClosureSafeProperty({ ngInjectableDef: getClosureSafeProperty });
     const NG_INJECTOR_DEF = getClosureSafeProperty({ ngInjectorDef: getClosureSafeProperty });
@@ -26525,7 +26724,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var ViewEncapsulation$1;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
         ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
@@ -26620,7 +26819,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (typeof ngDevMode !== 'object') {
                 ngDevModeResetPerfCounters();
             }
-            return !!ngDevMode;
+            return typeof ngDevMode !== 'undefined' && !!ngDevMode;
         }
         return false;
     }
@@ -27056,15 +27255,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * This is the default option.
          */
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        /**
-         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
-         * Use the native encapsulation mechanism of the renderer.
-         *
-         * For the DOM this means using the deprecated [Shadow DOM
-         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
-         * creating a ShadowRoot for Component's Host Element.
-         */
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        // Historically the 1 value was for `Native` encapsulation which has been removed as of v11.
         /**
          * Don't provide any template or style encapsulation.
          */
@@ -27603,7 +27794,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const instructionState = {
         lFrame: createLFrame(null),
         bindingsEnabled: true,
-        checkNoChangesMode: false,
+        isInCheckNoChangesMode: false,
     };
     /**
      * Return the current `TView`.
@@ -27622,12 +27813,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function isCurrentTNodeParent() {
         return instructionState.lFrame.isParent;
     }
-    function getCheckNoChangesMode() {
+    function isInCheckNoChangesMode() {
         // TODO(misko): remove this from the LView since it is ngDevMode=true mode only.
-        return instructionState.checkNoChangesMode;
+        return instructionState.isInCheckNoChangesMode;
     }
-    function setCheckNoChangesMode(mode) {
-        instructionState.checkNoChangesMode = mode;
+    function setIsInCheckNoChangesMode(mode) {
+        instructionState.isInCheckNoChangesMode = mode;
     }
     function setBindingIndex(value) {
         return instructionState.lFrame.bindingIndex = value;
@@ -27963,7 +28154,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function callHooks(currentView, arr, initPhase, currentNodeIndex) {
         ngDevMode &&
-            assertEqual(getCheckNoChangesMode(), false, 'Hooks should never be run in the check no changes mode.');
+            assertEqual(isInCheckNoChangesMode(), false, 'Hooks should never be run when in check no changes mode.');
         const startIndex = currentNodeIndex !== undefined ?
             (currentView[PREORDER_HOOK_FLAGS] & 65535 /* IndexOfTheNextPreOrderHookMaskMask */) :
             0;
@@ -28979,6 +29170,96 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * The Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported, or undefined if the policy has not been created yet.
+     */
+    let policy$1;
+    /**
+     * Returns the Trusted Types policy, or null if Trusted Types are not
+     * enabled/supported. The first call to this function will create the policy.
+     */
+    function getPolicy$1() {
+        if (policy$1 === undefined) {
+            policy$1 = null;
+            if (_global$1.trustedTypes) {
+                try {
+                    policy$1 = _global$1.trustedTypes.createPolicy('angular', {
+                        createHTML: (s) => s,
+                        createScript: (s) => s,
+                        createScriptURL: (s) => s,
+                    });
+                }
+                catch (_a) {
+                    // trustedTypes.createPolicy throws if called with a name that is
+                    // already registered, even in report-only mode. Until the API changes,
+                    // catch the error not to break the applications functionally. In such
+                    // cases, the code will fall back to using strings.
+                }
+            }
+        }
+        return policy$1;
+    }
+    /**
+     * Unsafely promote a string to a TrustedScript, falling back to strings when
+     * Trusted Types are not available.
+     * @security In particular, it must be assured that the provided string will
+     * never cause an XSS vulnerability if used in a context that will be
+     * interpreted and executed as a script by a browser, e.g. when calling eval.
+     */
+    function trustedScriptFromString$1(script) {
+        var _a;
+        return ((_a = getPolicy$1()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
+    }
+    /**
+     * Unsafely call the Function constructor with the given string arguments. It
+     * is only available in development mode, and should be stripped out of
+     * production code.
+     * @security This is a security-sensitive function; any use of this function
+     * must go through security review. In particular, it must be assured that it
+     * is only called from development code, as use in production code can lead to
+     * XSS vulnerabilities.
+     */
+    function newTrustedFunctionForDev(...args) {
+        if (typeof ngDevMode === 'undefined') {
+            throw new Error('newTrustedFunctionForDev should never be called in production');
+        }
+        if (!_global$1.trustedTypes) {
+            // In environments that don't support Trusted Types, fall back to the most
+            // straightforward implementation:
+            return new Function(...args);
+        }
+        // Chrome currently does not support passing TrustedScript to the Function
+        // constructor. The following implements the workaround proposed on the page
+        // below, where the Chromium bug is also referenced:
+        // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
+        const fnArgs = args.slice(0, -1).join(',');
+        const fnBody = args.pop().toString();
+        const body = `(function anonymous(${fnArgs}
+) { ${fnBody}
+})`;
+        // Using eval directly confuses the compiler and prevents this module from
+        // being stripped out of JS binaries even if not used. The global['eval']
+        // indirection fixes that.
+        const fn = _global$1['eval'](trustedScriptFromString$1(body));
+        // To completely mimic the behavior of calling "new Function", two more
+        // things need to happen:
+        // 1. Stringifying the resulting function should return its source code
+        fn.toString = () => body;
+        // 2. When calling the resulting function, `this` should refer to `global`
+        return fn.bind(_global$1);
+        // When Trusted Types support in Function constructors is widely available,
+        // the implementation of this function can be simplified to:
+        // return new Function(...args.map(a => trustedScriptFromString(a)));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * This file is used to control if the default rendering pipeline should be `ViewEngine` or `Ivy`.
      *
      * For more information on how to run and debug tests with either Ivy or View Engine (legacy),
@@ -29120,9 +29401,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // This should never be called in prod mode, so let's verify that is the case.
         if (ngDevMode) {
             try {
-                // We need to do it this way so that TypeScript does not down-level the below code.
-                const FunctionConstructor = createNamedArrayType.constructor;
-                return (new FunctionConstructor('Array', `return class ${name} extends Array{}`))(Array);
+                // If this function were compromised the following could lead to arbitrary
+                // script execution. We bless it with Trusted Types anyway since this
+                // function is stripped out of production binaries.
+                return (newTrustedFunctionForDev('Array', `return class ${name} extends Array{}`))(Array);
             }
             catch (e) {
                 // If it does not work just give up and fall back to regular Array.
@@ -30267,7 +30549,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if ((flags & 256 /* Destroyed */) === 256 /* Destroyed */)
             return;
         enterView(lView);
-        const checkNoChangesMode = getCheckNoChangesMode();
+        // Check no changes mode is a dev only mode used to verify that bindings have not changed
+        // since they were assigned. We do not want to execute lifecycle hooks in that mode.
+        const isInCheckNoChangesPass = isInCheckNoChangesMode();
         try {
             resetPreOrderHookFlags(lView);
             setBindingIndex(tView.bindingStartIndex);
@@ -30277,7 +30561,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const hooksInitPhaseCompleted = (flags & 3 /* InitPhaseStateMask */) === 3 /* InitPhaseCompleted */;
             // execute pre-order hooks (OnInit, OnChanges, DoCheck)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const preOrderCheckHooks = tView.preOrderCheckHooks;
                     if (preOrderCheckHooks !== null) {
@@ -30303,7 +30587,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             // execute content hooks (AfterContentInit, AfterContentChecked)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const contentCheckHooks = tView.contentCheckHooks;
                     if (contentCheckHooks !== null) {
@@ -30333,7 +30617,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             // execute view hooks (AfterViewInit, AfterViewChecked)
             // PERF WARNING: do NOT extract this to a separate function without running benchmarks
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 if (hooksInitPhaseCompleted) {
                     const viewCheckHooks = tView.viewCheckHooks;
                     if (viewCheckHooks !== null) {
@@ -30363,7 +30647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // refresh a `NgClass` binding should work. If we would reset the dirty state in the check
             // no changes cycle, the component would be not be dirty for the next update pass. This would
             // be different in production mode where the component dirty state is not reset.
-            if (!checkNoChangesMode) {
+            if (!isInCheckNoChangesPass) {
                 lView[FLAGS] &= ~(64 /* Dirty */ | 8 /* FirstLViewPass */);
             }
             if (lView[FLAGS] & 1024 /* RefreshTransplantedView */) {
@@ -30377,7 +30661,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function renderComponentOrTemplate(tView, lView, templateFn, context) {
         const rendererFactory = lView[RENDERER_FACTORY];
-        const normalExecutionPath = !getCheckNoChangesMode();
+        const normalExecutionPath = !isInCheckNoChangesMode();
         const creationModeIsActive = isCreationMode(lView);
         try {
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.begin) {
@@ -30401,7 +30685,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
-                selectIndexInternal(tView, lView, 0, getCheckNoChangesMode());
+                selectIndexInternal(tView, lView, 0, isInCheckNoChangesMode());
             }
             templateFn(rf, context);
         }
@@ -31009,12 +31293,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         tickRootContext(lView[CONTEXT]);
     }
     function checkNoChangesInternal(tView, view, context) {
-        setCheckNoChangesMode(true);
+        setIsInCheckNoChangesMode(true);
         try {
             detectChangesInternal(tView, view, context);
         }
         finally {
-            setCheckNoChangesMode(false);
+            setIsInCheckNoChangesMode(false);
         }
     }
     /**
@@ -31027,12 +31311,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param lView The view which the change detection should be checked on.
      */
     function checkNoChangesInRootView(lView) {
-        setCheckNoChangesMode(true);
+        setIsInCheckNoChangesMode(true);
         try {
             detectChangesInRootView(lView);
         }
         finally {
-            setCheckNoChangesMode(false);
+            setIsInCheckNoChangesMode(false);
         }
     }
     function executeViewQueryFn(flags, viewQueryFn, component) {
@@ -33856,6 +34140,110 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
+     */
+    if (typeof ngI18nClosureMode === 'undefined') {
+        // These property accesses can be ignored because ngI18nClosureMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
+        // NOTE: we need to have it in IIFE so that the tree-shaker is happy.
+        (function () {
+            // tslint:disable-next-line:no-toplevel-property-access
+            _global$1['ngI18nClosureMode'] =
+                // TODO(FW-1250): validate that this actually, you know, works.
+                // tslint:disable-next-line:no-toplevel-property-access
+                typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
+        })();
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Index of each type of locale data from the locale data array
+     */
+    var LocaleDataIndex;
+    (function (LocaleDataIndex) {
+        LocaleDataIndex[LocaleDataIndex["LocaleId"] = 0] = "LocaleId";
+        LocaleDataIndex[LocaleDataIndex["DayPeriodsFormat"] = 1] = "DayPeriodsFormat";
+        LocaleDataIndex[LocaleDataIndex["DayPeriodsStandalone"] = 2] = "DayPeriodsStandalone";
+        LocaleDataIndex[LocaleDataIndex["DaysFormat"] = 3] = "DaysFormat";
+        LocaleDataIndex[LocaleDataIndex["DaysStandalone"] = 4] = "DaysStandalone";
+        LocaleDataIndex[LocaleDataIndex["MonthsFormat"] = 5] = "MonthsFormat";
+        LocaleDataIndex[LocaleDataIndex["MonthsStandalone"] = 6] = "MonthsStandalone";
+        LocaleDataIndex[LocaleDataIndex["Eras"] = 7] = "Eras";
+        LocaleDataIndex[LocaleDataIndex["FirstDayOfWeek"] = 8] = "FirstDayOfWeek";
+        LocaleDataIndex[LocaleDataIndex["WeekendRange"] = 9] = "WeekendRange";
+        LocaleDataIndex[LocaleDataIndex["DateFormat"] = 10] = "DateFormat";
+        LocaleDataIndex[LocaleDataIndex["TimeFormat"] = 11] = "TimeFormat";
+        LocaleDataIndex[LocaleDataIndex["DateTimeFormat"] = 12] = "DateTimeFormat";
+        LocaleDataIndex[LocaleDataIndex["NumberSymbols"] = 13] = "NumberSymbols";
+        LocaleDataIndex[LocaleDataIndex["NumberFormats"] = 14] = "NumberFormats";
+        LocaleDataIndex[LocaleDataIndex["CurrencyCode"] = 15] = "CurrencyCode";
+        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 16] = "CurrencySymbol";
+        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 17] = "CurrencyName";
+        LocaleDataIndex[LocaleDataIndex["Currencies"] = 18] = "Currencies";
+        LocaleDataIndex[LocaleDataIndex["Directionality"] = 19] = "Directionality";
+        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 20] = "PluralCase";
+        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 21] = "ExtraData";
+    })(LocaleDataIndex || (LocaleDataIndex = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The locale id that the application is using by default (for translations and ICU expressions).
+     */
+    const DEFAULT_LOCALE_ID = 'en-US';
+    /**
+     * USD currency code that the application uses by default for CurrencyPipe when no
+     * DEFAULT_CURRENCY_CODE is provided.
+     */
+    const USD_CURRENCY_CODE = 'USD';
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The locale id that the application is currently using (for translations and ICU expressions).
+     * This is the ivy version of `LOCALE_ID` that was defined as an injection token for the view engine
+     * but is now defined as a global value.
+     */
+    let LOCALE_ID = DEFAULT_LOCALE_ID;
+    /**
+     * Sets the locale id that will be used for translations and ICU expressions.
+     * This is the ivy version of `LOCALE_ID` that was defined as an injection token for the view engine
+     * but is now defined as a global value.
+     *
+     * @param localeId
+     */
+    function setLocaleId(localeId) {
+        assertDefined(localeId, `Expected localeId to be defined`);
+        if (typeof localeId === 'string') {
+            LOCALE_ID = localeId.toLowerCase().replace(/_/g, '-');
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Represents a component created by a `ComponentFactory`.
      * Provides access to the component instance and related objects,
      * and provides the means of destroying the instance.
@@ -34070,7 +34458,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.5+2.sha-a8c0972');
+    const VERSION$2 = new Version$1('11.0.0-next.6+52.sha-0f1a18e');
 
     /**
      * @license
@@ -35473,110 +35861,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.destroyCbs.push(callback);
             }
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Index of each type of locale data from the locale data array
-     */
-    var LocaleDataIndex;
-    (function (LocaleDataIndex) {
-        LocaleDataIndex[LocaleDataIndex["LocaleId"] = 0] = "LocaleId";
-        LocaleDataIndex[LocaleDataIndex["DayPeriodsFormat"] = 1] = "DayPeriodsFormat";
-        LocaleDataIndex[LocaleDataIndex["DayPeriodsStandalone"] = 2] = "DayPeriodsStandalone";
-        LocaleDataIndex[LocaleDataIndex["DaysFormat"] = 3] = "DaysFormat";
-        LocaleDataIndex[LocaleDataIndex["DaysStandalone"] = 4] = "DaysStandalone";
-        LocaleDataIndex[LocaleDataIndex["MonthsFormat"] = 5] = "MonthsFormat";
-        LocaleDataIndex[LocaleDataIndex["MonthsStandalone"] = 6] = "MonthsStandalone";
-        LocaleDataIndex[LocaleDataIndex["Eras"] = 7] = "Eras";
-        LocaleDataIndex[LocaleDataIndex["FirstDayOfWeek"] = 8] = "FirstDayOfWeek";
-        LocaleDataIndex[LocaleDataIndex["WeekendRange"] = 9] = "WeekendRange";
-        LocaleDataIndex[LocaleDataIndex["DateFormat"] = 10] = "DateFormat";
-        LocaleDataIndex[LocaleDataIndex["TimeFormat"] = 11] = "TimeFormat";
-        LocaleDataIndex[LocaleDataIndex["DateTimeFormat"] = 12] = "DateTimeFormat";
-        LocaleDataIndex[LocaleDataIndex["NumberSymbols"] = 13] = "NumberSymbols";
-        LocaleDataIndex[LocaleDataIndex["NumberFormats"] = 14] = "NumberFormats";
-        LocaleDataIndex[LocaleDataIndex["CurrencyCode"] = 15] = "CurrencyCode";
-        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 16] = "CurrencySymbol";
-        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 17] = "CurrencyName";
-        LocaleDataIndex[LocaleDataIndex["Currencies"] = 18] = "Currencies";
-        LocaleDataIndex[LocaleDataIndex["Directionality"] = 19] = "Directionality";
-        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 20] = "PluralCase";
-        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 21] = "ExtraData";
-    })(LocaleDataIndex || (LocaleDataIndex = {}));
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * The locale id that the application is using by default (for translations and ICU expressions).
-     */
-    const DEFAULT_LOCALE_ID = 'en-US';
-    /**
-     * USD currency code that the application uses by default for CurrencyPipe when no
-     * DEFAULT_CURRENCY_CODE is provided.
-     */
-    const USD_CURRENCY_CODE = 'USD';
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * The locale id that the application is currently using (for translations and ICU expressions).
-     * This is the ivy version of `LOCALE_ID` that was defined as an injection token for the view engine
-     * but is now defined as a global value.
-     */
-    let LOCALE_ID = DEFAULT_LOCALE_ID;
-    /**
-     * Sets the locale id that will be used for translations and ICU expressions.
-     * This is the ivy version of `LOCALE_ID` that was defined as an injection token for the view engine
-     * but is now defined as a global value.
-     *
-     * @param localeId
-     */
-    function setLocaleId(localeId) {
-        assertDefined(localeId, `Expected localeId to be defined`);
-        if (typeof localeId === 'string') {
-            LOCALE_ID = localeId.toLowerCase().replace(/_/g, '-');
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
-     */
-    if (typeof ngI18nClosureMode === 'undefined') {
-        // These property accesses can be ignored because ngI18nClosureMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
-        // NOTE: we need to have it in IIFE so that the tree-shaker is happy.
-        (function () {
-            // tslint:disable-next-line:no-toplevel-property-access
-            _global$1['ngI18nClosureMode'] =
-                // TODO(FW-1250): validate that this actually, you know, works.
-                // tslint:disable-next-line:no-toplevel-property-access
-                typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
-        })();
     }
 
     /*! *****************************************************************************
@@ -41160,11 +41444,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!tss.isStringLiteralLike(node)) {
                 return;
             }
-            const tmplAsgn = getPropertyAssignmentFromValue(node, 'template');
-            if (!tmplAsgn) {
-                return;
-            }
-            const classDecl = getClassDeclFromDecoratorProp(tmplAsgn);
+            const classDecl = getClassDeclOfInlineTemplateNode(node);
             if (!classDecl || !classDecl.name) { // Does not handle anonymous class
                 return;
             }
