@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-rc.0+1.sha-7f79e77
+ * @license Angular v11.0.0-rc.0+29.sha-6669571
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -14311,10 +14311,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return;
             this.error(`Missing expected operator ${operator}`);
         }
+        prettyPrintToken(tok) {
+            return tok === EOF ? 'end of input' : `token ${tok}`;
+        }
         expectIdentifierOrKeyword() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword()) {
-                this.error(`Unexpected token ${n}, expected identifier or keyword`);
+                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
                 return '';
             }
             this.advance();
@@ -14323,7 +14326,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         expectIdentifierOrKeywordOrString() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword() && !n.isString()) {
-                this.error(`Unexpected token ${n}, expected identifier, keyword, or string`);
+                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
                 return '';
             }
             this.advance();
@@ -19307,7 +19310,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-rc.0+1.sha-7f79e77');
+    const VERSION$1 = new Version('11.0.0-rc.0+29.sha-6669571');
 
     /**
      * @license
@@ -19942,7 +19945,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-rc.0+1.sha-7f79e77');
+    const VERSION$2 = new Version('11.0.0-rc.0+29.sha-6669571');
 
     /**
      * @license
@@ -20365,11 +20368,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     class LocalIdentifierStrategy {
         emit(ref, context, importFlags) {
+            const refSf = getSourceFile(ref.node);
             // If the emitter has specified ForceNewImport, then LocalIdentifierStrategy should not use a
             // local identifier at all, *except* in the source file where the node is actually declared.
-            if (importFlags & ImportFlags.ForceNewImport &&
-                getSourceFile(ref.node) !== getSourceFile(context)) {
+            if (importFlags & ImportFlags.ForceNewImport && refSf !== context) {
                 return null;
+            }
+            // If referenced node is not an actual TS declaration (e.g. `class Foo` or `function foo() {}`,
+            // etc) and it is in the current file then just use it directly.
+            // This is important because the reference could be a property access (e.g. `exports.foo`). In
+            // such a case, the reference's `identities` property would be `[foo]`, which would result in an
+            // invalid emission of a free-standing `foo` identifier, rather than `exports.foo`.
+            if (!isDeclaration(ref.node) && refSf === context) {
+                return new WrappedNodeExpr(ref.node);
             }
             // A Reference can have multiple identities in different files, so it may already have an
             // Identifier in the requested context file.
@@ -23273,10 +23284,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             });
         }
         visitAmbiguousDeclaration(decl, declContext) {
-            return decl.kind === 1 /* Inline */ && decl.implementation !== undefined ?
-                // Inline declarations with an `implementation` should be visited as expressions
+            return decl.kind === 1 /* Inline */ && decl.implementation !== undefined &&
+                !isDeclaration(decl.implementation) ?
+                // Inline declarations whose `implementation` is a `ts.Expression` should be visited as
+                // an expression.
                 this.visitExpression(decl.implementation, declContext) :
-                // Otherwise just visit the declaration `node`
+                // Otherwise just visit the `node` as a declaration.
                 this.visitDeclaration(decl.node, declContext);
         }
         accessHelper(node, lhs, rhs, context) {
