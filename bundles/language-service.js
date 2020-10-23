@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+81.sha-08f3d62
+ * @license Angular v11.0.0-next.6+95.sha-b989ba2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13358,10 +13358,13 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 return;
             this.error(`Missing expected operator ${operator}`);
         }
+        prettyPrintToken(tok) {
+            return tok === EOF ? 'end of input' : `token ${tok}`;
+        }
         expectIdentifierOrKeyword() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword()) {
-                this.error(`Unexpected token ${n}, expected identifier or keyword`);
+                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
                 return '';
             }
             this.advance();
@@ -13370,7 +13373,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         expectIdentifierOrKeywordOrString() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword() && !n.isString()) {
-                this.error(`Unexpected token ${n}, expected identifier, keyword, or string`);
+                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
                 return '';
             }
             this.advance();
@@ -13700,7 +13703,13 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         parseAccessMemberOrMethodCall(receiver, isSafe = false) {
             const start = receiver.span.start;
             const nameStart = this.inputIndex;
-            const id = this.expectIdentifierOrKeyword();
+            const id = this.withContext(ParseContextFlags.Writable, () => {
+                const id = this.expectIdentifierOrKeyword();
+                if (id.length === 0) {
+                    this.error(`Expected identifier for property access`, receiver.span.end);
+                }
+                return id;
+            });
             const nameSpan = this.sourceSpan(nameStart);
             if (this.consumeOptionalCharacter($LPAREN)) {
                 this.rparensExpected++;
@@ -18354,7 +18363,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+81.sha-08f3d62');
+    const VERSION$1 = new Version('11.0.0-next.6+95.sha-b989ba2');
 
     /**
      * @license
@@ -27496,6 +27505,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     function assertFirstCreatePass(tView, errMessage) {
         assertEqual(tView.firstCreatePass, true, errMessage || 'Should only be called in first create pass.');
     }
+    function assertFirstUpdatePass(tView, errMessage) {
+        assertEqual(tView.firstUpdatePass, true, errMessage || 'Should only be called in first update pass.');
+    }
     /**
      * This is a basic sanity check that an object is probably a directive def. DirectiveDef is
      * an interface, so we can't do a direct instanceof check.
@@ -27537,6 +27549,56 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         assertNumber(lView[injectorIndex + 6], 'injectorIndex should point to a bloom filter');
         assertNumber(lView[injectorIndex + 7], 'injectorIndex should point to a bloom filter');
         assertNumber(lView[injectorIndex + 8 /* PARENT */], 'injectorIndex should point to parent injector');
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Used for stringify render output in Ivy.
+     * Important! This function is very performance-sensitive and we should
+     * be extra careful not to introduce megamorphic reads in it.
+     */
+    function renderStringify(value) {
+        if (typeof value === 'string')
+            return value;
+        if (value == null)
+            return '';
+        return '' + value;
+    }
+    /**
+     * Used to stringify a value so that it can be displayed in an error message.
+     * Important! This function contains a megamorphic read and should only be
+     * used for error messages.
+     */
+    function stringifyForError(value) {
+        if (typeof value === 'function')
+            return value.name || value.toString();
+        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
+            return value.type.name || value.type.toString();
+        }
+        return renderStringify(value);
+    }
+    const ɵ0$2 = () => (typeof requestAnimationFrame !== 'undefined' &&
+        requestAnimationFrame || // browser only
+        setTimeout // everything else
+    )
+        .bind(_global$1);
+    const defaultScheduler = (ɵ0$2)();
+
+    /** Called when directives inject each other (creating a circular dependency) */
+    function throwCyclicDependencyError(token, path) {
+        const depPath = path ? `. Dependency path: ${path.join(' > ')} > ${token}` : '';
+        throw new Error(`Circular dependency in DI detected for ${token}${depPath}`);
+    }
+    /** Throws an error when a token is not found in DI. */
+    function throwProviderNotFoundError(token, injectorName) {
+        const injectorDetails = injectorName ? ` in ${injectorName}` : '';
+        throw new Error(`No provider for ${stringifyForError(token)} found${injectorDetails}`);
     }
 
     /**
@@ -27693,11 +27755,11 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     function isProceduralRenderer(renderer) {
         return !!(renderer.listen);
     }
-    const ɵ0$2 = (hostElement, rendererType) => {
+    const ɵ0$3 = (hostElement, rendererType) => {
         return getDocument();
     };
     const domRendererFactory3 = {
-        createRenderer: ɵ0$2
+        createRenderer: ɵ0$3
     };
 
     /**
@@ -28109,6 +28171,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         // hooks for projected components and directives must be called *before* their hosts.
         for (let i = tNode.directiveStart, end = tNode.directiveEnd; i < end; i++) {
             const directiveDef = tView.data[i];
+            ngDevMode && assertDefined(directiveDef, 'Expecting DirectiveDef');
             const lifecycleHooks = directiveDef.type.prototype;
             const { ngAfterContentInit, ngAfterContentChecked, ngAfterViewInit, ngAfterViewChecked, ngOnDestroy } = lifecycleHooks;
             if (ngAfterContentInit) {
@@ -28572,45 +28635,6 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Used for stringify render output in Ivy.
-     * Important! This function is very performance-sensitive and we should
-     * be extra careful not to introduce megamorphic reads in it.
-     */
-    function renderStringify(value) {
-        if (typeof value === 'string')
-            return value;
-        if (value == null)
-            return '';
-        return '' + value;
-    }
-    /**
-     * Used to stringify a value so that it can be displayed in an error message.
-     * Important! This function contains a megamorphic read and should only be
-     * used for error messages.
-     */
-    function stringifyForError(value) {
-        if (typeof value === 'function')
-            return value.name || value.toString();
-        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
-            return value.type.name || value.type.toString();
-        }
-        return renderStringify(value);
-    }
-    const ɵ0$3 = () => (typeof requestAnimationFrame !== 'undefined' &&
-        requestAnimationFrame || // browser only
-        setTimeout // everything else
-    )
-        .bind(_global$1);
-    const defaultScheduler = (ɵ0$3)();
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Defines if the call to `inject` should include `viewProviders` in its resolution.
      *
      * This is set to true when we try to instantiate a component. This value is reset in
@@ -28852,7 +28876,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 try {
                     const value = bloomHash();
                     if (value == null && !(flags & InjectFlags.Optional)) {
-                        throw new Error(`No provider for ${stringifyForError(token)}!`);
+                        throwProviderNotFoundError(token);
                     }
                     else {
                         return value;
@@ -28951,7 +28975,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             return notFoundValue;
         }
         else {
-            throw new Error(`NodeInjector: NOT_FOUND [${stringifyForError(token)}]`);
+            throwProviderNotFoundError(token, 'NodeInjector');
         }
     }
     const NOT_FOUND = {};
@@ -29035,7 +29059,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         if (isFactory(value)) {
             const factory = value;
             if (factory.resolving) {
-                throw new Error(`Circular dep for ${stringifyForError(tData[index])}`);
+                throwCyclicDependencyError(stringifyForError(tData[index]));
             }
             const previousIncludeViewProviders = setIncludeViewProviders(factory.canSeeViewProviders);
             factory.resolving = true;
@@ -30341,38 +30365,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * debug tools in ngDevMode.
      */
     const TViewConstructor = class TView {
-        constructor(type, //
-        blueprint, //
-        template, //
-        queries, //
-        viewQuery, //
-        declTNode, //
-        data, //
-        bindingStartIndex, //
-        expandoStartIndex, //
-        expandoInstructions, //
-        firstCreatePass, //
-        firstUpdatePass, //
-        staticViewQueries, //
-        staticContentQueries, //
-        preOrderHooks, //
-        preOrderCheckHooks, //
-        contentHooks, //
-        contentCheckHooks, //
-        viewHooks, //
-        viewCheckHooks, //
-        destroyHooks, //
-        cleanup, //
-        contentQueries, //
-        components, //
-        directiveRegistry, //
-        pipeRegistry, //
-        firstChild, //
-        schemas, //
-        consts, //
-        incompleteFirstPass, //
-        _decls, //
-        _vars) {
+        constructor(type, blueprint, template, queries, viewQuery, declTNode, data, bindingStartIndex, expandoStartIndex, hostBindingOpCodes, firstCreatePass, firstUpdatePass, staticViewQueries, staticContentQueries, preOrderHooks, preOrderCheckHooks, contentHooks, contentCheckHooks, viewHooks, viewCheckHooks, destroyHooks, cleanup, contentQueries, components, directiveRegistry, pipeRegistry, firstChild, schemas, consts, incompleteFirstPass, _decls, _vars) {
             this.type = type;
             this.blueprint = blueprint;
             this.template = template;
@@ -30382,7 +30375,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             this.data = data;
             this.bindingStartIndex = bindingStartIndex;
             this.expandoStartIndex = expandoStartIndex;
-            this.expandoInstructions = expandoInstructions;
+            this.hostBindingOpCodes = hostBindingOpCodes;
             this.firstCreatePass = firstCreatePass;
             this.firstUpdatePass = firstUpdatePass;
             this.staticViewQueries = staticViewQueries;
@@ -30898,63 +30891,33 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      */
     const _CLEAN_PROMISE = (ɵ0$4)();
     /**
-     * Process the `TView.expandoInstructions`. (Execute the `hostBindings`.)
+     * Invoke `HostBindingsFunction`s for view.
      *
-     * @param tView `TView` containing the `expandoInstructions`
-     * @param lView `LView` associated with the `TView`
+     * This methods executes `TView.hostBindingOpCodes`. It is used to execute the
+     * `HostBindingsFunction`s associated with the current `LView`.
+     *
+     * @param tView Current `TView`.
+     * @param lView Current `LView`.
      */
-    function setHostBindingsByExecutingExpandoInstructions(tView, lView) {
-        ngDevMode && assertSame(tView, lView[TVIEW], '`LView` is not associated with the `TView`!');
+    function processHostBindingOpCodes(tView, lView) {
+        const hostBindingOpCodes = tView.hostBindingOpCodes;
+        if (hostBindingOpCodes === null)
+            return;
         try {
-            const expandoInstructions = tView.expandoInstructions;
-            if (expandoInstructions !== null) {
-                let bindingRootIndex = tView.expandoStartIndex;
-                let currentDirectiveIndex = -1;
-                let currentElementIndex = -1;
-                // TODO(misko): PERF It is possible to get here with `TView.expandoInstructions` containing no
-                // functions to execute. This is wasteful as there is no work to be done, but we still need
-                // to iterate over the instructions.
-                // In example of this is in this test: `host_binding_spec.ts`
-                // `fit('should not cause problems if detectChanges is called when a property updates', ...`
-                // In the above test we get here with expando [0, 0, 1] which requires a lot of processing but
-                // there is no function to execute.
-                for (let i = 0; i < expandoInstructions.length; i++) {
-                    const instruction = expandoInstructions[i];
-                    if (typeof instruction === 'number') {
-                        if (instruction <= 0) {
-                            // Negative numbers mean that we are starting new EXPANDO block and need to update
-                            // the current element and directive index.
-                            currentElementIndex = ~instruction;
-                            setSelectedIndex(currentElementIndex);
-                            // Injector block and providers are taken into account.
-                            const providerCount = expandoInstructions[++i];
-                            bindingRootIndex += 9 /* SIZE */ + providerCount;
-                            currentDirectiveIndex = bindingRootIndex;
-                        }
-                        else {
-                            // This is either the injector size (so the binding root can skip over directives
-                            // and get to the first set of host bindings on this node) or the host var count
-                            // (to get to the next set of host bindings on this node).
-                            bindingRootIndex += instruction;
-                        }
-                    }
-                    else {
-                        // If it's not a number, it's a host binding function that needs to be executed.
-                        if (instruction !== null) {
-                            ngDevMode &&
-                                assertLessThan(currentDirectiveIndex, 1048576 /* CptViewProvidersCountShifter */, 'Reached the max number of host bindings');
-                            setBindingRootForHostBindings(bindingRootIndex, currentDirectiveIndex);
-                            const hostCtx = lView[currentDirectiveIndex];
-                            instruction(2 /* Update */, hostCtx);
-                        }
-                        // TODO(misko): PERF Relying on incrementing the `currentDirectiveIndex` here is
-                        // sub-optimal. The implications are that if we have a lot of directives but none of them
-                        // have host bindings we nevertheless need to iterate over the expando instructions to
-                        // update the counter. It would be much better if we could encode the
-                        // `currentDirectiveIndex` into the `expandoInstruction` array so that we only need to
-                        // iterate over those directives which actually have `hostBindings`.
-                        currentDirectiveIndex++;
-                    }
+            for (let i = 0; i < hostBindingOpCodes.length; i++) {
+                const opCode = hostBindingOpCodes[i];
+                if (opCode < 0) {
+                    // Negative numbers are element indexes.
+                    setSelectedIndex(~opCode);
+                }
+                else {
+                    // Positive numbers are NumberTuple which store bindingRootIndex and directiveIndex.
+                    const directiveIdx = opCode;
+                    const bindingRootIndx = hostBindingOpCodes[++i];
+                    const hostBindingFn = hostBindingOpCodes[++i];
+                    setBindingRootForHostBindings(bindingRootIndx, directiveIdx);
+                    const context = lView[directiveIdx];
+                    hostBindingFn(2 /* Update */, context);
                 }
             }
         }
@@ -30971,6 +30934,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 const directiveDefIdx = contentQueries[i + 1];
                 if (directiveDefIdx !== -1) {
                     const directiveDef = tView.data[directiveDefIdx];
+                    ngDevMode && assertDefined(directiveDef, 'DirectiveDef not found.');
                     ngDevMode &&
                         assertDefined(directiveDef.contentQueries, 'contentQueries function should be defined');
                     setCurrentQueryIndex(queryStartIdx);
@@ -31072,6 +31036,34 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             }
         }
         return tNode;
+    }
+    /**
+     * When elements are created dynamically after a view blueprint is created (e.g. through
+     * i18nApply()), we need to adjust the blueprint for future
+     * template passes.
+     *
+     * @param tView `TView` associated with `LView`
+     * @param lView The `LView` containing the blueprint to adjust
+     * @param numSlotsToAlloc The number of slots to alloc in the LView, should be >0
+     * @param initialValue Initial value to store in blueprint
+     */
+    function allocExpando(tView, lView, numSlotsToAlloc, initialValue) {
+        if (numSlotsToAlloc === 0)
+            return -1;
+        if (ngDevMode) {
+            assertFirstCreatePass(tView);
+            assertSame(tView, lView[TVIEW], '`LView` must be associated with `TView`!');
+            assertEqual(tView.data.length, lView.length, 'Expecting LView to be same size as TView');
+            assertEqual(tView.data.length, tView.blueprint.length, 'Expecting Blueprint to be same size as TView');
+            assertFirstUpdatePass(tView);
+        }
+        const allocIdx = lView.length;
+        for (let i = 0; i < numSlotsToAlloc; i++) {
+            lView.push(initialValue);
+            tView.blueprint.push(initialValue);
+            tView.data.push(null);
+        }
+        return allocIdx;
     }
     //////////////////////////
     //// Render
@@ -31203,7 +31195,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                     incrementInitPhaseFlags(lView, 1 /* AfterContentInitHooksToBeRun */);
                 }
             }
-            setHostBindingsByExecutingExpandoInstructions(tView, lView);
+            processHostBindingOpCodes(tView, lView);
             // Refresh child component views.
             const components = tView.components;
             if (components !== null) {
@@ -31336,7 +31328,8 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         const blueprint = createViewBlueprint(bindingStartIndex, initialViewLength);
         const consts = typeof constsOrFactory === 'function' ? constsOrFactory() : constsOrFactory;
         const tView = blueprint[TVIEW] = ngDevMode ?
-            new TViewConstructor(type, blueprint, // blueprint: LView,
+            new TViewConstructor(type, // type: TViewType,
+            blueprint, // blueprint: LView,
             templateFn, // template: ComponentTemplate<{}>|null,
             null, // queries: TQueries|null
             viewQuery, // viewQuery: ViewQueriesFunction<{}>|null,
@@ -31344,7 +31337,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             cloneToTViewData(blueprint).fill(null, bindingStartIndex), // data: TData,
             bindingStartIndex, // bindingStartIndex: number,
             initialViewLength, // expandoStartIndex: number,
-            null, // expandoInstructions: ExpandoInstructions|null,
+            null, // hostBindingOpCodes: HostBindingOpCodes,
             true, // firstCreatePass: boolean,
             true, // firstUpdatePass: boolean,
             false, // staticViewQueries: boolean,
@@ -31359,8 +31352,8 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             null, // cleanup: any[]|null,
             null, // contentQueries: number[]|null,
             null, // components: number[]|null,
-            typeof directives === 'function' ?
-                directives() :
+            typeof directives === 'function' ? //
+                directives() : //
                 directives, // directiveRegistry: DirectiveDefList|null,
             typeof pipes === 'function' ? pipes() : pipes, // pipeRegistry: PipeDefList|null,
             null, // firstChild: TNode|null,
@@ -31379,7 +31372,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 data: blueprint.slice().fill(null, bindingStartIndex),
                 bindingStartIndex: bindingStartIndex,
                 expandoStartIndex: initialViewLength,
-                expandoInstructions: null,
+                hostBindingOpCodes: null,
                 firstCreatePass: true,
                 firstUpdatePass: true,
                 staticViewQueries: false,
@@ -31557,10 +31550,12 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         if (tView.firstCreatePass) {
             if (def.providersResolver)
                 def.providersResolver(def);
-            generateExpandoInstructionBlock(tView, rootTNode, 1);
-            baseResolveDirective(tView, lView, def);
+            const directiveIndex = allocExpando(tView, lView, 1, null);
+            ngDevMode &&
+                assertEqual(directiveIndex, rootTNode.directiveStart, 'Because this is a root component the allocated expando should match the TNode component.');
+            configureViewWithDirective(tView, rootTNode, lView, directiveIndex, def);
         }
-        const directive = getNodeInjectable(lView, tView, lView.length - 1, rootTNode);
+        const directive = getNodeInjectable(lView, tView, rootTNode.directiveStart, rootTNode);
         attachPatchData(directive, lView);
         const native = getNativeByTNode(rootTNode, lView);
         if (native) {
@@ -31569,47 +31564,50 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         return directive;
     }
     /**
-     * Add `hostBindings` to the `TView.expandoInstructions`.
+     * Add `hostBindings` to the `TView.hostBindingOpCodes`.
      *
      * @param tView `TView` to which the `hostBindings` should be added.
+     * @param tNode `TNode` the element which contains the directive
+     * @param lView `LView` current `LView`
+     * @param directiveIdx Directive index in view.
+     * @param directiveVarsIdx Where will the directive's vars be stored
      * @param def `ComponentDef`/`DirectiveDef`, which contains the `hostVars`/`hostBindings` to add.
      */
-    function addHostBindingsToExpandoInstructions(tView, def) {
+    function registerHostBindingOpCodes(tView, tNode, lView, directiveIdx, directiveVarsIdx, def) {
         ngDevMode && assertFirstCreatePass(tView);
-        const expando = tView.expandoInstructions;
-        // TODO(misko): PERF we are adding `hostBindings` even if there is nothing to add! This is
-        // suboptimal for performance. `def.hostBindings` may be null,
-        // but we still need to push null to the array as a placeholder
-        // to ensure the directive counter is incremented (so host
-        // binding functions always line up with the corrective directive).
-        // This is suboptimal for performance. See `currentDirectiveIndex`
-        //  comment in `setHostBindingsByExecutingExpandoInstructions` for more
-        // details.  expando.push(def.hostBindings);
-        expando.push(def.hostBindings);
-        const hostVars = def.hostVars;
-        if (hostVars !== 0) {
-            expando.push(def.hostVars);
+        const hostBindings = def.hostBindings;
+        if (hostBindings) {
+            let hostBindingOpCodes = tView.hostBindingOpCodes;
+            if (hostBindingOpCodes === null) {
+                hostBindingOpCodes = tView.hostBindingOpCodes = [];
+            }
+            const elementIndx = ~tNode.index;
+            if (lastSelectedElementIdx(hostBindingOpCodes) != elementIndx) {
+                // Conditionally add select element so that we are more efficient in execution.
+                // NOTE: this is strictly not necessary and it trades code size for runtime perf.
+                // (We could just always add it.)
+                hostBindingOpCodes.push(elementIndx);
+            }
+            hostBindingOpCodes.push(directiveIdx, directiveVarsIdx, hostBindings);
         }
     }
     /**
-     * Grow the `LView`, blueprint and `TView.data` to accommodate the `hostBindings`.
+     * Returns the last selected element index in the `HostBindingOpCodes`
      *
-     * To support locality we don't know ahead of time how many `hostVars` of the containing directives
-     * we need to allocate. For this reason we allow growing these data structures as we discover more
-     * directives to accommodate them.
+     * For perf reasons we don't need to update the selected element index in `HostBindingOpCodes` only
+     * if it changes. This method returns the last index (or '0' if not found.)
      *
-     * @param tView `TView` which needs to be grown.
-     * @param lView `LView` which needs to be grown.
-     * @param count Size by which we need to grow the data structures.
+     * Selected element index are only the ones which are negative.
      */
-    function growHostVarsSpace(tView, lView, count) {
-        ngDevMode && assertFirstCreatePass(tView);
-        ngDevMode && assertSame(tView, lView[TVIEW], '`LView` must be associated with `TView`!');
-        for (let i = 0; i < count; i++) {
-            lView.push(NO_CHANGE);
-            tView.blueprint.push(NO_CHANGE);
-            tView.data.push(null);
+    function lastSelectedElementIdx(hostBindingOpCodes) {
+        let i = hostBindingOpCodes.length;
+        while (i > 0) {
+            const value = hostBindingOpCodes[--i];
+            if (typeof value === 'number' && value < 0) {
+                return value;
+            }
         }
+        return 0;
     }
     /**
      * Invoke the host bindings in creation mode.
@@ -31621,21 +31619,6 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         if (def.hostBindings !== null) {
             def.hostBindings(1 /* Create */, directive);
         }
-    }
-    /**
-     * Generates a new block in TView.expandoInstructions for this node.
-     *
-     * Each expando block starts with the element index (turned negative so we can distinguish
-     * it from the hostVar count) and the directive count. See more in VIEW_DATA.md.
-     */
-    function generateExpandoInstructionBlock(tView, tNode, directiveCount) {
-        ngDevMode &&
-            assertEqual(tView.firstCreatePass, true, 'Expando block should only be generated on first create pass.');
-        const elementIndex = ~tNode.index;
-        const providerStartIndex = tNode.providerIndexes & 1048575 /* ProvidersStartIndexMask */;
-        const providerCount = tView.data.length - providerStartIndex;
-        (tView.expandoInstructions || (tView.expandoInstructions = []))
-            .push(elementIndex, providerCount, directiveCount);
     }
     /**
      * Marks a given TNode as a component's host. This consists of:
@@ -31662,12 +31645,27 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         tNode.directiveEnd = index + numberOfDirectives;
         tNode.providerIndexes = index;
     }
-    function baseResolveDirective(tView, viewData, def) {
-        tView.data.push(def);
+    /**
+     * Setup directive for instantiation.
+     *
+     * We need to create a `NodeInjectorFactory` which is then inserted in both the `Blueprint` as well
+     * as `LView`. `TView` gets the `DirectiveDef`.
+     *
+     * @param tView `TView`
+     * @param tNode `TNode`
+     * @param lView `LView`
+     * @param directiveIndex Index where the directive will be stored in the Expando.
+     * @param def `DirectiveDef`
+     */
+    function configureViewWithDirective(tView, tNode, lView, directiveIndex, def) {
+        ngDevMode &&
+            assertGreaterThanOrEqual(directiveIndex, HEADER_OFFSET, 'Must be in Expando section');
+        tView.data[directiveIndex] = def;
         const directiveFactory = def.factory || (def.factory = getFactoryDef(def.type, true));
         const nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
-        tView.blueprint.push(nodeInjectorFactory);
-        viewData.push(nodeInjectorFactory);
+        tView.blueprint[directiveIndex] = nodeInjectorFactory;
+        lView[directiveIndex] = nodeInjectorFactory;
+        registerHostBindingOpCodes(tView, tNode, lView, directiveIndex, allocExpando(tView, lView, def.hostVars, NO_CHANGE), def);
     }
     //////////////////////////
     //// ViewContainer & View
@@ -34140,7 +34138,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         // We want to generate an empty QueryList for root content queries for backwards
         // compatibility with ViewEngine.
         if (componentDef.contentQueries) {
-            componentDef.contentQueries(1 /* Create */, component, rootLView.length - 1);
+            const tNode = getCurrentTNode();
+            ngDevMode && assertDefined(tNode, 'TNode expected');
+            componentDef.contentQueries(1 /* Create */, component, tNode.directiveStart);
         }
         const rootTNode = getCurrentTNode();
         ngDevMode && assertDefined(rootTNode, 'tNode should have been already created');
@@ -34148,8 +34148,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             (componentDef.hostBindings !== null || componentDef.hostAttrs !== null)) {
             setSelectedIndex(rootTNode.index);
             const rootTView = rootLView[TVIEW];
-            addHostBindingsToExpandoInstructions(rootTView, componentDef);
-            growHostVarsSpace(rootTView, rootLView, componentDef.hostVars);
+            registerHostBindingOpCodes(rootTView, rootTNode, rootLView, rootTNode.directiveStart, rootTNode.directiveEnd, componentDef);
             invokeHostBindingsInCreationMode(componentDef, component);
         }
         return component;
@@ -34177,11 +34176,12 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * ```
      */
     function LifecycleHooksFeature(component, def) {
-        const rootTView = readPatchedLView(component)[TVIEW];
-        const dirIndex = rootTView.data.length - 1;
-        // TODO(misko): replace `as TNode` with createTNode call. (needs refactoring to lose dep on
-        // LNode).
-        registerPostOrderHooks(rootTView, { directiveStart: dirIndex, directiveEnd: dirIndex + 1 });
+        const lView = readPatchedLView(component);
+        ngDevMode && assertDefined(lView, 'LView is required');
+        const tView = lView[TVIEW];
+        const tNode = getCurrentTNode();
+        ngDevMode && assertDefined(tNode, 'TNode is required');
+        registerPostOrderHooks(tView, tNode);
     }
 
     /**
@@ -34639,7 +34639,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+81.sha-08f3d62');
+    const VERSION$2 = new Version$1('11.0.0-next.6+95.sha-b989ba2');
 
     /**
      * @license
