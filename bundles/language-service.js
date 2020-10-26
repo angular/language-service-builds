@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.2.0+1.sha-513ed49
+ * @license Angular v10.2.0+17.sha-308b930
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13026,10 +13026,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return;
             this.error(`Missing expected operator ${operator}`);
         }
+        prettyPrintToken(tok) {
+            return tok === EOF ? 'end of input' : `token ${tok}`;
+        }
         expectIdentifierOrKeyword() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword()) {
-                this.error(`Unexpected token ${n}, expected identifier or keyword`);
+                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
                 return '';
             }
             this.advance();
@@ -13038,7 +13041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         expectIdentifierOrKeywordOrString() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword() && !n.isString()) {
-                this.error(`Unexpected token ${n}, expected identifier, keyword, or string`);
+                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
                 return '';
             }
             this.advance();
@@ -17960,7 +17963,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.2.0+1.sha-513ed49');
+    const VERSION$1 = new Version('10.2.0+17.sha-308b930');
 
     /**
      * @license
@@ -27250,6 +27253,56 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Used for stringify render output in Ivy.
+     * Important! This function is very performance-sensitive and we should
+     * be extra careful not to introduce megamorphic reads in it.
+     */
+    function renderStringify(value) {
+        if (typeof value === 'string')
+            return value;
+        if (value == null)
+            return '';
+        return '' + value;
+    }
+    /**
+     * Used to stringify a value so that it can be displayed in an error message.
+     * Important! This function contains a megamorphic read and should only be
+     * used for error messages.
+     */
+    function stringifyForError(value) {
+        if (typeof value === 'function')
+            return value.name || value.toString();
+        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
+            return value.type.name || value.type.toString();
+        }
+        return renderStringify(value);
+    }
+    const ɵ0$2 = () => (typeof requestAnimationFrame !== 'undefined' &&
+        requestAnimationFrame || // browser only
+        setTimeout // everything else
+    )
+        .bind(_global$1);
+    const defaultScheduler = (ɵ0$2)();
+
+    /** Called when directives inject each other (creating a circular dependency) */
+    function throwCyclicDependencyError(token, path) {
+        const depPath = path ? `. Dependency path: ${path.join(' > ')} > ${token}` : '';
+        throw new Error(`Circular dependency in DI detected for ${token}${depPath}`);
+    }
+    /** Throws an error when a token is not found in DI. */
+    function throwProviderNotFoundError(token, injectorName) {
+        const injectorDetails = injectorName ? ` in ${injectorName}` : '';
+        throw new Error(`No provider for ${stringifyForError(token)} found${injectorDetails}`);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Represents a basic change from a previous to a new value for a single
      * property on a directive instance. Passed as a value in a
      * {@link SimpleChanges} object to the `ngOnChanges` hook.
@@ -27396,11 +27449,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function isProceduralRenderer(renderer) {
         return !!(renderer.listen);
     }
-    const ɵ0$2 = (hostElement, rendererType) => {
+    const ɵ0$3 = (hostElement, rendererType) => {
         return getDocument();
     };
     const domRendererFactory3 = {
-        createRenderer: ɵ0$2
+        createRenderer: ɵ0$3
     };
 
     /**
@@ -28235,45 +28288,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Used for stringify render output in Ivy.
-     * Important! This function is very performance-sensitive and we should
-     * be extra careful not to introduce megamorphic reads in it.
-     */
-    function renderStringify(value) {
-        if (typeof value === 'string')
-            return value;
-        if (value == null)
-            return '';
-        return '' + value;
-    }
-    /**
-     * Used to stringify a value so that it can be displayed in an error message.
-     * Important! This function contains a megamorphic read and should only be
-     * used for error messages.
-     */
-    function stringifyForError(value) {
-        if (typeof value === 'function')
-            return value.name || value.toString();
-        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
-            return value.type.name || value.type.toString();
-        }
-        return renderStringify(value);
-    }
-    const ɵ0$3 = () => (typeof requestAnimationFrame !== 'undefined' &&
-        requestAnimationFrame || // browser only
-        setTimeout // everything else
-    )
-        .bind(_global$1);
-    const defaultScheduler = (ɵ0$3)();
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Defines if the call to `inject` should include `viewProviders` in its resolution.
      *
      * This is set to true when we try to instantiate a component. This value is reset in
@@ -28515,7 +28529,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 try {
                     const value = bloomHash();
                     if (value == null && !(flags & InjectFlags.Optional)) {
-                        throw new Error(`No provider for ${stringifyForError(token)}!`);
+                        throwProviderNotFoundError(token);
                     }
                     else {
                         return value;
@@ -28614,7 +28628,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return notFoundValue;
         }
         else {
-            throw new Error(`NodeInjector: NOT_FOUND [${stringifyForError(token)}]`);
+            throwProviderNotFoundError(token, 'NodeInjector');
         }
     }
     const NOT_FOUND = {};
@@ -28698,7 +28712,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (isFactory(value)) {
             const factory = value;
             if (factory.resolving) {
-                throw new Error(`Circular dep for ${stringifyForError(tData[index])}`);
+                throwCyclicDependencyError(stringifyForError(tData[index]));
             }
             const previousIncludeViewProviders = setIncludeViewProviders(factory.canSeeViewProviders);
             factory.resolving = true;
@@ -34101,7 +34115,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.2.0+1.sha-513ed49');
+    const VERSION$2 = new Version$1('10.2.0+17.sha-308b930');
 
     /**
      * @license
