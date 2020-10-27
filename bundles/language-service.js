@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.2.0+17.sha-308b930
+ * @license Angular v10.2.0+31.sha-055f7eb
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17963,7 +17963,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.2.0+17.sha-308b930');
+    const VERSION$1 = new Version('10.2.0+31.sha-055f7eb');
 
     /**
      * @license
@@ -34115,7 +34115,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.2.0+17.sha-308b930');
+    const VERSION$2 = new Version$1('10.2.0+31.sha-055f7eb');
 
     /**
      * @license
@@ -39003,7 +39003,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    if (ngDevMode) {
+    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
         // This helper is to give a reasonable error message to people upgrading to v9 that have not yet
         // installed `@angular/localize` in their app.
         // tslint:disable-next-line: no-toplevel-property-access
