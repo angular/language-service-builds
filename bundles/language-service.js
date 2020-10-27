@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-rc.0+35.sha-3fbf325
+ * @license Angular v11.0.0-rc.0+58.sha-399f491
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2038,9 +2038,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function partitionArray(arr, conditionFn) {
         const truthy = [];
         const falsy = [];
-        arr.forEach(item => {
+        for (const item of arr) {
             (conditionFn(item) ? truthy : falsy).push(item);
-        });
+        }
         return [truthy, falsy];
     }
 
@@ -3781,6 +3781,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function hasI18nMeta(node) {
         return !!node.i18n;
+    }
+    function isBoundI18nAttribute(node) {
+        return node.i18n !== undefined && node instanceof BoundAttribute;
     }
     function hasI18nAttrs(element) {
         return element.attrs.some((attr) => isI18nAttribute(attr.name));
@@ -14674,7 +14677,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     (function (TagType) {
         TagType[TagType["ELEMENT"] = 0] = "ELEMENT";
         TagType[TagType["TEMPLATE"] = 1] = "TEMPLATE";
-        TagType[TagType["PROJECTION"] = 2] = "PROJECTION";
     })(TagType || (TagType = {}));
     /**
      * Generates an object that is used as a shared state between parent and all child contexts.
@@ -14756,10 +14758,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.appendTag(TagType.ELEMENT, node, index, closed);
         }
         appendProjection(node, index) {
-            // add open and close tags at the same time,
-            // since we process projected content separately
-            this.appendTag(TagType.PROJECTION, node, index, false);
-            this.appendTag(TagType.PROJECTION, node, index, true);
+            // Add open and close tags at the same time, since `<ng-content>` has no content,
+            // so when we come across `<ng-content>` we can register both open and close tags.
+            // Note: runtime i18n logic doesn't distinguish `<ng-content>` tag placeholders and
+            // regular element tag placeholders, so we generate element placeholders for both types.
+            this.appendTag(TagType.ELEMENT, node, index, false);
+            this.appendTag(TagType.ELEMENT, node, index, true);
         }
         /**
          * Generates an instance of a child context based on the root one,
@@ -14842,7 +14846,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function serializePlaceholderValue(value) {
         const element = (data, closed) => wrapTag('#', data, closed);
         const template = (data, closed) => wrapTag('*', data, closed);
-        const projection = (data, closed) => wrapTag('!', data, closed);
         switch (value.type) {
             case TagType.ELEMENT:
                 // close element tag
@@ -14857,8 +14860,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return element(value);
             case TagType.TEMPLATE:
                 return template(value, value.closed);
-            case TagType.PROJECTION:
-                return projection(value, value.closed);
             default:
                 return value;
         }
@@ -15908,24 +15909,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const bindings = [];
             attrs.forEach(attr => {
                 const message = attr.i18n;
-                if (attr instanceof TextAttribute) {
-                    i18nAttrArgs.push(literal(attr.name), this.i18nTranslate(message));
-                }
-                else {
-                    const converted = attr.value.visit(this._valueConverter);
-                    this.allocateBindingSlots(converted);
-                    if (converted instanceof Interpolation) {
-                        const placeholders = assembleBoundTextPlaceholders(message);
-                        const params = placeholdersToParams(placeholders);
-                        i18nAttrArgs.push(literal(attr.name), this.i18nTranslate(message, params));
-                        converted.expressions.forEach(expression => {
-                            hasBindings = true;
-                            bindings.push({
-                                sourceSpan,
-                                value: () => this.convertPropertyBinding(expression),
-                            });
+                const converted = attr.value.visit(this._valueConverter);
+                this.allocateBindingSlots(converted);
+                if (converted instanceof Interpolation) {
+                    const placeholders = assembleBoundTextPlaceholders(message);
+                    const params = placeholdersToParams(placeholders);
+                    i18nAttrArgs.push(literal(attr.name), this.i18nTranslate(message, params));
+                    converted.expressions.forEach(expression => {
+                        hasBindings = true;
+                        bindings.push({
+                            sourceSpan,
+                            value: () => this.convertPropertyBinding(expression),
                         });
-                    }
+                    });
                 }
             });
             if (bindings.length > 0) {
@@ -15985,7 +15981,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const stylingBuilder = new StylingBuilder(null);
             let isNonBindableMode = false;
             const isI18nRootElement = isI18nRootNode(element.i18n) && !isSingleI18nIcu(element.i18n);
-            const i18nAttrs = [];
+            const boundI18nAttrs = [];
             const outputAttrs = [];
             const [namespaceKey, elementName] = splitNsName(element.name);
             const isNgContainer$1 = isNgContainer(element.name);
@@ -16001,8 +15997,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 else if (name === 'class') {
                     stylingBuilder.registerClassAttr(value);
                 }
+                else if (isBoundI18nAttribute(attr)) {
+                    // Note that we don't collect static i18n attributes here, because
+                    // they can be treated in the same way as regular attributes.
+                    boundI18nAttrs.push(attr);
+                }
                 else {
-                    (attr.i18n ? i18nAttrs : outputAttrs).push(attr);
+                    outputAttrs.push(attr);
                 }
             }
             // Match directives on non i18n attributes
@@ -16018,7 +16019,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 const stylingInputWasSet = stylingBuilder.registerBoundInput(input);
                 if (!stylingInputWasSet) {
                     if (input.type === 0 /* Property */ && input.i18n) {
-                        i18nAttrs.push(input);
+                        boundI18nAttrs.push(input);
                     }
                     else {
                         allOtherInputs.push(input);
@@ -16026,7 +16027,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             // add attributes for directive and projection matching purposes
-            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
+            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], boundI18nAttrs);
             parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             const refs = this.prepareRefsArray(element.references);
@@ -16046,7 +16047,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const hasChildren = (!isI18nRootElement && this.i18n) ? !hasTextChildrenOnly(element.children) :
                 element.children.length > 0;
             const createSelfClosingInstruction = !stylingBuilder.hasBindingsWithPipes &&
-                element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren;
+                element.outputs.length === 0 && boundI18nAttrs.length === 0 && !hasChildren;
             const createSelfClosingI18nInstruction = !createSelfClosingInstruction && hasTextChildrenOnly(element.children);
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainer : Identifiers$1.element, trimTrailingNulls(parameters));
@@ -16056,8 +16057,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (isNonBindableMode) {
                     this.creationInstruction(element.startSourceSpan, Identifiers$1.disableBindings);
                 }
-                if (i18nAttrs.length > 0) {
-                    this.i18nAttributesInstruction(elementIndex, i18nAttrs, (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan);
+                if (boundI18nAttrs.length > 0) {
+                    this.i18nAttributesInstruction(elementIndex, boundI18nAttrs, (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan);
                 }
                 // Generate Listeners (outputs)
                 if (element.outputs.length > 0) {
@@ -16224,8 +16225,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
-            const [i18nStaticAttrs, staticAttrs] = partitionArray(template.attributes, hasI18nMeta);
-            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
+            const [boundI18nAttrs, attrs] = partitionArray(template.attributes, isBoundI18nAttribute);
+            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, attrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, boundI18nAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -16256,7 +16257,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
             if (template.tagName === NG_TEMPLATE_TAG_NAME) {
                 const [i18nInputs, inputs] = partitionArray(template.inputs, hasI18nMeta);
-                const i18nAttrs = [...i18nStaticAttrs, ...i18nInputs];
+                const i18nAttrs = [...boundI18nAttrs, ...i18nInputs];
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
                 // elements, in case of inline templates, corresponding instructions will be generated in the
@@ -16544,16 +16545,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
+        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], boundI18nAttrs = []) {
             const alreadySeen = new Set();
             const attrExprs = [];
             let ngProjectAsAttr;
-            renderAttributes.forEach((attr) => {
+            for (const attr of renderAttributes) {
                 if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
                     ngProjectAsAttr = attr;
                 }
-                attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
-            });
+                // Note that static i18n attributes aren't in the i18n array,
+                // because they're treated in the same way as regular attributes.
+                if (attr.i18n) {
+                    attrExprs.push(literal(attr.name), this.i18nTranslate(attr.i18n));
+                }
+                else {
+                    attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
+                }
+            }
             // Keep ngProjectAs next to the other name, value pairs so we can verify that we match
             // ngProjectAs marker in the attribute name slot.
             if (ngProjectAsAttr) {
@@ -16605,9 +16613,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 attrExprs.push(literal(4 /* Template */));
                 templateAttrs.forEach(attr => addAttrExpr(attr.name));
             }
-            if (i18nAttrs.length) {
+            if (boundI18nAttrs.length) {
                 attrExprs.push(literal(6 /* I18n */));
-                i18nAttrs.forEach(attr => addAttrExpr(attr.name));
+                boundI18nAttrs.forEach(attr => addAttrExpr(attr.name));
             }
             return attrExprs;
         }
@@ -17099,6 +17107,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
         if (parseResult.errors && parseResult.errors.length > 0) {
+            // TODO(ayazhafiz): we may not always want to bail out at this point (e.g. in
+            // the context of a language service).
             return {
                 interpolationConfig,
                 preserveWhitespaces,
@@ -17128,22 +17138,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
-        if (errors && errors.length > 0) {
-            return {
-                interpolationConfig,
-                preserveWhitespaces,
-                template,
-                errors,
-                nodes: [],
-                styleUrls: [],
-                styles: [],
-                ngContentSelectors: []
-            };
-        }
         return {
             interpolationConfig,
             preserveWhitespaces,
-            errors: null,
+            errors: errors.length > 0 ? errors : null,
             template,
             nodes,
             styleUrls,
@@ -18107,7 +18105,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-rc.0+35.sha-3fbf325');
+    const VERSION$1 = new Version('11.0.0-rc.0+58.sha-399f491');
 
     /**
      * @license
@@ -27381,7 +27379,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function assertIndexInExpandoRange(lView, index) {
         const tView = lView[1];
-        assertBetween(tView.originalExpandoStartIndex, lView.length, index);
+        assertBetween(tView.expandoStartIndex, lView.length, index);
     }
     function assertBetween(lower, upper, index) {
         if (!(lower <= index && index < upper)) {
@@ -30265,15 +30263,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         get type_() {
             return TViewTypeAsString[this.type] || `TViewType.?${this.type}?`;
         }
-        /**
-         * Returns initial value of `expandoStartIndex`.
-         */
-        // FIXME(misko): `originalExpandoStartIndex` should not be needed because it should be the same as
-        // `expandoStartIndex`. However `expandoStartIndex` is misnamed as it changes as more items get
-        // allocated in expando.
-        get originalExpandoStartIndex() {
-            return HEADER_OFFSET + this._decls + this._vars;
-        }
     };
     class TNode {
         constructor(tView_, //
@@ -30619,12 +30608,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return toLViewRange(this.tView, this._raw_lView, HEADER_OFFSET, this.tView.bindingStartIndex);
         }
         get vars() {
-            const tView = this.tView;
-            return toLViewRange(tView, this._raw_lView, tView.bindingStartIndex, tView.originalExpandoStartIndex);
+            return toLViewRange(this.tView, this._raw_lView, this.tView.bindingStartIndex, this.tView.expandoStartIndex);
         }
         get expando() {
-            const tView = this.tView;
-            return toLViewRange(this.tView, this._raw_lView, tView.originalExpandoStartIndex, this._raw_lView.length);
+            return toLViewRange(this.tView, this._raw_lView, this.tView.expandoStartIndex, this._raw_lView.length);
         }
         /**
          * Normalized view of child views (and containers) attached at this location.
@@ -34497,7 +34484,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-rc.0+35.sha-3fbf325');
+    const VERSION$2 = new Version$1('11.0.0-rc.0+58.sha-399f491');
 
     /**
      * @license
@@ -39385,7 +39372,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    if (ngDevMode) {
+    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
         // This helper is to give a reasonable error message to people upgrading to v9 that have not yet
         // installed `@angular/localize` in their app.
         // tslint:disable-next-line: no-toplevel-property-access

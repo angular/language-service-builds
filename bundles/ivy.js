@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-rc.0+35.sha-3fbf325
+ * @license Angular v11.0.0-rc.0+58.sha-399f491
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5152,9 +5152,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function partitionArray(arr, conditionFn) {
         const truthy = [];
         const falsy = [];
-        arr.forEach(item => {
+        for (const item of arr) {
             (conditionFn(item) ? truthy : falsy).push(item);
-        });
+        }
         return [truthy, falsy];
     }
 
@@ -6570,6 +6570,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     function hasI18nMeta(node) {
         return !!node.i18n;
+    }
+    function isBoundI18nAttribute(node) {
+        return node.i18n !== undefined && node instanceof BoundAttribute;
     }
     function hasI18nAttrs(element) {
         return element.attrs.some((attr) => isI18nAttribute(attr.name));
@@ -15877,7 +15880,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     (function (TagType) {
         TagType[TagType["ELEMENT"] = 0] = "ELEMENT";
         TagType[TagType["TEMPLATE"] = 1] = "TEMPLATE";
-        TagType[TagType["PROJECTION"] = 2] = "PROJECTION";
     })(TagType || (TagType = {}));
     /**
      * Generates an object that is used as a shared state between parent and all child contexts.
@@ -15959,10 +15961,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.appendTag(TagType.ELEMENT, node, index, closed);
         }
         appendProjection(node, index) {
-            // add open and close tags at the same time,
-            // since we process projected content separately
-            this.appendTag(TagType.PROJECTION, node, index, false);
-            this.appendTag(TagType.PROJECTION, node, index, true);
+            // Add open and close tags at the same time, since `<ng-content>` has no content,
+            // so when we come across `<ng-content>` we can register both open and close tags.
+            // Note: runtime i18n logic doesn't distinguish `<ng-content>` tag placeholders and
+            // regular element tag placeholders, so we generate element placeholders for both types.
+            this.appendTag(TagType.ELEMENT, node, index, false);
+            this.appendTag(TagType.ELEMENT, node, index, true);
         }
         /**
          * Generates an instance of a child context based on the root one,
@@ -16045,7 +16049,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function serializePlaceholderValue(value) {
         const element = (data, closed) => wrapTag('#', data, closed);
         const template = (data, closed) => wrapTag('*', data, closed);
-        const projection = (data, closed) => wrapTag('!', data, closed);
         switch (value.type) {
             case TagType.ELEMENT:
                 // close element tag
@@ -16060,8 +16063,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return element(value);
             case TagType.TEMPLATE:
                 return template(value, value.closed);
-            case TagType.PROJECTION:
-                return projection(value, value.closed);
             default:
                 return value;
         }
@@ -17111,24 +17112,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const bindings = [];
             attrs.forEach(attr => {
                 const message = attr.i18n;
-                if (attr instanceof TextAttribute) {
-                    i18nAttrArgs.push(literal(attr.name), this.i18nTranslate(message));
-                }
-                else {
-                    const converted = attr.value.visit(this._valueConverter);
-                    this.allocateBindingSlots(converted);
-                    if (converted instanceof Interpolation) {
-                        const placeholders = assembleBoundTextPlaceholders(message);
-                        const params = placeholdersToParams(placeholders);
-                        i18nAttrArgs.push(literal(attr.name), this.i18nTranslate(message, params));
-                        converted.expressions.forEach(expression => {
-                            hasBindings = true;
-                            bindings.push({
-                                sourceSpan,
-                                value: () => this.convertPropertyBinding(expression),
-                            });
+                const converted = attr.value.visit(this._valueConverter);
+                this.allocateBindingSlots(converted);
+                if (converted instanceof Interpolation) {
+                    const placeholders = assembleBoundTextPlaceholders(message);
+                    const params = placeholdersToParams(placeholders);
+                    i18nAttrArgs.push(literal(attr.name), this.i18nTranslate(message, params));
+                    converted.expressions.forEach(expression => {
+                        hasBindings = true;
+                        bindings.push({
+                            sourceSpan,
+                            value: () => this.convertPropertyBinding(expression),
                         });
-                    }
+                    });
                 }
             });
             if (bindings.length > 0) {
@@ -17188,7 +17184,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const stylingBuilder = new StylingBuilder(null);
             let isNonBindableMode = false;
             const isI18nRootElement = isI18nRootNode(element.i18n) && !isSingleI18nIcu(element.i18n);
-            const i18nAttrs = [];
+            const boundI18nAttrs = [];
             const outputAttrs = [];
             const [namespaceKey, elementName] = splitNsName(element.name);
             const isNgContainer$1 = isNgContainer(element.name);
@@ -17204,8 +17200,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 else if (name === 'class') {
                     stylingBuilder.registerClassAttr(value);
                 }
+                else if (isBoundI18nAttribute(attr)) {
+                    // Note that we don't collect static i18n attributes here, because
+                    // they can be treated in the same way as regular attributes.
+                    boundI18nAttrs.push(attr);
+                }
                 else {
-                    (attr.i18n ? i18nAttrs : outputAttrs).push(attr);
+                    outputAttrs.push(attr);
                 }
             }
             // Match directives on non i18n attributes
@@ -17221,7 +17222,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const stylingInputWasSet = stylingBuilder.registerBoundInput(input);
                 if (!stylingInputWasSet) {
                     if (input.type === 0 /* Property */ && input.i18n) {
-                        i18nAttrs.push(input);
+                        boundI18nAttrs.push(input);
                     }
                     else {
                         allOtherInputs.push(input);
@@ -17229,7 +17230,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 }
             });
             // add attributes for directive and projection matching purposes
-            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs);
+            const attributes = this.getAttributeExpressions(element.name, outputAttrs, allOtherInputs, element.outputs, stylingBuilder, [], boundI18nAttrs);
             parameters.push(this.addAttrsToConsts(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             const refs = this.prepareRefsArray(element.references);
@@ -17249,7 +17250,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const hasChildren = (!isI18nRootElement && this.i18n) ? !hasTextChildrenOnly(element.children) :
                 element.children.length > 0;
             const createSelfClosingInstruction = !stylingBuilder.hasBindingsWithPipes &&
-                element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren;
+                element.outputs.length === 0 && boundI18nAttrs.length === 0 && !hasChildren;
             const createSelfClosingI18nInstruction = !createSelfClosingInstruction && hasTextChildrenOnly(element.children);
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainer : Identifiers$1.element, trimTrailingNulls(parameters));
@@ -17259,8 +17260,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 if (isNonBindableMode) {
                     this.creationInstruction(element.startSourceSpan, Identifiers$1.disableBindings);
                 }
-                if (i18nAttrs.length > 0) {
-                    this.i18nAttributesInstruction(elementIndex, i18nAttrs, (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan);
+                if (boundI18nAttrs.length > 0) {
+                    this.i18nAttributesInstruction(elementIndex, boundI18nAttrs, (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan);
                 }
                 // Generate Listeners (outputs)
                 if (element.outputs.length > 0) {
@@ -17427,8 +17428,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
-            const [i18nStaticAttrs, staticAttrs] = partitionArray(template.attributes, hasI18nMeta);
-            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, staticAttrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, i18nStaticAttrs);
+            const [boundI18nAttrs, attrs] = partitionArray(template.attributes, isBoundI18nAttribute);
+            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, attrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, boundI18nAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -17459,7 +17460,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
             if (template.tagName === NG_TEMPLATE_TAG_NAME) {
                 const [i18nInputs, inputs] = partitionArray(template.inputs, hasI18nMeta);
-                const i18nAttrs = [...i18nStaticAttrs, ...i18nInputs];
+                const i18nAttrs = [...boundI18nAttrs, ...i18nInputs];
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
                 // elements, in case of inline templates, corresponding instructions will be generated in the
@@ -17747,16 +17748,23 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], i18nAttrs = []) {
+        getAttributeExpressions(elementName, renderAttributes, inputs, outputs, styles, templateAttrs = [], boundI18nAttrs = []) {
             const alreadySeen = new Set();
             const attrExprs = [];
             let ngProjectAsAttr;
-            renderAttributes.forEach((attr) => {
+            for (const attr of renderAttributes) {
                 if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
                     ngProjectAsAttr = attr;
                 }
-                attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
-            });
+                // Note that static i18n attributes aren't in the i18n array,
+                // because they're treated in the same way as regular attributes.
+                if (attr.i18n) {
+                    attrExprs.push(literal(attr.name), this.i18nTranslate(attr.i18n));
+                }
+                else {
+                    attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
+                }
+            }
             // Keep ngProjectAs next to the other name, value pairs so we can verify that we match
             // ngProjectAs marker in the attribute name slot.
             if (ngProjectAsAttr) {
@@ -17808,9 +17816,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 attrExprs.push(literal(4 /* Template */));
                 templateAttrs.forEach(attr => addAttrExpr(attr.name));
             }
-            if (i18nAttrs.length) {
+            if (boundI18nAttrs.length) {
                 attrExprs.push(literal(6 /* I18n */));
-                i18nAttrs.forEach(attr => addAttrExpr(attr.name));
+                boundI18nAttrs.forEach(attr => addAttrExpr(attr.name));
             }
             return attrExprs;
         }
@@ -18302,6 +18310,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
         if (parseResult.errors && parseResult.errors.length > 0) {
+            // TODO(ayazhafiz): we may not always want to bail out at this point (e.g. in
+            // the context of a language service).
             return {
                 interpolationConfig,
                 preserveWhitespaces,
@@ -18331,22 +18341,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
         }
         const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
-        if (errors && errors.length > 0) {
-            return {
-                interpolationConfig,
-                preserveWhitespaces,
-                template,
-                errors,
-                nodes: [],
-                styleUrls: [],
-                styles: [],
-                ngContentSelectors: []
-            };
-        }
         return {
             interpolationConfig,
             preserveWhitespaces,
-            errors: null,
+            errors: errors.length > 0 ? errors : null,
             template,
             nodes,
             styleUrls,
@@ -19310,7 +19308,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-rc.0+35.sha-3fbf325');
+    const VERSION$1 = new Version('11.0.0-rc.0+58.sha-399f491');
 
     /**
      * @license
@@ -19945,7 +19943,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-rc.0+35.sha-3fbf325');
+    const VERSION$2 = new Version('11.0.0-rc.0+58.sha-399f491');
 
     /**
      * @license
@@ -31548,9 +31546,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     var CompletionKind;
     (function (CompletionKind) {
-        CompletionKind[CompletionKind["ContextComponent"] = 0] = "ContextComponent";
-        CompletionKind[CompletionKind["Reference"] = 1] = "Reference";
-        CompletionKind[CompletionKind["Variable"] = 2] = "Variable";
+        CompletionKind[CompletionKind["Reference"] = 0] = "Reference";
+        CompletionKind[CompletionKind["Variable"] = 1] = "Variable";
     })(CompletionKind || (CompletionKind = {}));
 
     /**
@@ -31762,6 +31759,77 @@ Either add the @Injectable() decorator to '${provider.node.name
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
             return commentText === `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`;
         }) || false;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Powers autocompletion for a specific component.
+     *
+     * Internally caches autocompletion results, and must be discarded if the component template or
+     * surrounding TS program have changed.
+     */
+    class CompletionEngine {
+        constructor(tcb, data, shimPath) {
+            this.tcb = tcb;
+            this.data = data;
+            this.shimPath = shimPath;
+            /**
+             * Cache of `GlobalCompletion`s for various levels of the template, including the root template
+             * (`null`).
+             */
+            this.globalCompletionCache = new Map();
+        }
+        /**
+         * Get global completions within the given template context - either a `TmplAstTemplate` embedded
+         * view, or `null` for the root template context.
+         */
+        getGlobalCompletions(context) {
+            if (this.globalCompletionCache.has(context)) {
+                return this.globalCompletionCache.get(context);
+            }
+            // Find the component completion expression within the TCB. This looks like: `ctx. /* ... */;`
+            const globalRead = findFirstMatchingNode(this.tcb, {
+                filter: ts.isPropertyAccessExpression,
+                withExpressionIdentifier: ExpressionIdentifier.COMPONENT_COMPLETION
+            });
+            if (globalRead === null) {
+                return null;
+            }
+            const completion = {
+                componentContext: {
+                    shimPath: this.shimPath,
+                    // `globalRead.name` is an empty `ts.Identifier`, so its start position immediately follows
+                    // the `.` in `ctx.`. TS autocompletion APIs can then be used to access completion results
+                    // for the component context.
+                    positionInShimFile: globalRead.name.getStart(),
+                },
+                templateContext: new Map(),
+            };
+            // The bound template already has details about the references and variables in scope in the
+            // `context` template - they just need to be converted to `Completion`s.
+            for (const node of this.data.boundTarget.getEntitiesInTemplateScope(context)) {
+                if (node instanceof Reference) {
+                    completion.templateContext.set(node.name, {
+                        kind: CompletionKind.Reference,
+                        node,
+                    });
+                }
+                else {
+                    completion.templateContext.set(node.name, {
+                        kind: CompletionKind.Variable,
+                        node,
+                    });
+                }
+            }
+            this.globalCompletionCache.set(context, completion);
+            return completion;
+        }
     }
 
     /**
@@ -35444,43 +35512,53 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * A class which extracts information from a type check block.
-     * This class is essentially used as just a closure around the constructor parameters.
+     * Generates and caches `Symbol`s for various template structures for a given component.
+     *
+     * The `SymbolBuilder` internally caches the `Symbol`s it creates, and must be destroyed and
+     * replaced if the component's template changes.
      */
     class SymbolBuilder {
-        constructor(typeChecker, shimPath, typeCheckBlock, templateData, componentScopeReader) {
-            this.typeChecker = typeChecker;
+        constructor(shimPath, typeCheckBlock, templateData, componentScopeReader, 
+        // The `ts.TypeChecker` depends on the current type-checking program, and so must be requested
+        // on-demand instead of cached.
+        getTypeChecker) {
             this.shimPath = shimPath;
             this.typeCheckBlock = typeCheckBlock;
             this.templateData = templateData;
             this.componentScopeReader = componentScopeReader;
+            this.getTypeChecker = getTypeChecker;
+            this.symbolCache = new Map();
         }
         getSymbol(node) {
+            if (this.symbolCache.has(node)) {
+                return this.symbolCache.get(node);
+            }
+            let symbol = null;
             if (node instanceof BoundAttribute || node instanceof TextAttribute) {
                 // TODO(atscott): input and output bindings only return the first directive match but should
                 // return a list of bindings for all of them.
-                return this.getSymbolOfInputBinding(node);
+                symbol = this.getSymbolOfInputBinding(node);
             }
             else if (node instanceof BoundEvent) {
-                return this.getSymbolOfBoundEvent(node);
+                symbol = this.getSymbolOfBoundEvent(node);
             }
             else if (node instanceof Element) {
-                return this.getSymbolOfElement(node);
+                symbol = this.getSymbolOfElement(node);
             }
             else if (node instanceof Template) {
-                return this.getSymbolOfAstTemplate(node);
+                symbol = this.getSymbolOfAstTemplate(node);
             }
             else if (node instanceof Variable) {
-                return this.getSymbolOfVariable(node);
+                symbol = this.getSymbolOfVariable(node);
             }
             else if (node instanceof Reference) {
-                return this.getSymbolOfReference(node);
+                symbol = this.getSymbolOfReference(node);
             }
             else if (node instanceof AST) {
-                return this.getSymbolOfTemplateExpression(node);
+                symbol = this.getSymbolOfTemplateExpression(node);
             }
-            // TODO(atscott): TmplAstContent, TmplAstIcu
-            return null;
+            this.symbolCache.set(node, symbol);
+            return symbol;
         }
         getSymbolOfAstTemplate(template) {
             const directives = this.getDirectivesOfNode(template);
@@ -35515,7 +35593,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const nodes = findAllMatchingNodes(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: isDirectiveDeclaration });
             return nodes
                 .map(node => {
-                var _a, _b;
+                var _a;
                 const symbol = this.getSymbolOfTsNode(node.parent);
                 if (symbol === null || symbol.tsSymbol === null ||
                     symbol.tsSymbol.valueDeclaration === undefined ||
@@ -35527,10 +35605,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                     return null;
                 }
                 const ngModule = this.getDirectiveModule(symbol.tsSymbol.valueDeclaration);
-                const selector = (_a = meta.selector) !== null && _a !== void 0 ? _a : null;
-                const isComponent = (_b = meta.isComponent) !== null && _b !== void 0 ? _b : null;
-                const directiveSymbol = Object.assign(Object.assign({}, symbol), { tsSymbol: symbol.tsSymbol, selector,
-                    isComponent,
+                if (meta.selector === null) {
+                    return null;
+                }
+                const isComponent = (_a = meta.isComponent) !== null && _a !== void 0 ? _a : null;
+                const directiveSymbol = Object.assign(Object.assign({}, symbol), { tsSymbol: symbol.tsSymbol, selector: meta.selector, isComponent,
                     ngModule, kind: SymbolKind.Directive });
                 return directiveSymbol;
             })
@@ -35570,7 +35649,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (outputFieldAccess === null) {
                 return null;
             }
-            const tsSymbol = this.typeChecker.getSymbolAtLocation(outputFieldAccess.argumentExpression);
+            const tsSymbol = this.getTypeChecker().getSymbolAtLocation(outputFieldAccess.argumentExpression);
             if (tsSymbol === undefined) {
                 return null;
             }
@@ -35579,7 +35658,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             const positionInShimFile = this.getShimPositionForNode(outputFieldAccess);
-            const tsType = this.typeChecker.getTypeAtLocation(node);
+            const tsType = this.getTypeChecker().getTypeAtLocation(node);
             return {
                 kind: SymbolKind.Output,
                 bindings: [{
@@ -35621,8 +35700,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             var _a;
             // In either case, `_t1["index"]` or `_t1.index`, `node.expression` is _t1.
             // The retrieved symbol for _t1 will be the variable declaration.
-            const tsSymbol = this.typeChecker.getSymbolAtLocation(node.expression);
-            if (tsSymbol === undefined || tsSymbol.declarations.length === 0) {
+            const tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.expression);
+            if (tsSymbol === undefined || tsSymbol.declarations.length === 0 || selector === null) {
                 return null;
             }
             const [declaration] = tsSymbol.declarations;
@@ -35674,8 +35753,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             // initializers as invalid for symbol retrieval.
             const originalDeclaration = ts.isParenthesizedExpression(node.initializer) &&
                 ts.isAsExpression(node.initializer.expression) ?
-                this.typeChecker.getSymbolAtLocation(node.name) :
-                this.typeChecker.getSymbolAtLocation(node.initializer);
+                this.getTypeChecker().getSymbolAtLocation(node.name) :
+                this.getTypeChecker().getSymbolAtLocation(node.initializer);
             if (originalDeclaration === undefined || originalDeclaration.valueDeclaration === undefined) {
                 return null;
             }
@@ -35729,7 +35808,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return Object.assign(Object.assign({}, whenTrueSymbol), { kind: SymbolKind.Expression, 
                     // Rather than using the type of only the `whenTrue` part of the expression, we should
                     // still get the type of the whole conditional expression to include `|undefined`.
-                    tsType: this.typeChecker.getTypeAtLocation(node) });
+                    tsType: this.getTypeChecker().getTypeAtLocation(node) });
             }
             else if (expression instanceof BindingPipe && ts.isCallExpression(node)) {
                 // TODO(atscott): Create a PipeSymbol to include symbol for the Pipe class
@@ -35748,16 +35827,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             let tsSymbol;
             if (ts.isPropertyAccessExpression(node)) {
-                tsSymbol = this.typeChecker.getSymbolAtLocation(node.name);
+                tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.name);
             }
             else if (ts.isElementAccessExpression(node)) {
-                tsSymbol = this.typeChecker.getSymbolAtLocation(node.argumentExpression);
+                tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.argumentExpression);
             }
             else {
-                tsSymbol = this.typeChecker.getSymbolAtLocation(node);
+                tsSymbol = this.getTypeChecker().getSymbolAtLocation(node);
             }
             const positionInShimFile = this.getShimPositionForNode(node);
-            const type = this.typeChecker.getTypeAtLocation(node);
+            const type = this.getTypeChecker().getTypeAtLocation(node);
             return {
                 // If we could not find a symbol, fall back to the symbol on the type for the node.
                 // Some nodes won't have a "symbol at location" but will have a symbol for the type.
@@ -35810,6 +35889,31 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.priorBuild = priorBuild;
             this.componentScopeReader = componentScopeReader;
             this.state = new Map();
+            /**
+             * Stores the `CompletionEngine` which powers autocompletion for each component class.
+             *
+             * Must be invalidated whenever the component's template or the `ts.Program` changes. Invalidation
+             * on template changes is performed within this `TemplateTypeCheckerImpl` instance. When the
+             * `ts.Program` changes, the `TemplateTypeCheckerImpl` as a whole is destroyed and replaced.
+             */
+            this.completionCache = new Map();
+            /**
+             * Stores the `SymbolBuilder` which creates symbols for each component class.
+             *
+             * Must be invalidated whenever the component's template or the `ts.Program` changes. Invalidation
+             * on template changes is performed within this `TemplateTypeCheckerImpl` instance. When the
+             * `ts.Program` changes, the `TemplateTypeCheckerImpl` as a whole is destroyed and replaced.
+             */
+            this.symbolBuilderCache = new Map();
+            /**
+             * Stores directives and pipes that are in scope for each component.
+             *
+             * Unlike the other caches, the scope of a component is not affected by its template, so this
+             * cache does not need to be invalidate if the template is overridden. It will be destroyed when
+             * the `ts.Program` changes and the `TemplateTypeCheckerImpl` as a whole is destroyed and
+             * replaced.
+             */
+            this.scopeCache = new Map();
             this.isComplete = false;
         }
         resetOverrides() {
@@ -35820,6 +35924,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                     fileRecord.isComplete = false;
                 }
             }
+            // Ideally only those components with overridden templates would have their caches invalidated,
+            // but the `TemplateTypeCheckerImpl` does not track the class for components with overrides. As
+            // a quick workaround, clear the entire cache instead.
+            this.completionCache.clear();
+            this.symbolBuilderCache.clear();
         }
         getTemplate(component) {
             const { data } = this.getLatestComponentState(component);
@@ -35877,6 +35986,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             fileRecord.shimData.delete(shimFile);
             fileRecord.isComplete = false;
             this.isComplete = false;
+            // Overriding a component's template invalidates its cached results.
+            this.completionCache.delete(component);
+            this.symbolBuilderCache.delete(component);
             return { nodes };
         }
         /**
@@ -35933,44 +36045,23 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.getLatestComponentState(component).tcb;
         }
         getGlobalCompletions(context, component) {
+            const engine = this.getOrCreateCompletionEngine(component);
+            if (engine === null) {
+                return null;
+            }
+            return engine.getGlobalCompletions(context);
+        }
+        getOrCreateCompletionEngine(component) {
+            if (this.completionCache.has(component)) {
+                return this.completionCache.get(component);
+            }
             const { tcb, data, shimPath } = this.getLatestComponentState(component);
             if (tcb === null || data === null) {
-                return [];
+                return null;
             }
-            const { boundTarget } = data;
-            // Global completions are the union of two separate pieces: a `ContextComponentCompletion` which
-            // is created from an expression within the TCB, and a list of named entities (variables and
-            // references) which are visible within the given `context` template.
-            const completions = [];
-            const globalRead = findFirstMatchingNode(tcb, {
-                filter: ts.isPropertyAccessExpression,
-                withExpressionIdentifier: ExpressionIdentifier.COMPONENT_COMPLETION
-            });
-            if (globalRead === null) {
-                return [];
-            }
-            completions.push({
-                kind: CompletionKind.ContextComponent,
-                shimPath,
-                positionInShimFile: globalRead.name.getStart(),
-            });
-            // Add completions for each entity in the template scope. Since each entity is uniquely named,
-            // there is no special ordering applied here.
-            for (const node of boundTarget.getEntitiesInTemplateScope(context)) {
-                if (node instanceof Reference) {
-                    completions.push({
-                        kind: CompletionKind.Reference,
-                        node: node,
-                    });
-                }
-                else {
-                    completions.push({
-                        kind: CompletionKind.Variable,
-                        node: node,
-                    });
-                }
-            }
-            return completions;
+            const engine = new CompletionEngine(tcb, data, shimPath);
+            this.completionCache.set(component, engine);
+            return engine;
         }
         maybeAdoptPriorResultsForFile(sf) {
             const sfPath = absoluteFromSourceFile(sf);
@@ -36087,13 +36178,81 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.state.get(path);
         }
         getSymbolOfNode(node, component) {
+            const builder = this.getOrCreateSymbolBuilder(component);
+            if (builder === null) {
+                return null;
+            }
+            return builder.getSymbol(node);
+        }
+        getOrCreateSymbolBuilder(component) {
+            if (this.symbolBuilderCache.has(component)) {
+                return this.symbolBuilderCache.get(component);
+            }
             const { tcb, data, shimPath } = this.getLatestComponentState(component);
             if (tcb === null || data === null) {
                 return null;
             }
+            const builder = new SymbolBuilder(shimPath, tcb, data, this.componentScopeReader, () => this.typeCheckingStrategy.getProgram().getTypeChecker());
+            this.symbolBuilderCache.set(component, builder);
+            return builder;
+        }
+        getDirectivesInScope(component) {
+            const data = this.getScopeData(component);
+            if (data === null) {
+                return null;
+            }
+            return data.directives;
+        }
+        getPipesInScope(component) {
+            const data = this.getScopeData(component);
+            if (data === null) {
+                return null;
+            }
+            return data.pipes;
+        }
+        getScopeData(component) {
+            if (this.scopeCache.has(component)) {
+                return this.scopeCache.get(component);
+            }
+            if (!isNamedClassDeclaration(component)) {
+                throw new Error(`AssertionError: components must have names`);
+            }
+            const data = {
+                directives: [],
+                pipes: [],
+            };
+            const scope = this.componentScopeReader.getScopeForComponent(component);
+            if (scope === null || scope === 'error') {
+                return null;
+            }
             const typeChecker = this.typeCheckingStrategy.getProgram().getTypeChecker();
-            return new SymbolBuilder(typeChecker, shimPath, tcb, data, this.componentScopeReader)
-                .getSymbol(node);
+            for (const dir of scope.exported.directives) {
+                if (dir.selector === null) {
+                    // Skip this directive, it can't be added to a template anyway.
+                    continue;
+                }
+                const tsSymbol = typeChecker.getSymbolAtLocation(dir.ref.node.name);
+                if (tsSymbol === undefined) {
+                    continue;
+                }
+                data.directives.push({
+                    isComponent: dir.isComponent,
+                    selector: dir.selector,
+                    tsSymbol,
+                });
+            }
+            for (const pipe of scope.exported.pipes) {
+                const tsSymbol = typeChecker.getSymbolAtLocation(pipe.ref.node.name);
+                if (tsSymbol === undefined) {
+                    continue;
+                }
+                data.pipes.push({
+                    name: pipe.name,
+                    tsSymbol,
+                });
+            }
+            this.scopeCache.set(component, data);
+            return data;
         }
     }
     function convertDiagnostic(diag, sourceResolver) {
