@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+140.sha-20c26cd
+ * @license Angular v11.0.0-next.6+136.sha-371fb9a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18361,7 +18361,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+140.sha-20c26cd');
+    const VERSION$1 = new Version('11.0.0-next.6+136.sha-371fb9a');
 
     /**
      * @license
@@ -46748,7 +46748,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+140.sha-20c26cd');
+    const VERSION$2 = new Version$1('11.0.0-next.6+136.sha-371fb9a');
 
     /**
      * @license
