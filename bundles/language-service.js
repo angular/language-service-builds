@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+131.sha-0723331
+ * @license Angular v11.0.0-next.6+132.sha-e6ca3d3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18361,7 +18361,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+131.sha-0723331');
+    const VERSION$1 = new Version('11.0.0-next.6+132.sha-e6ca3d3');
 
     /**
      * @license
@@ -27556,6 +27556,25 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    class RuntimeError extends Error {
+        constructor(code, message) {
+            super(formatRuntimeError(code, message));
+            this.code = code;
+        }
+    }
+    /** Called to format a runtime error */
+    function formatRuntimeError(code, message) {
+        const fullCode = code ? `NG0${code}: ` : '';
+        return `${fullCode}${message}`;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Used for stringify render output in Ivy.
      * Important! This function is very performance-sensitive and we should
@@ -27591,12 +27610,12 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     /** Called when directives inject each other (creating a circular dependency) */
     function throwCyclicDependencyError(token, path) {
         const depPath = path ? `. Dependency path: ${path.join(' > ')} > ${token}` : '';
-        throw new Error(`Circular dependency in DI detected for ${token}${depPath}`);
+        throw new RuntimeError("200" /* CYCLIC_DI_DEPENDENCY */, `Circular dependency in DI detected for ${token}${depPath}`);
     }
     /** Throws an error when a token is not found in DI. */
     function throwProviderNotFoundError(token, injectorName) {
         const injectorDetails = injectorName ? ` in ${injectorName}` : '';
-        throw new Error(`No provider for ${stringifyForError(token)} found${injectorDetails}`);
+        throw new RuntimeError("201" /* PROVIDER_NOT_FOUND */, `No provider for ${stringifyForError(token)} found${injectorDetails}`);
     }
 
     /**
@@ -34626,7 +34645,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+131.sha-0723331');
+    const VERSION$2 = new Version$1('11.0.0-next.6+132.sha-e6ca3d3');
 
     /**
      * @license
