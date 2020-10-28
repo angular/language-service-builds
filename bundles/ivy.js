@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+134.sha-7c45cbc
+ * @license Angular v11.0.0-next.6+137.sha-1508fd2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19400,7 +19400,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+134.sha-7c45cbc');
+    const VERSION$1 = new Version('11.0.0-next.6+137.sha-1508fd2');
 
     /**
      * @license
@@ -20035,7 +20035,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+134.sha-7c45cbc');
+    const VERSION$2 = new Version('11.0.0-next.6+137.sha-1508fd2');
 
     /**
      * @license
@@ -22613,27 +22613,69 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Tracks the mapping between external template files and the component(s) which use them.
+     * Tracks the mapping between external template/style files and the component(s) which use them.
      *
      * This information is produced during analysis of the program and is used mainly to support
      * external tooling, for which such a mapping is challenging to determine without compiler
      * assistance.
      */
-    class TemplateRegistry {
+    class ResourceRegistry {
         constructor() {
-            this.map = new Map();
+            this.templateToComponentsMap = new Map();
+            this.componentToTemplateMap = new Map();
+            this.componentToStylesMap = new Map();
+            this.styleToComponentsMap = new Map();
         }
         getComponentsWithTemplate(template) {
-            if (!this.map.has(template)) {
+            if (!this.templateToComponentsMap.has(template)) {
                 return new Set();
             }
-            return this.map.get(template);
+            return this.templateToComponentsMap.get(template);
         }
-        register(template, component) {
-            if (!this.map.has(template)) {
-                this.map.set(template, new Set());
+        registerResources(resources, component) {
+            if (resources.template !== null) {
+                this.registerTemplate(resources.template, component);
             }
-            this.map.get(template).add(component);
+            for (const style of resources.styles) {
+                this.registerStyle(style, component);
+            }
+        }
+        registerTemplate(templateResource, component) {
+            const { path } = templateResource;
+            if (!this.templateToComponentsMap.has(path)) {
+                this.templateToComponentsMap.set(path, new Set());
+            }
+            this.templateToComponentsMap.get(path).add(component);
+            this.componentToTemplateMap.set(component, templateResource);
+        }
+        getTemplate(component) {
+            if (!this.componentToTemplateMap.has(component)) {
+                return null;
+            }
+            return this.componentToTemplateMap.get(component);
+        }
+        registerStyle(styleResource, component) {
+            const { path } = styleResource;
+            if (!this.componentToStylesMap.has(component)) {
+                this.componentToStylesMap.set(component, new Set());
+            }
+            if (!this.styleToComponentsMap.has(path)) {
+                this.styleToComponentsMap.set(path, new Set());
+            }
+            this.styleToComponentsMap.get(path).add(component);
+            this.componentToStylesMap.get(component).add(styleResource);
+        }
+        getStyles(component) {
+            if (!this.componentToStylesMap.has(component)) {
+                return new Set();
+            }
+            return this.componentToStylesMap.get(component);
+        }
+        getComponentsWithStyle(styleUrl) {
+            if (!this.styleToComponentsMap.has(styleUrl)) {
+                return new Set();
+            }
+            return this.styleToComponentsMap.get(styleUrl);
         }
     }
 
@@ -27449,14 +27491,14 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `DecoratorHandler` which handles the `@Component` annotation.
      */
     class ComponentDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
+        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
             this.metaReader = metaReader;
             this.scopeReader = scopeReader;
             this.scopeRegistry = scopeRegistry;
-            this.templateMapping = templateMapping;
+            this.resourceRegistry = resourceRegistry;
             this.isCore = isCore;
             this.resourceLoader = resourceLoader;
             this.rootDirs = rootDirs;
@@ -27615,6 +27657,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                     template = this._extractInlineTemplate(node, decorator, component, containingFile);
                 }
             }
+            const templateResource = template.isInline ?
+                null :
+                { path: absoluteFrom(template.templateUrl), expression: template.sourceMapping.node };
             let diagnostics = undefined;
             if (template.errors !== null) {
                 // If there are any template parsing errors, convert them to `ts.Diagnostic`s for display.
@@ -27635,6 +27680,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // precede inline styles, and styles defined in the template override styles defined in the
             // component.
             let styles = null;
+            const styleResources = this._extractStyleResources(component, containingFile);
             const styleUrls = this._extractStyleUrls(component, template.styleUrls);
             if (styleUrls !== null) {
                 if (styles === null) {
@@ -27691,6 +27737,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     template,
                     providersRequiringFactory,
                     viewProvidersRequiringFactory,
+                    resources: {
+                        styles: styleResources,
+                        template: templateResource,
+                    },
                 },
                 diagnostics,
             };
@@ -27704,9 +27754,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // the information about the component is available during the compile() phase.
             const ref = new Reference$1(node);
             this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
-            if (!analysis.template.isInline) {
-                this.templateMapping.register(resolve(analysis.template.templateUrl), node);
-            }
+            this.resourceRegistry.registerResources(analysis.resources, node);
             this.injectableRegistry.registerInjectable(node);
         }
         index(context, node, analysis) {
@@ -27896,6 +27944,21 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             styleUrls.push(...extraUrls);
             return styleUrls;
+        }
+        _extractStyleResources(component, containingFile) {
+            const styleUrlsExpr = component.get('styleUrls');
+            // If styleUrls is a literal array of strings, process each resource url individually and
+            // register them. Otherwise, give up and return an empty set.
+            if (styleUrlsExpr === undefined || !ts.isArrayLiteralExpression(styleUrlsExpr) ||
+                !styleUrlsExpr.elements.every(e => ts.isStringLiteralLike(e))) {
+                return new Set();
+            }
+            const externalStyles = new Set();
+            for (const expression of styleUrlsExpr.elements) {
+                const resourceUrl = this.resourceLoader.resolve(expression.text, containingFile);
+                externalStyles.add({ path: absoluteFrom(resourceUrl), expression });
+            }
+            return externalStyles;
         }
         _preloadAndParseTemplate(node, decorator, component, containingFile) {
             if (component.has('templateUrl')) {
@@ -36639,8 +36702,27 @@ Either add the @Injectable() decorator to '${provider.node.name
          * Retrieves the `ts.Declaration`s for any component(s) which use the given template file.
          */
         getComponentsWithTemplateFile(templateFilePath) {
-            const { templateMapping } = this.ensureAnalyzed();
-            return templateMapping.getComponentsWithTemplate(resolve(templateFilePath));
+            const { resourceRegistry } = this.ensureAnalyzed();
+            return resourceRegistry.getComponentsWithTemplate(resolve(templateFilePath));
+        }
+        /**
+         * Retrieves the `ts.Declaration`s for any component(s) which use the given template file.
+         */
+        getComponentsWithStyleFile(styleFilePath) {
+            const { resourceRegistry } = this.ensureAnalyzed();
+            return resourceRegistry.getComponentsWithStyle(resolve(styleFilePath));
+        }
+        /**
+         * Retrieves external resources for the given component.
+         */
+        getComponentResources(classDecl) {
+            if (!isNamedClassDeclaration(classDecl)) {
+                return null;
+            }
+            const { resourceRegistry } = this.ensureAnalyzed();
+            const styles = resourceRegistry.getStyles(classDecl);
+            const template = resourceRegistry.getTemplate(classDecl);
+            return { styles, template };
         }
         /**
          * Perform Angular's analysis step (as a precursor to `getDiagnostics` or `prepareEmit`)
@@ -37072,10 +37154,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             const mwpScanner = new ModuleWithProvidersScanner(reflector, evaluator, refEmitter);
             const isCore = isAngularCorePackage(this.tsProgram);
             const defaultImportTracker = new DefaultImportTracker();
-            const templateMapping = new TemplateRegistry();
+            const resourceRegistry = new ResourceRegistry();
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
@@ -37108,7 +37190,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 aliasingHost,
                 refEmitter,
                 templateTypeChecker,
-                templateMapping,
+                resourceRegistry,
             };
         }
     }
