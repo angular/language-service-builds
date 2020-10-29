@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-rc.1+13.sha-0e60dc5
+ * @license Angular v11.0.0-rc.1+16.sha-3091534
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3781,9 +3781,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function hasI18nMeta(node) {
         return !!node.i18n;
-    }
-    function isBoundI18nAttribute(node) {
-        return node.i18n !== undefined && node instanceof BoundAttribute;
     }
     function hasI18nAttrs(element) {
         return element.attrs.some((attr) => isI18nAttribute(attr.name));
@@ -15981,7 +15978,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const stylingBuilder = new StylingBuilder(null);
             let isNonBindableMode = false;
             const isI18nRootElement = isI18nRootNode(element.i18n) && !isSingleI18nIcu(element.i18n);
-            const boundI18nAttrs = [];
             const outputAttrs = [];
             const [namespaceKey, elementName] = splitNsName(element.name);
             const isNgContainer$1 = isNgContainer(element.name);
@@ -15997,11 +15993,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 else if (name === 'class') {
                     stylingBuilder.registerClassAttr(value);
                 }
-                else if (isBoundI18nAttribute(attr)) {
-                    // Note that we don't collect static i18n attributes here, because
-                    // they can be treated in the same way as regular attributes.
-                    boundI18nAttrs.push(attr);
-                }
                 else {
                     outputAttrs.push(attr);
                 }
@@ -16015,7 +16006,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             // Add the attributes
             const allOtherInputs = [];
-            element.inputs.forEach((input) => {
+            const boundI18nAttrs = [];
+            element.inputs.forEach(input => {
                 const stylingInputWasSet = stylingBuilder.registerBoundInput(input);
                 if (!stylingInputWasSet) {
                     if (input.type === 0 /* Property */ && input.i18n) {
@@ -16091,7 +16083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const propertyBindings = [];
             const attributeBindings = [];
             // Generate element input bindings
-            allOtherInputs.forEach((input) => {
+            allOtherInputs.forEach(input => {
                 const inputType = input.type;
                 if (inputType === 4 /* Animation */) {
                     const value = input.value.visit(this._valueConverter);
@@ -16225,8 +16217,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
             // prepare attributes parameter (including attributes used for directive matching)
-            const [boundI18nAttrs, attrs] = partitionArray(template.attributes, isBoundI18nAttribute);
-            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, attrs, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs, boundI18nAttrs);
+            const attrsExprs = this.getAttributeExpressions(NG_TEMPLATE_TAG_NAME, template.attributes, template.inputs, template.outputs, undefined /* styles */, template.templateAttrs);
             parameters.push(this.addAttrsToConsts(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -16257,13 +16248,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
             if (template.tagName === NG_TEMPLATE_TAG_NAME) {
                 const [i18nInputs, inputs] = partitionArray(template.inputs, hasI18nMeta);
-                const i18nAttrs = [...boundI18nAttrs, ...i18nInputs];
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
                 // elements, in case of inline templates, corresponding instructions will be generated in the
                 // nested template function.
-                if (i18nAttrs.length > 0) {
-                    this.i18nAttributesInstruction(templateIndex, i18nAttrs, (_a = template.startSourceSpan) !== null && _a !== void 0 ? _a : template.sourceSpan);
+                if (i18nInputs.length > 0) {
+                    this.i18nAttributesInstruction(templateIndex, i18nInputs, (_a = template.startSourceSpan) !== null && _a !== void 0 ? _a : template.sourceSpan);
                 }
                 // Add the input bindings
                 if (inputs.length > 0) {
@@ -18105,7 +18095,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-rc.1+13.sha-0e60dc5');
+    const VERSION$1 = new Version('11.0.0-rc.1+16.sha-3091534');
 
     /**
      * @license
@@ -34503,7 +34493,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-rc.1+13.sha-0e60dc5');
+    const VERSION$2 = new Version$1('11.0.0-rc.1+16.sha-3091534');
 
     /**
      * @license
