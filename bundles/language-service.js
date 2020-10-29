@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+162.sha-170af07
+ * @license Angular v11.0.0-next.6+163.sha-4a8d5ae
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18366,7 +18366,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+162.sha-170af07');
+    const VERSION$1 = new Version('11.0.0-next.6+163.sha-4a8d5ae');
 
     /**
      * @license
@@ -35669,8 +35669,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function scheduleTick(rootContext, flags) {
         const nothingScheduled = rootContext.flags === 0 /* Empty */;
-        rootContext.flags |= flags;
         if (nothingScheduled && rootContext.clean == _CLEAN_PROMISE) {
+            // https://github.com/angular/angular/issues/39296
+            // should only attach the flags when really scheduling a tick
+            rootContext.flags |= flags;
             let res;
             rootContext.clean = new Promise((r) => res = r);
             rootContext.scheduler(() => {
@@ -46753,7 +46755,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+162.sha-170af07');
+    const VERSION$2 = new Version$1('11.0.0-next.6+163.sha-4a8d5ae');
 
     /**
      * @license
