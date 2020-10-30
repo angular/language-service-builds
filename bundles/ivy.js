@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-rc.1+16.sha-3091534
+ * @license Angular v11.0.0-rc.1+18.sha-a8e0db7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8802,6 +8802,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     /**
+     * Receiver when something is accessed through `this` (e.g. `this.foo`). Note that this class
+     * inherits from `ImplicitReceiver`, because accessing something through `this` is treated the
+     * same as accessing it implicitly inside of an Angular template (e.g. `[attr.title]="this.title"`
+     * is the same as `[attr.title]="title"`.). Inheriting allows for the `this` accesses to be treated
+     * the same as implicit ones, except for a couple of exceptions like `$event` and `$any`.
+     * TODO: we should find a way for this class not to extend from `ImplicitReceiver` in the future.
+     */
+    class ThisReceiver extends ImplicitReceiver {
+        visit(visitor, context = null) {
+            var _a;
+            return (_a = visitor.visitThisReceiver) === null || _a === void 0 ? void 0 : _a.call(visitor, this, context);
+        }
+    }
+    /**
      * Multiple expressions separated by a semicolon.
      */
     class Chain extends AST {
@@ -9110,6 +9124,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.visitAll(ast.args, context);
         }
         visitImplicitReceiver(ast, context) { }
+        visitThisReceiver(ast, context) { }
         visitInterpolation(ast, context) {
             this.visitAll(ast.expressions, context);
         }
@@ -9163,6 +9178,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     class AstTransformer {
         visitImplicitReceiver(ast, context) {
+            return ast;
+        }
+        visitThisReceiver(ast, context) {
             return ast;
         }
         visitInterpolation(ast, context) {
@@ -9244,6 +9262,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     // a change is made a child node.
     class AstMemoryEfficientTransformer {
         visitImplicitReceiver(ast, context) {
+            return ast;
+        }
+        visitThisReceiver(ast, context) {
             return ast;
         }
         visitInterpolation(ast, context) {
@@ -9520,9 +9541,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Converts the given expression AST into an executable output AST, assuming the expression is
      * used in an action binding (e.g. an event handler).
      */
-    function convertActionBinding(localResolver, implicitReceiver, action, bindingId, interpolationFunction, baseSourceSpan, implicitReceiverAccesses) {
+    function convertActionBinding(localResolver, implicitReceiver, action, bindingId, interpolationFunction, baseSourceSpan, implicitReceiverAccesses, globals) {
         if (!localResolver) {
-            localResolver = new DefaultLocalResolver();
+            localResolver = new DefaultLocalResolver(globals);
         }
         const actionWithoutBuiltins = convertPropertyBindingBuiltins({
             createLiteralArrayConverter: (argCount) => {
@@ -9826,6 +9847,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.usesImplicitReceiver = true;
             return this._implicitReceiver;
         }
+        visitThisReceiver(ast, mode) {
+            return this.visitImplicitReceiver(ast, mode);
+        }
         visitInterpolation(ast, mode) {
             ensureExpressionMode(mode, ast);
             const args = [literal(ast.expressions.length)];
@@ -9872,11 +9896,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 undefined;
             return convertToStatementIfNeeded(mode, literal(ast.value, type, this.convertSourceSpan(ast.span)));
         }
-        _getLocal(name) {
+        _getLocal(name, receiver) {
+            var _a;
+            if (((_a = this._localResolver.globals) === null || _a === void 0 ? void 0 : _a.has(name)) && receiver instanceof ThisReceiver) {
+                return null;
+            }
             return this._localResolver.getLocal(name);
         }
         visitMethodCall(ast, mode) {
-            if (ast.receiver instanceof ImplicitReceiver && ast.name == '$any') {
+            if (ast.receiver instanceof ImplicitReceiver &&
+                !(ast.receiver instanceof ThisReceiver) && ast.name === '$any') {
                 const args = this.visitAll(ast.args, _Mode.Expression);
                 if (args.length != 1) {
                     throw new Error(`Invalid call to $any, expected 1 argument but received ${args.length || 'none'}`);
@@ -9893,14 +9922,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 let result = null;
                 const receiver = this._visit(ast.receiver, _Mode.Expression);
                 if (receiver === this._implicitReceiver) {
-                    const varExpr = this._getLocal(ast.name);
+                    const varExpr = this._getLocal(ast.name, ast.receiver);
                     if (varExpr) {
                         // Restore the previous "usesImplicitReceiver" state since the implicit
                         // receiver has been replaced with a resolved local expression.
                         this.usesImplicitReceiver = prevUsesImplicitReceiver;
                         result = varExpr.callFn(args);
+                        this.addImplicitReceiverAccess(ast.name);
                     }
-                    this.addImplicitReceiverAccess(ast.name);
                 }
                 if (result == null) {
                     result = receiver.callMethod(ast.name, args, this.convertSourceSpan(ast.span));
@@ -9924,13 +9953,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const prevUsesImplicitReceiver = this.usesImplicitReceiver;
                 const receiver = this._visit(ast.receiver, _Mode.Expression);
                 if (receiver === this._implicitReceiver) {
-                    result = this._getLocal(ast.name);
+                    result = this._getLocal(ast.name, ast.receiver);
                     if (result) {
                         // Restore the previous "usesImplicitReceiver" state since the implicit
                         // receiver has been replaced with a resolved local expression.
                         this.usesImplicitReceiver = prevUsesImplicitReceiver;
+                        this.addImplicitReceiverAccess(ast.name);
                     }
-                    this.addImplicitReceiverAccess(ast.name);
                 }
                 if (result == null) {
                     result = receiver.prop(ast.name);
@@ -9943,7 +9972,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const prevUsesImplicitReceiver = this.usesImplicitReceiver;
             let varExpr = null;
             if (receiver === this._implicitReceiver) {
-                const localExpr = this._getLocal(ast.name);
+                const localExpr = this._getLocal(ast.name, ast.receiver);
                 if (localExpr) {
                     if (localExpr instanceof ReadPropExpr) {
                         // If the local variable is a property read expression, it's a reference
@@ -10087,6 +10116,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 visitImplicitReceiver(ast) {
                     return null;
                 },
+                visitThisReceiver(ast) {
+                    return null;
+                },
                 visitInterpolation(ast) {
                     return null;
                 },
@@ -10161,6 +10193,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     return true;
                 },
                 visitImplicitReceiver(ast) {
+                    return false;
+                },
+                visitThisReceiver(ast) {
                     return false;
                 },
                 visitInterpolation(ast) {
@@ -10258,6 +10293,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class DefaultLocalResolver {
+        constructor(globals) {
+            this.globals = globals;
+        }
         notifyImplicitReceiverUse() { }
         getLocal(name) {
             if (name === EventHandlerVars.event.name) {
@@ -14591,7 +14629,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             else if (this.next.isKeywordThis()) {
                 this.advance();
-                return new ImplicitReceiver(this.span(start), this.sourceSpan(start));
+                return new ThisReceiver(this.span(start), this.sourceSpan(start));
             }
             else if (this.consumeOptionalCharacter($LBRACKET)) {
                 this.rbracketsExpected++;
@@ -14938,6 +14976,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.errors = [];
         }
         visitImplicitReceiver(ast, context) { }
+        visitThisReceiver(ast, context) { }
         visitInterpolation(ast, context) { }
         visitLiteralPrimitive(ast, context) { }
         visitPropertyRead(ast, context) { }
@@ -16739,6 +16778,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     const NG_CONTENT_SELECT_ATTR$1 = 'select';
     // Attribute name of `ngProjectAs`.
     const NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
+    // Global symbols available only inside event bindings.
+    const EVENT_BINDING_SCOPE_GLOBALS = new Set(['$event']);
     // List of supported global targets for event listeners
     const GLOBAL_TARGET_RESOLVERS = new Map([['window', Identifiers$1.resolveWindow], ['document', Identifiers$1.resolveDocument], ['body', Identifiers$1.resolveBody]]);
     const LEADING_TRIVIA_CHARS = [' ', '\n', '\r', '\t'];
@@ -16757,7 +16798,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const implicitReceiverExpr = (scope === null || scope.bindingLevel === 0) ?
             variable(CONTEXT_NAME) :
             scope.getOrCreateSharedContextVar(0);
-        const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses);
+        const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses, EVENT_BINDING_SCOPE_GLOBALS);
         const statements = [];
         if (scope) {
             statements.push(...scope.restoreViewStatement());
@@ -17857,7 +17898,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     prepareSyntheticListenerFunctionName(eventName, outputAst.phase) :
                     sanitizeIdentifier(eventName);
                 const handlerName = `${this.templateName}_${tagName}_${bindingFnName}_${index}_listener`;
-                const scope = this._bindingScope.nestedScope(this._bindingScope.bindingLevel);
+                const scope = this._bindingScope.nestedScope(this._bindingScope.bindingLevel, EVENT_BINDING_SCOPE_GLOBALS);
                 return prepareEventListenerParameters(outputAst, handlerName, scope);
             };
         }
@@ -17983,16 +18024,22 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     /** The prefix used to get a shared context in BindingScope's map. */
     const SHARED_CONTEXT_KEY = '$$shared_ctx$$';
     class BindingScope {
-        constructor(bindingLevel = 0, parent = null) {
+        constructor(bindingLevel = 0, parent = null, globals) {
             this.bindingLevel = bindingLevel;
             this.parent = parent;
+            this.globals = globals;
             /** Keeps a map from local variables to their BindingData. */
             this.map = new Map();
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
+            if (globals !== undefined) {
+                for (const name of globals) {
+                    this.set(0, name, variable(name));
+                }
+            }
         }
         static createRootScope() {
-            return new BindingScope().set(0, '$event', variable('$event'));
+            return new BindingScope();
         }
         get(name) {
             let current = this;
@@ -18070,8 +18117,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 this.map.get(SHARED_CONTEXT_KEY + 0).declare = true;
             }
         }
-        nestedScope(level) {
-            const newScope = new BindingScope(level, this);
+        nestedScope(level, globals) {
+            const newScope = new BindingScope(level, this, globals);
             if (level > 0)
                 newScope.generateSharedContextVar(0);
             return newScope;
@@ -19298,7 +19345,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-rc.1+16.sha-3091534');
+    const VERSION$1 = new Version('11.0.0-rc.1+18.sha-a8e0db7');
 
     /**
      * @license
@@ -19933,7 +19980,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-rc.1+16.sha-3091534');
+    const VERSION$2 = new Version('11.0.0-rc.1+18.sha-a8e0db7');
 
     /**
      * @license
@@ -33050,6 +33097,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitImplicitReceiver(ast) {
             throw new Error('Method not implemented.');
         }
+        visitThisReceiver(ast) {
+            throw new Error('Method not implemented.');
+        }
         visitInterpolation(ast) {
             // Build up a chain of binary + operations to simulate the string concatenation of the
             // interpolation's expressions. The chain is started using an actual string literal to ensure
@@ -33258,6 +33308,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             return true;
         }
         visitImplicitReceiver(ast) {
+            return false;
+        }
+        visitThisReceiver(ast) {
             return false;
         }
         visitInterpolation(ast) {
@@ -34779,7 +34832,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 addParseSpanInfo(result, ast.sourceSpan);
                 return result;
             }
-            else if (ast instanceof MethodCall && ast.receiver instanceof ImplicitReceiver) {
+            else if (ast instanceof MethodCall && ast.receiver instanceof ImplicitReceiver &&
+                !(ast.receiver instanceof ThisReceiver)) {
                 // Resolve the special `$any(expr)` syntax to insert a cast of the argument to type `any`.
                 // `$any(expr)` -> `expr as any`
                 if (ast.name === '$any' && ast.args.length === 1) {
@@ -34966,7 +35020,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // function that the converted expression becomes a child of, just create a reference to the
             // parameter by its name.
             if (ast instanceof PropertyRead && ast.receiver instanceof ImplicitReceiver &&
-                ast.name === EVENT_PARAMETER) {
+                !(ast.receiver instanceof ThisReceiver) && ast.name === EVENT_PARAMETER) {
                 const event = ts.createIdentifier(EVENT_PARAMETER);
                 addParseSpanInfo(event, ast.nameSpan);
                 return event;
@@ -37541,7 +37595,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function isDollarEvent(n) {
         return n instanceof PropertyRead && n.name === '$event' &&
-            n.receiver instanceof ImplicitReceiver;
+            n.receiver instanceof ImplicitReceiver && !(n.receiver instanceof ThisReceiver);
     }
     /**
      * Returns a new array formed by applying a given callback function to each element of the array,
@@ -38080,7 +38134,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function isDollarAny(node) {
         return node instanceof MethodCall && node.receiver instanceof ImplicitReceiver &&
-            node.name === '$any' && node.args.length === 1;
+            !(node.receiver instanceof ThisReceiver) && node.name === '$any' && node.args.length === 1;
     }
     function createDollarAnyQuickInfo(node) {
         return createQuickInfo('$any', QuickInfoKind.METHOD, getTextSpanOfNode(node), 
