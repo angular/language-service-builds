@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+165.sha-c83b2ad
+ * @license Angular v11.0.0-next.6+166.sha-3241d92
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -15574,7 +15574,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const BIND_NAME_REGEXP = /^(?:(?:(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.*))|\[\(([^\)]+)\)\]|\[([^\]]+)\]|\(([^\)]+)\))$/;
+    const BIND_NAME_REGEXP = /^(?:(bind-)|(let-)|(ref-|#)|(on-)|(bindon-)|(@))(.*)$/;
     // Group 1 = "bind-"
     const KW_BIND_IDX = 1;
     // Group 2 = "let-"
@@ -15589,12 +15589,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     const KW_AT_IDX = 6;
     // Group 7 = the identifier after "bind-", "let-", "ref-/#", "on-", "bindon-" or "@"
     const IDENT_KW_IDX = 7;
-    // Group 8 = identifier inside [()]
-    const IDENT_BANANA_BOX_IDX = 8;
-    // Group 9 = identifier inside []
-    const IDENT_PROPERTY_IDX = 9;
-    // Group 10 = identifier inside ()
-    const IDENT_EVENT_IDX = 10;
+    const BINDING_DELIMS = {
+        BANANA_BOX: { start: '[(', end: ')]' },
+        PROPERTY: { start: '[', end: ']' },
+        EVENT: { start: '(', end: ')' },
+    };
     const TEMPLATE_ATTR_PREFIX$1 = '*';
     function htmlAstToRender3Ast(htmlNodes, bindingParser) {
         const transformer = new HtmlAstToIvyAst(bindingParser);
@@ -15819,9 +15818,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return new ParseSourceSpan(keySpanStart, keySpanEnd, identifier);
             }
             const bindParts = name.match(BIND_NAME_REGEXP);
-            let hasBinding = false;
             if (bindParts) {
-                hasBinding = true;
                 if (bindParts[KW_BIND_IDX] != null) {
                     const identifier = bindParts[IDENT_KW_IDX];
                     const keySpan = createKeySpan(srcSpan, bindParts[KW_BIND_IDX], identifier);
@@ -15857,25 +15854,46 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     const keySpan = createKeySpan(srcSpan, '', name);
                     this.bindingParser.parseLiteralAttr(name, value, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
                 }
-                else if (bindParts[IDENT_BANANA_BOX_IDX]) {
-                    const keySpan = createKeySpan(srcSpan, '[(', bindParts[IDENT_BANANA_BOX_IDX]);
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX], value, false, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
-                    this.parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX], value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
+                return true;
+            }
+            // We didn't see a kw-prefixed property binding, but we have not yet checked
+            // for the []/()/[()] syntax.
+            let delims = null;
+            if (name.startsWith(BINDING_DELIMS.BANANA_BOX.start)) {
+                delims = BINDING_DELIMS.BANANA_BOX;
+            }
+            else if (name.startsWith(BINDING_DELIMS.PROPERTY.start)) {
+                delims = BINDING_DELIMS.PROPERTY;
+            }
+            else if (name.startsWith(BINDING_DELIMS.EVENT.start)) {
+                delims = BINDING_DELIMS.EVENT;
+            }
+            if (delims !== null &&
+                // NOTE: older versions of the parser would match a start/end delimited
+                // binding iff the property name was terminated by the ending delimiter
+                // and the identifier in the binding was non-empty.
+                // TODO(ayazhafiz): update this to handle malformed bindings.
+                name.endsWith(delims.end) && name.length > delims.start.length + delims.end.length) {
+                const identifier = name.substring(delims.start.length, name.length - delims.end.length);
+                if (delims.start === BINDING_DELIMS.BANANA_BOX.start) {
+                    const keySpan = createKeySpan(srcSpan, delims.start, identifier);
+                    this.bindingParser.parsePropertyBinding(identifier, value, false, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
+                    this.parseAssignmentEvent(identifier, value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
                 }
-                else if (bindParts[IDENT_PROPERTY_IDX]) {
-                    const keySpan = createKeySpan(srcSpan, '[', bindParts[IDENT_PROPERTY_IDX]);
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX], value, false, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
+                else if (delims.start === BINDING_DELIMS.PROPERTY.start) {
+                    const keySpan = createKeySpan(srcSpan, delims.start, identifier);
+                    this.bindingParser.parsePropertyBinding(identifier, value, false, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
                 }
-                else if (bindParts[IDENT_EVENT_IDX]) {
+                else {
                     const events = [];
-                    this.bindingParser.parseEvent(bindParts[IDENT_EVENT_IDX], value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events);
+                    this.bindingParser.parseEvent(identifier, value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events);
                     addEvents(events, boundEvents);
                 }
+                return true;
             }
-            else {
-                const keySpan = createKeySpan(srcSpan, '' /* prefix */, name);
-                hasBinding = this.bindingParser.parsePropertyInterpolation(name, value, srcSpan, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
-            }
+            // No explicit binding found.
+            const keySpan = createKeySpan(srcSpan, '' /* prefix */, name);
+            const hasBinding = this.bindingParser.parsePropertyInterpolation(name, value, srcSpan, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
             return hasBinding;
         }
         _visitTextWithInterpolation(value, sourceSpan, i18n) {
@@ -19395,7 +19413,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+165.sha-c83b2ad');
+    const VERSION$1 = new Version('11.0.0-next.6+166.sha-3241d92');
 
     /**
      * @license
@@ -20030,7 +20048,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+165.sha-c83b2ad');
+    const VERSION$2 = new Version('11.0.0-next.6+166.sha-3241d92');
 
     /**
      * @license
