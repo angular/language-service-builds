@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+166.sha-3241d92
+ * @license Angular v11.0.0-next.6+167.sha-beb9356
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19413,7 +19413,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+166.sha-3241d92');
+    const VERSION$1 = new Version('11.0.0-next.6+167.sha-beb9356');
 
     /**
      * @license
@@ -20048,7 +20048,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+166.sha-3241d92');
+    const VERSION$2 = new Version('11.0.0-next.6+167.sha-beb9356');
 
     /**
      * @license
@@ -22634,16 +22634,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     class ResourceRegistry {
         constructor() {
-            this.templateToComponentsMap = new Map();
+            this.externalTemplateToComponentsMap = new Map();
             this.componentToTemplateMap = new Map();
             this.componentToStylesMap = new Map();
-            this.styleToComponentsMap = new Map();
+            this.externalStyleToComponentsMap = new Map();
         }
         getComponentsWithTemplate(template) {
-            if (!this.templateToComponentsMap.has(template)) {
+            if (!this.externalTemplateToComponentsMap.has(template)) {
                 return new Set();
             }
-            return this.templateToComponentsMap.get(template);
+            return this.externalTemplateToComponentsMap.get(template);
         }
         registerResources(resources, component) {
             if (resources.template !== null) {
@@ -22655,10 +22655,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         registerTemplate(templateResource, component) {
             const { path } = templateResource;
-            if (!this.templateToComponentsMap.has(path)) {
-                this.templateToComponentsMap.set(path, new Set());
+            if (path !== null) {
+                if (!this.externalTemplateToComponentsMap.has(path)) {
+                    this.externalTemplateToComponentsMap.set(path, new Set());
+                }
+                this.externalTemplateToComponentsMap.get(path).add(component);
             }
-            this.templateToComponentsMap.get(path).add(component);
             this.componentToTemplateMap.set(component, templateResource);
         }
         getTemplate(component) {
@@ -22672,10 +22674,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (!this.componentToStylesMap.has(component)) {
                 this.componentToStylesMap.set(component, new Set());
             }
-            if (!this.styleToComponentsMap.has(path)) {
-                this.styleToComponentsMap.set(path, new Set());
+            if (path !== null) {
+                if (!this.externalStyleToComponentsMap.has(path)) {
+                    this.externalStyleToComponentsMap.set(path, new Set());
+                }
+                this.externalStyleToComponentsMap.get(path).add(component);
             }
-            this.styleToComponentsMap.get(path).add(component);
             this.componentToStylesMap.get(component).add(styleResource);
         }
         getStyles(component) {
@@ -22685,10 +22689,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return this.componentToStylesMap.get(component);
         }
         getComponentsWithStyle(styleUrl) {
-            if (!this.styleToComponentsMap.has(styleUrl)) {
+            if (!this.externalStyleToComponentsMap.has(styleUrl)) {
                 return new Set();
             }
-            return this.styleToComponentsMap.get(styleUrl);
+            return this.externalStyleToComponentsMap.get(styleUrl);
         }
     }
 
@@ -27671,7 +27675,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             const templateResource = template.isInline ?
-                null :
+                { path: null, expression: component.get('template') } :
                 { path: absoluteFrom(template.templateUrl), expression: template.sourceMapping.node };
             let diagnostics = undefined;
             if (template.errors !== null) {
@@ -27959,19 +27963,26 @@ Either add the @Injectable() decorator to '${provider.node.name
             return styleUrls;
         }
         _extractStyleResources(component, containingFile) {
+            const styles = new Set();
+            function stringLiteralElements(array) {
+                return array.elements.filter((e) => ts.isStringLiteralLike(e));
+            }
+            // If styleUrls is a literal array, process each resource url individually and
+            // register ones that are string literals.
             const styleUrlsExpr = component.get('styleUrls');
-            // If styleUrls is a literal array of strings, process each resource url individually and
-            // register them. Otherwise, give up and return an empty set.
-            if (styleUrlsExpr === undefined || !ts.isArrayLiteralExpression(styleUrlsExpr) ||
-                !styleUrlsExpr.elements.every(e => ts.isStringLiteralLike(e))) {
-                return new Set();
+            if (styleUrlsExpr !== undefined && ts.isArrayLiteralExpression(styleUrlsExpr)) {
+                for (const expression of stringLiteralElements(styleUrlsExpr)) {
+                    const resourceUrl = this.resourceLoader.resolve(expression.text, containingFile);
+                    styles.add({ path: absoluteFrom(resourceUrl), expression });
+                }
             }
-            const externalStyles = new Set();
-            for (const expression of styleUrlsExpr.elements) {
-                const resourceUrl = this.resourceLoader.resolve(expression.text, containingFile);
-                externalStyles.add({ path: absoluteFrom(resourceUrl), expression });
+            const stylesExpr = component.get('styles');
+            if (stylesExpr !== undefined && ts.isArrayLiteralExpression(stylesExpr)) {
+                for (const expression of stringLiteralElements(stylesExpr)) {
+                    styles.add({ path: null, expression });
+                }
             }
-            return externalStyles;
+            return styles;
         }
         _preloadAndParseTemplate(node, decorator, component, containingFile) {
             if (component.has('templateUrl')) {
@@ -36735,6 +36746,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             const { resourceRegistry } = this.ensureAnalyzed();
             const styles = resourceRegistry.getStyles(classDecl);
             const template = resourceRegistry.getTemplate(classDecl);
+            if (template === null) {
+                return null;
+            }
             return { styles, template };
         }
         /**
