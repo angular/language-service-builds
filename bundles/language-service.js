@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+168.sha-4e68254
+ * @license Angular v11.0.0-next.6+169.sha-cbc0907
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6276,6 +6276,20 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         }
     }
     /**
+     * Receiver when something is accessed through `this` (e.g. `this.foo`). Note that this class
+     * inherits from `ImplicitReceiver`, because accessing something through `this` is treated the
+     * same as accessing it implicitly inside of an Angular template (e.g. `[attr.title]="this.title"`
+     * is the same as `[attr.title]="title"`.). Inheriting allows for the `this` accesses to be treated
+     * the same as implicit ones, except for a couple of exceptions like `$event` and `$any`.
+     * TODO: we should find a way for this class not to extend from `ImplicitReceiver` in the future.
+     */
+    class ThisReceiver extends ImplicitReceiver {
+        visit(visitor, context = null) {
+            var _a;
+            return (_a = visitor.visitThisReceiver) === null || _a === void 0 ? void 0 : _a.call(visitor, this, context);
+        }
+    }
+    /**
      * Multiple expressions separated by a semicolon.
      */
     class Chain extends AST {
@@ -6584,6 +6598,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             this.visitAll(ast.args, context);
         }
         visitImplicitReceiver(ast, context) { }
+        visitThisReceiver(ast, context) { }
         visitInterpolation(ast, context) {
             this.visitAll(ast.expressions, context);
         }
@@ -6637,6 +6652,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     }
     class AstTransformer {
         visitImplicitReceiver(ast, context) {
+            return ast;
+        }
+        visitThisReceiver(ast, context) {
             return ast;
         }
         visitInterpolation(ast, context) {
@@ -6718,6 +6736,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     // a change is made a child node.
     class AstMemoryEfficientTransformer {
         visitImplicitReceiver(ast, context) {
+            return ast;
+        }
+        visitThisReceiver(ast, context) {
             return ast;
         }
         visitInterpolation(ast, context) {
@@ -6994,9 +7015,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * Converts the given expression AST into an executable output AST, assuming the expression is
      * used in an action binding (e.g. an event handler).
      */
-    function convertActionBinding(localResolver, implicitReceiver, action, bindingId, interpolationFunction, baseSourceSpan, implicitReceiverAccesses) {
+    function convertActionBinding(localResolver, implicitReceiver, action, bindingId, interpolationFunction, baseSourceSpan, implicitReceiverAccesses, globals) {
         if (!localResolver) {
-            localResolver = new DefaultLocalResolver();
+            localResolver = new DefaultLocalResolver(globals);
         }
         const actionWithoutBuiltins = convertPropertyBindingBuiltins({
             createLiteralArrayConverter: (argCount) => {
@@ -7300,6 +7321,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             this.usesImplicitReceiver = true;
             return this._implicitReceiver;
         }
+        visitThisReceiver(ast, mode) {
+            return this.visitImplicitReceiver(ast, mode);
+        }
         visitInterpolation(ast, mode) {
             ensureExpressionMode(mode, ast);
             const args = [literal(ast.expressions.length)];
@@ -7346,11 +7370,16 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 undefined;
             return convertToStatementIfNeeded(mode, literal(ast.value, type, this.convertSourceSpan(ast.span)));
         }
-        _getLocal(name) {
+        _getLocal(name, receiver) {
+            var _a;
+            if (((_a = this._localResolver.globals) === null || _a === void 0 ? void 0 : _a.has(name)) && receiver instanceof ThisReceiver) {
+                return null;
+            }
             return this._localResolver.getLocal(name);
         }
         visitMethodCall(ast, mode) {
-            if (ast.receiver instanceof ImplicitReceiver && ast.name == '$any') {
+            if (ast.receiver instanceof ImplicitReceiver &&
+                !(ast.receiver instanceof ThisReceiver) && ast.name === '$any') {
                 const args = this.visitAll(ast.args, _Mode.Expression);
                 if (args.length != 1) {
                     throw new Error(`Invalid call to $any, expected 1 argument but received ${args.length || 'none'}`);
@@ -7367,14 +7396,14 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 let result = null;
                 const receiver = this._visit(ast.receiver, _Mode.Expression);
                 if (receiver === this._implicitReceiver) {
-                    const varExpr = this._getLocal(ast.name);
+                    const varExpr = this._getLocal(ast.name, ast.receiver);
                     if (varExpr) {
                         // Restore the previous "usesImplicitReceiver" state since the implicit
                         // receiver has been replaced with a resolved local expression.
                         this.usesImplicitReceiver = prevUsesImplicitReceiver;
                         result = varExpr.callFn(args);
+                        this.addImplicitReceiverAccess(ast.name);
                     }
-                    this.addImplicitReceiverAccess(ast.name);
                 }
                 if (result == null) {
                     result = receiver.callMethod(ast.name, args, this.convertSourceSpan(ast.span));
@@ -7398,13 +7427,13 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 const prevUsesImplicitReceiver = this.usesImplicitReceiver;
                 const receiver = this._visit(ast.receiver, _Mode.Expression);
                 if (receiver === this._implicitReceiver) {
-                    result = this._getLocal(ast.name);
+                    result = this._getLocal(ast.name, ast.receiver);
                     if (result) {
                         // Restore the previous "usesImplicitReceiver" state since the implicit
                         // receiver has been replaced with a resolved local expression.
                         this.usesImplicitReceiver = prevUsesImplicitReceiver;
+                        this.addImplicitReceiverAccess(ast.name);
                     }
-                    this.addImplicitReceiverAccess(ast.name);
                 }
                 if (result == null) {
                     result = receiver.prop(ast.name);
@@ -7417,7 +7446,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             const prevUsesImplicitReceiver = this.usesImplicitReceiver;
             let varExpr = null;
             if (receiver === this._implicitReceiver) {
-                const localExpr = this._getLocal(ast.name);
+                const localExpr = this._getLocal(ast.name, ast.receiver);
                 if (localExpr) {
                     if (localExpr instanceof ReadPropExpr) {
                         // If the local variable is a property read expression, it's a reference
@@ -7561,6 +7590,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 visitImplicitReceiver(ast) {
                     return null;
                 },
+                visitThisReceiver(ast) {
+                    return null;
+                },
                 visitInterpolation(ast) {
                     return null;
                 },
@@ -7635,6 +7667,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                     return true;
                 },
                 visitImplicitReceiver(ast) {
+                    return false;
+                },
+                visitThisReceiver(ast) {
                     return false;
                 },
                 visitInterpolation(ast) {
@@ -7732,6 +7767,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         }
     }
     class DefaultLocalResolver {
+        constructor(globals) {
+            this.globals = globals;
+        }
         notifyImplicitReceiverUse() { }
         getLocal(name) {
             if (name === EventHandlerVars.event.name) {
@@ -13638,7 +13676,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             }
             else if (this.next.isKeywordThis()) {
                 this.advance();
-                return new ImplicitReceiver(this.span(start), this.sourceSpan(start));
+                return new ThisReceiver(this.span(start), this.sourceSpan(start));
             }
             else if (this.consumeOptionalCharacter($LBRACKET)) {
                 this.rbracketsExpected++;
@@ -13996,6 +14034,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             this.errors = [];
         }
         visitImplicitReceiver(ast, context) { }
+        visitThisReceiver(ast, context) { }
         visitInterpolation(ast, context) { }
         visitLiteralPrimitive(ast, context) { }
         visitPropertyRead(ast, context) { }
@@ -15815,6 +15854,8 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     const NG_CONTENT_SELECT_ATTR$1 = 'select';
     // Attribute name of `ngProjectAs`.
     const NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
+    // Global symbols available only inside event bindings.
+    const EVENT_BINDING_SCOPE_GLOBALS = new Set(['$event']);
     // List of supported global targets for event listeners
     const GLOBAL_TARGET_RESOLVERS = new Map([['window', Identifiers$1.resolveWindow], ['document', Identifiers$1.resolveDocument], ['body', Identifiers$1.resolveBody]]);
     const LEADING_TRIVIA_CHARS = [' ', '\n', '\r', '\t'];
@@ -15833,7 +15874,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
         const implicitReceiverExpr = (scope === null || scope.bindingLevel === 0) ?
             variable(CONTEXT_NAME) :
             scope.getOrCreateSharedContextVar(0);
-        const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses);
+        const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses, EVENT_BINDING_SCOPE_GLOBALS);
         const statements = [];
         if (scope) {
             statements.push(...scope.restoreViewStatement());
@@ -16933,7 +16974,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                     prepareSyntheticListenerFunctionName(eventName, outputAst.phase) :
                     sanitizeIdentifier(eventName);
                 const handlerName = `${this.templateName}_${tagName}_${bindingFnName}_${index}_listener`;
-                const scope = this._bindingScope.nestedScope(this._bindingScope.bindingLevel);
+                const scope = this._bindingScope.nestedScope(this._bindingScope.bindingLevel, EVENT_BINDING_SCOPE_GLOBALS);
                 return prepareEventListenerParameters(outputAst, handlerName, scope);
             };
         }
@@ -17059,16 +17100,22 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     /** The prefix used to get a shared context in BindingScope's map. */
     const SHARED_CONTEXT_KEY = '$$shared_ctx$$';
     class BindingScope {
-        constructor(bindingLevel = 0, parent = null) {
+        constructor(bindingLevel = 0, parent = null, globals) {
             this.bindingLevel = bindingLevel;
             this.parent = parent;
+            this.globals = globals;
             /** Keeps a map from local variables to their BindingData. */
             this.map = new Map();
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
+            if (globals !== undefined) {
+                for (const name of globals) {
+                    this.set(0, name, variable(name));
+                }
+            }
         }
         static createRootScope() {
-            return new BindingScope().set(0, '$event', variable('$event'));
+            return new BindingScope();
         }
         get(name) {
             let current = this;
@@ -17146,8 +17193,8 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 this.map.get(SHARED_CONTEXT_KEY + 0).declare = true;
             }
         }
-        nestedScope(level) {
-            const newScope = new BindingScope(level, this);
+        nestedScope(level, globals) {
+            const newScope = new BindingScope(level, this, globals);
             if (level > 0)
                 newScope.generateSharedContextVar(0);
             return newScope;
@@ -18374,7 +18421,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+168.sha-4e68254');
+    const VERSION$1 = new Version('11.0.0-next.6+169.sha-cbc0907');
 
     /**
      * @license
@@ -22777,6 +22824,9 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
                 },
             };
         }
+        visitThisReceiver(_ast) {
+            return this.visitImplicitReceiver(_ast);
+        }
         visitInterpolation(ast) {
             // If we are producing diagnostics, visit the children.
             for (const expr of ast.expressions) {
@@ -23363,6 +23413,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             visitConditional(_ast) { },
             visitFunctionCall(_ast) { },
             visitImplicitReceiver(_ast) { },
+            visitThisReceiver(_ast) { },
             visitInterpolation(_ast) {
                 result = undefined;
             },
@@ -23451,6 +23502,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
             visitConditional(_ast) { },
             visitFunctionCall(_ast) { },
             visitImplicitReceiver(_ast) { },
+            visitThisReceiver(_ast) { },
             visitInterpolation(_ast) { },
             visitKeyedRead(_ast) { },
             visitKeyedWrite(_ast) { },
@@ -34658,7 +34710,7 @@ define(['exports', 'path', 'typescript/lib/tsserverlibrary', 'typescript'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+168.sha-4e68254');
+    const VERSION$2 = new Version$1('11.0.0-next.6+169.sha-cbc0907');
 
     /**
      * @license
