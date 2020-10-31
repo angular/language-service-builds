@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.2.1+14.sha-85d5242
+ * @license Angular v10.2.1+15.sha-71d0063
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19166,7 +19166,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.2.1+14.sha-85d5242');
+    const VERSION$1 = new Version('10.2.1+15.sha-71d0063');
 
     /**
      * @license
@@ -19759,7 +19759,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.2.1+14.sha-85d5242');
+    const VERSION$2 = new Version('10.2.1+15.sha-71d0063');
 
     /**
      * @license
@@ -33518,7 +33518,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (!this.pipes.has(name)) {
                 return null;
             }
-            return this.env.pipeInst(this.pipes.get(name));
+            return this.pipes.get(name);
         }
     }
     /**
@@ -33974,18 +33974,21 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             else if (ast instanceof BindingPipe) {
                 const expr = this.translate(ast.exp);
+                const pipeRef = this.tcb.getPipeByName(ast.name);
                 let pipe;
-                if (this.tcb.env.config.checkTypeOfPipes) {
-                    pipe = this.tcb.getPipeByName(ast.name);
-                    if (pipe === null) {
-                        // No pipe by that name exists in scope. Record this as an error.
-                        this.tcb.oobRecorder.missingPipe(this.tcb.id, ast);
-                        // Return an 'any' value to at least allow the rest of the expression to be checked.
-                        pipe = NULL_AS_ANY;
-                    }
+                if (pipeRef === null) {
+                    // No pipe by that name exists in scope. Record this as an error.
+                    this.tcb.oobRecorder.missingPipe(this.tcb.id, ast);
+                    // Use an 'any' value to at least allow the rest of the expression to be checked.
+                    pipe = NULL_AS_ANY;
+                }
+                else if (this.tcb.env.config.checkTypeOfPipes) {
+                    // Use a variable declared as the pipe's type.
+                    pipe = this.tcb.env.pipeInst(pipeRef);
                 }
                 else {
-                    pipe = ts.createParen(ts.createAsExpression(ts.createNull(), ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)));
+                    // Use an 'any' value when not checking the type of the pipe.
+                    pipe = NULL_AS_ANY;
                 }
                 const args = ast.args.map(arg => this.translate(arg));
                 const result = tsCallMethod(pipe, 'transform', [expr, ...args]);
