@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+173.sha-3b0b7d2
+ * @license Angular v11.0.0-next.6+184.sha-cf48d50
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19460,7 +19460,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+173.sha-3b0b7d2');
+    const VERSION$1 = new Version('11.0.0-next.6+184.sha-cf48d50');
 
     /**
      * @license
@@ -20095,7 +20095,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+173.sha-3b0b7d2');
+    const VERSION$2 = new Version('11.0.0-next.6+184.sha-cf48d50');
 
     /**
      * @license
@@ -33740,9 +33740,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             super();
             this.tcb = tcb;
             this.scope = scope;
-        }
-        get optional() {
-            return false;
+            // The declaration of the context variable is only needed when the context is actually referenced.
+            this.optional = true;
         }
         execute() {
             // Allocate a template ctx variable and declare it with an 'any' type. The type of this variable
