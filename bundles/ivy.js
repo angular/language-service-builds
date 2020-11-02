@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+184.sha-cf48d50
+ * @license Angular v11.0.0-next.6+186.sha-eaace44
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19460,7 +19460,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+184.sha-cf48d50');
+    const VERSION$1 = new Version('11.0.0-next.6+186.sha-eaace44');
 
     /**
      * @license
@@ -20095,7 +20095,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+184.sha-cf48d50');
+    const VERSION$2 = new Version('11.0.0-next.6+186.sha-eaace44');
 
     /**
      * @license
@@ -37419,43 +37419,64 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     const SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
     const SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
     /**
-     * Construct a QuickInfo object taking into account its container and type.
-     * @param name Name of the QuickInfo target
+     * Label for various kinds of Angular entities for TS display info.
+     */
+    var DisplayInfoKind;
+    (function (DisplayInfoKind) {
+        DisplayInfoKind["COMPONENT"] = "component";
+        DisplayInfoKind["DIRECTIVE"] = "directive";
+        DisplayInfoKind["EVENT"] = "event";
+        DisplayInfoKind["REFERENCE"] = "reference";
+        DisplayInfoKind["ELEMENT"] = "element";
+        DisplayInfoKind["VARIABLE"] = "variable";
+        DisplayInfoKind["PIPE"] = "pipe";
+        DisplayInfoKind["PROPERTY"] = "property";
+        DisplayInfoKind["METHOD"] = "method";
+        DisplayInfoKind["TEMPLATE"] = "template";
+    })(DisplayInfoKind || (DisplayInfoKind = {}));
+    /**
+     * Construct a compound `ts.SymbolDisplayPart[]` which incorporates the container and type of a
+     * target declaration.
+     * @param name Name of the target
      * @param kind component, directive, pipe, etc.
-     * @param textSpan span of the target
      * @param containerName either the Symbol's container or the NgModule that contains the directive
      * @param type user-friendly name of the type
      * @param documentation docstring or comment
      */
-    function createQuickInfo(name, kind, textSpan, containerName, type, documentation) {
-        const containerDisplayParts = containerName ?
+    function createDisplayParts(name, kind, containerName, type) {
+        const containerDisplayParts = containerName !== undefined ?
             [
                 { text: containerName, kind: SYMBOL_INTERFACE },
                 { text: '.', kind: SYMBOL_PUNC },
             ] :
             [];
-        const typeDisplayParts = type ?
+        const typeDisplayParts = type !== undefined ?
             [
                 { text: ':', kind: SYMBOL_PUNC },
                 { text: ' ', kind: SYMBOL_SPACE },
                 { text: type, kind: SYMBOL_INTERFACE },
             ] :
             [];
-        return {
-            kind: kind,
-            kindModifiers: ts.ScriptElementKindModifier.none,
-            textSpan: textSpan,
-            displayParts: [
-                { text: '(', kind: SYMBOL_PUNC },
-                { text: kind, kind: SYMBOL_TEXT },
-                { text: ')', kind: SYMBOL_PUNC },
-                { text: ' ', kind: SYMBOL_SPACE },
-                ...containerDisplayParts,
-                { text: name, kind: SYMBOL_INTERFACE },
-                ...typeDisplayParts,
-            ],
-            documentation,
-        };
+        return [
+            { text: '(', kind: SYMBOL_PUNC },
+            { text: kind, kind: SYMBOL_TEXT },
+            { text: ')', kind: SYMBOL_PUNC },
+            { text: ' ', kind: SYMBOL_SPACE },
+            ...containerDisplayParts,
+            { text: name, kind: SYMBOL_INTERFACE },
+            ...typeDisplayParts,
+        ];
+    }
+    /**
+     * Convert a `SymbolDisplayInfoKind` to a `ts.ScriptElementKind` type, allowing it to pass through
+     * TypeScript APIs.
+     *
+     * In practice, this is an "illegal" type cast. Since `ts.ScriptElementKind` is a string, this is
+     * safe to do if TypeScript only uses the value in a string context. Consumers of this conversion
+     * function are responsible for ensuring this is the case.
+     */
+    function unsafeCastDisplayInfoKindToScriptElementKind(kind) {
+        return kind;
     }
 
     /**
@@ -37536,14 +37557,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         return getClassDeclFromDecoratorProp(tmplAsgn);
     }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function getTextSpanOfNode(node) {
         if (isTemplateNodeWithKeyAndValue(node)) {
             return toTextSpan(node.keySpan);
@@ -37846,136 +37859,59 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Gets an Angular-specific definition in a TypeScript source file.
-     */
-    function getTsDefinitionAndBoundSpan(sf, position, resourceResolver) {
-        const node = findTightestNode(sf, position);
-        if (!node)
-            return;
-        switch (node.kind) {
-            case ts.SyntaxKind.StringLiteral:
-            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
-                // Attempt to extract definition of a URL in a property assignment.
-                return getUrlFromProperty(node, resourceResolver);
-            default:
-                return undefined;
-        }
-    }
-    /**
-     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
-     * directive decorator.
-     * Currently applies to `templateUrl` and `styleUrls` properties.
-     */
-    function getUrlFromProperty(urlNode, resourceResolver) {
-        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
-        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
-        // an array of strings:
-        //   {
-        //        templateUrl: './template.ng.html',
-        //        styleUrls: ['./style.css', './other-style.css']
-        //   }
-        // `templateUrl`'s property assignment can be found from the string literal node;
-        // `styleUrls`'s property assignment can be found from the array (parent) node.
-        //
-        // First search for `templateUrl`.
-        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
-        if (!asgn) {
-            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
-            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
-            if (!asgn) {
-                // Nothing found, bail.
-                return;
-            }
-        }
-        // If the property assignment is not a property of a class decorator, don't generate definitions
-        // for it.
-        if (!getClassDeclFromDecoratorProp(asgn)) {
-            return;
-        }
-        const sf = urlNode.getSourceFile();
-        let url;
-        try {
-            url = resourceResolver.resolve(urlNode.text, sf.fileName);
-        }
-        catch (_a) {
-            // If the file does not exist, bail.
-            return;
-        }
-        const templateDefinitions = [{
-                kind: ts.ScriptElementKind.externalModuleName,
-                name: url,
-                containerKind: ts.ScriptElementKind.unknown,
-                containerName: '',
-                // Reading the template is expensive, so don't provide a preview.
-                // TODO(ayazhafiz): Consider providing an actual span:
-                //  1. We're likely to read the template anyway
-                //  2. We could show just the first 100 chars or so
-                textSpan: { start: 0, length: 0 },
-                fileName: url,
-            }];
-        return {
-            definitions: templateDefinitions,
-            textSpan: {
-                // Exclude opening and closing quotes in the url span.
-                start: urlNode.getStart() + 1,
-                length: urlNode.getWidth() - 2,
-            },
-        };
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Return the path to the template AST node or expression AST node that most accurately
+     * Return the template AST node or expression AST node that most accurately
      * represents the node at the specified cursor `position`.
      *
-     * @param ast AST tree
-     * @param position cursor position
+     * @param template AST tree of the template
+     * @param position target cursor position
      */
-    function getPathToNodeAtPosition(ast, position) {
-        const visitor = new R3Visitor(position);
-        visitor.visitAll(ast);
-        const candidate = visitor.path[visitor.path.length - 1];
-        if (!candidate) {
-            return;
+    function getTargetAtPosition(template, position) {
+        const path = TemplateTargetVisitor.visitTemplate(template, position);
+        if (path.length === 0) {
+            return null;
         }
+        const candidate = path[path.length - 1];
         if (isTemplateNodeWithKeyAndValue(candidate)) {
             const { keySpan, valueSpan } = candidate;
             const isWithinKeyValue = isWithin(position, keySpan) || (valueSpan && isWithin(position, valueSpan));
             if (!isWithinKeyValue) {
                 // If cursor is within source span but not within key span or value span,
                 // do not return the node.
-                return;
+                return null;
             }
         }
-        return visitor.path;
+        // Walk up the result nodes to find the nearest `t.Template` which contains the targeted node.
+        let context = null;
+        for (let i = path.length - 2; i >= 0; i--) {
+            const node = path[i];
+            if (node instanceof Template) {
+                context = node;
+                break;
+            }
+        }
+        let parent = null;
+        if (path.length >= 2) {
+            parent = path[path.length - 2];
+        }
+        return { position, node: candidate, context, parent };
     }
     /**
-     * Return the template AST node or expression AST node that most accurately
-     * represents the node at the specified cursor `position`.
-     *
-     * @param ast AST tree
-     * @param position cursor position
+     * Visitor which, given a position and a template, identifies the node within the template at that
+     * position, as well as records the path of increasingly nested nodes that were traversed to reach
+     * that position.
      */
-    function findNodeAtPosition(ast, position) {
-        const path = getPathToNodeAtPosition(ast, position);
-        if (!path) {
-            return;
-        }
-        return path[path.length - 1];
-    }
-    class R3Visitor {
+    class TemplateTargetVisitor {
         // Position must be absolute in the source file.
         constructor(position) {
             this.position = position;
             // We need to keep a path instead of the last node because we might need more
             // context for the last node, for example what is the parent node?
             this.path = [];
+        }
+        static visitTemplate(template, position) {
+            const visitor = new TemplateTargetVisitor(position);
+            visitor.visitAll(template);
+            return visitor.path;
         }
         visit(node) {
             const { start, end } = getSpanIncludingEndTag(node);
@@ -38122,6 +38058,83 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Gets an Angular-specific definition in a TypeScript source file.
+     */
+    function getTsDefinitionAndBoundSpan(sf, position, resourceResolver) {
+        const node = findTightestNode(sf, position);
+        if (!node)
+            return;
+        switch (node.kind) {
+            case ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+                // Attempt to extract definition of a URL in a property assignment.
+                return getUrlFromProperty(node, resourceResolver);
+            default:
+                return undefined;
+        }
+    }
+    /**
+     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
+     * directive decorator.
+     * Currently applies to `templateUrl` and `styleUrls` properties.
+     */
+    function getUrlFromProperty(urlNode, resourceResolver) {
+        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
+        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
+        // an array of strings:
+        //   {
+        //        templateUrl: './template.ng.html',
+        //        styleUrls: ['./style.css', './other-style.css']
+        //   }
+        // `templateUrl`'s property assignment can be found from the string literal node;
+        // `styleUrls`'s property assignment can be found from the array (parent) node.
+        //
+        // First search for `templateUrl`.
+        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
+        if (!asgn) {
+            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
+            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
+            if (!asgn) {
+                // Nothing found, bail.
+                return;
+            }
+        }
+        // If the property assignment is not a property of a class decorator, don't generate definitions
+        // for it.
+        if (!getClassDeclFromDecoratorProp(asgn)) {
+            return;
+        }
+        const sf = urlNode.getSourceFile();
+        let url;
+        try {
+            url = resourceResolver.resolve(urlNode.text, sf.fileName);
+        }
+        catch (_a) {
+            // If the file does not exist, bail.
+            return;
+        }
+        const templateDefinitions = [{
+                kind: ts.ScriptElementKind.externalModuleName,
+                name: url,
+                containerKind: ts.ScriptElementKind.unknown,
+                containerName: '',
+                // Reading the template is expensive, so don't provide a preview.
+                // TODO(ayazhafiz): Consider providing an actual span:
+                //  1. We're likely to read the template anyway
+                //  2. We could show just the first 100 chars or so
+                textSpan: { start: 0, length: 0 },
+                fileName: url,
+            }];
+        return {
+            definitions: templateDefinitions,
+            textSpan: {
+                // Exclude opening and closing quotes in the url span.
+                start: urlNode.getStart() + 1,
+                length: urlNode.getWidth() - 2,
+            },
+        };
+    }
     class DefinitionBuilder {
         constructor(tsLS, compiler, resourceResolver) {
             this.tsLS = tsLS;
@@ -38154,7 +38167,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const definitions = this.getDefinitionsForSymbol(Object.assign(Object.assign({}, definitionMeta), templateInfo));
             return { definitions, textSpan: getTextSpanOfNode(definitionMeta.node) };
         }
-        getDefinitionsForSymbol({ symbol, node, path, component }) {
+        getDefinitionsForSymbol({ symbol, node, parent, component }) {
             switch (symbol.kind) {
                 case SymbolKind.Directive:
                 case SymbolKind.Element:
@@ -38171,7 +38184,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     const bindingDefs = this.getDefinitionsForSymbols(...symbol.bindings);
                     // Also attempt to get directive matches for the input name. If there is a directive that
                     // has the input name as part of the selector, we want to return that as well.
-                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, path, component);
+                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, parent, component);
                     return [...bindingDefs, ...directiveDefs];
                 }
                 case SymbolKind.Variable:
@@ -38226,7 +38239,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     const bindingDefs = this.getTypeDefinitionsForSymbols(...symbol.bindings);
                     // Also attempt to get directive matches for the input name. If there is a directive that
                     // has the input name as part of the selector, we want to return that as well.
-                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, definitionMeta.path, templateInfo.component);
+                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, definitionMeta.parent, templateInfo.component);
                     return [...bindingDefs, ...directiveDefs];
                 }
                 case SymbolKind.Reference:
@@ -38260,13 +38273,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return this.getTypeDefinitionsForSymbols(symbol);
             }
         }
-        getDirectiveTypeDefsForBindingNode(node, pathToNode, component) {
+        getDirectiveTypeDefsForBindingNode(node, parent, component) {
             if (!(node instanceof BoundAttribute) && !(node instanceof TextAttribute) &&
                 !(node instanceof BoundEvent)) {
                 return [];
             }
-            const parent = pathToNode[pathToNode.length - 2];
-            if (!(parent instanceof Template || parent instanceof Element)) {
+            if (parent === null ||
+                !(parent instanceof Template || parent instanceof Element)) {
                 return [];
             }
             const templateOrElementSymbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(parent, component);
@@ -38286,16 +38299,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             });
         }
         getDefinitionMetaAtPosition({ template, component }, position) {
-            const path = getPathToNodeAtPosition(template, position);
-            if (path === undefined) {
-                return;
+            const target = getTargetAtPosition(template, position);
+            if (target === null) {
+                return undefined;
             }
-            const node = path[path.length - 1];
+            const { node, parent } = target;
             const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
             if (symbol === null) {
-                return;
+                return undefined;
             }
-            return { node, path, symbol };
+            return { node, parent, symbol };
         }
     }
 
@@ -38376,73 +38389,50 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * The type of Angular directive. Used for QuickInfo in template.
-     */
-    var QuickInfoKind;
-    (function (QuickInfoKind) {
-        QuickInfoKind["COMPONENT"] = "component";
-        QuickInfoKind["DIRECTIVE"] = "directive";
-        QuickInfoKind["EVENT"] = "event";
-        QuickInfoKind["REFERENCE"] = "reference";
-        QuickInfoKind["ELEMENT"] = "element";
-        QuickInfoKind["VARIABLE"] = "variable";
-        QuickInfoKind["PIPE"] = "pipe";
-        QuickInfoKind["PROPERTY"] = "property";
-        QuickInfoKind["METHOD"] = "method";
-        QuickInfoKind["TEMPLATE"] = "template";
-    })(QuickInfoKind || (QuickInfoKind = {}));
     class QuickInfoBuilder {
-        constructor(tsLS, compiler) {
+        constructor(tsLS, compiler, component, node) {
             this.tsLS = tsLS;
             this.compiler = compiler;
+            this.component = component;
+            this.node = node;
             this.typeChecker = this.compiler.getNextProgram().getTypeChecker();
         }
-        get(fileName, position) {
-            const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
-            if (templateInfo === undefined) {
-                return undefined;
-            }
-            const { template, component } = templateInfo;
-            const node = findNodeAtPosition(template, position);
-            if (node === undefined) {
-                return undefined;
-            }
-            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
+        get() {
+            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(this.node, this.component);
             if (symbol === null) {
-                return isDollarAny(node) ? createDollarAnyQuickInfo(node) : undefined;
+                return isDollarAny(this.node) ? createDollarAnyQuickInfo(this.node) : undefined;
             }
-            return this.getQuickInfoForSymbol(symbol, node);
+            return this.getQuickInfoForSymbol(symbol);
         }
-        getQuickInfoForSymbol(symbol, node) {
+        getQuickInfoForSymbol(symbol) {
             switch (symbol.kind) {
                 case SymbolKind.Input:
                 case SymbolKind.Output:
-                    return this.getQuickInfoForBindingSymbol(symbol, node);
+                    return this.getQuickInfoForBindingSymbol(symbol);
                 case SymbolKind.Template:
-                    return createNgTemplateQuickInfo(node);
+                    return createNgTemplateQuickInfo(this.node);
                 case SymbolKind.Element:
                     return this.getQuickInfoForElementSymbol(symbol);
                 case SymbolKind.Variable:
-                    return this.getQuickInfoForVariableSymbol(symbol, node);
+                    return this.getQuickInfoForVariableSymbol(symbol);
                 case SymbolKind.Reference:
-                    return this.getQuickInfoForReferenceSymbol(symbol, node);
+                    return this.getQuickInfoForReferenceSymbol(symbol);
                 case SymbolKind.DomBinding:
-                    return this.getQuickInfoForDomBinding(node, symbol);
+                    return this.getQuickInfoForDomBinding(symbol);
                 case SymbolKind.Directive:
-                    return this.getQuickInfoAtShimLocation(symbol.shimLocation, node);
+                    return this.getQuickInfoAtShimLocation(symbol.shimLocation);
                 case SymbolKind.Expression:
-                    return node instanceof BindingPipe ?
-                        this.getQuickInfoForPipeSymbol(symbol, node) :
-                        this.getQuickInfoAtShimLocation(symbol.shimLocation, node);
+                    return this.node instanceof BindingPipe ?
+                        this.getQuickInfoForPipeSymbol(symbol) :
+                        this.getQuickInfoAtShimLocation(symbol.shimLocation);
             }
         }
-        getQuickInfoForBindingSymbol(symbol, node) {
+        getQuickInfoForBindingSymbol(symbol) {
             if (symbol.bindings.length === 0) {
                 return undefined;
             }
-            const kind = symbol.kind === SymbolKind.Input ? QuickInfoKind.PROPERTY : QuickInfoKind.EVENT;
-            const quickInfo = this.getQuickInfoAtShimLocation(symbol.bindings[0].shimLocation, node);
+            const kind = symbol.kind === SymbolKind.Input ? DisplayInfoKind.PROPERTY : DisplayInfoKind.EVENT;
+            const quickInfo = this.getQuickInfoAtShimLocation(symbol.bindings[0].shimLocation);
             return quickInfo === undefined ? undefined : updateQuickInfoKind(quickInfo, kind);
         }
         getQuickInfoForElementSymbol(symbol) {
@@ -38451,38 +38441,40 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (matches.size > 0) {
                 return this.getQuickInfoForDirectiveSymbol(matches.values().next().value, templateNode);
             }
-            return createQuickInfo(templateNode.name, QuickInfoKind.ELEMENT, getTextSpanOfNode(templateNode), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType));
+            return createQuickInfo(templateNode.name, DisplayInfoKind.ELEMENT, getTextSpanOfNode(templateNode), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType));
         }
-        getQuickInfoForVariableSymbol(symbol, node) {
+        getQuickInfoForVariableSymbol(symbol) {
             const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.shimLocation);
-            return createQuickInfo(symbol.declaration.name, QuickInfoKind.VARIABLE, getTextSpanOfNode(node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
+            return createQuickInfo(symbol.declaration.name, DisplayInfoKind.VARIABLE, getTextSpanOfNode(this.node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
         }
-        getQuickInfoForReferenceSymbol(symbol, node) {
+        getQuickInfoForReferenceSymbol(symbol) {
             const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.shimLocation);
-            return createQuickInfo(symbol.declaration.name, QuickInfoKind.REFERENCE, getTextSpanOfNode(node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
+            return createQuickInfo(symbol.declaration.name, DisplayInfoKind.REFERENCE, getTextSpanOfNode(this.node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
         }
-        getQuickInfoForPipeSymbol(symbol, node) {
-            const quickInfo = this.getQuickInfoAtShimLocation(symbol.shimLocation, node);
-            return quickInfo === undefined ? undefined : updateQuickInfoKind(quickInfo, QuickInfoKind.PIPE);
+        getQuickInfoForPipeSymbol(symbol) {
+            const quickInfo = this.getQuickInfoAtShimLocation(symbol.shimLocation);
+            return quickInfo === undefined ? undefined :
+                updateQuickInfoKind(quickInfo, DisplayInfoKind.PIPE);
         }
-        getQuickInfoForDomBinding(node, symbol) {
-            if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
+        getQuickInfoForDomBinding(symbol) {
+            if (!(this.node instanceof TextAttribute) &&
+                !(this.node instanceof BoundAttribute)) {
                 return undefined;
             }
-            const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
+            const directives = getDirectiveMatchesForAttribute(this.node.name, symbol.host.templateNode, symbol.host.directives);
             if (directives.size === 0) {
                 return undefined;
             }
-            return this.getQuickInfoForDirectiveSymbol(directives.values().next().value, node);
+            return this.getQuickInfoForDirectiveSymbol(directives.values().next().value);
         }
-        getQuickInfoForDirectiveSymbol(dir, node) {
-            const kind = dir.isComponent ? QuickInfoKind.COMPONENT : QuickInfoKind.DIRECTIVE;
+        getQuickInfoForDirectiveSymbol(dir, node = this.node) {
+            const kind = dir.isComponent ? DisplayInfoKind.COMPONENT : DisplayInfoKind.DIRECTIVE;
             const documentation = this.getDocumentationFromTypeDefAtLocation(dir.shimLocation);
             let containerName;
             if (ts.isClassDeclaration(dir.tsSymbol.valueDeclaration) && dir.ngModule !== null) {
                 containerName = dir.ngModule.name.getText();
             }
-            return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(node), containerName, undefined, documentation);
+            return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(this.node), containerName, undefined, documentation);
         }
         getDocumentationFromTypeDefAtLocation(shimLocation) {
             var _a;
@@ -38492,13 +38484,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
             return (_a = this.tsLS.getQuickInfoAtPosition(typeDefs[0].fileName, typeDefs[0].textSpan.start)) === null || _a === void 0 ? void 0 : _a.documentation;
         }
-        getQuickInfoAtShimLocation(location, node) {
+        getQuickInfoAtShimLocation(location) {
             const quickInfo = this.tsLS.getQuickInfoAtPosition(location.shimPath, location.positionInShimFile);
             if (quickInfo === undefined || quickInfo.displayParts === undefined) {
                 return quickInfo;
             }
             quickInfo.displayParts = filterAliasImports(quickInfo.displayParts);
-            const textSpan = getTextSpanOfNode(node);
+            const textSpan = getTextSpanOfNode(this.node);
             return Object.assign(Object.assign({}, quickInfo), { textSpan });
         }
     }
@@ -38532,7 +38524,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             !(node.receiver instanceof ThisReceiver) && node.name === '$any' && node.args.length === 1;
     }
     function createDollarAnyQuickInfo(node) {
-        return createQuickInfo('$any', QuickInfoKind.METHOD, getTextSpanOfNode(node), 
+        return createQuickInfo('$any', DisplayInfoKind.METHOD, getTextSpanOfNode(node), 
         /** containerName */ undefined, 'any', [{
                 kind: SYMBOL_TEXT,
                 text: 'function to cast an expression to the `any` type',
@@ -38540,12 +38532,31 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     // TODO(atscott): Create special `ts.QuickInfo` for `ng-template` and `ng-container` as well.
     function createNgTemplateQuickInfo(node) {
-        return createQuickInfo('ng-template', QuickInfoKind.TEMPLATE, getTextSpanOfNode(node), 
+        return createQuickInfo('ng-template', DisplayInfoKind.TEMPLATE, getTextSpanOfNode(node), 
         /** containerName */ undefined, 
         /** type */ undefined, [{
                 kind: SYMBOL_TEXT,
                 text: 'The `<ng-template>` is an Angular element for rendering HTML. It is never displayed directly.',
             }]);
+    }
+    /**
+     * Construct a QuickInfo object taking into account its container and type.
+     * @param name Name of the QuickInfo target
+     * @param kind component, directive, pipe, etc.
+     * @param textSpan span of the target
+     * @param containerName either the Symbol's container or the NgModule that contains the directive
+     * @param type user-friendly name of the type
+     * @param documentation docstring or comment
+     */
+    function createQuickInfo(name, kind, textSpan, containerName, type, documentation) {
+        const displayParts = createDisplayParts(name, kind, containerName, type);
+        return {
+            kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
+            kindModifiers: ts.ScriptElementKindModifier.none,
+            textSpan: textSpan,
+            displayParts,
+            documentation,
+        };
     }
 
     /**
@@ -38601,8 +38612,18 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return results;
         }
         getQuickInfoAtPosition(fileName, position) {
+            const program = this.strategy.getProgram();
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
-            const results = new QuickInfoBuilder(this.tsLS, compiler).get(fileName, position);
+            const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
+            if (templateInfo === undefined) {
+                return undefined;
+            }
+            const positionDetails = getTargetAtPosition(templateInfo.template, position);
+            if (positionDetails === null) {
+                return undefined;
+            }
+            const results = new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, positionDetails.node)
+                .get();
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
