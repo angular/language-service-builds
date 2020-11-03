@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-rc.1+37.sha-b6064c2
+ * @license Angular v11.0.0-rc.1+40.sha-6817377
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19345,7 +19345,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-rc.1+37.sha-b6064c2');
+    const VERSION$1 = new Version('11.0.0-rc.1+40.sha-6817377');
 
     /**
      * @license
@@ -19980,7 +19980,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-rc.1+37.sha-b6064c2');
+    const VERSION$2 = new Version('11.0.0-rc.1+40.sha-6817377');
 
     /**
      * @license
@@ -26658,7 +26658,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             return null;
         }
         const ngClassDecorators = classDecorators.filter(dec => isAngularDecorator$1(dec, isCore))
-            .map((decorator) => decoratorToMetadata(decorator, annotateForClosureCompiler));
+            .map(decorator => decoratorToMetadata(decorator, annotateForClosureCompiler))
+            // Since the `setClassMetadata` call is intended to be emitted after the class
+            // declaration, we have to strip references to the existing identifiers or
+            // TypeScript might generate invalid code when it emits to JS. In particular
+            // this can break when emitting a class to ES5 which has a custom decorator
+            // and is referenced inside of its own metadata (see #39509 for more information).
+            .map(decorator => removeIdentifierReferences(decorator, id.text));
         if (ngClassDecorators.length === 0) {
             return null;
         }
@@ -26765,6 +26771,19 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function isAngularDecorator$1(decorator, isCore) {
         return isCore || (decorator.import !== null && decorator.import.from === '@angular/core');
+    }
+    /**
+     * Recursively recreates all of the `Identifier` descendant nodes with a particular name inside
+     * of an AST node, thus removing any references to them. Useful if a particular node has to be t
+     * aken from one place any emitted to another one exactly as it has been written.
+     */
+    function removeIdentifierReferences(node, name) {
+        const result = ts.transform(node, [context => root => ts.visitNode(root, function walk(current) {
+                return ts.isIdentifier(current) && current.text === name ?
+                    ts.createIdentifier(current.text) :
+                    ts.visitEachChild(current, walk, context);
+            })]);
+        return result.transformed[0];
     }
 
     /**
