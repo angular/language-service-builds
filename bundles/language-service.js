@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+195.sha-2d79780
+ * @license Angular v11.0.0-next.6+205.sha-27ae060
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2883,6 +2883,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.NEW_METHOD = 'factory';
     Identifiers$1.TRANSFORM_METHOD = 'transform';
     Identifiers$1.PATCH_DEPS = 'patchedDeps';
+    Identifiers$1.core = { name: null, moduleName: CORE$1 };
     /* Instructions */
     Identifiers$1.namespaceHTML = { name: 'ɵɵnamespaceHTML', moduleName: CORE$1 };
     Identifiers$1.namespaceMathML = { name: 'ɵɵnamespaceMathML', moduleName: CORE$1 };
@@ -3012,10 +3013,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         name: 'ɵɵFactoryDef',
         moduleName: CORE$1,
     };
-    Identifiers$1.defineDirective = {
-        name: 'ɵɵdefineDirective',
-        moduleName: CORE$1,
-    };
+    Identifiers$1.defineDirective = { name: 'ɵɵdefineDirective', moduleName: CORE$1 };
+    Identifiers$1.declareDirective = { name: 'ɵɵngDeclareDirective', moduleName: CORE$1 };
     Identifiers$1.DirectiveDefWithMeta = {
         name: 'ɵɵDirectiveDefWithMeta',
         moduleName: CORE$1,
@@ -18257,7 +18256,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+195.sha-2d79780');
+    const VERSION$1 = new Version('11.0.0-next.6+205.sha-27ae060');
 
     /**
      * @license
@@ -46771,7 +46770,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+195.sha-2d79780');
+    const VERSION$2 = new Version$1('11.0.0-next.6+205.sha-27ae060');
 
     /**
      * @license
@@ -48167,6 +48166,22 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 this.destroyCbs.push(callback);
             }
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Compiles a partial directive declaration object into a full directive definition object.
+     *
+     * @codeGenApi
+     */
+    function ɵɵngDeclareDirective(decl) {
+        throw new Error('Not yet implemented');
     }
 
     /**
@@ -51167,6 +51182,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         'ɵɵtrustConstantHtml': ɵɵtrustConstantHtml,
         'ɵɵtrustConstantScript': ɵɵtrustConstantScript,
         'ɵɵtrustConstantResourceUrl': ɵɵtrustConstantResourceUrl,
+        'ɵɵngDeclareDirective': ɵɵngDeclareDirective,
     }))();
 
     let jitOptions = null;
