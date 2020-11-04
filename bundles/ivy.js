@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+195.sha-2d79780
+ * @license Angular v11.0.0-next.6+205.sha-27ae060
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5650,6 +5650,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.NEW_METHOD = 'factory';
     Identifiers$1.TRANSFORM_METHOD = 'transform';
     Identifiers$1.PATCH_DEPS = 'patchedDeps';
+    Identifiers$1.core = { name: null, moduleName: CORE$1 };
     /* Instructions */
     Identifiers$1.namespaceHTML = { name: 'ɵɵnamespaceHTML', moduleName: CORE$1 };
     Identifiers$1.namespaceMathML = { name: 'ɵɵnamespaceMathML', moduleName: CORE$1 };
@@ -5779,10 +5780,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         name: 'ɵɵFactoryDef',
         moduleName: CORE$1,
     };
-    Identifiers$1.defineDirective = {
-        name: 'ɵɵdefineDirective',
-        moduleName: CORE$1,
-    };
+    Identifiers$1.defineDirective = { name: 'ɵɵdefineDirective', moduleName: CORE$1 };
+    Identifiers$1.declareDirective = { name: 'ɵɵngDeclareDirective', moduleName: CORE$1 };
     Identifiers$1.DirectiveDefWithMeta = {
         name: 'ɵɵDirectiveDefWithMeta',
         moduleName: CORE$1,
@@ -19460,7 +19459,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+195.sha-2d79780');
+    const VERSION$1 = new Version('11.0.0-next.6+205.sha-27ae060');
 
     /**
      * @license
@@ -20083,6 +20082,122 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Compile a directive declaration defined by the `R3DirectiveMetadata`.
+     */
+    function compileDeclareDirectiveFromMetadata(meta) {
+        const definitionMap = createDirectiveDefinitionMap(meta);
+        const expression = importExpr(Identifiers$1.declareDirective).callFn([definitionMap.toLiteralMap()]);
+        const typeParams = createDirectiveTypeParams(meta);
+        const type = expressionType(importExpr(Identifiers$1.DirectiveDefWithMeta, typeParams));
+        return { expression, type };
+    }
+    /**
+     * Gathers the declaration fields for a directive into a `DefinitionMap`. This allows for reusing
+     * this logic for components, as they extend the directive metadata.
+     */
+    function createDirectiveDefinitionMap(meta) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('version', literal(1));
+        // e.g. `type: MyDirective`
+        definitionMap.set('type', meta.internalType);
+        // e.g. `selector: 'some-dir'`
+        if (meta.selector !== null) {
+            definitionMap.set('selector', literal(meta.selector));
+        }
+        definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
+        definitionMap.set('outputs', conditionallyCreateMapObjectLiteral(meta.outputs));
+        definitionMap.set('host', compileHostMetadata(meta.host));
+        definitionMap.set('providers', meta.providers);
+        if (meta.queries.length > 0) {
+            definitionMap.set('queries', literalArr(meta.queries.map(compileQuery)));
+        }
+        if (meta.viewQueries.length > 0) {
+            definitionMap.set('viewQueries', literalArr(meta.viewQueries.map(compileQuery)));
+        }
+        if (meta.exportAs !== null) {
+            definitionMap.set('exportAs', asLiteral(meta.exportAs));
+        }
+        if (meta.usesInheritance) {
+            definitionMap.set('usesInheritance', literal(true));
+        }
+        if (meta.lifecycle.usesOnChanges) {
+            definitionMap.set('usesOnChanges', literal(true));
+        }
+        definitionMap.set('ngImport', importExpr(Identifiers$1.core));
+        return definitionMap;
+    }
+    /**
+     * Compiles the metadata of a single query into its partial declaration form as declared
+     * by `R3DeclareQueryMetadata`.
+     */
+    function compileQuery(query) {
+        const meta = new DefinitionMap();
+        meta.set('propertyName', literal(query.propertyName));
+        if (query.first) {
+            meta.set('first', literal(true));
+        }
+        meta.set('predicate', Array.isArray(query.predicate) ? asLiteral(query.predicate) : query.predicate);
+        if (query.descendants) {
+            meta.set('descendants', literal(true));
+        }
+        meta.set('read', query.read);
+        if (query.static) {
+            meta.set('static', literal(true));
+        }
+        return meta.toLiteralMap();
+    }
+    /**
+     * Compiles the host metadata into its partial declaration form as declared
+     * in `R3DeclareDirectiveMetadata['host']`
+     */
+    function compileHostMetadata(meta) {
+        const hostMetadata = new DefinitionMap();
+        hostMetadata.set('attributes', toOptionalLiteralMap(meta.attributes, expression => expression));
+        hostMetadata.set('listeners', toOptionalLiteralMap(meta.listeners, literal));
+        hostMetadata.set('properties', toOptionalLiteralMap(meta.properties, literal));
+        if (meta.specialAttributes.styleAttr) {
+            hostMetadata.set('styleAttribute', literal(meta.specialAttributes.styleAttr));
+        }
+        if (meta.specialAttributes.classAttr) {
+            hostMetadata.set('classAttribute', literal(meta.specialAttributes.classAttr));
+        }
+        if (hostMetadata.values.length > 0) {
+            return hostMetadata.toLiteralMap();
+        }
+        else {
+            return null;
+        }
+    }
+    /**
+     * Creates an object literal expression from the given object, mapping all values to an expression
+     * using the provided mapping function. If the object has no keys, then null is returned.
+     *
+     * @param object The object to transfer into an object literal expression.
+     * @param mapper The logic to use for creating an expression for the object's values.
+     * @returns An object literal expression representing `object`, or null if `object` does not have
+     * any keys.
+     */
+    function toOptionalLiteralMap(object, mapper) {
+        const entries = Object.keys(object).map(key => {
+            const value = object[key];
+            return { key, value: mapper(value), quoted: true };
+        });
+        if (entries.length > 0) {
+            return literalMap(entries);
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // This file only reexports content of the `src` folder. Keep it that way.
     // This function call has a global side effects and publishes the compiler into global namespace for
     // the late binding of the Compiler to the @angular/core for jit compilation.
@@ -20095,7 +20210,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+195.sha-2d79780');
+    const VERSION$2 = new Version('11.0.0-next.6+205.sha-27ae060');
 
     /**
      * @license
@@ -24732,7 +24847,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitExternalExpr(ast, _context) {
             if (ast.value.name === null) {
-                throw new Error(`Import unknown module or symbol ${ast.value}`);
+                if (ast.value.moduleName === null) {
+                    throw new Error('Invalid import without name nor moduleName');
+                }
+                return this.imports.generateNamespaceImport(ast.value.moduleName);
             }
             // If a moduleName is specified, this is a normal import. If there's no module name, it's a
             // reference to a global/ambient symbol.
@@ -27043,18 +27161,24 @@ Either add the @Injectable() decorator to '${provider.node.name
             return { diagnostics: diagnostics.length > 0 ? diagnostics : undefined };
         }
         compileFull(node, analysis, resolution, pool) {
-            const meta = analysis.meta;
-            const res = compileDirectiveFromMetadata(meta, pool, makeBindingParser());
-            const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Directive }));
+            const def = compileDirectiveFromMetadata(analysis.meta, pool, makeBindingParser());
+            return this.compileDirective(analysis, def);
+        }
+        compilePartial(node, analysis, resolution) {
+            const def = compileDeclareDirectiveFromMetadata(analysis.meta);
+            return this.compileDirective(analysis, def);
+        }
+        compileDirective(analysis, { expression: initializer, type }) {
+            const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, analysis.meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Directive }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
             return [
                 factoryRes, {
                     name: 'ɵdir',
-                    initializer: res.expression,
+                    initializer,
                     statements: [],
-                    type: res.type,
+                    type,
                 }
             ];
         }
