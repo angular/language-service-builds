@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+215.sha-8e384d9
+ * @license Angular v11.0.0-next.6+216.sha-3a1d36c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19489,7 +19489,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+215.sha-8e384d9');
+    const VERSION$1 = new Version('11.0.0-next.6+216.sha-3a1d36c');
 
     /**
      * @license
@@ -20240,7 +20240,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+215.sha-8e384d9');
+    const VERSION$2 = new Version('11.0.0-next.6+216.sha-3a1d36c');
 
     /**
      * @license
@@ -22817,6 +22817,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function isExternalResource(resource) {
+        return resource.path !== null;
+    }
     /**
      * Tracks the mapping between external template/style files and the component(s) which use them.
      *
@@ -37660,76 +37663,34 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Return the node that most tightly encompass the specified `position`.
-     * @param node
-     * @param position
+     * Return the node that most tightly encompasses the specified `position`.
+     * @param node The starting node to start the top-down search.
+     * @param position The target position within the `node`.
      */
     function findTightestNode(node, position) {
+        var _a;
         if (node.getStart() <= position && position < node.getEnd()) {
-            return node.forEachChild(c => findTightestNode(c, position)) || node;
+            return (_a = node.forEachChild(c => findTightestNode(c, position))) !== null && _a !== void 0 ? _a : node;
         }
+        return undefined;
     }
+    function getParentClassDeclaration(startNode) {
+        while (startNode) {
+            if (ts.isClassDeclaration(startNode)) {
+                return startNode;
+            }
+            startNode = startNode.parent;
+        }
+        return undefined;
+    }
+
     /**
-     * Returns a property assignment from the assignment value if the property name
-     * matches the specified `key`, or `undefined` if there is no match.
-     */
-    function getPropertyAssignmentFromValue(value, key) {
-        const propAssignment = value.parent;
-        if (!propAssignment || !ts.isPropertyAssignment(propAssignment) ||
-            propAssignment.name.getText() !== key) {
-            return;
-        }
-        return propAssignment;
-    }
-    /**
-     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
-     * directive class the property applies to.
-     * If the property assignment is not on a class decorator, no declaration is returned.
+     * @license
+     * Copyright Google LLC All Rights Reserved.
      *
-     * For example,
-     *
-     * @Component({
-     *   template: '<div></div>'
-     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
-     * })
-     * class AppComponent {}
-     *           ^---- class declaration node
-     *
-     * @param propAsgnNode property assignment
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
      */
-    function getClassDeclFromDecoratorProp(propAsgnNode) {
-        if (!propAsgnNode.parent || !ts.isObjectLiteralExpression(propAsgnNode.parent)) {
-            return;
-        }
-        const objLitExprNode = propAsgnNode.parent;
-        if (!objLitExprNode.parent || !ts.isCallExpression(objLitExprNode.parent)) {
-            return;
-        }
-        const callExprNode = objLitExprNode.parent;
-        if (!callExprNode.parent || !ts.isDecorator(callExprNode.parent)) {
-            return;
-        }
-        const decorator = callExprNode.parent;
-        if (!decorator.parent || !ts.isClassDeclaration(decorator.parent)) {
-            return;
-        }
-        const classDeclNode = decorator.parent;
-        return classDeclNode;
-    }
-    /**
-     * Given the node which is the string of the inline template for a component, returns the
-     * `ts.ClassDeclaration` for the component.
-     */
-    function getClassDeclOfInlineTemplateNode(templateStringNode) {
-        if (!ts.isStringLiteralLike(templateStringNode)) {
-            return;
-        }
-        const tmplAsgn = getPropertyAssignmentFromValue(templateStringNode, 'template');
-        if (!tmplAsgn) {
-            return;
-        }
-        return getClassDeclFromDecoratorProp(tmplAsgn);
-    }
     function getTextSpanOfNode(node) {
         if (isTemplateNodeWithKeyAndValue(node)) {
             return toTextSpan(node.keySpan);
@@ -37764,12 +37725,38 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         // Template node implements the Node interface so we cannot use instanceof.
         return node.sourceSpan instanceof ParseSourceSpan;
     }
+    function getInlineTemplateInfoAtPosition(sf, position, compiler) {
+        const expression = findTightestNode(sf, position);
+        if (expression === undefined) {
+            return undefined;
+        }
+        const classDecl = getParentClassDeclaration(expression);
+        if (classDecl === undefined) {
+            return undefined;
+        }
+        // Return `undefined` if the position is not on the template expression or the template resource
+        // is not inline.
+        const resources = compiler.getComponentResources(classDecl);
+        if (resources === null || isExternalResource(resources.template) ||
+            expression !== resources.template.expression) {
+            return undefined;
+        }
+        const template = compiler.getTemplateTypeChecker().getTemplate(classDecl);
+        if (template === null) {
+            return undefined;
+        }
+        return { template, component: classDecl };
+    }
     /**
      * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
      */
     function getTemplateInfoAtPosition(fileName, position, compiler) {
         if (isTypeScriptFile(fileName)) {
-            return getTemplateInfoFromClassMeta(fileName, position, compiler);
+            const sf = compiler.getNextProgram().getSourceFile(fileName);
+            if (sf === undefined) {
+                return undefined;
+            }
+            return getInlineTemplateInfoAtPosition(sf, position, compiler);
         }
         else {
             return getFirstComponentForTemplateFile(fileName, compiler);
@@ -37807,30 +37794,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return { template, component };
         }
         return undefined;
-    }
-    /**
-     * Retrieves the `ts.ClassDeclaration` at a location along with its template nodes.
-     */
-    function getTemplateInfoFromClassMeta(fileName, position, compiler) {
-        const classDecl = getClassDeclForInlineTemplateAtPosition(fileName, position, compiler);
-        if (!classDecl || !classDecl.name) { // Does not handle anonymous class
-            return;
-        }
-        const template = compiler.getTemplateTypeChecker().getTemplate(classDecl);
-        if (template === null) {
-            return;
-        }
-        return { template, component: classDecl };
-    }
-    function getClassDeclForInlineTemplateAtPosition(fileName, position, compiler) {
-        const sourceFile = compiler.getNextProgram().getSourceFile(fileName);
-        if (!sourceFile) {
-            return undefined;
-        }
-        const node = findTightestNode(sourceFile, position);
-        if (!node)
-            return;
-        return getClassDeclOfInlineTemplateNode(node);
     }
     /**
      * Given an attribute node, converts it to string form.
@@ -38231,88 +38194,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Gets an Angular-specific definition in a TypeScript source file.
-     */
-    function getTsDefinitionAndBoundSpan(sf, position, resourceResolver) {
-        const node = findTightestNode(sf, position);
-        if (!node)
-            return;
-        switch (node.kind) {
-            case ts.SyntaxKind.StringLiteral:
-            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
-                // Attempt to extract definition of a URL in a property assignment.
-                return getUrlFromProperty(node, resourceResolver);
-            default:
-                return undefined;
-        }
-    }
-    /**
-     * Attempts to get the definition of a file whose URL is specified in a property assignment in a
-     * directive decorator.
-     * Currently applies to `templateUrl` and `styleUrls` properties.
-     */
-    function getUrlFromProperty(urlNode, resourceResolver) {
-        // Get the property assignment node corresponding to the `templateUrl` or `styleUrls` assignment.
-        // These assignments are specified differently; `templateUrl` is a string, and `styleUrls` is
-        // an array of strings:
-        //   {
-        //        templateUrl: './template.ng.html',
-        //        styleUrls: ['./style.css', './other-style.css']
-        //   }
-        // `templateUrl`'s property assignment can be found from the string literal node;
-        // `styleUrls`'s property assignment can be found from the array (parent) node.
-        //
-        // First search for `templateUrl`.
-        let asgn = getPropertyAssignmentFromValue(urlNode, 'templateUrl');
-        if (!asgn) {
-            // `templateUrl` assignment not found; search for `styleUrls` array assignment.
-            asgn = getPropertyAssignmentFromValue(urlNode.parent, 'styleUrls');
-            if (!asgn) {
-                // Nothing found, bail.
-                return;
-            }
-        }
-        // If the property assignment is not a property of a class decorator, don't generate definitions
-        // for it.
-        if (!getClassDeclFromDecoratorProp(asgn)) {
-            return;
-        }
-        const sf = urlNode.getSourceFile();
-        let url;
-        try {
-            url = resourceResolver.resolve(urlNode.text, sf.fileName);
-        }
-        catch (_a) {
-            // If the file does not exist, bail.
-            return;
-        }
-        const templateDefinitions = [{
-                kind: ts.ScriptElementKind.externalModuleName,
-                name: url,
-                containerKind: ts.ScriptElementKind.unknown,
-                containerName: '',
-                // Reading the template is expensive, so don't provide a preview.
-                // TODO(ayazhafiz): Consider providing an actual span:
-                //  1. We're likely to read the template anyway
-                //  2. We could show just the first 100 chars or so
-                textSpan: { start: 0, length: 0 },
-                fileName: url,
-            }];
-        return {
-            definitions: templateDefinitions,
-            textSpan: {
-                // Exclude opening and closing quotes in the url span.
-                start: urlNode.getStart() + 1,
-                length: urlNode.getWidth() - 2,
-            },
-        };
-    }
     class DefinitionBuilder {
-        constructor(tsLS, compiler, resourceResolver) {
+        constructor(tsLS, compiler) {
             this.tsLS = tsLS;
             this.compiler = compiler;
-            this.resourceResolver = resourceResolver;
         }
         getDefinitionAndBoundSpan(fileName, position) {
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
@@ -38323,11 +38208,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (!isTypeScriptFile(fileName)) {
                     return;
                 }
-                const sf = this.compiler.getNextProgram().getSourceFile(fileName);
-                if (!sf) {
-                    return;
-                }
-                return getTsDefinitionAndBoundSpan(sf, position, this.resourceResolver);
+                return getDefinitionForExpressionAtPosition(fileName, position, this.compiler);
             }
             const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
             // The `$event` of event handlers would point to the $event parameter in the shim file, as in
@@ -38484,6 +38365,52 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return { node, parent, symbol };
         }
     }
+    /**
+     * Gets an Angular-specific definition in a TypeScript source file.
+     */
+    function getDefinitionForExpressionAtPosition(fileName, position, compiler) {
+        const sf = compiler.getNextProgram().getSourceFile(fileName);
+        if (sf === undefined) {
+            return;
+        }
+        const expression = findTightestNode(sf, position);
+        if (expression === undefined) {
+            return;
+        }
+        const classDeclaration = getParentClassDeclaration(expression);
+        if (classDeclaration === undefined) {
+            return;
+        }
+        const componentResources = compiler.getComponentResources(classDeclaration);
+        if (componentResources === null) {
+            return;
+        }
+        const allResources = [...componentResources.styles, componentResources.template];
+        const resourceForExpression = allResources.find(resource => resource.expression === expression);
+        if (resourceForExpression === undefined || !isExternalResource(resourceForExpression)) {
+            return;
+        }
+        const templateDefinitions = [{
+                kind: ts.ScriptElementKind.externalModuleName,
+                name: resourceForExpression.path,
+                containerKind: ts.ScriptElementKind.unknown,
+                containerName: '',
+                // Reading the template is expensive, so don't provide a preview.
+                // TODO(ayazhafiz): Consider providing an actual span:
+                //  1. We're likely to read the template anyway
+                //  2. We could show just the first 100 chars or so
+                textSpan: { start: 0, length: 0 },
+                fileName: resourceForExpression.path,
+            }];
+        return {
+            definitions: templateDefinitions,
+            textSpan: {
+                // Exclude opening and closing quotes in the url span.
+                start: expression.getStart() + 1,
+                length: expression.getWidth() - 2,
+            },
+        };
+    }
 
     /**
      * @license
@@ -38548,10 +38475,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const lastVersion = this.templateVersion.get(fileName);
             const latestVersion = this.project.getScriptVersion(fileName);
             return lastVersion !== latestVersion;
-        }
-        resolve(file, basePath) {
-            const loader = new AdapterResourceLoader(this, this.project.getCompilationSettings());
-            return loader.resolve(file, basePath);
         }
     }
 
@@ -38772,15 +38695,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getDefinitionAndBoundSpan(fileName, position) {
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
-            const results = new DefinitionBuilder(this.tsLS, compiler, this.adapter)
-                .getDefinitionAndBoundSpan(fileName, position);
+            const results = new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
         getTypeDefinitionAtPosition(fileName, position) {
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
-            const results = new DefinitionBuilder(this.tsLS, compiler, this.adapter)
-                .getTypeDefinitionsAtPosition(fileName, position);
+            const results = new DefinitionBuilder(this.tsLS, compiler).getTypeDefinitionsAtPosition(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
