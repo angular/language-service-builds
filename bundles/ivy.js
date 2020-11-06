@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.2.2+7.sha-1c6cf8a
+ * @license Angular v10.2.2+8.sha-861e4fa
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19198,7 +19198,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.2.2+7.sha-1c6cf8a');
+    const VERSION$1 = new Version('10.2.2+8.sha-861e4fa');
 
     /**
      * @license
@@ -19791,7 +19791,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.2.2+7.sha-1c6cf8a');
+    const VERSION$2 = new Version('10.2.2+8.sha-861e4fa');
 
     /**
      * @license
@@ -32121,6 +32121,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         constructor(resolver) {
             this.resolver = resolver;
             this._diagnostics = [];
+            /**
+             * Tracks which `BindingPipe` nodes have already been recorded as invalid, so only one diagnostic
+             * is ever produced per node.
+             */
+            this.recordedPipes = new Set();
         }
         get diagnostics() {
             return this._diagnostics;
@@ -32132,6 +32137,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, ref.valueSpan || ref.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
         }
         missingPipe(templateId, ast) {
+            if (this.recordedPipes.has(ast)) {
+                return;
+            }
             const mapping = this.resolver.getSourceMapping(templateId);
             const errorMsg = `No pipe found with name '${ast.name}'.`;
             const sourceSpan = this.resolver.toParseSourceSpan(templateId, ast.nameSpan);
@@ -32139,6 +32147,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 throw new Error(`Assertion failure: no SourceLocation found for usage of pipe '${ast.name}'.`);
             }
             this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
+            this.recordedPipes.add(ast);
         }
         illegalAssignmentToTemplateVar(templateId, assignment, target) {
             const mapping = this.resolver.getSourceMapping(templateId);
