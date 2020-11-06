@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+223.sha-bdce769
+ * @license Angular v11.0.0-next.6+225.sha-0929099
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18286,7 +18286,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+223.sha-bdce769');
+    const VERSION$1 = new Version('11.0.0-next.6+225.sha-0929099');
 
     /**
      * @license
@@ -34792,7 +34792,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+223.sha-bdce769');
+    const VERSION$2 = new Version$1('11.0.0-next.6+225.sha-0929099');
 
     /**
      * @license
@@ -40192,11 +40192,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case ts.SyntaxKind.UnionType:
                     const unionType = node;
                     // Remove null and undefined from the list of unions.
-                    // TODO(alan-agius4): remove `n.kind !== ts.SyntaxKind.NullKeyword` when
-                    // TS 3.9 support is dropped. In TS 4.0 NullKeyword is a child of LiteralType.
                     const references = unionType.types
-                        .filter(n => n.kind !== ts.SyntaxKind.NullKeyword &&
-                        n.kind !== ts.SyntaxKind.UndefinedKeyword &&
+                        .filter(n => n.kind !== ts.SyntaxKind.UndefinedKeyword &&
                         !(ts.isLiteralTypeNode(n) && n.literal.kind === ts.SyntaxKind.NullKeyword))
                         .map(n => this.evaluateNode(n));
                     // The remmaining reference must be the same. If two have type arguments consider them

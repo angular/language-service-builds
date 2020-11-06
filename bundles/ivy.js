@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+223.sha-bdce769
+ * @license Angular v11.0.0-next.6+225.sha-0929099
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19489,7 +19489,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+223.sha-bdce769');
+    const VERSION$1 = new Version('11.0.0-next.6+225.sha-0929099');
 
     /**
      * @license
@@ -20240,7 +20240,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+223.sha-bdce769');
+    const VERSION$2 = new Version('11.0.0-next.6+225.sha-0929099');
 
     /**
      * @license
@@ -21733,12 +21733,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // We also don't need to support `foo: Foo|undefined` because Angular's DI injects `null` for
                 // optional tokes that don't have providers.
                 if (typeNode && ts.isUnionTypeNode(typeNode)) {
-                    let childTypeNodes = typeNode.types.filter(
-                    // TODO(alan-agius4): remove `childTypeNode.kind !== ts.SyntaxKind.NullKeyword` when
-                    // TS 3.9 support is dropped. In TS 4.0 NullKeyword is a child of LiteralType.
-                    childTypeNode => childTypeNode.kind !== ts.SyntaxKind.NullKeyword &&
-                        !(ts.isLiteralTypeNode(childTypeNode) &&
-                            childTypeNode.literal.kind === ts.SyntaxKind.NullKeyword));
+                    let childTypeNodes = typeNode.types.filter(childTypeNode => !(ts.isLiteralTypeNode(childTypeNode) &&
+                        childTypeNode.literal.kind === ts.SyntaxKind.NullKeyword));
                     if (childTypeNodes.length === 1) {
                         typeNode = childTypeNodes[0];
                     }
@@ -22350,10 +22346,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (!ts.isTupleTypeNode(def)) {
             return [];
         }
-        // TODO(alan-agius4): remove `def.elementTypes` and casts when TS 3.9 support is dropped and G3 is
-        // using TS 4.0.
-        return (def.elements || def.elementTypes)
-            .map(element => {
+        return def.elements.map(element => {
             if (!ts.isTypeQueryNode(element)) {
                 throw new Error(`Expected TypeQueryNode: ${nodeDebugInfo(element)}`);
             }
@@ -22400,10 +22393,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return [];
         }
         const res = [];
-        // TODO(alan-agius4): remove `def.elementTypes` and casts when TS 3.9 support is dropped and G3 is
-        // using TS 4.0.
-        (type.elements || type.elementTypes)
-            .forEach(el => {
+        type.elements.forEach(el => {
             if (!ts.isLiteralTypeNode(el) || !ts.isStringLiteral(el.literal)) {
                 return;
             }
@@ -25108,11 +25098,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitLiteralExpr(ast, context) {
             if (ast.value === null) {
-                // TODO(alan-agius4): Remove when we no longer support TS 3.9
-                // Use: return ts.createLiteralTypeNode(ts.createNull()) directly.
-                return ts.versionMajorMinor.charAt(0) === '4' ?
-                    ts.createLiteralTypeNode(ts.createNull()) :
-                    ts.createKeywordTypeNode(ts.SyntaxKind.NullKeyword);
+                return ts.createLiteralTypeNode(ts.createNull());
             }
             else if (ast.value === undefined) {
                 return ts.createKeywordTypeNode(ts.SyntaxKind.UndefinedKeyword);
@@ -25678,30 +25664,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.typeReplacements.set(declaration, type);
         }
         transformClassElement(element, imports) {
-            // // TODO(alan-agius4): Remove when we no longer support TS 3.9
-            // TS <= 3.9
-            if (ts.isMethodSignature(element)) {
-                const original = ts.getOriginalNode(element);
-                if (!this.typeReplacements.has(original)) {
-                    return element;
-                }
-                const returnType = this.typeReplacements.get(original);
-                const tsReturnType = translateType(returnType, imports);
-                const methodSignature = ts.updateMethodSignature(
-                /* node */ element, 
-                /* typeParameters */ element.typeParameters, 
-                /* parameters */ element.parameters, 
-                /* type */ tsReturnType, 
-                /* name */ element.name, 
-                /* questionToken */ element.questionToken);
-                // Copy over any modifiers, these cannot be set during the `ts.updateMethodSignature` call.
-                methodSignature.modifiers = element.modifiers;
-                // A bug in the TypeScript declaration causes `ts.MethodSignature` not to be assignable to
-                // `ts.ClassElement`. Since `element` was a `ts.MethodSignature` already, transforming it into
-                // this type is actually correct.
-                return methodSignature;
-            }
-            // TS 4.0 +
             if (ts.isMethodDeclaration(element)) {
                 const original = ts.getOriginalNode(element, ts.isMethodDeclaration);
                 if (!this.typeReplacements.has(original)) {
