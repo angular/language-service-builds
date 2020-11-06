@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+215.sha-8e384d9
+ * @license Angular v11.0.0-next.6+216.sha-3a1d36c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18286,7 +18286,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+215.sha-8e384d9');
+    const VERSION$1 = new Version('11.0.0-next.6+216.sha-3a1d36c');
 
     /**
      * @license
@@ -25776,20 +25776,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return;
         }
         return propAssignment;
-    }
-    /**
-     * Given the node which is the string of the inline template for a component, returns the
-     * `ts.ClassDeclaration` for the component.
-     */
-    function getClassDeclOfInlineTemplateNode(templateStringNode) {
-        if (!tss.isStringLiteralLike(templateStringNode)) {
-            return;
-        }
-        const tmplAsgn = getPropertyAssignmentFromValue(templateStringNode, 'template');
-        if (!tmplAsgn) {
-            return;
-        }
-        return getClassDeclFromDecoratorProp(tmplAsgn);
     }
     /**
      * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
@@ -34695,7 +34681,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+215.sha-8e384d9');
+    const VERSION$2 = new Version$1('11.0.0-next.6+216.sha-3a1d36c');
 
     /**
      * @license
@@ -41681,7 +41667,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!tss.isStringLiteralLike(node)) {
                 return;
             }
-            const classDecl = getClassDeclOfInlineTemplateNode(node);
+            const tmplAsgn = getPropertyAssignmentFromValue(node, 'template');
+            if (!tmplAsgn) {
+                return;
+            }
+            const classDecl = getClassDeclFromDecoratorProp(tmplAsgn);
             if (!classDecl || !classDecl.name) { // Does not handle anonymous class
                 return;
             }
