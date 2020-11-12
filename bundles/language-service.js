@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+247.sha-ade6da9
+ * @license Angular v11.0.0-next.6+248.sha-21651d3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3143,11 +3143,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitBoundText(this);
         }
     }
+    /**
+     * Represents a text attribute in the template.
+     *
+     * `valueSpan` may not be present in cases where there is no value `<div a></div>`.
+     * `keySpan` may also not be present for synthetic attributes from ICU expansions.
+     */
     class TextAttribute {
-        constructor(name, value, sourceSpan, valueSpan, i18n) {
+        constructor(name, value, sourceSpan, keySpan, valueSpan, i18n) {
             this.name = name;
             this.value = value;
             this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
             this.valueSpan = valueSpan;
             this.i18n = i18n;
         }
@@ -8363,10 +8370,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class Attribute extends NodeWithI18n {
-        constructor(name, value, sourceSpan, valueSpan, i18n) {
+        constructor(name, value, sourceSpan, keySpan, valueSpan, i18n) {
             super(sourceSpan, i18n);
             this.name = name;
             this.value = value;
+            this.keySpan = keySpan;
             this.valueSpan = valueSpan;
         }
         visit(visitor, context) {
@@ -9644,7 +9652,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 const quoteToken = this._advance();
                 end = quoteToken.sourceSpan.end;
             }
-            return new Attribute(fullName, value, new ParseSourceSpan(attrName.sourceSpan.start, end, attrName.sourceSpan.fullStart), valueSpan);
+            const keySpan = new ParseSourceSpan(attrName.sourceSpan.start, attrName.sourceSpan.end);
+            return new Attribute(fullName, value, new ParseSourceSpan(attrName.sourceSpan.start, end, attrName.sourceSpan.fullStart), keySpan, valueSpan);
         }
         _getParentElement() {
             return this._elementStack.length > 0 ? this._elementStack[this._elementStack.length - 1] : null;
@@ -9866,9 +9875,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             const expansionResult = expandNodes(c.expression);
             errors.push(...expansionResult.errors);
-            return new Element$1(`ng-template`, [new Attribute('ngPluralCase', `${c.value}`, c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
+            return new Element$1(`ng-template`, [new Attribute('ngPluralCase', `${c.value}`, c.valueSourceSpan, undefined /* keySpan */, undefined /* valueSpan */, undefined /* i18n */)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
         });
-        const switchAttr = new Attribute('[ngPlural]', ast.switchValue, ast.switchValueSourceSpan);
+        const switchAttr = new Attribute('[ngPlural]', ast.switchValue, ast.switchValueSourceSpan, undefined /* keySpan */, undefined /* valueSpan */, undefined /* i18n */);
         return new Element$1('ng-container', [switchAttr], children, ast.sourceSpan, ast.sourceSpan, ast.sourceSpan);
     }
     // ICU messages (excluding plural form) are expanded to `NgSwitch`  and `NgSwitchCase`s
@@ -9878,11 +9887,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             errors.push(...expansionResult.errors);
             if (c.value === 'other') {
                 // other is the default case when no values match
-                return new Element$1(`ng-template`, [new Attribute('ngSwitchDefault', '', c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
+                return new Element$1(`ng-template`, [new Attribute('ngSwitchDefault', '', c.valueSourceSpan, undefined /* keySpan */, undefined /* valueSpan */, undefined /* i18n */)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
             }
-            return new Element$1(`ng-template`, [new Attribute('ngSwitchCase', `${c.value}`, c.valueSourceSpan)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
+            return new Element$1(`ng-template`, [new Attribute('ngSwitchCase', `${c.value}`, c.valueSourceSpan, undefined /* keySpan */, undefined /* valueSpan */, undefined /* i18n */)], expansionResult.nodes, c.sourceSpan, c.sourceSpan, c.sourceSpan);
         });
-        const switchAttr = new Attribute('[ngSwitch]', ast.switchValue, ast.switchValueSourceSpan);
+        const switchAttr = new Attribute('[ngSwitch]', ast.switchValue, ast.switchValueSourceSpan, undefined /* keySpan */, undefined /* valueSpan */, undefined /* i18n */);
         return new Element$1('ng-container', [switchAttr], children, ast.sourceSpan, ast.sourceSpan, ast.sourceSpan);
     }
 
@@ -14606,7 +14615,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return parsedElement;
         }
         visitAttribute(attribute) {
-            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, attribute.valueSpan, attribute.i18n);
+            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, attribute.keySpan, attribute.valueSpan, attribute.i18n);
         }
         visitText(text) {
             return this._visitTextWithInterpolation(text.value, text.sourceSpan, text.i18n);
@@ -14657,7 +14666,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             properties.forEach(prop => {
                 const i18n = i18nPropsMeta[prop.name];
                 if (prop.isLiteral) {
-                    literal.push(new TextAttribute(prop.name, prop.expression.source || '', prop.sourceSpan, undefined, i18n));
+                    literal.push(new TextAttribute(prop.name, prop.expression.source || '', prop.sourceSpan, prop.keySpan, prop.valueSpan, i18n));
                 }
                 else {
                     // Note that validation is skipped and property mapping is disabled
@@ -14812,7 +14821,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return null;
         }
         visitAttribute(attribute) {
-            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, undefined, attribute.i18n);
+            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, attribute.keySpan, attribute.valueSpan, attribute.i18n);
         }
         visitText(text) {
             return new Text(text.value, text.sourceSpan);
@@ -18286,7 +18295,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+247.sha-ade6da9');
+    const VERSION$1 = new Version('11.0.0-next.6+248.sha-21651d3');
 
     /**
      * @license
@@ -34792,7 +34801,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+247.sha-ade6da9');
+    const VERSION$2 = new Version$1('11.0.0-next.6+248.sha-21651d3');
 
     /**
      * @license
