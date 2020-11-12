@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+245.sha-8e17dc0
+ * @license Angular v11.0.0-next.6+247.sha-ade6da9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19489,7 +19489,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+245.sha-8e17dc0');
+    const VERSION$1 = new Version('11.0.0-next.6+247.sha-ade6da9');
 
     /**
      * @license
@@ -20240,7 +20240,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+245.sha-8e17dc0');
+    const VERSION$2 = new Version('11.0.0-next.6+247.sha-ade6da9');
 
     /**
      * @license
@@ -30445,6 +30445,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     const CSS_PREPROCESSOR_EXT = /(\.scss|\.sass|\.less|\.styl)$/;
+    const RESOURCE_MARKER = '.$ngresource$';
+    const RESOURCE_MARKER_TS = RESOURCE_MARKER + '.ts';
     /**
      * `ResourceLoader` which delegates to an `NgCompilerAdapter`'s resource loading methods.
      */
@@ -30454,6 +30456,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.options = options;
             this.cache = new Map();
             this.fetching = new Map();
+            this.lookupResolutionHost = createLookupResolutionHost(this.adapter);
             this.canPreload = !!this.adapter.readResource;
         }
         /**
@@ -30588,15 +30591,50 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         getResolvedCandidateLocations(url, fromFile) {
             // clang-format off
-            const failedLookup = ts.resolveModuleName(url + '.$ngresource$', fromFile, this.options, this.adapter);
+            const failedLookup = ts.resolveModuleName(url + RESOURCE_MARKER, fromFile, this.options, this.lookupResolutionHost);
             // clang-format on
             if (failedLookup.failedLookupLocations === undefined) {
                 throw new Error(`Internal error: expected to find failedLookupLocations during resolution of resource '${url}' in context of ${fromFile}`);
             }
             return failedLookup.failedLookupLocations
-                .filter(candidate => candidate.endsWith('.$ngresource$.ts'))
-                .map(candidate => candidate.replace(/\.\$ngresource\$\.ts$/, ''));
+                .filter(candidate => candidate.endsWith(RESOURCE_MARKER_TS))
+                .map(candidate => candidate.slice(0, -RESOURCE_MARKER_TS.length));
         }
+    }
+    /**
+     * Derives a `ts.ModuleResolutionHost` from a compiler adapter that recognizes the special resource
+     * marker and does not go to the filesystem for these requests, as they are known not to exist.
+     */
+    function createLookupResolutionHost(adapter) {
+        var _a, _b, _c;
+        return {
+            directoryExists(directoryName) {
+                if (directoryName.includes(RESOURCE_MARKER)) {
+                    return false;
+                }
+                else if (adapter.directoryExists !== undefined) {
+                    return adapter.directoryExists(directoryName);
+                }
+                else {
+                    // TypeScript's module resolution logic assumes that the directory exists when no host
+                    // implementation is available.
+                    return true;
+                }
+            },
+            fileExists(fileName) {
+                if (fileName.includes(RESOURCE_MARKER)) {
+                    return false;
+                }
+                else {
+                    return adapter.fileExists(fileName);
+                }
+            },
+            readFile: adapter.readFile.bind(adapter),
+            getCurrentDirectory: adapter.getCurrentDirectory.bind(adapter),
+            getDirectories: (_a = adapter.getDirectories) === null || _a === void 0 ? void 0 : _a.bind(adapter),
+            realpath: (_b = adapter.realpath) === null || _b === void 0 ? void 0 : _b.bind(adapter),
+            trace: (_c = adapter.trace) === null || _c === void 0 ? void 0 : _c.bind(adapter),
+        };
     }
 
     /**
