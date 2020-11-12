@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+237.sha-d1355ca
+ * @license Angular v11.0.0-next.6+238.sha-4476324
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18286,7 +18286,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+237.sha-d1355ca');
+    const VERSION$1 = new Version('11.0.0-next.6+238.sha-4476324');
 
     /**
      * @license
@@ -32936,9 +32936,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
         }
         else {
-            // TODO(misko): Can't import RendererStyleFlags2.DashCase as it causes imports to be resolved
-            // in different order which causes failures. Using direct constant as workaround for now.
-            const flags = prop.indexOf('-') == -1 ? undefined : 2 /* RendererStyleFlags2.DashCase */;
+            let flags = prop.indexOf('-') === -1 ? undefined : 2 /* DashCase */;
             if (value == null /** || value === undefined */) {
                 ngDevMode && ngDevMode.rendererRemoveStyle++;
                 if (isProcedural) {
@@ -32949,13 +32947,21 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 }
             }
             else {
+                // A value is important if it ends with `!important`. The style
+                // parser strips any semicolons at the end of the value.
+                const isImportant = typeof value === 'string' ? value.endsWith('!important') : false;
+                if (isImportant) {
+                    // !important has to be stripped from the value for it to be valid.
+                    value = value.slice(0, -10);
+                    flags |= 1 /* Important */;
+                }
                 ngDevMode && ngDevMode.rendererSetStyle++;
                 if (isProcedural) {
                     renderer.setStyle(rNode, prop, value, flags);
                 }
                 else {
                     ngDevMode && assertDefined(rNode.style, 'HTMLElement expected');
-                    rNode.style.setProperty(prop, value);
+                    rNode.style.setProperty(prop, value, isImportant ? 'important' : '');
                 }
             }
         }
@@ -46891,7 +46897,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+237.sha-d1355ca');
+    const VERSION$2 = new Version$1('11.0.0-next.6+238.sha-4476324');
 
     /**
      * @license
