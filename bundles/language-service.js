@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+249.sha-c33326c
+ * @license Angular v11.0.0-next.6+250.sha-8a1c98c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3268,10 +3268,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class Reference {
-        constructor(name, value, sourceSpan, valueSpan) {
+        constructor(name, value, sourceSpan, keySpan, valueSpan) {
             this.name = name;
             this.value = value;
             this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
             this.valueSpan = valueSpan;
         }
         visit(visitor) {
@@ -14723,7 +14724,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 else if (bindParts[KW_REF_IDX$1]) {
                     const identifier = bindParts[IDENT_KW_IDX$1];
-                    this.parseReference(identifier, value, srcSpan, attribute.valueSpan, references);
+                    const keySpan = createKeySpan(srcSpan, bindParts[KW_REF_IDX$1], identifier);
+                    this.parseReference(identifier, value, srcSpan, keySpan, attribute.valueSpan, references);
                 }
                 else if (bindParts[KW_ON_IDX$1]) {
                     const events = [];
@@ -14797,14 +14799,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             variables.push(new Variable(identifier, value, sourceSpan, keySpan, valueSpan));
         }
-        parseReference(identifier, value, sourceSpan, valueSpan, references) {
+        parseReference(identifier, value, sourceSpan, keySpan, valueSpan, references) {
             if (identifier.indexOf('-') > -1) {
                 this.reportError(`"-" is not allowed in reference names`, sourceSpan);
             }
             else if (identifier.length === 0) {
                 this.reportError(`Reference does not have a name`, sourceSpan);
             }
-            references.push(new Reference(identifier, value, sourceSpan, valueSpan));
+            references.push(new Reference(identifier, value, sourceSpan, keySpan, valueSpan));
         }
         parseAssignmentEvent(name, expression, sourceSpan, valueSpan, targetMatchableAttrs, boundEvents, keySpan) {
             const events = [];
@@ -18308,7 +18310,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+249.sha-c33326c');
+    const VERSION$1 = new Version('11.0.0-next.6+250.sha-8a1c98c');
 
     /**
      * @license
@@ -34814,7 +34816,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+249.sha-c33326c');
+    const VERSION$2 = new Version$1('11.0.0-next.6+250.sha-8a1c98c');
 
     /**
      * @license
