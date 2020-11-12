@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+247.sha-ade6da9
+ * @license Angular v11.0.0-next.6+248.sha-21651d3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5910,11 +5910,18 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return visitor.visitBoundText(this);
         }
     }
+    /**
+     * Represents a text attribute in the template.
+     *
+     * `valueSpan` may not be present in cases where there is no value `<div a></div>`.
+     * `keySpan` may also not be present for synthetic attributes from ICU expansions.
+     */
     class TextAttribute {
-        constructor(name, value, sourceSpan, valueSpan, i18n) {
+        constructor(name, value, sourceSpan, keySpan, valueSpan, i18n) {
             this.name = name;
             this.value = value;
             this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
             this.valueSpan = valueSpan;
             this.i18n = i18n;
         }
@@ -11080,10 +11087,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     class Attribute extends NodeWithI18n {
-        constructor(name, value, sourceSpan, valueSpan, i18n) {
+        constructor(name, value, sourceSpan, keySpan, valueSpan, i18n) {
             super(sourceSpan, i18n);
             this.name = name;
             this.value = value;
+            this.keySpan = keySpan;
             this.valueSpan = valueSpan;
         }
         visit(visitor, context) {
@@ -12333,7 +12341,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 const quoteToken = this._advance();
                 end = quoteToken.sourceSpan.end;
             }
-            return new Attribute(fullName, value, new ParseSourceSpan(attrName.sourceSpan.start, end, attrName.sourceSpan.fullStart), valueSpan);
+            const keySpan = new ParseSourceSpan(attrName.sourceSpan.start, attrName.sourceSpan.end);
+            return new Attribute(fullName, value, new ParseSourceSpan(attrName.sourceSpan.start, end, attrName.sourceSpan.fullStart), keySpan, valueSpan);
         }
         _getParentElement() {
             return this._elementStack.length > 0 ? this._elementStack[this._elementStack.length - 1] : null;
@@ -15809,7 +15818,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return parsedElement;
         }
         visitAttribute(attribute) {
-            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, attribute.valueSpan, attribute.i18n);
+            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, attribute.keySpan, attribute.valueSpan, attribute.i18n);
         }
         visitText(text) {
             return this._visitTextWithInterpolation(text.value, text.sourceSpan, text.i18n);
@@ -15860,7 +15869,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             properties.forEach(prop => {
                 const i18n = i18nPropsMeta[prop.name];
                 if (prop.isLiteral) {
-                    literal.push(new TextAttribute(prop.name, prop.expression.source || '', prop.sourceSpan, undefined, i18n));
+                    literal.push(new TextAttribute(prop.name, prop.expression.source || '', prop.sourceSpan, prop.keySpan, prop.valueSpan, i18n));
                 }
                 else {
                     // Note that validation is skipped and property mapping is disabled
@@ -16015,7 +16024,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return null;
         }
         visitAttribute(attribute) {
-            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, undefined, attribute.i18n);
+            return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, attribute.keySpan, attribute.valueSpan, attribute.i18n);
         }
         visitText(text) {
             return new Text(text.value, text.sourceSpan);
@@ -19489,7 +19498,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+247.sha-ade6da9');
+    const VERSION$1 = new Version('11.0.0-next.6+248.sha-21651d3');
 
     /**
      * @license
@@ -20240,7 +20249,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+247.sha-ade6da9');
+    const VERSION$2 = new Version('11.0.0-next.6+248.sha-21651d3');
 
     /**
      * @license
