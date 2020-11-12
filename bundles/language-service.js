@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+248.sha-21651d3
+ * @license Angular v11.0.0-next.6+249.sha-c33326c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3185,7 +3185,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class BoundEvent {
-        constructor(name, type, handler, target, phase, sourceSpan, handlerSpan) {
+        constructor(name, type, handler, target, phase, sourceSpan, handlerSpan, keySpan) {
             this.name = name;
             this.type = type;
             this.handler = handler;
@@ -3193,11 +3193,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.phase = phase;
             this.sourceSpan = sourceSpan;
             this.handlerSpan = handlerSpan;
+            this.keySpan = keySpan;
         }
         static fromParsedEvent(event) {
             const target = event.type === 0 /* Regular */ ? event.targetOrPhase : null;
             const phase = event.type === 1 /* Animation */ ? event.targetOrPhase : null;
-            return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan, event.handlerSpan);
+            if (event.keySpan === undefined) {
+                throw new Error(`Unexpected state: keySpan must be defined for bound event but was not for ${event.name}: ${event.sourceSpan}`);
+            }
+            return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan, event.handlerSpan, event.keySpan);
         }
         visit(visitor) {
             return visitor.visitBoundEvent(this);
@@ -6771,7 +6775,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     // Bindings
     class ParsedProperty {
         constructor(name, expression, type, 
-        // TODO(atscott): `keySpan` should really be required but allows `undefined` so VE does
+        // TODO(FW-2095): `keySpan` should really be required but allows `undefined` so VE does
         // not need to be updated. Make `keySpan` required when VE is removed.
         sourceSpan, keySpan, valueSpan) {
             this.name = name;
@@ -6793,13 +6797,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     class ParsedEvent {
         // Regular events have a target
         // Animation events have a phase
-        constructor(name, targetOrPhase, type, handler, sourceSpan, handlerSpan) {
+        constructor(name, targetOrPhase, type, handler, sourceSpan, 
+        // TODO(FW-2095): keySpan should be required but was made optional to avoid changing VE
+        handlerSpan, keySpan) {
             this.name = name;
             this.targetOrPhase = targetOrPhase;
             this.type = type;
             this.handler = handler;
             this.sourceSpan = sourceSpan;
             this.handlerSpan = handlerSpan;
+            this.keySpan = keySpan;
         }
     }
     /**
@@ -10690,8 +10697,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 Object.keys(dirMeta.hostListeners).forEach(propName => {
                     const expression = dirMeta.hostListeners[propName];
                     if (typeof expression === 'string') {
-                        // TODO: pass a more accurate handlerSpan for this event.
-                        this.parseEvent(propName, expression, sourceSpan, sourceSpan, [], targetEvents);
+                        // Use the `sourceSpan` for  `keySpan` and `handlerSpan`. This isn't really accurate, but
+                        // neither is the `sourceSpan`, as it represents the `sourceSpan` of the host itself
+                        // rather than the source of the host binding (which doesn't exist in the template).
+                        // Regardless, neither of these values are used in Ivy but are only here to satisfy the
+                        // function signature. This should likely be refactored in the future so that `sourceSpan`
+                        // isn't being used inaccurately.
+                        this.parseEvent(propName, expression, sourceSpan, sourceSpan, [], targetEvents, sourceSpan);
                     }
                     else {
                         this._reportError(`Value of the host listener "${propName}" needs to be a string representing an expression but got "${expression}" (${typeof expression})`, sourceSpan);
@@ -10935,23 +10947,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return new BoundElementProperty(boundPropertyName, bindingType, securityContexts[0], boundProp.expression, unit, boundProp.sourceSpan, boundProp.keySpan, boundProp.valueSpan);
         }
-        parseEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents) {
+        // TODO: keySpan should be required but was made optional to avoid changing VE parser.
+        parseEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan) {
             if (name.length === 0) {
                 this._reportError(`Event name is missing in binding`, sourceSpan);
             }
             if (isAnimationLabel(name)) {
                 name = name.substr(1);
-                this._parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents);
+                this._parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents, keySpan);
             }
             else {
-                this._parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents);
+                this._parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan);
             }
         }
         calcPossibleSecurityContexts(selector, propName, isAttribute) {
             const prop = this._schemaRegistry.getMappedPropName(propName);
             return calcPossibleSecurityContexts(this._schemaRegistry, selector, prop, isAttribute);
         }
-        _parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents) {
+        _parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents, keySpan) {
             const matches = splitAtPeriod(name, [name, '']);
             const eventName = matches[0];
             const phase = matches[1].toLowerCase();
@@ -10960,7 +10973,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case 'start':
                     case 'done':
                         const ast = this._parseAction(expression, handlerSpan);
-                        targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan));
+                        targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan, keySpan));
                         break;
                     default:
                         this._reportError(`The provided animation output phase value "${phase}" for "@${eventName}" is not supported (use start or done)`, sourceSpan);
@@ -10971,12 +10984,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this._reportError(`The animation trigger output event (@${eventName}) is missing its phase value name (start or done are currently supported)`, sourceSpan);
             }
         }
-        _parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents) {
+        _parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan) {
             // long format: 'target: eventName'
             const [target, eventName] = splitAtColon(name, [null, name]);
             const ast = this._parseAction(expression, handlerSpan);
             targetMatchableAttrs.push([name, ast.source]);
-            targetEvents.push(new ParsedEvent(eventName, target, 0 /* Regular */, ast, sourceSpan, handlerSpan));
+            targetEvents.push(new ParsedEvent(eventName, target, 0 /* Regular */, ast, sourceSpan, handlerSpan, keySpan));
             // Don't detect directives for event names for now,
             // so don't add the event name to the matchableAttrs
         }
@@ -14715,14 +14728,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 else if (bindParts[KW_ON_IDX$1]) {
                     const events = [];
                     const identifier = bindParts[IDENT_KW_IDX$1];
-                    this.bindingParser.parseEvent(identifier, value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events);
+                    const keySpan = createKeySpan(srcSpan, bindParts[KW_ON_IDX$1], identifier);
+                    this.bindingParser.parseEvent(identifier, value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events, keySpan);
                     addEvents(events, boundEvents);
                 }
                 else if (bindParts[KW_BINDON_IDX$1]) {
                     const identifier = bindParts[IDENT_KW_IDX$1];
                     const keySpan = createKeySpan(srcSpan, bindParts[KW_BINDON_IDX$1], identifier);
                     this.bindingParser.parsePropertyBinding(identifier, value, false, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
-                    this.parseAssignmentEvent(identifier, value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
+                    this.parseAssignmentEvent(identifier, value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents, keySpan);
                 }
                 else if (bindParts[KW_AT_IDX$1]) {
                     const keySpan = createKeySpan(srcSpan, '', name);
@@ -14749,18 +14763,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // TODO(ayazhafiz): update this to handle malformed bindings.
                 name.endsWith(delims.end) && name.length > delims.start.length + delims.end.length) {
                 const identifier = name.substring(delims.start.length, name.length - delims.end.length);
+                const keySpan = createKeySpan(srcSpan, delims.start, identifier);
                 if (delims.start === BINDING_DELIMS.BANANA_BOX.start) {
-                    const keySpan = createKeySpan(srcSpan, delims.start, identifier);
                     this.bindingParser.parsePropertyBinding(identifier, value, false, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
-                    this.parseAssignmentEvent(identifier, value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
+                    this.parseAssignmentEvent(identifier, value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents, keySpan);
                 }
                 else if (delims.start === BINDING_DELIMS.PROPERTY.start) {
-                    const keySpan = createKeySpan(srcSpan, delims.start, identifier);
                     this.bindingParser.parsePropertyBinding(identifier, value, false, srcSpan, absoluteOffset, attribute.valueSpan, matchableAttributes, parsedProperties, keySpan);
                 }
                 else {
                     const events = [];
-                    this.bindingParser.parseEvent(identifier, value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events);
+                    this.bindingParser.parseEvent(identifier, value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events, keySpan);
                     addEvents(events, boundEvents);
                 }
                 return true;
@@ -14793,9 +14806,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             references.push(new Reference(identifier, value, sourceSpan, valueSpan));
         }
-        parseAssignmentEvent(name, expression, sourceSpan, valueSpan, targetMatchableAttrs, boundEvents) {
+        parseAssignmentEvent(name, expression, sourceSpan, valueSpan, targetMatchableAttrs, boundEvents, keySpan) {
             const events = [];
-            this.bindingParser.parseEvent(`${name}Change`, `${expression}=$event`, sourceSpan, valueSpan || sourceSpan, targetMatchableAttrs, events);
+            this.bindingParser.parseEvent(`${name}Change`, `${expression}=$event`, sourceSpan, valueSpan || sourceSpan, targetMatchableAttrs, events, keySpan);
             addEvents(events, boundEvents);
         }
         reportError(message, sourceSpan, level = ParseErrorLevel.ERROR) {
@@ -18295,7 +18308,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+248.sha-21651d3');
+    const VERSION$1 = new Version('11.0.0-next.6+249.sha-c33326c');
 
     /**
      * @license
@@ -46894,7 +46907,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0-next.6+248.sha-21651d3');
+    const VERSION$2 = new Version$1('11.0.0-next.6+249.sha-c33326c');
 
     /**
      * @license
