@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0+17.sha-f1d8717
+ * @license Angular v11.0.0+19.sha-83a6ab1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19375,7 +19375,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0+17.sha-f1d8717');
+    const VERSION$1 = new Version('11.0.0+19.sha-83a6ab1');
 
     /**
      * @license
@@ -20010,7 +20010,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0+17.sha-f1d8717');
+    const VERSION$2 = new Version('11.0.0+19.sha-83a6ab1');
 
     /**
      * @license
@@ -27773,6 +27773,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     return {
                         selector: directive.selector,
                         expression: this.refEmitter.emit(directive.ref, context),
+                        ref: directive.ref,
                     };
                 });
                 const usedPipes = [];
@@ -27782,6 +27783,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }
                     const pipe = pipes.get(pipeName);
                     usedPipes.push({
+                        ref: pipe,
                         pipeName,
                         expression: this.refEmitter.emit(pipe, context),
                     });
@@ -27812,7 +27814,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // Declaring the directiveDefs/pipeDefs arrays directly would require imports that would
                     // create a cycle. Instead, mark this component as requiring remote scoping, so that the
                     // NgModule file will take care of setting the directives for the component.
-                    this.scopeRegistry.setComponentAsRequiringRemoteScoping(node);
+                    this.scopeRegistry.setComponentRemoteScope(node, usedDirectives.map(dir => dir.ref), usedPipes.map(pipe => pipe.ref));
                 }
             }
             const diagnostics = [];
@@ -28632,13 +28634,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const context = getSourceFile(node);
             for (const decl of analysis.declarations) {
-                if (this.scopeRegistry.getRequiresRemoteScope(decl.node)) {
-                    const scope = this.scopeRegistry.getScopeOfModule(ts.getOriginalNode(node));
-                    if (scope === null || scope === 'error') {
-                        continue;
-                    }
-                    const directives = scope.compilation.directives.map(directive => this.refEmitter.emit(directive.ref, context));
-                    const pipes = scope.compilation.pipes.map(pipe => this.refEmitter.emit(pipe.ref, context));
+                const remoteScope = this.scopeRegistry.getRemoteScope(decl.node);
+                if (remoteScope !== null) {
+                    const directives = remoteScope.directives.map(directive => this.refEmitter.emit(directive, context));
+                    const pipes = remoteScope.pipes.map(pipe => this.refEmitter.emit(pipe, context));
                     const directiveArray = new LiteralArrayExpr(directives);
                     const pipesArray = new LiteralArrayExpr(pipes);
                     const declExpr = this.refEmitter.emit(decl, context);
@@ -30828,14 +30827,14 @@ Either add the @Injectable() decorator to '${provider.node.name
              */
             this.cache = new Map();
             /**
-             * Tracks whether a given component requires "remote scoping".
+             * Tracks the `RemoteScope` for components requiring "remote scoping".
              *
              * Remote scoping is when the set of directives which apply to a given component is set in the
              * NgModule's file instead of directly on the component def (which is sometimes needed to get
              * around cyclic import issues). This is not used in calculation of `LocalModuleScope`s, but is
              * tracked here for convenience.
              */
-            this.remoteScoping = new Set();
+            this.remoteScoping = new Map();
             /**
              * Tracks errors accumulated in the processing of scopes for each module declaration.
              */
@@ -31143,14 +31142,15 @@ Either add the @Injectable() decorator to '${provider.node.name
         /**
          * Check whether a component requires remote scoping.
          */
-        getRequiresRemoteScope(node) {
-            return this.remoteScoping.has(node);
+        getRemoteScope(node) {
+            return this.remoteScoping.has(node) ? this.remoteScoping.get(node) : null;
         }
         /**
-         * Set a component as requiring remote scoping.
+         * Set a component as requiring remote scoping, with the given directives and pipes to be
+         * registered remotely.
          */
-        setComponentAsRequiringRemoteScoping(node) {
-            this.remoteScoping.add(node);
+        setComponentRemoteScope(node, directives, pipes) {
+            this.remoteScoping.set(node, { directives, pipes });
         }
         /**
          * Look up the `ExportScope` of a given `Reference` to an NgModule.
