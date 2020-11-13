@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0+7.sha-20db90a
+ * @license Angular v11.0.0+14.sha-06de803
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18172,7 +18172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0+7.sha-20db90a');
+    const VERSION$1 = new Version('11.0.0+14.sha-06de803');
 
     /**
      * @license
@@ -34686,7 +34686,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.0+7.sha-20db90a');
+    const VERSION$2 = new Version$1('11.0.0+14.sha-06de803');
 
     /**
      * @license
@@ -38353,9 +38353,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const self = this;
             self._nesting = 0;
             self._outer = self._inner = Zone.current;
-            if (Zone['wtfZoneSpec']) {
-                self._inner = self._inner.fork(Zone['wtfZoneSpec']);
-            }
             if (Zone['TaskTrackingZoneSpec']) {
                 self._inner = self._inner.fork(new Zone['TaskTrackingZoneSpec']);
             }
