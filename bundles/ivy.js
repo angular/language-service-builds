@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0+20.sha-7f3314a
+ * @license Angular v11.0.0+24.sha-e05cfdd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19375,7 +19375,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0+20.sha-7f3314a');
+    const VERSION$1 = new Version('11.0.0+24.sha-e05cfdd');
 
     /**
      * @license
@@ -20010,7 +20010,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0+20.sha-7f3314a');
+    const VERSION$2 = new Version('11.0.0+24.sha-e05cfdd');
 
     /**
      * @license
@@ -34949,7 +34949,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (receiver === null) {
                     return null;
                 }
-                const method = ts.createPropertyAccess(wrapForDiagnostics(receiver), ast.name);
+                const method = wrapForDiagnostics(receiver);
                 addParseSpanInfo(method, ast.nameSpan);
                 const args = ast.args.map(arg => this.translate(arg));
                 const node = ts.createCall(method, undefined, args);
