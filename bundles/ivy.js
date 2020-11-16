@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+265.sha-b0c4ecf
+ * @license Angular v11.0.0-next.6+280.sha-9f20942
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19513,7 +19513,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+265.sha-b0c4ecf');
+    const VERSION$1 = new Version('11.0.0-next.6+280.sha-9f20942');
 
     /**
      * @license
@@ -20264,7 +20264,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+265.sha-b0c4ecf');
+    const VERSION$2 = new Version('11.0.0-next.6+280.sha-9f20942');
 
     /**
      * @license
@@ -33933,9 +33933,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             const initializer = ts.createPropertyAccess(
             /* expression */ ctx, 
             /* name */ this.variable.value || '$implicit');
-            addParseSpanInfo(initializer, this.variable.sourceSpan);
+            addParseSpanInfo(id, this.variable.keySpan);
             // Declare the variable, and return its identifier.
-            this.scope.addStatement(tsCreateVariable(id, initializer));
+            let variable;
+            if (this.variable.valueSpan !== undefined) {
+                addParseSpanInfo(initializer, this.variable.valueSpan);
+                variable = tsCreateVariable(id, wrapForTypeChecker(initializer));
+            }
+            else {
+                variable = tsCreateVariable(id, initializer);
+            }
+            addParseSpanInfo(variable.declarationList.declarations[0], this.variable.sourceSpan);
+            this.scope.addStatement(variable);
             return id;
         }
     }
@@ -34175,6 +34184,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 initializer = ts.createParen(initializer);
             }
             addParseSpanInfo(initializer, this.node.sourceSpan);
+            addParseSpanInfo(id, this.node.keySpan);
             this.scope.addStatement(tsCreateVariable(id, initializer));
             return id;
         }
@@ -34329,6 +34339,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                         target = this.dir.stringLiteralInputFields.has(fieldName) ?
                             ts.createElementAccess(dirId, ts.createStringLiteral(fieldName)) :
                             ts.createPropertyAccess(dirId, ts.createIdentifier(fieldName));
+                    }
+                    if (input.attribute.keySpan !== undefined) {
+                        addParseSpanInfo(target, input.attribute.keySpan);
                     }
                     // Finally the assignment is extended by assigning it into the target expression.
                     assignment = ts.createBinary(target, ts.SyntaxKind.EqualsToken, assignment);
@@ -34536,6 +34549,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         dirId = this.scope.resolve(this.node, this.dir);
                     }
                     const outputField = ts.createElementAccess(dirId, ts.createStringLiteral(field));
+                    addParseSpanInfo(outputField, output.keySpan);
                     const outputHelper = ts.createCall(this.tcb.env.declareOutputHelper(), undefined, [outputField]);
                     const subscribeFn = ts.createPropertyAccess(outputHelper, 'subscribe');
                     const call = ts.createCall(subscribeFn, /* typeArguments */ undefined, [handler]);
@@ -35251,7 +35265,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (receiver === null) {
                     return null;
                 }
-                const method = ts.createPropertyAccess(wrapForDiagnostics(receiver), ast.name);
+                const method = wrapForDiagnostics(receiver);
                 addParseSpanInfo(method, ast.nameSpan);
                 const args = ast.args.map(arg => this.translate(arg));
                 const node = ts.createCall(method, undefined, args);
