@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+289.sha-3926665
+ * @license Angular v11.0.0-next.6+292.sha-d39c4bb
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -148,6 +148,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
 
     let fs = new InvalidFileSystem();
+    function getFileSystem() {
+        return fs;
+    }
     function setFileSystem(fileSystem) {
         fs = fileSystem;
     }
@@ -19681,7 +19684,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+289.sha-3926665');
+    const VERSION$1 = new Version('11.0.0-next.6+292.sha-d39c4bb');
 
     /**
      * @license
@@ -20432,7 +20435,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+289.sha-3926665');
+    const VERSION$2 = new Version('11.0.0-next.6+292.sha-d39c4bb');
 
     /**
      * @license
@@ -20452,6 +20455,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const UNKNOWN_ERROR_CODE = 500;
     var EmitFlags;
     (function (EmitFlags) {
         EmitFlags[EmitFlags["DTS"] = 1] = "DTS";
@@ -37762,12 +37766,96 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function calcProjectFileAndBasePath(project, host = getFileSystem()) {
+        const absProject = host.resolve(project);
+        const projectIsDir = host.lstat(absProject).isDirectory();
+        const projectFile = projectIsDir ? host.join(absProject, 'tsconfig.json') : absProject;
+        const projectDir = projectIsDir ? absProject : host.dirname(absProject);
+        const basePath = host.resolve(projectDir);
+        return { projectFile, basePath };
+    }
     function createNgCompilerOptions(basePath, config, tsOptions) {
         // enableIvy `ngtsc` is an alias for `true`.
         const { angularCompilerOptions = {} } = config;
         const { enableIvy } = angularCompilerOptions;
         angularCompilerOptions.enableIvy = enableIvy !== false && enableIvy !== 'tsc';
         return Object.assign(Object.assign(Object.assign({}, tsOptions), angularCompilerOptions), { genDir: basePath, basePath });
+    }
+    function readConfiguration(project, existingOptions, host = getFileSystem()) {
+        try {
+            const { projectFile, basePath } = calcProjectFileAndBasePath(project, host);
+            const readExtendedConfigFile = (configFile, existingConfig) => {
+                const { config, error } = ts.readConfigFile(configFile, file => host.readFile(host.resolve(file)));
+                if (error) {
+                    return { error };
+                }
+                // we are only interested into merging 'angularCompilerOptions' as
+                // other options like 'compilerOptions' are merged by TS
+                const baseConfig = existingConfig || config;
+                if (existingConfig) {
+                    baseConfig.angularCompilerOptions = Object.assign(Object.assign({}, config.angularCompilerOptions), baseConfig.angularCompilerOptions);
+                }
+                if (config.extends) {
+                    let extendedConfigPath = host.resolve(host.dirname(configFile), config.extends);
+                    extendedConfigPath = host.extname(extendedConfigPath) ?
+                        extendedConfigPath :
+                        absoluteFrom(`${extendedConfigPath}.json`);
+                    if (host.exists(extendedConfigPath)) {
+                        // Call read config recursively as TypeScript only merges CompilerOptions
+                        return readExtendedConfigFile(extendedConfigPath, baseConfig);
+                    }
+                }
+                return { config: baseConfig };
+            };
+            const { config, error } = readExtendedConfigFile(projectFile);
+            if (error) {
+                return {
+                    project,
+                    errors: [error],
+                    rootNames: [],
+                    options: {},
+                    emitFlags: EmitFlags.Default
+                };
+            }
+            const parseConfigHost = {
+                useCaseSensitiveFileNames: true,
+                fileExists: host.exists.bind(host),
+                readDirectory: ts.sys.readDirectory,
+                readFile: ts.sys.readFile
+            };
+            const configFileName = host.resolve(host.pwd(), projectFile);
+            const parsed = ts.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingOptions, configFileName);
+            const rootNames = parsed.fileNames;
+            const projectReferences = parsed.projectReferences;
+            const options = createNgCompilerOptions(basePath, config, parsed.options);
+            let emitFlags = EmitFlags.Default;
+            if (!(options.skipMetadataEmit || options.flatModuleOutFile)) {
+                emitFlags |= EmitFlags.Metadata;
+            }
+            if (options.skipTemplateCodegen) {
+                emitFlags = emitFlags & ~EmitFlags.Codegen;
+            }
+            return {
+                project: projectFile,
+                rootNames,
+                projectReferences,
+                options,
+                errors: parsed.errors,
+                emitFlags
+            };
+        }
+        catch (e) {
+            const errors = [{
+                    category: ts.DiagnosticCategory.Error,
+                    messageText: e.stack,
+                    file: undefined,
+                    start: undefined,
+                    length: undefined,
+                    source: 'angular',
+                    code: UNKNOWN_ERROR_CODE,
+                }];
+            return { project: '', errors, rootNames: [], options: {}, emitFlags: EmitFlags.Default };
+        }
     }
 
     /**
@@ -38143,6 +38231,122 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function isExternalTemplate(fileName) {
         return !isTypeScriptFile(fileName);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class LanguageServiceAdapter {
+        constructor(project) {
+            var _a;
+            this.project = project;
+            this.entryPoint = null;
+            this.constructionDiagnostics = [];
+            this.ignoreForEmit = new Set();
+            this.factoryTracker = null; // no .ngfactory shims
+            this.unifiedModulesHost = null; // only used in Bazel
+            this.templateVersion = new Map();
+            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
+        }
+        isShim(sf) {
+            return isShim(sf);
+        }
+        fileExists(fileName) {
+            return this.project.fileExists(fileName);
+        }
+        readFile(fileName) {
+            return this.project.readFile(fileName);
+        }
+        getCurrentDirectory() {
+            return this.project.getCurrentDirectory();
+        }
+        getCanonicalFileName(fileName) {
+            return this.project.projectService.toCanonicalFileName(fileName);
+        }
+        /**
+         * readResource() is an Angular-specific method for reading files that are not
+         * managed by the TS compiler host, namely templates and stylesheets.
+         * It is a method on ExtendedTsCompilerHost, see
+         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
+         */
+        readResource(fileName) {
+            if (isTypeScriptFile(fileName)) {
+                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
+            }
+            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
+            // not exist! The same applies for getScriptVersion().
+            // getScriptInfo() will not create one if it does not exist.
+            // In this case, we *want* a script info to be created so that we could
+            // keep track of its version.
+            const snapshot = this.project.getScriptSnapshot(fileName);
+            if (!snapshot) {
+                // This would fail if the file does not exist, or readFile() fails for
+                // whatever reasons.
+                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
+            }
+            const version = this.project.getScriptVersion(fileName);
+            this.templateVersion.set(fileName, version);
+            return snapshot.getText(0, snapshot.getLength());
+        }
+        isTemplateDirty(fileName) {
+            const lastVersion = this.templateVersion.get(fileName);
+            const latestVersion = this.project.getScriptVersion(fileName);
+            return lastVersion !== latestVersion;
+        }
+    }
+    /**
+     * Used to read configuration files.
+     *
+     * A language service parse configuration host is independent of the adapter
+     * because signatures of calls like `FileSystem#readFile` are a bit stricter
+     * than those on the adapter.
+     */
+    class LSParseConfigHost {
+        constructor(serverHost) {
+            this.serverHost = serverHost;
+        }
+        exists(path) {
+            return this.serverHost.fileExists(path) || this.serverHost.directoryExists(path);
+        }
+        readFile(path) {
+            const content = this.serverHost.readFile(path);
+            if (content === undefined) {
+                throw new Error(`LanguageServiceFS#readFile called on unavailable file ${path}`);
+            }
+            return content;
+        }
+        lstat(path) {
+            return {
+                isFile: () => {
+                    return this.serverHost.fileExists(path);
+                },
+                isDirectory: () => {
+                    return this.serverHost.directoryExists(path);
+                },
+                isSymbolicLink: () => {
+                    throw new Error(`LanguageServiceFS#lstat#isSymbolicLink not implemented`);
+                },
+            };
+        }
+        pwd() {
+            return this.serverHost.getCurrentDirectory();
+        }
+        extname(path$1) {
+            return path.extname(path$1);
+        }
+        resolve(...paths) {
+            return this.serverHost.resolvePath(this.join(paths[0], ...paths.slice(1)));
+        }
+        dirname(file) {
+            return path.dirname(file);
+        }
+        join(basePath, ...paths) {
+            return path.join(basePath, ...paths);
+        }
     }
 
     /**
@@ -38648,72 +38852,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    class LanguageServiceAdapter {
-        constructor(project) {
-            var _a;
-            this.project = project;
-            this.entryPoint = null;
-            this.constructionDiagnostics = [];
-            this.ignoreForEmit = new Set();
-            this.factoryTracker = null; // no .ngfactory shims
-            this.unifiedModulesHost = null; // only used in Bazel
-            this.templateVersion = new Map();
-            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
-        }
-        isShim(sf) {
-            return isShim(sf);
-        }
-        fileExists(fileName) {
-            return this.project.fileExists(fileName);
-        }
-        readFile(fileName) {
-            return this.project.readFile(fileName);
-        }
-        getCurrentDirectory() {
-            return this.project.getCurrentDirectory();
-        }
-        getCanonicalFileName(fileName) {
-            return this.project.projectService.toCanonicalFileName(fileName);
-        }
-        /**
-         * readResource() is an Angular-specific method for reading files that are not
-         * managed by the TS compiler host, namely templates and stylesheets.
-         * It is a method on ExtendedTsCompilerHost, see
-         * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
-         */
-        readResource(fileName) {
-            if (isTypeScriptFile(fileName)) {
-                throw new Error(`readResource() should not be called on TS file: ${fileName}`);
-            }
-            // Calling getScriptSnapshot() will actually create a ScriptInfo if it does
-            // not exist! The same applies for getScriptVersion().
-            // getScriptInfo() will not create one if it does not exist.
-            // In this case, we *want* a script info to be created so that we could
-            // keep track of its version.
-            const snapshot = this.project.getScriptSnapshot(fileName);
-            if (!snapshot) {
-                // This would fail if the file does not exist, or readFile() fails for
-                // whatever reasons.
-                throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
-            }
-            const version = this.project.getScriptVersion(fileName);
-            this.templateVersion.set(fileName, version);
-            return snapshot.getText(0, snapshot.getLength());
-        }
-        isTemplateDirty(fileName) {
-            const lastVersion = this.templateVersion.get(fileName);
-            const latestVersion = this.project.getScriptVersion(fileName);
-            return lastVersion !== latestVersion;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     class QuickInfoBuilder {
         constructor(tsLS, compiler, component, node) {
             this.tsLS = tsLS;
@@ -38894,11 +39032,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     class LanguageService {
         constructor(project, tsLS) {
             this.tsLS = tsLS;
-            this.options = parseNgCompilerOptions(project);
+            this.parseConfigHost = new LSParseConfigHost(project.projectService.host);
+            this.options = parseNgCompilerOptions(project, this.parseConfigHost);
             this.strategy = createTypeCheckingProgramStrategy(project);
             this.adapter = new LanguageServiceAdapter(project);
             this.compilerFactory = new CompilerFactory(this.adapter, this.strategy, this.options);
             this.watchConfigFile(project);
+        }
+        getCompilerOptions() {
+            return this.options;
         }
         getSemanticDiagnostics(fileName) {
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
@@ -38962,23 +39104,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             host.watchFile(project.getConfigFilePath(), (fileName, eventKind) => {
                 project.log(`Config file changed: ${fileName}`);
                 if (eventKind === ts$1.FileWatcherEventKind.Changed) {
-                    this.options = parseNgCompilerOptions(project);
+                    this.options = parseNgCompilerOptions(project, this.parseConfigHost);
                 }
             });
         }
     }
-    function parseNgCompilerOptions(project) {
-        let config = {};
-        if (project instanceof ts$1.server.ConfiguredProject) {
-            const configPath = project.getConfigFilePath();
-            const result = ts$1.readConfigFile(configPath, path => project.readFile(path));
-            if (result.error) {
-                project.error(ts$1.flattenDiagnosticMessageText(result.error.messageText, '\n'));
-            }
-            config = result.config || config;
+    function parseNgCompilerOptions(project, host) {
+        if (!(project instanceof ts$1.server.ConfiguredProject)) {
+            return {};
         }
-        const basePath = project.getCurrentDirectory();
-        return createNgCompilerOptions(basePath, config, project.getCompilationSettings());
+        const { options, errors } = readConfiguration(project.getConfigFilePath(), /* existingOptions */ undefined, host);
+        if (errors.length > 0) {
+            project.setProjectErrors(errors);
+        }
+        return options;
     }
     function createTypeCheckingProgramStrategy(project) {
         return {
