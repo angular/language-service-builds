@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.0-next.6+284.sha-806d7aa
+ * @license Angular v11.0.0-next.6+288.sha-b6893d2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19681,7 +19681,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.0-next.6+284.sha-806d7aa');
+    const VERSION$1 = new Version('11.0.0-next.6+288.sha-b6893d2');
 
     /**
      * @license
@@ -20432,7 +20432,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.0-next.6+284.sha-806d7aa');
+    const VERSION$2 = new Version('11.0.0-next.6+288.sha-b6893d2');
 
     /**
      * @license
@@ -38152,13 +38152,34 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Manages the `NgCompiler` instance which backs the language service, updating or replacing it as
+     * needed to produce an up-to-date understanding of the current program.
+     *
+     * TODO(alxhub): currently the options used for the compiler are specified at `CompilerFactory`
+     * construction, and are not changable. In a real project, users can update `tsconfig.json`. We need
+     * to properly handle a change in the compiler options, either by having an API to update the
+     * `CompilerFactory` to use new options, or by replacing it entirely.
+     */
     class CompilerFactory {
-        constructor(adapter, programStrategy) {
+        constructor(adapter, programStrategy, options) {
             this.adapter = adapter;
             this.programStrategy = programStrategy;
+            this.options = options;
             this.incrementalStrategy = new TrackedIncrementalBuildStrategy();
             this.compiler = null;
             this.lastKnownProgram = null;
+        }
+        getOrCreate() {
+            const program = this.programStrategy.getProgram();
+            if (this.compiler === null || program !== this.lastKnownProgram) {
+                this.compiler = new NgCompiler(this.adapter, // like compiler host
+                this.options, // angular compiler options
+                program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
+                this.lastKnownProgram, undefined);
+                this.lastKnownProgram = program;
+            }
+            return this.compiler;
         }
         /**
          * Create a new instance of the Ivy compiler if the program has changed since
@@ -38167,19 +38188,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * @param fileName override the template if this is an external template file
          * @param options angular compiler options
          */
-        getOrCreateWithChangedFile(fileName, options) {
-            const program = this.programStrategy.getProgram();
-            if (!this.compiler || program !== this.lastKnownProgram) {
-                this.compiler = new NgCompiler(this.adapter, // like compiler host
-                options, // angular compiler options
-                program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
-                this.lastKnownProgram, undefined);
-                this.lastKnownProgram = program;
-            }
+        getOrCreateWithChangedFile(fileName) {
+            const compiler = this.getOrCreate();
             if (isExternalTemplate(fileName)) {
-                this.overrideTemplate(fileName, this.compiler);
+                this.overrideTemplate(fileName, compiler);
             }
-            return this.compiler;
+            return compiler;
         }
         overrideTemplate(fileName, compiler) {
             if (!this.adapter.isTemplateDirty(fileName)) {
@@ -38883,11 +38897,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.options = parseNgCompilerOptions(project);
             this.strategy = createTypeCheckingProgramStrategy(project);
             this.adapter = new LanguageServiceAdapter(project);
-            this.compilerFactory = new CompilerFactory(this.adapter, this.strategy);
+            this.compilerFactory = new CompilerFactory(this.adapter, this.strategy, this.options);
             this.watchConfigFile(project);
         }
         getSemanticDiagnostics(fileName) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
             const ttc = compiler.getTemplateTypeChecker();
             const diagnostics = [];
             if (isTypeScriptFile(fileName)) {
@@ -38909,20 +38923,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return diagnostics;
         }
         getDefinitionAndBoundSpan(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
             const results = new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
         getTypeDefinitionAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
             const results = new DefinitionBuilder(this.tsLS, compiler).getTypeDefinitionsAtPosition(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
         getQuickInfoAtPosition(fileName, position) {
             const program = this.strategy.getProgram();
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName, this.options);
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
             const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
             if (templateInfo === undefined) {
                 return undefined;
