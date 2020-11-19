@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+21.sha-935cf43
+ * @license Angular v11.1.0-next.0+24.sha-1eb4066
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19684,7 +19684,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+21.sha-935cf43');
+    const VERSION$1 = new Version('11.1.0-next.0+24.sha-1eb4066');
 
     /**
      * @license
@@ -20435,7 +20435,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.0+21.sha-935cf43');
+    const VERSION$2 = new Version('11.1.0-next.0+24.sha-1eb4066');
 
     /**
      * @license
@@ -33406,6 +33406,100 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function requiresInlineTypeCheckBlock(node) {
+        // In order to qualify for a declared TCB (not inline) two conditions must be met:
+        // 1) the class must be exported
+        // 2) it must not have constrained generic types
+        if (!checkIfClassIsExported(node)) {
+            // Condition 1 is false, the class is not exported.
+            return true;
+        }
+        else if (!checkIfGenericTypesAreUnbound(node)) {
+            // Condition 2 is false, the class has constrained generic types
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    /** Maps a shim position back to a template location. */
+    function getTemplateMapping(shimSf, position, resolver) {
+        const node = getTokenAtPosition(shimSf, position);
+        const sourceLocation = findSourceLocation(node, shimSf);
+        if (sourceLocation === null) {
+            return null;
+        }
+        const mapping = resolver.getSourceMapping(sourceLocation.id);
+        const span = resolver.toParseSourceSpan(sourceLocation.id, sourceLocation.span);
+        if (span === null) {
+            return null;
+        }
+        return { sourceLocation, templateSourceMapping: mapping, span };
+    }
+    function findTypeCheckBlock(file, id) {
+        for (const stmt of file.statements) {
+            if (ts.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file) === id) {
+                return stmt;
+            }
+        }
+        return null;
+    }
+    /**
+     * Traverses up the AST starting from the given node to extract the source location from comments
+     * that have been emitted into the TCB. If the node does not exist within a TCB, or if an ignore
+     * marker comment is found up the tree, this function returns null.
+     */
+    function findSourceLocation(node, sourceFile) {
+        // Search for comments until the TCB's function declaration is encountered.
+        while (node !== undefined && !ts.isFunctionDeclaration(node)) {
+            if (hasIgnoreMarker(node, sourceFile)) {
+                // There's an ignore marker on this node, so the diagnostic should not be reported.
+                return null;
+            }
+            const span = readSpanComment(node, sourceFile);
+            if (span !== null) {
+                // Once the positional information has been extracted, search further up the TCB to extract
+                // the unique id that is attached with the TCB's function declaration.
+                const id = getTemplateId$1(node, sourceFile);
+                if (id === null) {
+                    return null;
+                }
+                return { id, span };
+            }
+            node = node.parent;
+        }
+        return null;
+    }
+    function getTemplateId$1(node, sourceFile) {
+        // Walk up to the function declaration of the TCB, the file information is attached there.
+        while (!ts.isFunctionDeclaration(node)) {
+            if (hasIgnoreMarker(node, sourceFile)) {
+                // There's an ignore marker on this node, so the diagnostic should not be reported.
+                return null;
+            }
+            node = node.parent;
+            // Bail once we have reached the root.
+            if (node === undefined) {
+                return null;
+            }
+        }
+        const start = node.getFullStart();
+        return ts.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
+            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText;
+        }) || null;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Wraps the node in parenthesis such that inserted span comments become attached to the proper
      * node. This is an alias for `ts.createParen` with the benefit that it signifies that the
@@ -33482,75 +33576,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (diagnostic.file === undefined || diagnostic.start === undefined) {
             return null;
         }
-        // Locate the node that the diagnostic is reported on and determine its location in the source.
-        const node = getTokenAtPosition(diagnostic.file, diagnostic.start);
-        const sourceLocation = findSourceLocation(node, diagnostic.file);
-        if (sourceLocation === null) {
+        const fullMapping = getTemplateMapping(diagnostic.file, diagnostic.start, resolver);
+        if (fullMapping === null) {
             return null;
         }
-        // Now use the external resolver to obtain the full `ParseSourceFile` of the template.
-        const span = resolver.toParseSourceSpan(sourceLocation.id, sourceLocation.span);
-        if (span === null) {
-            return null;
-        }
-        const mapping = resolver.getSourceMapping(sourceLocation.id);
-        return makeTemplateDiagnostic(sourceLocation.id, mapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
-    }
-    function findTypeCheckBlock(file, id) {
-        for (const stmt of file.statements) {
-            if (ts.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file) === id) {
-                return stmt;
-            }
-        }
-        return null;
-    }
-    /**
-     * Traverses up the AST starting from the given node to extract the source location from comments
-     * that have been emitted into the TCB. If the node does not exist within a TCB, or if an ignore
-     * marker comment is found up the tree, this function returns null.
-     */
-    function findSourceLocation(node, sourceFile) {
-        // Search for comments until the TCB's function declaration is encountered.
-        while (node !== undefined && !ts.isFunctionDeclaration(node)) {
-            if (hasIgnoreMarker(node, sourceFile)) {
-                // There's an ignore marker on this node, so the diagnostic should not be reported.
-                return null;
-            }
-            const span = readSpanComment(node, sourceFile);
-            if (span !== null) {
-                // Once the positional information has been extracted, search further up the TCB to extract
-                // the unique id that is attached with the TCB's function declaration.
-                const id = getTemplateId$1(node, sourceFile);
-                if (id === null) {
-                    return null;
-                }
-                return { id, span };
-            }
-            node = node.parent;
-        }
-        return null;
-    }
-    function getTemplateId$1(node, sourceFile) {
-        // Walk up to the function declaration of the TCB, the file information is attached there.
-        while (!ts.isFunctionDeclaration(node)) {
-            if (hasIgnoreMarker(node, sourceFile)) {
-                // There's an ignore marker on this node, so the diagnostic should not be reported.
-                return null;
-            }
-            node = node.parent;
-            // Bail once we have reached the root.
-            if (node === undefined) {
-                return null;
-            }
-        }
-        const start = node.getFullStart();
-        return ts.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText;
-        }) || null;
+        const { sourceLocation, templateSourceMapping, span } = fullMapping;
+        return makeTemplateDiagnostic(sourceLocation.id, templateSourceMapping, span, diagnostic.category, diagnostic.code, diagnostic.messageText);
     }
 
     /**
@@ -35614,22 +35645,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             return super.resolve(ast);
         }
     }
-    function requiresInlineTypeCheckBlock(node) {
-        // In order to qualify for a declared TCB (not inline) two conditions must be met:
-        // 1) the class must be exported
-        // 2) it must not have constrained generic types
-        if (!checkIfClassIsExported(node)) {
-            // Condition 1 is false, the class is not exported.
-            return true;
-        }
-        else if (!checkIfGenericTypesAreUnbound(node)) {
-            // Condition 2 is false, the class has constrained generic types
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
 
     /**
      * @license
@@ -36368,7 +36383,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (expressionSymbol === null) {
                 return null;
             }
-            return Object.assign(Object.assign({}, expressionSymbol), { kind: SymbolKind.Variable, declaration: variable });
+            return {
+                tsType: expressionSymbol.tsType,
+                tsSymbol: expressionSymbol.tsSymbol,
+                initializerLocation: expressionSymbol.shimLocation,
+                kind: SymbolKind.Variable,
+                declaration: variable,
+                localVarLocation: {
+                    shimPath: this.shimPath,
+                    positionInShimFile: this.getShimPositionForNode(node.name),
+                }
+            };
         }
         getSymbolOfReference(ref) {
             const target = this.templateData.boundTarget.getReferenceTarget(ref);
@@ -36392,14 +36417,34 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (symbol === null || symbol.tsSymbol === null) {
                 return null;
             }
+            const referenceVarShimLocation = {
+                shimPath: this.shimPath,
+                positionInShimFile: this.getShimPositionForNode(node),
+            };
             if (target instanceof Template || target instanceof Element) {
-                return Object.assign(Object.assign({}, symbol), { tsSymbol: symbol.tsSymbol, kind: SymbolKind.Reference, target, declaration: ref });
+                return {
+                    kind: SymbolKind.Reference,
+                    tsSymbol: symbol.tsSymbol,
+                    tsType: symbol.tsType,
+                    target,
+                    declaration: ref,
+                    targetLocation: symbol.shimLocation,
+                    referenceVarLocation: referenceVarShimLocation,
+                };
             }
             else {
                 if (!ts.isClassDeclaration(target.directive.ref.node)) {
                     return null;
                 }
-                return Object.assign(Object.assign({}, symbol), { kind: SymbolKind.Reference, tsSymbol: symbol.tsSymbol, declaration: ref, target: target.directive.ref.node });
+                return {
+                    kind: SymbolKind.Reference,
+                    tsSymbol: symbol.tsSymbol,
+                    tsType: symbol.tsType,
+                    declaration: ref,
+                    target: target.directive.ref.node,
+                    targetLocation: symbol.shimLocation,
+                    referenceVarLocation: referenceVarShimLocation,
+                };
             }
         }
         getSymbolOfTemplateExpression(expression) {
@@ -36620,6 +36665,26 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.completionCache.delete(component);
             this.symbolBuilderCache.delete(component);
             return { nodes };
+        }
+        getFileAndShimRecordsForPath(shimPath) {
+            for (const fileRecord of this.state.values()) {
+                if (fileRecord.shimData.has(shimPath)) {
+                    return { fileRecord, shimRecord: fileRecord.shimData.get(shimPath) };
+                }
+            }
+            return null;
+        }
+        getTemplateMappingAtShimLocation({ shimPath, positionInShimFile }) {
+            const records = this.getFileAndShimRecordsForPath(absoluteFrom(shimPath));
+            if (records === null) {
+                return null;
+            }
+            const { fileRecord } = records;
+            const shimSf = this.typeCheckingStrategy.getProgram().getSourceFile(absoluteFrom(shimPath));
+            if (shimSf === undefined) {
+                return null;
+            }
+            return getTemplateMapping(shimSf, positionInShimFile, fileRecord.sourceManager);
         }
         /**
          * Retrieve type-checking diagnostics from the given `ts.SourceFile` using the most recent
@@ -38689,7 +38754,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         });
                     }
                     if (symbol.kind === SymbolKind.Variable) {
-                        definitions.push(...this.getDefinitionsForSymbols(symbol));
+                        definitions.push(...this.getDefinitionsForSymbols({ shimLocation: symbol.initializerLocation }));
                     }
                     return definitions;
                 }
@@ -38730,9 +38795,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return [...bindingDefs, ...directiveDefs];
                 }
                 case SymbolKind.Reference:
+                    return this.getTypeDefinitionsForSymbols({ shimLocation: symbol.targetLocation });
                 case SymbolKind.Expression:
-                case SymbolKind.Variable:
                     return this.getTypeDefinitionsForSymbols(symbol);
+                case SymbolKind.Variable:
+                    return this.getTypeDefinitionsForSymbols({ shimLocation: symbol.initializerLocation });
             }
         }
         getTypeDefinitionsForTemplateInstance(symbol, node) {
@@ -38907,11 +38974,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return createQuickInfo(templateNode.name, DisplayInfoKind.ELEMENT, getTextSpanOfNode(templateNode), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType));
         }
         getQuickInfoForVariableSymbol(symbol) {
-            const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.shimLocation);
+            const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.initializerLocation);
             return createQuickInfo(symbol.declaration.name, DisplayInfoKind.VARIABLE, getTextSpanOfNode(this.node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
         }
         getQuickInfoForReferenceSymbol(symbol) {
-            const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.shimLocation);
+            const documentation = this.getDocumentationFromTypeDefAtLocation(symbol.targetLocation);
             return createQuickInfo(symbol.declaration.name, DisplayInfoKind.REFERENCE, getTextSpanOfNode(this.node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
         }
         getQuickInfoForPipeSymbol(symbol) {
