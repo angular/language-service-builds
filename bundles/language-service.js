@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+46.sha-ff0a90e
+ * @license Angular v11.1.0-next.0+51.sha-3e1e5a1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -70,7 +70,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function mergeNsAndName(prefix, localName) {
         return prefix ? `:${prefix}:${localName}` : localName;
     }
-    // see http://www.w3.org/TR/html51/syntax.html#named-character-references
+    // see https://www.w3.org/TR/html51/syntax.html#named-character-references
     // see https://html.spec.whatwg.org/multipage/entities.json
     // This list is not exhaustive to keep the compiler footprint low.
     // The `&#123;` / `&#x1ab;` syntax should be used when the named character reference does not
@@ -361,7 +361,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     let _DEFAULT_TAG_DEFINITION;
-    // see http://www.w3.org/TR/html51/syntax.html#optional-tags
+    // see https://www.w3.org/TR/html51/syntax.html#optional-tags
     // This implementation does not fully conform to the HTML5 spec.
     let TAG_DEFINITIONS;
     function getHtmlTagDefinition(tagName) {
@@ -3675,7 +3675,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * Compute the SHA1 of the given string
      *
-     * see http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
+     * see https://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
      *
      * WARNING: this function has not been designed not tested with security in mind.
      *          DO NOT USE IT IN A SECURITY SENSITIVE CONTEXT.
@@ -3900,7 +3900,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Represents two 32-bit words as a single decimal number. This requires a big integer storage
      * model as JS numbers are not accurate enough to represent the 64-bit number.
      *
-     * Based on http://www.danvk.org/hex2dec.html
+     * Based on https://www.danvk.org/hex2dec.html
      */
     function wordsToDecimalString(hi, lo) {
         // Encode the four bytes in lo in the lower digits of the decimal number.
@@ -8699,7 +8699,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.error = error;
         }
     }
-    // See http://www.w3.org/TR/html51/syntax.html#writing
+    // See https://www.w3.org/TR/html51/syntax.html#writing-html-documents
     class _Tokenizer {
         /**
          * @param _file The html source file being tokenized.
@@ -8736,7 +8736,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this._preserveLineEndings) {
                 return content;
             }
-            // http://www.w3.org/TR/html5/syntax.html#preprocessing-the-input-stream
+            // https://www.w3.org/TR/html51/syntax.html#preprocessing-the-input-stream
             // In order to keep the original position in the source, we can not
             // pre-process it.
             // Instead CRs are processed right before instantiating the tokens.
@@ -18544,7 +18544,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+46.sha-ff0a90e');
+    const VERSION$1 = new Version('11.1.0-next.0+51.sha-3e1e5a1');
 
     /**
      * @license
@@ -22111,7 +22111,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * A regular expression for breaking a URI into its component parts.
      *
-     * {@link http://www.gbiv.com/protocols/uri/rfc/rfc3986.html#RFC2234} says
+     * {@link https://tools.ietf.org/html/rfc3986#appendix-B} says
      * As the "first-match-wins" algorithm is identical to the "greedy"
      * disambiguation method used by POSIX regular expressions, it is natural and
      * commonplace to use a regular expression for parsing the potential five
@@ -31483,7 +31483,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
         toString() {
             return `SafeValue must use [property]=binding: ${this.changingThisBreaksApplicationSecurity}` +
-                ` (see http://g.co/ng/security#xss)`;
+                ` (see https://g.co/ng/security#xss)`;
         }
     }
     function unwrapSafeValue(value) {
@@ -31496,7 +31496,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             // Allow ResourceURLs in URL contexts, they are strictly more trusted.
             if (actualType === "ResourceURL" /* ResourceUrl */ && type === "URL" /* Url */)
                 return true;
-            throw new Error(`Required a safe ${type}, got a ${actualType} (see http://g.co/ng/security#xss)`);
+            throw new Error(`Required a safe ${type}, got a ${actualType} (see https://g.co/ng/security#xss)`);
         }
         return actualType === type;
     }
@@ -31694,7 +31694,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         if (url.match(SAFE_URL_PATTERN) || url.match(DATA_URL_PATTERN))
             return url;
         {
-            console.warn(`WARNING: sanitizing unsafe URL value ${url} (see http://g.co/ng/security#xss)`);
+            console.warn(`WARNING: sanitizing unsafe URL value ${url} (see https://g.co/ng/security#xss)`);
         }
         return 'unsafe:' + url;
     }
@@ -31727,13 +31727,13 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         return res;
     }
     // Good source of info about elements and attributes
-    // http://dev.w3.org/html5/spec/Overview.html#semantics
-    // http://simon.html5.org/html-elements
+    // https://html.spec.whatwg.org/#semantics
+    // https://simon.html5.org/html-elements
     // Safe Void Elements - HTML5
-    // http://dev.w3.org/html5/spec/Overview.html#void-elements
+    // https://html.spec.whatwg.org/#void-elements
     const VOID_ELEMENTS = tagSet('area,br,col,hr,img,wbr');
     // Elements that you can, intentionally, leave open (and which close themselves)
-    // http://dev.w3.org/html5/spec/Overview.html#optional-tags
+    // https://html.spec.whatwg.org/#optional-tags
     const OPTIONAL_END_TAG_BLOCK_ELEMENTS = tagSet('colgroup,dd,dt,li,p,tbody,td,tfoot,th,thead,tr');
     const OPTIONAL_END_TAG_INLINE_ELEMENTS = tagSet('rp,rt');
     const OPTIONAL_END_TAG_ELEMENTS = merge(OPTIONAL_END_TAG_INLINE_ELEMENTS, OPTIONAL_END_TAG_BLOCK_ELEMENTS);
@@ -31930,7 +31930,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             const sanitizer = new SanitizingHtmlSerializer();
             const safeHtml = sanitizer.sanitizeChildren(getTemplateContent(inertBodyElement) || inertBodyElement);
             if (isDevMode() && sanitizer.sanitizedSomething) {
-                console.warn('WARNING: sanitizing HTML stripped some content, see http://g.co/ng/security#xss');
+                console.warn('WARNING: sanitizing HTML stripped some content, see https://g.co/ng/security#xss');
             }
             return trustedHTMLFromString(safeHtml);
         }
@@ -32077,7 +32077,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         if (allowSanitizationBypassAndThrow(unsafeResourceUrl, "ResourceURL" /* ResourceUrl */)) {
             return trustedScriptURLFromStringBypass(unwrapSafeValue(unsafeResourceUrl));
         }
-        throw new Error('unsafe value used in a resource URL context (see http://g.co/ng/security#xss)');
+        throw new Error('unsafe value used in a resource URL context (see https://g.co/ng/security#xss)');
     }
     /**
      * A `script` sanitizer which only lets trusted javascript through.
@@ -45666,7 +45666,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                                 else {
                                     ngDevMode &&
                                         console.warn(`WARNING: ignoring unsafe attribute value ` +
-                                            `${lowerAttrName} on element ${tagName} (see http://g.co/ng/security#xss)`);
+                                            `${lowerAttrName} on element ${tagName} ` +
+                                            `(see https://g.co/ng/security#xss)`);
                                 }
                             }
                             else {
@@ -46393,7 +46394,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @security Permitting direct access to the DOM can make your application more vulnerable to
      * XSS attacks. Carefully review any use of `ElementRef` in your code. For more detail, see the
-     * [Security Guide](http://g.co/ng/security).
+     * [Security Guide](https://g.co/ng/security).
      *
      * @publicApi
      */
@@ -46512,7 +46513,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.0+46.sha-ff0a90e');
+    const VERSION$2 = new Version$1('11.1.0-next.0+51.sha-3e1e5a1');
 
     /**
      * @license
@@ -47939,7 +47940,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * The following example sets the `OnPush` change-detection strategy for a component
      * (`CheckOnce`, rather than the default `CheckAlways`), then forces a second check
-     * after an interval. See [live demo](http://plnkr.co/edit/GC512b?p=preview).
+     * after an interval. See [live demo](https://plnkr.co/edit/GC512b?p=preview).
      *
      * <code-example path="core/ts/change_detect/change-detection.ts"
      * region="mark-for-check"></code-example>

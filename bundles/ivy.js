@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+46.sha-ff0a90e
+ * @license Angular v11.1.0-next.0+51.sha-3e1e5a1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3297,7 +3297,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function mergeNsAndName(prefix, localName) {
         return prefix ? `:${prefix}:${localName}` : localName;
     }
-    // see http://www.w3.org/TR/html51/syntax.html#named-character-references
+    // see https://www.w3.org/TR/html51/syntax.html#named-character-references
     // see https://html.spec.whatwg.org/multipage/entities.json
     // This list is not exhaustive to keep the compiler footprint low.
     // The `&#123;` / `&#x1ab;` syntax should be used when the named character reference does not
@@ -3588,7 +3588,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     let _DEFAULT_TAG_DEFINITION;
-    // see http://www.w3.org/TR/html51/syntax.html#optional-tags
+    // see https://www.w3.org/TR/html51/syntax.html#optional-tags
     // This implementation does not fully conform to the HTML5 spec.
     let TAG_DEFINITIONS;
     function getHtmlTagDefinition(tagName) {
@@ -6467,7 +6467,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     /**
      * Compute the SHA1 of the given string
      *
-     * see http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
+     * see https://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
      *
      * WARNING: this function has not been designed not tested with security in mind.
      *          DO NOT USE IT IN A SECURITY SENSITIVE CONTEXT.
@@ -6692,7 +6692,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Represents two 32-bit words as a single decimal number. This requires a big integer storage
      * model as JS numbers are not accurate enough to represent the 64-bit number.
      *
-     * Based on http://www.danvk.org/hex2dec.html
+     * Based on https://www.danvk.org/hex2dec.html
      */
     function wordsToDecimalString(hi, lo) {
         // Encode the four bytes in lo in the lower digits of the decimal number.
@@ -11391,7 +11391,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.error = error;
         }
     }
-    // See http://www.w3.org/TR/html51/syntax.html#writing
+    // See https://www.w3.org/TR/html51/syntax.html#writing-html-documents
     class _Tokenizer {
         /**
          * @param _file The html source file being tokenized.
@@ -11428,7 +11428,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (this._preserveLineEndings) {
                 return content;
             }
-            // http://www.w3.org/TR/html5/syntax.html#preprocessing-the-input-stream
+            // https://www.w3.org/TR/html51/syntax.html#preprocessing-the-input-stream
             // In order to keep the original position in the source, we can not
             // pre-process it.
             // Instead CRs are processed right before instantiating the tokens.
@@ -19750,7 +19750,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+46.sha-ff0a90e');
+    const VERSION$1 = new Version('11.1.0-next.0+51.sha-3e1e5a1');
 
     /**
      * @license
@@ -20501,7 +20501,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.0+46.sha-ff0a90e');
+    const VERSION$2 = new Version('11.1.0-next.0+51.sha-3e1e5a1');
 
     /**
      * @license
