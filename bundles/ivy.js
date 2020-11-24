@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+83.sha-3a6e7b5
+ * @license Angular v11.1.0-next.0+84.sha-8758006
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19865,7 +19865,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+83.sha-3a6e7b5');
+    const VERSION$1 = new Version('11.1.0-next.0+84.sha-8758006');
 
     /**
      * @license
@@ -20728,7 +20728,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.0+83.sha-3a6e7b5');
+    const VERSION$2 = new Version('11.1.0-next.0+84.sha-8758006');
 
     /**
      * @license
@@ -39612,10 +39612,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return (_a = tsLS.getDefinitionAndBoundSpan(fileName, position)) !== null && _a !== void 0 ? _a : ngLS.getDefinitionAndBoundSpan(fileName, position);
             }
         }
+        function getReferencesAtPosition(fileName, position) {
+            // TODO(atscott): implement references
+            return undefined;
+        }
         return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics,
             getTypeDefinitionAtPosition,
             getQuickInfoAtPosition,
-            getDefinitionAndBoundSpan });
+            getDefinitionAndBoundSpan,
+            getReferencesAtPosition });
     }
 
     exports.create = create;
