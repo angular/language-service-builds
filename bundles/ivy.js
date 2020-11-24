@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+72.sha-39a47c2
+ * @license Angular v11.1.0-next.0+82.sha-e75244e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5774,7 +5774,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
     Identifiers$1.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE$1 };
     Identifiers$1.defineComponent = { name: 'ɵɵdefineComponent', moduleName: CORE$1 };
+    Identifiers$1.declareComponent = { name: 'ɵɵngDeclareComponent', moduleName: CORE$1 };
     Identifiers$1.setComponentScope = { name: 'ɵɵsetComponentScope', moduleName: CORE$1 };
+    Identifiers$1.ChangeDetectionStrategy = {
+        name: 'ChangeDetectionStrategy',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.ViewEncapsulation = {
+        name: 'ViewEncapsulation',
+        moduleName: CORE$1,
+    };
     Identifiers$1.ComponentDefWithMeta = {
         name: 'ɵɵComponentDefWithMeta',
         moduleName: CORE$1,
@@ -18817,7 +18826,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options = {}) {
+        var _a;
         const { interpolationConfig, preserveWhitespaces, enableI18nLegacyMessageIdFormat } = options;
+        const isInline = (_a = options.isInline) !== null && _a !== void 0 ? _a : false;
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
@@ -18828,6 +18839,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
+                isInline,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -18847,6 +18859,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
+                isInline,
                 errors: i18nMetaResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -18871,6 +18884,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
             template,
+            isInline,
             nodes,
             styleUrls,
             styles,
@@ -19053,8 +19067,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         addFeatures(definitionMap, meta);
         const expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
-        const typeParams = createDirectiveTypeParams(meta);
-        const type = expressionType(importExpr(Identifiers$1.DirectiveDefWithMeta, typeParams));
+        const type = createDirectiveType(meta);
         return { expression, type };
     }
     /**
@@ -19078,8 +19091,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         let directiveMatcher = null;
         if (meta.directives.length > 0) {
             const matcher = new SelectorMatcher();
-            for (const { selector, expression } of meta.directives) {
-                matcher.addSelectables(CssSelector.parse(selector), expression);
+            for (const { selector, type } of meta.directives) {
+                matcher.addSelectables(CssSelector.parse(selector), type);
             }
             directiveMatcher = matcher;
         }
@@ -19161,10 +19174,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             definitionMap.set('changeDetection', literal(changeDetection));
         }
         const expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
+        const type = createComponentType(meta);
+        return { expression, type };
+    }
+    /**
+     * Creates the type specification from the component meta. This type is inserted into .d.ts files
+     * to be consumed by upstream compilations.
+     */
+    function createComponentType(meta) {
         const typeParams = createDirectiveTypeParams(meta);
         typeParams.push(stringArrayAsType(meta.template.ngContentSelectors));
-        const type = expressionType(importExpr(Identifiers$1.ComponentDefWithMeta, typeParams));
-        return { expression, type };
+        return expressionType(importExpr(Identifiers$1.ComponentDefWithMeta, typeParams));
     }
     function prepareQueryParams(query, constantPool) {
         const parameters = [getQueryPredicate(query, constantPool), literal(query.descendants)];
@@ -19240,6 +19260,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             stringMapAsType(meta.outputs),
             stringArrayAsType(meta.queries.map(q => q.propertyName)),
         ];
+    }
+    /**
+     * Creates the type specification from the directive meta. This type is inserted into .d.ts files
+     * to be consumed by upstream compilations.
+     */
+    function createDirectiveType(meta) {
+        const typeParams = createDirectiveTypeParams(meta);
+        return expressionType(importExpr(Identifiers$1.DirectiveDefWithMeta, typeParams));
     }
     // Define and update any view queries
     function createViewQueriesFunction(viewQueries, constantPool, name) {
@@ -19837,7 +19865,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+72.sha-39a47c2');
+    const VERSION$1 = new Version('11.1.0-next.0+82.sha-e75244e');
 
     /**
      * @license
@@ -20461,13 +20489,56 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Creates an array literal expression from the given array, mapping all values to an expression
+     * using the provided mapping function. If the array is empty or null, then null is returned.
+     *
+     * @param values The array to transfer into literal array expression.
+     * @param mapper The logic to use for creating an expression for the array's values.
+     * @returns An array literal expression representing `values`, or null if `values` is empty or
+     * is itself null.
+     */
+    function toOptionalLiteralArray(values, mapper) {
+        if (values === null || values.length === 0) {
+            return null;
+        }
+        return literalArr(values.map(value => mapper(value)));
+    }
+    /**
+     * Creates an object literal expression from the given object, mapping all values to an expression
+     * using the provided mapping function. If the object has no keys, then null is returned.
+     *
+     * @param object The object to transfer into an object literal expression.
+     * @param mapper The logic to use for creating an expression for the object's values.
+     * @returns An object literal expression representing `object`, or null if `object` does not have
+     * any keys.
+     */
+    function toOptionalLiteralMap(object, mapper) {
+        const entries = Object.keys(object).map(key => {
+            const value = object[key];
+            return { key, value: mapper(value), quoted: true };
+        });
+        if (entries.length > 0) {
+            return literalMap(entries);
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Compile a directive declaration defined by the `R3DirectiveMetadata`.
      */
     function compileDeclareDirectiveFromMetadata(meta) {
         const definitionMap = createDirectiveDefinitionMap(meta);
         const expression = importExpr(Identifiers$1.declareDirective).callFn([definitionMap.toLiteralMap()]);
-        const typeParams = createDirectiveTypeParams(meta);
-        const type = expressionType(importExpr(Identifiers$1.DirectiveDefWithMeta, typeParams));
+        const type = createDirectiveType(meta);
         return { expression, type };
     }
     /**
@@ -20547,26 +20618,95 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return null;
         }
     }
+
     /**
-     * Creates an object literal expression from the given object, mapping all values to an expression
-     * using the provided mapping function. If the object has no keys, then null is returned.
+     * @license
+     * Copyright Google LLC All Rights Reserved.
      *
-     * @param object The object to transfer into an object literal expression.
-     * @param mapper The logic to use for creating an expression for the object's values.
-     * @returns An object literal expression representing `object`, or null if `object` does not have
-     * any keys.
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
      */
-    function toOptionalLiteralMap(object, mapper) {
-        const entries = Object.keys(object).map(key => {
-            const value = object[key];
-            return { key, value: mapper(value), quoted: true };
-        });
-        if (entries.length > 0) {
-            return literalMap(entries);
+    /**
+     * Compile a component declaration defined by the `R3ComponentMetadata`.
+     */
+    function compileDeclareComponentFromMetadata(meta, template) {
+        const definitionMap = createComponentDefinitionMap(meta, template);
+        const expression = importExpr(Identifiers$1.declareComponent).callFn([definitionMap.toLiteralMap()]);
+        const type = createComponentType(meta);
+        return { expression, type };
+    }
+    /**
+     * Gathers the declaration fields for a component into a `DefinitionMap`.
+     */
+    function createComponentDefinitionMap(meta, template) {
+        const definitionMap = createDirectiveDefinitionMap(meta);
+        const templateMap = compileTemplateDefinition(template);
+        definitionMap.set('template', templateMap);
+        definitionMap.set('styles', toOptionalLiteralArray(meta.styles, literal));
+        definitionMap.set('directives', compileUsedDirectiveMetadata(meta));
+        definitionMap.set('pipes', compileUsedPipeMetadata(meta));
+        definitionMap.set('viewProviders', meta.viewProviders);
+        definitionMap.set('animations', meta.animations);
+        if (meta.changeDetection !== undefined) {
+            definitionMap.set('changeDetection', importExpr(Identifiers$1.ChangeDetectionStrategy)
+                .prop(ChangeDetectionStrategy[meta.changeDetection]));
         }
-        else {
+        if (meta.encapsulation !== ViewEncapsulation.Emulated) {
+            definitionMap.set('encapsulation', importExpr(Identifiers$1.ViewEncapsulation).prop(ViewEncapsulation[meta.encapsulation]));
+        }
+        if (meta.interpolation !== DEFAULT_INTERPOLATION_CONFIG) {
+            definitionMap.set('interpolation', literalArr([literal(meta.interpolation.start), literal(meta.interpolation.end)]));
+        }
+        if (template.preserveWhitespaces === true) {
+            definitionMap.set('preserveWhitespaces', literal(true));
+        }
+        return definitionMap;
+    }
+    /**
+     * Compiles the provided template into its partial definition.
+     */
+    function compileTemplateDefinition(template) {
+        const templateMap = new DefinitionMap();
+        const templateExpr = typeof template.template === 'string' ? literal(template.template) : template.template;
+        templateMap.set('source', templateExpr);
+        templateMap.set('isInline', literal(template.isInline));
+        return templateMap.toLiteralMap();
+    }
+    /**
+     * Compiles the directives as registered in the component metadata into an array literal of the
+     * individual directives. If the component does not use any directives, then null is returned.
+     */
+    function compileUsedDirectiveMetadata(meta) {
+        const wrapType = meta.wrapDirectivesAndPipesInClosure ?
+            (expr) => fn([], [new ReturnStatement(expr)]) :
+            (expr) => expr;
+        return toOptionalLiteralArray(meta.directives, directive => {
+            const dirMeta = new DefinitionMap();
+            dirMeta.set('type', wrapType(directive.type));
+            dirMeta.set('selector', literal(directive.selector));
+            dirMeta.set('inputs', toOptionalLiteralArray(directive.inputs, literal));
+            dirMeta.set('outputs', toOptionalLiteralArray(directive.outputs, literal));
+            dirMeta.set('exportAs', toOptionalLiteralArray(directive.exportAs, literal));
+            return dirMeta.toLiteralMap();
+        });
+    }
+    /**
+     * Compiles the pipes as registered in the component metadata into an object literal, where the
+     * pipe's name is used as key and a reference to its type as value. If the component does not use
+     * any pipes, then null is returned.
+     */
+    function compileUsedPipeMetadata(meta) {
+        if (meta.pipes.size === 0) {
             return null;
         }
+        const wrapType = meta.wrapDirectivesAndPipesInClosure ?
+            (expr) => fn([], [new ReturnStatement(expr)]) :
+            (expr) => expr;
+        const entries = [];
+        for (const [name, pipe] of meta.pipes) {
+            entries.push({ key: name, value: wrapType(pipe), quoted: true });
+        }
+        return literalMap(entries);
     }
 
     /**
@@ -20588,7 +20728,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.0+72.sha-39a47c2');
+    const VERSION$2 = new Version('11.1.0-next.0+82.sha-e75244e');
 
     /**
      * @license
@@ -28373,12 +28513,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // BoundTarget, which is similar to a ts.TypeChecker.
                 const binder = new R3TargetBinder(matcher);
                 const bound = binder.bind({ template: metadata.template.nodes });
-                // The BoundTarget knows which directives and pipes matched the template.
                 const usedDirectives = bound.getUsedDirectives().map(directive => {
                     return {
-                        selector: directive.selector,
-                        expression: this.refEmitter.emit(directive.ref, context),
                         ref: directive.ref,
+                        type: this.refEmitter.emit(directive.ref, context),
+                        selector: directive.selector,
+                        inputs: directive.inputs.propertyNames,
+                        outputs: directive.outputs.propertyNames,
+                        exportAs: directive.exportAs,
                     };
                 });
                 const usedPipes = [];
@@ -28395,13 +28537,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 // Scan through the directives/pipes actually used in the template and check whether any
                 // import which needs to be generated would create a cycle.
-                const cycleDetected = usedDirectives.some(dir => this._isCyclicImport(dir.expression, context)) ||
+                const cycleDetected = usedDirectives.some(dir => this._isCyclicImport(dir.type, context)) ||
                     usedPipes.some(pipe => this._isCyclicImport(pipe.expression, context));
                 if (!cycleDetected) {
                     // No cycle was detected. Record the imports that need to be created in the cycle detector
                     // so that future cyclic import checks consider their production.
-                    for (const { expression } of usedDirectives) {
-                        this._recordSyntheticImport(expression, context);
+                    for (const { type } of usedDirectives) {
+                        this._recordSyntheticImport(type, context);
                     }
                     for (const { expression } of usedPipes) {
                         this._recordSyntheticImport(expression, context);
@@ -28409,7 +28551,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // Check whether the directive/pipe arrays in ɵcmp need to be wrapped in closures.
                     // This is required if any directive/pipe reference is to a declaration in the same file but
                     // declared after this component.
-                    const wrapDirectivesAndPipesInClosure = usedDirectives.some(dir => isExpressionForwardReference(dir.expression, node.name, context)) ||
+                    const wrapDirectivesAndPipesInClosure = usedDirectives.some(dir => isExpressionForwardReference(dir.type, node.name, context)) ||
                         usedPipes.some(pipe => isExpressionForwardReference(pipe.expression, node.name, context));
                     data.directives = usedDirectives;
                     data.pipes = new Map(usedPipes.map(pipe => [pipe.pipeName, pipe.expression]));
@@ -28444,17 +28586,25 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         compileFull(node, analysis, resolution, pool) {
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
-            const res = compileComponentFromMetadata(meta, pool, makeBindingParser());
-            const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Component }));
+            const def = compileComponentFromMetadata(meta, pool, makeBindingParser());
+            return this.compileComponent(analysis, def);
+        }
+        compilePartial(node, analysis, resolution) {
+            const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
+            const def = compileDeclareComponentFromMetadata(meta, analysis.template);
+            return this.compileComponent(analysis, def);
+        }
+        compileComponent(analysis, { expression: initializer, type }) {
+            const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, analysis.meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Component }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
             return [
                 factoryRes, {
                     name: 'ɵcmp',
-                    initializer: res.expression,
+                    initializer,
                     statements: [],
-                    type: res.type,
+                    type,
                 }
             ];
         }
@@ -28554,7 +28704,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (this.depTracker !== null) {
                 this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(resourceUrl));
             }
-            const template = this._parseTemplate(component, templateStr, sourceMapUrl(resourceUrl), /* templateRange */ undefined, 
+            const template = this._parseTemplate(component, templateStr, /* templateLiteral */ null, sourceMapUrl(resourceUrl), 
+            /* templateRange */ undefined, 
             /* escapedString */ false);
             return Object.assign(Object.assign({}, template), { sourceMapping: {
                     type: 'external',
@@ -28570,6 +28721,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const templateExpr = component.get('template');
             let templateStr;
+            let templateLiteral = null;
             let templateUrl = '';
             let templateRange = undefined;
             let sourceMapping;
@@ -28581,6 +28733,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // strip
                 templateRange = getTemplateRange(templateExpr);
                 templateStr = templateExpr.getSourceFile().text;
+                templateLiteral = templateExpr;
                 templateUrl = containingFile;
                 escapedString = true;
                 sourceMapping = {
@@ -28601,10 +28754,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     template: templateStr,
                 };
             }
-            const template = this._parseTemplate(component, templateStr, templateUrl, templateRange, escapedString);
+            const template = this._parseTemplate(component, templateStr, templateLiteral, templateUrl, templateRange, escapedString);
             return Object.assign(Object.assign({}, template), { sourceMapping });
         }
-        _parseTemplate(component, templateStr, templateUrl, templateRange, escapedString) {
+        _parseTemplate(component, templateStr, templateLiteral, templateUrl, templateRange, escapedString) {
             let preserveWhitespaces = this.defaultPreserveWhitespaces;
             if (component.has('preserveWhitespaces')) {
                 const expr = component.get('preserveWhitespaces');
@@ -28626,6 +28779,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // We always normalize line endings if the template has been escaped (i.e. is inline).
             const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
+            const isInline = component.has('template');
             const parsedTemplate = parseTemplate(templateStr, templateUrl, {
                 preserveWhitespaces,
                 interpolationConfig,
@@ -28633,6 +28787,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
+                isInline,
             });
             // Unfortunately, the primary parse of the template above may not contain accurate source map
             // information. If used directly, it would result in incorrect code locations in template
@@ -28654,8 +28809,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
                 leadingTriviaChars: [],
+                isInline,
             });
-            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: templateStr, templateUrl, isInline: component.has('template'), file: new ParseSourceFile(templateStr, templateUrl) });
+            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: templateLiteral !== null ? new WrappedNodeExpr(templateLiteral) : templateStr, templateUrl,
+                isInline, file: new ParseSourceFile(templateStr, templateUrl) });
         }
         _expressionToImportedFile(expr, origin) {
             if (!(expr instanceof ExternalExpr)) {
