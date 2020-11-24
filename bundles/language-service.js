@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+82.sha-e75244e
+ * @license Angular v11.1.0-next.0+73.sha-266959e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3004,16 +3004,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
     Identifiers$1.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE$1 };
     Identifiers$1.defineComponent = { name: 'ɵɵdefineComponent', moduleName: CORE$1 };
-    Identifiers$1.declareComponent = { name: 'ɵɵngDeclareComponent', moduleName: CORE$1 };
     Identifiers$1.setComponentScope = { name: 'ɵɵsetComponentScope', moduleName: CORE$1 };
-    Identifiers$1.ChangeDetectionStrategy = {
-        name: 'ChangeDetectionStrategy',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.ViewEncapsulation = {
-        name: 'ViewEncapsulation',
-        moduleName: CORE$1,
-    };
     Identifiers$1.ComponentDefWithMeta = {
         name: 'ɵɵComponentDefWithMeta',
         moduleName: CORE$1,
@@ -17620,9 +17611,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options = {}) {
-        var _a;
         const { interpolationConfig, preserveWhitespaces, enableI18nLegacyMessageIdFormat } = options;
-        const isInline = (_a = options.isInline) !== null && _a !== void 0 ? _a : false;
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
@@ -17633,7 +17622,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
-                isInline,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -17653,7 +17641,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
-                isInline,
                 errors: i18nMetaResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -17678,7 +17665,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
             template,
-            isInline,
             nodes,
             styleUrls,
             styles,
@@ -17861,7 +17847,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         addFeatures(definitionMap, meta);
         const expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
-        const type = createDirectiveType(meta);
+        const typeParams = createDirectiveTypeParams(meta);
+        const type = expressionType(importExpr(Identifiers$1.DirectiveDefWithMeta, typeParams));
         return { expression, type };
     }
     /**
@@ -17885,8 +17872,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         let directiveMatcher = null;
         if (meta.directives.length > 0) {
             const matcher = new SelectorMatcher();
-            for (const { selector, type } of meta.directives) {
-                matcher.addSelectables(CssSelector.parse(selector), type);
+            for (const { selector, expression } of meta.directives) {
+                matcher.addSelectables(CssSelector.parse(selector), expression);
             }
             directiveMatcher = matcher;
         }
@@ -17968,17 +17955,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             definitionMap.set('changeDetection', literal(changeDetection));
         }
         const expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
-        const type = createComponentType(meta);
-        return { expression, type };
-    }
-    /**
-     * Creates the type specification from the component meta. This type is inserted into .d.ts files
-     * to be consumed by upstream compilations.
-     */
-    function createComponentType(meta) {
         const typeParams = createDirectiveTypeParams(meta);
         typeParams.push(stringArrayAsType(meta.template.ngContentSelectors));
-        return expressionType(importExpr(Identifiers$1.ComponentDefWithMeta, typeParams));
+        const type = expressionType(importExpr(Identifiers$1.ComponentDefWithMeta, typeParams));
+        return { expression, type };
     }
     function prepareQueryParams(query, constantPool) {
         const parameters = [getQueryPredicate(query, constantPool), literal(query.descendants)];
@@ -18054,14 +18034,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             stringMapAsType(meta.outputs),
             stringArrayAsType(meta.queries.map(q => q.propertyName)),
         ];
-    }
-    /**
-     * Creates the type specification from the directive meta. This type is inserted into .d.ts files
-     * to be consumed by upstream compilations.
-     */
-    function createDirectiveType(meta) {
-        const typeParams = createDirectiveTypeParams(meta);
-        return expressionType(importExpr(Identifiers$1.DirectiveDefWithMeta, typeParams));
     }
     // Define and update any view queries
     function createViewQueriesFunction(viewQueries, constantPool, name) {
@@ -18659,7 +18631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+82.sha-e75244e');
+    const VERSION$1 = new Version('11.1.0-next.0+73.sha-266959e');
 
     /**
      * @license
@@ -34795,7 +34767,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.0+82.sha-e75244e');
+    const VERSION$2 = new Version$1('11.1.0-next.0+73.sha-266959e');
 
     /**
      * @license
