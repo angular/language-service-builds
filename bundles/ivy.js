@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.2+43.sha-7bf73d7
+ * @license Angular v11.0.2+48.sha-8634611
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19609,7 +19609,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.2+43.sha-7bf73d7');
+    const VERSION$1 = new Version('11.0.2+48.sha-8634611');
 
     /**
      * @license
@@ -20244,7 +20244,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.2+43.sha-7bf73d7');
+    const VERSION$2 = new Version('11.0.2+48.sha-8634611');
 
     /**
      * @license
@@ -34112,6 +34112,25 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     /**
+     * A `TcbOp` which is used when the target of a reference is missing. This operation generates a
+     * variable of type any for usages of the invalid reference to resolve to. The invalid reference
+     * itself is recorded out-of-band.
+     */
+    class TcbInvalidReferenceOp extends TcbOp {
+        constructor(tcb, scope) {
+            super();
+            this.tcb = tcb;
+            this.scope = scope;
+            // The declaration of a missing reference is only needed when the reference is resolved.
+            this.optional = true;
+        }
+        execute() {
+            const id = this.tcb.allocateId();
+            this.scope.addStatement(tsCreateVariable(id, NULL_AS_ANY));
+            return id;
+        }
+    }
+    /**
      * A `TcbOp` which constructs an instance of a directive with types inferred from its inputs. The
      * inputs themselves are not checked here; checking of inputs is achieved in `TcbDirectiveInputsOp`.
      * Any errors reported in this statement are ignored, as the type constructor call is only present
@@ -34935,12 +34954,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         checkAndAppendReferencesOfNode(node) {
             for (const ref of node.references) {
                 const target = this.tcb.boundTarget.getReferenceTarget(ref);
-                if (target === null) {
-                    this.tcb.oobRecorder.missingReferenceTarget(this.tcb.id, ref);
-                    continue;
-                }
                 let ctxIndex;
-                if (target instanceof Template || target instanceof Element) {
+                if (target === null) {
+                    // The reference is invalid if it doesn't have a target, so report it as an error.
+                    this.tcb.oobRecorder.missingReferenceTarget(this.tcb.id, ref);
+                    // Any usages of the invalid reference will be resolved to a variable of type any.
+                    ctxIndex = this.opQueue.push(new TcbInvalidReferenceOp(this.tcb, this)) - 1;
+                }
+                else if (target instanceof Template || target instanceof Element) {
                     ctxIndex = this.opQueue.push(new TcbReferenceOp(this.tcb, this, ref, node, target)) - 1;
                 }
                 else {
