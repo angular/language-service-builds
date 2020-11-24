@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+64.sha-6046419
+ * @license Angular v11.1.0-next.0+67.sha-2c275f6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18631,7 +18631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+64.sha-6046419');
+    const VERSION$1 = new Version('11.1.0-next.0+67.sha-2c275f6');
 
     /**
      * @license
@@ -27627,7 +27627,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         };
     }
     /**
-     * The following getter methods retrieve the definition form the type. Currently the retrieval
+     * The following getter methods retrieve the definition from the type. Currently the retrieval
      * honors inheritance, but in the future we may change the rule to require that definitions are
      * explicit. This would require some sort of migration strategy.
      */
@@ -46590,7 +46590,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.0+64.sha-6046419');
+    const VERSION$2 = new Version$1('11.1.0-next.0+67.sha-2c275f6');
 
     /**
      * @license
