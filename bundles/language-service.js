@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+89.sha-23c36a2
+ * @license Angular v11.1.0-next.0+91.sha-5684ac5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13917,7 +13917,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     else {
                         // Otherwise the key must be a directive keyword, like "of". Transform
                         // the key to actual key. Eg. of -> ngForOf, trackBy -> ngForTrackBy
-                        key.source = templateKey.source + key.source[0].toUpperCase() + key.source.substring(1);
+                        key.source =
+                            templateKey.source + key.source.charAt(0).toUpperCase() + key.source.substring(1);
                         bindings.push(...this.parseDirectiveKeywordBindings(key));
                     }
                 }
@@ -18659,7 +18660,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+89.sha-23c36a2');
+    const VERSION$1 = new Version('11.1.0-next.0+91.sha-5684ac5');
 
     /**
      * @license
@@ -34795,7 +34796,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.0+89.sha-23c36a2');
+    const VERSION$2 = new Version$1('11.1.0-next.0+91.sha-5684ac5');
 
     /**
      * @license
