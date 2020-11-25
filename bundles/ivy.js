@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.2+56.sha-9dc0a4e
+ * @license Angular v11.0.2+59.sha-2bfa8ee
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -14998,7 +14998,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     else {
                         // Otherwise the key must be a directive keyword, like "of". Transform
                         // the key to actual key. Eg. of -> ngForOf, trackBy -> ngForTrackBy
-                        key.source = templateKey.source + key.source[0].toUpperCase() + key.source.substring(1);
+                        key.source =
+                            templateKey.source + key.source.charAt(0).toUpperCase() + key.source.substring(1);
                         bindings.push(...this.parseDirectiveKeywordBindings(key));
                     }
                 }
@@ -19609,7 +19610,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.2+56.sha-9dc0a4e');
+    const VERSION$1 = new Version('11.0.2+59.sha-2bfa8ee');
 
     /**
      * @license
@@ -20244,7 +20245,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.2+56.sha-9dc0a4e');
+    const VERSION$2 = new Version('11.0.2+59.sha-2bfa8ee');
 
     /**
      * @license
