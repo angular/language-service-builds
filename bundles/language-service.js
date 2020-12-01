@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.0+115.sha-1de59d2
+ * @license Angular v11.1.0-next.0+116.sha-11cd37f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18660,7 +18660,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.0+115.sha-1de59d2');
+    const VERSION$1 = new Version('11.1.0-next.0+116.sha-11cd37f');
 
     /**
      * @license
@@ -27572,13 +27572,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Used for stringify render output in Ivy.
      * Important! This function is very performance-sensitive and we should
      * be extra careful not to introduce megamorphic reads in it.
+     * Check `core/test/render3/perf/render_stringify` for benchmarks and alternate implementations.
      */
     function renderStringify(value) {
         if (typeof value === 'string')
             return value;
         if (value == null)
             return '';
-        return '' + value;
+        // Use `String` so that it invokes the `toString` method of the value. Note that this
+        // appears to be faster than calling `value.toString` (see `render_stringify` benchmark).
+        return String(value);
     }
     /**
      * Used to stringify a value so that it can be displayed in an error message.
@@ -34796,7 +34799,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.0+115.sha-1de59d2');
+    const VERSION$2 = new Version$1('11.1.0-next.0+116.sha-11cd37f');
 
     /**
      * @license
