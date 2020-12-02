@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+12.sha-eba185e
+ * @license Angular v11.1.0-next.1+20.sha-a55e01b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18660,7 +18660,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+12.sha-eba185e');
+    const VERSION$1 = new Version('11.1.0-next.1+20.sha-a55e01b');
 
     /**
      * @license
@@ -26813,6 +26813,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throwError(msg, actual === null ? 'null' : typeof actual, 'string', '===');
         }
     }
+    function assertFunction(actual, msg) {
+        if (!(typeof actual === 'function')) {
+            throwError(msg, actual === null ? 'null' : typeof actual, 'function', '===');
+        }
+    }
     function assertEqual(actual, expected, msg) {
         if (!(actual == expected)) {
             throwError(msg, actual, expected, '==');
@@ -30721,7 +30726,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // really more of an "afterDestroy" hook if you think about it.
             lView[FLAGS] |= 256 /* Destroyed */;
             executeOnDestroys(tView, lView);
-            removeListeners(tView, lView);
+            processCleanups(tView, lView);
             // For component views only, the local renderer is destroyed at clean up time.
             if (lView[TVIEW].type === 1 /* Component */ && isProceduralRenderer(lView[RENDERER])) {
                 ngDevMode && ngDevMode.rendererDestroy++;
@@ -30743,10 +30748,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     /** Removes listeners and unsubscribes from output subscriptions */
-    function removeListeners(tView, lView) {
+    function processCleanups(tView, lView) {
         const tCleanup = tView.cleanup;
+        const lCleanup = lView[CLEANUP];
+        // `LCleanup` contains both share information with `TCleanup` as well as instance specific
+        // information appended at the end. We need to know where the end of the `TCleanup` information
+        // is, and we track this with `lastLCleanupIndex`.
+        let lastLCleanupIndex = -1;
         if (tCleanup !== null) {
-            const lCleanup = lView[CLEANUP];
             for (let i = 0; i < tCleanup.length - 1; i += 2) {
                 if (typeof tCleanup[i] === 'string') {
                     // This is a native DOM listener
@@ -30754,7 +30763,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     const target = typeof idxOrTargetGetter === 'function' ?
                         idxOrTargetGetter(lView) :
                         unwrapRNode(lView[idxOrTargetGetter]);
-                    const listener = lCleanup[tCleanup[i + 2]];
+                    const listener = lCleanup[lastLCleanupIndex = tCleanup[i + 2]];
                     const useCaptureOrSubIdx = tCleanup[i + 3];
                     if (typeof useCaptureOrSubIdx === 'boolean') {
                         // native DOM listener registered with Renderer3
@@ -30763,19 +30772,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     else {
                         if (useCaptureOrSubIdx >= 0) {
                             // unregister
-                            lCleanup[useCaptureOrSubIdx]();
+                            lCleanup[lastLCleanupIndex = useCaptureOrSubIdx]();
                         }
                         else {
                             // Subscription
-                            lCleanup[-useCaptureOrSubIdx].unsubscribe();
+                            lCleanup[lastLCleanupIndex = -useCaptureOrSubIdx].unsubscribe();
                         }
                     }
                     i += 2;
                 }
                 else {
                     // This is a cleanup function that is grouped with the index of its context
-                    const context = lCleanup[tCleanup[i + 1]];
+                    const context = lCleanup[lastLCleanupIndex = tCleanup[i + 1]];
                     tCleanup[i].call(context);
+                }
+            }
+            if (lCleanup !== null) {
+                for (let i = lastLCleanupIndex + 1; i < lCleanup.length; i++) {
+                    const instanceCleanupFn = lCleanup[i];
+                    ngDevMode && assertFunction(instanceCleanupFn, 'Expecting instance cleanup function.');
+                    instanceCleanupFn();
                 }
             }
             lView[CLEANUP] = null;
@@ -32400,12 +32416,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * On the first template pass, saves in TView:
      * - Cleanup function
      * - Index of context we just saved in LView.cleanupInstances
+     *
+     * This function can also be used to store instance specific cleanup fns. In that case the `context`
+     * is `null` and the function is store in `LView` (rather than it `TView`).
      */
     function storeCleanupWithContext(tView, lView, context, cleanupFn) {
         const lCleanup = getLCleanup(lView);
-        lCleanup.push(context);
-        if (tView.firstCreatePass) {
-            getTViewCleanup(tView).push(cleanupFn, lCleanup.length - 1);
+        if (context === null) {
+            // If context is null that this is instance specific callback. These callbacks can only be
+            // inserted after template shared instances. For this reason in ngDevMode we freeze the TView.
+            if (ngDevMode) {
+                Object.freeze(getTViewCleanup(tView));
+            }
+            lCleanup.push(cleanupFn);
+        }
+        else {
+            lCleanup.push(context);
+            if (tView.firstCreatePass) {
+                getTViewCleanup(tView).push(cleanupFn, lCleanup.length - 1);
+            }
         }
     }
     function createTNode(tView, tParent, type, index, value, attrs) {
@@ -34799,7 +34828,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.1+12.sha-eba185e');
+    const VERSION$2 = new Version$1('11.1.0-next.1+20.sha-a55e01b');
 
     /**
      * @license
@@ -36606,7 +36635,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.location = location;
             this._rootLView = _rootLView;
             this._tNode = _tNode;
-            this.destroyCbs = [];
             this.instance = instance;
             this.hostView = this.changeDetectorRef = new RootViewRef(_rootLView);
             this.componentType = componentType;
@@ -36615,16 +36643,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new NodeInjector(this._tNode, this._rootLView);
         }
         destroy() {
-            if (this.destroyCbs) {
-                this.destroyCbs.forEach(fn => fn());
-                this.destroyCbs = null;
-                !this.hostView.destroyed && this.hostView.destroy();
-            }
+            this.hostView.destroy();
         }
         onDestroy(callback) {
-            if (this.destroyCbs) {
-                this.destroyCbs.push(callback);
-            }
+            this.hostView.onDestroy(callback);
         }
     }
 
@@ -39776,7 +39798,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
              */
             this.components = [];
             this._enforceNoNewChanges = isDevMode();
-            this._zone.onMicrotaskEmpty.subscribe({
+            this._onMicrotaskEmptySubscription = this._zone.onMicrotaskEmpty.subscribe({
                 next: () => {
                     this._zone.run(() => {
                         this.tick();
@@ -39859,14 +39881,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const ngModule = isBoundToModule(componentFactory) ? undefined : this._injector.get(NgModuleRef);
             const selectorOrNode = rootSelectorOrNode || componentFactory.selector;
             const compRef = componentFactory.create(Injector.NULL, [], selectorOrNode, ngModule);
-            compRef.onDestroy(() => {
-                this._unloadComponent(compRef);
-            });
+            const nativeElement = compRef.location.nativeElement;
             const testability = compRef.injector.get(Testability, null);
-            if (testability) {
-                compRef.injector.get(TestabilityRegistry)
-                    .registerApplication(compRef.location.nativeElement, testability);
+            const testabilityRegistry = testability && compRef.injector.get(TestabilityRegistry);
+            if (testability && testabilityRegistry) {
+                testabilityRegistry.registerApplication(nativeElement, testability);
             }
+            compRef.onDestroy(() => {
+                this.detachView(compRef.hostView);
+                remove(this.components, compRef);
+                if (testabilityRegistry) {
+                    testabilityRegistry.unregisterApplication(nativeElement);
+                }
+            });
             this._loadComponent(compRef);
             {
                 this._console.log(`Angular is running in development mode. Call enableProdMode() to enable production mode.`);
@@ -39932,14 +39959,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const listeners = this._injector.get(APP_BOOTSTRAP_LISTENER, []).concat(this._bootstrapListeners);
             listeners.forEach((listener) => listener(componentRef));
         }
-        _unloadComponent(componentRef) {
-            this.detachView(componentRef.hostView);
-            remove(this.components, componentRef);
-        }
         /** @internal */
         ngOnDestroy() {
-            // TODO(alxhub): Dispose of the NgZone.
             this._views.slice().forEach((view) => view.destroy());
+            this._onMicrotaskEmptySubscription.unsubscribe();
         }
         /**
          * Returns the number of attached views.
