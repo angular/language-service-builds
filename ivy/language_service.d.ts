@@ -22,6 +22,5 @@ export declare class LanguageService {
     getDefinitionAndBoundSpan(fileName: string, position: number): ts.DefinitionInfoAndBoundSpan | undefined;
     getTypeDefinitionAtPosition(fileName: string, position: number): readonly ts.DefinitionInfo[] | undefined;
     getQuickInfoAtPosition(fileName: string, position: number): ts.QuickInfo | undefined;
-    getReferencesAtPosition(fileName: string, position: number): ts.ReferenceEntry[] | undefined;
     private watchConfigFile;
 }

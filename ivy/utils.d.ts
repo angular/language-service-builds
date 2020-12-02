@@ -66,5 +66,4 @@ export declare function isDollarEvent(n: t.Node | e.AST): n is e.PropertyRead;
 export declare function flatMap<T, R>(items: T[] | readonly T[], f: (item: T) => R[] | readonly R[]): R[];
 export declare function isTypeScriptFile(fileName: string): boolean;
 export declare function isExternalTemplate(fileName: string): boolean;
-export declare function isWithin(position: number, span: AbsoluteSourceSpan | ParseSourceSpan): boolean;
 export {};
