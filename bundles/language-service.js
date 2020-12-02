@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+22.sha-744f46c
+ * @license Angular v11.1.0-next.1+25.sha-8d613c1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13768,11 +13768,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseExpressionList(terminator) {
             const result = [];
-            if (!this.next.isCharacter(terminator)) {
-                do {
+            do {
+                if (!this.next.isCharacter(terminator)) {
                     result.push(this.parsePipe());
-                } while (this.consumeOptionalCharacter($COMMA));
-            }
+                }
+                else {
+                    break;
+                }
+            } while (this.consumeOptionalCharacter($COMMA));
             return result;
         }
         parseLiteralMap() {
@@ -18660,7 +18663,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+22.sha-744f46c');
+    const VERSION$1 = new Version('11.1.0-next.1+25.sha-8d613c1');
 
     /**
      * @license
@@ -46656,7 +46659,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.1+22.sha-744f46c');
+    const VERSION$2 = new Version$1('11.1.0-next.1+25.sha-8d613c1');
 
     /**
      * @license
