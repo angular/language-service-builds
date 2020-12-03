@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+33.sha-aa8bd73
+ * @license Angular v11.1.0-next.1+35.sha-5a3a154
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18663,7 +18663,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+33.sha-aa8bd73');
+    const VERSION$1 = new Version('11.1.0-next.1+35.sha-5a3a154');
 
     /**
      * @license
@@ -34831,7 +34831,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.1+33.sha-aa8bd73');
+    const VERSION$2 = new Version$1('11.1.0-next.1+35.sha-5a3a154');
 
     /**
      * @license
@@ -39550,12 +39550,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (!exceptionHandler) {
                     throw new Error('No ErrorHandler. Is platform module (BrowserModule) included?');
                 }
-                moduleRef.onDestroy(() => remove(this._modules, moduleRef));
-                ngZone.runOutsideAngular(() => ngZone.onError.subscribe({
-                    next: (error) => {
-                        exceptionHandler.handleError(error);
-                    }
-                }));
+                ngZone.runOutsideAngular(() => {
+                    const subscription = ngZone.onError.subscribe({
+                        next: (error) => {
+                            exceptionHandler.handleError(error);
+                        }
+                    });
+                    moduleRef.onDestroy(() => {
+                        remove(this._modules, moduleRef);
+                        subscription.unsubscribe();
+                    });
+                });
                 return _callAndReportToErrorHandler(exceptionHandler, ngZone, () => {
                     const initStatus = moduleRef.injector.get(ApplicationInitStatus);
                     initStatus.runInitializers();
