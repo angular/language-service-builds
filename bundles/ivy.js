@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.3+5.sha-57642e8
+ * @license Angular v11.0.3+17.sha-3680ad1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -14855,11 +14855,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         parseExpressionList(terminator) {
             const result = [];
-            if (!this.next.isCharacter(terminator)) {
-                do {
+            do {
+                if (!this.next.isCharacter(terminator)) {
                     result.push(this.parsePipe());
-                } while (this.consumeOptionalCharacter($COMMA));
-            }
+                }
+                else {
+                    break;
+                }
+            } while (this.consumeOptionalCharacter($COMMA));
             return result;
         }
         parseLiteralMap() {
@@ -19610,7 +19613,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.3+5.sha-57642e8');
+    const VERSION$1 = new Version('11.0.3+17.sha-3680ad1');
 
     /**
      * @license
@@ -20245,7 +20248,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.3+5.sha-57642e8');
+    const VERSION$2 = new Version('11.0.3+17.sha-3680ad1');
 
     /**
      * @license
