@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+34.sha-f01c713
+ * @license Angular v11.1.0-next.1+38.sha-65651b0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19869,7 +19869,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+34.sha-f01c713');
+    const VERSION$1 = new Version('11.1.0-next.1+38.sha-65651b0');
 
     /**
      * @license
@@ -20732,7 +20732,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.1+34.sha-f01c713');
+    const VERSION$2 = new Version('11.1.0-next.1+38.sha-65651b0');
 
     /**
      * @license
@@ -40156,11 +40156,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         function getReferencesAtPosition(fileName, position) {
             return ngLS.getReferencesAtPosition(fileName, position);
         }
+        function findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename) {
+            // TODO(atscott): implement
+            return undefined;
+        }
         return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics,
             getTypeDefinitionAtPosition,
             getQuickInfoAtPosition,
             getDefinitionAndBoundSpan,
-            getReferencesAtPosition });
+            getReferencesAtPosition,
+            findRenameLocations });
     }
 
     exports.create = create;
