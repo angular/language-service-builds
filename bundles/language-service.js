@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.3+17.sha-3680ad1
+ * @license Angular v11.0.3+18.sha-6b6fcd7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18410,7 +18410,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.3+17.sha-3680ad1');
+    const VERSION$1 = new Version('11.0.3+18.sha-6b6fcd7');
 
     /**
      * @license
@@ -34586,7 +34586,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.3+17.sha-3680ad1');
+    const VERSION$2 = new Version$1('11.0.3+18.sha-6b6fcd7');
 
     /**
      * @license
@@ -42251,8 +42251,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return [];
         }
         const ngLsHost = PROJECT_MAP.get(project);
-        ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getAnalyzedModules();
-        return (ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getExternalTemplates()) || [];
+        if (ngLsHost === undefined) {
+            return [];
+        }
+        ngLsHost.getAnalyzedModules();
+        return ngLsHost.getExternalTemplates().filter(fileName => {
+            // TODO(kyliau): Remove this when the following PR lands on the version of
+            // TypeScript used in this repo.
+            // https://github.com/microsoft/TypeScript/pull/41737
+            return project.fileExists(fileName);
+        });
     }
     function create(info) {
         const { languageService: tsLS, languageServiceHost: tsLSHost, config, project } = info;
