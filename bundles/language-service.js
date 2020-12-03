@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+24.sha-efd0d33
+ * @license Angular v11.1.0-next.1+26.sha-2b84882
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13768,11 +13768,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseExpressionList(terminator) {
             const result = [];
-            if (!this.next.isCharacter(terminator)) {
-                do {
+            do {
+                if (!this.next.isCharacter(terminator)) {
                     result.push(this.parsePipe());
-                } while (this.consumeOptionalCharacter($COMMA));
-            }
+                }
+                else {
+                    break;
+                }
+            } while (this.consumeOptionalCharacter($COMMA));
             return result;
         }
         parseLiteralMap() {
@@ -18660,7 +18663,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+24.sha-efd0d33');
+    const VERSION$1 = new Version('11.1.0-next.1+26.sha-2b84882');
 
     /**
      * @license
@@ -46656,7 +46659,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.1+24.sha-efd0d33');
+    const VERSION$2 = new Version$1('11.1.0-next.1+26.sha-2b84882');
 
     /**
      * @license
@@ -56999,8 +57002,16 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return [];
         }
         const ngLsHost = PROJECT_MAP.get(project);
-        ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getAnalyzedModules();
-        return (ngLsHost === null || ngLsHost === void 0 ? void 0 : ngLsHost.getExternalTemplates()) || [];
+        if (ngLsHost === undefined) {
+            return [];
+        }
+        ngLsHost.getAnalyzedModules();
+        return ngLsHost.getExternalTemplates().filter(fileName => {
+            // TODO(kyliau): Remove this when the following PR lands on the version of
+            // TypeScript used in this repo.
+            // https://github.com/microsoft/TypeScript/pull/41737
+            return project.fileExists(fileName);
+        });
     }
     function create(info) {
         const { languageService: tsLS, languageServiceHost: tsLSHost, config, project } = info;
