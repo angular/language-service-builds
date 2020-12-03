@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+35.sha-5a3a154
+ * @license Angular v11.1.0-next.1+37.sha-3b70098
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18663,7 +18663,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+35.sha-5a3a154');
+    const VERSION$1 = new Version('11.1.0-next.1+37.sha-3b70098');
 
     /**
      * @license
@@ -22150,161 +22150,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function createOfflineCompileUrlResolver() {
-        return new UrlResolver('.');
-    }
-    const UrlResolver = class UrlResolverImpl {
-        constructor(_packagePrefix = null) {
-            this._packagePrefix = _packagePrefix;
-        }
-        /**
-         * Resolves the `url` given the `baseUrl`:
-         * - when the `url` is null, the `baseUrl` is returned,
-         * - if `url` is relative ('path/to/here', './path/to/here'), the resolved url is a combination of
-         * `baseUrl` and `url`,
-         * - if `url` is absolute (it has a scheme: 'http://', 'https://' or start with '/'), the `url` is
-         * returned as is (ignoring the `baseUrl`)
-         */
-        resolve(baseUrl, url) {
-            let resolvedUrl = url;
-            if (baseUrl != null && baseUrl.length > 0) {
-                resolvedUrl = _resolveUrl(baseUrl, resolvedUrl);
-            }
-            const resolvedParts = _split(resolvedUrl);
-            let prefix = this._packagePrefix;
-            if (prefix != null && resolvedParts != null &&
-                resolvedParts[_ComponentIndex.Scheme] == 'package') {
-                let path = resolvedParts[_ComponentIndex.Path];
-                prefix = prefix.replace(/\/+$/, '');
-                path = path.replace(/^\/+/, '');
-                return `${prefix}/${path}`;
-            }
-            return resolvedUrl;
-        }
-    };
-    // The code below is adapted from Traceur:
-    // https://github.com/google/traceur-compiler/blob/9511c1dafa972bf0de1202a8a863bad02f0f95a8/src/runtime/url.js
-    /**
-     * Builds a URI string from already-encoded parts.
-     *
-     * No encoding is performed.  Any component may be omitted as either null or
-     * undefined.
-     *
-     * @param opt_scheme The scheme such as 'http'.
-     * @param opt_userInfo The user name before the '@'.
-     * @param opt_domain The domain such as 'www.google.com', already
-     *     URI-encoded.
-     * @param opt_port The port number.
-     * @param opt_path The path, already URI-encoded.  If it is not
-     *     empty, it must begin with a slash.
-     * @param opt_queryData The URI-encoded query data.
-     * @param opt_fragment The URI-encoded fragment identifier.
-     * @return The fully combined URI.
-     */
-    function _buildFromEncodedParts(opt_scheme, opt_userInfo, opt_domain, opt_port, opt_path, opt_queryData, opt_fragment) {
-        const out = [];
-        if (opt_scheme != null) {
-            out.push(opt_scheme + ':');
-        }
-        if (opt_domain != null) {
-            out.push('//');
-            if (opt_userInfo != null) {
-                out.push(opt_userInfo + '@');
-            }
-            out.push(opt_domain);
-            if (opt_port != null) {
-                out.push(':' + opt_port);
-            }
-        }
-        if (opt_path != null) {
-            out.push(opt_path);
-        }
-        if (opt_queryData != null) {
-            out.push('?' + opt_queryData);
-        }
-        if (opt_fragment != null) {
-            out.push('#' + opt_fragment);
-        }
-        return out.join('');
-    }
-    /**
-     * A regular expression for breaking a URI into its component parts.
-     *
-     * {@link https://tools.ietf.org/html/rfc3986#appendix-B} says
-     * As the "first-match-wins" algorithm is identical to the "greedy"
-     * disambiguation method used by POSIX regular expressions, it is natural and
-     * commonplace to use a regular expression for parsing the potential five
-     * components of a URI reference.
-     *
-     * The following line is the regular expression for breaking-down a
-     * well-formed URI reference into its components.
-     *
-     * <pre>
-     * ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
-     *  12            3  4          5       6  7        8 9
-     * </pre>
-     *
-     * The numbers in the second line above are only to assist readability; they
-     * indicate the reference points for each subexpression (i.e., each paired
-     * parenthesis). We refer to the value matched for subexpression <n> as $<n>.
-     * For example, matching the above expression to
-     * <pre>
-     *     http://www.ics.uci.edu/pub/ietf/uri/#Related
-     * </pre>
-     * results in the following subexpression matches:
-     * <pre>
-     *    $1 = http:
-     *    $2 = http
-     *    $3 = //www.ics.uci.edu
-     *    $4 = www.ics.uci.edu
-     *    $5 = /pub/ietf/uri/
-     *    $6 = <undefined>
-     *    $7 = <undefined>
-     *    $8 = #Related
-     *    $9 = Related
-     * </pre>
-     * where <undefined> indicates that the component is not present, as is the
-     * case for the query component in the above example. Therefore, we can
-     * determine the value of the five components as
-     * <pre>
-     *    scheme    = $2
-     *    authority = $4
-     *    path      = $5
-     *    query     = $7
-     *    fragment  = $9
-     * </pre>
-     *
-     * The regular expression has been modified slightly to expose the
-     * userInfo, domain, and port separately from the authority.
-     * The modified version yields
-     * <pre>
-     *    $1 = http              scheme
-     *    $2 = <undefined>       userInfo -\
-     *    $3 = www.ics.uci.edu   domain     | authority
-     *    $4 = <undefined>       port     -/
-     *    $5 = /pub/ietf/uri/    path
-     *    $6 = <undefined>       query without ?
-     *    $7 = Related           fragment without #
-     * </pre>
-     * @internal
-     */
-    const _splitRe = new RegExp('^' +
-        '(?:' +
-        '([^:/?#.]+)' + // scheme - ignore special characters
-        // used by other URL parts such as :,
-        // ?, /, #, and .
-        ':)?' +
-        '(?://' +
-        '(?:([^/?#]*)@)?' + // userInfo
-        '([\\w\\d\\-\\u0100-\\uffff.%]*)' + // domain - restrict to letters,
-        // digits, dashes, dots, percent
-        // escapes, and unicode characters.
-        '(?::([0-9]+))?' + // port
-        ')?' +
-        '([^?#]+)?' + // path
-        '(?:\\?([^#]*))?' + // query
-        '(?:#(.*))?' + // fragment
-        '$');
     /**
      * The index of each URI component in the return value of goog.uri.utils.split.
      * @enum {number}
@@ -22319,106 +22164,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ComponentIndex[_ComponentIndex["QueryData"] = 6] = "QueryData";
         _ComponentIndex[_ComponentIndex["Fragment"] = 7] = "Fragment";
     })(_ComponentIndex || (_ComponentIndex = {}));
-    /**
-     * Splits a URI into its component parts.
-     *
-     * Each component can be accessed via the component indices; for example:
-     * <pre>
-     * goog.uri.utils.split(someStr)[goog.uri.utils.CompontentIndex.QUERY_DATA];
-     * </pre>
-     *
-     * @param uri The URI string to examine.
-     * @return Each component still URI-encoded.
-     *     Each component that is present will contain the encoded value, whereas
-     *     components that are not present will be undefined or empty, depending
-     *     on the browser's regular expression implementation.  Never null, since
-     *     arbitrary strings may still look like path names.
-     */
-    function _split(uri) {
-        return uri.match(_splitRe);
-    }
-    /**
-     * Removes dot segments in given path component, as described in
-     * RFC 3986, section 5.2.4.
-     *
-     * @param path A non-empty path component.
-     * @return Path component with removed dot segments.
-     */
-    function _removeDotSegments(path) {
-        if (path == '/')
-            return '/';
-        const leadingSlash = path[0] == '/' ? '/' : '';
-        const trailingSlash = path[path.length - 1] === '/' ? '/' : '';
-        const segments = path.split('/');
-        const out = [];
-        let up = 0;
-        for (let pos = 0; pos < segments.length; pos++) {
-            const segment = segments[pos];
-            switch (segment) {
-                case '':
-                case '.':
-                    break;
-                case '..':
-                    if (out.length > 0) {
-                        out.pop();
-                    }
-                    else {
-                        up++;
-                    }
-                    break;
-                default:
-                    out.push(segment);
-            }
-        }
-        if (leadingSlash == '') {
-            while (up-- > 0) {
-                out.unshift('..');
-            }
-            if (out.length === 0)
-                out.push('.');
-        }
-        return leadingSlash + out.join('/') + trailingSlash;
-    }
-    /**
-     * Takes an array of the parts from split and canonicalizes the path part
-     * and then joins all the parts.
-     */
-    function _joinAndCanonicalizePath(parts) {
-        let path = parts[_ComponentIndex.Path];
-        path = path == null ? '' : _removeDotSegments(path);
-        parts[_ComponentIndex.Path] = path;
-        return _buildFromEncodedParts(parts[_ComponentIndex.Scheme], parts[_ComponentIndex.UserInfo], parts[_ComponentIndex.Domain], parts[_ComponentIndex.Port], path, parts[_ComponentIndex.QueryData], parts[_ComponentIndex.Fragment]);
-    }
-    /**
-     * Resolves a URL.
-     * @param base The URL acting as the base URL.
-     * @param to The URL to resolve.
-     */
-    function _resolveUrl(base, url) {
-        const parts = _split(encodeURI(url));
-        const baseParts = _split(base);
-        if (parts[_ComponentIndex.Scheme] != null) {
-            return _joinAndCanonicalizePath(parts);
-        }
-        else {
-            parts[_ComponentIndex.Scheme] = baseParts[_ComponentIndex.Scheme];
-        }
-        for (let i = _ComponentIndex.Scheme; i <= _ComponentIndex.Port; i++) {
-            if (parts[i] == null) {
-                parts[i] = baseParts[i];
-            }
-        }
-        if (parts[_ComponentIndex.Path][0] == '/') {
-            return _joinAndCanonicalizePath(parts);
-        }
-        let path = baseParts[_ComponentIndex.Path];
-        if (path == null)
-            path = '/';
-        const index = path.lastIndexOf('/');
-        path = path.substring(0, index + 1) + parts[_ComponentIndex.Path];
-        parts[_ComponentIndex.Path] = path;
-        return _joinAndCanonicalizePath(parts);
-    }
 
     /**
      * @license
@@ -34831,7 +34576,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.1+35.sha-5a3a154');
+    const VERSION$2 = new Version$1('11.1.0-next.1+37.sha-3b70098');
 
     /**
      * @license
@@ -41990,6 +41735,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }, this.staticSymbolCache);
             this.reflectorHost = new ReflectorHost(() => this.program, tsLsHost);
             this.staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this.staticSymbolCache, this.summaryResolver, (e, filePath) => this.collectError(e, filePath));
+            this.urlResolver = {
+                resolve: (baseUrl, url) => {
+                    // In practice, `directoryExists` is always defined.
+                    // https://github.com/microsoft/TypeScript/blob/0b6c9254a850dd07056259d4eefca7721745af75/src/server/project.ts#L1608-L1614
+                    if (tsLsHost.directoryExists(baseUrl)) {
+                        return path.resolve(baseUrl, url);
+                    }
+                    return path.resolve(path.dirname(baseUrl), url);
+                }
+            };
         }
         /**
          * Return the singleton instance of the MetadataResolver.
@@ -42011,7 +41766,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const pipeResolver = new PipeResolver(staticReflector);
             const elementSchemaRegistry = new DomElementSchemaRegistry();
             const resourceLoader = new DummyResourceLoader();
-            const urlResolver = createOfflineCompileUrlResolver();
             const htmlParser = new DummyHtmlParser();
             // This tracks the CompileConfig in codegen.ts. Currently these options
             // are hard-coded.
@@ -42019,7 +41773,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 defaultEncapsulation: ViewEncapsulation$1.Emulated,
                 useJit: false,
             });
-            const directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
+            const directiveNormalizer = new DirectiveNormalizer(resourceLoader, this.urlResolver, htmlParser, config);
             this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, staticReflector, (error, type) => this.collectError(error, type && type.filePath));
             return this._resolver;
         }
@@ -42067,12 +41821,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this.analyzedModules;
             }
             // update template references and fileToComponent
-            const urlResolver = createOfflineCompileUrlResolver();
             for (const ngModule of this.analyzedModules.ngModules) {
                 for (const directive of ngModule.declaredDirectives) {
                     const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
-                        const templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
+                        const templateName = this.urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
                         this.fileToComponent.set(templateName, directive.reference);
                     }
                 }
@@ -42596,6 +42349,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Not implemented in VE Language Service
             return undefined;
         }
+        function findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename) {
+            // not implemented in VE Language Service
+            return undefined;
+        }
         return Object.assign(Object.assign({}, tsLS), { 
             // Then override the methods supported by Angular language service
             getCompletionsAtPosition,
@@ -42604,7 +42361,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             getDefinitionAtPosition,
             getDefinitionAndBoundSpan,
             getTypeDefinitionAtPosition,
-            getReferencesAtPosition });
+            getReferencesAtPosition,
+            findRenameLocations });
     }
 
     exports.TypeScriptServiceHost = TypeScriptServiceHost;
