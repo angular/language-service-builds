@@ -46,7 +46,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly fileToComponent;
     private readonly collectedErrors;
     private readonly fileVersions;
-    private readonly urlResolver;
     private lastProgram;
     private analyzedModules;
     constructor(tsLsHost: tss.LanguageServiceHost, tsLS: tss.LanguageService);
