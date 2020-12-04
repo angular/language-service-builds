@@ -23,5 +23,9 @@ export declare class LanguageService {
     getTypeDefinitionAtPosition(fileName: string, position: number): readonly ts.DefinitionInfo[] | undefined;
     getQuickInfoAtPosition(fileName: string, position: number): ts.QuickInfo | undefined;
     getReferencesAtPosition(fileName: string, position: number): ts.ReferenceEntry[] | undefined;
+    private getCompletionBuilder;
+    getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ts.WithMetadata<ts.CompletionInfo> | undefined;
+    getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined): ts.CompletionEntryDetails | undefined;
+    getCompletionEntrySymbol(fileName: string, position: number, name: string): ts.Symbol | undefined;
     private watchConfigFile;
 }
