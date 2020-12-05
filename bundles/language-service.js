@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+45.sha-d2042a0
+ * @license Angular v11.1.0-next.1+49.sha-7954c8d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18663,7 +18663,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+45.sha-d2042a0');
+    const VERSION$1 = new Version('11.1.0-next.1+49.sha-7954c8d');
 
     /**
      * @license
@@ -46378,7 +46378,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.1+45.sha-d2042a0');
+    const VERSION$2 = new Version$1('11.1.0-next.1+49.sha-7954c8d');
 
     /**
      * @license
@@ -53946,7 +53946,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             this._bootstrapListeners = [];
             this._views = [];
             this._runningTick = false;
-            this._enforceNoNewChanges = false;
             this._stable = true;
             /**
              * Get a list of component types registered to this application.
@@ -53957,7 +53956,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
              * Get a list of components registered to this application.
              */
             this.components = [];
-            this._enforceNoNewChanges = isDevMode();
             this._onMicrotaskEmptySubscription = this._zone.onMicrotaskEmpty.subscribe({
                 next: () => {
                     this._zone.run(() => {
@@ -54079,7 +54077,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 for (let view of this._views) {
                     view.detectChanges();
                 }
-                if (this._enforceNoNewChanges) {
+                // Note that we have still left the `isDevMode()` condition in order to avoid
+                // creating a breaking change for projects that still use the View Engine.
+                if ((typeof ngDevMode === 'undefined' || ngDevMode) && isDevMode()) {
                     for (let view of this._views) {
                         view.checkNoChanges();
                     }
