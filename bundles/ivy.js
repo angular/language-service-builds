@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.3+26.sha-1e3534f
+ * @license Angular v11.0.3+39.sha-6d62971
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19613,7 +19613,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.3+26.sha-1e3534f');
+    const VERSION$1 = new Version('11.0.3+39.sha-6d62971');
 
     /**
      * @license
@@ -20248,7 +20248,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.3+26.sha-1e3534f');
+    const VERSION$2 = new Version('11.0.3+39.sha-6d62971');
 
     /**
      * @license
@@ -22616,7 +22616,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const inputs = ClassPropertyMapping.fromMappedObject(readStringMapType(def.type.typeArguments[3]));
             const outputs = ClassPropertyMapping.fromMappedObject(readStringMapType(def.type.typeArguments[4]));
             return Object.assign(Object.assign({ ref, name: clazz.name.text, isComponent: def.name === 'ɵcmp', selector: readStringType(def.type.typeArguments[1]), exportAs: readStringArrayType(def.type.typeArguments[2]), inputs,
-                outputs, queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveTypeCheckMeta(clazz, inputs, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector) });
+                outputs, queries: readStringArrayType(def.type.typeArguments[5]) }, extractDirectiveTypeCheckMeta(clazz, inputs, this.reflector)), { baseClass: readBaseClass(clazz, this.checker, this.reflector), isPoisoned: false });
         }
         /**
          * Read pipe metadata from a referenced class in a .d.ts file.
@@ -23471,6 +23471,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     return undefined;
                 }
                 else {
+                    // Check if the symbol here is imported.
+                    if (this.dependencyTracker !== null && this.host.getImportOfIdentifier(node) !== null) {
+                        // It was, but no declaration for the node could be found. This means that the dependency
+                        // graph for the current file cannot be properly updated to account for this (broken)
+                        // import. Instead, the originating file is reported as failing dependency analysis,
+                        // ensuring that future compilations will always attempt to re-resolve the previously
+                        // broken identifier.
+                        this.dependencyTracker.recordDependencyAnalysisFailure(context.originatingFile);
+                    }
                     return DynamicValue.fromUnknownIdentifier(node);
                 }
             }
@@ -24073,24 +24082,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         /**
          * Pending traits are freshly created and have never been analyzed.
          */
-        TraitState[TraitState["PENDING"] = 1] = "PENDING";
+        TraitState[TraitState["Pending"] = 0] = "Pending";
         /**
          * Analyzed traits have successfully been analyzed, but are pending resolution.
          */
-        TraitState[TraitState["ANALYZED"] = 2] = "ANALYZED";
+        TraitState[TraitState["Analyzed"] = 1] = "Analyzed";
         /**
          * Resolved traits have successfully been analyzed and resolved and are ready for compilation.
          */
-        TraitState[TraitState["RESOLVED"] = 4] = "RESOLVED";
-        /**
-         * Errored traits have failed either analysis or resolution and as a result contain diagnostics
-         * describing the failure(s).
-         */
-        TraitState[TraitState["ERRORED"] = 8] = "ERRORED";
+        TraitState[TraitState["Resolved"] = 2] = "Resolved";
         /**
          * Skipped traits are no longer considered for compilation.
          */
-        TraitState[TraitState["SKIPPED"] = 16] = "SKIPPED";
+        TraitState[TraitState["Skipped"] = 3] = "Skipped";
     })(TraitState || (TraitState = {}));
     /**
      * The value side of `Trait` exposes a helper to create a `Trait` in a pending state (by delegating
@@ -24105,40 +24109,37 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     class TraitImpl {
         constructor(handler, detected) {
-            this.state = TraitState.PENDING;
+            this.state = TraitState.Pending;
             this.analysis = null;
             this.resolution = null;
-            this.diagnostics = null;
+            this.analysisDiagnostics = null;
+            this.resolveDiagnostics = null;
             this.handler = handler;
             this.detected = detected;
         }
-        toAnalyzed(analysis) {
+        toAnalyzed(analysis, diagnostics) {
             // Only pending traits can be analyzed.
-            this.assertTransitionLegal(TraitState.PENDING, TraitState.ANALYZED);
+            this.assertTransitionLegal(TraitState.Pending, TraitState.Analyzed);
             this.analysis = analysis;
-            this.state = TraitState.ANALYZED;
+            this.analysisDiagnostics = diagnostics;
+            this.state = TraitState.Analyzed;
             return this;
         }
-        toErrored(diagnostics) {
-            // Pending traits (during analysis) or analyzed traits (during resolution) can produce
-            // diagnostics and enter an errored state.
-            this.assertTransitionLegal(TraitState.PENDING | TraitState.ANALYZED, TraitState.RESOLVED);
-            this.diagnostics = diagnostics;
-            this.analysis = null;
-            this.state = TraitState.ERRORED;
-            return this;
-        }
-        toResolved(resolution) {
+        toResolved(resolution, diagnostics) {
             // Only analyzed traits can be resolved.
-            this.assertTransitionLegal(TraitState.ANALYZED, TraitState.RESOLVED);
+            this.assertTransitionLegal(TraitState.Analyzed, TraitState.Resolved);
+            if (this.analysis === null) {
+                throw new Error(`Cannot transition an Analyzed trait with a null analysis to Resolved`);
+            }
             this.resolution = resolution;
-            this.state = TraitState.RESOLVED;
+            this.state = TraitState.Resolved;
+            this.resolveDiagnostics = diagnostics;
             return this;
         }
         toSkipped() {
             // Only pending traits can be skipped.
-            this.assertTransitionLegal(TraitState.PENDING, TraitState.SKIPPED);
-            this.state = TraitState.SKIPPED;
+            this.assertTransitionLegal(TraitState.Pending, TraitState.Skipped);
+            this.state = TraitState.Skipped;
             return this;
         }
         /**
@@ -24150,7 +24151,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * transitions to take place. Hence, this assertion provides a little extra runtime protection.
          */
         assertTransitionLegal(allowedState, transitionTo) {
-            if (!(this.state & allowedState)) {
+            if (!(this.state === allowedState)) {
                 throw new Error(`Assertion failure: cannot transition from ${TraitState[this.state]} to ${TraitState[transitionTo]}.`);
             }
         }
@@ -24278,17 +24279,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             for (const priorTrait of priorRecord.traits) {
                 const handler = this.handlersByName.get(priorTrait.handler.name);
                 let trait = Trait.pending(handler, priorTrait.detected);
-                if (priorTrait.state === TraitState.ANALYZED || priorTrait.state === TraitState.RESOLVED) {
-                    trait = trait.toAnalyzed(priorTrait.analysis);
-                    if (trait.handler.register !== undefined) {
+                if (priorTrait.state === TraitState.Analyzed || priorTrait.state === TraitState.Resolved) {
+                    trait = trait.toAnalyzed(priorTrait.analysis, priorTrait.analysisDiagnostics);
+                    if (trait.analysis !== null && trait.handler.register !== undefined) {
                         trait.handler.register(record.node, trait.analysis);
                     }
                 }
-                else if (priorTrait.state === TraitState.SKIPPED) {
+                else if (priorTrait.state === TraitState.Skipped) {
                     trait = trait.toSkipped();
-                }
-                else if (priorTrait.state === TraitState.ERRORED) {
-                    trait = trait.toErrored(priorTrait.diagnostics);
                 }
                 record.traits.push(trait);
             }
@@ -24394,7 +24392,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     }
                     catch (err) {
                         if (err instanceof FatalDiagnosticError) {
-                            trait.toErrored([err.toDiagnostic()]);
+                            trait.toAnalyzed(null, [err.toDiagnostic()]);
                             return;
                         }
                         else {
@@ -24411,7 +24409,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
         }
         analyzeTrait(clazz, trait, flags) {
-            if (trait.state !== TraitState.PENDING) {
+            var _a, _b;
+            if (trait.state !== TraitState.Pending) {
                 throw new Error(`Attempt to analyze trait of ${clazz.name.text} in state ${TraitState[trait.state]} (expected DETECTED)`);
             }
             // Attempt analysis. This could fail with a `FatalDiagnosticError`; catch it if it does.
@@ -24421,46 +24420,40 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             catch (err) {
                 if (err instanceof FatalDiagnosticError) {
-                    trait = trait.toErrored([err.toDiagnostic()]);
+                    trait.toAnalyzed(null, [err.toDiagnostic()]);
                     return;
                 }
                 else {
                     throw err;
                 }
             }
-            if (result.diagnostics !== undefined) {
-                trait = trait.toErrored(result.diagnostics);
+            if (result.analysis !== undefined && trait.handler.register !== undefined) {
+                trait.handler.register(clazz, result.analysis);
             }
-            else if (result.analysis !== undefined) {
-                // Analysis was successful. Trigger registration.
-                if (trait.handler.register !== undefined) {
-                    trait.handler.register(clazz, result.analysis);
-                }
-                // Successfully analyzed and registered.
-                trait = trait.toAnalyzed(result.analysis);
-            }
-            else {
-                trait = trait.toSkipped();
-            }
+            trait = trait.toAnalyzed((_a = result.analysis) !== null && _a !== void 0 ? _a : null, (_b = result.diagnostics) !== null && _b !== void 0 ? _b : null);
         }
         resolve() {
+            var _a, _b;
             const classes = Array.from(this.classes.keys());
             for (const clazz of classes) {
                 const record = this.classes.get(clazz);
                 for (let trait of record.traits) {
                     const handler = trait.handler;
                     switch (trait.state) {
-                        case TraitState.SKIPPED:
-                        case TraitState.ERRORED:
+                        case TraitState.Skipped:
                             continue;
-                        case TraitState.PENDING:
+                        case TraitState.Pending:
                             throw new Error(`Resolving a trait that hasn't been analyzed: ${clazz.name.text} / ${Object.getPrototypeOf(trait.handler).constructor.name}`);
-                        case TraitState.RESOLVED:
+                        case TraitState.Resolved:
                             throw new Error(`Resolving an already resolved trait`);
+                    }
+                    if (trait.analysis === null) {
+                        // No analysis results, cannot further process this trait.
+                        continue;
                     }
                     if (handler.resolve === undefined) {
                         // No resolution of this trait needed - it's considered successful by default.
-                        trait = trait.toResolved(null);
+                        trait = trait.toResolved(null, null);
                         continue;
                     }
                     let result;
@@ -24469,24 +24462,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     }
                     catch (err) {
                         if (err instanceof FatalDiagnosticError) {
-                            trait = trait.toErrored([err.toDiagnostic()]);
+                            trait = trait.toResolved(null, [err.toDiagnostic()]);
                             continue;
                         }
                         else {
                             throw err;
                         }
                     }
-                    if (result.diagnostics !== undefined && result.diagnostics.length > 0) {
-                        trait = trait.toErrored(result.diagnostics);
-                    }
-                    else {
-                        if (result.data !== undefined) {
-                            trait = trait.toResolved(result.data);
-                        }
-                        else {
-                            trait = trait.toResolved(null);
-                        }
-                    }
+                    trait = trait.toResolved((_a = result.data) !== null && _a !== void 0 ? _a : null, (_b = result.diagnostics) !== null && _b !== void 0 ? _b : null);
                     if (result.reexports !== undefined) {
                         const fileName = clazz.getSourceFile().fileName;
                         if (!this.reexportMap.has(fileName)) {
@@ -24511,13 +24494,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             for (const clazz of this.fileToClasses.get(sf)) {
                 const record = this.classes.get(clazz);
                 for (const trait of record.traits) {
-                    if (trait.state !== TraitState.RESOLVED) {
+                    if (trait.state !== TraitState.Resolved) {
                         continue;
                     }
                     else if (trait.handler.typeCheck === undefined) {
                         continue;
                     }
-                    trait.handler.typeCheck(ctx, clazz, trait.analysis, trait.resolution);
+                    if (trait.resolution !== null) {
+                        trait.handler.typeCheck(ctx, clazz, trait.analysis, trait.resolution);
+                    }
                 }
             }
         }
@@ -24525,7 +24510,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             for (const clazz of this.classes.keys()) {
                 const record = this.classes.get(clazz);
                 for (const trait of record.traits) {
-                    if (trait.state !== TraitState.RESOLVED) {
+                    if (trait.state !== TraitState.Resolved) {
                         // Skip traits that haven't been resolved successfully.
                         continue;
                     }
@@ -24533,7 +24518,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                         // Skip traits that don't affect indexing.
                         continue;
                     }
-                    trait.handler.index(ctx, clazz, trait.analysis, trait.resolution);
+                    if (trait.resolution !== null) {
+                        trait.handler.index(ctx, clazz, trait.analysis, trait.resolution);
+                    }
                 }
             }
         }
@@ -24546,10 +24533,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const record = this.classes.get(original);
             let res = [];
             for (const trait of record.traits) {
-                if (trait.state !== TraitState.RESOLVED) {
+                if (trait.state !== TraitState.Resolved || trait.analysisDiagnostics !== null ||
+                    trait.resolveDiagnostics !== null) {
+                    // Cannot compile a trait that is not resolved, or had any errors in its declaration.
                     continue;
                 }
                 const compileSpan = this.perf.start('compileClass', original);
+                // `trait.resolution` is non-null asserted here because TypeScript does not recognize that
+                // `Readonly<unknown>` is nullable (as `unknown` itself is nullable) due to the way that
+                // `Readonly` works.
                 let compileRes;
                 if (this.compilationMode === CompilationMode.PARTIAL &&
                     trait.handler.compilePartial !== undefined) {
@@ -24587,7 +24579,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const record = this.classes.get(original);
             const decorators = [];
             for (const trait of record.traits) {
-                if (trait.state !== TraitState.RESOLVED) {
+                if (trait.state !== TraitState.Resolved) {
                     continue;
                 }
                 if (trait.detected.trigger !== null && ts.isDecorator(trait.detected.trigger)) {
@@ -24604,8 +24596,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     diagnostics.push(...record.metaDiagnostics);
                 }
                 for (const trait of record.traits) {
-                    if (trait.state === TraitState.ERRORED) {
-                        diagnostics.push(...trait.diagnostics);
+                    if ((trait.state === TraitState.Analyzed || trait.state === TraitState.Resolved) &&
+                        trait.analysisDiagnostics !== null) {
+                        diagnostics.push(...trait.analysisDiagnostics);
+                    }
+                    if (trait.state === TraitState.Resolved && trait.resolveDiagnostics !== null) {
+                        diagnostics.push(...trait.resolveDiagnostics);
                     }
                 }
             }
@@ -27125,7 +27121,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
                     typeCheckMeta: extractDirectiveTypeCheckMeta(node, directiveResult.inputs, this.reflector),
-                    providersRequiringFactory
+                    providersRequiringFactory,
+                    isPoisoned: false,
                 }
             };
         }
@@ -27133,7 +27130,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this directive's information with the `MetadataRegistry`. This ensures that
             // the information about the directive is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta), { isPoisoned: analysis.isPoisoned }));
             this.injectableRegistry.registerInjectable(node);
         }
         resolve(node, analysis) {
@@ -27633,10 +27630,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             const pipes = new Map();
             const scope = this.scopeReader.getScopeForComponent(node);
             if (scope === null) {
-                return { matcher, pipes, schemas: [] };
-            }
-            else if (scope === 'error') {
-                return scope;
+                return {
+                    matcher,
+                    pipes,
+                    schemas: [],
+                    isPoisoned: false,
+                };
             }
             if (this.scopeCache.has(scope.ngModule)) {
                 return this.scopeCache.get(scope.ngModule);
@@ -27653,7 +27652,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 pipes.set(name, ref);
             }
-            const typeCheckScope = { matcher, pipes, schemas: scope.schemas };
+            const typeCheckScope = {
+                matcher,
+                pipes,
+                schemas: scope.schemas,
+                isPoisoned: scope.compilation.isPoisoned || scope.exported.isPoisoned,
+            };
             this.scopeCache.set(scope.ngModule, typeCheckScope);
             return typeCheckScope;
         }
@@ -27681,7 +27685,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `DecoratorHandler` which handles the `@Component` annotation.
      */
     class ComponentDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
+        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -27695,6 +27699,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.defaultPreserveWhitespaces = defaultPreserveWhitespaces;
             this.i18nUseExternalIds = i18nUseExternalIds;
             this.enableI18nLegacyMessageIdFormat = enableI18nLegacyMessageIdFormat;
+            this.usePoisonedData = usePoisonedData;
             this.i18nNormalizeLineEndingsInICUs = i18nNormalizeLineEndingsInICUs;
             this.moduleResolver = moduleResolver;
             this.cycleAnalyzer = cycleAnalyzer;
@@ -27923,6 +27928,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     template,
                     providersRequiringFactory,
                     viewProvidersRequiringFactory,
+                    isPoisoned: diagnostics !== undefined && diagnostics.length > 0,
                 },
                 diagnostics,
             };
@@ -27935,21 +27941,25 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Register this component's information with the `MetadataRegistry`. This ensures that
             // the information about the component is available during the compile() phase.
             const ref = new Reference$1(node);
-            this.metaRegistry.registerDirectiveMetadata(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta));
+            this.metaRegistry.registerDirectiveMetadata(Object.assign(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: true, baseClass: analysis.baseClass }, analysis.typeCheckMeta), { isPoisoned: analysis.isPoisoned }));
             if (!analysis.template.isInline) {
                 this.templateMapping.register(resolve(analysis.template.templateUrl), node);
             }
             this.injectableRegistry.registerInjectable(node);
         }
         index(context, node, analysis) {
+            if (analysis.isPoisoned && !this.usePoisonedData) {
+                return null;
+            }
             const scope = this.scopeReader.getScopeForComponent(node);
             const selector = analysis.meta.selector;
             const matcher = new SelectorMatcher();
-            if (scope === 'error') {
-                // Don't bother indexing components which had erroneous scopes.
-                return null;
-            }
             if (scope !== null) {
+                if ((scope.compilation.isPoisoned || scope.exported.isPoisoned) && !this.usePoisonedData) {
+                    // Don't bother indexing components which had erroneous scopes, unless specifically
+                    // requested.
+                    return null;
+                }
                 for (const directive of scope.compilation.directives) {
                     if (directive.selector !== null) {
                         matcher.addSelectables(CssSelector.parse(directive.selector), directive);
@@ -27972,15 +27982,21 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (!ts.isClassDeclaration(node)) {
                 return;
             }
+            if (meta.isPoisoned && !this.usePoisonedData) {
+                return;
+            }
             const scope = this.typeCheckScopes.getTypeCheckScope(node);
-            if (scope === 'error') {
-                // Don't type-check components that had errors in their scopes.
+            if (scope.isPoisoned && !this.usePoisonedData) {
+                // Don't type-check components that had errors in their scopes, unless requested.
                 return;
             }
             const binder = new R3TargetBinder(scope.matcher);
             ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file);
         }
         resolve(node, analysis) {
+            if (analysis.isPoisoned && !this.usePoisonedData) {
+                return {};
+            }
             const context = node.getSourceFile();
             // Check whether this component was registered with an NgModule. If so, it should be compiled
             // under that module's compilation scope.
@@ -27991,7 +28007,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 pipes: EMPTY_MAP,
                 wrapDirectivesAndPipesInClosure: false,
             };
-            if (scope !== null && scope !== 'error') {
+            if (scope !== null && (!scope.compilation.isPoisoned || this.usePoisonedData)) {
                 const matcher = new SelectorMatcher();
                 for (const dir of scope.compilation.directives) {
                     if (dir.selector !== null) {
@@ -28832,7 +28848,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const data = {
                 injectorImports: [],
             };
-            if (scope !== null && scope !== 'error') {
+            if (scope !== null && !scope.compilation.isPoisoned) {
                 // Using the scope information, extend the injector's imports using the modules that are
                 // specified as module exports.
                 const context = getSourceFile(node);
@@ -28851,7 +28867,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (diagnostics.length > 0) {
                 return { diagnostics };
             }
-            if (scope === null || scope === 'error' || scope.reexports === null) {
+            if (scope === null || scope.compilation.isPoisoned || scope.exported.isPoisoned ||
+                scope.reexports === null) {
                 return { data };
             }
             else {
@@ -29513,6 +29530,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 nodeFrom.usesResources.add(dep);
             }
         }
+        recordDependencyAnalysisFailure(file) {
+            this.nodeFor(file).failedAnalysis = true;
+        }
         getResourceDependencies(from) {
             const node = this.nodes.get(from);
             return node ? [...node.usesResources] : [];
@@ -29552,6 +29572,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     this.nodes.set(sf, {
                         dependsOn: new Set(node.dependsOn),
                         usesResources: new Set(node.usesResources),
+                        failedAnalysis: false,
                     });
                 }
             }
@@ -29562,6 +29583,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 this.nodes.set(sf, {
                     dependsOn: new Set(),
                     usesResources: new Set(),
+                    failedAnalysis: false,
                 });
             }
             return this.nodes.get(sf);
@@ -29572,6 +29594,11 @@ Either add the @Injectable() decorator to '${provider.node.name
      * changed files and resources.
      */
     function isLogicallyChanged(sf, node, changedTsPaths, deletedTsPaths, changedResources) {
+        // A file is assumed to have logically changed if its dependencies could not be determined
+        // accurately.
+        if (node.failedAnalysis) {
+            return true;
+        }
         // A file is logically changed if it has physically changed itself (including being deleted).
         if (changedTsPaths.has(sf.fileName) || deletedTsPaths.has(sf.fileName)) {
             return true;
@@ -30987,6 +31014,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     directives,
                     pipes,
                     ngModules: Array.from(ngModules),
+                    isPoisoned: false,
                 },
             };
             this.cache.set(clazz, exportScope);
@@ -31059,9 +31087,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.moduleToRef = new Map();
             /**
              * A cache of calculated `LocalModuleScope`s for each NgModule declared in the current program.
-             *
-             * A value of `undefined` indicates the scope was invalid and produced errors (therefore,
-             * diagnostics should exist in the `scopeErrors` map).
+          
              */
             this.cache = new Map();
             /**
@@ -31078,13 +31104,9 @@ Either add the @Injectable() decorator to '${provider.node.name
              */
             this.scopeErrors = new Map();
             /**
-             * Tracks which NgModules are unreliable due to errors within their declarations.
-             *
-             * This provides a unified view of which modules have errors, across all of the different
-             * diagnostic categories that can be produced. Theoretically this can be inferred from the other
-             * properties of this class, but is tracked explicitly to simplify the logic.
+             * Tracks which NgModules have directives/pipes that are declared in more than one module.
              */
-            this.taintedModules = new Set();
+            this.modulesWithStructuralErrors = new Set();
         }
         /**
          * Add an NgModule's data to the registry.
@@ -31129,15 +31151,9 @@ Either add the @Injectable() decorator to '${provider.node.name
          * defined, or the string `'error'` if the scope contained errors.
          */
         getScopeOfModule(clazz) {
-            const scope = this.moduleToRef.has(clazz) ?
+            return this.moduleToRef.has(clazz) ?
                 this.getScopeOfModuleReference(this.moduleToRef.get(clazz)) :
                 null;
-            // If the NgModule class is marked as tainted, consider it an error.
-            if (this.taintedModules.has(clazz)) {
-                return 'error';
-            }
-            // Translate undefined -> 'error'.
-            return scope !== undefined ? scope : 'error';
         }
         /**
          * Retrieves any `ts.Diagnostic`s produced during the calculation of the `LocalModuleScope` for
@@ -31161,7 +31177,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const scopes = [];
             this.declarationToModule.forEach((declData, declaration) => {
                 const scope = this.getScopeOfModule(declData.ngModule);
-                if (scope !== null && scope !== 'error') {
+                if (scope !== null) {
                     scopes.push(Object.assign({ declaration, ngModule: declData.ngModule }, scope.compilation));
                 }
             });
@@ -31185,9 +31201,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // duplicate instead.
                 const duplicateDeclMap = new Map();
                 const firstDeclData = this.declarationToModule.get(decl.node);
-                // Mark both modules as tainted, since their declarations are missing a component.
-                this.taintedModules.add(firstDeclData.ngModule);
-                this.taintedModules.add(ngModule);
+                // Mark both modules as having duplicate declarations.
+                this.modulesWithStructuralErrors.add(firstDeclData.ngModule);
+                this.modulesWithStructuralErrors.add(ngModule);
                 // Being detected as a duplicate means there are two NgModules (for now) which declare this
                 // directive/pipe. Add both of them to the duplicate tracking map.
                 duplicateDeclMap.set(firstDeclData.ngModule, firstDeclData);
@@ -31203,11 +31219,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         /**
-         * Implementation of `getScopeOfModule` which accepts a reference to a class and differentiates
-         * between:
-         *
-         * * no scope being available (returns `null`)
-         * * a scope being produced with errors (returns `undefined`).
+         * Implementation of `getScopeOfModule` which accepts a reference to a class.
          */
         getScopeOfModuleReference(ref) {
             if (this.cache.has(ref.node)) {
@@ -31251,20 +31263,30 @@ Either add the @Injectable() decorator to '${provider.node.name
             //       add it to the export scope.
             //    c) If it's neither an NgModule nor a directive/pipe in the compilation scope, then this
             //       is an error.
+            //
+            let isPoisoned = false;
+            if (this.modulesWithStructuralErrors.has(ngModule.ref.node)) {
+                // If the module contains declarations that are duplicates, then it's considered poisoned.
+                isPoisoned = true;
+            }
             // 1) process imports.
             for (const decl of ngModule.imports) {
                 const importScope = this.getExportedScope(decl, diagnostics, ref.node, 'import');
                 if (importScope === null) {
                     // An import wasn't an NgModule, so record an error.
                     diagnostics.push(invalidRef(ref.node, decl, 'import'));
+                    isPoisoned = true;
                     continue;
                 }
-                else if (importScope === undefined) {
+                else if (importScope === 'invalid' || importScope.exported.isPoisoned) {
                     // An import was an NgModule but contained errors of its own. Record this as an error too,
                     // because this scope is always going to be incorrect if one of its imports could not be
                     // read.
                     diagnostics.push(invalidTransitiveNgModuleRef(ref.node, decl, 'import'));
-                    continue;
+                    isPoisoned = true;
+                    if (importScope === 'invalid') {
+                        continue;
+                    }
                 }
                 for (const directive of importScope.exported.directives) {
                     compilationDirectives.set(directive.ref.node, directive);
@@ -31282,17 +31304,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const pipe = this.localReader.getPipeMetadata(decl);
                 if (directive !== null) {
                     compilationDirectives.set(decl.node, Object.assign(Object.assign({}, directive), { ref: decl }));
+                    if (directive.isPoisoned) {
+                        isPoisoned = true;
+                    }
                 }
                 else if (pipe !== null) {
                     compilationPipes.set(decl.node, Object.assign(Object.assign({}, pipe), { ref: decl }));
                 }
                 else {
-                    this.taintedModules.add(ngModule.ref.node);
                     const errorNode = decl.getOriginForDiagnostics(ngModule.rawDeclarations);
                     diagnostics.push(makeDiagnostic(ErrorCode.NGMODULE_INVALID_DECLARATION, errorNode, `The class '${decl.node.name.text}' is listed in the declarations ` +
                         `of the NgModule '${ngModule.ref.node.name
                         .text}', but is not a directive, a component, or a pipe. ` +
                         `Either remove it from the NgModule's declarations, or add an appropriate Angular decorator.`, [makeRelatedInformation(decl.node.name, `'${decl.node.name.text}' is declared here.`)]));
+                    isPoisoned = true;
                     continue;
                 }
                 declared.add(decl.node);
@@ -31304,23 +31329,26 @@ Either add the @Injectable() decorator to '${provider.node.name
             // imported types.
             for (const decl of ngModule.exports) {
                 // Attempt to resolve decl as an NgModule.
-                const importScope = this.getExportedScope(decl, diagnostics, ref.node, 'export');
-                if (importScope === undefined) {
+                const exportScope = this.getExportedScope(decl, diagnostics, ref.node, 'export');
+                if (exportScope === 'invalid' || (exportScope !== null && exportScope.exported.isPoisoned)) {
                     // An export was an NgModule but contained errors of its own. Record this as an error too,
                     // because this scope is always going to be incorrect if one of its exports could not be
                     // read.
                     diagnostics.push(invalidTransitiveNgModuleRef(ref.node, decl, 'export'));
-                    continue;
+                    isPoisoned = true;
+                    if (exportScope === 'invalid') {
+                        continue;
+                    }
                 }
-                else if (importScope !== null) {
+                else if (exportScope !== null) {
                     // decl is an NgModule.
-                    for (const directive of importScope.exported.directives) {
+                    for (const directive of exportScope.exported.directives) {
                         exportDirectives.set(directive.ref.node, directive);
                     }
-                    for (const pipe of importScope.exported.pipes) {
+                    for (const pipe of exportScope.exported.pipes) {
                         exportPipes.set(pipe.ref.node, pipe);
                     }
-                    for (const exportedModule of importScope.exported.ngModules) {
+                    for (const exportedModule of exportScope.exported.ngModules) {
                         exportedModules.add(exportedModule);
                     }
                 }
@@ -31343,6 +31371,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     else {
                         diagnostics.push(invalidRef(ref.node, decl, 'export'));
                     }
+                    isPoisoned = true;
                     continue;
                 }
             }
@@ -31350,18 +31379,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 directives: Array.from(exportDirectives.values()),
                 pipes: Array.from(exportPipes.values()),
                 ngModules: Array.from(exportedModules),
+                isPoisoned,
             };
             const reexports = this.getReexports(ngModule, ref, declared, exported, diagnostics);
-            // Check if this scope had any errors during production.
-            if (diagnostics.length > 0) {
-                // Cache undefined, to mark the fact that the scope is invalid.
-                this.cache.set(ref.node, undefined);
-                // Save the errors for retrieval.
-                this.scopeErrors.set(ref.node, diagnostics);
-                // Mark this module as being tainted.
-                this.taintedModules.add(ref.node);
-                return undefined;
-            }
             // Finally, produce the `LocalModuleScope` with both the compilation and export scopes.
             const scope = {
                 ngModule: ngModule.ref.node,
@@ -31369,11 +31389,19 @@ Either add the @Injectable() decorator to '${provider.node.name
                     directives: Array.from(compilationDirectives.values()),
                     pipes: Array.from(compilationPipes.values()),
                     ngModules: Array.from(compilationModules),
+                    isPoisoned,
                 },
                 exported,
                 reexports,
                 schemas: ngModule.schemas,
             };
+            // Check if this scope had any errors during production.
+            if (diagnostics.length > 0) {
+                // Save the errors for retrieval.
+                this.scopeErrors.set(ref.node, diagnostics);
+                // Mark this module as being tainted.
+                this.modulesWithStructuralErrors.add(ref.node);
+            }
             this.cache.set(ref.node, scope);
             return scope;
         }
@@ -31396,8 +31424,8 @@ Either add the @Injectable() decorator to '${provider.node.name
          * The NgModule in question may be declared locally in the current ts.Program, or it may be
          * declared in a .d.ts file.
          *
-         * @returns `null` if no scope could be found, or `undefined` if an invalid scope
-         * was found.
+         * @returns `null` if no scope could be found, or `'invalid'` if the `Reference` is not a valid
+         *     NgModule.
          *
          * May also contribute diagnostics of its own by adding to the given `diagnostics`
          * array parameter.
@@ -31411,7 +31439,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     const code = type === 'import' ? ErrorCode.NGMODULE_INVALID_IMPORT :
                         ErrorCode.NGMODULE_INVALID_EXPORT;
                     diagnostics.push(makeDiagnostic(code, identifierOfNode(ref.node) || ref.node, `Appears in the NgModule.${type}s of ${nodeNameForError(ownerForErrors)}, but could not be resolved to an NgModule`));
-                    return undefined;
+                    return 'invalid';
                 }
                 return this.dependencyScopeReader.resolve(ref);
             }
@@ -36026,7 +36054,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         getDirectiveModule(declaration) {
             const scope = this.componentScopeReader.getScopeForComponent(declaration);
-            if (scope === null || scope === 'error') {
+            if (scope === null) {
                 return null;
             }
             return scope.ngModule;
@@ -36618,14 +36646,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (!isNamedClassDeclaration(component)) {
                 throw new Error(`AssertionError: components must have names`);
             }
+            const scope = this.componentScopeReader.getScopeForComponent(component);
+            if (scope === null) {
+                return null;
+            }
             const data = {
                 directives: [],
                 pipes: [],
+                isPoisoned: scope.compilation.isPoisoned,
             };
-            const scope = this.componentScopeReader.getScopeForComponent(component);
-            if (scope === null || scope === 'error') {
-                return null;
-            }
             const typeChecker = this.typeCheckingStrategy.getProgram().getTypeChecker();
             for (const dir of scope.exported.directives) {
                 if (dir.selector === null) {
@@ -36805,13 +36834,14 @@ Either add the @Injectable() decorator to '${provider.node.name
      * See the README.md for more information.
      */
     class NgCompiler {
-        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, enableTemplateTypeChecker, oldProgram = null, perfRecorder = NOOP_PERF_RECORDER) {
+        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, enableTemplateTypeChecker, usePoisonedData, oldProgram = null, perfRecorder = NOOP_PERF_RECORDER) {
             this.adapter = adapter;
             this.options = options;
             this.tsProgram = tsProgram;
             this.typeCheckingProgramStrategy = typeCheckingProgramStrategy;
             this.incrementalStrategy = incrementalStrategy;
             this.enableTemplateTypeChecker = enableTemplateTypeChecker;
+            this.usePoisonedData = usePoisonedData;
             this.perfRecorder = perfRecorder;
             /**
              * Lazily evaluated state of the compilation.
@@ -37384,7 +37414,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const templateMapping = new TemplateRegistry();
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, templateMapping, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
@@ -37649,6 +37679,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 this.compiler = new NgCompiler(this.adapter, // like compiler host
                 options, // angular compiler options
                 program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
+                true, // usePoisonedData
                 this.lastKnownProgram, undefined);
                 this.lastKnownProgram = program;
             }
