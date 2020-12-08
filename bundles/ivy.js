@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+72.sha-86fdc77
+ * @license Angular v11.1.0-next.1+75.sha-fbfc7df
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19908,7 +19908,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+72.sha-86fdc77');
+    const VERSION$1 = new Version('11.1.0-next.1+75.sha-fbfc7df');
 
     /**
      * @license
@@ -20590,7 +20590,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.1+72.sha-86fdc77'));
+        definitionMap.set('version', literal('11.1.0-next.1+75.sha-fbfc7df'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20771,7 +20771,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.1+72.sha-86fdc77');
+    const VERSION$2 = new Version('11.1.0-next.1+75.sha-fbfc7df');
 
     /**
      * @license
@@ -34841,6 +34841,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             const genericInputs = new Map();
             const inputs = getBoundInputs(this.dir, this.node, this.tcb);
             for (const input of inputs) {
+                // Skip text attributes if configured to do so.
+                if (!this.tcb.env.config.checkTypeOfAttributes &&
+                    input.attribute instanceof TextAttribute) {
+                    continue;
+                }
                 for (const fieldName of input.fieldNames) {
                     // Skip the field if an attribute has already been bound to it; we can't have a duplicate
                     // key in the type constructor call.
@@ -34967,6 +34972,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                     assignment = ts.createBinary(target, ts.SyntaxKind.EqualsToken, assignment);
                 }
                 addParseSpanInfo(assignment, input.attribute.sourceSpan);
+                // Ignore diagnostics for text attributes if configured to do so.
+                if (!this.tcb.env.config.checkTypeOfAttributes &&
+                    input.attribute instanceof TextAttribute) {
+                    markIgnoreDiagnostics(assignment);
+                }
                 this.scope.addStatement(ts.createExpressionStatement(assignment));
             }
             return null;
@@ -35963,10 +35973,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         const processAttribute = (attr) => {
             // Skip non-property bindings.
             if (attr instanceof BoundAttribute && attr.type !== 0 /* Property */) {
-                return;
-            }
-            // Skip text attributes if configured to do so.
-            if (!tcb.env.config.checkTypeOfAttributes && attr instanceof TextAttribute) {
                 return;
             }
             // Skip the attribute if the directive does not have an input for it.
