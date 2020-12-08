@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.3+41.sha-6bb6dfd
+ * @license Angular v11.0.3+42.sha-5631daa
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4190,17 +4190,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         return base.isEquivalent(other);
     }
-    function areAllEquivalent(base, other) {
+    function areAllEquivalentPredicate(base, other, equivalentPredicate) {
         const len = base.length;
         if (len !== other.length) {
             return false;
         }
         for (let i = 0; i < len; i++) {
-            if (!base[i].isEquivalent(other[i])) {
+            if (!equivalentPredicate(base[i], other[i])) {
                 return false;
             }
         }
         return true;
+    }
+    function areAllEquivalent(base, other) {
+        return areAllEquivalentPredicate(base, other, (baseElement, otherElement) => baseElement.isEquivalent(otherElement));
     }
     class Expression {
         constructor(type, sourceSpan) {
@@ -4567,7 +4570,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     const escapeSlashes = (str) => str.replace(/\\/g, '\\\\');
     const escapeStartingColon = (str) => str.replace(/^:/, '\\:');
     const escapeColons = (str) => str.replace(/:/g, '\\:');
-    const escapeForMessagePart = (str) => str.replace(/`/g, '\\`').replace(/\${/g, '$\\{');
+    const escapeForTemplateLiteral = (str) => str.replace(/`/g, '\\`').replace(/\${/g, '$\\{');
     /**
      * Creates a `{cooked, raw}` object from the `metaBlock` and `messagePart`.
      *
@@ -4586,14 +4589,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (metaBlock === '') {
             return {
                 cooked: messagePart,
-                raw: escapeForMessagePart(escapeStartingColon(escapeSlashes(messagePart))),
+                raw: escapeForTemplateLiteral(escapeStartingColon(escapeSlashes(messagePart))),
                 range,
             };
         }
         else {
             return {
                 cooked: `:${metaBlock}:${messagePart}`,
-                raw: escapeForMessagePart(`:${escapeColons(escapeSlashes(metaBlock))}:${escapeSlashes(messagePart)}`),
+                raw: escapeForTemplateLiteral(`:${escapeColons(escapeSlashes(metaBlock))}:${escapeSlashes(messagePart)}`),
                 range,
             };
         }
@@ -5405,6 +5408,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.visitWritePropExpr = invalid;
             this.visitInvokeMethodExpr = invalid;
             this.visitInvokeFunctionExpr = invalid;
+            this.visitTaggedTemplateExpr = invalid;
             this.visitInstantiateExpr = invalid;
             this.visitConditionalExpr = invalid;
             this.visitNotExpr = invalid;
@@ -7855,6 +7859,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             ctx.print(expr, `)`);
             return null;
         }
+        visitTaggedTemplateExpr(expr, ctx) {
+            expr.tag.visitExpression(this, ctx);
+            ctx.print(expr, '`' + expr.template.elements[0].rawText);
+            for (let i = 1; i < expr.template.elements.length; i++) {
+                ctx.print(expr, '${');
+                expr.template.expressions[i - 1].visitExpression(this, ctx);
+                ctx.print(expr, `}${expr.template.elements[i].rawText}`);
+            }
+            ctx.print(expr, '`');
+            return null;
+        }
         visitWrappedNodeExpr(ast, ctx) {
             throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
         }
@@ -8118,6 +8133,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * In TypeScript, tagged template functions expect a "template object", which is an array of
+     * "cooked" strings plus a `raw` property that contains an array of "raw" strings. This is
+     * typically constructed with a function called `__makeTemplateObject(cooked, raw)`, but it may not
+     * be available in all environments.
+     *
+     * This is a JavaScript polyfill that uses __makeTemplateObject when it's available, but otherwise
+     * creates an inline helper with the same functionality.
+     *
+     * In the inline function, if `Object.defineProperty` is available we use that to attach the `raw`
+     * array.
+     */
+    const makeTemplateObjectPolyfill = '(this&&this.__makeTemplateObject||function(e,t){return Object.defineProperty?Object.defineProperty(e,"raw",{value:t}):e.raw=t,e})';
     class AbstractJsEmitterVisitor extends AbstractEmitterVisitor {
         constructor() {
             super(false);
@@ -8217,6 +8245,27 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             return null;
         }
+        visitTaggedTemplateExpr(ast, ctx) {
+            // The following convoluted piece of code is effectively the downlevelled equivalent of
+            // ```
+            // tag`...`
+            // ```
+            // which is effectively like:
+            // ```
+            // tag(__makeTemplateObject(cooked, raw), expression1, expression2, ...);
+            // ```
+            const elements = ast.template.elements;
+            ast.tag.visitExpression(this, ctx);
+            ctx.print(ast, `(${makeTemplateObjectPolyfill}(`);
+            ctx.print(ast, `[${elements.map(part => escapeIdentifier(part.text, false)).join(', ')}], `);
+            ctx.print(ast, `[${elements.map(part => escapeIdentifier(part.rawText, false)).join(', ')}])`);
+            ast.template.expressions.forEach(expression => {
+                ctx.print(ast, ', ');
+                expression.visitExpression(this, ctx);
+            });
+            ctx.print(ast, ')');
+            return null;
+        }
         visitFunctionExpr(ast, ctx) {
             ctx.print(ast, `function${ast.name ? ' ' + ast.name : ''}(`);
             this._visitParams(ast.params, ctx);
@@ -8261,17 +8310,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // ```
             // $localize(__makeTemplateObject(cooked, raw), expression1, expression2, ...);
             // ```
-            //
-            // The `$localize` function expects a "template object", which is an array of "cooked" strings
-            // plus a `raw` property that contains an array of "raw" strings.
-            //
-            // In some environments a helper function called `__makeTemplateObject(cooked, raw)` might be
-            // available, in which case we use that. Otherwise we must create our own helper function
-            // inline.
-            //
-            // In the inline function, if `Object.defineProperty` is available we use that to attach the
-            // `raw` array.
-            ctx.print(ast, '$localize((this&&this.__makeTemplateObject||function(e,t){return Object.defineProperty?Object.defineProperty(e,"raw",{value:t}):e.raw=t,e})(');
+            ctx.print(ast, `$localize(${makeTemplateObjectPolyfill}(`);
             const parts = [ast.serializeI18nHead()];
             for (let i = 1; i < ast.messageParts.length; i++) {
                 parts.push(ast.serializeI18nTemplatePart(i));
@@ -19613,7 +19652,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.3+41.sha-6bb6dfd');
+    const VERSION$1 = new Version('11.0.3+42.sha-5631daa');
 
     /**
      * @license
@@ -20248,7 +20287,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.3+41.sha-6bb6dfd');
+    const VERSION$2 = new Version('11.0.3+42.sha-5631daa');
 
     /**
      * @license
@@ -24756,6 +24795,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitInvokeFunctionExpr(ast, context) {
             throw new Error('Method not implemented.');
         }
+        visitTaggedTemplateExpr(ast, context) {
+            throw new Error('Method not implemented.');
+        }
         visitInstantiateExpr(ast, context) {
             throw new Error('Method not implemented.');
         }
@@ -25107,7 +25149,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         constructor(factory, imports, options) {
             this.factory = factory;
             this.imports = imports;
-            this.downlevelLocalizedStrings = options.downlevelLocalizedStrings === true;
+            this.downlevelTaggedTemplates = options.downlevelTaggedTemplates === true;
             this.downlevelVariableDeclarations = options.downlevelVariableDeclarations === true;
             this.recordWrappedNodeExpr = options.recordWrappedNodeExpr || (() => { });
         }
@@ -25169,6 +25211,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitInvokeFunctionExpr(ast, context) {
             return this.setSourceMapRange(this.factory.createCallExpression(ast.fn.visitExpression(this, context), ast.args.map(arg => arg.visitExpression(this, context)), ast.pure), ast.sourceSpan);
         }
+        visitTaggedTemplateExpr(ast, context) {
+            return this.setSourceMapRange(this.createTaggedTemplateExpression(ast.tag.visitExpression(this, context), {
+                elements: ast.template.elements.map(e => {
+                    var _a;
+                    return createTemplateElement({
+                        cooked: e.text,
+                        raw: e.rawText,
+                        range: (_a = e.sourceSpan) !== null && _a !== void 0 ? _a : ast.sourceSpan,
+                    });
+                }),
+                expressions: ast.template.expressions.map(e => e.visitExpression(this, context))
+            }), ast.sourceSpan);
+        }
         visitInstantiateExpr(ast, context) {
             return this.factory.createNewExpression(ast.classExpr.visitExpression(this, context), ast.args.map(arg => arg.visitExpression(this, context)));
         }
@@ -25197,11 +25252,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 elements.push(createTemplateElement(ast.serializeI18nTemplatePart(i + 1)));
             }
             const localizeTag = this.factory.createIdentifier('$localize');
-            // Now choose which implementation to use to actually create the necessary AST nodes.
-            const localizeCall = this.downlevelLocalizedStrings ?
-                this.createES5TaggedTemplateFunctionCall(localizeTag, { elements, expressions }) :
-                this.factory.createTaggedTemplate(localizeTag, { elements, expressions });
-            return this.setSourceMapRange(localizeCall, ast.sourceSpan);
+            return this.setSourceMapRange(this.createTaggedTemplateExpression(localizeTag, { elements, expressions }), ast.sourceSpan);
+        }
+        createTaggedTemplateExpression(tag, template) {
+            return this.downlevelTaggedTemplates ? this.createES5TaggedTemplateFunctionCall(tag, template) :
+                this.factory.createTaggedTemplate(tag, template);
         }
         /**
          * Translate the tagged template literal into a call that is compatible with ES5, using the
@@ -25996,7 +26051,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const downlevelTranslatedCode = getLocalizeCompileTarget(context) < ts.ScriptTarget.ES2015;
         const constants = constantPool.statements.map(stmt => translateStatement(stmt, importManager, {
             recordWrappedNodeExpr,
-            downlevelLocalizedStrings: downlevelTranslatedCode,
+            downlevelTaggedTemplates: downlevelTranslatedCode,
             downlevelVariableDeclarations: downlevelTranslatedCode,
         }));
         // Preserve @fileoverview comments required by Closure, since the location might change as a

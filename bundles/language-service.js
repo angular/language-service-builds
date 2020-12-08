@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.3+41.sha-6bb6dfd
+ * @license Angular v11.0.3+42.sha-5631daa
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1000,17 +1000,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return base.isEquivalent(other);
     }
-    function areAllEquivalent(base, other) {
+    function areAllEquivalentPredicate(base, other, equivalentPredicate) {
         const len = base.length;
         if (len !== other.length) {
             return false;
         }
         for (let i = 0; i < len; i++) {
-            if (!base[i].isEquivalent(other[i])) {
+            if (!equivalentPredicate(base[i], other[i])) {
                 return false;
             }
         }
         return true;
+    }
+    function areAllEquivalent(base, other) {
+        return areAllEquivalentPredicate(base, other, (baseElement, otherElement) => baseElement.isEquivalent(otherElement));
     }
     class Expression {
         constructor(type, sourceSpan) {
@@ -1377,7 +1380,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const escapeSlashes = (str) => str.replace(/\\/g, '\\\\');
     const escapeStartingColon = (str) => str.replace(/^:/, '\\:');
     const escapeColons = (str) => str.replace(/:/g, '\\:');
-    const escapeForMessagePart = (str) => str.replace(/`/g, '\\`').replace(/\${/g, '$\\{');
+    const escapeForTemplateLiteral = (str) => str.replace(/`/g, '\\`').replace(/\${/g, '$\\{');
     /**
      * Creates a `{cooked, raw}` object from the `metaBlock` and `messagePart`.
      *
@@ -1396,14 +1399,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (metaBlock === '') {
             return {
                 cooked: messagePart,
-                raw: escapeForMessagePart(escapeStartingColon(escapeSlashes(messagePart))),
+                raw: escapeForTemplateLiteral(escapeStartingColon(escapeSlashes(messagePart))),
                 range,
             };
         }
         else {
             return {
                 cooked: `:${metaBlock}:${messagePart}`,
-                raw: escapeForMessagePart(`:${escapeColons(escapeSlashes(metaBlock))}:${escapeSlashes(messagePart)}`),
+                raw: escapeForTemplateLiteral(`:${escapeColons(escapeSlashes(metaBlock))}:${escapeSlashes(messagePart)}`),
                 range,
             };
         }
@@ -2291,6 +2294,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.visitWritePropExpr = invalid;
             this.visitInvokeMethodExpr = invalid;
             this.visitInvokeFunctionExpr = invalid;
+            this.visitTaggedTemplateExpr = invalid;
             this.visitInstantiateExpr = invalid;
             this.visitConditionalExpr = invalid;
             this.visitNotExpr = invalid;
@@ -5079,6 +5083,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             ctx.print(expr, `)`);
             return null;
         }
+        visitTaggedTemplateExpr(expr, ctx) {
+            expr.tag.visitExpression(this, ctx);
+            ctx.print(expr, '`' + expr.template.elements[0].rawText);
+            for (let i = 1; i < expr.template.elements.length; i++) {
+                ctx.print(expr, '${');
+                expr.template.expressions[i - 1].visitExpression(this, ctx);
+                ctx.print(expr, `}${expr.template.elements[i].rawText}`);
+            }
+            ctx.print(expr, '`');
+            return null;
+        }
         visitWrappedNodeExpr(ast, ctx) {
             throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
         }
@@ -5342,6 +5357,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * In TypeScript, tagged template functions expect a "template object", which is an array of
+     * "cooked" strings plus a `raw` property that contains an array of "raw" strings. This is
+     * typically constructed with a function called `__makeTemplateObject(cooked, raw)`, but it may not
+     * be available in all environments.
+     *
+     * This is a JavaScript polyfill that uses __makeTemplateObject when it's available, but otherwise
+     * creates an inline helper with the same functionality.
+     *
+     * In the inline function, if `Object.defineProperty` is available we use that to attach the `raw`
+     * array.
+     */
+    const makeTemplateObjectPolyfill = '(this&&this.__makeTemplateObject||function(e,t){return Object.defineProperty?Object.defineProperty(e,"raw",{value:t}):e.raw=t,e})';
     class AbstractJsEmitterVisitor extends AbstractEmitterVisitor {
         constructor() {
             super(false);
@@ -5441,6 +5469,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return null;
         }
+        visitTaggedTemplateExpr(ast, ctx) {
+            // The following convoluted piece of code is effectively the downlevelled equivalent of
+            // ```
+            // tag`...`
+            // ```
+            // which is effectively like:
+            // ```
+            // tag(__makeTemplateObject(cooked, raw), expression1, expression2, ...);
+            // ```
+            const elements = ast.template.elements;
+            ast.tag.visitExpression(this, ctx);
+            ctx.print(ast, `(${makeTemplateObjectPolyfill}(`);
+            ctx.print(ast, `[${elements.map(part => escapeIdentifier(part.text, false)).join(', ')}], `);
+            ctx.print(ast, `[${elements.map(part => escapeIdentifier(part.rawText, false)).join(', ')}])`);
+            ast.template.expressions.forEach(expression => {
+                ctx.print(ast, ', ');
+                expression.visitExpression(this, ctx);
+            });
+            ctx.print(ast, ')');
+            return null;
+        }
         visitFunctionExpr(ast, ctx) {
             ctx.print(ast, `function${ast.name ? ' ' + ast.name : ''}(`);
             this._visitParams(ast.params, ctx);
@@ -5485,17 +5534,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // ```
             // $localize(__makeTemplateObject(cooked, raw), expression1, expression2, ...);
             // ```
-            //
-            // The `$localize` function expects a "template object", which is an array of "cooked" strings
-            // plus a `raw` property that contains an array of "raw" strings.
-            //
-            // In some environments a helper function called `__makeTemplateObject(cooked, raw)` might be
-            // available, in which case we use that. Otherwise we must create our own helper function
-            // inline.
-            //
-            // In the inline function, if `Object.defineProperty` is available we use that to attach the
-            // `raw` array.
-            ctx.print(ast, '$localize((this&&this.__makeTemplateObject||function(e,t){return Object.defineProperty?Object.defineProperty(e,"raw",{value:t}):e.raw=t,e})(');
+            ctx.print(ast, `$localize(${makeTemplateObjectPolyfill}(`);
             const parts = [ast.serializeI18nHead()];
             for (let i = 1; i < ast.messageParts.length; i++) {
                 parts.push(ast.serializeI18nTemplatePart(i));
@@ -18410,7 +18449,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.3+41.sha-6bb6dfd');
+    const VERSION$1 = new Version('11.0.3+42.sha-5631daa');
 
     /**
      * @license
@@ -34305,7 +34344,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.3+41.sha-6bb6dfd');
+    const VERSION$2 = new Version$1('11.0.3+42.sha-5631daa');
 
     /**
      * @license
