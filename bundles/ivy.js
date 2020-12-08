@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.1+79.sha-5848439
+ * @license Angular v11.1.0-next.1+83.sha-e692884
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6994,13 +6994,18 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return query.predicate;
         }
     }
+    /**
+     * A representation for an object literal used during codegen of definition objects. The generic
+     * type `T` allows to reference a documented type of the generated structure, such that the
+     * property names that are set can be resolved to their documented declaration.
+     */
     class DefinitionMap {
         constructor() {
             this.values = [];
         }
         set(key, value) {
             if (value) {
-                this.values.push({ key, value, quoted: false });
+                this.values.push({ key: key, value, quoted: false });
             }
         }
         toLiteralMap() {
@@ -19908,7 +19913,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.1+79.sha-5848439');
+    const VERSION$1 = new Version('11.1.0-next.1+83.sha-e692884');
 
     /**
      * @license
@@ -20590,7 +20595,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.1+79.sha-5848439'));
+        definitionMap.set('version', literal('11.1.0-next.1+83.sha-e692884'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20771,7 +20776,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.1+79.sha-5848439');
+    const VERSION$2 = new Version('11.1.0-next.1+83.sha-e692884');
 
     /**
      * @license
