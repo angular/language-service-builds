@@ -10,5 +10,6 @@ export declare class ReferenceBuilder {
     constructor(strategy: TypeCheckingProgramStrategy, tsLS: ts.LanguageService, compiler: NgCompiler);
     get(filePath: string, position: number): ts.ReferenceEntry[] | undefined;
     private getReferencesAtTemplatePosition;
+    private getReferencesForDirectives;
     private getReferencesAtTypescriptPosition;
 }

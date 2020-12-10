@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+13.sha-b4b21bd
+ * @license Angular v11.1.0-next.2+16.sha-973f797
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19948,7 +19948,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+13.sha-b4b21bd');
+    const VERSION$1 = new Version('11.1.0-next.2+16.sha-973f797');
 
     /**
      * @license
@@ -20630,7 +20630,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+13.sha-b4b21bd'));
+        definitionMap.set('version', literal('11.1.0-next.2+16.sha-973f797'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20811,7 +20811,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+13.sha-b4b21bd');
+    const VERSION$2 = new Version('11.1.0-next.2+16.sha-973f797');
 
     /**
      * @license
@@ -39377,21 +39377,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return visitor.path;
         }
         visit(node) {
+            const last = this.path[this.path.length - 1];
+            if (last && isTemplateNodeWithKeyAndValue(last) && isWithin(this.position, last.keySpan)) {
+                // We've already identified that we are within a `keySpan` of a node.
+                // We should stop processing nodes at this point to prevent matching
+                // any other nodes. This can happen when the end span of a different node
+                // touches the start of the keySpan for the candidate node. Because
+                // our `isWithin` logic is inclusive on both ends, we can match both nodes.
+                return;
+            }
             const { start, end } = getSpanIncludingEndTag(node);
             if (isWithin(this.position, { start, end })) {
-                const length = end - start;
-                const last = this.path[this.path.length - 1];
-                if (last) {
-                    const { start, end } = isTemplateNode(last) ? getSpanIncludingEndTag(last) : last.sourceSpan;
-                    const lastLength = end - start;
-                    if (length > lastLength) {
-                        // The current node has a span that is larger than the last node found
-                        // so we do not descend into it. This typically means we have found
-                        // a candidate in one of the root nodes so we do not need to visit
-                        // other root nodes.
-                        return;
-                    }
-                }
                 this.path.push(node);
                 node.visit(this);
             }
@@ -39401,7 +39397,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.visitAll(element.inputs);
             this.visitAll(element.outputs);
             this.visitAll(element.references);
-            this.visitAll(element.children);
+            const last = this.path[this.path.length - 1];
+            // If we get here and have not found a candidate node on the element itself, proceed with
+            // looking for a more specific node on the element children.
+            if (last === element) {
+                this.visitAll(element.children);
+            }
         }
         visitTemplate(template) {
             this.visitAll(template.attributes);
@@ -39410,7 +39411,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.visitAll(template.templateAttrs);
             this.visitAll(template.references);
             this.visitAll(template.variables);
-            this.visitAll(template.children);
+            const last = this.path[this.path.length - 1];
+            // If we get here and have not found a candidate node on the template itself, proceed with
+            // looking for a more specific node on the template children.
+            if (last === template) {
+                this.visitAll(template.children);
+            }
         }
         visitContent(content) {
             visitAll(this, content.attributes);
@@ -39937,19 +39943,26 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return undefined;
             }
             switch (symbol.kind) {
-                case SymbolKind.Element:
                 case SymbolKind.Directive:
                 case SymbolKind.Template:
-                case SymbolKind.DomBinding:
                     // References to elements, templates, and directives will be through template references
                     // (#ref). They shouldn't be used directly for a Language Service reference request.
-                    //
-                    // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
-                    // have a shim location and so we cannot find references for them.
-                    //
-                    // TODO(atscott): Consider finding references for elements that are components as well as
-                    // when the position is on an element attribute that directly maps to a directive.
                     return undefined;
+                case SymbolKind.Element: {
+                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
+                    return this.getReferencesForDirectives(matches);
+                }
+                case SymbolKind.DomBinding: {
+                    // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
+                    // have a shim location. This means we can't match dom bindings to their lib.dom reference,
+                    // but we can still see if they match to a directive.
+                    if (!(positionDetails.node instanceof TextAttribute) &&
+                        !(positionDetails.node instanceof BoundAttribute)) {
+                        return undefined;
+                    }
+                    const directives = getDirectiveMatchesForAttribute(positionDetails.node.name, symbol.host.templateNode, symbol.host.directives);
+                    return this.getReferencesForDirectives(directives);
+                }
                 case SymbolKind.Reference: {
                     const { shimPath, positionInShimFile } = symbol.referenceVarLocation;
                     return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
@@ -39986,6 +39999,23 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
                 }
             }
+        }
+        getReferencesForDirectives(directives) {
+            const allDirectiveRefs = [];
+            for (const dir of directives.values()) {
+                const dirClass = dir.tsSymbol.valueDeclaration;
+                if (dirClass === undefined || !ts.isClassDeclaration(dirClass) ||
+                    dirClass.name === undefined) {
+                    continue;
+                }
+                const dirFile = dirClass.getSourceFile().fileName;
+                const dirPosition = dirClass.name.getStart();
+                const directiveRefs = this.getReferencesAtTypescriptPosition(dirFile, dirPosition);
+                if (directiveRefs !== undefined) {
+                    allDirectiveRefs.push(...directiveRefs);
+                }
+            }
+            return allDirectiveRefs.length > 0 ? allDirectiveRefs : undefined;
         }
         getReferencesAtTypescriptPosition(fileName, position) {
             const refs = this.tsLS.getReferencesAtPosition(fileName, position);
