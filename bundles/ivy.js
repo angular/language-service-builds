@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+4.sha-269a775
+ * @license Angular v11.1.0-next.2+5.sha-93a8326
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19913,7 +19913,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+4.sha-269a775');
+    const VERSION$1 = new Version('11.1.0-next.2+5.sha-93a8326');
 
     /**
      * @license
@@ -20595,7 +20595,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+4.sha-269a775'));
+        definitionMap.set('version', literal('11.1.0-next.2+5.sha-93a8326'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20776,7 +20776,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+4.sha-269a775');
+    const VERSION$2 = new Version('11.1.0-next.2+5.sha-93a8326');
 
     /**
      * @license
@@ -32784,6 +32784,7 @@ Either add the @Injectable() decorator to '${provider.node.name
              * (`null`).
              */
             this.globalCompletionCache = new Map();
+            this.expressionCompletionCache = new Map();
         }
         /**
          * Get global completions within the given template context - either a `TmplAstTemplate` embedded
@@ -32829,6 +32830,49 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             this.globalCompletionCache.set(context, completion);
             return completion;
+        }
+        getExpressionCompletionLocation(expr) {
+            if (this.expressionCompletionCache.has(expr)) {
+                return this.expressionCompletionCache.get(expr);
+            }
+            // Completion works inside property reads and method calls.
+            let tsExpr = null;
+            if (expr instanceof PropertyRead || expr instanceof MethodCall ||
+                expr instanceof PropertyWrite) {
+                // Non-safe navigation operations are trivial: `foo.bar` or `foo.bar()`
+                tsExpr = findFirstMatchingNode(this.tcb, {
+                    filter: ts.isPropertyAccessExpression,
+                    withSpan: expr.nameSpan,
+                });
+            }
+            else if (expr instanceof SafePropertyRead || expr instanceof SafeMethodCall) {
+                // Safe navigation operations are a little more complex, and involve a ternary. Completion
+                // happens in the "true" case of the ternary.
+                const ternaryExpr = findFirstMatchingNode(this.tcb, {
+                    filter: ts.isParenthesizedExpression,
+                    withSpan: expr.sourceSpan,
+                });
+                if (ternaryExpr === null || !ts.isConditionalExpression(ternaryExpr.expression)) {
+                    return null;
+                }
+                const whenTrue = ternaryExpr.expression.whenTrue;
+                if (expr instanceof SafePropertyRead && ts.isPropertyAccessExpression(whenTrue)) {
+                    tsExpr = whenTrue;
+                }
+                else if (expr instanceof SafeMethodCall && ts.isCallExpression(whenTrue) &&
+                    ts.isPropertyAccessExpression(whenTrue.expression)) {
+                    tsExpr = whenTrue.expression;
+                }
+            }
+            if (tsExpr === null) {
+                return null;
+            }
+            const res = {
+                shimPath: this.shimPath,
+                positionInShimFile: tsExpr.name.getEnd(),
+            };
+            this.expressionCompletionCache.set(expr, res);
+            return res;
         }
     }
 
@@ -37186,6 +37230,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return engine.getGlobalCompletions(context);
         }
+        getExpressionCompletionLocation(ast, component) {
+            const engine = this.getOrCreateCompletionEngine(component);
+            if (engine === null) {
+                return null;
+            }
+            return engine.getExpressionCompletionLocation(ast);
+        }
         getOrCreateCompletionEngine(component) {
             if (this.completionCache.has(component)) {
                 return this.completionCache.get(component);
@@ -39038,7 +39089,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          */
         isPropertyExpressionCompletion() {
             return this.node instanceof PropertyRead || this.node instanceof MethodCall ||
-                this.node instanceof EmptyExpr ||
+                this.node instanceof SafePropertyRead || this.node instanceof SafeMethodCall ||
+                this.node instanceof PropertyWrite || this.node instanceof EmptyExpr ||
                 isBrokenEmptyBoundEventExpression(this.node, this.nodeParent);
         }
         /**
@@ -39051,23 +39103,45 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return this.getGlobalPropertyExpressionCompletion(options);
             }
             else {
-                // TODO(alxhub): implement completion of non-global expressions.
-                return undefined;
+                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
+                if (location === null) {
+                    return undefined;
+                }
+                const tsResults = this.tsLS.getCompletionsAtPosition(location.shimPath, location.positionInShimFile, options);
+                if (tsResults === undefined) {
+                    return undefined;
+                }
+                const replacementSpan = makeReplacementSpan(this.node);
+                let ngResults = [];
+                for (const result of tsResults.entries) {
+                    ngResults.push(Object.assign(Object.assign({}, result), { replacementSpan }));
+                }
+                return Object.assign(Object.assign({}, tsResults), { entries: ngResults });
             }
         }
         /**
          * Get the details of a specific completion for a property expression.
          */
         getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
+            let details = undefined;
             if (this.node instanceof EmptyExpr ||
                 isBrokenEmptyBoundEventExpression(this.node, this.nodeParent) ||
                 this.node.receiver instanceof ImplicitReceiver) {
-                return this.getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
+                details =
+                    this.getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
             }
             else {
-                // TODO(alxhub): implement completion of non-global expressions.
-                return undefined;
+                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
+                if (location === null) {
+                    return undefined;
+                }
+                details = this.tsLS.getCompletionEntryDetails(location.shimPath, location.positionInShimFile, entryName, formatOptions, 
+                /* source */ undefined, preferences);
             }
+            if (details !== undefined) {
+                details.displayParts = filterAliasImports(details.displayParts);
+            }
+            return details;
         }
         /**
          * Get the `ts.Symbol` for a specific completion for a property expression.
@@ -39078,8 +39152,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return this.getGlobalPropertyExpressionCompletionSymbol(name);
             }
             else {
-                // TODO(alxhub): implement completion of non-global expressions.
-                return undefined;
+                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
+                if (location === null) {
+                    return undefined;
+                }
+                return this.tsLS.getCompletionEntrySymbol(location.shimPath, location.positionInShimFile, name, /* source */ undefined);
             }
         }
         /**
@@ -39094,10 +39171,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             let replacementSpan = undefined;
             // Non-empty nodes get replaced with the completion.
             if (!(this.node instanceof EmptyExpr || this.node instanceof LiteralPrimitive)) {
-                replacementSpan = {
-                    start: this.node.nameSpan.start,
-                    length: this.node.nameSpan.end - this.node.nameSpan.start,
-                };
+                replacementSpan = makeReplacementSpan(this.node);
             }
             // Merge TS completion results with results from the template scope.
             let entries = [];
@@ -39202,6 +39276,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function isBrokenEmptyBoundEventExpression(node, parent) {
         return node instanceof LiteralPrimitive && parent !== null && parent instanceof BoundEvent &&
             node.value === 'ERROR';
+    }
+    function makeReplacementSpan(node) {
+        return {
+            start: node.nameSpan.start,
+            length: node.nameSpan.end - node.nameSpan.start,
+        };
     }
 
     /**
