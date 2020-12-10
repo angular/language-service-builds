@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+8.sha-85b07ad
+ * @license Angular v11.1.0-next.2+9.sha-1f73af7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3122,11 +3122,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return `animation_${name}_${phase}`;
     }
     function jitOnlyGuardedExpression(expr) {
-        const ngJitMode = new ExternalExpr({ name: 'ngJitMode', moduleName: null });
-        const jitFlagNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(ngJitMode), literal('undefined'));
-        const jitFlagUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, jitFlagNotDefined, ngJitMode, /* type */ undefined, 
+        return guardedExpression('ngJitMode', expr);
+    }
+    function guardedExpression(guard, expr) {
+        const guardExpr = new ExternalExpr({ name: guard, moduleName: null });
+        const guardNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(guardExpr), literal('undefined'));
+        const guardUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, guardNotDefined, guardExpr, /* type */ undefined, 
         /* sourceSpan */ undefined, true);
-        return new BinaryOperatorExpr(BinaryOperator.And, jitFlagUndefinedOrTrue, expr);
+        return new BinaryOperatorExpr(BinaryOperator.And, guardUndefinedOrTrue, expr);
     }
 
     /**
@@ -18736,7 +18739,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+8.sha-85b07ad');
+    const VERSION$1 = new Version('11.1.0-next.2+9.sha-1f73af7');
 
     /**
      * @license
@@ -46451,7 +46454,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.2+8.sha-85b07ad');
+    const VERSION$2 = new Version$1('11.1.0-next.2+9.sha-1f73af7');
 
     /**
      * @license
@@ -48531,6 +48534,54 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         onDestroy(callback) {
             this.hostView.onDestroy(callback);
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Adds decorator, constructor, and property metadata to a given type via static metadata fields
+     * on the type.
+     *
+     * These metadata fields can later be read with Angular's `ReflectionCapabilities` API.
+     *
+     * Calls to `setClassMetadata` can be guarded by ngDevMode, resulting in the metadata assignments
+     * being tree-shaken away during production builds.
+     */
+    function setClassMetadata(type, decorators, ctorParameters, propDecorators) {
+        return noSideEffects(() => {
+            const clazz = type;
+            if (decorators !== null) {
+                if (clazz.hasOwnProperty('decorators') && clazz.decorators !== undefined) {
+                    clazz.decorators.push(...decorators);
+                }
+                else {
+                    clazz.decorators = decorators;
+                }
+            }
+            if (ctorParameters !== null) {
+                // Rather than merging, clobber the existing parameters. If other projects exist which
+                // use tsickle-style annotations and reflect over them in the same way, this could
+                // cause issues, but that is vanishingly unlikely.
+                clazz.ctorParameters = ctorParameters;
+            }
+            if (propDecorators !== null) {
+                // The property decorator objects are merged as it is possible different fields have
+                // different decorator types. Decorators on individual fields are not merged, as it's
+                // also incredibly unlikely that a field will be decorated both with an Angular
+                // decorator and a non-Angular decorator that's also been downleveled.
+                if (clazz.hasOwnProperty('propDecorators') && clazz.propDecorators !== undefined) {
+                    clazz.propDecorators = Object.assign(Object.assign({}, clazz.propDecorators), propDecorators);
+                }
+                else {
+                    clazz.propDecorators = propDecorators;
+                }
+            }
+        });
     }
 
     /**
@@ -52587,6 +52638,14 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     ApplicationInitStatus.ɵfac = function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(ɵɵinject(APP_INITIALIZER, 8)); };
     ApplicationInitStatus.ɵprov = ɵɵdefineInjectable({ token: ApplicationInitStatus, factory: ApplicationInitStatus.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApplicationInitStatus, [{
+            type: Injectable
+        }], function () { return [{ type: undefined, decorators: [{
+                    type: Inject,
+                    args: [APP_INITIALIZER]
+                }, {
+                    type: Optional
+                }] }]; }, null); })();
 
     /**
      * @license
@@ -52670,6 +52729,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     Console.ɵfac = function Console_Factory(t) { return new (t || Console)(); };
     Console.ɵprov = ɵɵdefineInjectable({ token: Console, factory: Console.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Console, [{
+            type: Injectable
+        }], null, null); })();
 
     /**
      * @license
@@ -52917,6 +52979,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     Compiler.ɵfac = function Compiler_Factory(t) { return new (t || Compiler)(); };
     Compiler.ɵprov = ɵɵdefineInjectable({ token: Compiler, factory: Compiler.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Compiler, [{
+            type: Injectable
+        }], null, null); })();
     /**
      * Token to provide CompilerOptions in the platform injector.
      *
@@ -53492,6 +53557,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     Testability.ɵfac = function Testability_Factory(t) { return new (t || Testability)(ɵɵinject(NgZone)); };
     Testability.ɵprov = ɵɵdefineInjectable({ token: Testability, factory: Testability.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Testability, [{
+            type: Injectable
+        }], function () { return [{ type: NgZone }]; }, null); })();
     /**
      * A global registry of {@link Testability} instances for specific elements.
      * @publicApi
@@ -53554,6 +53622,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     TestabilityRegistry.ɵfac = function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); };
     TestabilityRegistry.ɵprov = ɵɵdefineInjectable({ token: TestabilityRegistry, factory: TestabilityRegistry.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TestabilityRegistry, [{
+            type: Injectable
+        }], function () { return []; }, null); })();
     class _NoopGetTestability {
         addToWindow(registry) { }
         findTestabilityInTree(registry, elem, findInAncestors) {
@@ -53865,6 +53936,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     PlatformRef.ɵfac = function PlatformRef_Factory(t) { return new (t || PlatformRef)(ɵɵinject(Injector)); };
     PlatformRef.ɵprov = ɵɵdefineInjectable({ token: PlatformRef, factory: PlatformRef.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PlatformRef, [{
+            type: Injectable
+        }], function () { return [{ type: Injector }]; }, null); })();
     function getNgZone(ngZoneOption, extra) {
         let ngZone;
         if (ngZoneOption === 'noop') {
@@ -54199,6 +54273,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     ApplicationRef.ɵfac = function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(ɵɵinject(NgZone), ɵɵinject(Console), ɵɵinject(Injector), ɵɵinject(ErrorHandler), ɵɵinject(ComponentFactoryResolver), ɵɵinject(ApplicationInitStatus)); };
     ApplicationRef.ɵprov = ɵɵdefineInjectable({ token: ApplicationRef, factory: ApplicationRef.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApplicationRef, [{
+            type: Injectable
+        }], function () { return [{ type: NgZone }, { type: Console }, { type: Injector }, { type: ErrorHandler }, { type: ComponentFactoryResolver }, { type: ApplicationInitStatus }]; }, null); })();
     function remove(list, el) {
         const index = list.indexOf(el);
         if (index > -1) {
@@ -54280,6 +54357,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     SystemJsNgModuleLoader.ɵfac = function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(ɵɵinject(Compiler), ɵɵinject(SystemJsNgModuleLoaderConfig, 8)); };
     SystemJsNgModuleLoader.ɵprov = ɵɵdefineInjectable({ token: SystemJsNgModuleLoader, factory: SystemJsNgModuleLoader.ɵfac });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SystemJsNgModuleLoader, [{
+            type: Injectable
+        }], function () { return [{ type: Compiler }, { type: SystemJsNgModuleLoaderConfig, decorators: [{
+                    type: Optional
+                }] }]; }, null); })();
     function checkNotEmpty(value, modulePath, exportName) {
         if (!value) {
             throw new Error(`Cannot find '${exportName}' in '${modulePath}'`);
@@ -54419,6 +54501,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     ApplicationModule.ɵmod = ɵɵdefineNgModule({ type: ApplicationModule });
     ApplicationModule.ɵinj = ɵɵdefineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(ɵɵinject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
+    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApplicationModule, [{
+            type: NgModule,
+            args: [{ providers: APPLICATION_MODULE_PROVIDERS }]
+        }], function () { return [{ type: ApplicationRef }]; }, null); })();
 
     /**
      * @license
