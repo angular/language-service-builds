@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.4+1.sha-eba7de6
+ * @license Angular v11.0.4+3.sha-f5aab2b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13115,10 +13115,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     atInterpolation = true;
                 }
                 else {
-                    // parse from starting {{ to ending }}
+                    // parse from starting {{ to ending }} while ignoring content inside quotes.
                     const fullStart = i;
                     const exprStart = fullStart + interpStart.length;
-                    const exprEnd = input.indexOf(interpEnd, exprStart);
+                    const exprEnd = this._getExpressiondEndIndex(input, interpEnd, exprStart);
                     if (exprEnd === -1) {
                         // Could not find the end of the interpolation; do not parse an expression.
                         // Instead we should extend the content on the last raw string.
@@ -13193,11 +13193,40 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return errLocation.length;
         }
+        /**
+         * Finds the index of the end of an interpolation expression
+         * while ignoring comments and quoted content.
+         */
+        _getExpressiondEndIndex(input, expressionEnd, start) {
+            let currentQuote = null;
+            let escapeCount = 0;
+            for (let i = start; i < input.length; i++) {
+                const char = input[i];
+                // Skip the characters inside quotes. Note that we only care about the
+                // outer-most quotes matching up and we need to account for escape characters.
+                if (isQuote(input.charCodeAt(i)) && (currentQuote === null || currentQuote === char) &&
+                    escapeCount % 2 === 0) {
+                    currentQuote = currentQuote === null ? char : null;
+                }
+                else if (currentQuote === null) {
+                    if (input.startsWith(expressionEnd, i)) {
+                        return i;
+                    }
+                    // Nothing else in the expression matters after we've
+                    // hit a comment so look directly for the end token.
+                    if (input.startsWith('//', i)) {
+                        return input.indexOf(expressionEnd, i);
+                    }
+                }
+                escapeCount = char === '\\' ? escapeCount + 1 : 0;
+            }
+            return -1;
+        }
     }
     class IvyParser extends Parser$1 {
         constructor() {
             super(...arguments);
-            this.simpleExpressionChecker = IvySimpleExpressionChecker; //
+            this.simpleExpressionChecker = IvySimpleExpressionChecker;
         }
     }
     /** Describes a stateful context an expression parser is in. */
@@ -18407,7 +18436,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.4+1.sha-eba7de6');
+    const VERSION$1 = new Version('11.0.4+3.sha-f5aab2b');
 
     /**
      * @license
@@ -34302,7 +34331,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.4+1.sha-eba7de6');
+    const VERSION$2 = new Version$1('11.0.4+3.sha-f5aab2b');
 
     /**
      * @license
