@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+2.sha-29298f4
+ * @license Angular v11.1.0-next.2+4.sha-269a775
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19913,7 +19913,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+2.sha-29298f4');
+    const VERSION$1 = new Version('11.1.0-next.2+4.sha-269a775');
 
     /**
      * @license
@@ -20595,7 +20595,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+2.sha-29298f4'));
+        definitionMap.set('version', literal('11.1.0-next.2+4.sha-269a775'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20776,7 +20776,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+2.sha-29298f4');
+    const VERSION$2 = new Version('11.1.0-next.2+4.sha-269a775');
 
     /**
      * @license
@@ -35168,6 +35168,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 // TODO(alxhub): consider supporting multiple fields with the same property name for outputs.
                 const field = outputs.getByBindingPropertyName(output.name)[0].classPropertyName;
+                if (dirId === null) {
+                    dirId = this.scope.resolve(this.node, this.dir);
+                }
+                const outputField = ts.createElementAccess(dirId, ts.createStringLiteral(field));
+                addParseSpanInfo(outputField, output.keySpan);
                 if (this.tcb.env.config.checkTypeOfOutputEvents) {
                     // For strict checking of directive events, generate a call to the `subscribe` method
                     // on the directive's output field to let type information flow into the handler function's
@@ -35180,11 +35185,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // specially crafted set of signatures, to effectively cast `EventEmitter<T>` to something
                     // that has a `subscribe` method that properly carries the `T` into the handler function.
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 0 /* Infer */);
-                    if (dirId === null) {
-                        dirId = this.scope.resolve(this.node, this.dir);
-                    }
-                    const outputField = ts.createElementAccess(dirId, ts.createStringLiteral(field));
-                    addParseSpanInfo(outputField, output.keySpan);
                     const outputHelper = ts.createCall(this.tcb.env.declareOutputHelper(), undefined, [outputField]);
                     const subscribeFn = ts.createPropertyAccess(outputHelper, 'subscribe');
                     const call = ts.createCall(subscribeFn, /* typeArguments */ undefined, [handler]);
@@ -35192,43 +35192,19 @@ Either add the @Injectable() decorator to '${provider.node.name
                     this.scope.addStatement(ts.createExpressionStatement(call));
                 }
                 else {
-                    // If strict checking of directive events is disabled, emit a handler function where the
-                    // `$event` parameter has an explicit `any` type.
+                    // If strict checking of directive events is disabled:
+                    //
+                    // * We still generate the access to the output field as a statement in the TCB so consumers
+                    //   of the `TemplateTypeChecker` can still find the node for the class member for the
+                    //   output.
+                    // * Emit a handler function where the `$event` parameter has an explicit `any` type.
+                    this.scope.addStatement(ts.createExpressionStatement(outputField));
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 1 /* Any */);
                     this.scope.addStatement(ts.createExpressionStatement(handler));
                 }
                 ExpressionSemanticVisitor.visit(output.handler, this.tcb.id, this.tcb.boundTarget, this.tcb.oobRecorder);
             }
             return null;
-        }
-        /**
-         * Outputs are a `ts.CallExpression` that look like one of the two:
-         *  - `_outputHelper(_t1["outputField"]).subscribe(handler);`
-         *  - `_t1.addEventListener(handler);`
-         * This method reverses the operations to create a call expression for a directive output.
-         * It unpacks the given call expression and returns the original element access (i.e.
-         * `_t1["outputField"]` in the example above). Returns `null` if the given call expression is not
-         * the expected structure of an output binding
-         */
-        static decodeOutputCallExpression(node) {
-            // `node.expression` === `_outputHelper(_t1["outputField"]).subscribe` or `_t1.addEventListener`
-            if (!ts.isPropertyAccessExpression(node.expression) ||
-                node.expression.name.text === 'addEventListener') {
-                // `addEventListener` outputs do not have an `ElementAccessExpression` for the output field.
-                return null;
-            }
-            if (!ts.isCallExpression(node.expression.expression)) {
-                return null;
-            }
-            // `node.expression.expression` === `_outputHelper(_t1["outputField"])`
-            if (node.expression.expression.arguments.length === 0) {
-                return null;
-            }
-            const [outputFieldAccess] = node.expression.expression.arguments;
-            if (!ts.isElementAccessExpression(outputFieldAccess)) {
-                return null;
-            }
-            return outputFieldAccess;
         }
     }
     /**
@@ -35275,8 +35251,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     if (elId === null) {
                         elId = this.scope.resolve(this.element);
                     }
+                    const propertyAccess = ts.createPropertyAccess(elId, 'addEventListener');
+                    addParseSpanInfo(propertyAccess, output.keySpan);
                     const call = ts.createCall(
-                    /* expression */ ts.createPropertyAccess(elId, 'addEventListener'), 
+                    /* expression */ propertyAccess, 
                     /* typeArguments */ undefined, 
                     /* arguments */ [ts.createStringLiteral(output.name), handler]);
                     addParseSpanInfo(call, output.sourceSpan);
@@ -36711,11 +36689,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             return scope.ngModule;
         }
         getSymbolOfBoundEvent(eventBinding) {
-            // Outputs are a `ts.CallExpression` that look like one of the two:
+            // Outputs in the TCB look like one of the two:
             // * _outputHelper(_t1["outputField"]).subscribe(handler);
             // * _t1.addEventListener(handler);
-            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: eventBinding.sourceSpan, filter: ts.isCallExpression });
-            if (node === null) {
+            // Even with strict null checks disabled, we still produce the access as a separate statement
+            // so that it can be found here.
+            const outputFieldAccess = findFirstMatchingNode(this.typeCheckBlock, { withSpan: eventBinding.keySpan, filter: isAccessExpression });
+            if (outputFieldAccess === null) {
                 return null;
             }
             const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
@@ -36723,11 +36703,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             if (consumer instanceof Template || consumer instanceof Element) {
-                if (!ts.isPropertyAccessExpression(node.expression) ||
-                    node.expression.name.text !== 'addEventListener') {
+                if (!ts.isPropertyAccessExpression(outputFieldAccess) ||
+                    outputFieldAccess.name.text !== 'addEventListener') {
                     return null;
                 }
-                const addEventListener = node.expression.name;
+                const addEventListener = outputFieldAccess.name;
                 const tsSymbol = this.getTypeChecker().getSymbolAtLocation(addEventListener);
                 const tsType = this.getTypeChecker().getTypeAtLocation(addEventListener);
                 const positionInShimFile = this.getShimPositionForNode(addEventListener);
@@ -36747,8 +36727,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
             else {
-                const outputFieldAccess = TcbDirectiveOutputsOp.decodeOutputCallExpression(node);
-                if (outputFieldAccess === null) {
+                if (!ts.isElementAccessExpression(outputFieldAccess)) {
                     return null;
                 }
                 const tsSymbol = this.getTypeChecker().getSymbolAtLocation(outputFieldAccess.argumentExpression);
@@ -36760,7 +36739,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     return null;
                 }
                 const positionInShimFile = this.getShimPositionForNode(outputFieldAccess);
-                const tsType = this.getTypeChecker().getTypeAtLocation(node);
+                const tsType = this.getTypeChecker().getTypeAtLocation(outputFieldAccess);
                 return {
                     kind: SymbolKind.Output,
                     bindings: [{
