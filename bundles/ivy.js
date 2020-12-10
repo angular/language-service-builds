@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+8.sha-85b07ad
+ * @license Angular v11.1.0-next.2+9.sha-1f73af7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5892,11 +5892,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return `animation_${name}_${phase}`;
     }
     function jitOnlyGuardedExpression(expr) {
-        const ngJitMode = new ExternalExpr({ name: 'ngJitMode', moduleName: null });
-        const jitFlagNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(ngJitMode), literal('undefined'));
-        const jitFlagUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, jitFlagNotDefined, ngJitMode, /* type */ undefined, 
+        return guardedExpression('ngJitMode', expr);
+    }
+    function devOnlyGuardedExpression(expr) {
+        return guardedExpression('ngDevMode', expr);
+    }
+    function guardedExpression(guard, expr) {
+        const guardExpr = new ExternalExpr({ name: guard, moduleName: null });
+        const guardNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(guardExpr), literal('undefined'));
+        const guardUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, guardNotDefined, guardExpr, /* type */ undefined, 
         /* sourceSpan */ undefined, true);
-        return new BinaryOperatorExpr(BinaryOperator.And, jitFlagUndefinedOrTrue, expr);
+        return new BinaryOperatorExpr(BinaryOperator.And, guardUndefinedOrTrue, expr);
     }
 
     /**
@@ -19942,7 +19948,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+8.sha-85b07ad');
+    const VERSION$1 = new Version('11.1.0-next.2+9.sha-1f73af7');
 
     /**
      * @license
@@ -20624,7 +20630,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+8.sha-85b07ad'));
+        definitionMap.set('version', literal('11.1.0-next.2+9.sha-1f73af7'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20805,7 +20811,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+8.sha-85b07ad');
+    const VERSION$2 = new Version('11.1.0-next.2+9.sha-1f73af7');
 
     /**
      * @license
@@ -27493,7 +27499,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     /**
      * Given a class declaration, generate a call to `setClassMetadata` with the Angular metadata
-     * present on the class or its member fields.
+     * present on the class or its member fields. An ngDevMode guard is used to allow the call to be
+     * tree-shaken away, as the `setClassMetadata` invocation is only needed for testing purposes.
      *
      * If no such metadata is present, this function returns `null`. Otherwise, the call is returned
      * as a `Statement` for inclusion along with the class.
@@ -27556,14 +27563,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             metaCtorParameters,
             new WrappedNodeExpr(metaPropDecorators),
         ]);
-        const iifeFn = new FunctionExpr([], [fnCall.toStmt()], NONE_TYPE);
-        const iife = new InvokeFunctionExpr(
-        /* fn */ iifeFn, 
-        /* args */ [], 
-        /* type */ undefined, 
-        /* sourceSpan */ undefined, 
-        /* pure */ true);
-        return iife.toStmt();
+        const iife = new FunctionExpr([], [devOnlyGuardedExpression(fnCall).toStmt()]);
+        return iife.callFn([]).toStmt();
     }
     /**
      * Convert a reflected constructor parameter to metadata.

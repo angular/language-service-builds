@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+8.sha-85b07ad
+ * @license Angular v11.1.0-next.2+9.sha-1f73af7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3122,11 +3122,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return `animation_${name}_${phase}`;
     }
     function jitOnlyGuardedExpression(expr) {
-        const ngJitMode = new ExternalExpr({ name: 'ngJitMode', moduleName: null });
-        const jitFlagNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(ngJitMode), literal('undefined'));
-        const jitFlagUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, jitFlagNotDefined, ngJitMode, /* type */ undefined, 
+        return guardedExpression('ngJitMode', expr);
+    }
+    function guardedExpression(guard, expr) {
+        const guardExpr = new ExternalExpr({ name: guard, moduleName: null });
+        const guardNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(guardExpr), literal('undefined'));
+        const guardUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, guardNotDefined, guardExpr, /* type */ undefined, 
         /* sourceSpan */ undefined, true);
-        return new BinaryOperatorExpr(BinaryOperator.And, jitFlagUndefinedOrTrue, expr);
+        return new BinaryOperatorExpr(BinaryOperator.And, guardUndefinedOrTrue, expr);
     }
 
     /**
@@ -18736,7 +18739,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+8.sha-85b07ad');
+    const VERSION$1 = new Version('11.1.0-next.2+9.sha-1f73af7');
 
     /**
      * @license
@@ -34623,7 +34626,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.2+8.sha-85b07ad');
+    const VERSION$2 = new Version$1('11.1.0-next.2+9.sha-1f73af7');
 
     /**
      * @license
