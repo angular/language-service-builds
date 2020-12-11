@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+24.sha-b08fd0c
+ * @license Angular v11.1.0-next.2+26.sha-6e4e68c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19948,7 +19948,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+24.sha-b08fd0c');
+    const VERSION$1 = new Version('11.1.0-next.2+26.sha-6e4e68c');
 
     /**
      * @license
@@ -20630,7 +20630,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+24.sha-b08fd0c'));
+        definitionMap.set('version', literal('11.1.0-next.2+26.sha-6e4e68c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20811,7 +20811,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+24.sha-b08fd0c');
+    const VERSION$2 = new Version('11.1.0-next.2+26.sha-6e4e68c');
 
     /**
      * @license
@@ -32680,22 +32680,23 @@ Either add the @Injectable() decorator to '${provider.node.name
         ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
         /* hasTrailingNewLine */ false);
     }
-    const IGNORE_MARKER = `${CommentTriviaType.DIAGNOSTIC}:ignore`;
+    const IGNORE_FOR_DIAGNOSTICS_MARKER = `${CommentTriviaType.DIAGNOSTIC}:ignore`;
     /**
      * Tag the `ts.Node` with an indication that any errors arising from the evaluation of the node
      * should be ignored.
      */
     function markIgnoreDiagnostics(node) {
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_MARKER, /* hasTrailingNewLine */ false);
+        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_FOR_DIAGNOSTICS_MARKER, 
+        /* hasTrailingNewLine */ false);
     }
     /** Returns true if the node has a marker that indicates diagnostics errors should be ignored.  */
-    function hasIgnoreMarker(node, sourceFile) {
+    function hasIgnoreForDiagnosticsMarker(node, sourceFile) {
         return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
             if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText === IGNORE_MARKER;
+            return commentText === IGNORE_FOR_DIAGNOSTICS_MARKER;
         }) === true;
     }
     function makeRecursiveVisitor(visitor) {
@@ -33899,9 +33900,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     /** Maps a shim position back to a template location. */
-    function getTemplateMapping(shimSf, position, resolver) {
+    function getTemplateMapping(shimSf, position, resolver, isDiagnosticRequest) {
         const node = getTokenAtPosition(shimSf, position);
-        const sourceLocation = findSourceLocation(node, shimSf);
+        const sourceLocation = findSourceLocation(node, shimSf, isDiagnosticRequest);
         if (sourceLocation === null) {
             return null;
         }
@@ -33914,9 +33915,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         // different span.
         return { sourceLocation, templateSourceMapping: mapping, span };
     }
-    function findTypeCheckBlock(file, id) {
+    function findTypeCheckBlock(file, id, isDiagnosticRequest) {
         for (const stmt of file.statements) {
-            if (ts.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file) === id) {
+            if (ts.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file, isDiagnosticRequest) === id) {
                 return stmt;
             }
         }
@@ -33925,12 +33926,13 @@ Either add the @Injectable() decorator to '${provider.node.name
     /**
      * Traverses up the AST starting from the given node to extract the source location from comments
      * that have been emitted into the TCB. If the node does not exist within a TCB, or if an ignore
-     * marker comment is found up the tree, this function returns null.
+     * marker comment is found up the tree (and this is part of a diagnostic request), this function
+     * returns null.
      */
-    function findSourceLocation(node, sourceFile) {
+    function findSourceLocation(node, sourceFile, isDiagnosticsRequest) {
         // Search for comments until the TCB's function declaration is encountered.
         while (node !== undefined && !ts.isFunctionDeclaration(node)) {
-            if (hasIgnoreMarker(node, sourceFile)) {
+            if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticsRequest) {
                 // There's an ignore marker on this node, so the diagnostic should not be reported.
                 return null;
             }
@@ -33938,7 +33940,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (span !== null) {
                 // Once the positional information has been extracted, search further up the TCB to extract
                 // the unique id that is attached with the TCB's function declaration.
-                const id = getTemplateId$1(node, sourceFile);
+                const id = getTemplateId$1(node, sourceFile, isDiagnosticsRequest);
                 if (id === null) {
                     return null;
                 }
@@ -33948,10 +33950,10 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         return null;
     }
-    function getTemplateId$1(node, sourceFile) {
+    function getTemplateId$1(node, sourceFile, isDiagnosticRequest) {
         // Walk up to the function declaration of the TCB, the file information is attached there.
         while (!ts.isFunctionDeclaration(node)) {
-            if (hasIgnoreMarker(node, sourceFile)) {
+            if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticRequest) {
                 // There's an ignore marker on this node, so the diagnostic should not be reported.
                 return null;
             }
@@ -34054,7 +34056,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (diagnostic.file === undefined || diagnostic.start === undefined) {
             return null;
         }
-        const fullMapping = getTemplateMapping(diagnostic.file, diagnostic.start, resolver);
+        const fullMapping = getTemplateMapping(diagnostic.file, diagnostic.start, resolver, /*isDiagnosticsRequest*/ true);
         if (fullMapping === null) {
             return null;
         }
@@ -37140,11 +37142,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (shimSf === null || !fileRecord.shimData.has(shimPath)) {
                 throw new Error(`Error: no shim file in program: ${shimPath}`);
             }
-            let tcb = findTypeCheckBlock(shimSf, id);
+            let tcb = findTypeCheckBlock(shimSf, id, /*isDiagnosticsRequest*/ false);
             if (tcb === null) {
                 // Try for an inline block.
                 const inlineSf = getSourceFileOrError(program, sfPath);
-                tcb = findTypeCheckBlock(inlineSf, id);
+                tcb = findTypeCheckBlock(inlineSf, id, /*isDiagnosticsRequest*/ false);
             }
             let data = null;
             if (shimRecord.templates.has(templateId)) {
@@ -37195,7 +37197,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (shimSf === undefined) {
                 return null;
             }
-            return getTemplateMapping(shimSf, positionInShimFile, fileRecord.sourceManager);
+            return getTemplateMapping(shimSf, positionInShimFile, fileRecord.sourceManager, /*isDiagnosticsRequest*/ false);
         }
         generateAllTypeCheckBlocks() {
             this.ensureAllShimsForAllFiles();
