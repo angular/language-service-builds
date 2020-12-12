@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+26.sha-6e4e68c
+ * @license Angular v11.1.0-next.2+27.sha-2b74a05
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19948,7 +19948,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+26.sha-6e4e68c');
+    const VERSION$1 = new Version('11.1.0-next.2+27.sha-2b74a05');
 
     /**
      * @license
@@ -20630,7 +20630,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+26.sha-6e4e68c'));
+        definitionMap.set('version', literal('11.1.0-next.2+27.sha-2b74a05'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20811,7 +20811,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+26.sha-6e4e68c');
+    const VERSION$2 = new Version('11.1.0-next.2+27.sha-2b74a05');
 
     /**
      * @license
@@ -32599,6 +32599,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         SymbolKind[SymbolKind["Template"] = 7] = "Template";
         SymbolKind[SymbolKind["Expression"] = 8] = "Expression";
         SymbolKind[SymbolKind["DomBinding"] = 9] = "DomBinding";
+        SymbolKind[SymbolKind["Pipe"] = 10] = "Pipe";
     })(SymbolKind || (SymbolKind = {}));
 
     /**
@@ -33883,7 +33884,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function requiresInlineTypeCheckBlock(node) {
+    function requiresInlineTypeCheckBlock(node, usedPipes) {
         // In order to qualify for a declared TCB (not inline) two conditions must be met:
         // 1) the class must be exported
         // 2) it must not have constrained generic types
@@ -33893,6 +33894,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         else if (!checkIfGenericTypesAreUnbound(node)) {
             // Condition 2 is false, the class has constrained generic types
+            return true;
+        }
+        else if (Array.from(usedPipes.values())
+            .some(pipeRef => !checkIfClassIsExported(pipeRef.node))) {
+            // If one of the pipes used by the component is not exported, a non-inline TCB will not be able
+            // to import it, so this requires an inline TCB.
             return true;
         }
         else {
@@ -35930,7 +35937,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 else {
                     // Use an 'any' value when not checking the type of the pipe.
-                    pipe = NULL_AS_ANY;
+                    pipe = ts.createAsExpression(this.tcb.env.pipeInst(pipeRef), ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
                 }
                 const args = ast.args.map(arg => this.translate(arg));
                 const methodAccess = ts.createPropertyAccess(pipe, 'transform');
@@ -36294,7 +36301,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 template,
                 boundTarget,
             });
-            const tcbRequiresInline = requiresInlineTypeCheckBlock(ref.node);
+            const tcbRequiresInline = requiresInlineTypeCheckBlock(ref.node, pipes);
             // If inlining is not supported, but is required for either the TCB or one of its directive
             // dependencies, then exit here with an error.
             if (this.inlining === InliningMode.Error && (tcbRequiresInline || missingInlines.length > 0)) {
@@ -36688,6 +36695,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             else if (node instanceof Reference) {
                 symbol = this.getSymbolOfReference(node);
             }
+            else if (node instanceof BindingPipe) {
+                symbol = this.getSymbolOfPipe(node);
+            }
             else if (node instanceof AST) {
                 symbol = this.getSymbolOfTemplateExpression(node);
             }
@@ -36960,6 +36970,32 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
         }
+        getSymbolOfPipe(expression) {
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: expression.sourceSpan, filter: ts.isCallExpression });
+            if (node === null || !ts.isPropertyAccessExpression(node.expression)) {
+                return null;
+            }
+            const methodAccess = node.expression;
+            // Find the node for the pipe variable from the transform property access. This will be one of
+            // two forms: `_pipe1.transform` or `(_pipe1 as any).transform`.
+            const pipeVariableNode = ts.isParenthesizedExpression(methodAccess.expression) &&
+                ts.isAsExpression(methodAccess.expression.expression) ?
+                methodAccess.expression.expression.expression :
+                methodAccess.expression;
+            const pipeDeclaration = this.getTypeChecker().getSymbolAtLocation(pipeVariableNode);
+            if (pipeDeclaration === undefined || pipeDeclaration.valueDeclaration === undefined) {
+                return null;
+            }
+            const pipeInstance = this.getSymbolOfTsNode(pipeDeclaration.valueDeclaration);
+            if (pipeInstance === null || pipeInstance.tsSymbol === null) {
+                return null;
+            }
+            const symbolInfo = this.getSymbolOfTsNode(methodAccess);
+            if (symbolInfo === null) {
+                return null;
+            }
+            return Object.assign(Object.assign({ kind: SymbolKind.Pipe }, symbolInfo), { classSymbol: Object.assign(Object.assign({}, pipeInstance), { tsSymbol: pipeInstance.tsSymbol }) });
+        }
         getSymbolOfTemplateExpression(expression) {
             if (expression instanceof ASTWithSource) {
                 expression = expression.ast;
@@ -36997,11 +37033,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // Rather than using the type of only the `whenTrue` part of the expression, we should
                     // still get the type of the whole conditional expression to include `|undefined`.
                     tsType: this.getTypeChecker().getTypeAtLocation(node) });
-            }
-            else if (expression instanceof BindingPipe && ts.isCallExpression(node)) {
-                // TODO(atscott): Create a PipeSymbol to include symbol for the Pipe class
-                const symbolInfo = this.getSymbolOfTsNode(node.expression);
-                return symbolInfo === null ? null : Object.assign(Object.assign({}, symbolInfo), { kind: SymbolKind.Expression });
             }
             else {
                 const symbolInfo = this.getSymbolOfTsNode(node);
@@ -39554,6 +39585,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     // LS users to "go to definition" on an item in the template that maps to a class and be
                     // taken to the directive or HTML class.
                     return this.getTypeDefinitionsForTemplateInstance(symbol, node);
+                case SymbolKind.Pipe: {
+                    if (symbol.tsSymbol !== null) {
+                        return this.getDefinitionsForSymbols(symbol);
+                    }
+                    else {
+                        // If there is no `ts.Symbol` for the pipe transform, we want to return the
+                        // type definition (the pipe class).
+                        return this.getTypeDefinitionsForSymbols(symbol.classSymbol);
+                    }
+                }
                 case SymbolKind.Output:
                 case SymbolKind.Input: {
                     const bindingDefs = this.getDefinitionsForSymbols(...symbol.bindings);
@@ -39616,6 +39657,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     // has the input name as part of the selector, we want to return that as well.
                     const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, definitionMeta.parent, templateInfo.component);
                     return [...bindingDefs, ...directiveDefs];
+                }
+                case SymbolKind.Pipe: {
+                    if (symbol.tsSymbol !== null) {
+                        return this.getTypeDefinitionsForSymbols(symbol);
+                    }
+                    else {
+                        // If there is no `ts.Symbol` for the pipe transform, we want to return the
+                        // type definition (the pipe class).
+                        return this.getTypeDefinitionsForSymbols(symbol.classSymbol);
+                    }
                 }
                 case SymbolKind.Reference:
                     return this.getTypeDefinitionsForSymbols({ shimLocation: symbol.targetLocation });
@@ -39774,10 +39825,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return this.getQuickInfoForDomBinding(symbol);
                 case SymbolKind.Directive:
                     return this.getQuickInfoAtShimLocation(symbol.shimLocation);
+                case SymbolKind.Pipe:
+                    return this.getQuickInfoForPipeSymbol(symbol);
                 case SymbolKind.Expression:
-                    return this.node instanceof BindingPipe ?
-                        this.getQuickInfoForPipeSymbol(symbol) :
-                        this.getQuickInfoAtShimLocation(symbol.shimLocation);
+                    return this.getQuickInfoAtShimLocation(symbol.shimLocation);
             }
         }
         getQuickInfoForBindingSymbol(symbol) {
@@ -39805,9 +39856,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return createQuickInfo(symbol.declaration.name, DisplayInfoKind.REFERENCE, getTextSpanOfNode(this.node), undefined /* containerName */, this.typeChecker.typeToString(symbol.tsType), documentation);
         }
         getQuickInfoForPipeSymbol(symbol) {
-            const quickInfo = this.getQuickInfoAtShimLocation(symbol.shimLocation);
-            return quickInfo === undefined ? undefined :
-                updateQuickInfoKind(quickInfo, DisplayInfoKind.PIPE);
+            if (symbol.tsSymbol !== null) {
+                const quickInfo = this.getQuickInfoAtShimLocation(symbol.shimLocation);
+                return quickInfo === undefined ? undefined :
+                    updateQuickInfoKind(quickInfo, DisplayInfoKind.PIPE);
+            }
+            else {
+                return createQuickInfo(this.typeChecker.typeToString(symbol.classSymbol.tsType), DisplayInfoKind.PIPE, getTextSpanOfNode(this.node));
+            }
         }
         getQuickInfoForDomBinding(symbol) {
             if (!(this.node instanceof TextAttribute) &&
@@ -39996,6 +40052,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     const { shimPath, positionInShimFile } = symbol.bindings[0].shimLocation;
                     return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
                 }
+                case SymbolKind.Pipe:
                 case SymbolKind.Expression: {
                     const { shimPath, positionInShimFile } = symbol.shimLocation;
                     return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
