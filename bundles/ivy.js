@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+27.sha-2b74a05
+ * @license Angular v11.1.0-next.2+28.sha-028e4f7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19948,7 +19948,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+27.sha-2b74a05');
+    const VERSION$1 = new Version('11.1.0-next.2+28.sha-028e4f7');
 
     /**
      * @license
@@ -20630,7 +20630,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+27.sha-2b74a05'));
+        definitionMap.set('version', literal('11.1.0-next.2+28.sha-028e4f7'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20811,7 +20811,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+27.sha-2b74a05');
+    const VERSION$2 = new Version('11.1.0-next.2+28.sha-028e4f7');
 
     /**
      * @license
@@ -40135,6 +40135,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.tsLS = tsLS;
             this.parseConfigHost = new LSParseConfigHost(project.projectService.host);
             this.options = parseNgCompilerOptions(project, this.parseConfigHost);
+            // Projects loaded into the Language Service often include test files which are not part of the
+            // app's main compilation unit, and these test files often include inline NgModules that declare
+            // components from the app. These declarations conflict with the main declarations of such
+            // components in the app's NgModules. This conflict is not normally present during regular
+            // compilation because the app and the tests are part of separate compilation units.
+            //
+            // As a temporary mitigation of this problem, we instruct the compiler to ignore classes which
+            // are not exported. In many cases, this ensures the test NgModules are ignored by the compiler
+            // and only the real component declaration is used.
+            this.options.compileNonExportedClasses = false;
             this.strategy = createTypeCheckingProgramStrategy(project);
             this.adapter = new LanguageServiceAdapter(project);
             this.compilerFactory = new CompilerFactory(this.adapter, this.strategy, this.options);
