@@ -41,6 +41,7 @@ export declare function getTemplateInfoAtPosition(fileName: string, position: nu
  * @returns The list of directives matching the tag name via the strategy described above.
  */
 export declare function getDirectiveMatchesForElementTag(element: t.Template | t.Element, directives: DirectiveSymbol[]): Set<DirectiveSymbol>;
+export declare function makeElementSelector(element: t.Element | t.Template): string;
 /**
  * Given an attribute name, determines which directives match because the attribute is present. We
  * find which directives are applied because of this attribute by elimination: compare the directive
