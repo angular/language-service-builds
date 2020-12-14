@@ -9,6 +9,13 @@
 import { AST, TmplAstNode, TmplAstTemplate } from '@angular/compiler';
 import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
 import * as ts from 'typescript';
+export declare enum CompletionNodeContext {
+    None = 0,
+    ElementTag = 1,
+    ElementAttributeKey = 2,
+    ElementAttributeValue = 3,
+    EventValue = 4
+}
 /**
  * Performs autocompletion operations on a given node in the template.
  *
@@ -25,11 +32,12 @@ export declare class CompletionBuilder<N extends TmplAstNode | AST> {
     private readonly compiler;
     private readonly component;
     private readonly node;
+    private readonly nodeContext;
     private readonly nodeParent;
-    private readonly context;
+    private readonly template;
     private readonly typeChecker;
     private readonly templateTypeChecker;
-    constructor(tsLS: ts.LanguageService, compiler: NgCompiler, component: ts.ClassDeclaration, node: N, nodeParent: TmplAstNode | AST | null, context: TmplAstTemplate | null);
+    constructor(tsLS: ts.LanguageService, compiler: NgCompiler, component: ts.ClassDeclaration, node: N, nodeContext: CompletionNodeContext, nodeParent: TmplAstNode | AST | null, template: TmplAstTemplate | null);
     /**
      * Analogue for `ts.LanguageService.getCompletionsAtPosition`.
      */
@@ -77,4 +85,14 @@ export declare class CompletionBuilder<N extends TmplAstNode | AST> {
      * `{{y|}}`).
      */
     private getGlobalPropertyExpressionCompletionSymbol;
+    private isElementTagCompletion;
+    private getElementTagCompletion;
+    private getElementTagCompletionDetails;
+    private getElementTagCompletionSymbol;
+    private isElementAttributeCompletion;
+    private getElementAttributeCompletions;
+    private getElementAttributeCompletionDetails;
+    private getElementAttributeCompletionSymbol;
+    private isPipeCompletion;
+    private getPipeCompletions;
 }

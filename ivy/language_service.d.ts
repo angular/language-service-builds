@@ -26,6 +26,6 @@ export declare class LanguageService {
     private getCompletionBuilder;
     getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ts.WithMetadata<ts.CompletionInfo> | undefined;
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined): ts.CompletionEntryDetails | undefined;
-    getCompletionEntrySymbol(fileName: string, position: number, name: string): ts.Symbol | undefined;
+    getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
     private watchConfigFile;
 }

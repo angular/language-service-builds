@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/ivy/display_parts" />
-import { ReferenceSymbol, VariableSymbol } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
+import { DirectiveInScope, ReferenceSymbol, VariableSymbol } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
 import * as ts from 'typescript';
 export declare const ALIAS_NAME: string;
 export declare const SYMBOL_INTERFACE: string;
@@ -17,6 +17,7 @@ export declare const SYMBOL_TEXT: string;
  * Label for various kinds of Angular entities for TS display info.
  */
 export declare enum DisplayInfoKind {
+    ATTRIBUTE = "attribute",
     COMPONENT = "component",
     DIRECTIVE = "directive",
     EVENT = "event",
@@ -33,7 +34,7 @@ export interface DisplayInfo {
     displayParts: ts.SymbolDisplayPart[];
     documentation: ts.SymbolDisplayPart[] | undefined;
 }
-export declare function getDisplayInfo(tsLS: ts.LanguageService, typeChecker: ts.TypeChecker, symbol: ReferenceSymbol | VariableSymbol): DisplayInfo;
+export declare function getSymbolDisplayInfo(tsLS: ts.LanguageService, typeChecker: ts.TypeChecker, symbol: ReferenceSymbol | VariableSymbol): DisplayInfo;
 /**
  * Construct a compound `ts.SymbolDisplayPart[]` which incorporates the container and type of a
  * target declaration.
@@ -53,3 +54,5 @@ export declare function createDisplayParts(name: string, kind: DisplayInfoKind, 
  * function are responsible for ensuring this is the case.
  */
 export declare function unsafeCastDisplayInfoKindToScriptElementKind(kind: DisplayInfoKind): ts.ScriptElementKind;
+export declare function getDirectiveDisplayInfo(tsLS: ts.LanguageService, dir: DirectiveInScope): DisplayInfo;
+export declare function getTsSymbolDisplayInfo(tsLS: ts.LanguageService, checker: ts.TypeChecker, symbol: ts.Symbol, kind: DisplayInfoKind, ownerName: string | null): DisplayInfo | null;
