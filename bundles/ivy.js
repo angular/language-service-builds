@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+47.sha-973bb40
+ * @license Angular v11.1.0-next.2+50.sha-dcb3d17
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16739,7 +16739,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+47.sha-973bb40');
+    const VERSION$1 = new Version('11.1.0-next.2+50.sha-dcb3d17');
 
     /**
      * @license
@@ -17421,7 +17421,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+47.sha-973bb40'));
+        definitionMap.set('version', literal('11.1.0-next.2+50.sha-dcb3d17'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20821,7 +20821,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+47.sha-973bb40');
+    const VERSION$2 = new Version('11.1.0-next.2+50.sha-dcb3d17');
 
     /**
      * @license
@@ -26702,127 +26702,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
-     */
-    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessage) {
-        if (mapping.type === 'direct') {
-            let relatedInformation = undefined;
-            if (relatedMessage !== undefined) {
-                relatedInformation = [{
-                        category: ts.DiagnosticCategory.Message,
-                        code: 0,
-                        file: mapping.node.getSourceFile(),
-                        start: relatedMessage.span.start.offset,
-                        length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
-                        messageText: relatedMessage.text,
-                    }];
-            }
-            // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
-            // constant within the `@Component` decorator for the template. This allows us to map the error
-            // directly into the bytes of the source file.
-            return {
-                source: 'ngtsc',
-                code,
-                category,
-                messageText,
-                file: mapping.node.getSourceFile(),
-                componentFile: mapping.node.getSourceFile(),
-                templateId,
-                start: span.start.offset,
-                length: span.end.offset - span.start.offset,
-                relatedInformation,
-            };
-        }
-        else if (mapping.type === 'indirect' || mapping.type === 'external') {
-            // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
-            // to a string constant in the decorator), the component's file name is given with a suffix
-            // indicating it's not the TS file being displayed, but a template.
-            // For external temoplates, the HTML filename is used.
-            const componentSf = mapping.componentClass.getSourceFile();
-            const componentName = mapping.componentClass.name.text;
-            // TODO(alxhub): remove cast when TS in g3 supports this narrowing.
-            const fileName = mapping.type === 'indirect' ?
-                `${componentSf.fileName} (${componentName} template)` :
-                mapping.templateUrl;
-            // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
-            // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
-            // Also investigate caching the file to avoid running the parser multiple times.
-            const sf = ts.createSourceFile(fileName, mapping.template, ts.ScriptTarget.Latest, false, ts.ScriptKind.JSX);
-            let relatedInformation = [];
-            if (relatedMessage !== undefined) {
-                relatedInformation.push({
-                    category: ts.DiagnosticCategory.Message,
-                    code: 0,
-                    file: sf,
-                    start: relatedMessage.span.start.offset,
-                    length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
-                    messageText: relatedMessage.text,
-                });
-            }
-            relatedInformation.push({
-                category: ts.DiagnosticCategory.Message,
-                code: 0,
-                file: componentSf,
-                // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
-                // and getEnd() are used because they don't include surrounding whitespace.
-                start: mapping.node.getStart(),
-                length: mapping.node.getEnd() - mapping.node.getStart(),
-                messageText: `Error occurs in the template of component ${componentName}.`,
-            });
-            return {
-                source: 'ngtsc',
-                category,
-                code,
-                messageText,
-                file: sf,
-                componentFile: componentSf,
-                templateId,
-                start: span.start.offset,
-                length: span.end.offset - span.start.offset,
-                // Show a secondary message indicating the component whose template contains the error.
-                relatedInformation,
-            };
-        }
-        else {
-            throw new Error(`Unexpected source mapping type: ${mapping.type}`);
-        }
-    }
-    function isTemplateDiagnostic(diagnostic) {
-        return diagnostic.hasOwnProperty('componentFile') &&
-            ts.isSourceFile(diagnostic.componentFile);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const TEMPLATE_ID = Symbol('ngTemplateId');
-    const NEXT_TEMPLATE_ID = Symbol('ngNextTemplateId');
-    function getTemplateId(clazz) {
-        const node = clazz;
-        if (node[TEMPLATE_ID] === undefined) {
-            node[TEMPLATE_ID] = allocateTemplateId(node.getSourceFile());
-        }
-        return node[TEMPLATE_ID];
-    }
-    function allocateTemplateId(sf) {
-        if (sf[NEXT_TEMPLATE_ID] === undefined) {
-            sf[NEXT_TEMPLATE_ID] = 1;
-        }
-        return (`tcb${sf[NEXT_TEMPLATE_ID]++}`);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     let _tsSourceMapBug29300Fixed;
     /**
      * Test the current version of TypeScript to see if it has fixed the external SourceMap
@@ -28415,22 +28294,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const templateResource = template.isInline ?
                 { path: null, expression: component.get('template') } :
                 { path: absoluteFrom(template.templateUrl), expression: template.sourceMapping.node };
-            let diagnostics = undefined;
-            if (template.errors !== null) {
-                // If there are any template parsing errors, convert them to `ts.Diagnostic`s for display.
-                const id = getTemplateId(node);
-                diagnostics = template.errors.map(error => {
-                    const span = error.span;
-                    if (span.start.offset === span.end.offset) {
-                        // Template errors can contain zero-length spans, if the error occurs at a single point.
-                        // However, TypeScript does not handle displaying a zero-length diagnostic very well, so
-                        // increase the ending offset by 1 for such errors, to ensure the position is shown in the
-                        // diagnostic.
-                        span.end.offset++;
-                    }
-                    return makeTemplateDiagnostic(id, template.sourceMapping, span, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.TEMPLATE_PARSE_ERROR), error.msg);
-                });
-            }
             // Figure out the set of styles. The ordering here is important: external resources (styleUrls)
             // precede inline styles, and styles defined in the template override styles defined in the
             // component.
@@ -28496,9 +28359,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                         styles: styleResources,
                         template: templateResource,
                     },
-                    isPoisoned: diagnostics !== undefined && diagnostics.length > 0,
+                    isPoisoned: false,
                 },
-                diagnostics,
             };
             if (changeDetection !== null) {
                 output.analysis.meta.changeDetection = changeDetection;
@@ -28557,7 +28419,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return;
             }
             const binder = new R3TargetBinder(scope.matcher);
-            ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file);
+            ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file, meta.template.errors);
         }
         resolve(node, analysis) {
             if (analysis.isPoisoned && !this.usePoisonedData) {
@@ -28660,11 +28522,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             return { data };
         }
         compileFull(node, analysis, resolution, pool) {
+            if (analysis.template.errors !== null && analysis.template.errors.length > 0) {
+                return [];
+            }
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
             const def = compileComponentFromMetadata(meta, pool, makeBindingParser());
             return this.compileComponent(analysis, def);
         }
         compilePartial(node, analysis, resolution) {
+            if (analysis.template.errors !== null && analysis.template.errors.length > 0) {
+                return [];
+            }
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
             const def = compileDeclareComponentFromMetadata(meta, analysis.template);
             return this.compileComponent(analysis, def);
@@ -32960,6 +32828,127 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
+     */
+    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessage) {
+        if (mapping.type === 'direct') {
+            let relatedInformation = undefined;
+            if (relatedMessage !== undefined) {
+                relatedInformation = [{
+                        category: ts.DiagnosticCategory.Message,
+                        code: 0,
+                        file: mapping.node.getSourceFile(),
+                        start: relatedMessage.span.start.offset,
+                        length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
+                        messageText: relatedMessage.text,
+                    }];
+            }
+            // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
+            // constant within the `@Component` decorator for the template. This allows us to map the error
+            // directly into the bytes of the source file.
+            return {
+                source: 'ngtsc',
+                code,
+                category,
+                messageText,
+                file: mapping.node.getSourceFile(),
+                componentFile: mapping.node.getSourceFile(),
+                templateId,
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                relatedInformation,
+            };
+        }
+        else if (mapping.type === 'indirect' || mapping.type === 'external') {
+            // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
+            // to a string constant in the decorator), the component's file name is given with a suffix
+            // indicating it's not the TS file being displayed, but a template.
+            // For external temoplates, the HTML filename is used.
+            const componentSf = mapping.componentClass.getSourceFile();
+            const componentName = mapping.componentClass.name.text;
+            // TODO(alxhub): remove cast when TS in g3 supports this narrowing.
+            const fileName = mapping.type === 'indirect' ?
+                `${componentSf.fileName} (${componentName} template)` :
+                mapping.templateUrl;
+            // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
+            // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
+            // Also investigate caching the file to avoid running the parser multiple times.
+            const sf = ts.createSourceFile(fileName, mapping.template, ts.ScriptTarget.Latest, false, ts.ScriptKind.JSX);
+            let relatedInformation = [];
+            if (relatedMessage !== undefined) {
+                relatedInformation.push({
+                    category: ts.DiagnosticCategory.Message,
+                    code: 0,
+                    file: sf,
+                    start: relatedMessage.span.start.offset,
+                    length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
+                    messageText: relatedMessage.text,
+                });
+            }
+            relatedInformation.push({
+                category: ts.DiagnosticCategory.Message,
+                code: 0,
+                file: componentSf,
+                // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
+                // and getEnd() are used because they don't include surrounding whitespace.
+                start: mapping.node.getStart(),
+                length: mapping.node.getEnd() - mapping.node.getStart(),
+                messageText: `Error occurs in the template of component ${componentName}.`,
+            });
+            return {
+                source: 'ngtsc',
+                category,
+                code,
+                messageText,
+                file: sf,
+                componentFile: componentSf,
+                templateId,
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                // Show a secondary message indicating the component whose template contains the error.
+                relatedInformation,
+            };
+        }
+        else {
+            throw new Error(`Unexpected source mapping type: ${mapping.type}`);
+        }
+    }
+    function isTemplateDiagnostic(diagnostic) {
+        return diagnostic.hasOwnProperty('componentFile') &&
+            ts.isSourceFile(diagnostic.componentFile);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const TEMPLATE_ID = Symbol('ngTemplateId');
+    const NEXT_TEMPLATE_ID = Symbol('ngNextTemplateId');
+    function getTemplateId(clazz) {
+        const node = clazz;
+        if (node[TEMPLATE_ID] === undefined) {
+            node[TEMPLATE_ID] = allocateTemplateId(node.getSourceFile());
+        }
+        return node[TEMPLATE_ID];
+    }
+    function allocateTemplateId(sf) {
+        if (sf[NEXT_TEMPLATE_ID] === undefined) {
+            sf[NEXT_TEMPLATE_ID] = 1;
+        }
+        return (`tcb${sf[NEXT_TEMPLATE_ID]++}`);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const REGISTRY = new DomElementSchemaRegistry();
     const REMOVE_XHTML_REGEX = /^:xhtml:/;
     /**
@@ -36294,27 +36283,30 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.typeCtorPending = new Set();
         }
         /**
-         * Record a template for the given component `node`, with a `SelectorMatcher` for directive
-         * matching.
+         * Register a template to potentially be type-checked.
          *
-         * @param node class of the node being recorded.
-         * @param template AST nodes of the template being recorded.
-         * @param matcher `SelectorMatcher` which tracks directives that are in scope for this template.
+         * Implements `TypeCheckContext.addTemplate`.
          */
-        addTemplate(ref, binder, template, pipes, schemas, sourceMapping, file) {
+        addTemplate(ref, binder, template, pipes, schemas, sourceMapping, file, parseErrors) {
             if (!this.host.shouldCheckComponent(ref.node)) {
                 return;
             }
+            const fileData = this.dataForFile(ref.node.getSourceFile());
+            const shimData = this.pendingShimForComponent(ref.node);
+            const templateId = fileData.sourceManager.getTemplateId(ref.node);
+            const templateDiagnostics = [];
             const sfPath = absoluteFromSourceFile(ref.node.getSourceFile());
             const overrideTemplate = this.host.getTemplateOverride(sfPath, ref.node);
             if (overrideTemplate !== null) {
-                template = overrideTemplate;
+                template = overrideTemplate.nodes;
+                parseErrors = overrideTemplate.errors;
+            }
+            if (parseErrors !== null) {
+                templateDiagnostics.push(...this.getTemplateDiagnostics(parseErrors, templateId, sourceMapping));
             }
             // Accumulate a list of any directives which could not have type constructors generated due to
             // unsupported inlining operations.
             let missingInlines = [];
-            const fileData = this.dataForFile(ref.node.getSourceFile());
-            const shimData = this.pendingShimForComponent(ref.node);
             const boundTarget = binder.bind({ template });
             // Get all of the directives used in the template and record type constructors for all of them.
             for (const dir of boundTarget.getUsedDirectives()) {
@@ -36341,10 +36333,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     });
                 }
             }
-            const templateId = fileData.sourceManager.getTemplateId(ref.node);
             shimData.templates.set(templateId, {
                 template,
                 boundTarget,
+                templateDiagnostics,
             });
             const tcbRequiresInline = requiresInlineTypeCheckBlock(ref.node, pipes);
             // If inlining is not supported, but is required for either the TCB or one of its directive
@@ -36492,6 +36484,19 @@ Either add the @Injectable() decorator to '${provider.node.name
                 this.fileMap.set(sfPath, data);
             }
             return this.fileMap.get(sfPath);
+        }
+        getTemplateDiagnostics(parseErrors, templateId, sourceMapping) {
+            return parseErrors.map(error => {
+                const span = error.span;
+                if (span.start.offset === span.end.offset) {
+                    // Template errors can contain zero-length spans, if the error occurs at a single point.
+                    // However, TypeScript does not handle displaying a zero-length diagnostic very well, so
+                    // increase the ending offset by 1 for such errors, to ensure the position is shown in the
+                    // diagnostic.
+                    span.end.offset++;
+                }
+                return makeTemplateDiagnostic(templateId, sourceMapping, span, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.TEMPLATE_PARSE_ERROR), error.msg);
+            });
         }
     }
     /**
@@ -37254,7 +37259,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (fileRecord.templateOverrides === null) {
                 fileRecord.templateOverrides = new Map();
             }
-            fileRecord.templateOverrides.set(id, nodes);
+            fileRecord.templateOverrides.set(id, { nodes, errors });
             // Clear data for the shim in question, so it'll be regenerated on the next request.
             const shimFile = this.typeCheckingStrategy.shimPathForComponent(component);
             fileRecord.shimData.delete(shimFile);
@@ -37292,8 +37297,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.ensureAllShimsForAllFiles();
         }
         /**
-         * Retrieve type-checking diagnostics from the given `ts.SourceFile` using the most recent
-         * type-checking program.
+         * Retrieve type-checking and template parse diagnostics from the given `ts.SourceFile` using the
+         * most recent type-checking program.
          */
         getDiagnosticsForFile(sf, optimizeFor) {
             switch (optimizeFor) {
@@ -37316,6 +37321,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
                 diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(shimSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
                 diagnostics.push(...shimRecord.genesisDiagnostics);
+                for (const templateData of shimRecord.templates.values()) {
+                    diagnostics.push(...templateData.templateDiagnostics);
+                }
             }
             return diagnostics.filter((diag) => diag !== null);
         }
@@ -37339,6 +37347,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
             diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(shimSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
             diagnostics.push(...shimRecord.genesisDiagnostics);
+            for (const templateData of shimRecord.templates.values()) {
+                diagnostics.push(...templateData.templateDiagnostics);
+            }
             return diagnostics.filter((diag) => diag !== null && diag.templateId === templateId);
         }
         getTypeCheckBlock(component) {
