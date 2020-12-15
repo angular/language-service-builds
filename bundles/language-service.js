@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+52.sha-245dccc
+ * @license Angular v11.1.0-next.2+53.sha-caa4666
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16188,7 +16188,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return params;
     }
     function createComponentDefConsts() {
-        return { prepareStatements: [], constExpressions: [] };
+        return {
+            prepareStatements: [],
+            constExpressions: [],
+            i18nVarRefsCache: new Map(),
+        };
     }
     class TemplateDefinitionBuilder {
         constructor(constantPool, parentBindingScope, level = 0, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds, _constants = createComponentDefConsts()) {
@@ -17158,7 +17162,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Note that static i18n attributes aren't in the i18n array,
                 // because they're treated in the same way as regular attributes.
                 if (attr.i18n) {
-                    attrExprs.push(literal(attr.name), this.i18nTranslate(attr.i18n));
+                    // When i18n attributes are present on elements with structural directives
+                    // (e.g. `<div *ngIf title="Hello" i18n-title>`), we want to avoid generating
+                    // duplicate i18n translation blocks for `ɵɵtemplate` and `ɵɵelement` instruction
+                    // attributes. So we do a cache lookup to see if suitable i18n translation block
+                    // already exists.
+                    const { i18nVarRefsCache } = this._constants;
+                    let i18nVarRef;
+                    if (i18nVarRefsCache.has(attr.i18n)) {
+                        i18nVarRef = i18nVarRefsCache.get(attr.i18n);
+                    }
+                    else {
+                        i18nVarRef = this.i18nTranslate(attr.i18n);
+                        i18nVarRefsCache.set(attr.i18n, i18nVarRef);
+                    }
+                    attrExprs.push(literal(attr.name), i18nVarRef);
                 }
                 else {
                     attrExprs.push(...getAttributeNameLiterals(attr.name), trustedConstAttribute(elementName, attr));
@@ -18749,7 +18767,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+52.sha-245dccc');
+    const VERSION$1 = new Version('11.1.0-next.2+53.sha-caa4666');
 
     /**
      * @license
@@ -46464,7 +46482,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.2+52.sha-245dccc');
+    const VERSION$2 = new Version$1('11.1.0-next.2+53.sha-caa4666');
 
     /**
      * @license
