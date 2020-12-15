@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.2+46.sha-2a74431
+ * @license Angular v11.1.0-next.2+47.sha-973bb40
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16739,7 +16739,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.2+46.sha-2a74431');
+    const VERSION$1 = new Version('11.1.0-next.2+47.sha-973bb40');
 
     /**
      * @license
@@ -17421,7 +17421,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.2+46.sha-2a74431'));
+        definitionMap.set('version', literal('11.1.0-next.2+47.sha-973bb40'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20821,7 +20821,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.2+46.sha-2a74431');
+    const VERSION$2 = new Version('11.1.0-next.2+47.sha-973bb40');
 
     /**
      * @license
@@ -27325,7 +27325,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     tokenClass = useExisting;
                 }
             }
-            if (tokenClass !== null && reflector.isClass(tokenClass.node)) {
+            // TODO(alxhub): there was a bug where `getConstructorParameters` would return `null` for a
+            // class in a .d.ts file, always, even if the class had a constructor. This was fixed for
+            // `getConstructorParameters`, but that fix causes more classes to be recognized here as needing
+            // provider checks, which is a breaking change in g3. Avoid this breakage for now by skipping
+            // classes from .d.ts files here directly, until g3 can be cleaned up.
+            if (tokenClass !== null && !tokenClass.node.getSourceFile().isDeclarationFile &&
+                reflector.isClass(tokenClass.node)) {
                 const constructorParameters = reflector.getConstructorParameters(tokenClass.node);
                 // Note that we only want to capture providers with a non-trivial constructor,
                 // because they're the ones that might be using DI and need to be decorated.
