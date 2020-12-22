@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+25.sha-12cb39c
+ * @license Angular v11.1.0-next.3+27.sha-e4fbab9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18768,7 +18768,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+25.sha-12cb39c');
+    const VERSION$1 = new Version('11.1.0-next.3+27.sha-e4fbab9');
 
     /**
      * @license
@@ -28215,8 +28215,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             (currentView[PREORDER_HOOK_FLAGS] & 65535 /* IndexOfTheNextPreOrderHookMaskMask */) :
             0;
         const nodeIndexLimit = currentNodeIndex != null ? currentNodeIndex : -1;
+        const max = arr.length - 1; // Stop the loop at length - 1, because we look for the hook at i + 1
         let lastNodeIndexFound = 0;
-        for (let i = startIndex; i < arr.length; i++) {
+        for (let i = startIndex; i < max; i++) {
             const hook = arr[i + 1];
             if (typeof hook === 'number') {
                 lastNodeIndexFound = arr[i];
@@ -28253,8 +28254,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const directive = currentView[directiveIndex];
         if (isInitHook) {
             const indexWithintInitPhase = currentView[FLAGS] >> 11 /* IndexWithinInitPhaseShift */;
-            // The init phase state must be always checked here as it may have been recursively
-            // updated
+            // The init phase state must be always checked here as it may have been recursively updated.
             if (indexWithintInitPhase <
                 (currentView[PREORDER_HOOK_FLAGS] >> 16 /* NumberOfInitHooksCalledShift */) &&
                 (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
@@ -34655,7 +34655,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.3+25.sha-12cb39c');
+    const VERSION$2 = new Version$1('11.1.0-next.3+27.sha-e4fbab9');
 
     /**
      * @license
