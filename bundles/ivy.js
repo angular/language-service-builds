@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+12.sha-7413cb4
+ * @license Angular v11.1.0-next.3+24.sha-382f906
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2555,6 +2555,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     Identifiers$1.invalidFactory = { name: 'ɵɵinvalidFactory', moduleName: CORE$1 };
     Identifiers$1.invalidFactoryDep = { name: 'ɵɵinvalidFactoryDep', moduleName: CORE$1 };
     Identifiers$1.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
+    Identifiers$1.forwardRef = { name: 'forwardRef', moduleName: CORE$1 };
     Identifiers$1.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
     Identifiers$1.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
     Identifiers$1.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE$1 };
@@ -16757,7 +16758,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+12.sha-7413cb4');
+    const VERSION$1 = new Version('11.1.0-next.3+24.sha-382f906');
 
     /**
      * @license
@@ -17439,7 +17440,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+12.sha-7413cb4'));
+        definitionMap.set('version', literal('11.1.0-next.3+24.sha-382f906'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -17569,9 +17570,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * individual directives. If the component does not use any directives, then null is returned.
      */
     function compileUsedDirectiveMetadata(meta) {
-        const wrapType = meta.wrapDirectivesAndPipesInClosure ?
-            (expr) => fn([], [new ReturnStatement(expr)]) :
-            (expr) => expr;
+        const wrapType = meta.wrapDirectivesAndPipesInClosure ? generateForwardRef : (expr) => expr;
         return toOptionalLiteralArray(meta.directives, directive => {
             const dirMeta = new DefinitionMap();
             dirMeta.set('type', wrapType(directive.type));
@@ -17591,14 +17590,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (meta.pipes.size === 0) {
             return null;
         }
-        const wrapType = meta.wrapDirectivesAndPipesInClosure ?
-            (expr) => fn([], [new ReturnStatement(expr)]) :
-            (expr) => expr;
+        const wrapType = meta.wrapDirectivesAndPipesInClosure ? generateForwardRef : (expr) => expr;
         const entries = [];
         for (const [name, pipe] of meta.pipes) {
             entries.push({ key: name, value: wrapType(pipe), quoted: true });
         }
         return literalMap(entries);
+    }
+    function generateForwardRef(expr) {
+        return importExpr(Identifiers$1.forwardRef).callFn([fn([], [new ReturnStatement(expr)])]);
     }
 
     /**
@@ -20839,7 +20839,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+12.sha-7413cb4');
+    const VERSION$2 = new Version('11.1.0-next.3+24.sha-382f906');
 
     /**
      * @license
