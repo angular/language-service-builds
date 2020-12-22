@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+24.sha-382f906
+ * @license Angular v11.1.0-next.3+25.sha-12cb39c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16758,7 +16758,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+24.sha-382f906');
+    const VERSION$1 = new Version('11.1.0-next.3+25.sha-12cb39c');
 
     /**
      * @license
@@ -17440,7 +17440,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+24.sha-382f906'));
+        definitionMap.set('version', literal('11.1.0-next.3+25.sha-12cb39c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20839,7 +20839,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+24.sha-382f906');
+    const VERSION$2 = new Version('11.1.0-next.3+25.sha-12cb39c');
 
     /**
      * @license
@@ -38841,6 +38841,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function isTemplateNodeWithKeyAndValue(node) {
         return isTemplateNode(node) && node.hasOwnProperty('keySpan');
     }
+    function isWithinKeyValue(position, node) {
+        let { keySpan, valueSpan } = node;
+        if (valueSpan === undefined && node instanceof BoundEvent) {
+            valueSpan = node.handlerSpan;
+        }
+        const isWithinKeyValue = isWithin(position, keySpan) || !!(valueSpan && isWithin(position, valueSpan));
+        return isWithinKeyValue;
+    }
     function isTemplateNode(node) {
         // Template node implements the Node interface so we cannot use instanceof.
         return node.sourceSpan instanceof ParseSourceSpan;
@@ -40243,6 +40251,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         TargetNodeKind[TargetNodeKind["AttributeInValueContext"] = 5] = "AttributeInValueContext";
     })(TargetNodeKind || (TargetNodeKind = {}));
     /**
+     * This special marker is added to the path when the cursor is within the sourceSpan but not the key
+     * or value span of a node with key/value spans.
+     */
+    const OUTSIDE_K_V_MARKER = new AST(new ParseSpan(-1, -1), new AbsoluteSourceSpan(-1, -1));
+    /**
      * Return the template AST node or expression AST node that most accurately
      * represents the node at the specified cursor `position`.
      *
@@ -40255,18 +40268,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return null;
         }
         const candidate = path[path.length - 1];
-        if (isTemplateNodeWithKeyAndValue(candidate)) {
-            let { keySpan, valueSpan } = candidate;
-            if (valueSpan === undefined && candidate instanceof BoundEvent) {
-                valueSpan = candidate.handlerSpan;
-            }
-            const isWithinKeyValue = isWithin(position, keySpan) || (valueSpan && isWithin(position, valueSpan));
-            if (!isWithinKeyValue) {
-                // If cursor is within source span but not within key span or value span,
-                // do not return the node.
-                return null;
-            }
-        }
         // Walk up the result nodes to find the nearest `t.Template` which contains the targeted node.
         let context = null;
         for (let i = path.length - 2; i >= 0; i--) {
@@ -40347,7 +40348,21 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         static visitTemplate(template, position) {
             const visitor = new TemplateTargetVisitor(position);
             visitor.visitAll(template);
-            return visitor.path;
+            const { path } = visitor;
+            const strictPath = path.filter(v => v !== OUTSIDE_K_V_MARKER);
+            const candidate = strictPath[strictPath.length - 1];
+            const matchedASourceSpanButNotAKvSpan = path.some(v => v === OUTSIDE_K_V_MARKER);
+            if (matchedASourceSpanButNotAKvSpan &&
+                (candidate instanceof Template || candidate instanceof Element)) {
+                // Template nodes with key and value spans are always defined on a `t.Template` or
+                // `t.Element`. If we found a node on a template with a `sourceSpan` that includes the cursor,
+                // it is possible that we are outside the k/v spans (i.e. in-between them). If this is the
+                // case and we do not have any other candidate matches on the `t.Element` or `t.Template`, we
+                // want to return no results. Otherwise, the `t.Element`/`t.Template` result is incorrect for
+                // that cursor position.
+                return [];
+            }
+            return strictPath;
         }
         visit(node) {
             const last = this.path[this.path.length - 1];
@@ -40360,7 +40375,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return;
             }
             const { start, end } = getSpanIncludingEndTag(node);
-            if (isWithin(this.position, { start, end })) {
+            if (!isWithin(this.position, { start, end })) {
+                return;
+            }
+            if (isTemplateNodeWithKeyAndValue(node) && !isWithinKeyValue(this.position, node)) {
+                // If cursor is within source span but not within key span or value span,
+                // do not return the node.
+                this.path.push(OUTSIDE_K_V_MARKER);
+            }
+            else {
                 this.path.push(node);
                 node.visit(this);
             }
