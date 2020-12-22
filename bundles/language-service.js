@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.5+11.sha-3f4a1d6
+ * @license Angular v11.0.5+23.sha-ef13e83
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18436,7 +18436,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.5+11.sha-3f4a1d6');
+    const VERSION$1 = new Version('11.0.5+23.sha-ef13e83');
 
     /**
      * @license
@@ -27891,8 +27891,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             (currentView[PREORDER_HOOK_FLAGS] & 65535 /* IndexOfTheNextPreOrderHookMaskMask */) :
             0;
         const nodeIndexLimit = currentNodeIndex != null ? currentNodeIndex : -1;
+        const max = arr.length - 1; // Stop the loop at length - 1, because we look for the hook at i + 1
         let lastNodeIndexFound = 0;
-        for (let i = startIndex; i < arr.length; i++) {
+        for (let i = startIndex; i < max; i++) {
             const hook = arr[i + 1];
             if (typeof hook === 'number') {
                 lastNodeIndexFound = arr[i];
@@ -27929,8 +27930,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const directive = currentView[directiveIndex];
         if (isInitHook) {
             const indexWithintInitPhase = currentView[FLAGS] >> 11 /* IndexWithinInitPhaseShift */;
-            // The init phase state must be always checked here as it may have been recursively
-            // updated
+            // The init phase state must be always checked here as it may have been recursively updated.
             if (indexWithintInitPhase <
                 (currentView[PREORDER_HOOK_FLAGS] >> 16 /* NumberOfInitHooksCalledShift */) &&
                 (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
@@ -30290,12 +30290,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     tCleanup[i].call(context);
                 }
             }
-            if (lCleanup !== null) {
-                for (let i = lastLCleanupIndex + 1; i < lCleanup.length; i++) {
-                    const instanceCleanupFn = lCleanup[i];
-                    ngDevMode && assertFunction(instanceCleanupFn, 'Expecting instance cleanup function.');
-                    instanceCleanupFn();
-                }
+        }
+        if (lCleanup !== null) {
+            for (let i = lastLCleanupIndex + 1; i < lCleanup.length; i++) {
+                const instanceCleanupFn = lCleanup[i];
+                ngDevMode && assertFunction(instanceCleanupFn, 'Expecting instance cleanup function.');
+                instanceCleanupFn();
             }
             lView[CLEANUP] = null;
         }
@@ -31924,19 +31924,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * is `null` and the function is store in `LView` (rather than it `TView`).
      */
     function storeCleanupWithContext(tView, lView, context, cleanupFn) {
-        const lCleanup = getLCleanup(lView);
+        const lCleanup = getOrCreateLViewCleanup(lView);
         if (context === null) {
             // If context is null that this is instance specific callback. These callbacks can only be
             // inserted after template shared instances. For this reason in ngDevMode we freeze the TView.
             if (ngDevMode) {
-                Object.freeze(getTViewCleanup(tView));
+                Object.freeze(getOrCreateTViewCleanup(tView));
             }
             lCleanup.push(cleanupFn);
         }
         else {
             lCleanup.push(context);
             if (tView.firstCreatePass) {
-                getTViewCleanup(tView).push(cleanupFn, lCleanup.length - 1);
+                getOrCreateTViewCleanup(tView).push(cleanupFn, lCleanup.length - 1);
             }
         }
     }
@@ -32408,11 +32408,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         viewQueryFn(flags, component);
     }
     const CLEAN_PROMISE = _CLEAN_PROMISE;
-    function getLCleanup(view) {
+    function getOrCreateLViewCleanup(view) {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
         return view[CLEANUP] || (view[CLEANUP] = ngDevMode ? new LCleanup() : []);
     }
-    function getTViewCleanup(tView) {
+    function getOrCreateTViewCleanup(tView) {
         return tView.cleanup || (tView.cleanup = ngDevMode ? new TCleanup() : []);
     }
     /** Handles an error thrown in an LView. */
@@ -34331,7 +34331,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.5+11.sha-3f4a1d6');
+    const VERSION$2 = new Version$1('11.0.5+23.sha-ef13e83');
 
     /**
      * @license
