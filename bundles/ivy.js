@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+53.sha-8cdfd77
+ * @license Angular v11.1.0-next.3+54.sha-6a9d7e5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1244,6 +1244,24 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return visitor.visitInvokeFunctionExpr(this, context);
         }
     }
+    class TaggedTemplateExpr extends Expression {
+        constructor(tag, template, type, sourceSpan) {
+            super(type, sourceSpan);
+            this.tag = tag;
+            this.template = template;
+        }
+        isEquivalent(e) {
+            return e instanceof TaggedTemplateExpr && this.tag.isEquivalent(e.tag) &&
+                areAllEquivalentPredicate(this.template.elements, e.template.elements, (a, b) => a.text === b.text) &&
+                areAllEquivalent(this.template.expressions, e.template.expressions);
+        }
+        isConstant() {
+            return false;
+        }
+        visitExpression(visitor, context) {
+            return visitor.visitTaggedTemplateExpr(this, context);
+        }
+    }
     class InstantiateExpr extends Expression {
         constructor(classExpr, args, type, sourceSpan) {
             super(type, sourceSpan);
@@ -1274,6 +1292,26 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitExpression(visitor, context) {
             return visitor.visitLiteralExpr(this, context);
+        }
+    }
+    class TemplateLiteral {
+        constructor(elements, expressions) {
+            this.elements = elements;
+            this.expressions = expressions;
+        }
+    }
+    class TemplateLiteralElement {
+        constructor(text, sourceSpan, rawText) {
+            var _a;
+            this.text = text;
+            this.sourceSpan = sourceSpan;
+            // If `rawText` is not provided, try to extract the raw string from its
+            // associated `sourceSpan`. If that is also not available, "fake" the raw
+            // string instead by escaping the following control sequences:
+            // - "\" would otherwise indicate that the next character is a control character.
+            // - "`" and "${" are template string control sequences that would otherwise prematurely
+            // indicate the end of the template literal element.
+            this.rawText = (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
         }
     }
     class MessagePiece {
@@ -1774,6 +1812,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     function ifStmt(condition, thenClause, elseClause, sourceSpan, leadingComments) {
         return new IfStmt(condition, thenClause, elseClause, sourceSpan, leadingComments);
+    }
+    function taggedTemplate(tag, template, type, sourceSpan) {
+        return new TaggedTemplateExpr(tag, template, type, sourceSpan);
     }
     function literal(value, type, sourceSpan) {
         return new LiteralExpr(value, type, sourceSpan);
@@ -15822,10 +15863,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (isTrustedTypesSink(tagName, attr.name)) {
             switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
                 case SecurityContext.HTML:
-                    return importExpr(Identifiers$1.trustConstantHtml).callFn([value], attr.valueSpan);
+                    return taggedTemplate(importExpr(Identifiers$1.trustConstantHtml), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
                 // NB: no SecurityContext.SCRIPT here, as the corresponding tags are stripped by the compiler.
                 case SecurityContext.RESOURCE_URL:
-                    return importExpr(Identifiers$1.trustConstantResourceUrl).callFn([value], attr.valueSpan);
+                    return taggedTemplate(importExpr(Identifiers$1.trustConstantResourceUrl), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
                 default:
                     return value;
             }
@@ -16827,7 +16868,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+53.sha-8cdfd77');
+    const VERSION$1 = new Version('11.1.0-next.3+54.sha-6a9d7e5');
 
     /**
      * @license
@@ -17509,7 +17550,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+53.sha-8cdfd77'));
+        definitionMap.set('version', literal('11.1.0-next.3+54.sha-6a9d7e5'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20908,7 +20949,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+53.sha-8cdfd77');
+    const VERSION$2 = new Version('11.1.0-next.3+54.sha-6a9d7e5');
 
     /**
      * @license
