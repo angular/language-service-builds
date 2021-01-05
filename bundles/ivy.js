@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+51.sha-6057753
+ * @license Angular v11.1.0-next.3+55.sha-6abc133
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1244,6 +1244,24 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return visitor.visitInvokeFunctionExpr(this, context);
         }
     }
+    class TaggedTemplateExpr extends Expression {
+        constructor(tag, template, type, sourceSpan) {
+            super(type, sourceSpan);
+            this.tag = tag;
+            this.template = template;
+        }
+        isEquivalent(e) {
+            return e instanceof TaggedTemplateExpr && this.tag.isEquivalent(e.tag) &&
+                areAllEquivalentPredicate(this.template.elements, e.template.elements, (a, b) => a.text === b.text) &&
+                areAllEquivalent(this.template.expressions, e.template.expressions);
+        }
+        isConstant() {
+            return false;
+        }
+        visitExpression(visitor, context) {
+            return visitor.visitTaggedTemplateExpr(this, context);
+        }
+    }
     class InstantiateExpr extends Expression {
         constructor(classExpr, args, type, sourceSpan) {
             super(type, sourceSpan);
@@ -1274,6 +1292,26 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitExpression(visitor, context) {
             return visitor.visitLiteralExpr(this, context);
+        }
+    }
+    class TemplateLiteral {
+        constructor(elements, expressions) {
+            this.elements = elements;
+            this.expressions = expressions;
+        }
+    }
+    class TemplateLiteralElement {
+        constructor(text, sourceSpan, rawText) {
+            var _a;
+            this.text = text;
+            this.sourceSpan = sourceSpan;
+            // If `rawText` is not provided, try to extract the raw string from its
+            // associated `sourceSpan`. If that is also not available, "fake" the raw
+            // string instead by escaping the following control sequences:
+            // - "\" would otherwise indicate that the next character is a control character.
+            // - "`" and "${" are template string control sequences that would otherwise prematurely
+            // indicate the end of the template literal element.
+            this.rawText = (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
         }
     }
     class MessagePiece {
@@ -1775,6 +1813,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function ifStmt(condition, thenClause, elseClause, sourceSpan, leadingComments) {
         return new IfStmt(condition, thenClause, elseClause, sourceSpan, leadingComments);
     }
+    function taggedTemplate(tag, template, type, sourceSpan) {
+        return new TaggedTemplateExpr(tag, template, type, sourceSpan);
+    }
     function literal(value, type, sourceSpan) {
         return new LiteralExpr(value, type, sourceSpan);
     }
@@ -1844,10 +1885,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     function error(msg) {
         throw new Error(`Internal Error: ${msg}`);
-    }
-    // Escape characters that have a special meaning in Regular Expressions
-    function escapeRegExp(s) {
-        return s.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
     }
     function utf8Encode(str) {
         let encoded = [];
@@ -11107,19 +11144,6 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.errors = errors;
         }
     }
-    const defaultInterpolateRegExp = _createInterpolateRegExp(DEFAULT_INTERPOLATION_CONFIG);
-    function _getInterpolateRegExp(config) {
-        if (config === DEFAULT_INTERPOLATION_CONFIG) {
-            return defaultInterpolateRegExp;
-        }
-        else {
-            return _createInterpolateRegExp(config);
-        }
-    }
-    function _createInterpolateRegExp(config) {
-        const pattern = escapeRegExp(config.start) + '([\\s\\S]*?)' + escapeRegExp(config.end);
-        return new RegExp(pattern, 'g');
-    }
     class Parser$1 {
         constructor(_lexer) {
             this._lexer = _lexer;
@@ -11279,7 +11303,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     // parse from starting {{ to ending }} while ignoring content inside quotes.
                     const fullStart = i;
                     const exprStart = fullStart + interpStart.length;
-                    const exprEnd = this._getExpressiondEndIndex(input, interpEnd, exprStart);
+                    const exprEnd = this._getInterpolationEndIndex(input, interpEnd, exprStart);
                     if (exprEnd === -1) {
                         // Could not find the end of the interpolation; do not parse an expression.
                         // Instead we should extend the content on the last raw string.
@@ -11338,50 +11362,64 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             return null;
         }
-        _checkNoInterpolation(input, location, interpolationConfig) {
-            const regexp = _getInterpolateRegExp(interpolationConfig);
-            const parts = input.split(regexp);
-            if (parts.length > 1) {
-                this._reportError(`Got interpolation (${interpolationConfig.start}${interpolationConfig.end}) where expression was expected`, input, `at column ${this._findInterpolationErrorColumn(parts, 1, interpolationConfig)} in`, location);
+        _checkNoInterpolation(input, location, { start, end }) {
+            let startIndex = -1;
+            let endIndex = -1;
+            for (const charIndex of this._forEachUnquotedChar(input, 0)) {
+                if (startIndex === -1) {
+                    if (input.startsWith(start)) {
+                        startIndex = charIndex;
+                    }
+                }
+                else {
+                    endIndex = this._getInterpolationEndIndex(input, end, charIndex);
+                    if (endIndex > -1) {
+                        break;
+                    }
+                }
             }
-        }
-        _findInterpolationErrorColumn(parts, partInErrIdx, interpolationConfig) {
-            let errLocation = '';
-            for (let j = 0; j < partInErrIdx; j++) {
-                errLocation += j % 2 === 0 ?
-                    parts[j] :
-                    `${interpolationConfig.start}${parts[j]}${interpolationConfig.end}`;
+            if (startIndex > -1 && endIndex > -1) {
+                this._reportError(`Got interpolation (${start}${end}) where expression was expected`, input, `at column ${startIndex} in`, location);
             }
-            return errLocation.length;
         }
         /**
          * Finds the index of the end of an interpolation expression
          * while ignoring comments and quoted content.
          */
-        _getExpressiondEndIndex(input, expressionEnd, start) {
+        _getInterpolationEndIndex(input, expressionEnd, start) {
+            for (const charIndex of this._forEachUnquotedChar(input, start)) {
+                if (input.startsWith(expressionEnd, charIndex)) {
+                    return charIndex;
+                }
+                // Nothing else in the expression matters after we've
+                // hit a comment so look directly for the end token.
+                if (input.startsWith('//', charIndex)) {
+                    return input.indexOf(expressionEnd, charIndex);
+                }
+            }
+            return -1;
+        }
+        /**
+         * Generator used to iterate over the character indexes of a string that are outside of quotes.
+         * @param input String to loop through.
+         * @param start Index within the string at which to start.
+         */
+        *_forEachUnquotedChar(input, start) {
             let currentQuote = null;
             let escapeCount = 0;
             for (let i = start; i < input.length; i++) {
                 const char = input[i];
-                // Skip the characters inside quotes. Note that we only care about the
-                // outer-most quotes matching up and we need to account for escape characters.
+                // Skip the characters inside quotes. Note that we only care about the outer-most
+                // quotes matching up and we need to account for escape characters.
                 if (isQuote(input.charCodeAt(i)) && (currentQuote === null || currentQuote === char) &&
                     escapeCount % 2 === 0) {
                     currentQuote = currentQuote === null ? char : null;
                 }
                 else if (currentQuote === null) {
-                    if (input.startsWith(expressionEnd, i)) {
-                        return i;
-                    }
-                    // Nothing else in the expression matters after we've
-                    // hit a comment so look directly for the end token.
-                    if (input.startsWith('//', i)) {
-                        return input.indexOf(expressionEnd, i);
-                    }
+                    yield i;
                 }
                 escapeCount = char === '\\' ? escapeCount + 1 : 0;
             }
-            return -1;
         }
     }
     class IvyParser extends Parser$1 {
@@ -15822,10 +15860,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (isTrustedTypesSink(tagName, attr.name)) {
             switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
                 case SecurityContext.HTML:
-                    return importExpr(Identifiers$1.trustConstantHtml).callFn([value], attr.valueSpan);
+                    return taggedTemplate(importExpr(Identifiers$1.trustConstantHtml), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
                 // NB: no SecurityContext.SCRIPT here, as the corresponding tags are stripped by the compiler.
                 case SecurityContext.RESOURCE_URL:
-                    return importExpr(Identifiers$1.trustConstantResourceUrl).callFn([value], attr.valueSpan);
+                    return taggedTemplate(importExpr(Identifiers$1.trustConstantResourceUrl), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
                 default:
                     return value;
             }
@@ -16827,7 +16865,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+51.sha-6057753');
+    const VERSION$1 = new Version('11.1.0-next.3+55.sha-6abc133');
 
     /**
      * @license
@@ -17509,7 +17547,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+51.sha-6057753'));
+        definitionMap.set('version', literal('11.1.0-next.3+55.sha-6abc133'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20908,7 +20946,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+51.sha-6057753');
+    const VERSION$2 = new Version('11.1.0-next.3+55.sha-6abc133');
 
     /**
      * @license
