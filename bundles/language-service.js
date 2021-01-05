@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+54.sha-6a9d7e5
+ * @license Angular v11.1.0-next.3+51.sha-6057753
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1270,24 +1270,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitInvokeFunctionExpr(this, context);
         }
     }
-    class TaggedTemplateExpr extends Expression {
-        constructor(tag, template, type, sourceSpan) {
-            super(type, sourceSpan);
-            this.tag = tag;
-            this.template = template;
-        }
-        isEquivalent(e) {
-            return e instanceof TaggedTemplateExpr && this.tag.isEquivalent(e.tag) &&
-                areAllEquivalentPredicate(this.template.elements, e.template.elements, (a, b) => a.text === b.text) &&
-                areAllEquivalent(this.template.expressions, e.template.expressions);
-        }
-        isConstant() {
-            return false;
-        }
-        visitExpression(visitor, context) {
-            return visitor.visitTaggedTemplateExpr(this, context);
-        }
-    }
     class InstantiateExpr extends Expression {
         constructor(classExpr, args, type, sourceSpan) {
             super(type, sourceSpan);
@@ -1318,26 +1300,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         visitExpression(visitor, context) {
             return visitor.visitLiteralExpr(this, context);
-        }
-    }
-    class TemplateLiteral {
-        constructor(elements, expressions) {
-            this.elements = elements;
-            this.expressions = expressions;
-        }
-    }
-    class TemplateLiteralElement {
-        constructor(text, sourceSpan, rawText) {
-            var _a;
-            this.text = text;
-            this.sourceSpan = sourceSpan;
-            // If `rawText` is not provided, try to extract the raw string from its
-            // associated `sourceSpan`. If that is also not available, "fake" the raw
-            // string instead by escaping the following control sequences:
-            // - "\" would otherwise indicate that the next character is a control character.
-            // - "`" and "${" are template string control sequences that would otherwise prematurely
-            // indicate the end of the template literal element.
-            this.rawText = (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
         }
     }
     class MessagePiece {
@@ -1831,9 +1793,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function ifStmt(condition, thenClause, elseClause, sourceSpan, leadingComments) {
         return new IfStmt(condition, thenClause, elseClause, sourceSpan, leadingComments);
-    }
-    function taggedTemplate(tag, template, type, sourceSpan) {
-        return new TaggedTemplateExpr(tag, template, type, sourceSpan);
     }
     function literal(value, type, sourceSpan) {
         return new LiteralExpr(value, type, sourceSpan);
@@ -17873,10 +17832,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (isTrustedTypesSink(tagName, attr.name)) {
             switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
                 case SecurityContext.HTML:
-                    return taggedTemplate(importExpr(Identifiers$1.trustConstantHtml), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
+                    return importExpr(Identifiers$1.trustConstantHtml).callFn([value], attr.valueSpan);
                 // NB: no SecurityContext.SCRIPT here, as the corresponding tags are stripped by the compiler.
                 case SecurityContext.RESOURCE_URL:
-                    return taggedTemplate(importExpr(Identifiers$1.trustConstantResourceUrl), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
+                    return importExpr(Identifiers$1.trustConstantResourceUrl).callFn([value], attr.valueSpan);
                 default:
                     return value;
             }
@@ -18878,7 +18837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+54.sha-6a9d7e5');
+    const VERSION$1 = new Version('11.1.0-next.3+51.sha-6057753');
 
     /**
      * @license
@@ -32166,10 +32125,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         throw new Error('unsafe value used in a script context');
     }
     /**
-     * A template tag function for promoting the associated constant literal to a
-     * TrustedHTML. Interpolation is explicitly not allowed.
-     *
-     * @param html constant template literal containing trusted HTML.
+     * Promotes the given constant string to a TrustedHTML.
+     * @param html constant string containing trusted HTML.
      * @returns TrustedHTML wrapping `html`.
      *
      * @security This is a security-sensitive function and should only be used to
@@ -32179,22 +32136,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @codeGenApi
      */
     function ɵɵtrustConstantHtml(html) {
-        // The following runtime check ensures that the function was called as a
-        // template tag (e.g. ɵɵtrustConstantHtml`content`), without any interpolation
-        // (e.g. not ɵɵtrustConstantHtml`content ${variable}`). A TemplateStringsArray
-        // is an array with a `raw` property that is also an array. The associated
-        // template literal has no interpolation if and only if the length of the
-        // TemplateStringsArray is 1.
-        if (ngDevMode && (!Array.isArray(html) || !Array.isArray(html.raw) || html.length !== 1)) {
-            throw new Error(`Unexpected interpolation in trusted HTML constant: ${html.join('?')}`);
-        }
-        return trustedHTMLFromString(html[0]);
+        return trustedHTMLFromString(html);
     }
     /**
-     * A template tag function for promoting the associated constant literal to a
-     * TrustedScriptURL. Interpolation is explicitly not allowed.
-     *
-     * @param url constant template literal containing a trusted script URL.
+     * Promotes the given constant string to a TrustedScriptURL.
+     * @param url constant string containing a trusted script URL.
      * @returns TrustedScriptURL wrapping `url`.
      *
      * @security This is a security-sensitive function and should only be used to
@@ -32204,16 +32150,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @codeGenApi
      */
     function ɵɵtrustConstantResourceUrl(url) {
-        // The following runtime check ensures that the function was called as a
-        // template tag (e.g. ɵɵtrustConstantResourceUrl`content`), without any
-        // interpolation (e.g. not ɵɵtrustConstantResourceUrl`content ${variable}`). A
-        // TemplateStringsArray is an array with a `raw` property that is also an
-        // array. The associated template literal has no interpolation if and only if
-        // the length of the TemplateStringsArray is 1.
-        if (ngDevMode && (!Array.isArray(url) || !Array.isArray(url.raw) || url.length !== 1)) {
-            throw new Error(`Unexpected interpolation in trusted URL constant: ${url.join('?')}`);
-        }
-        return trustedScriptURLFromString(url[0]);
+        return trustedScriptURLFromString(url);
     }
     /**
      * Detects which sanitizer to use for URL property, based on tag name and prop name.
@@ -46654,7 +46591,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.3+54.sha-6a9d7e5');
+    const VERSION$2 = new Version$1('11.1.0-next.3+51.sha-6057753');
 
     /**
      * @license
@@ -53932,7 +53869,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     }
     /**
      * Creates a factory for a platform. Can be used to provide or override `Providers` specific to
-     * your application's runtime needs, such as `PLATFORM_INITIALIZER` and `PLATFORM_ID`.
+     * your applciation's runtime needs, such as `PLATFORM_INITIALIZER` and `PLATFORM_ID`.
      * @param parentPlatformFactory Another platform factory to modify. Allows you to compose factories
      * to build up configurations that might be required by different libraries or parts of the
      * application.
