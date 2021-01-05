@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+37.sha-4eac7e6
+ * @license Angular v11.1.0-next.3+38.sha-d466db8
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16827,7 +16827,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+37.sha-4eac7e6');
+    const VERSION$1 = new Version('11.1.0-next.3+38.sha-d466db8');
 
     /**
      * @license
@@ -17509,7 +17509,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+37.sha-4eac7e6'));
+        definitionMap.set('version', literal('11.1.0-next.3+38.sha-d466db8'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20908,7 +20908,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+37.sha-4eac7e6');
+    const VERSION$2 = new Version('11.1.0-next.3+38.sha-d466db8');
 
     /**
      * @license
@@ -32675,6 +32675,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     (function (ExpressionIdentifier) {
         ExpressionIdentifier["DIRECTIVE"] = "DIR";
         ExpressionIdentifier["COMPONENT_COMPLETION"] = "COMPCOMP";
+        ExpressionIdentifier["EVENT_PARAMETER"] = "EP";
     })(ExpressionIdentifier || (ExpressionIdentifier = {}));
     /** Tags the node with the given expression identifier. */
     function addExpressionIdentifier(node, identifier) {
@@ -36229,6 +36230,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         /* name */ EVENT_PARAMETER, 
         /* questionToken */ undefined, 
         /* type */ eventParamType);
+        addExpressionIdentifier(eventParam, ExpressionIdentifier.EVENT_PARAMETER);
         return ts.createFunctionExpression(
         /* modifier */ undefined, 
         /* asteriskToken */ undefined, 
@@ -41129,7 +41131,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const entries = [];
             for (const ref of refs) {
                 if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(ref.fileName))) {
-                    const entry = convertToTemplateReferenceEntry(ref, this.ttc);
+                    const entry = this.convertToTemplateReferenceEntry(ref, this.ttc);
                     if (entry !== null) {
                         entries.push(entry);
                     }
@@ -41140,32 +41142,44 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
             return entries;
         }
-    }
-    function convertToTemplateReferenceEntry(shimReferenceEntry, templateTypeChecker) {
-        // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project serverHost or
-        // LSParseConfigHost in the adapter. We should have a better defined way to normalize paths.
-        const mapping = templateTypeChecker.getTemplateMappingAtShimLocation({
-            shimPath: absoluteFrom(shimReferenceEntry.fileName),
-            positionInShimFile: shimReferenceEntry.textSpan.start,
-        });
-        if (mapping === null) {
-            return null;
+        convertToTemplateReferenceEntry(shimReferenceEntry, templateTypeChecker) {
+            const sf = this.strategy.getProgram().getSourceFile(shimReferenceEntry.fileName);
+            if (sf === undefined) {
+                return null;
+            }
+            const tcbNode = findTightestNode(sf, shimReferenceEntry.textSpan.start);
+            if (tcbNode === undefined ||
+                hasExpressionIdentifier(sf, tcbNode, ExpressionIdentifier.EVENT_PARAMETER)) {
+                // If the reference result is the $event parameter in the subscribe/addEventListener function
+                // in the TCB, we want to filter this result out of the references. We really only want to
+                // return references to the parameter in the template itself.
+                return null;
+            }
+            // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project serverHost
+            // or LSParseConfigHost in the adapter. We should have a better defined way to normalize paths.
+            const mapping = templateTypeChecker.getTemplateMappingAtShimLocation({
+                shimPath: absoluteFrom(shimReferenceEntry.fileName),
+                positionInShimFile: shimReferenceEntry.textSpan.start,
+            });
+            if (mapping === null) {
+                return null;
+            }
+            const { templateSourceMapping, span } = mapping;
+            let templateUrl;
+            if (templateSourceMapping.type === 'direct') {
+                templateUrl = absoluteFromSourceFile(templateSourceMapping.node.getSourceFile());
+            }
+            else if (templateSourceMapping.type === 'external') {
+                templateUrl = absoluteFrom(templateSourceMapping.templateUrl);
+            }
+            else {
+                // This includes indirect mappings, which are difficult to map directly to the code location.
+                // Diagnostics similarly return a synthetic template string for this case rather than a real
+                // location.
+                return null;
+            }
+            return Object.assign(Object.assign({}, shimReferenceEntry), { fileName: templateUrl, textSpan: toTextSpan(span) });
         }
-        const { templateSourceMapping, span } = mapping;
-        let templateUrl;
-        if (templateSourceMapping.type === 'direct') {
-            templateUrl = absoluteFromSourceFile(templateSourceMapping.node.getSourceFile());
-        }
-        else if (templateSourceMapping.type === 'external') {
-            templateUrl = absoluteFrom(templateSourceMapping.templateUrl);
-        }
-        else {
-            // This includes indirect mappings, which are difficult to map directly to the code location.
-            // Diagnostics similarly return a synthetic template string for this case rather than a real
-            // location.
-            return null;
-        }
-        return Object.assign(Object.assign({}, shimReferenceEntry), { fileName: templateUrl, textSpan: toTextSpan(span) });
     }
 
     /**
