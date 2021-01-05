@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+40.sha-805b4f9
+ * @license Angular v11.1.0-next.3+42.sha-3735633
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18837,7 +18837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+40.sha-805b4f9');
+    const VERSION$1 = new Version('11.1.0-next.3+42.sha-3735633');
 
     /**
      * @license
@@ -29951,6 +29951,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     else if (meta instanceof Self || meta.ngMetadataName === 'Self' || meta === Self) {
                         flags |= InjectFlags.Self;
                     }
+                    else if (meta instanceof Host || meta.ngMetadataName === 'Host' || meta === Host) {
+                        flags |= InjectFlags.Host;
+                    }
                     else if (meta instanceof Inject || meta === Inject) {
                         type = meta.token;
                     }
@@ -34724,7 +34727,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.3+40.sha-805b4f9');
+    const VERSION$2 = new Version$1('11.1.0-next.3+42.sha-3735633');
 
     /**
      * @license
