@@ -12,4 +12,5 @@ export declare class ReferenceBuilder {
     private getReferencesAtTemplatePosition;
     private getReferencesForDirectives;
     private getReferencesAtTypescriptPosition;
+    private convertToTemplateReferenceEntry;
 }
