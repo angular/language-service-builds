@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+67.sha-8ebac24
+ * @license Angular v11.1.0-next.3+68.sha-335d6c8
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -7952,12 +7952,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.index = 0;
             // Replaces attribute selectors with placeholders.
             // The WS in [attr="va lue"] would otherwise be interpreted as a selector separator.
-            selector = selector.replace(/(\[[^\]]*\])/g, (_, keep) => {
-                const replaceBy = `__ph-${this.index}__`;
-                this.placeholders.push(keep);
-                this.index++;
-                return replaceBy;
-            });
+            selector = this._escapeRegexMatches(selector, /(\[[^\]]*\])/g);
+            // CSS allows for certain special characters to be used in selectors if they're escaped.
+            // E.g. `.foo:blue` won't match a class called `foo:blue`, because the colon denotes a
+            // pseudo-class, but writing `.foo\:blue` will match, because the colon was escaped.
+            // Replace all escape sequences (`\` followed by a character) with a placeholder so
+            // that our handling of pseudo-selectors doesn't mess with them.
+            selector = this._escapeRegexMatches(selector, /(\\.)/g);
             // Replaces the expression in `:nth-child(2n + 1)` with a placeholder.
             // WS and "+" would otherwise be interpreted as selector separators.
             this._content = selector.replace(/(:nth-[-\w]+)(\([^)]+\))/g, (_, pseudo, exp) => {
@@ -7968,10 +7969,22 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             });
         }
         restore(content) {
-            return content.replace(/__ph-(\d+)__/g, (ph, index) => this.placeholders[+index]);
+            return content.replace(/__ph-(\d+)__/g, (_ph, index) => this.placeholders[+index]);
         }
         content() {
             return this._content;
+        }
+        /**
+         * Replaces all of the substrings that match a regex within a
+         * special string (e.g. `__ph-0__`, `__ph-1__`, etc).
+         */
+        _escapeRegexMatches(content, pattern) {
+            return content.replace(pattern, (_, keep) => {
+                const replaceBy = `__ph-${this.index}__`;
+                this.placeholders.push(keep);
+                this.index++;
+                return replaceBy;
+            });
         }
     }
     const _cssContentNextSelectorRe = /polyfill-next-selector[^}]*content:[\s]*?(['"])(.*?)\1[;\s]*}([^{]*?){/gim;
@@ -16919,7 +16932,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+67.sha-8ebac24');
+    const VERSION$1 = new Version('11.1.0-next.3+68.sha-335d6c8');
 
     /**
      * @license
@@ -17601,7 +17614,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+67.sha-8ebac24'));
+        definitionMap.set('version', literal('11.1.0-next.3+68.sha-335d6c8'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21004,7 +21017,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+67.sha-8ebac24');
+    const VERSION$2 = new Version('11.1.0-next.3+68.sha-335d6c8');
 
     /**
      * @license
