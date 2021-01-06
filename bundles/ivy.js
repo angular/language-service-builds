@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+1.sha-13020f9
+ * @license Angular v11.1.0-next.4+3.sha-989b4a9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16932,7 +16932,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+1.sha-13020f9');
+    const VERSION$1 = new Version('11.1.0-next.4+3.sha-989b4a9');
 
     /**
      * @license
@@ -17614,7 +17614,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+1.sha-13020f9'));
+        definitionMap.set('version', literal('11.1.0-next.4+3.sha-989b4a9'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21017,7 +21017,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+1.sha-13020f9');
+    const VERSION$2 = new Version('11.1.0-next.4+3.sha-989b4a9');
 
     /**
      * @license
@@ -37047,63 +37047,61 @@ Either add the @Injectable() decorator to '${provider.node.name
             // * _t1.addEventListener(handler);
             // Even with strict null checks disabled, we still produce the access as a separate statement
             // so that it can be found here.
-            const outputFieldAccess = findFirstMatchingNode(this.typeCheckBlock, { withSpan: eventBinding.keySpan, filter: isAccessExpression });
-            if (outputFieldAccess === null) {
+            const outputFieldAccesses = findAllMatchingNodes(this.typeCheckBlock, { withSpan: eventBinding.keySpan, filter: isAccessExpression });
+            const bindings = [];
+            for (const outputFieldAccess of outputFieldAccesses) {
+                const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
+                if (consumer === null) {
+                    continue;
+                }
+                if (consumer instanceof Template || consumer instanceof Element) {
+                    if (!ts$1.isPropertyAccessExpression(outputFieldAccess) ||
+                        outputFieldAccess.name.text !== 'addEventListener') {
+                        continue;
+                    }
+                    const addEventListener = outputFieldAccess.name;
+                    const tsSymbol = this.getTypeChecker().getSymbolAtLocation(addEventListener);
+                    const tsType = this.getTypeChecker().getTypeAtLocation(addEventListener);
+                    const positionInShimFile = this.getShimPositionForNode(addEventListener);
+                    const target = this.getSymbol(consumer);
+                    if (target === null || tsSymbol === undefined) {
+                        continue;
+                    }
+                    bindings.push({
+                        kind: SymbolKind.Binding,
+                        tsSymbol,
+                        tsType,
+                        target,
+                        shimLocation: { shimPath: this.shimPath, positionInShimFile },
+                    });
+                }
+                else {
+                    if (!ts$1.isElementAccessExpression(outputFieldAccess)) {
+                        continue;
+                    }
+                    const tsSymbol = this.getTypeChecker().getSymbolAtLocation(outputFieldAccess.argumentExpression);
+                    if (tsSymbol === undefined) {
+                        continue;
+                    }
+                    const target = this.getDirectiveSymbolForAccessExpression(outputFieldAccess, consumer);
+                    if (target === null) {
+                        continue;
+                    }
+                    const positionInShimFile = this.getShimPositionForNode(outputFieldAccess);
+                    const tsType = this.getTypeChecker().getTypeAtLocation(outputFieldAccess);
+                    bindings.push({
+                        kind: SymbolKind.Binding,
+                        tsSymbol,
+                        tsType,
+                        target,
+                        shimLocation: { shimPath: this.shimPath, positionInShimFile },
+                    });
+                }
+            }
+            if (bindings.length === 0) {
                 return null;
             }
-            const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
-            if (consumer === null) {
-                return null;
-            }
-            if (consumer instanceof Template || consumer instanceof Element) {
-                if (!ts$1.isPropertyAccessExpression(outputFieldAccess) ||
-                    outputFieldAccess.name.text !== 'addEventListener') {
-                    return null;
-                }
-                const addEventListener = outputFieldAccess.name;
-                const tsSymbol = this.getTypeChecker().getSymbolAtLocation(addEventListener);
-                const tsType = this.getTypeChecker().getTypeAtLocation(addEventListener);
-                const positionInShimFile = this.getShimPositionForNode(addEventListener);
-                const target = this.getSymbol(consumer);
-                if (target === null || tsSymbol === undefined) {
-                    return null;
-                }
-                return {
-                    kind: SymbolKind.Output,
-                    bindings: [{
-                            kind: SymbolKind.Binding,
-                            tsSymbol,
-                            tsType,
-                            target,
-                            shimLocation: { shimPath: this.shimPath, positionInShimFile },
-                        }],
-                };
-            }
-            else {
-                if (!ts$1.isElementAccessExpression(outputFieldAccess)) {
-                    return null;
-                }
-                const tsSymbol = this.getTypeChecker().getSymbolAtLocation(outputFieldAccess.argumentExpression);
-                if (tsSymbol === undefined) {
-                    return null;
-                }
-                const target = this.getDirectiveSymbolForAccessExpression(outputFieldAccess, consumer);
-                if (target === null) {
-                    return null;
-                }
-                const positionInShimFile = this.getShimPositionForNode(outputFieldAccess);
-                const tsType = this.getTypeChecker().getTypeAtLocation(outputFieldAccess);
-                return {
-                    kind: SymbolKind.Output,
-                    bindings: [{
-                            kind: SymbolKind.Binding,
-                            tsSymbol,
-                            tsType,
-                            target,
-                            shimLocation: { shimPath: this.shimPath, positionInShimFile },
-                        }],
-                };
-            }
+            return { kind: SymbolKind.Output, bindings };
         }
         getSymbolOfInputBinding(binding) {
             const consumer = this.templateData.boundTarget.getConsumerOfBinding(binding);
@@ -37114,22 +37112,26 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const host = this.getSymbol(consumer);
                 return host !== null ? { kind: SymbolKind.DomBinding, host } : null;
             }
-            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: binding.sourceSpan, filter: isAssignment });
-            if (node === null || !isAccessExpression(node.left)) {
+            const nodes = findAllMatchingNodes(this.typeCheckBlock, { withSpan: binding.sourceSpan, filter: isAssignment });
+            const bindings = [];
+            for (const node of nodes) {
+                if (!isAccessExpression(node.left)) {
+                    continue;
+                }
+                const symbolInfo = this.getSymbolOfTsNode(node.left);
+                if (symbolInfo === null || symbolInfo.tsSymbol === null) {
+                    continue;
+                }
+                const target = this.getDirectiveSymbolForAccessExpression(node.left, consumer);
+                if (target === null) {
+                    continue;
+                }
+                bindings.push(Object.assign(Object.assign({}, symbolInfo), { tsSymbol: symbolInfo.tsSymbol, kind: SymbolKind.Binding, target }));
+            }
+            if (bindings.length === 0) {
                 return null;
             }
-            const symbolInfo = this.getSymbolOfTsNode(node.left);
-            if (symbolInfo === null || symbolInfo.tsSymbol === null) {
-                return null;
-            }
-            const target = this.getDirectiveSymbolForAccessExpression(node.left, consumer);
-            if (target === null) {
-                return null;
-            }
-            return {
-                kind: SymbolKind.Input,
-                bindings: [Object.assign(Object.assign({}, symbolInfo), { tsSymbol: symbolInfo.tsSymbol, kind: SymbolKind.Binding, target })],
-            };
+            return { kind: SymbolKind.Input, bindings };
         }
         getDirectiveSymbolForAccessExpression(node, { isComponent, selector, isStructural }) {
             var _a;
