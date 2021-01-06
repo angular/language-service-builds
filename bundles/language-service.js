@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+61.sha-c130812
+ * @license Angular v11.1.0-next.3+64.sha-d4327d5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3042,6 +3042,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.invalidFactoryDep = { name: 'ɵɵinvalidFactoryDep', moduleName: CORE$1 };
     Identifiers$1.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
     Identifiers$1.forwardRef = { name: 'forwardRef', moduleName: CORE$1 };
+    Identifiers$1.resolveForwardRef = { name: 'resolveForwardRef', moduleName: CORE$1 };
     Identifiers$1.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
     Identifiers$1.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
     Identifiers$1.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE$1 };
@@ -18080,18 +18081,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         definitionMap.set('template', templateFunctionExpression);
         // e.g. `directives: [MyDirective]`
         if (directivesUsed.size) {
-            let directivesExpr = literalArr(Array.from(directivesUsed));
-            if (meta.wrapDirectivesAndPipesInClosure) {
-                directivesExpr = fn([], [new ReturnStatement(directivesExpr)]);
-            }
+            const directivesList = literalArr(Array.from(directivesUsed));
+            const directivesExpr = compileDeclarationList(directivesList, meta.declarationListEmitMode);
             definitionMap.set('directives', directivesExpr);
         }
         // e.g. `pipes: [MyPipe]`
         if (pipesUsed.size) {
-            let pipesExpr = literalArr(Array.from(pipesUsed));
-            if (meta.wrapDirectivesAndPipesInClosure) {
-                pipesExpr = fn([], [new ReturnStatement(pipesExpr)]);
-            }
+            const pipesList = literalArr(Array.from(pipesUsed));
+            const pipesExpr = compileDeclarationList(pipesList, meta.declarationListEmitMode);
             definitionMap.set('pipes', pipesExpr);
         }
         if (meta.encapsulation === null) {
@@ -18133,6 +18130,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const typeParams = createDirectiveTypeParams(meta);
         typeParams.push(stringArrayAsType(meta.template.ngContentSelectors));
         return expressionType(importExpr(Identifiers$1.ComponentDefWithMeta, typeParams));
+    }
+    /**
+     * Compiles the array literal of declarations into an expression according to the provided emit
+     * mode.
+     */
+    function compileDeclarationList(list, mode) {
+        switch (mode) {
+            case 0 /* Direct */:
+                // directives: [MyDir],
+                return list;
+            case 1 /* Closure */:
+                // directives: function () { return [MyDir]; }
+                return fn([], [new ReturnStatement(list)]);
+            case 2 /* ClosureResolved */:
+                // directives: function () { return [MyDir].map(ng.resolveForwardRef); }
+                const resolvedList = list.callMethod('map', [importExpr(Identifiers$1.resolveForwardRef)]);
+                return fn([], [new ReturnStatement(resolvedList)]);
+        }
     }
     function prepareQueryParams(query, constantPool) {
         const parameters = [getQueryPredicate(query, constantPool), literal(query.descendants)];
@@ -18638,24 +18653,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, constantPool.statements);
         }
         compileComponent(angularCoreEnv, sourceMapUrl, facade) {
-            // The ConstantPool is a requirement of the JIT'er.
-            const constantPool = new ConstantPool();
-            const interpolationConfig = facade.interpolation ?
-                InterpolationConfig.fromArray(facade.interpolation) :
-                DEFAULT_INTERPOLATION_CONFIG;
             // Parse the template and check for errors.
-            const template = parseTemplate(facade.template, sourceMapUrl, { preserveWhitespaces: facade.preserveWhitespaces, interpolationConfig });
-            if (template.errors !== null) {
-                const errors = template.errors.map(err => err.toString()).join(', ');
-                throw new Error(`Errors during JIT compilation of template for ${facade.name}: ${errors}`);
-            }
+            const { template, interpolation } = parseJitTemplate(facade.template, facade.name, sourceMapUrl, facade.preserveWhitespaces, facade.interpolation);
             // Compile the component metadata, including template, into an expression.
-            // TODO(alxhub): implement inputs, outputs, queries, etc.
-            const metadata = Object.assign(Object.assign(Object.assign({}, facade), convertDirectiveFacadeToMetadata(facade)), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template, wrapDirectivesAndPipesInClosure: false, styles: [...facade.styles, ...template.styles], encapsulation: facade.encapsulation, interpolation: interpolationConfig, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
+            const meta = Object.assign(Object.assign(Object.assign({}, facade), convertDirectiveFacadeToMetadata(facade)), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template, declarationListEmitMode: 0 /* Direct */, styles: [...facade.styles, ...template.styles], encapsulation: facade.encapsulation, interpolation, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
                     null, relativeContextFilePath: '', i18nUseExternalIds: true });
-            const res = compileComponentFromMetadata(metadata, constantPool, makeBindingParser(interpolationConfig));
             const jitExpressionSourceMap = `ng:///${facade.name}.js`;
-            return this.jitExpression(res.expression, angularCoreEnv, jitExpressionSourceMap, constantPool.statements);
+            return this.compileComponentFromMeta(angularCoreEnv, jitExpressionSourceMap, meta);
+        }
+        compileComponentDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const typeSourceSpan = this.createParseSourceSpan('Component', declaration.type.name, sourceMapUrl);
+            const meta = convertDeclareComponentFacadeToMetadata(declaration, typeSourceSpan, sourceMapUrl);
+            return this.compileComponentFromMeta(angularCoreEnv, sourceMapUrl, meta);
+        }
+        compileComponentFromMeta(angularCoreEnv, sourceMapUrl, meta) {
+            const constantPool = new ConstantPool();
+            const bindingParser = makeBindingParser(meta.interpolation);
+            const res = compileComponentFromMetadata(meta, constantPool, bindingParser);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, constantPool.statements);
         }
         compileFactory(angularCoreEnv, sourceMapUrl, meta) {
             const factoryRes = compileFactoryFunction({
@@ -18781,6 +18796,45 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return result;
     }
+    function convertDeclareComponentFacadeToMetadata(declaration, typeSourceSpan, sourceMapUrl) {
+        var _a, _b, _c, _d, _e;
+        const { template, interpolation } = parseJitTemplate(declaration.template.source, declaration.type.name, sourceMapUrl, (_a = declaration.preserveWhitespaces) !== null && _a !== void 0 ? _a : false, declaration.interpolation);
+        return Object.assign(Object.assign({}, convertDeclareDirectiveFacadeToMetadata(declaration, typeSourceSpan)), { template, styles: (_b = declaration.styles) !== null && _b !== void 0 ? _b : [], directives: ((_c = declaration.directives) !== null && _c !== void 0 ? _c : []).map(convertUsedDirectiveDeclarationToMetadata), pipes: convertUsedPipesToMetadata(declaration.pipes), viewProviders: declaration.viewProviders !== undefined ?
+                new WrappedNodeExpr(declaration.viewProviders) :
+                null, animations: declaration.animations !== undefined ? new WrappedNodeExpr(declaration.animations) :
+                null, changeDetection: (_d = declaration.changeDetection) !== null && _d !== void 0 ? _d : ChangeDetectionStrategy.Default, encapsulation: (_e = declaration.encapsulation) !== null && _e !== void 0 ? _e : ViewEncapsulation.Emulated, interpolation, declarationListEmitMode: 2 /* ClosureResolved */, relativeContextFilePath: '', i18nUseExternalIds: true });
+    }
+    function convertUsedDirectiveDeclarationToMetadata(declaration) {
+        var _a, _b, _c;
+        return {
+            selector: declaration.selector,
+            type: new WrappedNodeExpr(declaration.type),
+            inputs: (_a = declaration.inputs) !== null && _a !== void 0 ? _a : [],
+            outputs: (_b = declaration.outputs) !== null && _b !== void 0 ? _b : [],
+            exportAs: (_c = declaration.exportAs) !== null && _c !== void 0 ? _c : null,
+        };
+    }
+    function convertUsedPipesToMetadata(declaredPipes) {
+        const pipes = new Map();
+        if (declaredPipes === undefined) {
+            return pipes;
+        }
+        for (const pipeName of Object.keys(declaredPipes)) {
+            const pipeType = declaredPipes[pipeName];
+            pipes.set(pipeName, new WrappedNodeExpr(pipeType));
+        }
+        return pipes;
+    }
+    function parseJitTemplate(template, typeName, sourceMapUrl, preserveWhitespaces, interpolation) {
+        const interpolationConfig = interpolation ? InterpolationConfig.fromArray(interpolation) : DEFAULT_INTERPOLATION_CONFIG;
+        // Parse the template and check for errors.
+        const parsed = parseTemplate(template, sourceMapUrl, { preserveWhitespaces: preserveWhitespaces, interpolationConfig });
+        if (parsed.errors !== null) {
+            const errors = parsed.errors.map(err => err.toString()).join(', ');
+            throw new Error(`Errors during JIT compilation of template for ${typeName}: ${errors}`);
+        }
+        return { template: parsed, interpolation: interpolationConfig };
+    }
     function wrapExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
             return new WrappedNodeExpr(obj[property]);
@@ -18875,7 +18929,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+61.sha-c130812');
+    const VERSION$1 = new Version('11.1.0-next.3+64.sha-d4327d5');
 
     /**
      * @license
@@ -34765,7 +34819,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.3+61.sha-c130812');
+    const VERSION$2 = new Version$1('11.1.0-next.3+64.sha-d4327d5');
 
     /**
      * @license
