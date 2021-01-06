@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+70.sha-0264f76
+ * @license Angular v11.1.0-next.3+71.sha-183fb7e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -27,7 +27,7 @@ module.exports = function(provided) {
   return results;
 };
 
-define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'assert', 'path', 'typescript/lib/tsserverlibrary'], function (exports, os, ts, fs$2, constants, stream, util, assert, path, ts$1) { 'use strict';
+define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'assert', 'path'], function (exports, ts, os, ts$1, fs$2, constants, stream, util, assert, path) { 'use strict';
 
     var os__default = 'default' in os ? os['default'] : os;
     var fs$2__default = 'default' in fs$2 ? fs$2['default'] : fs$2;
@@ -16932,7 +16932,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+70.sha-0264f76');
+    const VERSION$1 = new Version('11.1.0-next.3+71.sha-183fb7e');
 
     /**
      * @license
@@ -17614,7 +17614,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+70.sha-0264f76'));
+        definitionMap.set('version', literal('11.1.0-next.3+71.sha-183fb7e'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21017,7 +21017,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+70.sha-0264f76');
+    const VERSION$2 = new Version('11.1.0-next.3+71.sha-183fb7e');
 
     /**
      * @license
@@ -21027,8 +21027,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     // In TypeScript 2.1 the spread element kind was renamed.
-    const spreadElementSyntaxKind = ts.SyntaxKind.SpreadElement || ts.SyntaxKind.SpreadElementExpression;
-    const empty$1 = ts.createNodeArray();
+    const spreadElementSyntaxKind = ts$1.SyntaxKind.SpreadElement || ts$1.SyntaxKind.SpreadElementExpression;
+    const empty$1 = ts$1.createNodeArray();
 
     /**
      * @license
@@ -21240,11 +21240,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function makeDiagnostic(code, node, messageText, relatedInformation) {
-        node = ts.getOriginalNode(node);
+        node = ts$1.getOriginalNode(node);
         return {
-            category: ts.DiagnosticCategory.Error,
+            category: ts$1.DiagnosticCategory.Error,
             code: ngErrorCode(code),
-            file: ts.getOriginalNode(node).getSourceFile(),
+            file: ts$1.getOriginalNode(node).getSourceFile(),
             start: node.getStart(undefined, false),
             length: node.getWidth(),
             messageText,
@@ -21252,9 +21252,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         };
     }
     function makeRelatedInformation(node, messageText) {
-        node = ts.getOriginalNode(node);
+        node = ts$1.getOriginalNode(node);
         return {
-            category: ts.DiagnosticCategory.Message,
+            category: ts$1.DiagnosticCategory.Message,
             code: 0,
             file: node.getSourceFile(),
             start: node.getStart(),
@@ -21275,12 +21275,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return D_TS.test(filePath);
     }
     function nodeNameForError(node) {
-        if (node.name !== undefined && ts.isIdentifier(node.name)) {
+        if (node.name !== undefined && ts$1.isIdentifier(node.name)) {
             return node.name.text;
         }
         else {
-            const kind = ts.SyntaxKind[node.kind];
-            const { line, character } = ts.getLineAndCharacterOfPosition(node.getSourceFile(), node.getStart());
+            const kind = ts$1.SyntaxKind[node.kind];
+            const { line, character } = ts$1.getLineAndCharacterOfPosition(node.getSourceFile(), node.getStart());
             return `${kind}@${line}:${character}`;
         }
     }
@@ -21289,17 +21289,17 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         // despite the type signature not allowing it. In that event, get the `ts.SourceFile` via the
         // original node instead (which works).
         const directSf = node.getSourceFile();
-        return directSf !== undefined ? directSf : ts.getOriginalNode(node).getSourceFile();
+        return directSf !== undefined ? directSf : ts$1.getOriginalNode(node).getSourceFile();
     }
     function getSourceFileOrNull(program, fileName) {
         return program.getSourceFile(fileName) || null;
     }
     function getTokenAtPosition(sf, pos) {
         // getTokenAtPosition is part of TypeScript's private API.
-        return ts.getTokenAtPosition(sf, pos);
+        return ts$1.getTokenAtPosition(sf, pos);
     }
     function identifierOfNode(decl) {
-        if (decl.name !== undefined && ts.isIdentifier(decl.name)) {
+        if (decl.name !== undefined && ts$1.isIdentifier(decl.name)) {
             return decl.name;
         }
         else {
@@ -21310,20 +21310,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return isValueDeclaration(node) || isTypeDeclaration(node);
     }
     function isValueDeclaration(node) {
-        return ts.isClassDeclaration(node) || ts.isFunctionDeclaration(node) ||
-            ts.isVariableDeclaration(node);
+        return ts$1.isClassDeclaration(node) || ts$1.isFunctionDeclaration(node) ||
+            ts$1.isVariableDeclaration(node);
     }
     function isTypeDeclaration(node) {
-        return ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node) ||
-            ts.isInterfaceDeclaration(node);
+        return ts$1.isEnumDeclaration(node) || ts$1.isTypeAliasDeclaration(node) ||
+            ts$1.isInterfaceDeclaration(node);
     }
     function isExported(node) {
         let topLevel = node;
-        if (ts.isVariableDeclaration(node) && ts.isVariableDeclarationList(node.parent)) {
+        if (ts$1.isVariableDeclaration(node) && ts$1.isVariableDeclarationList(node.parent)) {
             topLevel = node.parent.parent;
         }
         return topLevel.modifiers !== undefined &&
-            topLevel.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
+            topLevel.modifiers.some(modifier => modifier.kind === ts$1.SyntaxKind.ExportKeyword);
     }
     function getRootDirs(host, options) {
         const rootDirs = [];
@@ -21344,8 +21344,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     function nodeDebugInfo(node) {
         const sf = getSourceFile(node);
-        const { line, character } = ts.getLineAndCharacterOfPosition(sf, node.pos);
-        return `[${sf.fileName}: ${ts.SyntaxKind[node.kind]} @ ${line}:${character}]`;
+        const { line, character } = ts$1.getLineAndCharacterOfPosition(sf, node.pos);
+        return `[${sf.fileName}: ${ts$1.SyntaxKind[node.kind]} @ ${line}:${character}]`;
     }
     /**
      * Resolve the specified `moduleName` using the given `compilerOptions` and `compilerHost`.
@@ -21360,13 +21360,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             compilerOptions)[0];
         }
         else {
-            return ts.resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost, moduleResolutionCache !== null ? moduleResolutionCache : undefined)
+            return ts$1.resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost, moduleResolutionCache !== null ? moduleResolutionCache : undefined)
                 .resolvedModule;
         }
     }
     /** Returns true if the node is an assignment expression. */
     function isAssignment(node) {
-        return ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken;
+        return ts$1.isBinaryExpression(node) && node.operatorToken.kind === ts$1.SyntaxKind.EqualsToken;
     }
 
     /**
@@ -21512,10 +21512,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             else if (!isDeclaration(ref.node)) {
                 // It's not possible to import something which isn't a declaration.
-                throw new Error(`Debug assert: unable to import a Reference to non-declaration of type ${ts.SyntaxKind[ref.node.kind]}.`);
+                throw new Error(`Debug assert: unable to import a Reference to non-declaration of type ${ts$1.SyntaxKind[ref.node.kind]}.`);
             }
             else if ((importFlags & ImportFlags.AllowTypeImports) === 0 && isTypeDeclaration(ref.node)) {
-                throw new Error(`Importing a type-only declaration of type ${ts.SyntaxKind[ref.node.kind]} in a value position is not allowed.`);
+                throw new Error(`Importing a type-only declaration of type ${ts$1.SyntaxKind[ref.node.kind]} in a value position is not allowed.`);
             }
             // Try to find the exported name of the declaration, if one is available.
             const { specifier, resolutionContext } = ref.bestGuessOwningModule;
@@ -21954,7 +21954,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * Process a `ts.SourceFile` and replace any `ts.ImportDeclaration`s.
          */
         transformSourceFile(sf) {
-            const originalSf = ts.getOriginalNode(sf);
+            const originalSf = ts$1.getOriginalNode(sf);
             // Take a fast path if no import declarations need to be preserved in the file.
             if (!this.sourceFileToUsedImports.has(originalSf)) {
                 return sf;
@@ -21963,7 +21963,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const importsToPreserve = this.sourceFileToUsedImports.get(originalSf);
             // Generate a new statement list which preserves any imports present in `importsToPreserve`.
             const statements = sf.statements.map(stmt => {
-                if (ts.isImportDeclaration(stmt) && importsToPreserve.has(stmt)) {
+                if (ts$1.isImportDeclaration(stmt) && importsToPreserve.has(stmt)) {
                     // Preserving an import that's marked as unreferenced (type-only) is tricky in TypeScript.
                     //
                     // Various approaches have been tried, with mixed success:
@@ -21990,7 +21990,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     //
                     // TODO(alxhub): discuss with the TypeScript team and determine if there's a better way to
                     // deal with this issue.
-                    stmt = ts.getMutableClone(stmt);
+                    stmt = ts$1.getMutableClone(stmt);
                 }
                 return stmt;
             });
@@ -21998,7 +21998,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // file.
             this.sourceFileToImportMap.delete(originalSf);
             this.sourceFileToUsedImports.delete(originalSf);
-            return ts.updateSourceFileNode(sf, statements);
+            return ts$1.updateSourceFileNode(sf, statements);
         }
     }
 
@@ -22179,9 +22179,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         },
     };
     function isDecoratorIdentifier(exp) {
-        return ts.isIdentifier(exp) ||
-            ts.isPropertyAccessExpression(exp) && ts.isIdentifier(exp.expression) &&
-                ts.isIdentifier(exp.name);
+        return ts$1.isIdentifier(exp) ||
+            ts$1.isPropertyAccessExpression(exp) && ts$1.isIdentifier(exp.expression) &&
+                ts$1.isIdentifier(exp.name);
     }
     /**
      * An enumeration of possible kinds of class members.
@@ -22243,7 +22243,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (typeNode === null) {
             return missingType();
         }
-        if (!ts.isTypeReferenceNode(typeNode)) {
+        if (!ts$1.isTypeReferenceNode(typeNode)) {
             return unsupportedType(typeNode);
         }
         const symbols = resolveTypeSymbols(typeNode, checker);
@@ -22254,7 +22254,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         // It's only valid to convert a type reference to a value reference if the type actually
         // has a value declaration associated with it. Note that const enums are an exception,
         // because while they do have a value declaration, they don't exist at runtime.
-        if (decl.valueDeclaration === undefined || decl.flags & ts.SymbolFlags.ConstEnum) {
+        if (decl.valueDeclaration === undefined || decl.flags & ts$1.SymbolFlags.ConstEnum) {
             let typeOnlyDecl = null;
             if (decl.declarations !== undefined && decl.declarations.length > 0) {
                 typeOnlyDecl = decl.declarations[0];
@@ -22267,7 +22267,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         // statement. If so, extract the module specifier and the name of the imported type.
         const firstDecl = local.declarations && local.declarations[0];
         if (firstDecl !== undefined) {
-            if (ts.isImportClause(firstDecl) && firstDecl.name !== undefined) {
+            if (ts$1.isImportClause(firstDecl) && firstDecl.name !== undefined) {
                 // This is a default import.
                 //   import Foo from 'foo';
                 if (firstDecl.isTypeOnly) {
@@ -22280,7 +22280,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     defaultImportStatement: firstDecl.parent,
                 };
             }
-            else if (ts.isImportSpecifier(firstDecl)) {
+            else if (ts$1.isImportSpecifier(firstDecl)) {
                 // The symbol was imported by name
                 //   import {Foo} from 'foo';
                 // or
@@ -22304,7 +22304,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     nestedPath
                 };
             }
-            else if (ts.isNamespaceImport(firstDecl)) {
+            else if (ts$1.isNamespaceImport(firstDecl)) {
                 // The import is a namespace import
                 //   import * as Foo from 'foo';
                 if (firstDecl.parent.isTypeOnly) {
@@ -22385,7 +22385,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * This will return `null` if an equivalent expression cannot be constructed.
      */
     function typeNodeToValueExpr(node) {
-        if (ts.isTypeReferenceNode(node)) {
+        if (ts$1.isTypeReferenceNode(node)) {
             return entityNameToValue(node.typeName);
         }
         else {
@@ -22429,7 +22429,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         //   type is not qualified.
         let leftMost = typeName;
         const symbolNames = [];
-        while (ts.isQualifiedName(leftMost)) {
+        while (ts$1.isQualifiedName(leftMost)) {
             symbolNames.unshift(leftMost.right.text);
             leftMost = leftMost.left;
         }
@@ -22442,25 +22442,25 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         // De-alias the top-level type reference symbol to get the symbol of the actual declaration.
         let decl = typeRefSymbol;
-        if (typeRefSymbol.flags & ts.SymbolFlags.Alias) {
+        if (typeRefSymbol.flags & ts$1.SymbolFlags.Alias) {
             decl = checker.getAliasedSymbol(typeRefSymbol);
         }
         return { local, decl, symbolNames };
     }
     function entityNameToValue(node) {
-        if (ts.isQualifiedName(node)) {
+        if (ts$1.isQualifiedName(node)) {
             const left = entityNameToValue(node.left);
-            return left !== null ? ts.createPropertyAccess(left, node.right) : null;
+            return left !== null ? ts$1.createPropertyAccess(left, node.right) : null;
         }
-        else if (ts.isIdentifier(node)) {
-            return ts.getMutableClone(node);
+        else if (ts$1.isIdentifier(node)) {
+            return ts$1.getMutableClone(node);
         }
         else {
             return null;
         }
     }
     function extractModuleName(node) {
-        if (!ts.isStringLiteral(node.moduleSpecifier)) {
+        if (!ts$1.isStringLiteral(node.moduleSpecifier)) {
             throw new Error('not a module specifier');
         }
         return node.moduleSpecifier.text;
@@ -22474,10 +22474,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     function isNamedClassDeclaration(node) {
-        return ts.isClassDeclaration(node) && isIdentifier$1(node.name);
+        return ts$1.isClassDeclaration(node) && isIdentifier$1(node.name);
     }
     function isIdentifier$1(node) {
-        return node !== undefined && ts.isIdentifier(node);
+        return node !== undefined && ts$1.isIdentifier(node);
     }
 
     /**
@@ -22513,7 +22513,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // without a `body` are overloads whereas we want the implementation since it's the one that'll
             // be executed and which can have decorators. For declaration files, we take the first one that
             // we get.
-            const ctor = tsClazz.members.find((member) => ts.isConstructorDeclaration(member) && (isDeclaration || member.body !== undefined));
+            const ctor = tsClazz.members.find((member) => ts$1.isConstructorDeclaration(member) && (isDeclaration || member.body !== undefined));
             if (ctor === undefined) {
                 return null;
             }
@@ -22529,9 +22529,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // and extract the type. More complex union types e.g. `foo: Foo|Bar` are not supported.
                 // We also don't need to support `foo: Foo|undefined` because Angular's DI injects `null` for
                 // optional tokes that don't have providers.
-                if (typeNode && ts.isUnionTypeNode(typeNode)) {
-                    let childTypeNodes = typeNode.types.filter(childTypeNode => !(ts.isLiteralTypeNode(childTypeNode) &&
-                        childTypeNode.literal.kind === ts.SyntaxKind.NullKeyword));
+                if (typeNode && ts$1.isUnionTypeNode(typeNode)) {
+                    let childTypeNodes = typeNode.types.filter(childTypeNode => !(ts$1.isLiteralTypeNode(childTypeNode) &&
+                        childTypeNode.literal.kind === ts$1.SyntaxKind.NullKeyword));
                     if (childTypeNodes.length === 1) {
                         typeNode = childTypeNodes[0];
                     }
@@ -22551,10 +22551,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (directImport !== null) {
                 return directImport;
             }
-            else if (ts.isQualifiedName(id.parent) && id.parent.right === id) {
+            else if (ts$1.isQualifiedName(id.parent) && id.parent.right === id) {
                 return this.getImportOfNamespacedIdentifier(id, getQualifiedNameRoot(id.parent));
             }
-            else if (ts.isPropertyAccessExpression(id.parent) && id.parent.name === id) {
+            else if (ts$1.isPropertyAccessExpression(id.parent) && id.parent.name === id) {
                 return this.getImportOfNamespacedIdentifier(id, getFarLeftIdentifier(id.parent));
             }
             else {
@@ -22563,7 +22563,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         getExportsOfModule(node) {
             // In TypeScript code, modules are only ts.SourceFiles. Throw if the node isn't a module.
-            if (!ts.isSourceFile(node)) {
+            if (!ts$1.isSourceFile(node)) {
                 throw new Error(`getExportsOfModule() called on non-SourceFile in TS code`);
             }
             // Reflect the module to a Symbol, and use getExportsOfModule() to get a list of exported
@@ -22591,11 +22591,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return this.getBaseClassExpression(clazz) !== null;
         }
         getBaseClassExpression(clazz) {
-            if (!(ts.isClassDeclaration(clazz) || ts.isClassExpression(clazz)) ||
+            if (!(ts$1.isClassDeclaration(clazz) || ts$1.isClassExpression(clazz)) ||
                 clazz.heritageClauses === undefined) {
                 return null;
             }
-            const extendsClause = clazz.heritageClauses.find(clause => clause.token === ts.SyntaxKind.ExtendsKeyword);
+            const extendsClause = clazz.heritageClauses.find(clause => clause.token === ts$1.SyntaxKind.ExtendsKeyword);
             if (extendsClause === undefined) {
                 return null;
             }
@@ -22614,8 +22614,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return this.getDeclarationOfSymbol(symbol, id);
         }
         getDefinitionOfFunction(node) {
-            if (!ts.isFunctionDeclaration(node) && !ts.isMethodDeclaration(node) &&
-                !ts.isFunctionExpression(node)) {
+            if (!ts$1.isFunctionDeclaration(node) && !ts$1.isMethodDeclaration(node) &&
+                !ts$1.isFunctionExpression(node)) {
                 return null;
             }
             return {
@@ -22629,7 +22629,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             };
         }
         getGenericArityOfClass(clazz) {
-            if (!ts.isClassDeclaration(clazz)) {
+            if (!ts$1.isClassDeclaration(clazz)) {
                 return null;
             }
             return clazz.typeParameters !== undefined ? clazz.typeParameters.length : 0;
@@ -22659,7 +22659,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return null;
             }
             // The module specifier is guaranteed to be a string literal, so this should always pass.
-            if (!ts.isStringLiteral(importDecl.moduleSpecifier)) {
+            if (!ts$1.isStringLiteral(importDecl.moduleSpecifier)) {
                 // Not allowed to happen in TypeScript ASTs.
                 return null;
             }
@@ -22695,12 +22695,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (!declaration) {
                 return null;
             }
-            const namespaceDeclaration = ts.isNamespaceImport(declaration) ? declaration : null;
+            const namespaceDeclaration = ts$1.isNamespaceImport(declaration) ? declaration : null;
             if (!namespaceDeclaration) {
                 return null;
             }
             const importDeclaration = namespaceDeclaration.parent.parent;
-            if (!ts.isStringLiteral(importDeclaration.moduleSpecifier)) {
+            if (!ts$1.isStringLiteral(importDeclaration.moduleSpecifier)) {
                 // Should not happen as this would be invalid TypesScript
                 return null;
             }
@@ -22721,14 +22721,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             else if (symbol.declarations !== undefined && symbol.declarations.length > 0) {
                 valueDeclaration = symbol.declarations[0];
             }
-            if (valueDeclaration !== undefined && ts.isShorthandPropertyAssignment(valueDeclaration)) {
+            if (valueDeclaration !== undefined && ts$1.isShorthandPropertyAssignment(valueDeclaration)) {
                 const shorthandSymbol = this.checker.getShorthandAssignmentValueSymbol(valueDeclaration);
                 if (shorthandSymbol === undefined) {
                     return null;
                 }
                 return this.getDeclarationOfSymbol(shorthandSymbol, originalId);
             }
-            else if (valueDeclaration !== undefined && ts.isExportSpecifier(valueDeclaration)) {
+            else if (valueDeclaration !== undefined && ts$1.isExportSpecifier(valueDeclaration)) {
                 const targetSymbol = this.checker.getExportSpecifierLocalTargetSymbol(valueDeclaration);
                 if (targetSymbol === undefined) {
                     return null;
@@ -22740,7 +22740,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 importInfo.from :
                 null;
             // Now, resolve the Symbol to its declaration by following any and all aliases.
-            while (symbol.flags & ts.SymbolFlags.Alias) {
+            while (symbol.flags & ts$1.SymbolFlags.Alias) {
                 symbol = this.checker.getAliasedSymbol(symbol);
             }
             // Look at the resolved Symbol's declarations and pick one of them to return. Value declarations
@@ -22774,7 +22774,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             let decoratorExpr = node.expression;
             let args = null;
             // Check for call expressions.
-            if (ts.isCallExpression(decoratorExpr)) {
+            if (ts$1.isCallExpression(decoratorExpr)) {
                 args = Array.from(decoratorExpr.arguments);
                 decoratorExpr = decoratorExpr.expression;
             }
@@ -22783,7 +22783,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (!isDecoratorIdentifier(decoratorExpr)) {
                 return null;
             }
-            const decoratorIdentifier = ts.isIdentifier(decoratorExpr) ? decoratorExpr : decoratorExpr.name;
+            const decoratorIdentifier = ts$1.isIdentifier(decoratorExpr) ? decoratorExpr : decoratorExpr.name;
             const importDecl = this.getImportOfIdentifier(decoratorIdentifier);
             return {
                 name: decoratorIdentifier.text,
@@ -22798,33 +22798,33 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             let value = null;
             let name = null;
             let nameNode = null;
-            if (ts.isPropertyDeclaration(node)) {
+            if (ts$1.isPropertyDeclaration(node)) {
                 kind = ClassMemberKind.Property;
                 value = node.initializer || null;
             }
-            else if (ts.isGetAccessorDeclaration(node)) {
+            else if (ts$1.isGetAccessorDeclaration(node)) {
                 kind = ClassMemberKind.Getter;
             }
-            else if (ts.isSetAccessorDeclaration(node)) {
+            else if (ts$1.isSetAccessorDeclaration(node)) {
                 kind = ClassMemberKind.Setter;
             }
-            else if (ts.isMethodDeclaration(node)) {
+            else if (ts$1.isMethodDeclaration(node)) {
                 kind = ClassMemberKind.Method;
             }
-            else if (ts.isConstructorDeclaration(node)) {
+            else if (ts$1.isConstructorDeclaration(node)) {
                 kind = ClassMemberKind.Constructor;
             }
             else {
                 return null;
             }
-            if (ts.isConstructorDeclaration(node)) {
+            if (ts$1.isConstructorDeclaration(node)) {
                 name = 'constructor';
             }
-            else if (ts.isIdentifier(node.name)) {
+            else if (ts$1.isIdentifier(node.name)) {
                 name = node.name.text;
                 nameNode = node.name;
             }
-            else if (ts.isStringLiteral(node.name)) {
+            else if (ts$1.isStringLiteral(node.name)) {
                 name = node.name.text;
                 nameNode = node.name;
             }
@@ -22833,7 +22833,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             const decorators = this.getDecoratorsOfDeclaration(node);
             const isStatic = node.modifiers !== undefined &&
-                node.modifiers.some(mod => mod.kind === ts.SyntaxKind.StaticKeyword);
+                node.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.StaticKeyword);
             return {
                 node,
                 implementation: node,
@@ -22852,7 +22852,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (realSymbol === undefined) {
             throw new Error(`Cannot resolve type entity ${type.getText()} to symbol`);
         }
-        while (realSymbol.flags & ts.SymbolFlags.Alias) {
+        while (realSymbol.flags & ts$1.SymbolFlags.Alias) {
             realSymbol = checker.getAliasedSymbol(realSymbol);
         }
         let node = null;
@@ -22865,8 +22865,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         else {
             throw new Error(`Cannot resolve type entity symbol to declaration`);
         }
-        if (ts.isQualifiedName(type)) {
-            if (!ts.isIdentifier(type.left)) {
+        if (ts$1.isQualifiedName(type)) {
+            if (!ts$1.isIdentifier(type.left)) {
                 throw new Error(`Cannot handle qualified name with non-identifier lhs`);
             }
             const symbol = checker.getSymbolAtLocation(type.left);
@@ -22875,10 +22875,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 throw new Error(`Cannot resolve qualified type entity lhs to symbol`);
             }
             const decl = symbol.declarations[0];
-            if (ts.isNamespaceImport(decl)) {
+            if (ts$1.isNamespaceImport(decl)) {
                 const clause = decl.parent;
                 const importDecl = clause.parent;
-                if (!ts.isStringLiteral(importDecl.moduleSpecifier)) {
+                if (!ts$1.isStringLiteral(importDecl.moduleSpecifier)) {
                     throw new Error(`Module specifier is not a string`);
                 }
                 return { node, from: importDecl.moduleSpecifier.text };
@@ -22915,14 +22915,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function reflectObjectLiteral(node) {
         const map = new Map();
         node.properties.forEach(prop => {
-            if (ts.isPropertyAssignment(prop)) {
+            if (ts$1.isPropertyAssignment(prop)) {
                 const name = propertyNameToString(prop.name);
                 if (name === null) {
                     return;
                 }
                 map.set(name, prop.initializer);
             }
-            else if (ts.isShorthandPropertyAssignment(prop)) {
+            else if (ts$1.isShorthandPropertyAssignment(prop)) {
                 map.set(prop.name.text, prop.name);
             }
             else {
@@ -22932,13 +22932,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return map;
     }
     function castDeclarationToClassOrDie(declaration) {
-        if (!ts.isClassDeclaration(declaration)) {
-            throw new Error(`Reflecting on a ${ts.SyntaxKind[declaration.kind]} instead of a ClassDeclaration.`);
+        if (!ts$1.isClassDeclaration(declaration)) {
+            throw new Error(`Reflecting on a ${ts$1.SyntaxKind[declaration.kind]} instead of a ClassDeclaration.`);
         }
         return declaration;
     }
     function parameterName(name) {
-        if (ts.isIdentifier(name)) {
+        if (ts$1.isIdentifier(name)) {
             return name.text;
         }
         else {
@@ -22946,7 +22946,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function propertyNameToString(node) {
-        if (ts.isIdentifier(node) || ts.isStringLiteral(node) || ts.isNumericLiteral(node)) {
+        if (ts$1.isIdentifier(node) || ts$1.isStringLiteral(node) || ts$1.isNumericLiteral(node)) {
             return node.text;
         }
         else {
@@ -22960,10 +22960,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * @returns the left most identifier in the chain or `null` if it is not an identifier.
      */
     function getQualifiedNameRoot(qualifiedName) {
-        while (ts.isQualifiedName(qualifiedName.left)) {
+        while (ts$1.isQualifiedName(qualifiedName.left)) {
             qualifiedName = qualifiedName.left;
         }
-        return ts.isIdentifier(qualifiedName.left) ? qualifiedName.left : null;
+        return ts$1.isIdentifier(qualifiedName.left) ? qualifiedName.left : null;
     }
     /**
      * Compute the left most identifier in a property access chain. E.g. the `a` of `a.b.c.d`.
@@ -22972,18 +22972,18 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * @returns the left most identifier in the chain or `null` if it is not an identifier.
      */
     function getFarLeftIdentifier(propertyAccess) {
-        while (ts.isPropertyAccessExpression(propertyAccess.expression)) {
+        while (ts$1.isPropertyAccessExpression(propertyAccess.expression)) {
             propertyAccess = propertyAccess.expression;
         }
-        return ts.isIdentifier(propertyAccess.expression) ? propertyAccess.expression : null;
+        return ts$1.isIdentifier(propertyAccess.expression) ? propertyAccess.expression : null;
     }
     /**
      * Return the ImportDeclaration for the given `node` if it is either an `ImportSpecifier` or a
      * `NamespaceImport`. If not return `null`.
      */
     function getContainingImportDeclaration(node) {
-        return ts.isImportSpecifier(node) ? node.parent.parent.parent :
-            ts.isNamespaceImport(node) ? node.parent.parent : null;
+        return ts$1.isImportSpecifier(node) ? node.parent.parent.parent :
+            ts$1.isNamespaceImport(node) ? node.parent.parent : null;
     }
     /**
      * Compute the name by which the `decl` was exported, not imported.
@@ -22991,7 +22991,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * then fallback to the `originalId`.
      */
     function getExportedName(decl, originalId) {
-        return ts.isImportSpecifier(decl) ?
+        return ts$1.isImportSpecifier(decl) ?
             (decl.propertyName !== undefined ? decl.propertyName : decl.name).text :
             originalId.text;
     }
@@ -23140,11 +23140,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     function extractReferencesFromType(checker, def, ngModuleImportedFrom, resolutionContext) {
-        if (!ts.isTupleTypeNode(def)) {
+        if (!ts$1.isTupleTypeNode(def)) {
             return [];
         }
         return def.elements.map(element => {
-            if (!ts.isTypeQueryNode(element)) {
+            if (!ts$1.isTypeQueryNode(element)) {
                 throw new Error(`Expected TypeQueryNode: ${nodeDebugInfo(element)}`);
             }
             const type = element.exprName;
@@ -23162,19 +23162,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         });
     }
     function readStringType(type) {
-        if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) {
+        if (!ts$1.isLiteralTypeNode(type) || !ts$1.isStringLiteral(type.literal)) {
             return null;
         }
         return type.literal.text;
     }
     function readStringMapType(type) {
-        if (!ts.isTypeLiteralNode(type)) {
+        if (!ts$1.isTypeLiteralNode(type)) {
             return {};
         }
         const obj = {};
         type.members.forEach(member => {
-            if (!ts.isPropertySignature(member) || member.type === undefined || member.name === undefined ||
-                !ts.isStringLiteral(member.name)) {
+            if (!ts$1.isPropertySignature(member) || member.type === undefined || member.name === undefined ||
+                !ts$1.isStringLiteral(member.name)) {
                 return;
             }
             const value = readStringType(member.type);
@@ -23186,12 +23186,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return obj;
     }
     function readStringArrayType(type) {
-        if (!ts.isTupleTypeNode(type)) {
+        if (!ts$1.isTupleTypeNode(type)) {
             return [];
         }
         const res = [];
         type.elements.forEach(el => {
-            if (!ts.isLiteralTypeNode(el) || !ts.isStringLiteral(el.literal)) {
+            if (!ts$1.isLiteralTypeNode(el) || !ts$1.isStringLiteral(el.literal)) {
                 return;
             }
             res.push(el.literal.text);
@@ -23223,7 +23223,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (isRestricted(field.node)) {
                 restrictedInputFields.add(classPropertyName);
             }
-            if (field.nameNode !== null && ts.isStringLiteral(field.nameNode)) {
+            if (field.nameNode !== null && ts$1.isStringLiteral(field.nameNode)) {
                 stringLiteralInputFields.add(classPropertyName);
             }
         }
@@ -23242,9 +23242,9 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         if (node.modifiers === undefined) {
             return false;
         }
-        return node.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.PrivateKeyword ||
-            modifier.kind === ts.SyntaxKind.ProtectedKeyword ||
-            modifier.kind === ts.SyntaxKind.ReadonlyKeyword);
+        return node.modifiers.some(modifier => modifier.kind === ts$1.SyntaxKind.PrivateKeyword ||
+            modifier.kind === ts$1.SyntaxKind.ProtectedKeyword ||
+            modifier.kind === ts$1.SyntaxKind.ReadonlyKeyword);
     }
     function extractTemplateGuard(member) {
         if (!member.name.startsWith('ngTemplateGuard_')) {
@@ -23253,8 +23253,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const inputName = afterUnderscore(member.name);
         if (member.kind === ClassMemberKind.Property) {
             let type = null;
-            if (member.type !== null && ts.isLiteralTypeNode(member.type) &&
-                ts.isStringLiteral(member.type.literal)) {
+            if (member.type !== null && ts$1.isLiteralTypeNode(member.type) &&
+                ts$1.isStringLiteral(member.type.literal)) {
                 type = member.type.literal.text;
             }
             // Only property members with string literal type 'binding' are considered as template guard.
@@ -23361,7 +23361,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             else if (
             // Validate that the shape of the ngModuleDef type is correct.
-            ngModuleDef.type === null || !ts.isTypeReferenceNode(ngModuleDef.type) ||
+            ngModuleDef.type === null || !ts$1.isTypeReferenceNode(ngModuleDef.type) ||
                 ngModuleDef.type.typeArguments === undefined ||
                 ngModuleDef.type.typeArguments.length !== 4) {
                 return null;
@@ -23387,7 +23387,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // No definition could be found.
                 return null;
             }
-            else if (def.type === null || !ts.isTypeReferenceNode(def.type) ||
+            else if (def.type === null || !ts$1.isTypeReferenceNode(def.type) ||
                 def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
                 // The type metadata was the wrong shape.
                 return null;
@@ -23416,13 +23416,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // No definition could be found.
                 return null;
             }
-            else if (def.type === null || !ts.isTypeReferenceNode(def.type) ||
+            else if (def.type === null || !ts$1.isTypeReferenceNode(def.type) ||
                 def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
                 // The type metadata was the wrong shape.
                 return null;
             }
             const type = def.type.typeArguments[1];
-            if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) {
+            if (!ts$1.isLiteralTypeNode(type) || !ts$1.isStringLiteral(type.literal)) {
                 // The type metadata was the wrong type.
                 return null;
             }
@@ -23438,13 +23438,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         if (clazz.heritageClauses !== undefined) {
             for (const clause of clazz.heritageClauses) {
-                if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
+                if (clause.token === ts$1.SyntaxKind.ExtendsKeyword) {
                     const baseExpr = clause.types[0].expression;
                     let symbol = checker.getSymbolAtLocation(baseExpr);
                     if (symbol === undefined) {
                         return 'dynamic';
                     }
-                    else if (symbol.flags & ts.SymbolFlags.Alias) {
+                    else if (symbol.flags & ts$1.SymbolFlags.Alias) {
                         symbol = checker.getAliasedSymbol(symbol);
                     }
                     if (symbol.valueDeclaration !== undefined &&
@@ -23970,21 +23970,21 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         let currentNode = node;
         while (currentNode !== undefined) {
             switch (currentNode.kind) {
-                case ts.SyntaxKind.ExpressionStatement:
-                case ts.SyntaxKind.VariableStatement:
-                case ts.SyntaxKind.ReturnStatement:
-                case ts.SyntaxKind.IfStatement:
-                case ts.SyntaxKind.SwitchStatement:
-                case ts.SyntaxKind.DoStatement:
-                case ts.SyntaxKind.WhileStatement:
-                case ts.SyntaxKind.ForStatement:
-                case ts.SyntaxKind.ForInStatement:
-                case ts.SyntaxKind.ForOfStatement:
-                case ts.SyntaxKind.ContinueStatement:
-                case ts.SyntaxKind.BreakStatement:
-                case ts.SyntaxKind.ThrowStatement:
-                case ts.SyntaxKind.ObjectBindingPattern:
-                case ts.SyntaxKind.ArrayBindingPattern:
+                case ts$1.SyntaxKind.ExpressionStatement:
+                case ts$1.SyntaxKind.VariableStatement:
+                case ts$1.SyntaxKind.ReturnStatement:
+                case ts$1.SyntaxKind.IfStatement:
+                case ts$1.SyntaxKind.SwitchStatement:
+                case ts$1.SyntaxKind.DoStatement:
+                case ts$1.SyntaxKind.WhileStatement:
+                case ts$1.SyntaxKind.ForStatement:
+                case ts$1.SyntaxKind.ForInStatement:
+                case ts$1.SyntaxKind.ForOfStatement:
+                case ts$1.SyntaxKind.ContinueStatement:
+                case ts$1.SyntaxKind.BreakStatement:
+                case ts$1.SyntaxKind.ThrowStatement:
+                case ts$1.SyntaxKind.ObjectBindingPattern:
+                case ts$1.SyntaxKind.ArrayBindingPattern:
                     return currentNode;
             }
             currentNode = currentNode.parent;
@@ -24131,32 +24131,32 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return { op, literal: false };
     }
     const BINARY_OPERATORS = new Map([
-        [ts.SyntaxKind.PlusToken, literalBinaryOp((a, b) => a + b)],
-        [ts.SyntaxKind.MinusToken, literalBinaryOp((a, b) => a - b)],
-        [ts.SyntaxKind.AsteriskToken, literalBinaryOp((a, b) => a * b)],
-        [ts.SyntaxKind.SlashToken, literalBinaryOp((a, b) => a / b)],
-        [ts.SyntaxKind.PercentToken, literalBinaryOp((a, b) => a % b)],
-        [ts.SyntaxKind.AmpersandToken, literalBinaryOp((a, b) => a & b)],
-        [ts.SyntaxKind.BarToken, literalBinaryOp((a, b) => a | b)],
-        [ts.SyntaxKind.CaretToken, literalBinaryOp((a, b) => a ^ b)],
-        [ts.SyntaxKind.LessThanToken, literalBinaryOp((a, b) => a < b)],
-        [ts.SyntaxKind.LessThanEqualsToken, literalBinaryOp((a, b) => a <= b)],
-        [ts.SyntaxKind.GreaterThanToken, literalBinaryOp((a, b) => a > b)],
-        [ts.SyntaxKind.GreaterThanEqualsToken, literalBinaryOp((a, b) => a >= b)],
-        [ts.SyntaxKind.EqualsEqualsToken, literalBinaryOp((a, b) => a == b)],
-        [ts.SyntaxKind.EqualsEqualsEqualsToken, literalBinaryOp((a, b) => a === b)],
-        [ts.SyntaxKind.ExclamationEqualsToken, literalBinaryOp((a, b) => a != b)],
-        [ts.SyntaxKind.ExclamationEqualsEqualsToken, literalBinaryOp((a, b) => a !== b)],
-        [ts.SyntaxKind.LessThanLessThanToken, literalBinaryOp((a, b) => a << b)],
-        [ts.SyntaxKind.GreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >> b)],
-        [ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >>> b)],
-        [ts.SyntaxKind.AsteriskAsteriskToken, literalBinaryOp((a, b) => Math.pow(a, b))],
-        [ts.SyntaxKind.AmpersandAmpersandToken, referenceBinaryOp((a, b) => a && b)],
-        [ts.SyntaxKind.BarBarToken, referenceBinaryOp((a, b) => a || b)]
+        [ts$1.SyntaxKind.PlusToken, literalBinaryOp((a, b) => a + b)],
+        [ts$1.SyntaxKind.MinusToken, literalBinaryOp((a, b) => a - b)],
+        [ts$1.SyntaxKind.AsteriskToken, literalBinaryOp((a, b) => a * b)],
+        [ts$1.SyntaxKind.SlashToken, literalBinaryOp((a, b) => a / b)],
+        [ts$1.SyntaxKind.PercentToken, literalBinaryOp((a, b) => a % b)],
+        [ts$1.SyntaxKind.AmpersandToken, literalBinaryOp((a, b) => a & b)],
+        [ts$1.SyntaxKind.BarToken, literalBinaryOp((a, b) => a | b)],
+        [ts$1.SyntaxKind.CaretToken, literalBinaryOp((a, b) => a ^ b)],
+        [ts$1.SyntaxKind.LessThanToken, literalBinaryOp((a, b) => a < b)],
+        [ts$1.SyntaxKind.LessThanEqualsToken, literalBinaryOp((a, b) => a <= b)],
+        [ts$1.SyntaxKind.GreaterThanToken, literalBinaryOp((a, b) => a > b)],
+        [ts$1.SyntaxKind.GreaterThanEqualsToken, literalBinaryOp((a, b) => a >= b)],
+        [ts$1.SyntaxKind.EqualsEqualsToken, literalBinaryOp((a, b) => a == b)],
+        [ts$1.SyntaxKind.EqualsEqualsEqualsToken, literalBinaryOp((a, b) => a === b)],
+        [ts$1.SyntaxKind.ExclamationEqualsToken, literalBinaryOp((a, b) => a != b)],
+        [ts$1.SyntaxKind.ExclamationEqualsEqualsToken, literalBinaryOp((a, b) => a !== b)],
+        [ts$1.SyntaxKind.LessThanLessThanToken, literalBinaryOp((a, b) => a << b)],
+        [ts$1.SyntaxKind.GreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >> b)],
+        [ts$1.SyntaxKind.GreaterThanGreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >>> b)],
+        [ts$1.SyntaxKind.AsteriskAsteriskToken, literalBinaryOp((a, b) => Math.pow(a, b))],
+        [ts$1.SyntaxKind.AmpersandAmpersandToken, referenceBinaryOp((a, b) => a && b)],
+        [ts$1.SyntaxKind.BarBarToken, referenceBinaryOp((a, b) => a || b)]
     ]);
     const UNARY_OPERATORS = new Map([
-        [ts.SyntaxKind.TildeToken, a => ~a], [ts.SyntaxKind.MinusToken, a => -a],
-        [ts.SyntaxKind.PlusToken, a => +a], [ts.SyntaxKind.ExclamationToken, a => !a]
+        [ts$1.SyntaxKind.TildeToken, a => ~a], [ts$1.SyntaxKind.MinusToken, a => -a],
+        [ts$1.SyntaxKind.PlusToken, a => +a], [ts$1.SyntaxKind.ExclamationToken, a => !a]
     ]);
     class StaticInterpreter {
         constructor(host, checker, dependencyTracker) {
@@ -24169,61 +24169,61 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitExpression(node, context) {
             let result;
-            if (node.kind === ts.SyntaxKind.TrueKeyword) {
+            if (node.kind === ts$1.SyntaxKind.TrueKeyword) {
                 return true;
             }
-            else if (node.kind === ts.SyntaxKind.FalseKeyword) {
+            else if (node.kind === ts$1.SyntaxKind.FalseKeyword) {
                 return false;
             }
-            else if (node.kind === ts.SyntaxKind.NullKeyword) {
+            else if (node.kind === ts$1.SyntaxKind.NullKeyword) {
                 return null;
             }
-            else if (ts.isStringLiteral(node)) {
+            else if (ts$1.isStringLiteral(node)) {
                 return node.text;
             }
-            else if (ts.isNoSubstitutionTemplateLiteral(node)) {
+            else if (ts$1.isNoSubstitutionTemplateLiteral(node)) {
                 return node.text;
             }
-            else if (ts.isTemplateExpression(node)) {
+            else if (ts$1.isTemplateExpression(node)) {
                 result = this.visitTemplateExpression(node, context);
             }
-            else if (ts.isNumericLiteral(node)) {
+            else if (ts$1.isNumericLiteral(node)) {
                 return parseFloat(node.text);
             }
-            else if (ts.isObjectLiteralExpression(node)) {
+            else if (ts$1.isObjectLiteralExpression(node)) {
                 result = this.visitObjectLiteralExpression(node, context);
             }
-            else if (ts.isIdentifier(node)) {
+            else if (ts$1.isIdentifier(node)) {
                 result = this.visitIdentifier(node, context);
             }
-            else if (ts.isPropertyAccessExpression(node)) {
+            else if (ts$1.isPropertyAccessExpression(node)) {
                 result = this.visitPropertyAccessExpression(node, context);
             }
-            else if (ts.isCallExpression(node)) {
+            else if (ts$1.isCallExpression(node)) {
                 result = this.visitCallExpression(node, context);
             }
-            else if (ts.isConditionalExpression(node)) {
+            else if (ts$1.isConditionalExpression(node)) {
                 result = this.visitConditionalExpression(node, context);
             }
-            else if (ts.isPrefixUnaryExpression(node)) {
+            else if (ts$1.isPrefixUnaryExpression(node)) {
                 result = this.visitPrefixUnaryExpression(node, context);
             }
-            else if (ts.isBinaryExpression(node)) {
+            else if (ts$1.isBinaryExpression(node)) {
                 result = this.visitBinaryExpression(node, context);
             }
-            else if (ts.isArrayLiteralExpression(node)) {
+            else if (ts$1.isArrayLiteralExpression(node)) {
                 result = this.visitArrayLiteralExpression(node, context);
             }
-            else if (ts.isParenthesizedExpression(node)) {
+            else if (ts$1.isParenthesizedExpression(node)) {
                 result = this.visitParenthesizedExpression(node, context);
             }
-            else if (ts.isElementAccessExpression(node)) {
+            else if (ts$1.isElementAccessExpression(node)) {
                 result = this.visitElementAccessExpression(node, context);
             }
-            else if (ts.isAsExpression(node)) {
+            else if (ts$1.isAsExpression(node)) {
                 result = this.visitExpression(node.expression, context);
             }
-            else if (ts.isNonNullExpression(node)) {
+            else if (ts$1.isNonNullExpression(node)) {
                 result = this.visitExpression(node.expression, context);
             }
             else if (this.host.isClass(node)) {
@@ -24241,7 +24241,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const array = [];
             for (let i = 0; i < node.elements.length; i++) {
                 const element = node.elements[i];
-                if (ts.isSpreadElement(element)) {
+                if (ts$1.isSpreadElement(element)) {
                     array.push(...this.visitSpreadElement(element, context));
                 }
                 else {
@@ -24254,7 +24254,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             const map = new Map();
             for (let i = 0; i < node.properties.length; i++) {
                 const property = node.properties[i];
-                if (ts.isPropertyAssignment(property)) {
+                if (ts$1.isPropertyAssignment(property)) {
                     const name = this.stringNameFromPropertyName(property.name, context);
                     // Check whether the name can be determined statically.
                     if (name === undefined) {
@@ -24262,7 +24262,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     }
                     map.set(name, this.visitExpression(property.initializer, context));
                 }
-                else if (ts.isShorthandPropertyAssignment(property)) {
+                else if (ts$1.isShorthandPropertyAssignment(property)) {
                     const symbol = this.checker.getShorthandAssignmentValueSymbol(property);
                     if (symbol === undefined || symbol.valueDeclaration === undefined) {
                         map.set(property.name.text, DynamicValue.fromUnknown(property));
@@ -24271,7 +24271,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                         map.set(property.name.text, this.visitDeclaration(symbol.valueDeclaration, context));
                     }
                 }
-                else if (ts.isSpreadAssignment(property)) {
+                else if (ts$1.isSpreadAssignment(property)) {
                     const spread = this.visitExpression(property.expression, context);
                     if (spread instanceof DynamicValue) {
                         return DynamicValue.fromDynamicInput(node, spread);
@@ -24307,7 +24307,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitIdentifier(node, context) {
             const decl = this.host.getDeclarationOfIdentifier(node);
             if (decl === null) {
-                if (node.originalKeywordKind === ts.SyntaxKind.UndefinedKeyword) {
+                if (node.originalKeywordKind === ts$1.SyntaxKind.UndefinedKeyword) {
                     return undefined;
                 }
                 else {
@@ -24352,22 +24352,22 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (this.host.isClass(node)) {
                 return this.getReference(node, context);
             }
-            else if (ts.isVariableDeclaration(node)) {
+            else if (ts$1.isVariableDeclaration(node)) {
                 return this.visitVariableDeclaration(node, context);
             }
-            else if (ts.isParameter(node) && context.scope.has(node)) {
+            else if (ts$1.isParameter(node) && context.scope.has(node)) {
                 return context.scope.get(node);
             }
-            else if (ts.isExportAssignment(node)) {
+            else if (ts$1.isExportAssignment(node)) {
                 return this.visitExpression(node.expression, context);
             }
-            else if (ts.isEnumDeclaration(node)) {
+            else if (ts$1.isEnumDeclaration(node)) {
                 return this.visitEnumDeclaration(node, context);
             }
-            else if (ts.isSourceFile(node)) {
+            else if (ts$1.isSourceFile(node)) {
                 return this.visitSourceFile(node, context);
             }
-            else if (ts.isBindingElement(node)) {
+            else if (ts$1.isBindingElement(node)) {
                 return this.visitBindingElement(node, context);
             }
             else {
@@ -24575,7 +24575,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (fn.body === null) {
                 return DynamicValue.fromUnknown(node);
             }
-            else if (fn.body.length !== 1 || !ts.isReturnStatement(fn.body[0])) {
+            else if (fn.body.length !== 1 || !ts$1.isReturnStatement(fn.body[0])) {
                 return DynamicValue.fromComplexFunctionCall(node, fn);
             }
             const ret = fn.body[0];
@@ -24652,7 +24652,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         evaluateFunctionArguments(node, context) {
             const args = [];
             for (const arg of node.arguments) {
-                if (ts.isSpreadElement(arg)) {
+                if (ts$1.isSpreadElement(arg)) {
                     args.push(...this.visitSpreadElement(arg, context));
                 }
                 else {
@@ -24676,27 +24676,27 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitBindingElement(node, context) {
             const path = [];
             let closestDeclaration = node;
-            while (ts.isBindingElement(closestDeclaration) ||
-                ts.isArrayBindingPattern(closestDeclaration) ||
-                ts.isObjectBindingPattern(closestDeclaration)) {
-                if (ts.isBindingElement(closestDeclaration)) {
+            while (ts$1.isBindingElement(closestDeclaration) ||
+                ts$1.isArrayBindingPattern(closestDeclaration) ||
+                ts$1.isObjectBindingPattern(closestDeclaration)) {
+                if (ts$1.isBindingElement(closestDeclaration)) {
                     path.unshift(closestDeclaration);
                 }
                 closestDeclaration = closestDeclaration.parent;
             }
-            if (!ts.isVariableDeclaration(closestDeclaration) ||
+            if (!ts$1.isVariableDeclaration(closestDeclaration) ||
                 closestDeclaration.initializer === undefined) {
                 return DynamicValue.fromUnknown(node);
             }
             let value = this.visit(closestDeclaration.initializer, context);
             for (const element of path) {
                 let key;
-                if (ts.isArrayBindingPattern(element.parent)) {
+                if (ts$1.isArrayBindingPattern(element.parent)) {
                     key = element.parent.elements.indexOf(element);
                 }
                 else {
                     const name = element.propertyName || element.name;
-                    if (ts.isIdentifier(name)) {
+                    if (ts$1.isIdentifier(name)) {
                         key = name.text;
                     }
                     else {
@@ -24711,10 +24711,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return value;
         }
         stringNameFromPropertyName(node, context) {
-            if (ts.isIdentifier(node) || ts.isStringLiteral(node) || ts.isNumericLiteral(node)) {
+            if (ts$1.isIdentifier(node) || ts$1.isStringLiteral(node) || ts$1.isNumericLiteral(node)) {
                 return node.text;
             }
-            else if (ts.isComputedPropertyName(node)) {
+            else if (ts$1.isComputedPropertyName(node)) {
                 const literal = this.visitExpression(node.expression, context);
                 return typeof literal === 'string' ? literal : undefined;
             }
@@ -24739,8 +24739,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function isFunctionOrMethodReference(ref) {
-        return ts.isFunctionDeclaration(ref.node) || ts.isMethodDeclaration(ref.node) ||
-            ts.isFunctionExpression(ref.node);
+        return ts$1.isFunctionDeclaration(ref.node) || ts$1.isMethodDeclaration(ref.node) ||
+            ts$1.isFunctionExpression(ref.node);
     }
     function literal$1(value, reject) {
         if (value instanceof EnumValue) {
@@ -24753,16 +24753,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return reject(value);
     }
     function isVariableDeclarationDeclared(node) {
-        if (node.parent === undefined || !ts.isVariableDeclarationList(node.parent)) {
+        if (node.parent === undefined || !ts$1.isVariableDeclarationList(node.parent)) {
             return false;
         }
         const declList = node.parent;
-        if (declList.parent === undefined || !ts.isVariableStatement(declList.parent)) {
+        if (declList.parent === undefined || !ts$1.isVariableStatement(declList.parent)) {
             return false;
         }
         const varStmt = declList.parent;
         return varStmt.modifiers !== undefined &&
-            varStmt.modifiers.some(mod => mod.kind === ts.SyntaxKind.DeclareKeyword);
+            varStmt.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.DeclareKeyword);
     }
     const EMPTY = {};
     function joinModuleContext(existing, node, decl) {
@@ -24891,21 +24891,21 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function aliasTransformFactory(exportStatements) {
         return (context) => {
             return (file) => {
-                if (ts.isBundle(file) || !exportStatements.has(file.fileName)) {
+                if (ts$1.isBundle(file) || !exportStatements.has(file.fileName)) {
                     return file;
                 }
                 const statements = [...file.statements];
                 exportStatements.get(file.fileName).forEach(([moduleName, symbolName], aliasName) => {
-                    const stmt = ts.createExportDeclaration(
+                    const stmt = ts$1.createExportDeclaration(
                     /* decorators */ undefined, 
                     /* modifiers */ undefined, 
-                    /* exportClause */ ts.createNamedExports([ts.createExportSpecifier(
+                    /* exportClause */ ts$1.createNamedExports([ts$1.createExportSpecifier(
                         /* propertyName */ symbolName, 
                         /* name */ aliasName)]), 
-                    /* moduleSpecifier */ ts.createStringLiteral(moduleName));
+                    /* moduleSpecifier */ ts$1.createStringLiteral(moduleName));
                     statements.push(stmt);
                 });
-                return ts.updateSourceFileNode(file, statements);
+                return ts$1.updateSourceFileNode(file, statements);
             };
         };
     }
@@ -25072,7 +25072,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 if (this.reflector.isClass(node)) {
                     this.analyzeClass(node, preanalyze ? promises : null);
                 }
-                ts.forEachChild(node, visit);
+                ts$1.forEachChild(node, visit);
             };
             visit(sf);
             if (preanalyze && promises.length > 0) {
@@ -25197,7 +25197,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     if (isPrimaryHandler && record.hasPrimaryHandler) {
                         // The class already has a PRIMARY handler, and another one just matched.
                         record.metaDiagnostics = [{
-                                category: ts.DiagnosticCategory.Error,
+                                category: ts$1.DiagnosticCategory.Error,
                                 code: Number('-99' + ErrorCode.DECORATOR_COLLISION),
                                 file: getSourceFile(clazz),
                                 start: clazz.getStart(undefined, false),
@@ -25365,7 +25365,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
         }
         compile(clazz, constantPool) {
-            const original = ts.getOriginalNode(clazz);
+            const original = ts$1.getOriginalNode(clazz);
             if (!this.reflector.isClass(clazz) || !this.reflector.isClass(original) ||
                 !this.classes.has(original)) {
                 return null;
@@ -25412,7 +25412,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             return res.length > 0 ? res : null;
         }
         decoratorsFor(node) {
-            const original = ts.getOriginalNode(node);
+            const original = ts$1.getOriginalNode(node);
             if (!this.reflector.isClass(original) || !this.classes.has(original)) {
                 return [];
             }
@@ -25422,7 +25422,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 if (trait.state !== TraitState.Resolved) {
                     continue;
                 }
-                if (trait.detected.trigger !== null && ts.isDecorator(trait.detected.trigger)) {
+                if (trait.detected.trigger !== null && ts$1.isDecorator(trait.detected.trigger)) {
                     decorators.push(trait.detected.trigger);
                 }
             }
@@ -25492,7 +25492,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         generateNamespaceImport(moduleName) {
             if (!this.specifierToIdentifier.has(moduleName)) {
-                this.specifierToIdentifier.set(moduleName, ts.createIdentifier(`${this.prefix}${this.nextIndex++}`));
+                this.specifierToIdentifier.set(moduleName, ts$1.createIdentifier(`${this.prefix}${this.nextIndex++}`));
             }
             return this.specifierToIdentifier.get(moduleName);
         }
@@ -25851,16 +25851,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         visitBuiltinType(type, context) {
             switch (type.name) {
                 case BuiltinTypeName.Bool:
-                    return ts.createKeywordTypeNode(ts.SyntaxKind.BooleanKeyword);
+                    return ts$1.createKeywordTypeNode(ts$1.SyntaxKind.BooleanKeyword);
                 case BuiltinTypeName.Dynamic:
-                    return ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+                    return ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword);
                 case BuiltinTypeName.Int:
                 case BuiltinTypeName.Number:
-                    return ts.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
+                    return ts$1.createKeywordTypeNode(ts$1.SyntaxKind.NumberKeyword);
                 case BuiltinTypeName.String:
-                    return ts.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
+                    return ts$1.createKeywordTypeNode(ts$1.SyntaxKind.StringKeyword);
                 case BuiltinTypeName.None:
-                    return ts.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword);
+                    return ts$1.createKeywordTypeNode(ts$1.SyntaxKind.NeverKeyword);
                 default:
                     throw new Error(`Unsupported builtin type: ${BuiltinTypeName[type.name]}`);
             }
@@ -25870,31 +25870,31 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (type.typeParams === null) {
                 return typeNode;
             }
-            if (!ts.isTypeReferenceNode(typeNode)) {
+            if (!ts$1.isTypeReferenceNode(typeNode)) {
                 throw new Error('An ExpressionType with type arguments must translate into a TypeReferenceNode');
             }
             else if (typeNode.typeArguments !== undefined) {
                 throw new Error(`An ExpressionType with type arguments cannot have multiple levels of type arguments`);
             }
             const typeArgs = type.typeParams.map(param => this.translateType(param, context));
-            return ts.createTypeReferenceNode(typeNode.typeName, typeArgs);
+            return ts$1.createTypeReferenceNode(typeNode.typeName, typeArgs);
         }
         visitArrayType(type, context) {
-            return ts.createArrayTypeNode(this.translateType(type.of, context));
+            return ts$1.createArrayTypeNode(this.translateType(type.of, context));
         }
         visitMapType(type, context) {
-            const parameter = ts.createParameter(undefined, undefined, undefined, 'key', undefined, ts.createKeywordTypeNode(ts.SyntaxKind.StringKeyword));
+            const parameter = ts$1.createParameter(undefined, undefined, undefined, 'key', undefined, ts$1.createKeywordTypeNode(ts$1.SyntaxKind.StringKeyword));
             const typeArgs = type.valueType !== null ?
                 this.translateType(type.valueType, context) :
-                ts.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword);
-            const indexSignature = ts.createIndexSignature(undefined, undefined, [parameter], typeArgs);
-            return ts.createTypeLiteralNode([indexSignature]);
+                ts$1.createKeywordTypeNode(ts$1.SyntaxKind.UnknownKeyword);
+            const indexSignature = ts$1.createIndexSignature(undefined, undefined, [parameter], typeArgs);
+            return ts$1.createTypeLiteralNode([indexSignature]);
         }
         visitReadVarExpr(ast, context) {
             if (ast.name === null) {
                 throw new Error(`ReadVarExpr with no variable name in type`);
             }
-            return ts.createTypeQueryNode(ts.createIdentifier(ast.name));
+            return ts$1.createTypeQueryNode(ts$1.createIdentifier(ast.name));
         }
         visitWriteVarExpr(expr, context) {
             throw new Error('Method not implemented.');
@@ -25919,19 +25919,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitLiteralExpr(ast, context) {
             if (ast.value === null) {
-                return ts.createLiteralTypeNode(ts.createNull());
+                return ts$1.createLiteralTypeNode(ts$1.createNull());
             }
             else if (ast.value === undefined) {
-                return ts.createKeywordTypeNode(ts.SyntaxKind.UndefinedKeyword);
+                return ts$1.createKeywordTypeNode(ts$1.SyntaxKind.UndefinedKeyword);
             }
             else if (typeof ast.value === 'boolean') {
-                return ts.createLiteralTypeNode(ts.createLiteral(ast.value));
+                return ts$1.createLiteralTypeNode(ts$1.createLiteral(ast.value));
             }
             else if (typeof ast.value === 'number') {
-                return ts.createLiteralTypeNode(ts.createLiteral(ast.value));
+                return ts$1.createLiteralTypeNode(ts$1.createLiteral(ast.value));
             }
             else {
-                return ts.createLiteralTypeNode(ts.createLiteral(ast.value));
+                return ts$1.createLiteralTypeNode(ts$1.createLiteral(ast.value));
             }
         }
         visitLocalizedString(ast, context) {
@@ -25942,12 +25942,12 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 throw new Error(`Import unknown module or symbol`);
             }
             const { moduleImport, symbol } = this.imports.generateNamedImport(ast.value.moduleName, ast.value.name);
-            const symbolIdentifier = ts.createIdentifier(symbol);
-            const typeName = moduleImport ? ts.createQualifiedName(moduleImport, symbolIdentifier) : symbolIdentifier;
+            const symbolIdentifier = ts$1.createIdentifier(symbol);
+            const typeName = moduleImport ? ts$1.createQualifiedName(moduleImport, symbolIdentifier) : symbolIdentifier;
             const typeArguments = ast.typeParams !== null ?
                 ast.typeParams.map(type => this.translateType(type, context)) :
                 undefined;
-            return ts.createTypeReferenceNode(typeName, typeArguments);
+            return ts$1.createTypeReferenceNode(typeName, typeArguments);
         }
         visitConditionalExpr(ast, context) {
             throw new Error('Method not implemented.');
@@ -25978,58 +25978,58 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         visitLiteralArrayExpr(ast, context) {
             const values = ast.entries.map(expr => this.translateExpression(expr, context));
-            return ts.createTupleTypeNode(values);
+            return ts$1.createTupleTypeNode(values);
         }
         visitLiteralMapExpr(ast, context) {
             const entries = ast.entries.map(entry => {
                 const { key, quoted } = entry;
                 const type = this.translateExpression(entry.value, context);
-                return ts.createPropertySignature(
+                return ts$1.createPropertySignature(
                 /* modifiers */ undefined, 
-                /* name */ quoted ? ts.createStringLiteral(key) : key, 
+                /* name */ quoted ? ts$1.createStringLiteral(key) : key, 
                 /* questionToken */ undefined, 
                 /* type */ type, 
                 /* initializer */ undefined);
             });
-            return ts.createTypeLiteralNode(entries);
+            return ts$1.createTypeLiteralNode(entries);
         }
         visitCommaExpr(ast, context) {
             throw new Error('Method not implemented.');
         }
         visitWrappedNodeExpr(ast, context) {
             const node = ast.node;
-            if (ts.isEntityName(node)) {
-                return ts.createTypeReferenceNode(node, /* typeArguments */ undefined);
+            if (ts$1.isEntityName(node)) {
+                return ts$1.createTypeReferenceNode(node, /* typeArguments */ undefined);
             }
-            else if (ts.isTypeNode(node)) {
+            else if (ts$1.isTypeNode(node)) {
                 return node;
             }
-            else if (ts.isLiteralExpression(node)) {
-                return ts.createLiteralTypeNode(node);
+            else if (ts$1.isLiteralExpression(node)) {
+                return ts$1.createLiteralTypeNode(node);
             }
             else {
-                throw new Error(`Unsupported WrappedNodeExpr in TypeTranslatorVisitor: ${ts.SyntaxKind[node.kind]}`);
+                throw new Error(`Unsupported WrappedNodeExpr in TypeTranslatorVisitor: ${ts$1.SyntaxKind[node.kind]}`);
             }
         }
         visitTypeofExpr(ast, context) {
             const typeNode = this.translateExpression(ast.expr, context);
-            if (!ts.isTypeReferenceNode(typeNode)) {
+            if (!ts$1.isTypeReferenceNode(typeNode)) {
                 throw new Error(`The target of a typeof expression must be a type reference, but it was
-          ${ts.SyntaxKind[typeNode.kind]}`);
+          ${ts$1.SyntaxKind[typeNode.kind]}`);
             }
-            return ts.createTypeQueryNode(typeNode.typeName);
+            return ts$1.createTypeQueryNode(typeNode.typeName);
         }
         translateType(type, context) {
             const typeNode = type.visitType(this, context);
-            if (!ts.isTypeNode(typeNode)) {
-                throw new Error(`A Type must translate to a TypeNode, but was ${ts.SyntaxKind[typeNode.kind]}`);
+            if (!ts$1.isTypeNode(typeNode)) {
+                throw new Error(`A Type must translate to a TypeNode, but was ${ts$1.SyntaxKind[typeNode.kind]}`);
             }
             return typeNode;
         }
         translateExpression(expr, context) {
             const typeNode = expr.visitExpression(this, context);
-            if (!ts.isTypeNode(typeNode)) {
-                throw new Error(`An Expression must translate to a TypeNode, but was ${ts.SyntaxKind[typeNode.kind]}`);
+            if (!ts$1.isTypeNode(typeNode)) {
+                throw new Error(`An Expression must translate to a TypeNode, but was ${ts$1.SyntaxKind[typeNode.kind]}`);
             }
             return typeNode;
         }
@@ -26043,32 +26043,32 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     const UNARY_OPERATORS$2 = {
-        '+': ts.SyntaxKind.PlusToken,
-        '-': ts.SyntaxKind.MinusToken,
-        '!': ts.SyntaxKind.ExclamationToken,
+        '+': ts$1.SyntaxKind.PlusToken,
+        '-': ts$1.SyntaxKind.MinusToken,
+        '!': ts$1.SyntaxKind.ExclamationToken,
     };
     const BINARY_OPERATORS$2 = {
-        '&&': ts.SyntaxKind.AmpersandAmpersandToken,
-        '>': ts.SyntaxKind.GreaterThanToken,
-        '>=': ts.SyntaxKind.GreaterThanEqualsToken,
-        '&': ts.SyntaxKind.AmpersandToken,
-        '/': ts.SyntaxKind.SlashToken,
-        '==': ts.SyntaxKind.EqualsEqualsToken,
-        '===': ts.SyntaxKind.EqualsEqualsEqualsToken,
-        '<': ts.SyntaxKind.LessThanToken,
-        '<=': ts.SyntaxKind.LessThanEqualsToken,
-        '-': ts.SyntaxKind.MinusToken,
-        '%': ts.SyntaxKind.PercentToken,
-        '*': ts.SyntaxKind.AsteriskToken,
-        '!=': ts.SyntaxKind.ExclamationEqualsToken,
-        '!==': ts.SyntaxKind.ExclamationEqualsEqualsToken,
-        '||': ts.SyntaxKind.BarBarToken,
-        '+': ts.SyntaxKind.PlusToken,
+        '&&': ts$1.SyntaxKind.AmpersandAmpersandToken,
+        '>': ts$1.SyntaxKind.GreaterThanToken,
+        '>=': ts$1.SyntaxKind.GreaterThanEqualsToken,
+        '&': ts$1.SyntaxKind.AmpersandToken,
+        '/': ts$1.SyntaxKind.SlashToken,
+        '==': ts$1.SyntaxKind.EqualsEqualsToken,
+        '===': ts$1.SyntaxKind.EqualsEqualsEqualsToken,
+        '<': ts$1.SyntaxKind.LessThanToken,
+        '<=': ts$1.SyntaxKind.LessThanEqualsToken,
+        '-': ts$1.SyntaxKind.MinusToken,
+        '%': ts$1.SyntaxKind.PercentToken,
+        '*': ts$1.SyntaxKind.AsteriskToken,
+        '!=': ts$1.SyntaxKind.ExclamationEqualsToken,
+        '!==': ts$1.SyntaxKind.ExclamationEqualsEqualsToken,
+        '||': ts$1.SyntaxKind.BarBarToken,
+        '+': ts$1.SyntaxKind.PlusToken,
     };
     const VAR_TYPES = {
-        'const': ts.NodeFlags.Const,
-        'let': ts.NodeFlags.Let,
-        'var': ts.NodeFlags.None,
+        'const': ts$1.NodeFlags.Const,
+        'let': ts$1.NodeFlags.Let,
+        'var': ts$1.NodeFlags.None,
     };
     /**
      * A TypeScript flavoured implementation of the AstFactory.
@@ -26077,74 +26077,74 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         constructor() {
             this.externalSourceFiles = new Map();
             this.attachComments = attachComments;
-            this.createArrayLiteral = ts.createArrayLiteral;
-            this.createConditional = ts.createConditional;
-            this.createElementAccess = ts.createElementAccess;
-            this.createExpressionStatement = ts.createExpressionStatement;
-            this.createIdentifier = ts.createIdentifier;
-            this.createParenthesizedExpression = ts.createParen;
-            this.createPropertyAccess = ts.createPropertyAccess;
-            this.createThrowStatement = ts.createThrow;
-            this.createTypeOfExpression = ts.createTypeOf;
+            this.createArrayLiteral = ts$1.createArrayLiteral;
+            this.createConditional = ts$1.createConditional;
+            this.createElementAccess = ts$1.createElementAccess;
+            this.createExpressionStatement = ts$1.createExpressionStatement;
+            this.createIdentifier = ts$1.createIdentifier;
+            this.createParenthesizedExpression = ts$1.createParen;
+            this.createPropertyAccess = ts$1.createPropertyAccess;
+            this.createThrowStatement = ts$1.createThrow;
+            this.createTypeOfExpression = ts$1.createTypeOf;
         }
         createAssignment(target, value) {
-            return ts.createBinary(target, ts.SyntaxKind.EqualsToken, value);
+            return ts$1.createBinary(target, ts$1.SyntaxKind.EqualsToken, value);
         }
         createBinaryExpression(leftOperand, operator, rightOperand) {
-            return ts.createBinary(leftOperand, BINARY_OPERATORS$2[operator], rightOperand);
+            return ts$1.createBinary(leftOperand, BINARY_OPERATORS$2[operator], rightOperand);
         }
         createBlock(body) {
-            return ts.createBlock(body);
+            return ts$1.createBlock(body);
         }
         createCallExpression(callee, args, pure) {
-            const call = ts.createCall(callee, undefined, args);
+            const call = ts$1.createCall(callee, undefined, args);
             if (pure) {
-                ts.addSyntheticLeadingComment(call, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', /* trailing newline */ false);
+                ts$1.addSyntheticLeadingComment(call, ts$1.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', /* trailing newline */ false);
             }
             return call;
         }
         createFunctionDeclaration(functionName, parameters, body) {
-            if (!ts.isBlock(body)) {
-                throw new Error(`Invalid syntax, expected a block, but got ${ts.SyntaxKind[body.kind]}.`);
+            if (!ts$1.isBlock(body)) {
+                throw new Error(`Invalid syntax, expected a block, but got ${ts$1.SyntaxKind[body.kind]}.`);
             }
-            return ts.createFunctionDeclaration(undefined, undefined, undefined, functionName, undefined, parameters.map(param => ts.createParameter(undefined, undefined, undefined, param)), undefined, body);
+            return ts$1.createFunctionDeclaration(undefined, undefined, undefined, functionName, undefined, parameters.map(param => ts$1.createParameter(undefined, undefined, undefined, param)), undefined, body);
         }
         createFunctionExpression(functionName, parameters, body) {
-            if (!ts.isBlock(body)) {
-                throw new Error(`Invalid syntax, expected a block, but got ${ts.SyntaxKind[body.kind]}.`);
+            if (!ts$1.isBlock(body)) {
+                throw new Error(`Invalid syntax, expected a block, but got ${ts$1.SyntaxKind[body.kind]}.`);
             }
-            return ts.createFunctionExpression(undefined, undefined, functionName !== null && functionName !== void 0 ? functionName : undefined, undefined, parameters.map(param => ts.createParameter(undefined, undefined, undefined, param)), undefined, body);
+            return ts$1.createFunctionExpression(undefined, undefined, functionName !== null && functionName !== void 0 ? functionName : undefined, undefined, parameters.map(param => ts$1.createParameter(undefined, undefined, undefined, param)), undefined, body);
         }
         createIfStatement(condition, thenStatement, elseStatement) {
-            return ts.createIf(condition, thenStatement, elseStatement !== null && elseStatement !== void 0 ? elseStatement : undefined);
+            return ts$1.createIf(condition, thenStatement, elseStatement !== null && elseStatement !== void 0 ? elseStatement : undefined);
         }
         createLiteral(value) {
             if (value === undefined) {
-                return ts.createIdentifier('undefined');
+                return ts$1.createIdentifier('undefined');
             }
             else if (value === null) {
-                return ts.createNull();
+                return ts$1.createNull();
             }
             else {
-                return ts.createLiteral(value);
+                return ts$1.createLiteral(value);
             }
         }
         createNewExpression(expression, args) {
-            return ts.createNew(expression, undefined, args);
+            return ts$1.createNew(expression, undefined, args);
         }
         createObjectLiteral(properties) {
-            return ts.createObjectLiteral(properties.map(prop => ts.createPropertyAssignment(prop.quoted ? ts.createLiteral(prop.propertyName) :
-                ts.createIdentifier(prop.propertyName), prop.value)));
+            return ts$1.createObjectLiteral(properties.map(prop => ts$1.createPropertyAssignment(prop.quoted ? ts$1.createLiteral(prop.propertyName) :
+                ts$1.createIdentifier(prop.propertyName), prop.value)));
         }
         createReturnStatement(expression) {
-            return ts.createReturn(expression !== null && expression !== void 0 ? expression : undefined);
+            return ts$1.createReturn(expression !== null && expression !== void 0 ? expression : undefined);
         }
         createTaggedTemplate(tag, template) {
             let templateLiteral;
             const length = template.elements.length;
             const head = template.elements[0];
             if (length === 1) {
-                templateLiteral = ts.createNoSubstitutionTemplateLiteral(head.cooked, head.raw);
+                templateLiteral = ts$1.createNoSubstitutionTemplateLiteral(head.cooked, head.raw);
             }
             else {
                 const spans = [];
@@ -26155,7 +26155,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     if (range !== null) {
                         this.setSourceMapRange(middle, range);
                     }
-                    spans.push(ts.createTemplateSpan(template.expressions[i - 1], middle));
+                    spans.push(ts$1.createTemplateSpan(template.expressions[i - 1], middle));
                 }
                 // Create the tail part
                 const resolvedExpression = template.expressions[length - 2];
@@ -26164,21 +26164,21 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 if (templatePart.range !== null) {
                     this.setSourceMapRange(templateTail, templatePart.range);
                 }
-                spans.push(ts.createTemplateSpan(resolvedExpression, templateTail));
+                spans.push(ts$1.createTemplateSpan(resolvedExpression, templateTail));
                 // Put it all together
                 templateLiteral =
-                    ts.createTemplateExpression(ts.createTemplateHead(head.cooked, head.raw), spans);
+                    ts$1.createTemplateExpression(ts$1.createTemplateHead(head.cooked, head.raw), spans);
             }
             if (head.range !== null) {
                 this.setSourceMapRange(templateLiteral, head.range);
             }
-            return ts.createTaggedTemplate(tag, templateLiteral);
+            return ts$1.createTaggedTemplate(tag, templateLiteral);
         }
         createUnaryExpression(operator, operand) {
-            return ts.createPrefix(UNARY_OPERATORS$2[operator], operand);
+            return ts$1.createPrefix(UNARY_OPERATORS$2[operator], operand);
         }
         createVariableDeclaration(variableName, initializer, type) {
-            return ts.createVariableStatement(undefined, ts.createVariableDeclarationList([ts.createVariableDeclaration(variableName, undefined, initializer !== null && initializer !== void 0 ? initializer : undefined)], VAR_TYPES[type]));
+            return ts$1.createVariableStatement(undefined, ts$1.createVariableDeclarationList([ts$1.createVariableDeclaration(variableName, undefined, initializer !== null && initializer !== void 0 ? initializer : undefined)], VAR_TYPES[type]));
         }
         setSourceMapRange(node, sourceMapRange) {
             if (sourceMapRange === null) {
@@ -26186,25 +26186,25 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             }
             const url = sourceMapRange.url;
             if (!this.externalSourceFiles.has(url)) {
-                this.externalSourceFiles.set(url, ts.createSourceMapSource(url, sourceMapRange.content, pos => pos));
+                this.externalSourceFiles.set(url, ts$1.createSourceMapSource(url, sourceMapRange.content, pos => pos));
             }
             const source = this.externalSourceFiles.get(url);
-            ts.setSourceMapRange(node, { pos: sourceMapRange.start.offset, end: sourceMapRange.end.offset, source });
+            ts$1.setSourceMapRange(node, { pos: sourceMapRange.start.offset, end: sourceMapRange.end.offset, source });
             return node;
         }
     }
     // HACK: Use this in place of `ts.createTemplateMiddle()`.
     // Revert once https://github.com/microsoft/TypeScript/issues/35374 is fixed.
     function createTemplateMiddle(cooked, raw) {
-        const node = ts.createTemplateHead(cooked, raw);
-        node.kind = ts.SyntaxKind.TemplateMiddle;
+        const node = ts$1.createTemplateHead(cooked, raw);
+        node.kind = ts$1.SyntaxKind.TemplateMiddle;
         return node;
     }
     // HACK: Use this in place of `ts.createTemplateTail()`.
     // Revert once https://github.com/microsoft/TypeScript/issues/35374 is fixed.
     function createTemplateTail(cooked, raw) {
-        const node = ts.createTemplateHead(cooked, raw);
-        node.kind = ts.SyntaxKind.TemplateTail;
+        const node = ts$1.createTemplateHead(cooked, raw);
+        node.kind = ts$1.SyntaxKind.TemplateTail;
         return node;
     }
     /**
@@ -26215,14 +26215,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function attachComments(statement, leadingComments) {
         for (const comment of leadingComments) {
-            const commentKind = comment.multiline ? ts.SyntaxKind.MultiLineCommentTrivia :
-                ts.SyntaxKind.SingleLineCommentTrivia;
+            const commentKind = comment.multiline ? ts$1.SyntaxKind.MultiLineCommentTrivia :
+                ts$1.SyntaxKind.SingleLineCommentTrivia;
             if (comment.multiline) {
-                ts.addSyntheticLeadingComment(statement, commentKind, comment.toString(), comment.trailingNewline);
+                ts$1.addSyntheticLeadingComment(statement, commentKind, comment.toString(), comment.trailingNewline);
             }
             else {
                 for (const line of comment.toString().split('\n')) {
-                    ts.addSyntheticLeadingComment(statement, commentKind, line, comment.trailingNewline);
+                    ts$1.addSyntheticLeadingComment(statement, commentKind, line, comment.trailingNewline);
                 }
             }
         }
@@ -26257,15 +26257,15 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function addImports(importManager, sf, extraStatements = []) {
         // Generate the import statements to prepend.
         const addedImports = importManager.getAllImports(sf.fileName).map(i => {
-            const qualifier = ts.createIdentifier(i.qualifier);
-            const importClause = ts.createImportClause(
+            const qualifier = ts$1.createIdentifier(i.qualifier);
+            const importClause = ts$1.createImportClause(
             /* name */ undefined, 
-            /* namedBindings */ ts.createNamespaceImport(qualifier));
-            return ts.createImportDeclaration(
+            /* namedBindings */ ts$1.createNamespaceImport(qualifier));
+            return ts$1.createImportDeclaration(
             /* decorators */ undefined, 
             /* modifiers */ undefined, 
             /* importClause */ importClause, 
-            /* moduleSpecifier */ ts.createLiteral(i.specifier));
+            /* moduleSpecifier */ ts$1.createLiteral(i.specifier));
         });
         // Filter out the existing imports and the source file body. All new statements
         // will be inserted between them.
@@ -26276,16 +26276,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // If we prepend imports, we also prepend NotEmittedStatement to use it as an anchor
             // for @fileoverview Closure annotation. If there is no @fileoverview annotations, this
             // statement would be a noop.
-            const fileoverviewAnchorStmt = ts.createNotEmittedStatement(sf);
-            return ts.updateSourceFileNode(sf, ts.createNodeArray([
+            const fileoverviewAnchorStmt = ts$1.createNotEmittedStatement(sf);
+            return ts$1.updateSourceFileNode(sf, ts$1.createNodeArray([
                 fileoverviewAnchorStmt, ...existingImports, ...addedImports, ...extraStatements, ...body
             ]));
         }
         return sf;
     }
     function isImportStatement(stmt) {
-        return ts.isImportDeclaration(stmt) || ts.isImportEqualsDeclaration(stmt) ||
-            ts.isNamespaceImport(stmt);
+        return ts$1.isImportDeclaration(stmt) || ts$1.isImportEqualsDeclaration(stmt) ||
+            ts$1.isNamespaceImport(stmt);
     }
 
     /**
@@ -26328,7 +26328,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             if (!sf.isDeclarationFile) {
                 return null;
             }
-            const originalSf = ts.getOriginalNode(sf);
+            const originalSf = ts$1.getOriginalNode(sf);
             let transforms = null;
             if (this.ivyDeclarationTransforms.has(originalSf)) {
                 transforms = [];
@@ -26345,7 +26345,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         return (context) => {
             const transformer = new DtsTransformer(context, importRewriter, importPrefix);
             return (fileOrBundle) => {
-                if (ts.isBundle(fileOrBundle)) {
+                if (ts$1.isBundle(fileOrBundle)) {
                     // Only attempt to transform source files.
                     return fileOrBundle;
                 }
@@ -26372,19 +26372,19 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         transform(sf, transforms) {
             const imports = new ImportManager(this.importRewriter, this.importPrefix);
             const visitor = (node) => {
-                if (ts.isClassDeclaration(node)) {
+                if (ts$1.isClassDeclaration(node)) {
                     return this.transformClassDeclaration(node, transforms, imports);
                 }
-                else if (ts.isFunctionDeclaration(node)) {
+                else if (ts$1.isFunctionDeclaration(node)) {
                     return this.transformFunctionDeclaration(node, transforms, imports);
                 }
                 else {
                     // Otherwise return node as is.
-                    return ts.visitEachChild(node, visitor, this.ctx);
+                    return ts$1.visitEachChild(node, visitor, this.ctx);
                 }
             };
             // Recursively scan through the AST and process all nodes as desired.
-            sf = ts.visitNode(sf, visitor);
+            sf = ts$1.visitNode(sf, visitor);
             // Add new imports for this file.
             return addImports(imports, sf);
         }
@@ -26417,7 +26417,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // If some elements have been transformed but the class itself has not been transformed, create
             // an updated class declaration with the updated elements.
             if (elementsChanged && clazz === newClazz) {
-                newClazz = ts.updateClassDeclaration(
+                newClazz = ts$1.updateClassDeclaration(
                 /* node */ clazz, 
                 /* decorators */ clazz.decorators, 
                 /* modifiers */ clazz.modifiers, 
@@ -26446,16 +26446,16 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.declarationFields.set(decl, fields);
         }
         transformClass(clazz, members, imports) {
-            const original = ts.getOriginalNode(clazz);
+            const original = ts$1.getOriginalNode(clazz);
             if (!this.declarationFields.has(original)) {
                 return clazz;
             }
             const fields = this.declarationFields.get(original);
             const newMembers = fields.map(decl => {
-                const modifiers = [ts.createModifier(ts.SyntaxKind.StaticKeyword)];
+                const modifiers = [ts$1.createModifier(ts$1.SyntaxKind.StaticKeyword)];
                 const typeRef = translateType(decl.type, imports);
                 markForEmitAsSingleLine(typeRef);
-                return ts.createProperty(
+                return ts$1.createProperty(
                 /* decorators */ undefined, 
                 /* modifiers */ modifiers, 
                 /* name */ decl.name, 
@@ -26463,7 +26463,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 /* type */ typeRef, 
                 /* initializer */ undefined);
             });
-            return ts.updateClassDeclaration(
+            return ts$1.updateClassDeclaration(
             /* node */ clazz, 
             /* decorators */ clazz.decorators, 
             /* modifiers */ clazz.modifiers, 
@@ -26474,8 +26474,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     function markForEmitAsSingleLine(node) {
-        ts.setEmitFlags(node, ts.EmitFlags.SingleLine);
-        ts.forEachChild(node, markForEmitAsSingleLine);
+        ts$1.setEmitFlags(node, ts$1.EmitFlags.SingleLine);
+        ts$1.forEachChild(node, markForEmitAsSingleLine);
     }
     class ReturnTypeTransform {
         constructor() {
@@ -26485,25 +26485,25 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             this.typeReplacements.set(declaration, type);
         }
         transformClassElement(element, imports) {
-            if (ts.isMethodDeclaration(element)) {
-                const original = ts.getOriginalNode(element, ts.isMethodDeclaration);
+            if (ts$1.isMethodDeclaration(element)) {
+                const original = ts$1.getOriginalNode(element, ts$1.isMethodDeclaration);
                 if (!this.typeReplacements.has(original)) {
                     return element;
                 }
                 const returnType = this.typeReplacements.get(original);
                 const tsReturnType = translateType(returnType, imports);
-                return ts.updateMethod(element, element.decorators, element.modifiers, element.asteriskToken, element.name, element.questionToken, element.typeParameters, element.parameters, tsReturnType, element.body);
+                return ts$1.updateMethod(element, element.decorators, element.modifiers, element.asteriskToken, element.name, element.questionToken, element.typeParameters, element.parameters, tsReturnType, element.body);
             }
             return element;
         }
         transformFunctionDeclaration(element, imports) {
-            const original = ts.getOriginalNode(element);
+            const original = ts$1.getOriginalNode(element);
             if (!this.typeReplacements.has(original)) {
                 return element;
             }
             const returnType = this.typeReplacements.get(original);
             const tsReturnType = translateType(returnType, imports);
-            return ts.updateFunctionDeclaration(
+            return ts$1.updateFunctionDeclaration(
             /* node */ element, 
             /* decorators */ element.decorators, 
             /* modifiers */ element.modifiers, 
@@ -26577,8 +26577,8 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
             // First, visit the node. visitedNode starts off as `null` but should be set after visiting
             // is completed.
             let visitedNode = null;
-            node = ts.visitEachChild(node, child => this._visit(child, context), context);
-            if (ts.isClassDeclaration(node)) {
+            node = ts$1.visitEachChild(node, child => this._visit(child, context), context);
+            if (ts$1.isClassDeclaration(node)) {
                 visitedNode =
                     this._visitListEntryNode(node, (node) => this.visitClassDeclaration(node));
             }
@@ -26599,7 +26599,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return node;
             }
             // There are statements to prepend, so clone the original node.
-            const clone = ts.getMutableClone(node);
+            const clone = ts$1.getMutableClone(node);
             // Build a new list of statements and patch it onto the clone.
             const newStatements = [];
             clone.statements.forEach(stmt => {
@@ -26613,7 +26613,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     this._after.delete(stmt);
                 }
             });
-            clone.statements = ts.createNodeArray(newStatements, node.statements.hasTrailingComma);
+            clone.statements = ts$1.createNodeArray(newStatements, node.statements.hasTrailingComma);
             return clone;
         }
     }
@@ -26689,13 +26689,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 // Translate the initializer for the field into TS nodes.
                 const exprNode = translateExpression(field.initializer, this.importManager, { recordWrappedNodeExpr: this.recordWrappedNodeExpr });
                 // Create a static property declaration for the new field.
-                const property = ts.createProperty(undefined, [ts.createToken(ts.SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
+                const property = ts$1.createProperty(undefined, [ts$1.createToken(ts$1.SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
                 if (this.isClosureCompilerEnabled) {
                     // Closure compiler transforms the form `Service.ɵprov = X` into `Service$ɵprov = X`. To
                     // prevent this transformation, such assignments need to be annotated with @nocollapse.
                     // Note that tsickle is typically responsible for adding such annotations, however it
                     // doesn't yet handle synthetic fields added during other transformations.
-                    ts.addSyntheticLeadingComment(property, ts.SyntaxKind.MultiLineCommentTrivia, '* @nocollapse ', 
+                    ts$1.addSyntheticLeadingComment(property, ts$1.SyntaxKind.MultiLineCommentTrivia, '* @nocollapse ', 
                     /* hasTrailingNewLine */ false);
                 }
                 field.statements
@@ -26704,7 +26704,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 members.push(property);
             }
             // Replace the class declaration with an updated version.
-            node = ts.updateClassDeclaration(node, 
+            node = ts$1.updateClassDeclaration(node, 
             // Remove the decorator which triggered this compilation, leaving the others alone.
             maybeFilterDecorator(node.decorators, this.compilation.decoratorsFor(node)), node.modifiers, node.name, node.typeParameters, node.heritageClauses || [], 
             // Map over the class members and remove any Angular decorators from them.
@@ -26759,7 +26759,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 return undefined;
             }
             // Create a new `NodeArray` with the filtered decorators that sourcemaps back to the original.
-            const array = ts.createNodeArray(filtered);
+            const array = ts$1.createNodeArray(filtered);
             array.pos = node.decorators.pos;
             array.end = node.decorators.end;
             return array;
@@ -26771,31 +26771,31 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * as parameters of constructors.
          */
         _stripAngularDecorators(node) {
-            if (ts.isParameter(node)) {
+            if (ts$1.isParameter(node)) {
                 // Strip decorators from parameters (probably of the constructor).
-                node = ts.updateParameter(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.dotDotDotToken, node.name, node.questionToken, node.type, node.initializer);
+                node = ts$1.updateParameter(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.dotDotDotToken, node.name, node.questionToken, node.type, node.initializer);
             }
-            else if (ts.isMethodDeclaration(node) && node.decorators !== undefined) {
+            else if (ts$1.isMethodDeclaration(node) && node.decorators !== undefined) {
                 // Strip decorators of methods.
-                node = ts.updateMethod(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.asteriskToken, node.name, node.questionToken, node.typeParameters, node.parameters, node.type, node.body);
+                node = ts$1.updateMethod(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.asteriskToken, node.name, node.questionToken, node.typeParameters, node.parameters, node.type, node.body);
             }
-            else if (ts.isPropertyDeclaration(node) && node.decorators !== undefined) {
+            else if (ts$1.isPropertyDeclaration(node) && node.decorators !== undefined) {
                 // Strip decorators of properties.
-                node = ts.updateProperty(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.questionToken, node.type, node.initializer);
+                node = ts$1.updateProperty(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.questionToken, node.type, node.initializer);
             }
-            else if (ts.isGetAccessor(node)) {
+            else if (ts$1.isGetAccessor(node)) {
                 // Strip decorators of getters.
-                node = ts.updateGetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.type, node.body);
+                node = ts$1.updateGetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.type, node.body);
             }
-            else if (ts.isSetAccessor(node)) {
+            else if (ts$1.isSetAccessor(node)) {
                 // Strip decorators of setters.
-                node = ts.updateSetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.body);
+                node = ts$1.updateSetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.body);
             }
-            else if (ts.isConstructorDeclaration(node)) {
+            else if (ts$1.isConstructorDeclaration(node)) {
                 // For constructors, strip decorators of the parameters.
                 const parameters = node.parameters.map(param => this._stripAngularDecorators(param));
                 node =
-                    ts.updateConstructor(node, node.decorators, node.modifiers, parameters, node.body);
+                    ts$1.updateConstructor(node, node.decorators, node.modifiers, parameters, node.body);
             }
             return node;
         }
@@ -26824,7 +26824,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         let sf = visit(file, transformationVisitor, context);
         // Generate the constant statements first, as they may involve adding additional imports
         // to the ImportManager.
-        const downlevelTranslatedCode = getLocalizeCompileTarget(context) < ts.ScriptTarget.ES2015;
+        const downlevelTranslatedCode = getLocalizeCompileTarget(context) < ts$1.ScriptTarget.ES2015;
         const constants = constantPool.statements.map(stmt => translateStatement(stmt, importManager, {
             recordWrappedNodeExpr,
             downlevelTaggedTemplates: downlevelTranslatedCode,
@@ -26851,20 +26851,20 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * downleveling for us.
      */
     function getLocalizeCompileTarget(context) {
-        const target = context.getCompilerOptions().target || ts.ScriptTarget.ES2015;
-        return target !== ts.ScriptTarget.JSON ? target : ts.ScriptTarget.ES2015;
+        const target = context.getCompilerOptions().target || ts$1.ScriptTarget.ES2015;
+        return target !== ts$1.ScriptTarget.JSON ? target : ts$1.ScriptTarget.ES2015;
     }
     function getFileOverviewComment(statements) {
         if (statements.length > 0) {
             const host = statements[0];
             let trailing = false;
-            let comments = ts.getSyntheticLeadingComments(host);
+            let comments = ts$1.getSyntheticLeadingComments(host);
             // If @fileoverview tag is not found in source file, tsickle produces fake node with trailing
             // comment and inject it at the very beginning of the generated file. So we need to check for
             // leading as well as trailing comments.
             if (!comments || comments.length === 0) {
                 trailing = true;
-                comments = ts.getSyntheticTrailingComments(host);
+                comments = ts$1.getSyntheticTrailingComments(host);
             }
             if (comments && comments.length > 0 && CLOSURE_FILE_OVERVIEW_REGEXP.test(comments[0].text)) {
                 return { comments, host, trailing };
@@ -26879,30 +26879,30 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         // that hosted it.
         if (sf.statements.length > 0 && host !== sf.statements[0]) {
             if (trailing) {
-                ts.setSyntheticTrailingComments(host, undefined);
+                ts$1.setSyntheticTrailingComments(host, undefined);
             }
             else {
-                ts.setSyntheticLeadingComments(host, undefined);
+                ts$1.setSyntheticLeadingComments(host, undefined);
             }
-            ts.setSyntheticLeadingComments(sf.statements[0], comments);
+            ts$1.setSyntheticLeadingComments(sf.statements[0], comments);
         }
     }
     function maybeFilterDecorator(decorators, toRemove) {
         if (decorators === undefined) {
             return undefined;
         }
-        const filtered = decorators.filter(dec => toRemove.find(decToRemove => ts.getOriginalNode(dec) === decToRemove) === undefined);
+        const filtered = decorators.filter(dec => toRemove.find(decToRemove => ts$1.getOriginalNode(dec) === decToRemove) === undefined);
         if (filtered.length === 0) {
             return undefined;
         }
-        return ts.createNodeArray(filtered);
+        return ts$1.createNodeArray(filtered);
     }
     function isFromAngularCore(decorator) {
         return decorator.import !== null && decorator.import.from === '@angular/core';
     }
     function createRecorderFn(defaultImportRecorder) {
         return expr => {
-            if (ts.isIdentifier(expr)) {
+            if (ts$1.isIdentifier(expr)) {
                 defaultImportRecorder.recordUsedIdentifier(expr);
             }
         };
@@ -26933,7 +26933,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     function tsSourceMapBug29300Fixed() {
         if (_tsSourceMapBug29300Fixed === undefined) {
             let writtenFiles = {};
-            const sourceFile = ts.createSourceFile('test.ts', 'a;', ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+            const sourceFile = ts$1.createSourceFile('test.ts', 'a;', ts$1.ScriptTarget.ES2015, true, ts$1.ScriptKind.TS);
             const host = {
                 getSourceFile() {
                     return sourceFile;
@@ -26967,21 +26967,21 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                 },
             };
             const transform = (context) => {
-                return (node) => ts.visitNode(node, visitor);
+                return (node) => ts$1.visitNode(node, visitor);
                 function visitor(node) {
-                    if (ts.isIdentifier(node) && node.text === 'a') {
-                        const newNode = ts.createIdentifier('b');
-                        ts.setSourceMapRange(newNode, {
+                    if (ts$1.isIdentifier(node) && node.text === 'a') {
+                        const newNode = ts$1.createIdentifier('b');
+                        ts$1.setSourceMapRange(newNode, {
                             pos: 16,
                             end: 16,
-                            source: ts.createSourceMapSource('test.html', 'abc\ndef\nghi\njkl\nmno\npqr')
+                            source: ts$1.createSourceMapSource('test.html', 'abc\ndef\nghi\njkl\nmno\npqr')
                         });
                         return newNode;
                     }
-                    return ts.visitEachChild(node, visitor, context);
+                    return ts$1.visitEachChild(node, visitor, context);
                 }
             };
-            const program = ts.createProgram(['test.ts'], { sourceMap: true }, host);
+            const program = ts$1.createProgram(['test.ts'], { sourceMap: true }, host);
             program.emit(sourceFile, undefined, undefined, undefined, { after: [transform] });
             // The first two mappings in the source map should look like:
             // [0,1,4,0] col 0 => source file 1, row 4, column 0)
@@ -27041,11 +27041,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
                     }
                     const attributeName = dec.args[0];
                     token = new WrappedNodeExpr(attributeName);
-                    if (ts.isStringLiteralLike(attributeName)) {
+                    if (ts$1.isStringLiteralLike(attributeName)) {
                         attribute = new LiteralExpr(attributeName.text);
                     }
                     else {
-                        attribute = new WrappedNodeExpr(ts.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword));
+                        attribute = new WrappedNodeExpr(ts$1.createKeywordTypeNode(ts$1.SyntaxKind.UnknownKeyword));
                     }
                     resolved = R3ResolvedDependencyType.Attribute;
                 }
@@ -27084,7 +27084,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         else if (valueRef.kind === 0 /* LOCAL */) {
             if (defaultImportRecorder !== null && valueRef.defaultImportStatement !== null &&
-                ts.isIdentifier(valueRef.expression)) {
+                ts$1.isIdentifier(valueRef.expression)) {
                 defaultImportRecorder.recordImportedIdentifier(valueRef.expression, valueRef.defaultImportStatement);
             }
             return new WrappedNodeExpr(valueRef.expression);
@@ -27193,11 +27193,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         const chain = {
             messageText: `No suitable injection token for parameter '${param.name || index}' of class '${clazz.name.text}'.`,
-            category: ts.DiagnosticCategory.Error,
+            category: ts$1.DiagnosticCategory.Error,
             code: 0,
             next: [{
                     messageText: chainMessage,
-                    category: ts.DiagnosticCategory.Message,
+                    category: ts$1.DiagnosticCategory.Message,
                     code: 0,
                 }],
         };
@@ -27207,7 +27207,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         const value = refEmitter.emit(valueRef, valueContext);
         const type = refEmitter.emit(typeRef, typeContext, ImportFlags.ForceNewImport | ImportFlags.AllowTypeImports);
         if (value === null || type === null) {
-            throw new Error(`Could not refer to ${ts.SyntaxKind[valueRef.node.kind]}`);
+            throw new Error(`Could not refer to ${ts$1.SyntaxKind[valueRef.node.kind]}`);
         }
         return { value, type };
     }
@@ -27236,25 +27236,25 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * For example, the expression "(foo as Type)" unwraps to "foo".
      */
     function unwrapExpression(node) {
-        while (ts.isAsExpression(node) || ts.isParenthesizedExpression(node)) {
+        while (ts$1.isAsExpression(node) || ts$1.isParenthesizedExpression(node)) {
             node = node.expression;
         }
         return node;
     }
     function expandForwardRef(arg) {
         arg = unwrapExpression(arg);
-        if (!ts.isArrowFunction(arg) && !ts.isFunctionExpression(arg)) {
+        if (!ts$1.isArrowFunction(arg) && !ts$1.isFunctionExpression(arg)) {
             return null;
         }
         const body = arg.body;
         // Either the body is a ts.Expression directly, or a block with a single return statement.
-        if (ts.isBlock(body)) {
+        if (ts$1.isBlock(body)) {
             // Block body - look for a single return statement.
             if (body.statements.length !== 1) {
                 return null;
             }
             const stmt = body.statements[0];
-            if (!ts.isReturnStatement(stmt) || stmt.expression === undefined) {
+            if (!ts$1.isReturnStatement(stmt) || stmt.expression === undefined) {
                 return null;
             }
             return stmt.expression;
@@ -27274,11 +27274,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function unwrapForwardRef(node, reflector) {
         node = unwrapExpression(node);
-        if (!ts.isCallExpression(node) || node.arguments.length !== 1) {
+        if (!ts$1.isCallExpression(node) || node.arguments.length !== 1) {
             return node;
         }
-        const fn = ts.isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression;
-        if (!ts.isIdentifier(fn)) {
+        const fn = ts$1.isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression;
+        if (!ts$1.isIdentifier(fn)) {
             return node;
         }
         const expr = expandForwardRef(node.arguments[0]);
@@ -27324,7 +27324,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     function isExpressionForwardReference(expr, context, contextSource) {
         if (isWrappedTsNodeExpr(expr)) {
-            const node = ts.getOriginalNode(expr.node);
+            const node = ts$1.getOriginalNode(expr.node);
             return node.getSourceFile() === contextSource && context.pos < node.pos;
         }
         else {
@@ -27349,13 +27349,13 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
     }
     const parensWrapperTransformerFactory = (context) => {
         const visitor = (node) => {
-            const visited = ts.visitEachChild(node, visitor, context);
-            if (ts.isArrowFunction(visited) || ts.isFunctionExpression(visited)) {
-                return ts.createParen(visited);
+            const visited = ts$1.visitEachChild(node, visitor, context);
+            if (ts$1.isArrowFunction(visited) || ts$1.isFunctionExpression(visited)) {
+                return ts$1.createParen(visited);
             }
             return visited;
         };
-        return (node) => ts.visitEachChild(node, visitor, context);
+        return (node) => ts$1.visitEachChild(node, visitor, context);
     };
     /**
      * Wraps all functions in a given expression in parentheses. This is needed to avoid problems
@@ -27368,7 +27368,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * @param expression Expression where functions should be wrapped in parentheses
      */
     function wrapFunctionExpressionsInParens(expression) {
-        return ts.transform(expression, [parensWrapperTransformerFactory]).transformed[0];
+        return ts$1.transform(expression, [parensWrapperTransformerFactory]).transformed[0];
     }
     /**
      * Create a `ts.Diagnostic` which indicates the given class is part of the declarations of two or
@@ -27495,11 +27495,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         const chain = {
             messageText,
-            category: ts.DiagnosticCategory.Error,
+            category: ts$1.DiagnosticCategory.Error,
             code: 0,
             next: [{
                     messageText: chainedMessage,
-                    category: ts.DiagnosticCategory.Message,
+                    category: ts$1.DiagnosticCategory.Message,
                     code: 0,
                 }]
         };
@@ -27649,7 +27649,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (ngClassDecorators.length === 0) {
             return null;
         }
-        const metaDecorators = ts.createArrayLiteral(ngClassDecorators);
+        const metaDecorators = ts$1.createArrayLiteral(ngClassDecorators);
         // Convert the constructor parameters to metadata, passing null if none are present.
         let metaCtorParameters = new LiteralExpr(null);
         const classCtorParameters = reflection.getConstructorParameters(clazz);
@@ -27660,7 +27660,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             ]);
         }
         // Do the same for property decorators.
-        let metaPropDecorators = ts.createNull();
+        let metaPropDecorators = ts$1.createNull();
         const classMembers = reflection.getMembersOfClass(clazz).filter(member => !member.isStatic && member.decorators !== null && member.decorators.length > 0);
         const duplicateDecoratedMemberNames = classMembers.map(member => member.name).filter((name, i, arr) => arr.indexOf(name) < i);
         if (duplicateDecoratedMemberNames.length > 0) {
@@ -27672,7 +27672,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         const decoratedMembers = classMembers.map(member => { var _a; return classMemberToMetadata((_a = member.nameNode) !== null && _a !== void 0 ? _a : member.name, member.decorators, isCore); });
         if (decoratedMembers.length > 0) {
-            metaPropDecorators = ts.createObjectLiteral(decoratedMembers);
+            metaPropDecorators = ts$1.createObjectLiteral(decoratedMembers);
         }
         // Generate a pure call to setClassMetadata with the class identifier and its metadata.
         const setClassMetadata = new ExternalExpr(Identifiers.setClassMetadata);
@@ -27704,7 +27704,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (param.decorators !== null) {
             const ngDecorators = param.decorators.filter(dec => isAngularDecorator$1(dec, isCore))
                 .map((decorator) => decoratorToMetadata(decorator));
-            const value = new WrappedNodeExpr(ts.createArrayLiteral(ngDecorators));
+            const value = new WrappedNodeExpr(ts$1.createArrayLiteral(ngDecorators));
             mapEntries.push({ key: 'decorators', value, quoted: false });
         }
         return literalMap(mapEntries);
@@ -27715,8 +27715,8 @@ Either add the @Injectable() decorator to '${provider.node.name
     function classMemberToMetadata(name, decorators, isCore) {
         const ngDecorators = decorators.filter(dec => isAngularDecorator$1(dec, isCore))
             .map((decorator) => decoratorToMetadata(decorator));
-        const decoratorMeta = ts.createArrayLiteral(ngDecorators);
-        return ts.createPropertyAssignment(name, decoratorMeta);
+        const decoratorMeta = ts$1.createArrayLiteral(ngDecorators);
+        return ts$1.createPropertyAssignment(name, decoratorMeta);
     }
     /**
      * Convert a reflected decorator to metadata.
@@ -27727,17 +27727,17 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         // Decorators have a type.
         const properties = [
-            ts.createPropertyAssignment('type', ts.getMutableClone(decorator.identifier)),
+            ts$1.createPropertyAssignment('type', ts$1.getMutableClone(decorator.identifier)),
         ];
         // Sometimes they have arguments.
         if (decorator.args !== null && decorator.args.length > 0) {
             const args = decorator.args.map(arg => {
-                const expr = ts.getMutableClone(arg);
+                const expr = ts$1.getMutableClone(arg);
                 return wrapFunctionsInParens ? wrapFunctionExpressionsInParens(expr) : expr;
             });
-            properties.push(ts.createPropertyAssignment('args', ts.createArrayLiteral(args)));
+            properties.push(ts$1.createPropertyAssignment('args', ts$1.createArrayLiteral(args)));
         }
-        return ts.createObjectLiteral(properties, true);
+        return ts$1.createObjectLiteral(properties, true);
     }
     /**
      * Whether a given decorator should be treated as an Angular decorator.
@@ -27753,10 +27753,10 @@ Either add the @Injectable() decorator to '${provider.node.name
      * aken from one place any emitted to another one exactly as it has been written.
      */
     function removeIdentifierReferences(node, name) {
-        const result = ts.transform(node, [context => root => ts.visitNode(root, function walk(current) {
-                return ts.isIdentifier(current) && current.text === name ?
-                    ts.createIdentifier(current.text) :
-                    ts.visitEachChild(current, walk, context);
+        const result = ts$1.transform(node, [context => root => ts$1.visitNode(root, function walk(current) {
+                return ts$1.isIdentifier(current) && current.text === name ?
+                    ts$1.createIdentifier(current.text) :
+                    ts$1.visitEachChild(current, walk, context);
             })]);
         return result.transformed[0];
     }
@@ -27915,7 +27915,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         else {
             const meta = unwrapExpression(decorator.args[0]);
-            if (!ts.isObjectLiteralExpression(meta)) {
+            if (!ts$1.isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, `@${decorator.name} argument must be an object literal`);
             }
             directive = reflectObjectLiteral(meta);
@@ -28068,7 +28068,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         let descendants = name !== 'ContentChildren';
         if (args.length === 2) {
             const optionsExpr = unwrapExpression(args[1]);
-            if (!ts.isObjectLiteralExpression(optionsExpr)) {
+            if (!ts$1.isObjectLiteralExpression(optionsExpr)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, optionsExpr, `@${name} options must be an object literal`);
             }
             const options = reflectObjectLiteral(optionsExpr);
@@ -28106,18 +28106,18 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function extractQueriesFromDecorator(queryData, reflector, evaluator, isCore) {
         const content = [], view = [];
-        if (!ts.isObjectLiteralExpression(queryData)) {
+        if (!ts$1.isObjectLiteralExpression(queryData)) {
             throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator queries metadata must be an object literal');
         }
         reflectObjectLiteral(queryData).forEach((queryExpr, propertyName) => {
             queryExpr = unwrapExpression(queryExpr);
-            if (!ts.isNewExpression(queryExpr)) {
+            if (!ts$1.isNewExpression(queryExpr)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
             }
-            const queryType = ts.isPropertyAccessExpression(queryExpr.expression) ?
+            const queryType = ts$1.isPropertyAccessExpression(queryExpr.expression) ?
                 queryExpr.expression.name :
                 queryExpr.expression;
-            if (!ts.isIdentifier(queryType)) {
+            if (!ts$1.isIdentifier(queryType)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
             }
             const type = reflector.getImportOfIdentifier(queryType);
@@ -28620,7 +28620,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         typeCheck(ctx, node, meta) {
-            if (this.typeCheckScopeRegistry === null || !ts.isClassDeclaration(node)) {
+            if (this.typeCheckScopeRegistry === null || !ts$1.isClassDeclaration(node)) {
                 return;
             }
             if (meta.isPoisoned && !this.usePoisonedData) {
@@ -28774,7 +28774,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), `Incorrect number of arguments to @Component decorator`);
             }
             const meta = unwrapExpression(decorator.args[0]);
-            if (!ts.isObjectLiteralExpression(meta)) {
+            if (!ts$1.isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, `Decorator argument must be literal.`);
             }
             this.literalCache.set(decorator, meta);
@@ -28809,19 +28809,19 @@ Either add the @Injectable() decorator to '${provider.node.name
         _extractStyleResources(component, containingFile) {
             const styles = new Set();
             function stringLiteralElements(array) {
-                return array.elements.filter((e) => ts.isStringLiteralLike(e));
+                return array.elements.filter((e) => ts$1.isStringLiteralLike(e));
             }
             // If styleUrls is a literal array, process each resource url individually and
             // register ones that are string literals.
             const styleUrlsExpr = component.get('styleUrls');
-            if (styleUrlsExpr !== undefined && ts.isArrayLiteralExpression(styleUrlsExpr)) {
+            if (styleUrlsExpr !== undefined && ts$1.isArrayLiteralExpression(styleUrlsExpr)) {
                 for (const expression of stringLiteralElements(styleUrlsExpr)) {
                     const resourceUrl = this.resourceLoader.resolve(expression.text, containingFile);
                     styles.add({ path: absoluteFrom(resourceUrl), expression });
                 }
             }
             const stylesExpr = component.get('styles');
-            if (stylesExpr !== undefined && ts.isArrayLiteralExpression(stylesExpr)) {
+            if (stylesExpr !== undefined && ts$1.isArrayLiteralExpression(stylesExpr)) {
                 for (const expression of stringLiteralElements(stylesExpr)) {
                     styles.add({ path: null, expression });
                 }
@@ -28885,7 +28885,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             let sourceMapping;
             let escapedString = false;
             // We only support SourceMaps for inline templates that are simple string literals.
-            if (ts.isStringLiteral(templateExpr) || ts.isNoSubstitutionTemplateLiteral(templateExpr)) {
+            if (ts$1.isStringLiteral(templateExpr) || ts$1.isNoSubstitutionTemplateLiteral(templateExpr)) {
                 // the start and end of the `templateExpr` node includes the quotation marks, which we
                 // must
                 // strip
@@ -28997,7 +28997,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getTemplateRange(templateExpr) {
         const startPos = templateExpr.getStart() + 1;
-        const { line, character } = ts.getLineAndCharacterOfPosition(templateExpr.getSourceFile(), startPos);
+        const { line, character } = ts$1.getLineAndCharacterOfPosition(templateExpr.getSourceFile(), startPos);
         return {
             startPos,
             startLine: line,
@@ -29138,7 +29138,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Firstly make sure the decorator argument is an inline literal - if not, it's illegal to
             // transport references from one location to another. This is the problem that lowering
             // used to solve - if this restriction proves too undesirable we can re-implement lowering.
-            if (!ts.isObjectLiteralExpression(metaNode)) {
+            if (!ts$1.isObjectLiteralExpression(metaNode)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, metaNode, `@Injectable argument must be an object literal`);
             }
             // Resolve the fields of the literal into a map of field name to expression.
@@ -29150,7 +29150,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             let userDeps = undefined;
             if ((meta.has('useClass') || meta.has('useFactory')) && meta.has('deps')) {
                 const depsExpr = meta.get('deps');
-                if (!ts.isArrayLiteralExpression(depsExpr)) {
+                if (!ts$1.isArrayLiteralExpression(depsExpr)) {
                     throw new FatalDiagnosticError(ErrorCode.VALUE_NOT_LITERAL, depsExpr, `@Injectable deps metadata must be an inline array`);
                 }
                 userDeps = depsExpr.elements.map(dep => getDep(dep, reflector));
@@ -29274,12 +29274,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                     break;
             }
         }
-        if (ts.isArrayLiteralExpression(dep)) {
+        if (ts$1.isArrayLiteralExpression(dep)) {
             dep.elements.forEach(el => {
-                if (ts.isIdentifier(el)) {
+                if (ts$1.isIdentifier(el)) {
                     maybeUpdateDecorator(el, reflector);
                 }
-                else if (ts.isNewExpression(el) && ts.isIdentifier(el.expression)) {
+                else if (ts$1.isNewExpression(el) && ts$1.isIdentifier(el.expression)) {
                     const token = el.arguments && el.arguments.length > 0 && el.arguments[0] || undefined;
                     maybeUpdateDecorator(el.expression, reflector, token);
                 }
@@ -29343,8 +29343,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             // @NgModule can be invoked without arguments. In case it is, pretend as if a blank object
             // literal was specified. This simplifies the code below.
             const meta = decorator.args.length === 1 ? unwrapExpression(decorator.args[0]) :
-                ts.createObjectLiteral([]);
-            if (!ts.isObjectLiteralExpression(meta)) {
+                ts$1.createObjectLiteral([]);
+            if (!ts$1.isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, '@NgModule argument must be an object literal');
             }
             const ngModule = reflectObjectLiteral(meta);
@@ -29643,12 +29643,12 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         _reflectModuleFromTypeParam(type, node) {
             // Examine the type of the function to see if it's a ModuleWithProviders reference.
-            if (!ts.isTypeReferenceNode(type)) {
+            if (!ts$1.isTypeReferenceNode(type)) {
                 return null;
             }
             const typeName = type &&
-                (ts.isIdentifier(type.typeName) && type.typeName ||
-                    ts.isQualifiedName(type.typeName) && type.typeName.right) ||
+                (ts$1.isIdentifier(type.typeName) && type.typeName ||
+                    ts$1.isQualifiedName(type.typeName) && type.typeName.right) ||
                 null;
             if (typeName === null) {
                 return null;
@@ -29665,7 +29665,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // If there's no type parameter specified, bail.
             if (type.typeArguments === undefined || type.typeArguments.length !== 1) {
-                const parent = ts.isMethodDeclaration(node) && ts.isClassDeclaration(node.parent) ? node.parent : null;
+                const parent = ts$1.isMethodDeclaration(node) && ts$1.isClassDeclaration(node.parent) ? node.parent : null;
                 const symbolName = (parent && parent.name ? parent.name.getText() + '.' : '') +
                     (node.name ? node.name.getText() : 'anonymous');
                 throw new FatalDiagnosticError(ErrorCode.NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC, type, `${symbolName} returns a ModuleWithProviders type without a generic type argument. ` +
@@ -29682,13 +29682,13 @@ Either add the @Injectable() decorator to '${provider.node.name
          * @returns the identifier of the NgModule type if found, or null otherwise.
          */
         _reflectModuleFromLiteralType(type) {
-            if (!ts.isIntersectionTypeNode(type)) {
+            if (!ts$1.isIntersectionTypeNode(type)) {
                 return null;
             }
             for (const t of type.types) {
-                if (ts.isTypeLiteralNode(t)) {
+                if (ts$1.isTypeLiteralNode(t)) {
                     for (const m of t.members) {
-                        const ngModuleType = ts.isPropertySignature(m) && ts.isIdentifier(m.name) &&
+                        const ngModuleType = ts$1.isPropertySignature(m) && ts$1.isIdentifier(m.name) &&
                             m.name.text === 'ngModule' && m.type ||
                             null;
                         const ngModuleExpression = ngModuleType && typeNodeToValueExpr(ngModuleType);
@@ -29787,7 +29787,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), '@Pipe must have exactly one argument');
             }
             const meta = unwrapExpression(decorator.args[0]);
-            if (!ts.isObjectLiteralExpression(meta)) {
+            if (!ts$1.isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, '@Pipe must have a literal argument');
             }
             const pipe = reflectObjectLiteral(meta);
@@ -29963,8 +29963,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             const imports = new Set();
             // Look through the source file for import statements.
             sf.statements.forEach(stmt => {
-                if ((ts.isImportDeclaration(stmt) || ts.isExportDeclaration(stmt)) &&
-                    stmt.moduleSpecifier !== undefined && ts.isStringLiteral(stmt.moduleSpecifier)) {
+                if ((ts$1.isImportDeclaration(stmt) || ts$1.isExportDeclaration(stmt)) &&
+                    stmt.moduleSpecifier !== undefined && ts$1.isStringLiteral(stmt.moduleSpecifier)) {
                     // Resolve the module to a file, and check whether that file is in the ts.Program.
                     const moduleName = stmt.moduleSpecifier.text;
                     const moduleFile = this.resolver.resolveModule(moduleName, sf.fileName);
@@ -30023,7 +30023,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Loop through the exported symbols, de-alias if needed, and add them to `topLevelExports`.
         // TODO(alxhub): use proper iteration when build.sh is removed. (#27762)
         exportedSymbols.forEach(symbol => {
-            if (symbol.flags & ts.SymbolFlags.Alias) {
+            if (symbol.flags & ts$1.SymbolFlags.Alias) {
                 symbol = checker.getAliasedSymbol(symbol);
             }
             const decl = symbol.valueDeclaration;
@@ -30058,7 +30058,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     if (transitivePath !== null) {
                         visibleVia = transitivePath.map(seg => getNameOfDeclaration(seg)).join(' -> ');
                     }
-                    const diagnostic = Object.assign(Object.assign({ category: ts.DiagnosticCategory.Error, code: ngErrorCode(ErrorCode.SYMBOL_NOT_EXPORTED), file: transitiveReference.getSourceFile() }, getPosOfDeclaration(transitiveReference)), { messageText: `Unsupported private ${descriptor} ${name}. This ${descriptor} is visible to consumers via ${visibleVia}, but is not exported from the top-level library entrypoint.` });
+                    const diagnostic = Object.assign(Object.assign({ category: ts$1.DiagnosticCategory.Error, code: ngErrorCode(ErrorCode.SYMBOL_NOT_EXPORTED), file: transitiveReference.getSourceFile() }, getPosOfDeclaration(transitiveReference)), { messageText: `Unsupported private ${descriptor} ${name}. This ${descriptor} is visible to consumers via ${visibleVia}, but is not exported from the top-level library entrypoint.` });
                     diagnostics.push(diagnostic);
                 }
             });
@@ -30073,9 +30073,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         };
     }
     function getIdentifierOfDeclaration(decl) {
-        if ((ts.isClassDeclaration(decl) || ts.isVariableDeclaration(decl) ||
-            ts.isFunctionDeclaration(decl)) &&
-            decl.name !== undefined && ts.isIdentifier(decl.name)) {
+        if ((ts$1.isClassDeclaration(decl) || ts$1.isVariableDeclaration(decl) ||
+            ts$1.isFunctionDeclaration(decl)) &&
+            decl.name !== undefined && ts$1.isIdentifier(decl.name)) {
             return decl.name;
         }
         else {
@@ -30088,13 +30088,13 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getDescriptorOfDeclaration(decl) {
         switch (decl.kind) {
-            case ts.SyntaxKind.ClassDeclaration:
+            case ts$1.SyntaxKind.ClassDeclaration:
                 return 'class';
-            case ts.SyntaxKind.FunctionDeclaration:
+            case ts$1.SyntaxKind.FunctionDeclaration:
                 return 'function';
-            case ts.SyntaxKind.VariableDeclaration:
+            case ts$1.SyntaxKind.VariableDeclaration:
                 return 'variable';
-            case ts.SyntaxKind.EnumDeclaration:
+            case ts$1.SyntaxKind.EnumDeclaration:
                 return 'enum';
             default:
                 return 'declaration';
@@ -30978,19 +30978,19 @@ Either add the @Injectable() decorator to '${provider.node.name
             // This is intentional, because the alternative is slow and this will catch 99% of the cases we
             // need to handle.
             const isExported = stmt.modifiers !== undefined &&
-                stmt.modifiers.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
+                stmt.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.ExportKeyword);
             if (!isExported) {
                 return;
             }
-            if (ts.isClassDeclaration(stmt)) {
+            if (ts$1.isClassDeclaration(stmt)) {
                 for (const member of stmt.members) {
-                    if (!ts.isMethodDeclaration(member) || !isStatic(member)) {
+                    if (!ts$1.isMethodDeclaration(member) || !isStatic(member)) {
                         continue;
                     }
                     this.visitFunctionOrMethodDeclaration(dts, member);
                 }
             }
-            else if (ts.isFunctionDeclaration(stmt)) {
+            else if (ts$1.isFunctionDeclaration(stmt)) {
                 this.visitFunctionOrMethodDeclaration(dts, stmt);
             }
         }
@@ -31000,7 +31000,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return;
             }
             const retStmt = decl.body.statements[0];
-            if (!ts.isReturnStatement(retStmt) || retStmt.expression === undefined) {
+            if (!ts$1.isReturnStatement(retStmt) || retStmt.expression === undefined) {
                 return;
             }
             const retValue = retStmt.expression;
@@ -31026,7 +31026,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // return type is inferred or the generic type argument is missing. In both cases, a new return
             // type is created where the `ngModule` type is included as generic type argument.
             const ngModule = value.get('ngModule');
-            if (!(ngModule instanceof Reference$1) || !ts.isClassDeclaration(ngModule.node)) {
+            if (!(ngModule instanceof Reference$1) || !ts$1.isClassDeclaration(ngModule.node)) {
                 return;
             }
             const ngModuleExpr = this.emitter.emit(ngModule, decl.getSourceFile(), ImportFlags.ForceNewImport);
@@ -31038,17 +31038,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (decl.type === undefined) {
                 return ReturnType.INFERRED;
             }
-            else if (!ts.isTypeReferenceNode(decl.type)) {
+            else if (!ts$1.isTypeReferenceNode(decl.type)) {
                 return ReturnType.OTHER;
             }
             // Try to figure out if the type is of a familiar form, something that looks like it was
             // imported.
             let typeId;
-            if (ts.isIdentifier(decl.type.typeName)) {
+            if (ts$1.isIdentifier(decl.type.typeName)) {
                 // def: ModuleWithProviders
                 typeId = decl.type.typeName;
             }
-            else if (ts.isQualifiedName(decl.type.typeName) && ts.isIdentifier(decl.type.typeName.left)) {
+            else if (ts$1.isQualifiedName(decl.type.typeName) && ts$1.isIdentifier(decl.type.typeName.left)) {
                 // def: i0.ModuleWithProviders
                 typeId = decl.type.typeName.right;
             }
@@ -31085,7 +31085,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function isStatic(node) {
         return node.modifiers !== undefined &&
-            node.modifiers.some(mod => mod.kind === ts.SyntaxKind.StaticKeyword);
+            node.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.StaticKeyword);
     }
 
     const NOOP_PERF_RECORDER = {
@@ -31265,7 +31265,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         getResolvedCandidateLocations(url, fromFile) {
             // clang-format off
-            const failedLookup = ts.resolveModuleName(url + RESOURCE_MARKER, fromFile, this.options, this.lookupResolutionHost);
+            const failedLookup = ts$1.resolveModuleName(url + RESOURCE_MARKER, fromFile, this.options, this.lookupResolutionHost);
             // clang-format on
             if (failedLookup.failedLookupLocations === undefined) {
                 throw new Error(`Internal error: expected to find failedLookupLocations during resolution of resource '${url}' in context of ${fromFile}`);
@@ -31493,7 +31493,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * These objects are then recognizable inside the larger set of imports/exports.
      */
     const routerModuleFFR = function routerModuleFFR(ref, args) {
-        if (!isMethodNodeReference(ref) || !ts.isClassDeclaration(ref.node.parent)) {
+        if (!isMethodNodeReference(ref) || !ts$1.isClassDeclaration(ref.node.parent)) {
             return null;
         }
         else if (ref.bestGuessOwningModule === null ||
@@ -31503,22 +31503,22 @@ Either add the @Injectable() decorator to '${provider.node.name
         else if (ref.node.parent.name === undefined || ref.node.parent.name.text !== 'RouterModule') {
             return null;
         }
-        else if (!ts.isIdentifier(ref.node.name) ||
+        else if (!ts$1.isIdentifier(ref.node.name) ||
             (ref.node.name.text !== 'forRoot' && ref.node.name.text !== 'forChild')) {
             return null;
         }
         const routes = args[0];
-        return ts.createObjectLiteral([
-            ts.createPropertyAssignment(ROUTES_MARKER, ts.createTrue()),
-            ts.createPropertyAssignment('routes', routes),
+        return ts$1.createObjectLiteral([
+            ts$1.createPropertyAssignment(ROUTES_MARKER, ts$1.createTrue()),
+            ts$1.createPropertyAssignment('routes', routes),
         ]);
     };
     function hasIdentifier(node) {
         const node_ = node;
-        return (node_.name !== undefined) && ts.isIdentifier(node_.name);
+        return (node_.name !== undefined) && ts$1.isIdentifier(node_.name);
     }
     function isMethodNodeReference(ref) {
-        return ts.isMethodDeclaration(ref.node);
+        return ts$1.isMethodDeclaration(ref.node);
     }
     function isRouteToken(ref) {
         return ref instanceof Reference$1 && ref.bestGuessOwningModule !== null &&
@@ -32121,7 +32121,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         getExportedScope(ref, diagnostics, ownerForErrors, type) {
             if (ref.node.getSourceFile().isDeclarationFile) {
                 // The NgModule is declared in a .d.ts file. Resolve it with the `DependencyScopeReader`.
-                if (!ts.isClassDeclaration(ref.node)) {
+                if (!ts$1.isClassDeclaration(ref.node)) {
                     // The NgModule is in a .d.ts file but is not declared as a ts.ClassDeclaration. This is an
                     // error in the .d.ts metadata.
                     const code = type === 'import' ? ErrorCode.NGMODULE_INVALID_IMPORT :
@@ -32315,8 +32315,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             for (const { name, ref } of scope.compilation.pipes) {
-                if (!ts.isClassDeclaration(ref.node)) {
-                    throw new Error(`Unexpected non-class declaration ${ts.SyntaxKind[ref.node.kind]} for pipe ${ref.debugName}`);
+                if (!ts$1.isClassDeclaration(ref.node)) {
+                    throw new Error(`Unexpected non-class declaration ${ts$1.SyntaxKind[ref.node.kind]} for pipe ${ref.debugName}`);
                 }
                 pipes.set(name, ref);
             }
@@ -32408,16 +32408,16 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Consider all the statements.
         for (const stmt of file.statements) {
             // Look for imports to @angular/core.
-            if (ts.isImportDeclaration(stmt) && ts.isStringLiteral(stmt.moduleSpecifier) &&
+            if (ts$1.isImportDeclaration(stmt) && ts$1.isStringLiteral(stmt.moduleSpecifier) &&
                 stmt.moduleSpecifier.text === '@angular/core') {
                 // Update the import path to point to the correct file using the ImportRewriter.
                 const rewrittenModuleSpecifier = importRewriter.rewriteSpecifier('@angular/core', sourceFilePath);
                 if (rewrittenModuleSpecifier !== stmt.moduleSpecifier.text) {
-                    transformedStatements.push(ts.updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts.createStringLiteral(rewrittenModuleSpecifier)));
+                    transformedStatements.push(ts$1.updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts$1.createStringLiteral(rewrittenModuleSpecifier)));
                     // Record the identifier by which this imported module goes, so references to its symbols
                     // can be discovered later.
                     if (stmt.importClause !== undefined && stmt.importClause.namedBindings !== undefined &&
-                        ts.isNamespaceImport(stmt.importClause.namedBindings)) {
+                        ts$1.isNamespaceImport(stmt.importClause.namedBindings)) {
                         coreImportIdentifiers.add(stmt.importClause.namedBindings.name.text);
                     }
                 }
@@ -32425,10 +32425,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     transformedStatements.push(stmt);
                 }
             }
-            else if (ts.isVariableStatement(stmt) && stmt.declarationList.declarations.length === 1) {
+            else if (ts$1.isVariableStatement(stmt) && stmt.declarationList.declarations.length === 1) {
                 const decl = stmt.declarationList.declarations[0];
                 // If this is the ɵNonEmptyModule export, then save it for later.
-                if (ts.isIdentifier(decl.name)) {
+                if (ts$1.isIdentifier(decl.name)) {
                     if (decl.name.text === 'ɵNonEmptyModule') {
                         nonEmptyExport = stmt;
                         continue;
@@ -32463,25 +32463,25 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         // Check whether the empty module export is still needed.
-        if (!transformedStatements.some(ts.isVariableStatement) && nonEmptyExport !== null) {
+        if (!transformedStatements.some(ts$1.isVariableStatement) && nonEmptyExport !== null) {
             // If the resulting file has no factories, include an empty export to
             // satisfy closure compiler.
             transformedStatements.push(nonEmptyExport);
         }
-        file = ts.updateSourceFileNode(file, transformedStatements);
+        file = ts$1.updateSourceFileNode(file, transformedStatements);
         // If any imports to @angular/core were detected and rewritten (which happens when compiling
         // @angular/core), go through the SourceFile and rewrite references to symbols imported from core.
         if (coreImportIdentifiers.size > 0) {
             const visit = (node) => {
-                node = ts.visitEachChild(node, child => visit(child), context);
+                node = ts$1.visitEachChild(node, child => visit(child), context);
                 // Look for expressions of the form "i.s" where 'i' is a detected name for an @angular/core
                 // import that was changed above. Rewrite 's' using the ImportResolver.
-                if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) &&
+                if (ts$1.isPropertyAccessExpression(node) && ts$1.isIdentifier(node.expression) &&
                     coreImportIdentifiers.has(node.expression.text)) {
                     // This is an import of a symbol from @angular/core. Transform it with the importRewriter.
                     const rewrittenSymbol = importRewriter.rewriteSymbol(node.name.text, '@angular/core');
                     if (rewrittenSymbol !== node.name.text) {
-                        const updated = ts.updatePropertyAccess(node, node.expression, ts.createIdentifier(rewrittenSymbol));
+                        const updated = ts$1.updatePropertyAccess(node, node.expression, ts$1.createIdentifier(rewrittenSymbol));
                         node = updated;
                     }
                 }
@@ -32500,20 +32500,20 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Example: Takes `1 + 2` and returns `i0.ɵnoSideEffects(() => 1 + 2)`.
      */
     function wrapInNoSideEffects(expr) {
-        const noSideEffects = ts.createPropertyAccess(ts.createIdentifier('i0'), 'ɵnoSideEffects');
-        return ts.createCall(noSideEffects, 
+        const noSideEffects = ts$1.createPropertyAccess(ts$1.createIdentifier('i0'), 'ɵnoSideEffects');
+        return ts$1.createCall(noSideEffects, 
         /* typeArguments */ [], 
         /* arguments */
         [
-            ts.createFunctionExpression(
+            ts$1.createFunctionExpression(
             /* modifiers */ [], 
             /* asteriskToken */ undefined, 
             /* name */ undefined, 
             /* typeParameters */ [], 
             /* parameters */ [], 
             /* type */ undefined, 
-            /* body */ ts.createBlock([
-                ts.createReturn(expr),
+            /* body */ ts$1.createBlock([
+                ts$1.createReturn(expr),
             ])),
         ]);
     }
@@ -32522,7 +32522,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * expression provided. Does not mutate the input statement.
      */
     function updateInitializers(stmt, update) {
-        return ts.updateVariableStatement(stmt, stmt.modifiers, ts.updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts.updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
+        return ts$1.updateVariableStatement(stmt, stmt.modifiers, ts$1.updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts$1.updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
     }
 
     /**
@@ -32545,7 +32545,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         for (let i = 0; i < sf.statements.length; i++) {
             const statement = sf.statements[i];
             // Skip over everything that isn't a variable statement.
-            if (!ts.isVariableStatement(statement) || !hasIvySwitches(statement)) {
+            if (!ts$1.isVariableStatement(statement) || !hasIvySwitches(statement)) {
                 continue;
             }
             // This statement needs to be replaced. Check if the newStatements array needs to be lazily
@@ -32559,7 +32559,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         // Only update the statements in the SourceFile if any have changed.
         if (newStatements !== undefined) {
-            return ts.updateSourceFileNode(sf, newStatements);
+            return ts$1.updateSourceFileNode(sf, newStatements);
         }
         return sf;
     }
@@ -32576,14 +32576,14 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function findPostSwitchIdentifier(statements, name) {
         for (const stmt of statements) {
-            if (ts.isVariableStatement(stmt)) {
-                const decl = stmt.declarationList.declarations.find(decl => ts.isIdentifier(decl.name) && decl.name.text === name);
+            if (ts$1.isVariableStatement(stmt)) {
+                const decl = stmt.declarationList.declarations.find(decl => ts$1.isIdentifier(decl.name) && decl.name.text === name);
                 if (decl !== undefined) {
                     return decl.name;
                 }
             }
-            else if (ts.isFunctionDeclaration(stmt) || ts.isClassDeclaration(stmt)) {
-                if (stmt.name !== undefined && ts.isIdentifier(stmt.name) && stmt.name.text === name) {
+            else if (ts$1.isFunctionDeclaration(stmt) || ts$1.isClassDeclaration(stmt)) {
+                if (stmt.name !== undefined && ts$1.isIdentifier(stmt.name) && stmt.name.text === name) {
                     return stmt.name;
                 }
             }
@@ -32601,7 +32601,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         for (let i = 0; i < newDeclarations.length; i++) {
             const decl = newDeclarations[i];
             // Skip declarations that aren't initialized to an identifier.
-            if (decl.initializer === undefined || !ts.isIdentifier(decl.initializer)) {
+            if (decl.initializer === undefined || !ts$1.isIdentifier(decl.initializer)) {
                 continue;
             }
             // Skip declarations that aren't Ivy switches.
@@ -32616,16 +32616,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (newIdentifier === null) {
                 throw new Error(`Unable to find identifier ${postSwitchName} in ${stmt.getSourceFile().fileName} for the Ivy switch.`);
             }
-            newDeclarations[i] = ts.updateVariableDeclaration(
+            newDeclarations[i] = ts$1.updateVariableDeclaration(
             /* node */ decl, 
             /* name */ decl.name, 
             /* type */ decl.type, 
             /* initializer */ newIdentifier);
         }
-        const newDeclList = ts.updateVariableDeclarationList(
+        const newDeclList = ts$1.updateVariableDeclarationList(
         /* declarationList */ stmt.declarationList, 
         /* declarations */ newDeclarations);
-        const newStmt = ts.updateVariableStatement(
+        const newStmt = ts$1.updateVariableStatement(
         /* statement */ stmt, 
         /* modifiers */ stmt.modifiers, 
         /* declarationList */ newDeclList);
@@ -32635,7 +32635,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Check whether the given VariableStatement has any Ivy switch variables.
      */
     function hasIvySwitches(stmt) {
-        return stmt.declarationList.declarations.some(decl => decl.initializer !== undefined && ts.isIdentifier(decl.initializer) &&
+        return stmt.declarationList.declarations.some(decl => decl.initializer !== undefined && ts$1.isIdentifier(decl.initializer) &&
             decl.initializer.text.endsWith(IVY_SWITCH_PRE_SUFFIX));
     }
 
@@ -32758,7 +32758,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // no harm in reuse here even if it's out of date.
                 return priorShimSf;
             }
-            return ts.createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+            return ts$1.createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts$1.ScriptTarget.Latest, true, ts$1.ScriptKind.TS);
         }
         static shimFor(fileName) {
             return absoluteFrom(fileName.replace(/\.tsx?$/, '.ngtypecheck.ts'));
@@ -32780,8 +32780,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Will return `null` if no trailing comments on the node match the expected form of a source span.
      */
     function readSpanComment(node, sourceFile = node.getSourceFile()) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+        return ts$1.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts$1.SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -32807,7 +32807,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     })(ExpressionIdentifier || (ExpressionIdentifier = {}));
     /** Tags the node with the given expression identifier. */
     function addExpressionIdentifier(node, identifier) {
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
+        ts$1.addSyntheticTrailingComment(node, ts$1.SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
         /* hasTrailingNewLine */ false);
     }
     const IGNORE_FOR_DIAGNOSTICS_MARKER = `${CommentTriviaType.DIAGNOSTIC}:ignore`;
@@ -32816,13 +32816,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      * should be ignored.
      */
     function markIgnoreDiagnostics(node) {
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, IGNORE_FOR_DIAGNOSTICS_MARKER, 
+        ts$1.addSyntheticTrailingComment(node, ts$1.SyntaxKind.MultiLineCommentTrivia, IGNORE_FOR_DIAGNOSTICS_MARKER, 
         /* hasTrailingNewLine */ false);
     }
     /** Returns true if the node has a marker that indicates diagnostics errors should be ignored.  */
     function hasIgnoreForDiagnosticsMarker(node, sourceFile) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+        return ts$1.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts$1.SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -32913,8 +32913,8 @@ Either add the @Injectable() decorator to '${provider.node.name
         return results;
     }
     function hasExpressionIdentifier(sourceFile, node, identifier) {
-        return ts.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+        return ts$1.forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts$1.SyntaxKind.MultiLineCommentTrivia) {
                 return false;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -32957,7 +32957,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // Find the component completion expression within the TCB. This looks like: `ctx. /* ... */;`
             const globalRead = findFirstMatchingNode(this.tcb, {
-                filter: ts.isPropertyAccessExpression,
+                filter: ts$1.isPropertyAccessExpression,
                 withExpressionIdentifier: ExpressionIdentifier.COMPONENT_COMPLETION
             });
             if (globalRead === null) {
@@ -33002,7 +33002,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 expr instanceof PropertyWrite) {
                 // Non-safe navigation operations are trivial: `foo.bar` or `foo.bar()`
                 tsExpr = findFirstMatchingNode(this.tcb, {
-                    filter: ts.isPropertyAccessExpression,
+                    filter: ts$1.isPropertyAccessExpression,
                     withSpan: expr.nameSpan,
                 });
             }
@@ -33010,18 +33010,18 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Safe navigation operations are a little more complex, and involve a ternary. Completion
                 // happens in the "true" case of the ternary.
                 const ternaryExpr = findFirstMatchingNode(this.tcb, {
-                    filter: ts.isParenthesizedExpression,
+                    filter: ts$1.isParenthesizedExpression,
                     withSpan: expr.sourceSpan,
                 });
-                if (ternaryExpr === null || !ts.isConditionalExpression(ternaryExpr.expression)) {
+                if (ternaryExpr === null || !ts$1.isConditionalExpression(ternaryExpr.expression)) {
                     return null;
                 }
                 const whenTrue = ternaryExpr.expression.whenTrue;
-                if (expr instanceof SafePropertyRead && ts.isPropertyAccessExpression(whenTrue)) {
+                if (expr instanceof SafePropertyRead && ts$1.isPropertyAccessExpression(whenTrue)) {
                     tsExpr = whenTrue;
                 }
-                else if (expr instanceof SafeMethodCall && ts.isCallExpression(whenTrue) &&
-                    ts.isPropertyAccessExpression(whenTrue.expression)) {
+                else if (expr instanceof SafeMethodCall && ts$1.isCallExpression(whenTrue) &&
+                    ts$1.isPropertyAccessExpression(whenTrue.expression)) {
                     tsExpr = whenTrue.expression;
                 }
             }
@@ -33052,7 +33052,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             let relatedInformation = undefined;
             if (relatedMessage !== undefined) {
                 relatedInformation = [{
-                        category: ts.DiagnosticCategory.Message,
+                        category: ts$1.DiagnosticCategory.Message,
                         code: 0,
                         file: mapping.node.getSourceFile(),
                         start: relatedMessage.span.start.offset,
@@ -33090,11 +33090,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
             // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
             // Also investigate caching the file to avoid running the parser multiple times.
-            const sf = ts.createSourceFile(fileName, mapping.template, ts.ScriptTarget.Latest, false, ts.ScriptKind.JSX);
+            const sf = ts$1.createSourceFile(fileName, mapping.template, ts$1.ScriptTarget.Latest, false, ts$1.ScriptKind.JSX);
             let relatedInformation = [];
             if (relatedMessage !== undefined) {
                 relatedInformation.push({
-                    category: ts.DiagnosticCategory.Message,
+                    category: ts$1.DiagnosticCategory.Message,
                     code: 0,
                     file: sf,
                     start: relatedMessage.span.start.offset,
@@ -33103,7 +33103,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 });
             }
             relatedInformation.push({
-                category: ts.DiagnosticCategory.Message,
+                category: ts$1.DiagnosticCategory.Message,
                 code: 0,
                 file: componentSf,
                 // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
@@ -33132,7 +33132,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function isTemplateDiagnostic(diagnostic) {
         return diagnostic.hasOwnProperty('componentFile') &&
-            ts.isSourceFile(diagnostic.componentFile);
+            ts$1.isSourceFile(diagnostic.componentFile);
     }
 
     /**
@@ -33196,7 +33196,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     errorMsg +=
                         `2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`;
                 }
-                const diag = makeTemplateDiagnostic(id, mapping, element.startSourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
+                const diag = makeTemplateDiagnostic(id, mapping, element.startSourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
                 this._diagnostics.push(diag);
             }
         }
@@ -33216,7 +33216,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                             .name}' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.` +
                             `\n3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`;
                 }
-                const diag = makeTemplateDiagnostic(id, mapping, span, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ATTRIBUTE), errorMsg);
+                const diag = makeTemplateDiagnostic(id, mapping, span, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ATTRIBUTE), errorMsg);
                 this._diagnostics.push(diag);
             }
         }
@@ -33242,30 +33242,30 @@ Either add the @Injectable() decorator to '${provider.node.name
     //
     const SAFE_TO_CAST_WITHOUT_PARENS = new Set([
         // Expressions which are already parenthesized can be cast without further wrapping.
-        ts.SyntaxKind.ParenthesizedExpression,
+        ts$1.SyntaxKind.ParenthesizedExpression,
         // Expressions which form a single lexical unit leave no room for precedence issues with the cast.
-        ts.SyntaxKind.Identifier,
-        ts.SyntaxKind.CallExpression,
-        ts.SyntaxKind.NonNullExpression,
-        ts.SyntaxKind.ElementAccessExpression,
-        ts.SyntaxKind.PropertyAccessExpression,
-        ts.SyntaxKind.ArrayLiteralExpression,
-        ts.SyntaxKind.ObjectLiteralExpression,
+        ts$1.SyntaxKind.Identifier,
+        ts$1.SyntaxKind.CallExpression,
+        ts$1.SyntaxKind.NonNullExpression,
+        ts$1.SyntaxKind.ElementAccessExpression,
+        ts$1.SyntaxKind.PropertyAccessExpression,
+        ts$1.SyntaxKind.ArrayLiteralExpression,
+        ts$1.SyntaxKind.ObjectLiteralExpression,
         // The same goes for various literals.
-        ts.SyntaxKind.StringLiteral,
-        ts.SyntaxKind.NumericLiteral,
-        ts.SyntaxKind.TrueKeyword,
-        ts.SyntaxKind.FalseKeyword,
-        ts.SyntaxKind.NullKeyword,
-        ts.SyntaxKind.UndefinedKeyword,
+        ts$1.SyntaxKind.StringLiteral,
+        ts$1.SyntaxKind.NumericLiteral,
+        ts$1.SyntaxKind.TrueKeyword,
+        ts$1.SyntaxKind.FalseKeyword,
+        ts$1.SyntaxKind.NullKeyword,
+        ts$1.SyntaxKind.UndefinedKeyword,
     ]);
     function tsCastToAny(expr) {
         // Wrap `expr` in parentheses if needed (see `SAFE_TO_CAST_WITHOUT_PARENS` above).
         if (!SAFE_TO_CAST_WITHOUT_PARENS.has(expr.kind)) {
-            expr = ts.createParen(expr);
+            expr = ts$1.createParen(expr);
         }
         // The outer expression is always wrapped in parentheses.
-        return ts.createParen(ts.createAsExpression(expr, ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)));
+        return ts$1.createParen(ts$1.createAsExpression(expr, ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword)));
     }
     /**
      * Create an expression which instantiates an element by its HTML tagName.
@@ -33274,12 +33274,12 @@ Either add the @Injectable() decorator to '${provider.node.name
      * based on the tag name, including for custom elements that have appropriate .d.ts definitions.
      */
     function tsCreateElement(tagName) {
-        const createElement = ts.createPropertyAccess(
-        /* expression */ ts.createIdentifier('document'), 'createElement');
-        return ts.createCall(
+        const createElement = ts$1.createPropertyAccess(
+        /* expression */ ts$1.createIdentifier('document'), 'createElement');
+        return ts$1.createCall(
         /* expression */ createElement, 
         /* typeArguments */ undefined, 
-        /* argumentsArray */ [ts.createLiteral(tagName)]);
+        /* argumentsArray */ [ts$1.createLiteral(tagName)]);
     }
     /**
      * Create a `ts.VariableStatement` which declares a variable without explicit initialization.
@@ -33289,11 +33289,11 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Unlike with `tsCreateVariable`, the type of the variable is explicitly specified.
      */
     function tsDeclareVariable(id, type) {
-        const decl = ts.createVariableDeclaration(
+        const decl = ts$1.createVariableDeclaration(
         /* name */ id, 
         /* type */ type, 
-        /* initializer */ ts.createNonNullExpression(ts.createNull()));
-        return ts.createVariableStatement(
+        /* initializer */ ts$1.createNonNullExpression(ts$1.createNull()));
+        return ts$1.createVariableStatement(
         /* modifiers */ undefined, 
         /* declarationList */ [decl]);
     }
@@ -33307,7 +33307,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * @param coercedInputName The field name of the coerced input.
      */
     function tsCreateTypeQueryForCoercedInput(typeName, coercedInputName) {
-        return ts.createTypeQueryNode(ts.createQualifiedName(typeName, `ngAcceptInputType_${coercedInputName}`));
+        return ts$1.createTypeQueryNode(ts$1.createQualifiedName(typeName, `ngAcceptInputType_${coercedInputName}`));
     }
     /**
      * Create a `ts.VariableStatement` that initializes a variable with a given expression.
@@ -33316,11 +33316,11 @@ Either add the @Injectable() decorator to '${provider.node.name
      * expression.
      */
     function tsCreateVariable(id, initializer) {
-        const decl = ts.createVariableDeclaration(
+        const decl = ts$1.createVariableDeclaration(
         /* name */ id, 
         /* type */ undefined, 
         /* initializer */ initializer);
-        return ts.createVariableStatement(
+        return ts$1.createVariableStatement(
         /* modifiers */ undefined, 
         /* declarationList */ [decl]);
     }
@@ -33328,8 +33328,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Construct a `ts.CallExpression` that calls a method on a receiver.
      */
     function tsCallMethod(receiver, methodName, args = []) {
-        const methodAccess = ts.createPropertyAccess(receiver, methodName);
-        return ts.createCall(
+        const methodAccess = ts$1.createPropertyAccess(receiver, methodName);
+        return ts$1.createCall(
         /* expression */ methodAccess, 
         /* typeArguments */ undefined, 
         /* argumentsArray */ args);
@@ -33339,11 +33339,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         // 1) it has the 'export' modifier.
         // 2) it's declared at the top level, and there is an export statement for the class.
         if (node.modifiers !== undefined &&
-            node.modifiers.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)) {
+            node.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.ExportKeyword)) {
             // Condition 1 is true, the class has an 'export' keyword attached.
             return true;
         }
-        else if (node.parent !== undefined && ts.isSourceFile(node.parent) &&
+        else if (node.parent !== undefined && ts$1.isSourceFile(node.parent) &&
             checkIfFileHasExport(node.parent, node.name.text)) {
             // Condition 2 is true, the class is exported via an 'export {}' statement.
             return true;
@@ -33352,8 +33352,8 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function checkIfFileHasExport(sf, name) {
         for (const stmt of sf.statements) {
-            if (ts.isExportDeclaration(stmt) && stmt.exportClause !== undefined &&
-                ts.isNamedExports(stmt.exportClause)) {
+            if (ts$1.isExportDeclaration(stmt) && stmt.exportClause !== undefined &&
+                ts$1.isNamedExports(stmt.exportClause)) {
                 for (const element of stmt.exportClause.elements) {
                     if (element.propertyName === undefined && element.name.text === name) {
                         // The named declaration is directly exported.
@@ -33375,7 +33375,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         return node.typeParameters.every(param => param.constraint === undefined);
     }
     function isAccessExpression(node) {
-        return ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node);
+        return ts$1.isPropertyAccessExpression(node) || ts$1.isElementAccessExpression(node);
     }
 
     /**
@@ -33457,7 +33457,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         emitType(type) {
             return visitTypeNode(type, {
                 visitTypeReferenceNode: type => this.emitTypeReference(type),
-                visitArrayTypeNode: type => ts.updateArrayTypeNode(type, this.emitType(type.elementType)),
+                visitArrayTypeNode: type => ts$1.updateArrayTypeNode(type, this.emitType(type.elementType)),
                 visitKeywordType: type => type,
                 visitLiteralType: type => type,
                 visitOtherType: () => {
@@ -33474,7 +33474,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Emit the type arguments, if any.
             let typeArguments = undefined;
             if (type.typeArguments !== undefined) {
-                typeArguments = ts.createNodeArray(type.typeArguments.map(typeArg => this.emitType(typeArg)));
+                typeArguments = ts$1.createNodeArray(type.typeArguments.map(typeArg => this.emitType(typeArg)));
             }
             // Emit the type name.
             let typeName = type.typeName;
@@ -33483,33 +33483,33 @@ Either add the @Injectable() decorator to '${provider.node.name
                     throw new Error('A type reference to emit must be imported from an absolute module');
                 }
                 const emittedType = this.emitReference(reference);
-                if (!ts.isTypeReferenceNode(emittedType)) {
-                    throw new Error(`Expected TypeReferenceNode for emitted reference, got ${ts.SyntaxKind[emittedType.kind]}`);
+                if (!ts$1.isTypeReferenceNode(emittedType)) {
+                    throw new Error(`Expected TypeReferenceNode for emitted reference, got ${ts$1.SyntaxKind[emittedType.kind]}`);
                 }
                 typeName = emittedType.typeName;
             }
-            return ts.updateTypeReferenceNode(type, typeName, typeArguments);
+            return ts$1.updateTypeReferenceNode(type, typeName, typeArguments);
         }
     }
     function visitTypeNode(type, visitor) {
-        if (ts.isTypeReferenceNode(type)) {
+        if (ts$1.isTypeReferenceNode(type)) {
             return visitor.visitTypeReferenceNode(type);
         }
-        else if (ts.isArrayTypeNode(type)) {
+        else if (ts$1.isArrayTypeNode(type)) {
             return visitor.visitArrayTypeNode(type);
         }
-        else if (ts.isLiteralTypeNode(type)) {
+        else if (ts$1.isLiteralTypeNode(type)) {
             return visitor.visitLiteralType(type);
         }
         switch (type.kind) {
-            case ts.SyntaxKind.AnyKeyword:
-            case ts.SyntaxKind.UnknownKeyword:
-            case ts.SyntaxKind.NumberKeyword:
-            case ts.SyntaxKind.ObjectKeyword:
-            case ts.SyntaxKind.BooleanKeyword:
-            case ts.SyntaxKind.StringKeyword:
-            case ts.SyntaxKind.UndefinedKeyword:
-            case ts.SyntaxKind.NullKeyword:
+            case ts$1.SyntaxKind.AnyKeyword:
+            case ts$1.SyntaxKind.UnknownKeyword:
+            case ts$1.SyntaxKind.NumberKeyword:
+            case ts$1.SyntaxKind.ObjectKeyword:
+            case ts$1.SyntaxKind.BooleanKeyword:
+            case ts$1.SyntaxKind.StringKeyword:
+            case ts$1.SyntaxKind.UndefinedKeyword:
+            case ts$1.SyntaxKind.NullKeyword:
                 return visitor.visitKeywordType(type);
             default:
                 return visitor.visitOtherType(type);
@@ -33557,7 +33557,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const emitter = new TypeEmitter(type => this.resolveTypeReference(type), emitReference);
             return this.typeParameters.map(typeParam => {
                 const constraint = typeParam.constraint !== undefined ? emitter.emitType(typeParam.constraint) : undefined;
-                return ts.updateTypeParameterDeclaration(
+                return ts$1.updateTypeParameterDeclaration(
                 /* node */ typeParam, 
                 /* name */ typeParam.name, 
                 /* constraint */ constraint, 
@@ -33565,7 +33565,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         resolveTypeReference(type) {
-            const target = ts.isIdentifier(type.typeName) ? type.typeName : type.typeName.right;
+            const target = ts$1.isIdentifier(type.typeName) ? type.typeName : type.typeName.right;
             const declaration = this.reflector.getDeclarationOfIdentifier(target);
             // If no declaration could be resolved or does not have a `ts.Declaration`, the type cannot be
             // resolved.
@@ -33605,27 +33605,27 @@ Either add the @Injectable() decorator to '${provider.node.name
             throw new Error(`${node.name.text} requires an inline type constructor`);
         }
         const rawTypeArgs = typeParams !== undefined ? generateGenericArgs(typeParams) : undefined;
-        const rawType = ts.createTypeReferenceNode(nodeTypeRef, rawTypeArgs);
+        const rawType = ts$1.createTypeReferenceNode(nodeTypeRef, rawTypeArgs);
         const initParam = constructTypeCtorParameter(node, meta, rawType);
         const typeParameters = typeParametersWithDefaultTypes(typeParams);
         if (meta.body) {
-            const fnType = ts.createFunctionTypeNode(
+            const fnType = ts$1.createFunctionTypeNode(
             /* typeParameters */ typeParameters, 
             /* parameters */ [initParam], 
             /* type */ rawType);
-            const decl = ts.createVariableDeclaration(
+            const decl = ts$1.createVariableDeclaration(
             /* name */ meta.fnName, 
             /* type */ fnType, 
-            /* body */ ts.createNonNullExpression(ts.createNull()));
-            const declList = ts.createVariableDeclarationList([decl], ts.NodeFlags.Const);
-            return ts.createVariableStatement(
+            /* body */ ts$1.createNonNullExpression(ts$1.createNull()));
+            const declList = ts$1.createVariableDeclarationList([decl], ts$1.NodeFlags.Const);
+            return ts$1.createVariableStatement(
             /* modifiers */ undefined, 
             /* declarationList */ declList);
         }
         else {
-            return ts.createFunctionDeclaration(
+            return ts$1.createFunctionDeclaration(
             /* decorators */ undefined, 
-            /* modifiers */ [ts.createModifier(ts.SyntaxKind.DeclareKeyword)], 
+            /* modifiers */ [ts$1.createModifier(ts$1.SyntaxKind.DeclareKeyword)], 
             /* asteriskToken */ undefined, 
             /* name */ meta.fnName, 
             /* typeParameters */ typeParameters, 
@@ -33674,21 +33674,21 @@ Either add the @Injectable() decorator to '${provider.node.name
         // the definition without any type bounds. For example, if the class is
         // `FooDirective<T extends Bar>`, its rawType would be `FooDirective<T>`.
         const rawTypeArgs = node.typeParameters !== undefined ? generateGenericArgs(node.typeParameters) : undefined;
-        const rawType = ts.createTypeReferenceNode(node.name, rawTypeArgs);
+        const rawType = ts$1.createTypeReferenceNode(node.name, rawTypeArgs);
         const initParam = constructTypeCtorParameter(node, meta, rawType);
         // If this constructor is being generated into a .ts file, then it needs a fake body. The body
         // is set to a return of `null!`. If the type constructor is being generated into a .d.ts file,
         // it needs no body.
         let body = undefined;
         if (meta.body) {
-            body = ts.createBlock([
-                ts.createReturn(ts.createNonNullExpression(ts.createNull())),
+            body = ts$1.createBlock([
+                ts$1.createReturn(ts$1.createNonNullExpression(ts$1.createNull())),
             ]);
         }
         // Create the type constructor method declaration.
-        return ts.createMethod(
+        return ts$1.createMethod(
         /* decorators */ undefined, 
-        /* modifiers */ [ts.createModifier(ts.SyntaxKind.StaticKeyword)], 
+        /* modifiers */ [ts$1.createModifier(ts$1.SyntaxKind.StaticKeyword)], 
         /* asteriskToken */ undefined, 
         /* name */ meta.fnName, 
         /* questionToken */ undefined, 
@@ -33713,10 +33713,10 @@ Either add the @Injectable() decorator to '${provider.node.name
         const coercedKeys = [];
         for (const key of keys) {
             if (!meta.coercedInputFields.has(key)) {
-                plainKeys.push(ts.createLiteralTypeNode(ts.createStringLiteral(key)));
+                plainKeys.push(ts$1.createLiteralTypeNode(ts$1.createStringLiteral(key)));
             }
             else {
-                coercedKeys.push(ts.createPropertySignature(
+                coercedKeys.push(ts$1.createPropertySignature(
                 /* modifiers */ undefined, 
                 /* name */ key, 
                 /* questionToken */ undefined, 
@@ -33726,21 +33726,21 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         if (plainKeys.length > 0) {
             // Construct a union of all the field names.
-            const keyTypeUnion = ts.createUnionTypeNode(plainKeys);
+            const keyTypeUnion = ts$1.createUnionTypeNode(plainKeys);
             // Construct the Pick<rawType, keyTypeUnion>.
-            initType = ts.createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
+            initType = ts$1.createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
         }
         if (coercedKeys.length > 0) {
-            const coercedLiteral = ts.createTypeLiteralNode(coercedKeys);
-            initType = initType !== null ? ts.createIntersectionTypeNode([initType, coercedLiteral]) :
+            const coercedLiteral = ts$1.createTypeLiteralNode(coercedKeys);
+            initType = initType !== null ? ts$1.createIntersectionTypeNode([initType, coercedLiteral]) :
                 coercedLiteral;
         }
         if (initType === null) {
             // Special case - no inputs, outputs, or other fields which could influence the result type.
-            initType = ts.createTypeLiteralNode([]);
+            initType = ts$1.createTypeLiteralNode([]);
         }
         // Create the 'init' parameter itself.
-        return ts.createParameter(
+        return ts$1.createParameter(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, 
@@ -33750,7 +33750,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         /* initializer */ undefined);
     }
     function generateGenericArgs(params) {
-        return params.map(param => ts.createTypeReferenceNode(param.name, undefined));
+        return params.map(param => ts$1.createTypeReferenceNode(param.name, undefined));
     }
     function requiresInlineTypeCtor(node, host) {
         // The class requires an inline type constructor if it has generic type bounds that can not be
@@ -33809,11 +33809,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         return params.map(param => {
             if (param.default === undefined) {
-                return ts.updateTypeParameterDeclaration(
+                return ts$1.updateTypeParameterDeclaration(
                 /* node */ param, 
                 /* name */ param.name, 
                 /* constraint */ param.constraint, 
-                /* defaultType */ ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+                /* defaultType */ ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
             }
             else {
                 return param;
@@ -33873,14 +33873,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // The constructor has already been created inline, we just need to construct a reference to
                 // it.
                 const ref = this.reference(dirRef);
-                const typeCtorExpr = ts.createPropertyAccess(ref, 'ngTypeCtor');
+                const typeCtorExpr = ts$1.createPropertyAccess(ref, 'ngTypeCtor');
                 this.typeCtors.set(node, typeCtorExpr);
                 return typeCtorExpr;
             }
             else {
                 const fnName = `_ctor${this.nextIds.typeCtor++}`;
                 const nodeTypeRef = this.referenceType(dirRef);
-                if (!ts.isTypeReferenceNode(nodeTypeRef)) {
+                if (!ts$1.isTypeReferenceNode(nodeTypeRef)) {
                     throw new Error(`Expected TypeReferenceNode from reference to ${dirRef.debugName}`);
                 }
                 const meta = {
@@ -33897,7 +33897,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const typeParams = this.emitTypeParameters(node);
                 const typeCtor = generateTypeCtorDeclarationFn(node, meta, nodeTypeRef.typeName, typeParams, this.reflector);
                 this.typeCtorStatements.push(typeCtor);
-                const fnId = ts.createIdentifier(fnName);
+                const fnId = ts$1.createIdentifier(fnName);
                 this.typeCtors.set(node, fnId);
                 return fnId;
             }
@@ -33910,7 +33910,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return this.pipeInsts.get(ref.node);
             }
             const pipeType = this.referenceType(ref);
-            const pipeInstId = ts.createIdentifier(`_pipe${this.nextIds.pipeInst++}`);
+            const pipeInstId = ts$1.createIdentifier(`_pipe${this.nextIds.pipeInst++}`);
             this.pipeInstStatements.push(tsDeclareVariable(pipeInstId, pipeType));
             this.pipeInsts.set(ref.node, pipeInstId);
             return pipeInstId;
@@ -33925,46 +33925,46 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (this.outputHelperIdent !== null) {
                 return this.outputHelperIdent;
             }
-            const outputHelperIdent = ts.createIdentifier('_outputHelper');
-            const genericTypeDecl = ts.createTypeParameterDeclaration('T');
-            const genericTypeRef = ts.createTypeReferenceNode('T', /* typeParameters */ undefined);
+            const outputHelperIdent = ts$1.createIdentifier('_outputHelper');
+            const genericTypeDecl = ts$1.createTypeParameterDeclaration('T');
+            const genericTypeRef = ts$1.createTypeReferenceNode('T', /* typeParameters */ undefined);
             const eventEmitter = this.referenceExternalType('@angular/core', 'EventEmitter', [new ExpressionType(new WrappedNodeExpr(genericTypeRef))]);
             // Declare a type that has a `subscribe` method that carries over type `T` as parameter
             // into the callback. The below code generates the following type literal:
             // `{subscribe(cb: (event: T) => any): void;}`
-            const observableLike = ts.createTypeLiteralNode([ts.createMethodSignature(
+            const observableLike = ts$1.createTypeLiteralNode([ts$1.createMethodSignature(
                 /* typeParameters */ undefined, 
-                /* parameters */ [ts.createParameter(
+                /* parameters */ [ts$1.createParameter(
                     /* decorators */ undefined, 
                     /* modifiers */ undefined, 
                     /* dotDotDotToken */ undefined, 
                     /* name */ 'cb', 
                     /* questionToken */ undefined, 
                     /* type */
-                    ts.createFunctionTypeNode(
+                    ts$1.createFunctionTypeNode(
                     /* typeParameters */ undefined, 
-                    /* parameters */ [ts.createParameter(
+                    /* parameters */ [ts$1.createParameter(
                         /* decorators */ undefined, 
                         /* modifiers */ undefined, 
                         /* dotDotDotToken */ undefined, 
                         /* name */ 'event', 
                         /* questionToken */ undefined, 
                         /* type */ genericTypeRef)], 
-                    /* type */ ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)))], 
-                /* type */ ts.createKeywordTypeNode(ts.SyntaxKind.VoidKeyword), 
+                    /* type */ ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword)))], 
+                /* type */ ts$1.createKeywordTypeNode(ts$1.SyntaxKind.VoidKeyword), 
                 /* name */ 'subscribe', 
                 /* questionToken */ undefined)]);
             // Declares the first signature of `_outputHelper` that matches arguments of type
             // `EventEmitter`, to convert them into `observableLike` defined above. The following
             // statement is generated:
             // `declare function _outputHelper<T>(output: EventEmitter<T>): observableLike;`
-            this.helperStatements.push(ts.createFunctionDeclaration(
+            this.helperStatements.push(ts$1.createFunctionDeclaration(
             /* decorators */ undefined, 
-            /* modifiers */ [ts.createModifier(ts.SyntaxKind.DeclareKeyword)], 
+            /* modifiers */ [ts$1.createModifier(ts$1.SyntaxKind.DeclareKeyword)], 
             /* asteriskToken */ undefined, 
             /* name */ outputHelperIdent, 
             /* typeParameters */ [genericTypeDecl], 
-            /* parameters */ [ts.createParameter(
+            /* parameters */ [ts$1.createParameter(
                 /* decorators */ undefined, 
                 /* modifiers */ undefined, 
                 /* dotDotDotToken */ undefined, 
@@ -33977,13 +33977,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             // i.e. ensures type identity for output types other than `EventEmitter`. This corresponds
             // with the following statement:
             // `declare function _outputHelper<T>(output: T): T;`
-            this.helperStatements.push(ts.createFunctionDeclaration(
+            this.helperStatements.push(ts$1.createFunctionDeclaration(
             /* decorators */ undefined, 
-            /* modifiers */ [ts.createModifier(ts.SyntaxKind.DeclareKeyword)], 
+            /* modifiers */ [ts$1.createModifier(ts$1.SyntaxKind.DeclareKeyword)], 
             /* asteriskToken */ undefined, 
             /* name */ outputHelperIdent, 
             /* typeParameters */ [genericTypeDecl], 
-            /* parameters */ [ts.createParameter(
+            /* parameters */ [ts$1.createParameter(
                 /* decorators */ undefined, 
                 /* modifiers */ undefined, 
                 /* dotDotDotToken */ undefined, 
@@ -34066,7 +34066,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const mapping = this.resolver.getSourceMapping(templateId);
             const value = ref.value.trim();
             const errorMsg = `No directive found with exportAs '${value}'.`;
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, ref.valueSpan || ref.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, ref.valueSpan || ref.sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
         }
         missingPipe(templateId, ast) {
             if (this.recordedPipes.has(ast)) {
@@ -34078,7 +34078,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (sourceSpan === null) {
                 throw new Error(`Assertion failure: no SourceLocation found for usage of pipe '${ast.name}'.`);
             }
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
             this.recordedPipes.add(ast);
         }
         illegalAssignmentToTemplateVar(templateId, assignment, target) {
@@ -34089,7 +34089,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (sourceSpan === null) {
                 throw new Error(`Assertion failure: no SourceLocation found for property binding.`);
             }
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, {
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, {
                 text: `The variable ${assignment.name} is declared here.`,
                 span: target.valueSpan || target.sourceSpan,
             }));
@@ -34102,7 +34102,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // variable in question.
             //
             // TODO(alxhub): allocate to a tighter span once one is available.
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, variable.sourceSpan, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, {
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, variable.sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, {
                 text: `The variable '${firstDecl.name}' was first declared here.`,
                 span: firstDecl.sourceSpan,
             }));
@@ -34174,7 +34174,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function findTypeCheckBlock(file, id, isDiagnosticRequest) {
         for (const stmt of file.statements) {
-            if (ts.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file, isDiagnosticRequest) === id) {
+            if (ts$1.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file, isDiagnosticRequest) === id) {
                 return stmt;
             }
         }
@@ -34188,7 +34188,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function findSourceLocation(node, sourceFile, isDiagnosticsRequest) {
         // Search for comments until the TCB's function declaration is encountered.
-        while (node !== undefined && !ts.isFunctionDeclaration(node)) {
+        while (node !== undefined && !ts$1.isFunctionDeclaration(node)) {
             if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticsRequest) {
                 // There's an ignore marker on this node, so the diagnostic should not be reported.
                 return null;
@@ -34209,7 +34209,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getTemplateId$1(node, sourceFile, isDiagnosticRequest) {
         // Walk up to the function declaration of the TCB, the file information is attached there.
-        while (!ts.isFunctionDeclaration(node)) {
+        while (!ts$1.isFunctionDeclaration(node)) {
             if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticRequest) {
                 // There's an ignore marker on this node, so the diagnostic should not be reported.
                 return null;
@@ -34221,8 +34221,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         const start = node.getFullStart();
-        return ts.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
-            if (kind !== ts.SyntaxKind.MultiLineCommentTrivia) {
+        return ts$1.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
+            if (kind !== ts$1.SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -34248,7 +34248,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * positional comment would be located within that node, resulting in a mismatch.
      */
     function wrapForDiagnostics(expr) {
-        return ts.createParen(expr);
+        return ts$1.createParen(expr);
     }
     /**
      * Wraps the node in parenthesis such that inserted span comments become attached to the proper
@@ -34257,7 +34257,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * code.
      */
     function wrapForTypeChecker(expr) {
-        return ts.createParen(expr);
+        return ts$1.createParen(expr);
     }
     /**
      * Adds a synthetic comment to the expression that represents the parse span of the provided node.
@@ -34271,14 +34271,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         else {
             commentText = `${span.start.offset},${span.end.offset}`;
         }
-        ts.addSyntheticTrailingComment(node, ts.SyntaxKind.MultiLineCommentTrivia, commentText, /* hasTrailingNewLine */ false);
+        ts$1.addSyntheticTrailingComment(node, ts$1.SyntaxKind.MultiLineCommentTrivia, commentText, /* hasTrailingNewLine */ false);
     }
     /**
      * Adds a synthetic comment to the function declaration that contains the template id
      * of the class declaration.
      */
     function addTemplateId(tcb, id) {
-        ts.addSyntheticLeadingComment(tcb, ts.SyntaxKind.MultiLineCommentTrivia, id, true);
+        ts$1.addSyntheticLeadingComment(tcb, ts$1.SyntaxKind.MultiLineCommentTrivia, id, true);
     }
     /**
      * Determines if the diagnostic should be reported. Some diagnostics are produced because of the
@@ -34328,30 +34328,30 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const NULL_AS_ANY = ts.createAsExpression(ts.createNull(), ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
-    const UNDEFINED = ts.createIdentifier('undefined');
+    const NULL_AS_ANY = ts$1.createAsExpression(ts$1.createNull(), ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
+    const UNDEFINED = ts$1.createIdentifier('undefined');
     const UNARY_OPS = new Map([
-        ['+', ts.SyntaxKind.PlusToken],
-        ['-', ts.SyntaxKind.MinusToken],
+        ['+', ts$1.SyntaxKind.PlusToken],
+        ['-', ts$1.SyntaxKind.MinusToken],
     ]);
     const BINARY_OPS = new Map([
-        ['+', ts.SyntaxKind.PlusToken],
-        ['-', ts.SyntaxKind.MinusToken],
-        ['<', ts.SyntaxKind.LessThanToken],
-        ['>', ts.SyntaxKind.GreaterThanToken],
-        ['<=', ts.SyntaxKind.LessThanEqualsToken],
-        ['>=', ts.SyntaxKind.GreaterThanEqualsToken],
-        ['==', ts.SyntaxKind.EqualsEqualsToken],
-        ['===', ts.SyntaxKind.EqualsEqualsEqualsToken],
-        ['*', ts.SyntaxKind.AsteriskToken],
-        ['/', ts.SyntaxKind.SlashToken],
-        ['%', ts.SyntaxKind.PercentToken],
-        ['!=', ts.SyntaxKind.ExclamationEqualsToken],
-        ['!==', ts.SyntaxKind.ExclamationEqualsEqualsToken],
-        ['||', ts.SyntaxKind.BarBarToken],
-        ['&&', ts.SyntaxKind.AmpersandAmpersandToken],
-        ['&', ts.SyntaxKind.AmpersandToken],
-        ['|', ts.SyntaxKind.BarToken],
+        ['+', ts$1.SyntaxKind.PlusToken],
+        ['-', ts$1.SyntaxKind.MinusToken],
+        ['<', ts$1.SyntaxKind.LessThanToken],
+        ['>', ts$1.SyntaxKind.GreaterThanToken],
+        ['<=', ts$1.SyntaxKind.LessThanEqualsToken],
+        ['>=', ts$1.SyntaxKind.GreaterThanEqualsToken],
+        ['==', ts$1.SyntaxKind.EqualsEqualsToken],
+        ['===', ts$1.SyntaxKind.EqualsEqualsEqualsToken],
+        ['*', ts$1.SyntaxKind.AsteriskToken],
+        ['/', ts$1.SyntaxKind.SlashToken],
+        ['%', ts$1.SyntaxKind.PercentToken],
+        ['!=', ts$1.SyntaxKind.ExclamationEqualsToken],
+        ['!==', ts$1.SyntaxKind.ExclamationEqualsEqualsToken],
+        ['||', ts$1.SyntaxKind.BarBarToken],
+        ['&&', ts$1.SyntaxKind.AmpersandAmpersandToken],
+        ['&', ts$1.SyntaxKind.AmpersandToken],
+        ['|', ts$1.SyntaxKind.BarToken],
     ]);
     /**
      * Convert an `AST` to TypeScript code directly, without going through an intermediate `Expression`
@@ -34389,7 +34389,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (op === undefined) {
                 throw new Error(`Unsupported Unary.operator: ${ast.operator}`);
             }
-            const node = wrapForDiagnostics(ts.createPrefix(op, expr));
+            const node = wrapForDiagnostics(ts$1.createPrefix(op, expr));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -34400,13 +34400,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (op === undefined) {
                 throw new Error(`Unsupported Binary.operation: ${ast.operation}`);
             }
-            const node = ts.createBinary(lhs, op, rhs);
+            const node = ts$1.createBinary(lhs, op, rhs);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitChain(ast) {
             const elements = ast.expressions.map(expr => this.translate(expr));
-            const node = wrapForDiagnostics(ts.createCommaList(elements));
+            const node = wrapForDiagnostics(ts$1.createCommaList(elements));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -34421,14 +34421,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             // `conditional /*1,2*/ ? trueExpr /*3,4*/ : falseExpr /*5,6*/`
             // This should be instead be `conditional /*1,2*/ ? trueExpr /*3,4*/ : (falseExpr /*5,6*/)`
             const falseExpr = wrapForTypeChecker(this.translate(ast.falseExp));
-            const node = ts.createParen(ts.createConditional(condExpr, trueExpr, falseExpr));
+            const node = ts$1.createParen(ts$1.createConditional(condExpr, trueExpr, falseExpr));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitFunctionCall(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.target));
             const args = ast.args.map(expr => this.translate(expr));
-            const node = ts.createCall(receiver, undefined, args);
+            const node = ts$1.createCall(receiver, undefined, args);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -34442,28 +34442,28 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Build up a chain of binary + operations to simulate the string concatenation of the
             // interpolation's expressions. The chain is started using an actual string literal to ensure
             // the type is inferred as 'string'.
-            return ast.expressions.reduce((lhs, ast) => ts.createBinary(lhs, ts.SyntaxKind.PlusToken, wrapForTypeChecker(this.translate(ast))), ts.createLiteral(''));
+            return ast.expressions.reduce((lhs, ast) => ts$1.createBinary(lhs, ts$1.SyntaxKind.PlusToken, wrapForTypeChecker(this.translate(ast))), ts$1.createLiteral(''));
         }
         visitKeyedRead(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.obj));
             const key = this.translate(ast.key);
-            const node = ts.createElementAccess(receiver, key);
+            const node = ts$1.createElementAccess(receiver, key);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitKeyedWrite(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.obj));
-            const left = ts.createElementAccess(receiver, this.translate(ast.key));
+            const left = ts$1.createElementAccess(receiver, this.translate(ast.key));
             // TODO(joost): annotate `left` with the span of the element access, which is not currently
             //  available on `ast`.
             const right = wrapForTypeChecker(this.translate(ast.value));
-            const node = wrapForDiagnostics(ts.createBinary(left, ts.SyntaxKind.EqualsToken, right));
+            const node = wrapForDiagnostics(ts$1.createBinary(left, ts$1.SyntaxKind.EqualsToken, right));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitLiteralArray(ast) {
             const elements = ast.expressions.map(expr => this.translate(expr));
-            const literal = ts.createArrayLiteral(elements);
+            const literal = ts$1.createArrayLiteral(elements);
             // If strictLiteralTypes is disabled, array literals are cast to `any`.
             const node = this.config.strictLiteralTypes ? literal : tsCastToAny(literal);
             addParseSpanInfo(node, ast.sourceSpan);
@@ -34472,9 +34472,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitLiteralMap(ast) {
             const properties = ast.keys.map(({ key }, idx) => {
                 const value = this.translate(ast.values[idx]);
-                return ts.createPropertyAssignment(ts.createStringLiteral(key), value);
+                return ts$1.createPropertyAssignment(ts$1.createStringLiteral(key), value);
             });
-            const literal = ts.createObjectLiteral(properties, true);
+            const literal = ts$1.createObjectLiteral(properties, true);
             // If strictLiteralTypes is disabled, object literals are cast to `any`.
             const node = this.config.strictLiteralTypes ? literal : tsCastToAny(literal);
             addParseSpanInfo(node, ast.sourceSpan);
@@ -34483,29 +34483,29 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitLiteralPrimitive(ast) {
             let node;
             if (ast.value === undefined) {
-                node = ts.createIdentifier('undefined');
+                node = ts$1.createIdentifier('undefined');
             }
             else if (ast.value === null) {
-                node = ts.createNull();
+                node = ts$1.createNull();
             }
             else {
-                node = ts.createLiteral(ast.value);
+                node = ts$1.createLiteral(ast.value);
             }
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitMethodCall(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const method = ts.createPropertyAccess(receiver, ast.name);
+            const method = ts$1.createPropertyAccess(receiver, ast.name);
             addParseSpanInfo(method, ast.nameSpan);
             const args = ast.args.map(expr => this.translate(expr));
-            const node = ts.createCall(method, undefined, args);
+            const node = ts$1.createCall(method, undefined, args);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitNonNullAssert(ast) {
             const expr = wrapForDiagnostics(this.translate(ast.expression));
-            const node = ts.createNonNullExpression(expr);
+            const node = ts$1.createNonNullExpression(expr);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -34514,7 +34514,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         visitPrefixNot(ast) {
             const expression = wrapForDiagnostics(this.translate(ast.expression));
-            const node = ts.createLogicalNot(expression);
+            const node = ts$1.createLogicalNot(expression);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -34522,7 +34522,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // This is a normal property read - convert the receiver to an expression and emit the correct
             // TypeScript expression to read the property.
             const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const name = ts.createPropertyAccess(receiver, ast.name);
+            const name = ts$1.createPropertyAccess(receiver, ast.name);
             addParseSpanInfo(name, ast.nameSpan);
             const node = wrapForDiagnostics(name);
             addParseSpanInfo(node, ast.sourceSpan);
@@ -34530,7 +34530,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         visitPropertyWrite(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const left = ts.createPropertyAccess(receiver, ast.name);
+            const left = ts$1.createPropertyAccess(receiver, ast.name);
             addParseSpanInfo(left, ast.nameSpan);
             // TypeScript reports assignment errors on the entire lvalue expression. Annotate the lvalue of
             // the assignment with the sourceSpan, which includes receivers, rather than nameSpan for
@@ -34545,7 +34545,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // It could refer to either the whole binary expression or just the RHS.
             // We should instead generate `e = ($event /*0,10*/)` so we know the span 0,10 matches RHS.
             const right = wrapForTypeChecker(this.translate(ast.value));
-            const node = wrapForDiagnostics(ts.createBinary(leftWithPath, ts.SyntaxKind.EqualsToken, right));
+            const node = wrapForDiagnostics(ts$1.createBinary(leftWithPath, ts$1.SyntaxKind.EqualsToken, right));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -34559,22 +34559,22 @@ Either add the @Injectable() decorator to '${provider.node.name
             const args = ast.args.map(expr => this.translate(expr));
             if (this.config.strictSafeNavigationTypes) {
                 // "a?.method(...)" becomes (null as any ? a!.method(...) : undefined)
-                const method = ts.createPropertyAccess(ts.createNonNullExpression(receiver), ast.name);
+                const method = ts$1.createPropertyAccess(ts$1.createNonNullExpression(receiver), ast.name);
                 addParseSpanInfo(method, ast.nameSpan);
-                const call = ts.createCall(method, undefined, args);
-                node = ts.createParen(ts.createConditional(NULL_AS_ANY, call, UNDEFINED));
+                const call = ts$1.createCall(method, undefined, args);
+                node = ts$1.createParen(ts$1.createConditional(NULL_AS_ANY, call, UNDEFINED));
             }
             else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
                 // "a?.method(...)" becomes (a as any).method(...)
-                const method = ts.createPropertyAccess(tsCastToAny(receiver), ast.name);
+                const method = ts$1.createPropertyAccess(tsCastToAny(receiver), ast.name);
                 addParseSpanInfo(method, ast.nameSpan);
-                node = ts.createCall(method, undefined, args);
+                node = ts$1.createCall(method, undefined, args);
             }
             else {
                 // "a?.method(...)" becomes (a!.method(...) as any)
-                const method = ts.createPropertyAccess(ts.createNonNullExpression(receiver), ast.name);
+                const method = ts$1.createPropertyAccess(ts$1.createNonNullExpression(receiver), ast.name);
                 addParseSpanInfo(method, ast.nameSpan);
-                node = tsCastToAny(ts.createCall(method, undefined, args));
+                node = tsCastToAny(ts$1.createCall(method, undefined, args));
             }
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
@@ -34588,9 +34588,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // property read, or `undefined`. So a ternary is used to create an "or" type:
                 // "a?.b" becomes (null as any ? a!.b : undefined)
                 // The type of this expression is (typeof a!.b) | undefined, which is exactly as desired.
-                const expr = ts.createPropertyAccess(ts.createNonNullExpression(receiver), ast.name);
+                const expr = ts$1.createPropertyAccess(ts$1.createNonNullExpression(receiver), ast.name);
                 addParseSpanInfo(expr, ast.nameSpan);
-                node = ts.createParen(ts.createConditional(NULL_AS_ANY, expr, UNDEFINED));
+                node = ts$1.createParen(ts$1.createConditional(NULL_AS_ANY, expr, UNDEFINED));
             }
             else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
                 // Emulate a View Engine bug where 'any' is inferred for the left-hand side of the safe
@@ -34598,13 +34598,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Therefore, the left-hand side only needs repeating in the output (to validate it), and then
                 // 'any' is used for the rest of the expression. This is done using a comma operator:
                 // "a?.b" becomes (a as any).b, which will of course have type 'any'.
-                node = ts.createPropertyAccess(tsCastToAny(receiver), ast.name);
+                node = ts$1.createPropertyAccess(tsCastToAny(receiver), ast.name);
             }
             else {
                 // The View Engine bug isn't active, so check the entire type of the expression, but the final
                 // result is still inferred as `any`.
                 // "a?.b" becomes (a!.b as any)
-                const expr = ts.createPropertyAccess(ts.createNonNullExpression(receiver), ast.name);
+                const expr = ts$1.createPropertyAccess(ts$1.createNonNullExpression(receiver), ast.name);
                 addParseSpanInfo(expr, ast.nameSpan);
                 node = tsCastToAny(expr);
             }
@@ -34764,19 +34764,19 @@ Either add the @Injectable() decorator to '${provider.node.name
         const tcb = new Context$1(env, domSchemaChecker, oobRecorder, meta.id, meta.boundTarget, meta.pipes, meta.schemas);
         const scope = Scope$1.forNodes(tcb, null, tcb.boundTarget.target.template, /* guard */ null);
         const ctxRawType = env.referenceType(ref);
-        if (!ts.isTypeReferenceNode(ctxRawType)) {
+        if (!ts$1.isTypeReferenceNode(ctxRawType)) {
             throw new Error(`Expected TypeReferenceNode when referencing the ctx param for ${ref.debugName}`);
         }
         const paramList = [tcbCtxParam(ref.node, ctxRawType.typeName, env.config.useContextGenericType)];
         const scopeStatements = scope.render();
-        const innerBody = ts.createBlock([
+        const innerBody = ts$1.createBlock([
             ...env.getPreludeStatements(),
             ...scopeStatements,
         ]);
         // Wrap the body in an "if (true)" expression. This is unnecessary but has the effect of causing
         // the `ts.Printer` to format the type-check block nicely.
-        const body = ts.createBlock([ts.createIf(ts.createTrue(), innerBody, undefined)]);
-        const fnDecl = ts.createFunctionDeclaration(
+        const body = ts$1.createBlock([ts$1.createIf(ts$1.createTrue(), innerBody, undefined)]);
+        const fnDecl = ts$1.createFunctionDeclaration(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* asteriskToken */ undefined, 
@@ -34869,7 +34869,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Allocate an identifier for the TmplAstVariable, and initialize it to a read of the variable
             // on the template context.
             const id = this.tcb.allocateId();
-            const initializer = ts.createPropertyAccess(
+            const initializer = ts$1.createPropertyAccess(
             /* expression */ ctx, 
             /* name */ this.variable.value || '$implicit');
             addParseSpanInfo(id, this.variable.keySpan);
@@ -34904,7 +34904,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Allocate a template ctx variable and declare it with an 'any' type. The type of this variable
             // may be narrowed as a result of template guard conditions.
             const ctx = this.tcb.allocateId();
-            const type = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+            const type = ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword);
             this.scope.addStatement(tsDeclareVariable(ctx, type));
             return ctx;
         }
@@ -34987,7 +34987,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (directiveGuards.length > 0) {
                 // Pop the first value and use it as the initializer to reduce(). This way, a single guard
                 // will be used on its own, but two or more will be combined into binary AND expressions.
-                guard = directiveGuards.reduce((expr, dirGuard) => ts.createBinary(expr, ts.SyntaxKind.AmpersandAmpersandToken, dirGuard), directiveGuards.pop());
+                guard = directiveGuards.reduce((expr, dirGuard) => ts$1.createBinary(expr, ts$1.SyntaxKind.AmpersandAmpersandToken, dirGuard), directiveGuards.pop());
             }
             // Create a new Scope for the template. This constructs the list of operations for the template
             // children, as well as tracks bindings within the template.
@@ -35003,11 +35003,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // type-checking time.
                 return null;
             }
-            let tmplBlock = ts.createBlock(statements);
+            let tmplBlock = ts$1.createBlock(statements);
             if (guard !== null) {
                 // The scope has a guard that needs to be applied, so wrap the template block into an `if`
                 // statement containing the guard expression.
-                tmplBlock = ts.createIf(/* expression */ guard, /* thenStatement */ tmplBlock);
+                tmplBlock = ts$1.createIf(/* expression */ guard, /* thenStatement */ tmplBlock);
             }
             this.scope.addStatement(tmplBlock);
             return null;
@@ -35030,7 +35030,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute() {
             const expr = tcbExpression(this.binding.value, this.tcb, this.scope);
-            this.scope.addStatement(ts.createExpressionStatement(expr));
+            this.scope.addStatement(ts$1.createExpressionStatement(expr));
             return null;
         }
     }
@@ -35111,16 +35111,16 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // References to `TemplateRef`s and directives are pinned to 'any' when
                 // `checkTypeOfNonDomReferences` is `false`.
                 initializer =
-                    ts.createAsExpression(initializer, ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+                    ts$1.createAsExpression(initializer, ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
             }
             else if (this.target instanceof Template) {
                 // Direct references to an <ng-template> node simply require a value of type
                 // `TemplateRef<any>`. To get this, an expression of the form
                 // `(_t1 as any as TemplateRef<any>)` is constructed.
                 initializer =
-                    ts.createAsExpression(initializer, ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
-                initializer = ts.createAsExpression(initializer, this.tcb.env.referenceExternalType('@angular/core', 'TemplateRef', [DYNAMIC_TYPE]));
-                initializer = ts.createParen(initializer);
+                    ts$1.createAsExpression(initializer, ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
+                initializer = ts$1.createAsExpression(initializer, this.tcb.env.referenceExternalType('@angular/core', 'TemplateRef', [DYNAMIC_TYPE]));
+                initializer = ts$1.createParen(initializer);
             }
             addParseSpanInfo(initializer, this.node.sourceSpan);
             addParseSpanInfo(id, this.node.keySpan);
@@ -35248,7 +35248,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 else if (!this.tcb.env.config.strictNullInputBindings) {
                     // If strict null checks are disabled, erase `null` and `undefined` from the type by
                     // wrapping the expression in a non-null assertion.
-                    expr = ts.createNonNullExpression(expr);
+                    expr = ts$1.createNonNullExpression(expr);
                 }
                 let assignment = wrapForDiagnostics(expr);
                 for (const fieldName of input.fieldNames) {
@@ -35259,7 +35259,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // with a type of `typeof Directive.ngAcceptInputType_fieldName` which is then used as
                         // target of the assignment.
                         const dirTypeRef = this.tcb.env.referenceType(this.dir.ref);
-                        if (!ts.isTypeReferenceNode(dirTypeRef)) {
+                        if (!ts$1.isTypeReferenceNode(dirTypeRef)) {
                             throw new Error(`Expected TypeReferenceNode from reference to ${this.dir.ref.debugName}`);
                         }
                         const id = this.tcb.allocateId();
@@ -35284,10 +35284,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                         }
                         const id = this.tcb.allocateId();
                         const dirTypeRef = this.tcb.env.referenceType(this.dir.ref);
-                        if (!ts.isTypeReferenceNode(dirTypeRef)) {
+                        if (!ts$1.isTypeReferenceNode(dirTypeRef)) {
                             throw new Error(`Expected TypeReferenceNode from reference to ${this.dir.ref.debugName}`);
                         }
-                        const type = ts.createIndexedAccessTypeNode(ts.createTypeQueryNode(dirId), ts.createLiteralTypeNode(ts.createStringLiteral(fieldName)));
+                        const type = ts$1.createIndexedAccessTypeNode(ts$1.createTypeQueryNode(dirId), ts$1.createLiteralTypeNode(ts$1.createStringLiteral(fieldName)));
                         const temp = tsDeclareVariable(id, type);
                         this.scope.addStatement(temp);
                         target = id;
@@ -35300,14 +35300,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // when possible. String literal fields may not be valid JS identifiers so we use
                         // literal element access instead for those cases.
                         target = this.dir.stringLiteralInputFields.has(fieldName) ?
-                            ts.createElementAccess(dirId, ts.createStringLiteral(fieldName)) :
-                            ts.createPropertyAccess(dirId, ts.createIdentifier(fieldName));
+                            ts$1.createElementAccess(dirId, ts$1.createStringLiteral(fieldName)) :
+                            ts$1.createPropertyAccess(dirId, ts$1.createIdentifier(fieldName));
                     }
                     if (input.attribute.keySpan !== undefined) {
                         addParseSpanInfo(target, input.attribute.keySpan);
                     }
                     // Finally the assignment is extended by assigning it into the target expression.
-                    assignment = ts.createBinary(target, ts.SyntaxKind.EqualsToken, assignment);
+                    assignment = ts$1.createBinary(target, ts$1.SyntaxKind.EqualsToken, assignment);
                 }
                 addParseSpanInfo(assignment, input.attribute.sourceSpan);
                 // Ignore diagnostics for text attributes if configured to do so.
@@ -35315,7 +35315,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     input.attribute instanceof TextAttribute) {
                     markIgnoreDiagnostics(assignment);
                 }
-                this.scope.addStatement(ts.createExpressionStatement(assignment));
+                this.scope.addStatement(ts$1.createExpressionStatement(assignment));
             }
             return null;
         }
@@ -35348,7 +35348,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         execute() {
             const id = this.tcb.allocateId();
             const typeCtor = this.tcb.env.typeCtorFor(this.dir);
-            const circularPlaceholder = ts.createCall(typeCtor, /* typeArguments */ undefined, [ts.createNonNullExpression(ts.createNull())]);
+            const circularPlaceholder = ts$1.createCall(typeCtor, /* typeArguments */ undefined, [ts$1.createNonNullExpression(ts$1.createNull())]);
             this.scope.addStatement(tsCreateVariable(id, circularPlaceholder));
             return id;
         }
@@ -35447,7 +35447,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 else if (!this.tcb.env.config.strictNullInputBindings) {
                     // If strict null checks are disabled, erase `null` and `undefined` from the type by
                     // wrapping the expression in a non-null assertion.
-                    expr = ts.createNonNullExpression(expr);
+                    expr = ts$1.createNonNullExpression(expr);
                 }
                 if (this.tcb.env.config.checkTypeOfDomBindings && binding.type === 0 /* Property */) {
                     if (binding.name !== 'style' && binding.name !== 'class') {
@@ -35456,20 +35456,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                         }
                         // A direct binding to a property.
                         const propertyName = ATTR_TO_PROP[binding.name] || binding.name;
-                        const prop = ts.createElementAccess(elId, ts.createStringLiteral(propertyName));
-                        const stmt = ts.createBinary(prop, ts.SyntaxKind.EqualsToken, wrapForDiagnostics(expr));
+                        const prop = ts$1.createElementAccess(elId, ts$1.createStringLiteral(propertyName));
+                        const stmt = ts$1.createBinary(prop, ts$1.SyntaxKind.EqualsToken, wrapForDiagnostics(expr));
                         addParseSpanInfo(stmt, binding.sourceSpan);
-                        this.scope.addStatement(ts.createExpressionStatement(stmt));
+                        this.scope.addStatement(ts$1.createExpressionStatement(stmt));
                     }
                     else {
-                        this.scope.addStatement(ts.createExpressionStatement(expr));
+                        this.scope.addStatement(ts$1.createExpressionStatement(expr));
                     }
                 }
                 else {
                     // A binding to an animation, attribute, class or style. For now, only validate the right-
                     // hand side of the expression.
                     // TODO: properly check class and style bindings.
-                    this.scope.addStatement(ts.createExpressionStatement(expr));
+                    this.scope.addStatement(ts$1.createExpressionStatement(expr));
                 }
             }
             return null;
@@ -35504,7 +35504,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (dirId === null) {
                     dirId = this.scope.resolve(this.node, this.dir);
                 }
-                const outputField = ts.createElementAccess(dirId, ts.createStringLiteral(field));
+                const outputField = ts$1.createElementAccess(dirId, ts$1.createStringLiteral(field));
                 addParseSpanInfo(outputField, output.keySpan);
                 if (this.tcb.env.config.checkTypeOfOutputEvents) {
                     // For strict checking of directive events, generate a call to the `subscribe` method
@@ -35518,11 +35518,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // specially crafted set of signatures, to effectively cast `EventEmitter<T>` to something
                     // that has a `subscribe` method that properly carries the `T` into the handler function.
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 0 /* Infer */);
-                    const outputHelper = ts.createCall(this.tcb.env.declareOutputHelper(), undefined, [outputField]);
-                    const subscribeFn = ts.createPropertyAccess(outputHelper, 'subscribe');
-                    const call = ts.createCall(subscribeFn, /* typeArguments */ undefined, [handler]);
+                    const outputHelper = ts$1.createCall(this.tcb.env.declareOutputHelper(), undefined, [outputField]);
+                    const subscribeFn = ts$1.createPropertyAccess(outputHelper, 'subscribe');
+                    const call = ts$1.createCall(subscribeFn, /* typeArguments */ undefined, [handler]);
                     addParseSpanInfo(call, output.sourceSpan);
-                    this.scope.addStatement(ts.createExpressionStatement(call));
+                    this.scope.addStatement(ts$1.createExpressionStatement(call));
                 }
                 else {
                     // If strict checking of directive events is disabled:
@@ -35531,9 +35531,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                     //   of the `TemplateTypeChecker` can still find the node for the class member for the
                     //   output.
                     // * Emit a handler function where the `$event` parameter has an explicit `any` type.
-                    this.scope.addStatement(ts.createExpressionStatement(outputField));
+                    this.scope.addStatement(ts$1.createExpressionStatement(outputField));
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 1 /* Any */);
-                    this.scope.addStatement(ts.createExpressionStatement(handler));
+                    this.scope.addStatement(ts$1.createExpressionStatement(handler));
                 }
                 ExpressionSemanticVisitor.visit(output.handler, this.tcb.id, this.tcb.boundTarget, this.tcb.oobRecorder);
             }
@@ -35572,7 +35572,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         this.tcb.env.referenceExternalType('@angular/animations', 'AnimationEvent') :
                         1 /* Any */;
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, eventType);
-                    this.scope.addStatement(ts.createExpressionStatement(handler));
+                    this.scope.addStatement(ts$1.createExpressionStatement(handler));
                 }
                 else if (this.tcb.env.config.checkTypeOfDomEvents) {
                     // If strict checking of DOM events is enabled, generate a call to `addEventListener` on
@@ -35584,20 +35584,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                     if (elId === null) {
                         elId = this.scope.resolve(this.element);
                     }
-                    const propertyAccess = ts.createPropertyAccess(elId, 'addEventListener');
+                    const propertyAccess = ts$1.createPropertyAccess(elId, 'addEventListener');
                     addParseSpanInfo(propertyAccess, output.keySpan);
-                    const call = ts.createCall(
+                    const call = ts$1.createCall(
                     /* expression */ propertyAccess, 
                     /* typeArguments */ undefined, 
-                    /* arguments */ [ts.createStringLiteral(output.name), handler]);
+                    /* arguments */ [ts$1.createStringLiteral(output.name), handler]);
                     addParseSpanInfo(call, output.sourceSpan);
-                    this.scope.addStatement(ts.createExpressionStatement(call));
+                    this.scope.addStatement(ts$1.createExpressionStatement(call));
                 }
                 else {
                     // If strict checking of DOM inputs is disabled, emit a handler function where the `$event`
                     // parameter has an explicit `any` type.
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 1 /* Any */);
-                    this.scope.addStatement(ts.createExpressionStatement(handler));
+                    this.scope.addStatement(ts$1.createExpressionStatement(handler));
                 }
                 ExpressionSemanticVisitor.visit(output.handler, this.tcb.id, this.tcb.boundTarget, this.tcb.oobRecorder);
             }
@@ -35618,11 +35618,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.optional = false;
         }
         execute() {
-            const ctx = ts.createIdentifier('ctx');
-            const ctxDot = ts.createPropertyAccess(ctx, '');
+            const ctx = ts$1.createIdentifier('ctx');
+            const ctxDot = ts$1.createPropertyAccess(ctx, '');
             markIgnoreDiagnostics(ctxDot);
             addExpressionIdentifier(ctxDot, ExpressionIdentifier.COMPONENT_COMPLETION);
-            this.scope.addStatement(ts.createExpressionStatement(ctxDot));
+            this.scope.addStatement(ts$1.createExpressionStatement(ctxDot));
             return null;
         }
     }
@@ -35633,7 +35633,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * assertion of the null value (in TypeScript, the expression `null!`). This construction will infer
      * the least narrow type for whatever it's assigned to.
      */
-    const INFER_TYPE_FOR_CIRCULAR_OP_EXPR = ts.createNonNullExpression(ts.createNull());
+    const INFER_TYPE_FOR_CIRCULAR_OP_EXPR = ts$1.createNonNullExpression(ts$1.createNull());
     /**
      * Overall generation context for the type check block.
      *
@@ -35659,7 +35659,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          * might change depending on the type of data being stored.
          */
         allocateId() {
-            return ts.createIdentifier(`_t${this.nextId++}`);
+            return ts$1.createIdentifier(`_t${this.nextId++}`);
         }
         getPipeByName(name) {
             if (!this.pipes.has(name)) {
@@ -35804,8 +35804,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 //
                 // In addition, returning a clone prevents the consumer of `Scope#resolve` from
                 // attaching comments at the declaration site.
-                const clone = ts.getMutableClone(res);
-                ts.setSyntheticTrailingComments(clone, []);
+                const clone = ts$1.getMutableClone(res);
+                ts$1.setSyntheticTrailingComments(clone, []);
                 return clone;
             }
             else if (this.parent !== null) {
@@ -35857,7 +35857,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Both the parent scope and this scope provide a guard, so create a combination of the two.
                 // It is important that the parent guard is used as left operand, given that it may provide
                 // narrowing that is required for this scope's guard to be valid.
-                return ts.createBinary(parentGuards, ts.SyntaxKind.AmpersandAmpersandToken, this.guard);
+                return ts$1.createBinary(parentGuards, ts$1.SyntaxKind.AmpersandAmpersandToken, this.guard);
             }
         }
         resolveLocal(ref, directive) {
@@ -36096,15 +36096,15 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (node.typeParameters !== undefined) {
             if (useGenericType) {
                 typeArguments =
-                    node.typeParameters.map(param => ts.createTypeReferenceNode(param.name, undefined));
+                    node.typeParameters.map(param => ts$1.createTypeReferenceNode(param.name, undefined));
             }
             else {
                 typeArguments =
-                    node.typeParameters.map(() => ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+                    node.typeParameters.map(() => ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
             }
         }
-        const type = ts.createTypeReferenceNode(name, typeArguments);
-        return ts.createParameter(
+        const type = ts$1.createTypeReferenceNode(name, typeArguments);
+        return ts$1.createParameter(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, 
@@ -36152,7 +36152,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     return null;
                 }
                 const expr = this.translate(ast.value);
-                const result = ts.createParen(ts.createBinary(target, ts.SyntaxKind.EqualsToken, expr));
+                const result = ts$1.createParen(ts$1.createBinary(target, ts$1.SyntaxKind.EqualsToken, expr));
                 addParseSpanInfo(result, ast.sourceSpan);
                 return result;
             }
@@ -36169,7 +36169,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Therefore if `resolve` is called on an `ImplicitReceiver`, it's because no outer
                 // PropertyRead/MethodCall resolved to a variable or reference, and therefore this is a
                 // property read or method call on the component context itself.
-                return ts.createIdentifier('ctx');
+                return ts$1.createIdentifier('ctx');
             }
             else if (ast instanceof BindingPipe) {
                 const expr = this.translate(ast.exp);
@@ -36187,12 +36187,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 else {
                     // Use an 'any' value when not checking the type of the pipe.
-                    pipe = ts.createAsExpression(this.tcb.env.pipeInst(pipeRef), ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+                    pipe = ts$1.createAsExpression(this.tcb.env.pipeInst(pipeRef), ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
                 }
                 const args = ast.args.map(arg => this.translate(arg));
-                const methodAccess = ts.createPropertyAccess(pipe, 'transform');
+                const methodAccess = ts$1.createPropertyAccess(pipe, 'transform');
                 addParseSpanInfo(methodAccess, ast.nameSpan);
-                const result = ts.createCall(
+                const result = ts$1.createCall(
                 /* expression */ methodAccess, 
                 /* typeArguments */ undefined, 
                 /* argumentsArray */ [expr, ...args]);
@@ -36205,8 +36205,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // `$any(expr)` -> `expr as any`
                 if (ast.name === '$any' && ast.args.length === 1) {
                     const expr = this.translate(ast.args[0]);
-                    const exprAsAny = ts.createAsExpression(expr, ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
-                    const result = ts.createParen(exprAsAny);
+                    const exprAsAny = ts$1.createAsExpression(expr, ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
+                    const result = ts$1.createParen(exprAsAny);
                     addParseSpanInfo(result, ast.sourceSpan);
                     return result;
                 }
@@ -36221,7 +36221,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const method = wrapForDiagnostics(receiver);
                 addParseSpanInfo(method, ast.nameSpan);
                 const args = ast.args.map(arg => this.translate(arg));
-                const node = ts.createCall(method, undefined, args);
+                const node = ts$1.createCall(method, undefined, args);
                 addParseSpanInfo(node, ast.sourceSpan);
                 return node;
             }
@@ -36253,7 +36253,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         const typeCtor = tcb.env.typeCtorFor(dir);
         // Construct an array of `ts.PropertyAssignment`s for each of the directive's inputs.
         const members = inputs.map(input => {
-            const propertyName = ts.createStringLiteral(input.field);
+            const propertyName = ts$1.createStringLiteral(input.field);
             if (input.type === 'binding') {
                 // For bound inputs, the property is assigned the binding expression.
                 let expr = input.expression;
@@ -36265,24 +36265,24 @@ Either add the @Injectable() decorator to '${provider.node.name
                 else if (!tcb.env.config.strictNullInputBindings) {
                     // If strict null checks are disabled, erase `null` and `undefined` from the type by
                     // wrapping the expression in a non-null assertion.
-                    expr = ts.createNonNullExpression(expr);
+                    expr = ts$1.createNonNullExpression(expr);
                 }
-                const assignment = ts.createPropertyAssignment(propertyName, wrapForDiagnostics(expr));
+                const assignment = ts$1.createPropertyAssignment(propertyName, wrapForDiagnostics(expr));
                 addParseSpanInfo(assignment, input.sourceSpan);
                 return assignment;
             }
             else {
                 // A type constructor is required to be called with all input properties, so any unset
                 // inputs are simply assigned a value of type `any` to ignore them.
-                return ts.createPropertyAssignment(propertyName, NULL_AS_ANY);
+                return ts$1.createPropertyAssignment(propertyName, NULL_AS_ANY);
             }
         });
         // Call the `ngTypeCtor` method on the directive class, with an object literal argument created
         // from the matched inputs.
-        return ts.createCall(
+        return ts$1.createCall(
         /* expression */ typeCtor, 
         /* typeArguments */ undefined, 
-        /* argumentsArray */ [ts.createObjectLiteral(members)]);
+        /* argumentsArray */ [ts$1.createObjectLiteral(members)]);
     }
     function getBoundInputs(directive, node, tcb) {
         const boundInputs = [];
@@ -36316,7 +36316,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         else {
             // For regular attributes with a static string value, use the represented string literal.
-            return ts.createStringLiteral(attr.value);
+            return ts$1.createStringLiteral(attr.value);
         }
     }
     const EVENT_PARAMETER = '$event';
@@ -36338,7 +36338,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             eventParamType = undefined;
         }
         else if (eventType === 1 /* Any */) {
-            eventParamType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+            eventParamType = ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword);
         }
         else {
             eventParamType = eventType;
@@ -36346,12 +36346,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Obtain all guards that have been applied to the scope and its parents, as they have to be
         // repeated within the handler function for their narrowing to be in effect within the handler.
         const guards = scope.guards();
-        let body = ts.createExpressionStatement(handler);
+        let body = ts$1.createExpressionStatement(handler);
         if (guards !== null) {
             // Wrap the body in an `if` statement containing all guards that have to be applied.
-            body = ts.createIf(guards, body);
+            body = ts$1.createIf(guards, body);
         }
-        const eventParam = ts.createParameter(
+        const eventParam = ts$1.createParameter(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, 
@@ -36359,14 +36359,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         /* questionToken */ undefined, 
         /* type */ eventParamType);
         addExpressionIdentifier(eventParam, ExpressionIdentifier.EVENT_PARAMETER);
-        return ts.createFunctionExpression(
+        return ts$1.createFunctionExpression(
         /* modifier */ undefined, 
         /* asteriskToken */ undefined, 
         /* name */ undefined, 
         /* typeParameters */ undefined, 
         /* parameters */ [eventParam], 
-        /* type */ ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword), 
-        /* body */ ts.createBlock([body]));
+        /* type */ ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword), 
+        /* body */ ts$1.createBlock([body]));
     }
     /**
      * Similar to `tcbExpression`, this function converts the provided `AST` expression into a
@@ -36385,7 +36385,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // parameter by its name.
             if (ast instanceof PropertyRead && ast.receiver instanceof ImplicitReceiver &&
                 !(ast.receiver instanceof ThisReceiver) && ast.name === EVENT_PARAMETER) {
-                const event = ts.createIdentifier(EVENT_PARAMETER);
+                const event = ts$1.createIdentifier(EVENT_PARAMETER);
                 addParseSpanInfo(event, ast.nameSpan);
                 return event;
             }
@@ -36410,13 +36410,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     class TypeCheckFile extends Environment {
         constructor(fileName, config, refEmitter, reflector, compilerHost) {
-            super(config, new ImportManager(new NoopImportRewriter(), 'i'), refEmitter, reflector, ts.createSourceFile(compilerHost.getCanonicalFileName(fileName), '', ts.ScriptTarget.Latest, true));
+            super(config, new ImportManager(new NoopImportRewriter(), 'i'), refEmitter, reflector, ts$1.createSourceFile(compilerHost.getCanonicalFileName(fileName), '', ts$1.ScriptTarget.Latest, true));
             this.fileName = fileName;
             this.nextTcbId = 1;
             this.tcbStatements = [];
         }
         addTypeCheckBlock(ref, meta, domSchemaChecker, oobRecorder) {
-            const fnId = ts.createIdentifier(`_tcb${this.nextTcbId++}`);
+            const fnId = ts$1.createIdentifier(`_tcb${this.nextTcbId++}`);
             const fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker, oobRecorder);
             this.tcbStatements.push(fn);
         }
@@ -36425,20 +36425,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                 .map(i => `import * as ${i.qualifier} from '${i.specifier}';`)
                 .join('\n') +
                 '\n\n';
-            const printer = ts.createPrinter();
+            const printer = ts$1.createPrinter();
             source += '\n';
             for (const stmt of this.helperStatements) {
-                source += printer.printNode(ts.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
+                source += printer.printNode(ts$1.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
             for (const stmt of this.pipeInstStatements) {
-                source += printer.printNode(ts.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
+                source += printer.printNode(ts$1.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
             for (const stmt of this.typeCtorStatements) {
-                source += printer.printNode(ts.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
+                source += printer.printNode(ts$1.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
             source += '\n';
             for (const stmt of this.tcbStatements) {
-                source += printer.printNode(ts.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
+                source += printer.printNode(ts$1.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
             // Ensure the template type-checking file is an ES module. Otherwise, it's interpreted as some
             // kind of global namespace in TS, which forces a full re-typecheck of the user's program that
@@ -36625,7 +36625,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const ops = this.opMap.get(sf).sort(orderOps);
             const textParts = splitStringAtPoints(sf.text, ops.map(op => op.splitPoint));
             // Use a `ts.Printer` to generate source code.
-            const printer = ts.createPrinter({ omitTrailingSemicolon: true });
+            const printer = ts$1.createPrinter({ omitTrailingSemicolon: true });
             // Begin with the intial section of the code text.
             let code = textParts[0];
             // Process each operation and use the printer to generate source code for it, inserting it into
@@ -36712,7 +36712,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // diagnostic.
                     span.end.offset++;
                 }
-                return makeTemplateDiagnostic(templateId, sourceMapping, span, ts.DiagnosticCategory.Error, ngErrorCode(ErrorCode.TEMPLATE_PARSE_ERROR), error.msg);
+                return makeTemplateDiagnostic(templateId, sourceMapping, span, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.TEMPLATE_PARSE_ERROR), error.msg);
             });
         }
     }
@@ -36736,9 +36736,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute(im, sf, refEmitter, printer) {
             const env = new Environment(this.config, im, refEmitter, this.reflector, sf);
-            const fnName = ts.createIdentifier(`_tcb_${this.ref.node.pos}`);
+            const fnName = ts$1.createIdentifier(`_tcb_${this.ref.node.pos}`);
             const fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta, this.domSchemaChecker, this.oobRecorder);
-            return printer.printNode(ts.EmitHint.Unspecified, fn, sf);
+            return printer.printNode(ts$1.EmitHint.Unspecified, fn, sf);
         }
     }
     /**
@@ -36757,7 +36757,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute(im, sf, refEmitter, printer) {
             const tcb = generateInlineTypeCtor(this.ref.node, this.meta);
-            return printer.printNode(ts.EmitHint.Unspecified, tcb, sf);
+            return printer.printNode(ts$1.EmitHint.Unspecified, tcb, sf);
         }
     }
     /**
@@ -36978,7 +36978,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         getSymbolOfElement(element) {
             var _a;
             const elementSourceSpan = (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan;
-            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: ts.isVariableDeclaration });
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: ts$1.isVariableDeclaration });
             if (node === null) {
                 return null;
             }
@@ -36999,7 +36999,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // directives could be either:
             // - var _t1: TestDir /*T:D*/ = (null!);
             // - var _t1 /*T:D*/ = _ctor1({});
-            const isDirectiveDeclaration = (node) => (ts.isTypeNode(node) || ts.isIdentifier(node)) && ts.isVariableDeclaration(node.parent) &&
+            const isDirectiveDeclaration = (node) => (ts$1.isTypeNode(node) || ts$1.isIdentifier(node)) && ts$1.isVariableDeclaration(node.parent) &&
                 hasExpressionIdentifier(tcbSourceFile, node, ExpressionIdentifier.DIRECTIVE);
             const nodes = findAllMatchingNodes(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: isDirectiveDeclaration });
             return nodes
@@ -37008,7 +37008,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const symbol = this.getSymbolOfTsNode(node.parent);
                 if (symbol === null || symbol.tsSymbol === null ||
                     symbol.tsSymbol.valueDeclaration === undefined ||
-                    !ts.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
+                    !ts$1.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                     return null;
                 }
                 const meta = this.getDirectiveMeta(element, symbol.tsSymbol.valueDeclaration);
@@ -37056,7 +37056,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             if (consumer instanceof Template || consumer instanceof Element) {
-                if (!ts.isPropertyAccessExpression(outputFieldAccess) ||
+                if (!ts$1.isPropertyAccessExpression(outputFieldAccess) ||
                     outputFieldAccess.name.text !== 'addEventListener') {
                     return null;
                 }
@@ -37080,7 +37080,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
             else {
-                if (!ts.isElementAccessExpression(outputFieldAccess)) {
+                if (!ts$1.isElementAccessExpression(outputFieldAccess)) {
                     return null;
                 }
                 const tsSymbol = this.getTypeChecker().getSymbolAtLocation(outputFieldAccess.argumentExpression);
@@ -37140,7 +37140,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             const [declaration] = tsSymbol.declarations;
-            if (!ts.isVariableDeclaration(declaration) ||
+            if (!ts$1.isVariableDeclaration(declaration) ||
                 !hasExpressionIdentifier(
                 // The expression identifier could be on the type (for regular directives) or the name
                 // (for generic directives and the ctor op).
@@ -37150,7 +37150,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const symbol = this.getSymbolOfTsNode(declaration);
             if (symbol === null || symbol.tsSymbol === null ||
                 symbol.tsSymbol.valueDeclaration === undefined ||
-                !ts.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
+                !ts$1.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                 return null;
             }
             const ngModule = this.getDirectiveModule(symbol.tsSymbol.valueDeclaration);
@@ -37166,7 +37166,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             };
         }
         getSymbolOfVariable(variable) {
-            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: variable.sourceSpan, filter: ts.isVariableDeclaration });
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: variable.sourceSpan, filter: ts$1.isVariableDeclaration });
             if (node === null || node.initializer === undefined) {
                 return null;
             }
@@ -37189,7 +37189,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         getSymbolOfReference(ref) {
             const target = this.templateData.boundTarget.getReferenceTarget(ref);
             // Find the node for the reference declaration, i.e. `var _t2 = _t1;`
-            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: ref.sourceSpan, filter: ts.isVariableDeclaration });
+            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: ref.sourceSpan, filter: ts$1.isVariableDeclaration });
             if (node === null || target === null || node.initializer === undefined) {
                 return null;
             }
@@ -37197,8 +37197,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             // which are of the form var _t3 = (_t2 as any as i2.TemplateRef<any>)
             // TODO(atscott): Consider adding an `ExpressionIdentifier` to tag variable declaration
             // initializers as invalid for symbol retrieval.
-            const originalDeclaration = ts.isParenthesizedExpression(node.initializer) &&
-                ts.isAsExpression(node.initializer.expression) ?
+            const originalDeclaration = ts$1.isParenthesizedExpression(node.initializer) &&
+                ts$1.isAsExpression(node.initializer.expression) ?
                 this.getTypeChecker().getSymbolAtLocation(node.name) :
                 this.getTypeChecker().getSymbolAtLocation(node.initializer);
             if (originalDeclaration === undefined || originalDeclaration.valueDeclaration === undefined) {
@@ -37224,7 +37224,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
             else {
-                if (!ts.isClassDeclaration(target.directive.ref.node)) {
+                if (!ts$1.isClassDeclaration(target.directive.ref.node)) {
                     return null;
                 }
                 return {
@@ -37239,15 +37239,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         getSymbolOfPipe(expression) {
-            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: expression.sourceSpan, filter: ts.isCallExpression });
-            if (node === null || !ts.isPropertyAccessExpression(node.expression)) {
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: expression.sourceSpan, filter: ts$1.isCallExpression });
+            if (node === null || !ts$1.isPropertyAccessExpression(node.expression)) {
                 return null;
             }
             const methodAccess = node.expression;
             // Find the node for the pipe variable from the transform property access. This will be one of
             // two forms: `_pipe1.transform` or `(_pipe1 as any).transform`.
-            const pipeVariableNode = ts.isParenthesizedExpression(methodAccess.expression) &&
-                ts.isAsExpression(methodAccess.expression.expression) ?
+            const pipeVariableNode = ts$1.isParenthesizedExpression(methodAccess.expression) &&
+                ts$1.isAsExpression(methodAccess.expression.expression) ?
                 methodAccess.expression.expression.expression :
                 methodAccess.expression;
             const pipeDeclaration = this.getTypeChecker().getSymbolAtLocation(pipeVariableNode);
@@ -37281,7 +37281,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node === null) {
                 return null;
             }
-            while (ts.isParenthesizedExpression(node)) {
+            while (ts$1.isParenthesizedExpression(node)) {
                 node = node.expression;
             }
             // - If we have safe property read ("a?.b") we want to get the Symbol for b, the `whenTrue`
@@ -37290,8 +37290,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             // `transform` on the pipe.
             // - Otherwise, we retrieve the symbol for the node itself with no special considerations
             if ((expression instanceof SafePropertyRead || expression instanceof SafeMethodCall) &&
-                ts.isConditionalExpression(node)) {
-                const whenTrueSymbol = (expression instanceof SafeMethodCall && ts.isCallExpression(node.whenTrue)) ?
+                ts$1.isConditionalExpression(node)) {
+                const whenTrueSymbol = (expression instanceof SafeMethodCall && ts$1.isCallExpression(node.whenTrue)) ?
                     this.getSymbolOfTsNode(node.whenTrue.expression) :
                     this.getSymbolOfTsNode(node.whenTrue);
                 if (whenTrueSymbol === null) {
@@ -37309,14 +37309,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         getSymbolOfTsNode(node) {
             var _a;
-            while (ts.isParenthesizedExpression(node)) {
+            while (ts$1.isParenthesizedExpression(node)) {
                 node = node.expression;
             }
             let tsSymbol;
-            if (ts.isPropertyAccessExpression(node)) {
+            if (ts$1.isPropertyAccessExpression(node)) {
                 tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.name);
             }
-            else if (ts.isElementAccessExpression(node)) {
+            else if (ts$1.isElementAccessExpression(node)) {
                 tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.argumentExpression);
             }
             else {
@@ -37334,16 +37334,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             };
         }
         getShimPositionForNode(node) {
-            if (ts.isTypeReferenceNode(node)) {
+            if (ts$1.isTypeReferenceNode(node)) {
                 return this.getShimPositionForNode(node.typeName);
             }
-            else if (ts.isQualifiedName(node)) {
+            else if (ts$1.isQualifiedName(node)) {
                 return node.right.getStart();
             }
-            else if (ts.isPropertyAccessExpression(node)) {
+            else if (ts$1.isPropertyAccessExpression(node)) {
                 return node.name.getStart();
             }
-            else if (ts.isElementAccessExpression(node)) {
+            else if (ts$1.isElementAccessExpression(node)) {
                 return node.argumentExpression.getStart();
             }
             else {
@@ -38020,7 +38020,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.closureCompilerEnabled = !!this.options.annotateForClosureCompiler;
             this.entryPoint =
                 adapter.entryPoint !== null ? getSourceFileOrNull(tsProgram, adapter.entryPoint) : null;
-            const moduleResolutionCache = ts.createModuleResolutionCache(this.adapter.getCurrentDirectory(), 
+            const moduleResolutionCache = ts$1.createModuleResolutionCache(this.adapter.getCurrentDirectory(), 
             // Note: this used to be an arrow-function closure. However, JS engines like v8 have some
             // strange behaviors with retaining the lexical scope of the closure. Even if this function
             // doesn't retain a reference to `this`, if other closures in the constructor here reference
@@ -38633,22 +38633,22 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Look for the constant ITS_JUST_ANGULAR in that file.
         return r3Symbols.statements.some(stmt => {
             // The statement must be a variable declaration statement.
-            if (!ts.isVariableStatement(stmt)) {
+            if (!ts$1.isVariableStatement(stmt)) {
                 return false;
             }
             // It must be exported.
             if (stmt.modifiers === undefined ||
-                !stmt.modifiers.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)) {
+                !stmt.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.ExportKeyword)) {
                 return false;
             }
             // It must declare ITS_JUST_ANGULAR.
             return stmt.declarationList.declarations.some(decl => {
                 // The declaration must match the name.
-                if (!ts.isIdentifier(decl.name) || decl.name.text !== 'ITS_JUST_ANGULAR') {
+                if (!ts$1.isIdentifier(decl.name) || decl.name.text !== 'ITS_JUST_ANGULAR') {
                     return false;
                 }
                 // It must initialize the variable to true.
-                if (decl.initializer === undefined || decl.initializer.kind !== ts.SyntaxKind.TrueKeyword) {
+                if (decl.initializer === undefined || decl.initializer.kind !== ts$1.SyntaxKind.TrueKeyword) {
                     return false;
                 }
                 // This definition matches.
@@ -38670,7 +38670,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     function verifyCompatibleTypeCheckOptions(options) {
         if (options.fullTemplateTypeCheck === false && options.strictTemplates === true) {
             return {
-                category: ts.DiagnosticCategory.Error,
+                category: ts$1.DiagnosticCategory.Error,
                 code: ngErrorCode(ErrorCode.CONFIG_STRICT_TEMPLATES_IMPLIES_FULL_TEMPLATE_TYPECHECK),
                 file: undefined,
                 start: undefined,
@@ -38698,7 +38698,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             for (const { node } of references) {
                 let sourceFile = node.getSourceFile();
                 if (sourceFile === undefined) {
-                    sourceFile = ts.getOriginalNode(node).getSourceFile();
+                    sourceFile = ts$1.getOriginalNode(node).getSourceFile();
                 }
                 // Only record local references (not references into .d.ts files).
                 if (sourceFile === undefined || !isDtsPath(sourceFile.fileName)) {
@@ -38734,7 +38734,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         try {
             const { projectFile, basePath } = calcProjectFileAndBasePath(project, host);
             const readExtendedConfigFile = (configFile, existingConfig) => {
-                const { config, error } = ts.readConfigFile(configFile, file => host.readFile(host.resolve(file)));
+                const { config, error } = ts$1.readConfigFile(configFile, file => host.readFile(host.resolve(file)));
                 if (error) {
                     return { error };
                 }
@@ -38769,11 +38769,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const parseConfigHost = {
                 useCaseSensitiveFileNames: true,
                 fileExists: host.exists.bind(host),
-                readDirectory: ts.sys.readDirectory,
-                readFile: ts.sys.readFile
+                readDirectory: ts$1.sys.readDirectory,
+                readFile: ts$1.sys.readFile
             };
             const configFileName = host.resolve(host.pwd(), projectFile);
-            const parsed = ts.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingOptions, configFileName);
+            const parsed = ts$1.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingOptions, configFileName);
             const rootNames = parsed.fileNames;
             const projectReferences = parsed.projectReferences;
             const options = createNgCompilerOptions(basePath, config, parsed.options);
@@ -38795,7 +38795,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         catch (e) {
             const errors = [{
-                    category: ts.DiagnosticCategory.Error,
+                    category: ts$1.DiagnosticCategory.Error,
                     messageText: e.stack,
                     file: undefined,
                     start: undefined,
@@ -38841,11 +38841,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     // Reverse mappings of enum would generate strings
-    const ALIAS_NAME = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.aliasName];
-    const SYMBOL_INTERFACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.interfaceName];
-    const SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
-    const SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
-    const SYMBOL_TEXT = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.text];
+    const ALIAS_NAME = ts$1.SymbolDisplayPartKind[ts$1.SymbolDisplayPartKind.aliasName];
+    const SYMBOL_INTERFACE = ts$1.SymbolDisplayPartKind[ts$1.SymbolDisplayPartKind.interfaceName];
+    const SYMBOL_PUNC = ts$1.SymbolDisplayPartKind[ts$1.SymbolDisplayPartKind.punctuation];
+    const SYMBOL_SPACE = ts$1.SymbolDisplayPartKind[ts$1.SymbolDisplayPartKind.space];
+    const SYMBOL_TEXT = ts$1.SymbolDisplayPartKind[ts$1.SymbolDisplayPartKind.text];
     /**
      * Label for various kinds of Angular entities for TS display info.
      */
@@ -38939,7 +38939,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function getDirectiveDisplayInfo(tsLS, dir) {
         var _a, _b;
         const kind = dir.isComponent ? DisplayInfoKind.COMPONENT : DisplayInfoKind.DIRECTIVE;
-        const decl = dir.tsSymbol.declarations.find(ts.isClassDeclaration);
+        const decl = dir.tsSymbol.declarations.find(ts$1.isClassDeclaration);
         if (decl === undefined || decl.name === undefined) {
             return { kind, displayParts: [], documentation: [] };
         }
@@ -38956,8 +38956,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function getTsSymbolDisplayInfo(tsLS, checker, symbol, kind, ownerName) {
         const decl = symbol.valueDeclaration;
-        if (decl === undefined || (!ts.isPropertyDeclaration(decl) && !ts.isMethodDeclaration(decl)) ||
-            !ts.isIdentifier(decl.name)) {
+        if (decl === undefined || (!ts$1.isPropertyDeclaration(decl) && !ts$1.isMethodDeclaration(decl)) ||
+            !ts$1.isIdentifier(decl.name)) {
             return null;
         }
         const res = tsLS.getQuickInfoAtPosition(decl.getSourceFile().fileName, decl.name.getStart());
@@ -38995,7 +38995,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function getParentClassDeclaration(startNode) {
         while (startNode) {
-            if (ts.isClassDeclaration(startNode)) {
+            if (ts$1.isClassDeclaration(startNode)) {
                 return startNode;
             }
             startNode = startNode.parent;
@@ -39111,7 +39111,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const components = compiler.getComponentsWithTemplateFile(fileName);
         const sortedComponents = Array.from(components).sort(tsDeclarationSortComparator);
         for (const component of sortedComponents) {
-            if (!ts.isClassDeclaration(component)) {
+            if (!ts$1.isClassDeclaration(component)) {
                 continue;
             }
             const template = templateTypeChecker.getTemplate(component);
@@ -39453,7 +39453,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const components = compiler.getComponentsWithTemplateFile(fileName);
             // 3. Update component template
             for (const component of components) {
-                if (ts$1.isClassDeclaration(component)) {
+                if (ts.isClassDeclaration(component)) {
                     ttc.overrideComponentTemplate(component, latestTemplate);
                 }
             }
@@ -39533,7 +39533,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             // element can be added to the completion table.
             for (const dirSymbol of symbol.directives) {
                 const directive = dirSymbol.tsSymbol.valueDeclaration;
-                if (!ts.isClassDeclaration(directive)) {
+                if (!ts$1.isClassDeclaration(directive)) {
                     continue;
                 }
                 presentDirectives.add(directive);
@@ -39574,7 +39574,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             for (const dirInScope of directivesInScope) {
                 const directive = dirInScope.tsSymbol.valueDeclaration;
                 // Skip directives that are present on the element.
-                if (!ts.isClassDeclaration(directive) || presentDirectives.has(directive)) {
+                if (!ts$1.isClassDeclaration(directive) || presentDirectives.has(directive)) {
                     continue;
                 }
                 const meta = checker.getDirectiveMetadata(directive);
@@ -40092,7 +40092,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     name,
                     sortText: name,
                     replacementSpan,
-                    kindModifiers: ts.ScriptElementKindModifier.none,
+                    kindModifiers: ts$1.ScriptElementKindModifier.none,
                     kind: unsafeCastDisplayInfoKindToScriptElementKind(entity.kind === CompletionKind.Reference ? DisplayInfoKind.REFERENCE :
                         DisplayInfoKind.VARIABLE),
                 });
@@ -40129,7 +40129,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return {
                     kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
                     name: entryName,
-                    kindModifiers: ts.ScriptElementKindModifier.none,
+                    kindModifiers: ts$1.ScriptElementKindModifier.none,
                     displayParts,
                     documentation,
                 };
@@ -40208,7 +40208,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return {
                 kind: tagCompletionKind(directive),
                 name: entryName,
-                kindModifiers: ts.ScriptElementKindModifier.none,
+                kindModifiers: ts$1.ScriptElementKindModifier.none,
                 displayParts,
                 documentation,
             };
@@ -40341,7 +40341,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return {
                 name: entryName,
                 kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
-                kindModifiers: ts.ScriptElementKindModifier.none,
+                kindModifiers: ts$1.ScriptElementKindModifier.none,
                 displayParts: [],
                 documentation,
             };
@@ -40784,8 +40784,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         definitions.push({
                             name: symbol.declaration.name,
                             containerName: '',
-                            containerKind: ts.ScriptElementKind.unknown,
-                            kind: ts.ScriptElementKind.variableElement,
+                            containerKind: ts$1.ScriptElementKind.unknown,
+                            kind: ts$1.ScriptElementKind.variableElement,
                             textSpan: getTextSpanOfNode(symbol.declaration),
                             contextSpan: toTextSpan(symbol.declaration.sourceSpan),
                             fileName: symbol.declaration.sourceSpan.start.file.url,
@@ -40939,9 +40939,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return;
         }
         const templateDefinitions = [{
-                kind: ts.ScriptElementKind.externalModuleName,
+                kind: ts$1.ScriptElementKind.externalModuleName,
                 name: resourceForExpression.path,
-                containerKind: ts.ScriptElementKind.unknown,
+                containerKind: ts$1.ScriptElementKind.unknown,
                 containerName: '',
                 // Reading the template is expensive, so don't provide a preview.
                 // TODO(ayazhafiz): Consider providing an actual span:
@@ -41054,7 +41054,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const kind = dir.isComponent ? DisplayInfoKind.COMPONENT : DisplayInfoKind.DIRECTIVE;
             const documentation = this.getDocumentationFromTypeDefAtLocation(dir.shimLocation);
             let containerName;
-            if (ts.isClassDeclaration(dir.tsSymbol.valueDeclaration) && dir.ngModule !== null) {
+            if (ts$1.isClassDeclaration(dir.tsSymbol.valueDeclaration) && dir.ngModule !== null) {
                 containerName = dir.ngModule.name.getText();
             }
             return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(this.node), containerName, undefined, documentation);
@@ -41135,7 +41135,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const displayParts = createDisplayParts(name, kind, containerName, type);
         return {
             kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
-            kindModifiers: ts.ScriptElementKindModifier.none,
+            kindModifiers: ts$1.ScriptElementKindModifier.none,
             textSpan: textSpan,
             displayParts,
             documentation,
@@ -41237,7 +41237,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const allDirectiveRefs = [];
             for (const dir of directives.values()) {
                 const dirClass = dir.tsSymbol.valueDeclaration;
-                if (dirClass === undefined || !ts.isClassDeclaration(dirClass) ||
+                if (dirClass === undefined || !ts$1.isClassDeclaration(dirClass) ||
                     dirClass.name === undefined) {
                     continue;
                 }
@@ -41353,7 +41353,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             else {
                 const components = compiler.getComponentsWithTemplateFile(fileName);
                 for (const component of components) {
-                    if (ts$1.isClassDeclaration(component)) {
+                    if (ts.isClassDeclaration(component)) {
                         diagnostics.push(...ttc.getDiagnosticsForComponent(component));
                     }
                 }
@@ -41438,20 +41438,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             // could be disposed when a tsconfig.json is added to the workspace,
             // in which case it becomes a ConfiguredProject (or vice-versa).
             // We need to make sure that the FileWatcher is closed.
-            if (!(project instanceof ts$1.server.ConfiguredProject)) {
+            if (!(project instanceof ts.server.ConfiguredProject)) {
                 return;
             }
             const { host } = project.projectService;
             host.watchFile(project.getConfigFilePath(), (fileName, eventKind) => {
                 project.log(`Config file changed: ${fileName}`);
-                if (eventKind === ts$1.FileWatcherEventKind.Changed) {
+                if (eventKind === ts.FileWatcherEventKind.Changed) {
                     this.options = parseNgCompilerOptions(project, this.parseConfigHost);
                 }
             });
         }
     }
     function parseNgCompilerOptions(project, host) {
-        if (!(project instanceof ts$1.server.ConfiguredProject)) {
+        if (!(project instanceof ts.server.ConfiguredProject)) {
             return {};
         }
         const { options, errors } = readConfiguration(project.getConfigFilePath(), /* existingOptions */ undefined, host);
@@ -41491,9 +41491,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             // ScriptInfo needs to be opened by client to be able to set its user-defined
             // content. We must also provide file content, otherwise the service will
             // attempt to fetch the content from disk and fail.
-            scriptInfo = projectService.getOrCreateScriptInfoForNormalizedPath(ts$1.server.toNormalizedPath(tcf), true, // openedByClient
+            scriptInfo = projectService.getOrCreateScriptInfoForNormalizedPath(ts.server.toNormalizedPath(tcf), true, // openedByClient
             '', // fileContent
-            ts$1.ScriptKind.TS);
+            // script info added by plugins should be marked as external, see
+            // https://github.com/microsoft/TypeScript/blob/b217f22e798c781f55d17da72ed099a9dee5c650/src/compiler/program.ts#L1897-L1899
+            ts.ScriptKind.External);
             if (!scriptInfo) {
                 throw new Error(`Failed to create script info for ${tcf}`);
             }
@@ -41623,8 +41625,24 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             getCompletionEntryDetails,
             getCompletionEntrySymbol });
     }
+    function getExternalFiles(project) {
+        if (!project.hasRoots()) {
+            return []; // project has not been initialized
+        }
+        const typecheckFiles = [];
+        for (const scriptInfo of project.getScriptInfos()) {
+            if (scriptInfo.scriptKind === ts.ScriptKind.External) {
+                // script info for typecheck file is marked as external, see
+                // getOrCreateTypeCheckScriptInfo() in
+                // packages/language-service/ivy/language_service.ts
+                typecheckFiles.push(scriptInfo.fileName);
+            }
+        }
+        return typecheckFiles;
+    }
 
     exports.create = create;
+    exports.getExternalFiles = getExternalFiles;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
