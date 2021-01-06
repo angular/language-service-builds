@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.3+68.sha-335d6c8
+ * @license Angular v11.1.0-next.3+70.sha-0264f76
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16932,7 +16932,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.3+68.sha-335d6c8');
+    const VERSION$1 = new Version('11.1.0-next.3+70.sha-0264f76');
 
     /**
      * @license
@@ -17614,7 +17614,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.3+68.sha-335d6c8'));
+        definitionMap.set('version', literal('11.1.0-next.3+70.sha-0264f76'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21017,7 +21017,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.3+68.sha-335d6c8');
+    const VERSION$2 = new Version('11.1.0-next.3+70.sha-0264f76');
 
     /**
      * @license
@@ -21324,6 +21324,23 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
         return topLevel.modifiers !== undefined &&
             topLevel.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
+    }
+    function getRootDirs(host, options) {
+        const rootDirs = [];
+        if (options.rootDirs !== undefined) {
+            rootDirs.push(...options.rootDirs);
+        }
+        else if (options.rootDir !== undefined) {
+            rootDirs.push(options.rootDir);
+        }
+        else {
+            rootDirs.push(host.getCurrentDirectory());
+        }
+        // In Windows the above might not always return posix separated paths
+        // See:
+        // https://github.com/Microsoft/TypeScript/blob/3f7357d37f66c842d70d835bc925ec2a873ecfec/src/compiler/sys.ts#L650
+        // Also compiler options might be set via an API which doesn't normalize paths
+        return rootDirs.map(rootDir => absoluteFrom(host.getCanonicalFileName(rootDir)));
     }
     function nodeDebugInfo(node) {
         const sf = getSourceFile(node);
@@ -39268,7 +39285,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      */
     class LanguageServiceAdapter {
         constructor(project) {
-            var _a;
             this.project = project;
             this.entryPoint = null;
             this.constructionDiagnostics = [];
@@ -39276,7 +39292,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.factoryTracker = null; // no .ngfactory shims
             this.unifiedModulesHost = null; // only used in Bazel
             this.templateVersion = new Map();
-            this.rootDirs = ((_a = project.getCompilationSettings().rootDirs) === null || _a === void 0 ? void 0 : _a.map(absoluteFrom)) || [];
+            this.rootDirs = getRootDirs(this, project.getCompilationSettings());
         }
         isShim(sf) {
             return isShim(sf);
@@ -39365,7 +39381,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return path.extname(path$1);
         }
         resolve(...paths) {
-            return this.serverHost.resolvePath(this.join(paths[0], ...paths.slice(1)));
+            return path.resolve(...paths);
         }
         dirname(file) {
             return path.dirname(file);
