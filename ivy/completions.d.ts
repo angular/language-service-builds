@@ -14,8 +14,7 @@ export declare enum CompletionNodeContext {
     ElementTag = 1,
     ElementAttributeKey = 2,
     ElementAttributeValue = 3,
-    EventValue = 4,
-    TwoWayBinding = 5
+    EventValue = 4
 }
 /**
  * Performs autocompletion operations on a given node in the template.

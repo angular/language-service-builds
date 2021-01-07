@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+31.sha-da6c739
+ * @license Angular v11.1.0-next.4+22.sha-1045465
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9929,14 +9929,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const matches = splitAtPeriod(name, [name, '']);
             const eventName = matches[0];
             const phase = matches[1].toLowerCase();
-            const ast = this._parseAction(expression, handlerSpan);
-            targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan, keySpan));
-            if (eventName.length === 0) {
-                this._reportError(`Animation event name is missing in binding`, sourceSpan);
-            }
             if (phase) {
-                if (phase !== 'start' && phase !== 'done') {
-                    this._reportError(`The provided animation output phase value "${phase}" for "@${eventName}" is not supported (use start or done)`, sourceSpan);
+                switch (phase) {
+                    case 'start':
+                    case 'done':
+                        const ast = this._parseAction(expression, handlerSpan);
+                        targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan, keySpan));
+                        break;
+                    default:
+                        this._reportError(`The provided animation output phase value "${phase}" for "@${eventName}" is not supported (use start or done)`, sourceSpan);
+                        break;
                 }
             }
             else {
@@ -16941,7 +16943,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+31.sha-da6c739');
+    const VERSION$1 = new Version('11.1.0-next.4+22.sha-1045465');
 
     /**
      * @license
@@ -17623,7 +17625,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+31.sha-da6c739'));
+        definitionMap.set('version', literal('11.1.0-next.4+22.sha-1045465'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21063,7 +21065,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+31.sha-da6c739');
+    const VERSION$2 = new Version('11.1.0-next.4+22.sha-1045465');
 
     /**
      * @license
@@ -37092,46 +37094,21 @@ Either add the @Injectable() decorator to '${provider.node.name
             return scope.ngModule;
         }
         getSymbolOfBoundEvent(eventBinding) {
-            const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
-            if (consumer === null) {
-                return null;
-            }
             // Outputs in the TCB look like one of the two:
             // * _outputHelper(_t1["outputField"]).subscribe(handler);
             // * _t1.addEventListener(handler);
             // Even with strict null checks disabled, we still produce the access as a separate statement
             // so that it can be found here.
-            let expectedAccess;
-            if (consumer instanceof Template || consumer instanceof Element) {
-                expectedAccess = 'addEventListener';
-            }
-            else {
-                const bindingPropertyNames = consumer.outputs.getByBindingPropertyName(eventBinding.name);
-                if (bindingPropertyNames === null || bindingPropertyNames.length === 0) {
-                    return null;
-                }
-                // Note that we only get the expectedAccess text from a single consumer of the binding. If
-                // there are multiple consumers (not supported in the `boundTarget` API) and one of them has
-                // an alias, it will not get matched here.
-                expectedAccess = bindingPropertyNames[0].classPropertyName;
-            }
-            function filter(n) {
-                if (!isAccessExpression(n)) {
-                    return false;
-                }
-                if (ts$1.isPropertyAccessExpression(n)) {
-                    return n.name.getText() === expectedAccess;
-                }
-                else {
-                    return ts$1.isStringLiteral(n.argumentExpression) &&
-                        n.argumentExpression.text === expectedAccess;
-                }
-            }
-            const outputFieldAccesses = findAllMatchingNodes(this.typeCheckBlock, { withSpan: eventBinding.keySpan, filter });
+            const outputFieldAccesses = findAllMatchingNodes(this.typeCheckBlock, { withSpan: eventBinding.keySpan, filter: isAccessExpression });
             const bindings = [];
             for (const outputFieldAccess of outputFieldAccesses) {
+                const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
+                if (consumer === null) {
+                    continue;
+                }
                 if (consumer instanceof Template || consumer instanceof Element) {
-                    if (!ts$1.isPropertyAccessExpression(outputFieldAccess)) {
+                    if (!ts$1.isPropertyAccessExpression(outputFieldAccess) ||
+                        outputFieldAccess.name.text !== 'addEventListener') {
                         continue;
                     }
                     const addEventListener = outputFieldAccess.name;
@@ -39981,7 +39958,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         CompletionNodeContext[CompletionNodeContext["ElementAttributeKey"] = 2] = "ElementAttributeKey";
         CompletionNodeContext[CompletionNodeContext["ElementAttributeValue"] = 3] = "ElementAttributeValue";
         CompletionNodeContext[CompletionNodeContext["EventValue"] = 4] = "EventValue";
-        CompletionNodeContext[CompletionNodeContext["TwoWayBinding"] = 5] = "TwoWayBinding";
     })(CompletionNodeContext || (CompletionNodeContext = {}));
     /**
      * Performs autocompletion operations on a given node in the template.
@@ -40301,8 +40277,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return directive === null || directive === void 0 ? void 0 : directive.tsSymbol;
         }
         isElementAttributeCompletion() {
-            return (this.nodeContext === CompletionNodeContext.ElementAttributeKey ||
-                this.nodeContext === CompletionNodeContext.TwoWayBinding) &&
+            return this.nodeContext === CompletionNodeContext.ElementAttributeKey &&
                 (this.node instanceof Element || this.node instanceof BoundAttribute ||
                     this.node instanceof TextAttribute || this.node instanceof BoundEvent);
         }
@@ -40339,10 +40314,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         break;
                     case AttributeCompletionKind.DirectiveInput:
                         if (this.node instanceof BoundEvent) {
-                            continue;
-                        }
-                        if (!completion.twoWayBindingSupported &&
-                            this.nodeContext === CompletionNodeContext.TwoWayBinding) {
                             continue;
                         }
                         break;
@@ -40530,7 +40501,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         TargetNodeKind[TargetNodeKind["ElementInBodyContext"] = 3] = "ElementInBodyContext";
         TargetNodeKind[TargetNodeKind["AttributeInKeyContext"] = 4] = "AttributeInKeyContext";
         TargetNodeKind[TargetNodeKind["AttributeInValueContext"] = 5] = "AttributeInValueContext";
-        TargetNodeKind[TargetNodeKind["TwoWayBindingContext"] = 6] = "TwoWayBindingContext";
     })(TargetNodeKind || (TargetNodeKind = {}));
     /**
      * This special marker is added to the path when the cursor is within the sourceSpan but not the key
@@ -40558,6 +40528,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 context = node;
                 break;
             }
+        }
+        let parent = null;
+        if (path.length >= 2) {
+            parent = path[path.length - 2];
         }
         // Given the candidate node, determine the full targeted context.
         let nodeInContext;
@@ -40589,17 +40563,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         else if ((candidate instanceof BoundAttribute || candidate instanceof BoundEvent ||
             candidate instanceof TextAttribute) &&
             candidate.keySpan !== undefined) {
-            const previousCandidate = path[path.length - 2];
-            if (candidate instanceof BoundEvent && previousCandidate instanceof BoundAttribute &&
-                candidate.name === previousCandidate.name + 'Change') {
-                const boundAttribute = previousCandidate;
-                const boundEvent = candidate;
-                nodeInContext = {
-                    kind: TargetNodeKind.TwoWayBindingContext,
-                    nodes: [boundAttribute, boundEvent],
-                };
-            }
-            else if (isWithin(position, candidate.keySpan)) {
+            if (isWithin(position, candidate.keySpan)) {
                 nodeInContext = {
                     kind: TargetNodeKind.AttributeInKeyContext,
                     node: candidate,
@@ -40618,14 +40582,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 node: candidate,
             };
         }
-        let parent = null;
-        if (nodeInContext.kind === TargetNodeKind.TwoWayBindingContext && path.length >= 3) {
-            parent = path[path.length - 3];
-        }
-        else if (path.length >= 2) {
-            parent = path[path.length - 2];
-        }
-        return { position, context: nodeInContext, template: context, parent };
+        return { position, nodeInContext, template: context, parent };
     }
     /**
      * Visitor which, given a position and a template, identifies the node within the template at that
@@ -40660,20 +40617,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return strictPath;
         }
         visit(node) {
-            const { start, end } = getSpanIncludingEndTag(node);
-            if (!isWithin(this.position, { start, end })) {
+            const last = this.path[this.path.length - 1];
+            if (last && isTemplateNodeWithKeyAndValue(last) && isWithin(this.position, last.keySpan)) {
+                // We've already identified that we are within a `keySpan` of a node.
+                // We should stop processing nodes at this point to prevent matching
+                // any other nodes. This can happen when the end span of a different node
+                // touches the start of the keySpan for the candidate node. Because
+                // our `isWithin` logic is inclusive on both ends, we can match both nodes.
                 return;
             }
-            const last = this.path[this.path.length - 1];
-            const withinKeySpanOfLastNode = last && isTemplateNodeWithKeyAndValue(last) && isWithin(this.position, last.keySpan);
-            const withinKeySpanOfCurrentNode = isTemplateNodeWithKeyAndValue(node) && isWithin(this.position, node.keySpan);
-            if (withinKeySpanOfLastNode && !withinKeySpanOfCurrentNode) {
-                // We've already identified that we are within a `keySpan` of a node.
-                // Unless we are _also_ in the `keySpan` of the current node (happens with two way bindings),
-                // we should stop processing nodes at this point to prevent matching any other nodes. This can
-                // happen when the end span of a different node touches the start of the keySpan for the
-                // candidate node. Because our `isWithin` logic is inclusive on both ends, we can match both
-                // nodes.
+            const { start, end } = getSpanIncludingEndTag(node);
+            if (!isWithin(this.position, { start, end })) {
                 return;
             }
             if (isTemplateNodeWithKeyAndValue(node) && !isWithinKeyValue(this.position, node)) {
@@ -40687,28 +40641,30 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
         }
         visitElement(element) {
-            this.visitElementOrTemplate(element);
-        }
-        visitTemplate(template) {
-            this.visitElementOrTemplate(template);
-        }
-        visitElementOrTemplate(element) {
             this.visitAll(element.attributes);
             this.visitAll(element.inputs);
             this.visitAll(element.outputs);
-            if (element instanceof Template) {
-                this.visitAll(element.templateAttrs);
-            }
             this.visitAll(element.references);
-            if (element instanceof Template) {
-                this.visitAll(element.variables);
-            }
+            const last = this.path[this.path.length - 1];
             // If we get here and have not found a candidate node on the element itself, proceed with
             // looking for a more specific node on the element children.
-            if (this.path[this.path.length - 1] !== element) {
-                return;
+            if (last === element) {
+                this.visitAll(element.children);
             }
-            this.visitAll(element.children);
+        }
+        visitTemplate(template) {
+            this.visitAll(template.attributes);
+            this.visitAll(template.inputs);
+            this.visitAll(template.outputs);
+            this.visitAll(template.templateAttrs);
+            this.visitAll(template.references);
+            this.visitAll(template.variables);
+            const last = this.path[this.path.length - 1];
+            // If we get here and have not found a candidate node on the template itself, proceed with
+            // looking for a more specific node on the template children.
+            if (last === template) {
+                this.visitAll(template.children);
+            }
         }
         visitContent(content) {
             visitAll(this, content.attributes);
@@ -40727,6 +40683,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             visitor.visit(attribute.value, this.path);
         }
         visitBoundEvent(event) {
+            const isTwoWayBinding = this.path.some(n => n instanceof BoundAttribute && event.name === n.name + 'Change');
+            if (isTwoWayBinding) {
+                // For two-way binding aka banana-in-a-box, there are two matches:
+                // BoundAttribute and BoundEvent. Both have the same spans. We choose to
+                // return BoundAttribute because it matches the identifier name verbatim.
+                // TODO: For operations like go to definition, ideally we want to return
+                // both.
+                this.path.pop(); // remove bound event from the AST path
+                return;
+            }
             // An event binding with no value (e.g. `(event|)`) parses to a `BoundEvent` with a
             // `LiteralPrimitive` handler with value `'ERROR'`, as opposed to a property binding with no
             // value which has an `EmptyExpr` as its value. This is a synthetic node created by the binding
@@ -40814,7 +40780,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.compiler = compiler;
         }
         getDefinitionAndBoundSpan(fileName, position) {
-            var _a;
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
             if (templateInfo === undefined) {
                 // We were unable to get a template at the given position. If we are in a TS file, instead
@@ -40825,25 +40790,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 }
                 return getDefinitionForExpressionAtPosition(fileName, position, this.compiler);
             }
-            const definitionMetas = this.getDefinitionMetaAtPosition(templateInfo, position);
-            if (definitionMetas === undefined) {
+            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
+            // The `$event` of event handlers would point to the $event parameter in the shim file, as in
+            // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
+            // If we wanted to return something for this, it would be more appropriate for something like
+            // `getTypeDefinition`.
+            if (definitionMeta === undefined || isDollarEvent(definitionMeta.node)) {
                 return undefined;
             }
-            const definitions = [];
-            for (const definitionMeta of definitionMetas) {
-                // The `$event` of event handlers would point to the $event parameter in the shim file, as in
-                // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
-                // If we wanted to return something for this, it would be more appropriate for something like
-                // `getTypeDefinition`.
-                if (isDollarEvent(definitionMeta.node)) {
-                    continue;
-                }
-                definitions.push(...((_a = this.getDefinitionsForSymbol(Object.assign(Object.assign({}, definitionMeta), templateInfo))) !== null && _a !== void 0 ? _a : []));
-            }
-            if (definitions.length === 0) {
-                return undefined;
-            }
-            return { definitions, textSpan: getTextSpanOfNode(definitionMetas[0].node) };
+            const definitions = this.getDefinitionsForSymbol(Object.assign(Object.assign({}, definitionMeta), templateInfo));
+            return { definitions, textSpan: getTextSpanOfNode(definitionMeta.node) };
         }
         getDefinitionsForSymbol({ symbol, node, parent, component }) {
             switch (symbol.kind) {
@@ -40911,52 +40867,41 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (templateInfo === undefined) {
                 return;
             }
-            const definitionMetas = this.getDefinitionMetaAtPosition(templateInfo, position);
-            if (definitionMetas === undefined) {
+            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
+            if (definitionMeta === undefined) {
                 return undefined;
             }
-            const definitions = [];
-            for (const { symbol, node, parent } of definitionMetas) {
-                switch (symbol.kind) {
-                    case SymbolKind.Directive:
-                    case SymbolKind.DomBinding:
-                    case SymbolKind.Element:
-                    case SymbolKind.Template:
-                        definitions.push(...this.getTypeDefinitionsForTemplateInstance(symbol, node));
-                        break;
-                    case SymbolKind.Output:
-                    case SymbolKind.Input: {
-                        const bindingDefs = this.getTypeDefinitionsForSymbols(...symbol.bindings);
-                        definitions.push(...bindingDefs);
-                        // Also attempt to get directive matches for the input name. If there is a directive that
-                        // has the input name as part of the selector, we want to return that as well.
-                        const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, parent, templateInfo.component);
-                        definitions.push(...directiveDefs);
-                        break;
+            const { symbol, node } = definitionMeta;
+            switch (symbol.kind) {
+                case SymbolKind.Directive:
+                case SymbolKind.DomBinding:
+                case SymbolKind.Element:
+                case SymbolKind.Template:
+                    return this.getTypeDefinitionsForTemplateInstance(symbol, node);
+                case SymbolKind.Output:
+                case SymbolKind.Input: {
+                    const bindingDefs = this.getTypeDefinitionsForSymbols(...symbol.bindings);
+                    // Also attempt to get directive matches for the input name. If there is a directive that
+                    // has the input name as part of the selector, we want to return that as well.
+                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, definitionMeta.parent, templateInfo.component);
+                    return [...bindingDefs, ...directiveDefs];
+                }
+                case SymbolKind.Pipe: {
+                    if (symbol.tsSymbol !== null) {
+                        return this.getTypeDefinitionsForSymbols(symbol);
                     }
-                    case SymbolKind.Pipe: {
-                        if (symbol.tsSymbol !== null) {
-                            definitions.push(...this.getTypeDefinitionsForSymbols(symbol));
-                        }
-                        else {
-                            // If there is no `ts.Symbol` for the pipe transform, we want to return the
-                            // type definition (the pipe class).
-                            definitions.push(...this.getTypeDefinitionsForSymbols(symbol.classSymbol));
-                        }
-                        break;
-                    }
-                    case SymbolKind.Reference:
-                        definitions.push(...this.getTypeDefinitionsForSymbols({ shimLocation: symbol.targetLocation }));
-                        break;
-                    case SymbolKind.Expression:
-                        definitions.push(...this.getTypeDefinitionsForSymbols(symbol));
-                        break;
-                    case SymbolKind.Variable: {
-                        definitions.push(...this.getTypeDefinitionsForSymbols({ shimLocation: symbol.initializerLocation }));
-                        break;
+                    else {
+                        // If there is no `ts.Symbol` for the pipe transform, we want to return the
+                        // type definition (the pipe class).
+                        return this.getTypeDefinitionsForSymbols(symbol.classSymbol);
                     }
                 }
-                return definitions;
+                case SymbolKind.Reference:
+                    return this.getTypeDefinitionsForSymbols({ shimLocation: symbol.targetLocation });
+                case SymbolKind.Expression:
+                    return this.getTypeDefinitionsForSymbols(symbol);
+                case SymbolKind.Variable:
+                    return this.getTypeDefinitionsForSymbols({ shimLocation: symbol.initializerLocation });
             }
         }
         getTypeDefinitionsForTemplateInstance(symbol, node) {
@@ -41014,17 +40959,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (target === null) {
                 return undefined;
             }
-            const { context, parent } = target;
-            const nodes = context.kind === TargetNodeKind.TwoWayBindingContext ? context.nodes : [context.node];
-            const definitionMetas = [];
-            for (const node of nodes) {
-                const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
-                if (symbol === null) {
-                    continue;
-                }
-                definitionMetas.push({ node, parent, symbol });
+            const { nodeInContext, parent } = target;
+            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(nodeInContext.node, component);
+            if (symbol === null) {
+                return undefined;
             }
-            return definitionMetas.length > 0 ? definitionMetas : undefined;
+            return { node: nodeInContext.node, parent, symbol };
         }
     }
     /**
@@ -41278,88 +41218,74 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 this.getReferencesAtTypescriptPosition(filePath, position);
         }
         getReferencesAtTemplatePosition({ template, component }, position) {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
             // Find the AST node in the template at the position.
             const positionDetails = getTargetAtPosition(template, position);
             if (positionDetails === null) {
                 return undefined;
             }
-            const nodes = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
-                positionDetails.context.nodes :
-                [positionDetails.context.node];
-            const references = [];
-            for (const node of nodes) {
-                // Get the information about the TCB at the template position.
-                const symbol = this.ttc.getSymbolOfNode(node, component);
-                if (symbol === null) {
-                    continue;
-                }
-                switch (symbol.kind) {
-                    case SymbolKind.Directive:
-                    case SymbolKind.Template:
-                        // References to elements, templates, and directives will be through template references
-                        // (#ref). They shouldn't be used directly for a Language Service reference request.
-                        break;
-                    case SymbolKind.Element: {
-                        const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
-                        references.push(...(_a = this.getReferencesForDirectives(matches)) !== null && _a !== void 0 ? _a : []);
-                        break;
-                    }
-                    case SymbolKind.DomBinding: {
-                        // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
-                        // have a shim location. This means we can't match dom bindings to their lib.dom
-                        // reference, but we can still see if they match to a directive.
-                        if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
-                            break;
-                        }
-                        const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
-                        references.push(...(_b = this.getReferencesForDirectives(directives)) !== null && _b !== void 0 ? _b : []);
-                        break;
-                    }
-                    case SymbolKind.Reference: {
-                        const { shimPath, positionInShimFile } = symbol.referenceVarLocation;
-                        references.push(...(_c = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _c !== void 0 ? _c : []);
-                        break;
-                    }
-                    case SymbolKind.Variable: {
-                        const { positionInShimFile: initializerPosition, shimPath } = symbol.initializerLocation;
-                        const localVarPosition = symbol.localVarLocation.positionInShimFile;
-                        if ((node instanceof Variable)) {
-                            if (node.valueSpan !== undefined && isWithin(position, node.valueSpan)) {
-                                // In the valueSpan of the variable, we want to get the reference of the initializer.
-                                references.push(...(_d = this.getReferencesAtTypescriptPosition(shimPath, initializerPosition)) !== null && _d !== void 0 ? _d : []);
-                            }
-                            else if (isWithin(position, node.keySpan)) {
-                                // In the keySpan of the variable, we want to get the reference of the local variable.
-                                references.push(...(_e = this.getReferencesAtTypescriptPosition(shimPath, localVarPosition)) !== null && _e !== void 0 ? _e : []);
-                            }
-                        }
-                        else {
-                            // If the templateNode is not the `TmplAstVariable`, it must be a usage of the variable
-                            // somewhere in the template.
-                            references.push(...(_f = this.getReferencesAtTypescriptPosition(shimPath, localVarPosition)) !== null && _f !== void 0 ? _f : []);
-                        }
-                        break;
-                    }
-                    case SymbolKind.Input:
-                    case SymbolKind.Output: {
-                        // TODO(atscott): Determine how to handle when the binding maps to several inputs/outputs
-                        const { shimPath, positionInShimFile } = symbol.bindings[0].shimLocation;
-                        references.push(...(_g = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _g !== void 0 ? _g : []);
-                        break;
-                    }
-                    case SymbolKind.Pipe:
-                    case SymbolKind.Expression: {
-                        const { shimPath, positionInShimFile } = symbol.shimLocation;
-                        references.push(...(_h = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _h !== void 0 ? _h : []);
-                        break;
-                    }
-                }
-            }
-            if (references.length === 0) {
+            const node = positionDetails.nodeInContext.node;
+            // Get the information about the TCB at the template position.
+            const symbol = this.ttc.getSymbolOfNode(node, component);
+            if (symbol === null) {
                 return undefined;
             }
-            return references;
+            switch (symbol.kind) {
+                case SymbolKind.Directive:
+                case SymbolKind.Template:
+                    // References to elements, templates, and directives will be through template references
+                    // (#ref). They shouldn't be used directly for a Language Service reference request.
+                    return undefined;
+                case SymbolKind.Element: {
+                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
+                    return this.getReferencesForDirectives(matches);
+                }
+                case SymbolKind.DomBinding: {
+                    // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
+                    // have a shim location. This means we can't match dom bindings to their lib.dom reference,
+                    // but we can still see if they match to a directive.
+                    if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
+                        return undefined;
+                    }
+                    const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
+                    return this.getReferencesForDirectives(directives);
+                }
+                case SymbolKind.Reference: {
+                    const { shimPath, positionInShimFile } = symbol.referenceVarLocation;
+                    return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
+                }
+                case SymbolKind.Variable: {
+                    const { positionInShimFile: initializerPosition, shimPath } = symbol.initializerLocation;
+                    const localVarPosition = symbol.localVarLocation.positionInShimFile;
+                    const templateNode = positionDetails.nodeInContext.node;
+                    if ((templateNode instanceof Variable)) {
+                        if (templateNode.valueSpan !== undefined && isWithin(position, templateNode.valueSpan)) {
+                            // In the valueSpan of the variable, we want to get the reference of the initializer.
+                            return this.getReferencesAtTypescriptPosition(shimPath, initializerPosition);
+                        }
+                        else if (isWithin(position, templateNode.keySpan)) {
+                            // In the keySpan of the variable, we want to get the reference of the local variable.
+                            return this.getReferencesAtTypescriptPosition(shimPath, localVarPosition);
+                        }
+                        else {
+                            return undefined;
+                        }
+                    }
+                    // If the templateNode is not the `TmplAstVariable`, it must be a usage of the variable
+                    // somewhere in the template.
+                    return this.getReferencesAtTypescriptPosition(shimPath, localVarPosition);
+                }
+                case SymbolKind.Input:
+                case SymbolKind.Output: {
+                    // TODO(atscott): Determine how to handle when the binding maps to several inputs/outputs
+                    const { shimPath, positionInShimFile } = symbol.bindings[0].shimLocation;
+                    return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
+                }
+                case SymbolKind.Pipe:
+                case SymbolKind.Expression: {
+                    const { shimPath, positionInShimFile } = symbol.shimLocation;
+                    return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
+                }
+            }
         }
         getReferencesForDirectives(directives) {
             const allDirectiveRefs = [];
@@ -41511,13 +41437,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (positionDetails === null) {
                 return undefined;
             }
-            // Because we can only show 1 quick info, just use the bound attribute if the target is a two
-            // way binding. We may consider concatenating additional display parts from the other target
-            // nodes or representing the two way binding in some other manner in the future.
-            const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
-                positionDetails.context.nodes[0] :
-                positionDetails.context.node;
-            const results = new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node).get();
+            const results = new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, positionDetails.nodeInContext.node)
+                .get();
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
@@ -41537,12 +41458,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (positionDetails === null) {
                 return null;
             }
-            // For two-way bindings, we actually only need to be concerned with the bound attribute because
-            // the bindings in the template are written with the attribute name, not the event name.
-            const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
-                positionDetails.context.nodes[0] :
-                positionDetails.context.node;
-            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, nodeContextFromTarget(positionDetails.context), positionDetails.parent, positionDetails.template);
+            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, positionDetails.nodeInContext.node, nodeContextFromTarget(positionDetails.nodeInContext), positionDetails.parent, positionDetails.template);
         }
         getCompletionsAtPosition(fileName, position, options) {
             const builder = this.getCompletionBuilder(fileName, position);
@@ -41652,8 +41568,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             case TargetNodeKind.ElementInBodyContext:
                 // Completions in element bodies are for new attributes.
                 return CompletionNodeContext.ElementAttributeKey;
-            case TargetNodeKind.TwoWayBindingContext:
-                return CompletionNodeContext.TwoWayBinding;
             case TargetNodeKind.AttributeInKeyContext:
                 return CompletionNodeContext.ElementAttributeKey;
             case TargetNodeKind.AttributeInValueContext:
