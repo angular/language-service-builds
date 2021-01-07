@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+21.sha-266cc9b
+ * @license Angular v11.1.0-next.4+29.sha-5704372
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2678,6 +2678,721 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
+    const VERSION = 3;
+    const JS_B64_PREFIX = '# sourceMappingURL=data:application/json;base64,';
+    class SourceMapGenerator {
+        constructor(file = null) {
+            this.file = file;
+            this.sourcesContent = new Map();
+            this.lines = [];
+            this.lastCol0 = 0;
+            this.hasMappings = false;
+        }
+        // The content is `null` when the content is expected to be loaded using the URL
+        addSource(url, content = null) {
+            if (!this.sourcesContent.has(url)) {
+                this.sourcesContent.set(url, content);
+            }
+            return this;
+        }
+        addLine() {
+            this.lines.push([]);
+            this.lastCol0 = 0;
+            return this;
+        }
+        addMapping(col0, sourceUrl, sourceLine0, sourceCol0) {
+            if (!this.currentLine) {
+                throw new Error(`A line must be added before mappings can be added`);
+            }
+            if (sourceUrl != null && !this.sourcesContent.has(sourceUrl)) {
+                throw new Error(`Unknown source file "${sourceUrl}"`);
+            }
+            if (col0 == null) {
+                throw new Error(`The column in the generated code must be provided`);
+            }
+            if (col0 < this.lastCol0) {
+                throw new Error(`Mapping should be added in output order`);
+            }
+            if (sourceUrl && (sourceLine0 == null || sourceCol0 == null)) {
+                throw new Error(`The source location must be provided when a source url is provided`);
+            }
+            this.hasMappings = true;
+            this.lastCol0 = col0;
+            this.currentLine.push({ col0, sourceUrl, sourceLine0, sourceCol0 });
+            return this;
+        }
+        /**
+         * @internal strip this from published d.ts files due to
+         * https://github.com/microsoft/TypeScript/issues/36216
+         */
+        get currentLine() {
+            return this.lines.slice(-1)[0];
+        }
+        toJSON() {
+            if (!this.hasMappings) {
+                return null;
+            }
+            const sourcesIndex = new Map();
+            const sources = [];
+            const sourcesContent = [];
+            Array.from(this.sourcesContent.keys()).forEach((url, i) => {
+                sourcesIndex.set(url, i);
+                sources.push(url);
+                sourcesContent.push(this.sourcesContent.get(url) || null);
+            });
+            let mappings = '';
+            let lastCol0 = 0;
+            let lastSourceIndex = 0;
+            let lastSourceLine0 = 0;
+            let lastSourceCol0 = 0;
+            this.lines.forEach(segments => {
+                lastCol0 = 0;
+                mappings += segments
+                    .map(segment => {
+                    // zero-based starting column of the line in the generated code
+                    let segAsStr = toBase64VLQ(segment.col0 - lastCol0);
+                    lastCol0 = segment.col0;
+                    if (segment.sourceUrl != null) {
+                        // zero-based index into the “sources” list
+                        segAsStr +=
+                            toBase64VLQ(sourcesIndex.get(segment.sourceUrl) - lastSourceIndex);
+                        lastSourceIndex = sourcesIndex.get(segment.sourceUrl);
+                        // the zero-based starting line in the original source
+                        segAsStr += toBase64VLQ(segment.sourceLine0 - lastSourceLine0);
+                        lastSourceLine0 = segment.sourceLine0;
+                        // the zero-based starting column in the original source
+                        segAsStr += toBase64VLQ(segment.sourceCol0 - lastSourceCol0);
+                        lastSourceCol0 = segment.sourceCol0;
+                    }
+                    return segAsStr;
+                })
+                    .join(',');
+                mappings += ';';
+            });
+            mappings = mappings.slice(0, -1);
+            return {
+                'file': this.file || '',
+                'version': VERSION,
+                'sourceRoot': '',
+                'sources': sources,
+                'sourcesContent': sourcesContent,
+                'mappings': mappings,
+            };
+        }
+        toJsComment() {
+            return this.hasMappings ? '//' + JS_B64_PREFIX + toBase64String(JSON.stringify(this, null, 0)) :
+                '';
+        }
+    }
+    function toBase64String(value) {
+        let b64 = '';
+        const encoded = utf8Encode(value);
+        for (let i = 0; i < encoded.length;) {
+            const i1 = encoded[i++];
+            const i2 = i < encoded.length ? encoded[i++] : null;
+            const i3 = i < encoded.length ? encoded[i++] : null;
+            b64 += toBase64Digit(i1 >> 2);
+            b64 += toBase64Digit(((i1 & 3) << 4) | (i2 === null ? 0 : i2 >> 4));
+            b64 += i2 === null ? '=' : toBase64Digit(((i2 & 15) << 2) | (i3 === null ? 0 : i3 >> 6));
+            b64 += i2 === null || i3 === null ? '=' : toBase64Digit(i3 & 63);
+        }
+        return b64;
+    }
+    function toBase64VLQ(value) {
+        value = value < 0 ? ((-value) << 1) + 1 : value << 1;
+        let out = '';
+        do {
+            let digit = value & 31;
+            value = value >> 5;
+            if (value > 0) {
+                digit = digit | 32;
+            }
+            out += toBase64Digit(digit);
+        } while (value > 0);
+        return out;
+    }
+    const B64_DIGITS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    function toBase64Digit(value) {
+        if (value < 0 || value >= 64) {
+            throw new Error(`Can only encode value in the range [0, 63]`);
+        }
+        return B64_DIGITS[value];
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const _SINGLE_QUOTE_ESCAPE_STRING_RE = /'|\\|\n|\r|\$/g;
+    const _LEGAL_IDENTIFIER_RE = /^[$A-Z_][0-9A-Z_$]*$/i;
+    const _INDENT_WITH = '  ';
+    const CATCH_ERROR_VAR$1 = variable('error', null, null);
+    const CATCH_STACK_VAR$1 = variable('stack', null, null);
+    class _EmittedLine {
+        constructor(indent) {
+            this.indent = indent;
+            this.partsLength = 0;
+            this.parts = [];
+            this.srcSpans = [];
+        }
+    }
+    class EmitterVisitorContext {
+        constructor(_indent) {
+            this._indent = _indent;
+            this._classes = [];
+            this._preambleLineCount = 0;
+            this._lines = [new _EmittedLine(_indent)];
+        }
+        static createRoot() {
+            return new EmitterVisitorContext(0);
+        }
+        /**
+         * @internal strip this from published d.ts files due to
+         * https://github.com/microsoft/TypeScript/issues/36216
+         */
+        get _currentLine() {
+            return this._lines[this._lines.length - 1];
+        }
+        println(from, lastPart = '') {
+            this.print(from || null, lastPart, true);
+        }
+        lineIsEmpty() {
+            return this._currentLine.parts.length === 0;
+        }
+        lineLength() {
+            return this._currentLine.indent * _INDENT_WITH.length + this._currentLine.partsLength;
+        }
+        print(from, part, newLine = false) {
+            if (part.length > 0) {
+                this._currentLine.parts.push(part);
+                this._currentLine.partsLength += part.length;
+                this._currentLine.srcSpans.push(from && from.sourceSpan || null);
+            }
+            if (newLine) {
+                this._lines.push(new _EmittedLine(this._indent));
+            }
+        }
+        removeEmptyLastLine() {
+            if (this.lineIsEmpty()) {
+                this._lines.pop();
+            }
+        }
+        incIndent() {
+            this._indent++;
+            if (this.lineIsEmpty()) {
+                this._currentLine.indent = this._indent;
+            }
+        }
+        decIndent() {
+            this._indent--;
+            if (this.lineIsEmpty()) {
+                this._currentLine.indent = this._indent;
+            }
+        }
+        pushClass(clazz) {
+            this._classes.push(clazz);
+        }
+        popClass() {
+            return this._classes.pop();
+        }
+        get currentClass() {
+            return this._classes.length > 0 ? this._classes[this._classes.length - 1] : null;
+        }
+        toSource() {
+            return this.sourceLines
+                .map(l => l.parts.length > 0 ? _createIndent(l.indent) + l.parts.join('') : '')
+                .join('\n');
+        }
+        toSourceMapGenerator(genFilePath, startsAtLine = 0) {
+            const map = new SourceMapGenerator(genFilePath);
+            let firstOffsetMapped = false;
+            const mapFirstOffsetIfNeeded = () => {
+                if (!firstOffsetMapped) {
+                    // Add a single space so that tools won't try to load the file from disk.
+                    // Note: We are using virtual urls like `ng:///`, so we have to
+                    // provide a content here.
+                    map.addSource(genFilePath, ' ').addMapping(0, genFilePath, 0, 0);
+                    firstOffsetMapped = true;
+                }
+            };
+            for (let i = 0; i < startsAtLine; i++) {
+                map.addLine();
+                mapFirstOffsetIfNeeded();
+            }
+            this.sourceLines.forEach((line, lineIdx) => {
+                map.addLine();
+                const spans = line.srcSpans;
+                const parts = line.parts;
+                let col0 = line.indent * _INDENT_WITH.length;
+                let spanIdx = 0;
+                // skip leading parts without source spans
+                while (spanIdx < spans.length && !spans[spanIdx]) {
+                    col0 += parts[spanIdx].length;
+                    spanIdx++;
+                }
+                if (spanIdx < spans.length && lineIdx === 0 && col0 === 0) {
+                    firstOffsetMapped = true;
+                }
+                else {
+                    mapFirstOffsetIfNeeded();
+                }
+                while (spanIdx < spans.length) {
+                    const span = spans[spanIdx];
+                    const source = span.start.file;
+                    const sourceLine = span.start.line;
+                    const sourceCol = span.start.col;
+                    map.addSource(source.url, source.content)
+                        .addMapping(col0, source.url, sourceLine, sourceCol);
+                    col0 += parts[spanIdx].length;
+                    spanIdx++;
+                    // assign parts without span or the same span to the previous segment
+                    while (spanIdx < spans.length && (span === spans[spanIdx] || !spans[spanIdx])) {
+                        col0 += parts[spanIdx].length;
+                        spanIdx++;
+                    }
+                }
+            });
+            return map;
+        }
+        setPreambleLineCount(count) {
+            return this._preambleLineCount = count;
+        }
+        spanOf(line, column) {
+            const emittedLine = this._lines[line - this._preambleLineCount];
+            if (emittedLine) {
+                let columnsLeft = column - _createIndent(emittedLine.indent).length;
+                for (let partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
+                    const part = emittedLine.parts[partIndex];
+                    if (part.length > columnsLeft) {
+                        return emittedLine.srcSpans[partIndex];
+                    }
+                    columnsLeft -= part.length;
+                }
+            }
+            return null;
+        }
+        /**
+         * @internal strip this from published d.ts files due to
+         * https://github.com/microsoft/TypeScript/issues/36216
+         */
+        get sourceLines() {
+            if (this._lines.length && this._lines[this._lines.length - 1].parts.length === 0) {
+                return this._lines.slice(0, -1);
+            }
+            return this._lines;
+        }
+    }
+    class AbstractEmitterVisitor {
+        constructor(_escapeDollarInStrings) {
+            this._escapeDollarInStrings = _escapeDollarInStrings;
+        }
+        printLeadingComments(stmt, ctx) {
+            if (stmt.leadingComments === undefined) {
+                return;
+            }
+            for (const comment of stmt.leadingComments) {
+                if (comment instanceof JSDocComment) {
+                    ctx.print(stmt, `/*${comment.toString()}*/`, comment.trailingNewline);
+                }
+                else {
+                    if (comment.multiline) {
+                        ctx.print(stmt, `/* ${comment.text} */`, comment.trailingNewline);
+                    }
+                    else {
+                        comment.text.split('\n').forEach((line) => {
+                            ctx.println(stmt, `// ${line}`);
+                        });
+                    }
+                }
+            }
+        }
+        visitExpressionStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            stmt.expr.visitExpression(this, ctx);
+            ctx.println(stmt, ';');
+            return null;
+        }
+        visitReturnStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            ctx.print(stmt, `return `);
+            stmt.value.visitExpression(this, ctx);
+            ctx.println(stmt, ';');
+            return null;
+        }
+        visitIfStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            ctx.print(stmt, `if (`);
+            stmt.condition.visitExpression(this, ctx);
+            ctx.print(stmt, `) {`);
+            const hasElseCase = stmt.falseCase != null && stmt.falseCase.length > 0;
+            if (stmt.trueCase.length <= 1 && !hasElseCase) {
+                ctx.print(stmt, ` `);
+                this.visitAllStatements(stmt.trueCase, ctx);
+                ctx.removeEmptyLastLine();
+                ctx.print(stmt, ` `);
+            }
+            else {
+                ctx.println();
+                ctx.incIndent();
+                this.visitAllStatements(stmt.trueCase, ctx);
+                ctx.decIndent();
+                if (hasElseCase) {
+                    ctx.println(stmt, `} else {`);
+                    ctx.incIndent();
+                    this.visitAllStatements(stmt.falseCase, ctx);
+                    ctx.decIndent();
+                }
+            }
+            ctx.println(stmt, `}`);
+            return null;
+        }
+        visitThrowStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            ctx.print(stmt, `throw `);
+            stmt.error.visitExpression(this, ctx);
+            ctx.println(stmt, `;`);
+            return null;
+        }
+        visitWriteVarExpr(expr, ctx) {
+            const lineWasEmpty = ctx.lineIsEmpty();
+            if (!lineWasEmpty) {
+                ctx.print(expr, '(');
+            }
+            ctx.print(expr, `${expr.name} = `);
+            expr.value.visitExpression(this, ctx);
+            if (!lineWasEmpty) {
+                ctx.print(expr, ')');
+            }
+            return null;
+        }
+        visitWriteKeyExpr(expr, ctx) {
+            const lineWasEmpty = ctx.lineIsEmpty();
+            if (!lineWasEmpty) {
+                ctx.print(expr, '(');
+            }
+            expr.receiver.visitExpression(this, ctx);
+            ctx.print(expr, `[`);
+            expr.index.visitExpression(this, ctx);
+            ctx.print(expr, `] = `);
+            expr.value.visitExpression(this, ctx);
+            if (!lineWasEmpty) {
+                ctx.print(expr, ')');
+            }
+            return null;
+        }
+        visitWritePropExpr(expr, ctx) {
+            const lineWasEmpty = ctx.lineIsEmpty();
+            if (!lineWasEmpty) {
+                ctx.print(expr, '(');
+            }
+            expr.receiver.visitExpression(this, ctx);
+            ctx.print(expr, `.${expr.name} = `);
+            expr.value.visitExpression(this, ctx);
+            if (!lineWasEmpty) {
+                ctx.print(expr, ')');
+            }
+            return null;
+        }
+        visitInvokeMethodExpr(expr, ctx) {
+            expr.receiver.visitExpression(this, ctx);
+            let name = expr.name;
+            if (expr.builtin != null) {
+                name = this.getBuiltinMethodName(expr.builtin);
+                if (name == null) {
+                    // some builtins just mean to skip the call.
+                    return null;
+                }
+            }
+            ctx.print(expr, `.${name}(`);
+            this.visitAllExpressions(expr.args, ctx, `,`);
+            ctx.print(expr, `)`);
+            return null;
+        }
+        visitInvokeFunctionExpr(expr, ctx) {
+            expr.fn.visitExpression(this, ctx);
+            ctx.print(expr, `(`);
+            this.visitAllExpressions(expr.args, ctx, ',');
+            ctx.print(expr, `)`);
+            return null;
+        }
+        visitTaggedTemplateExpr(expr, ctx) {
+            expr.tag.visitExpression(this, ctx);
+            ctx.print(expr, '`' + expr.template.elements[0].rawText);
+            for (let i = 1; i < expr.template.elements.length; i++) {
+                ctx.print(expr, '${');
+                expr.template.expressions[i - 1].visitExpression(this, ctx);
+                ctx.print(expr, `}${expr.template.elements[i].rawText}`);
+            }
+            ctx.print(expr, '`');
+            return null;
+        }
+        visitWrappedNodeExpr(ast, ctx) {
+            throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
+        }
+        visitTypeofExpr(expr, ctx) {
+            ctx.print(expr, 'typeof ');
+            expr.expr.visitExpression(this, ctx);
+        }
+        visitReadVarExpr(ast, ctx) {
+            let varName = ast.name;
+            if (ast.builtin != null) {
+                switch (ast.builtin) {
+                    case BuiltinVar.Super:
+                        varName = 'super';
+                        break;
+                    case BuiltinVar.This:
+                        varName = 'this';
+                        break;
+                    case BuiltinVar.CatchError:
+                        varName = CATCH_ERROR_VAR$1.name;
+                        break;
+                    case BuiltinVar.CatchStack:
+                        varName = CATCH_STACK_VAR$1.name;
+                        break;
+                    default:
+                        throw new Error(`Unknown builtin variable ${ast.builtin}`);
+                }
+            }
+            ctx.print(ast, varName);
+            return null;
+        }
+        visitInstantiateExpr(ast, ctx) {
+            ctx.print(ast, `new `);
+            ast.classExpr.visitExpression(this, ctx);
+            ctx.print(ast, `(`);
+            this.visitAllExpressions(ast.args, ctx, ',');
+            ctx.print(ast, `)`);
+            return null;
+        }
+        visitLiteralExpr(ast, ctx) {
+            const value = ast.value;
+            if (typeof value === 'string') {
+                ctx.print(ast, escapeIdentifier(value, this._escapeDollarInStrings));
+            }
+            else {
+                ctx.print(ast, `${value}`);
+            }
+            return null;
+        }
+        visitLocalizedString(ast, ctx) {
+            const head = ast.serializeI18nHead();
+            ctx.print(ast, '$localize `' + head.raw);
+            for (let i = 1; i < ast.messageParts.length; i++) {
+                ctx.print(ast, '${');
+                ast.expressions[i - 1].visitExpression(this, ctx);
+                ctx.print(ast, `}${ast.serializeI18nTemplatePart(i).raw}`);
+            }
+            ctx.print(ast, '`');
+            return null;
+        }
+        visitConditionalExpr(ast, ctx) {
+            ctx.print(ast, `(`);
+            ast.condition.visitExpression(this, ctx);
+            ctx.print(ast, '? ');
+            ast.trueCase.visitExpression(this, ctx);
+            ctx.print(ast, ': ');
+            ast.falseCase.visitExpression(this, ctx);
+            ctx.print(ast, `)`);
+            return null;
+        }
+        visitNotExpr(ast, ctx) {
+            ctx.print(ast, '!');
+            ast.condition.visitExpression(this, ctx);
+            return null;
+        }
+        visitAssertNotNullExpr(ast, ctx) {
+            ast.condition.visitExpression(this, ctx);
+            return null;
+        }
+        visitUnaryOperatorExpr(ast, ctx) {
+            let opStr;
+            switch (ast.operator) {
+                case UnaryOperator.Plus:
+                    opStr = '+';
+                    break;
+                case UnaryOperator.Minus:
+                    opStr = '-';
+                    break;
+                default:
+                    throw new Error(`Unknown operator ${ast.operator}`);
+            }
+            if (ast.parens)
+                ctx.print(ast, `(`);
+            ctx.print(ast, opStr);
+            ast.expr.visitExpression(this, ctx);
+            if (ast.parens)
+                ctx.print(ast, `)`);
+            return null;
+        }
+        visitBinaryOperatorExpr(ast, ctx) {
+            let opStr;
+            switch (ast.operator) {
+                case BinaryOperator.Equals:
+                    opStr = '==';
+                    break;
+                case BinaryOperator.Identical:
+                    opStr = '===';
+                    break;
+                case BinaryOperator.NotEquals:
+                    opStr = '!=';
+                    break;
+                case BinaryOperator.NotIdentical:
+                    opStr = '!==';
+                    break;
+                case BinaryOperator.And:
+                    opStr = '&&';
+                    break;
+                case BinaryOperator.BitwiseAnd:
+                    opStr = '&';
+                    break;
+                case BinaryOperator.Or:
+                    opStr = '||';
+                    break;
+                case BinaryOperator.Plus:
+                    opStr = '+';
+                    break;
+                case BinaryOperator.Minus:
+                    opStr = '-';
+                    break;
+                case BinaryOperator.Divide:
+                    opStr = '/';
+                    break;
+                case BinaryOperator.Multiply:
+                    opStr = '*';
+                    break;
+                case BinaryOperator.Modulo:
+                    opStr = '%';
+                    break;
+                case BinaryOperator.Lower:
+                    opStr = '<';
+                    break;
+                case BinaryOperator.LowerEquals:
+                    opStr = '<=';
+                    break;
+                case BinaryOperator.Bigger:
+                    opStr = '>';
+                    break;
+                case BinaryOperator.BiggerEquals:
+                    opStr = '>=';
+                    break;
+                default:
+                    throw new Error(`Unknown operator ${ast.operator}`);
+            }
+            if (ast.parens)
+                ctx.print(ast, `(`);
+            ast.lhs.visitExpression(this, ctx);
+            ctx.print(ast, ` ${opStr} `);
+            ast.rhs.visitExpression(this, ctx);
+            if (ast.parens)
+                ctx.print(ast, `)`);
+            return null;
+        }
+        visitReadPropExpr(ast, ctx) {
+            ast.receiver.visitExpression(this, ctx);
+            ctx.print(ast, `.`);
+            ctx.print(ast, ast.name);
+            return null;
+        }
+        visitReadKeyExpr(ast, ctx) {
+            ast.receiver.visitExpression(this, ctx);
+            ctx.print(ast, `[`);
+            ast.index.visitExpression(this, ctx);
+            ctx.print(ast, `]`);
+            return null;
+        }
+        visitLiteralArrayExpr(ast, ctx) {
+            ctx.print(ast, `[`);
+            this.visitAllExpressions(ast.entries, ctx, ',');
+            ctx.print(ast, `]`);
+            return null;
+        }
+        visitLiteralMapExpr(ast, ctx) {
+            ctx.print(ast, `{`);
+            this.visitAllObjects(entry => {
+                ctx.print(ast, `${escapeIdentifier(entry.key, this._escapeDollarInStrings, entry.quoted)}:`);
+                entry.value.visitExpression(this, ctx);
+            }, ast.entries, ctx, ',');
+            ctx.print(ast, `}`);
+            return null;
+        }
+        visitCommaExpr(ast, ctx) {
+            ctx.print(ast, '(');
+            this.visitAllExpressions(ast.parts, ctx, ',');
+            ctx.print(ast, ')');
+            return null;
+        }
+        visitAllExpressions(expressions, ctx, separator) {
+            this.visitAllObjects(expr => expr.visitExpression(this, ctx), expressions, ctx, separator);
+        }
+        visitAllObjects(handler, expressions, ctx, separator) {
+            let incrementedIndent = false;
+            for (let i = 0; i < expressions.length; i++) {
+                if (i > 0) {
+                    if (ctx.lineLength() > 80) {
+                        ctx.print(null, separator, true);
+                        if (!incrementedIndent) {
+                            // continuation are marked with double indent.
+                            ctx.incIndent();
+                            ctx.incIndent();
+                            incrementedIndent = true;
+                        }
+                    }
+                    else {
+                        ctx.print(null, separator, false);
+                    }
+                }
+                handler(expressions[i]);
+            }
+            if (incrementedIndent) {
+                // continuation are marked with double indent.
+                ctx.decIndent();
+                ctx.decIndent();
+            }
+        }
+        visitAllStatements(statements, ctx) {
+            statements.forEach((stmt) => stmt.visitStatement(this, ctx));
+        }
+    }
+    function escapeIdentifier(input, escapeDollar, alwaysQuote = true) {
+        if (input == null) {
+            return null;
+        }
+        const body = input.replace(_SINGLE_QUOTE_ESCAPE_STRING_RE, (...match) => {
+            if (match[0] == '$') {
+                return escapeDollar ? '\\$' : '$';
+            }
+            else if (match[0] == '\n') {
+                return '\\n';
+            }
+            else if (match[0] == '\r') {
+                return '\\r';
+            }
+            else {
+                return `\\${match[0]}`;
+            }
+        });
+        const requiresQuotes = alwaysQuote || !_LEGAL_IDENTIFIER_RE.test(body);
+        return requiresQuotes ? `'${body}'` : body;
+    }
+    function _createIndent(count) {
+        let res = '';
+        for (let i = 0; i < count; i++) {
+            res += _INDENT_WITH;
+        }
+        return res;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Convert an object map with `Expression` values into a `LiteralMapExpr`.
      */
@@ -2707,6 +3422,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function prepareSyntheticListenerName(name, phase) {
         return `${ANIMATE_SYMBOL_PREFIX}${name}.${phase}`;
+    }
+    function getSafePropertyAccessString(accessor, name) {
+        const escapedName = escapeIdentifier(name, false, false);
+        return escapedName !== name ? `${accessor}[${escapedName}]` : `${accessor}.${name}`;
     }
     function prepareSyntheticListenerFunctionName(name, phase) {
         return `animation_${name}_${phase}`;
@@ -4270,721 +4989,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     const DEFAULT_INTERPOLATION_CONFIG = new InterpolationConfig('{{', '}}');
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
-    const VERSION = 3;
-    const JS_B64_PREFIX = '# sourceMappingURL=data:application/json;base64,';
-    class SourceMapGenerator {
-        constructor(file = null) {
-            this.file = file;
-            this.sourcesContent = new Map();
-            this.lines = [];
-            this.lastCol0 = 0;
-            this.hasMappings = false;
-        }
-        // The content is `null` when the content is expected to be loaded using the URL
-        addSource(url, content = null) {
-            if (!this.sourcesContent.has(url)) {
-                this.sourcesContent.set(url, content);
-            }
-            return this;
-        }
-        addLine() {
-            this.lines.push([]);
-            this.lastCol0 = 0;
-            return this;
-        }
-        addMapping(col0, sourceUrl, sourceLine0, sourceCol0) {
-            if (!this.currentLine) {
-                throw new Error(`A line must be added before mappings can be added`);
-            }
-            if (sourceUrl != null && !this.sourcesContent.has(sourceUrl)) {
-                throw new Error(`Unknown source file "${sourceUrl}"`);
-            }
-            if (col0 == null) {
-                throw new Error(`The column in the generated code must be provided`);
-            }
-            if (col0 < this.lastCol0) {
-                throw new Error(`Mapping should be added in output order`);
-            }
-            if (sourceUrl && (sourceLine0 == null || sourceCol0 == null)) {
-                throw new Error(`The source location must be provided when a source url is provided`);
-            }
-            this.hasMappings = true;
-            this.lastCol0 = col0;
-            this.currentLine.push({ col0, sourceUrl, sourceLine0, sourceCol0 });
-            return this;
-        }
-        /**
-         * @internal strip this from published d.ts files due to
-         * https://github.com/microsoft/TypeScript/issues/36216
-         */
-        get currentLine() {
-            return this.lines.slice(-1)[0];
-        }
-        toJSON() {
-            if (!this.hasMappings) {
-                return null;
-            }
-            const sourcesIndex = new Map();
-            const sources = [];
-            const sourcesContent = [];
-            Array.from(this.sourcesContent.keys()).forEach((url, i) => {
-                sourcesIndex.set(url, i);
-                sources.push(url);
-                sourcesContent.push(this.sourcesContent.get(url) || null);
-            });
-            let mappings = '';
-            let lastCol0 = 0;
-            let lastSourceIndex = 0;
-            let lastSourceLine0 = 0;
-            let lastSourceCol0 = 0;
-            this.lines.forEach(segments => {
-                lastCol0 = 0;
-                mappings += segments
-                    .map(segment => {
-                    // zero-based starting column of the line in the generated code
-                    let segAsStr = toBase64VLQ(segment.col0 - lastCol0);
-                    lastCol0 = segment.col0;
-                    if (segment.sourceUrl != null) {
-                        // zero-based index into the “sources” list
-                        segAsStr +=
-                            toBase64VLQ(sourcesIndex.get(segment.sourceUrl) - lastSourceIndex);
-                        lastSourceIndex = sourcesIndex.get(segment.sourceUrl);
-                        // the zero-based starting line in the original source
-                        segAsStr += toBase64VLQ(segment.sourceLine0 - lastSourceLine0);
-                        lastSourceLine0 = segment.sourceLine0;
-                        // the zero-based starting column in the original source
-                        segAsStr += toBase64VLQ(segment.sourceCol0 - lastSourceCol0);
-                        lastSourceCol0 = segment.sourceCol0;
-                    }
-                    return segAsStr;
-                })
-                    .join(',');
-                mappings += ';';
-            });
-            mappings = mappings.slice(0, -1);
-            return {
-                'file': this.file || '',
-                'version': VERSION,
-                'sourceRoot': '',
-                'sources': sources,
-                'sourcesContent': sourcesContent,
-                'mappings': mappings,
-            };
-        }
-        toJsComment() {
-            return this.hasMappings ? '//' + JS_B64_PREFIX + toBase64String(JSON.stringify(this, null, 0)) :
-                '';
-        }
-    }
-    function toBase64String(value) {
-        let b64 = '';
-        const encoded = utf8Encode(value);
-        for (let i = 0; i < encoded.length;) {
-            const i1 = encoded[i++];
-            const i2 = i < encoded.length ? encoded[i++] : null;
-            const i3 = i < encoded.length ? encoded[i++] : null;
-            b64 += toBase64Digit(i1 >> 2);
-            b64 += toBase64Digit(((i1 & 3) << 4) | (i2 === null ? 0 : i2 >> 4));
-            b64 += i2 === null ? '=' : toBase64Digit(((i2 & 15) << 2) | (i3 === null ? 0 : i3 >> 6));
-            b64 += i2 === null || i3 === null ? '=' : toBase64Digit(i3 & 63);
-        }
-        return b64;
-    }
-    function toBase64VLQ(value) {
-        value = value < 0 ? ((-value) << 1) + 1 : value << 1;
-        let out = '';
-        do {
-            let digit = value & 31;
-            value = value >> 5;
-            if (value > 0) {
-                digit = digit | 32;
-            }
-            out += toBase64Digit(digit);
-        } while (value > 0);
-        return out;
-    }
-    const B64_DIGITS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    function toBase64Digit(value) {
-        if (value < 0 || value >= 64) {
-            throw new Error(`Can only encode value in the range [0, 63]`);
-        }
-        return B64_DIGITS[value];
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const _SINGLE_QUOTE_ESCAPE_STRING_RE = /'|\\|\n|\r|\$/g;
-    const _LEGAL_IDENTIFIER_RE = /^[$A-Z_][0-9A-Z_$]*$/i;
-    const _INDENT_WITH = '  ';
-    const CATCH_ERROR_VAR$1 = variable('error', null, null);
-    const CATCH_STACK_VAR$1 = variable('stack', null, null);
-    class _EmittedLine {
-        constructor(indent) {
-            this.indent = indent;
-            this.partsLength = 0;
-            this.parts = [];
-            this.srcSpans = [];
-        }
-    }
-    class EmitterVisitorContext {
-        constructor(_indent) {
-            this._indent = _indent;
-            this._classes = [];
-            this._preambleLineCount = 0;
-            this._lines = [new _EmittedLine(_indent)];
-        }
-        static createRoot() {
-            return new EmitterVisitorContext(0);
-        }
-        /**
-         * @internal strip this from published d.ts files due to
-         * https://github.com/microsoft/TypeScript/issues/36216
-         */
-        get _currentLine() {
-            return this._lines[this._lines.length - 1];
-        }
-        println(from, lastPart = '') {
-            this.print(from || null, lastPart, true);
-        }
-        lineIsEmpty() {
-            return this._currentLine.parts.length === 0;
-        }
-        lineLength() {
-            return this._currentLine.indent * _INDENT_WITH.length + this._currentLine.partsLength;
-        }
-        print(from, part, newLine = false) {
-            if (part.length > 0) {
-                this._currentLine.parts.push(part);
-                this._currentLine.partsLength += part.length;
-                this._currentLine.srcSpans.push(from && from.sourceSpan || null);
-            }
-            if (newLine) {
-                this._lines.push(new _EmittedLine(this._indent));
-            }
-        }
-        removeEmptyLastLine() {
-            if (this.lineIsEmpty()) {
-                this._lines.pop();
-            }
-        }
-        incIndent() {
-            this._indent++;
-            if (this.lineIsEmpty()) {
-                this._currentLine.indent = this._indent;
-            }
-        }
-        decIndent() {
-            this._indent--;
-            if (this.lineIsEmpty()) {
-                this._currentLine.indent = this._indent;
-            }
-        }
-        pushClass(clazz) {
-            this._classes.push(clazz);
-        }
-        popClass() {
-            return this._classes.pop();
-        }
-        get currentClass() {
-            return this._classes.length > 0 ? this._classes[this._classes.length - 1] : null;
-        }
-        toSource() {
-            return this.sourceLines
-                .map(l => l.parts.length > 0 ? _createIndent(l.indent) + l.parts.join('') : '')
-                .join('\n');
-        }
-        toSourceMapGenerator(genFilePath, startsAtLine = 0) {
-            const map = new SourceMapGenerator(genFilePath);
-            let firstOffsetMapped = false;
-            const mapFirstOffsetIfNeeded = () => {
-                if (!firstOffsetMapped) {
-                    // Add a single space so that tools won't try to load the file from disk.
-                    // Note: We are using virtual urls like `ng:///`, so we have to
-                    // provide a content here.
-                    map.addSource(genFilePath, ' ').addMapping(0, genFilePath, 0, 0);
-                    firstOffsetMapped = true;
-                }
-            };
-            for (let i = 0; i < startsAtLine; i++) {
-                map.addLine();
-                mapFirstOffsetIfNeeded();
-            }
-            this.sourceLines.forEach((line, lineIdx) => {
-                map.addLine();
-                const spans = line.srcSpans;
-                const parts = line.parts;
-                let col0 = line.indent * _INDENT_WITH.length;
-                let spanIdx = 0;
-                // skip leading parts without source spans
-                while (spanIdx < spans.length && !spans[spanIdx]) {
-                    col0 += parts[spanIdx].length;
-                    spanIdx++;
-                }
-                if (spanIdx < spans.length && lineIdx === 0 && col0 === 0) {
-                    firstOffsetMapped = true;
-                }
-                else {
-                    mapFirstOffsetIfNeeded();
-                }
-                while (spanIdx < spans.length) {
-                    const span = spans[spanIdx];
-                    const source = span.start.file;
-                    const sourceLine = span.start.line;
-                    const sourceCol = span.start.col;
-                    map.addSource(source.url, source.content)
-                        .addMapping(col0, source.url, sourceLine, sourceCol);
-                    col0 += parts[spanIdx].length;
-                    spanIdx++;
-                    // assign parts without span or the same span to the previous segment
-                    while (spanIdx < spans.length && (span === spans[spanIdx] || !spans[spanIdx])) {
-                        col0 += parts[spanIdx].length;
-                        spanIdx++;
-                    }
-                }
-            });
-            return map;
-        }
-        setPreambleLineCount(count) {
-            return this._preambleLineCount = count;
-        }
-        spanOf(line, column) {
-            const emittedLine = this._lines[line - this._preambleLineCount];
-            if (emittedLine) {
-                let columnsLeft = column - _createIndent(emittedLine.indent).length;
-                for (let partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
-                    const part = emittedLine.parts[partIndex];
-                    if (part.length > columnsLeft) {
-                        return emittedLine.srcSpans[partIndex];
-                    }
-                    columnsLeft -= part.length;
-                }
-            }
-            return null;
-        }
-        /**
-         * @internal strip this from published d.ts files due to
-         * https://github.com/microsoft/TypeScript/issues/36216
-         */
-        get sourceLines() {
-            if (this._lines.length && this._lines[this._lines.length - 1].parts.length === 0) {
-                return this._lines.slice(0, -1);
-            }
-            return this._lines;
-        }
-    }
-    class AbstractEmitterVisitor {
-        constructor(_escapeDollarInStrings) {
-            this._escapeDollarInStrings = _escapeDollarInStrings;
-        }
-        printLeadingComments(stmt, ctx) {
-            if (stmt.leadingComments === undefined) {
-                return;
-            }
-            for (const comment of stmt.leadingComments) {
-                if (comment instanceof JSDocComment) {
-                    ctx.print(stmt, `/*${comment.toString()}*/`, comment.trailingNewline);
-                }
-                else {
-                    if (comment.multiline) {
-                        ctx.print(stmt, `/* ${comment.text} */`, comment.trailingNewline);
-                    }
-                    else {
-                        comment.text.split('\n').forEach((line) => {
-                            ctx.println(stmt, `// ${line}`);
-                        });
-                    }
-                }
-            }
-        }
-        visitExpressionStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            stmt.expr.visitExpression(this, ctx);
-            ctx.println(stmt, ';');
-            return null;
-        }
-        visitReturnStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            ctx.print(stmt, `return `);
-            stmt.value.visitExpression(this, ctx);
-            ctx.println(stmt, ';');
-            return null;
-        }
-        visitIfStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            ctx.print(stmt, `if (`);
-            stmt.condition.visitExpression(this, ctx);
-            ctx.print(stmt, `) {`);
-            const hasElseCase = stmt.falseCase != null && stmt.falseCase.length > 0;
-            if (stmt.trueCase.length <= 1 && !hasElseCase) {
-                ctx.print(stmt, ` `);
-                this.visitAllStatements(stmt.trueCase, ctx);
-                ctx.removeEmptyLastLine();
-                ctx.print(stmt, ` `);
-            }
-            else {
-                ctx.println();
-                ctx.incIndent();
-                this.visitAllStatements(stmt.trueCase, ctx);
-                ctx.decIndent();
-                if (hasElseCase) {
-                    ctx.println(stmt, `} else {`);
-                    ctx.incIndent();
-                    this.visitAllStatements(stmt.falseCase, ctx);
-                    ctx.decIndent();
-                }
-            }
-            ctx.println(stmt, `}`);
-            return null;
-        }
-        visitThrowStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            ctx.print(stmt, `throw `);
-            stmt.error.visitExpression(this, ctx);
-            ctx.println(stmt, `;`);
-            return null;
-        }
-        visitWriteVarExpr(expr, ctx) {
-            const lineWasEmpty = ctx.lineIsEmpty();
-            if (!lineWasEmpty) {
-                ctx.print(expr, '(');
-            }
-            ctx.print(expr, `${expr.name} = `);
-            expr.value.visitExpression(this, ctx);
-            if (!lineWasEmpty) {
-                ctx.print(expr, ')');
-            }
-            return null;
-        }
-        visitWriteKeyExpr(expr, ctx) {
-            const lineWasEmpty = ctx.lineIsEmpty();
-            if (!lineWasEmpty) {
-                ctx.print(expr, '(');
-            }
-            expr.receiver.visitExpression(this, ctx);
-            ctx.print(expr, `[`);
-            expr.index.visitExpression(this, ctx);
-            ctx.print(expr, `] = `);
-            expr.value.visitExpression(this, ctx);
-            if (!lineWasEmpty) {
-                ctx.print(expr, ')');
-            }
-            return null;
-        }
-        visitWritePropExpr(expr, ctx) {
-            const lineWasEmpty = ctx.lineIsEmpty();
-            if (!lineWasEmpty) {
-                ctx.print(expr, '(');
-            }
-            expr.receiver.visitExpression(this, ctx);
-            ctx.print(expr, `.${expr.name} = `);
-            expr.value.visitExpression(this, ctx);
-            if (!lineWasEmpty) {
-                ctx.print(expr, ')');
-            }
-            return null;
-        }
-        visitInvokeMethodExpr(expr, ctx) {
-            expr.receiver.visitExpression(this, ctx);
-            let name = expr.name;
-            if (expr.builtin != null) {
-                name = this.getBuiltinMethodName(expr.builtin);
-                if (name == null) {
-                    // some builtins just mean to skip the call.
-                    return null;
-                }
-            }
-            ctx.print(expr, `.${name}(`);
-            this.visitAllExpressions(expr.args, ctx, `,`);
-            ctx.print(expr, `)`);
-            return null;
-        }
-        visitInvokeFunctionExpr(expr, ctx) {
-            expr.fn.visitExpression(this, ctx);
-            ctx.print(expr, `(`);
-            this.visitAllExpressions(expr.args, ctx, ',');
-            ctx.print(expr, `)`);
-            return null;
-        }
-        visitTaggedTemplateExpr(expr, ctx) {
-            expr.tag.visitExpression(this, ctx);
-            ctx.print(expr, '`' + expr.template.elements[0].rawText);
-            for (let i = 1; i < expr.template.elements.length; i++) {
-                ctx.print(expr, '${');
-                expr.template.expressions[i - 1].visitExpression(this, ctx);
-                ctx.print(expr, `}${expr.template.elements[i].rawText}`);
-            }
-            ctx.print(expr, '`');
-            return null;
-        }
-        visitWrappedNodeExpr(ast, ctx) {
-            throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
-        }
-        visitTypeofExpr(expr, ctx) {
-            ctx.print(expr, 'typeof ');
-            expr.expr.visitExpression(this, ctx);
-        }
-        visitReadVarExpr(ast, ctx) {
-            let varName = ast.name;
-            if (ast.builtin != null) {
-                switch (ast.builtin) {
-                    case BuiltinVar.Super:
-                        varName = 'super';
-                        break;
-                    case BuiltinVar.This:
-                        varName = 'this';
-                        break;
-                    case BuiltinVar.CatchError:
-                        varName = CATCH_ERROR_VAR$1.name;
-                        break;
-                    case BuiltinVar.CatchStack:
-                        varName = CATCH_STACK_VAR$1.name;
-                        break;
-                    default:
-                        throw new Error(`Unknown builtin variable ${ast.builtin}`);
-                }
-            }
-            ctx.print(ast, varName);
-            return null;
-        }
-        visitInstantiateExpr(ast, ctx) {
-            ctx.print(ast, `new `);
-            ast.classExpr.visitExpression(this, ctx);
-            ctx.print(ast, `(`);
-            this.visitAllExpressions(ast.args, ctx, ',');
-            ctx.print(ast, `)`);
-            return null;
-        }
-        visitLiteralExpr(ast, ctx) {
-            const value = ast.value;
-            if (typeof value === 'string') {
-                ctx.print(ast, escapeIdentifier(value, this._escapeDollarInStrings));
-            }
-            else {
-                ctx.print(ast, `${value}`);
-            }
-            return null;
-        }
-        visitLocalizedString(ast, ctx) {
-            const head = ast.serializeI18nHead();
-            ctx.print(ast, '$localize `' + head.raw);
-            for (let i = 1; i < ast.messageParts.length; i++) {
-                ctx.print(ast, '${');
-                ast.expressions[i - 1].visitExpression(this, ctx);
-                ctx.print(ast, `}${ast.serializeI18nTemplatePart(i).raw}`);
-            }
-            ctx.print(ast, '`');
-            return null;
-        }
-        visitConditionalExpr(ast, ctx) {
-            ctx.print(ast, `(`);
-            ast.condition.visitExpression(this, ctx);
-            ctx.print(ast, '? ');
-            ast.trueCase.visitExpression(this, ctx);
-            ctx.print(ast, ': ');
-            ast.falseCase.visitExpression(this, ctx);
-            ctx.print(ast, `)`);
-            return null;
-        }
-        visitNotExpr(ast, ctx) {
-            ctx.print(ast, '!');
-            ast.condition.visitExpression(this, ctx);
-            return null;
-        }
-        visitAssertNotNullExpr(ast, ctx) {
-            ast.condition.visitExpression(this, ctx);
-            return null;
-        }
-        visitUnaryOperatorExpr(ast, ctx) {
-            let opStr;
-            switch (ast.operator) {
-                case UnaryOperator.Plus:
-                    opStr = '+';
-                    break;
-                case UnaryOperator.Minus:
-                    opStr = '-';
-                    break;
-                default:
-                    throw new Error(`Unknown operator ${ast.operator}`);
-            }
-            if (ast.parens)
-                ctx.print(ast, `(`);
-            ctx.print(ast, opStr);
-            ast.expr.visitExpression(this, ctx);
-            if (ast.parens)
-                ctx.print(ast, `)`);
-            return null;
-        }
-        visitBinaryOperatorExpr(ast, ctx) {
-            let opStr;
-            switch (ast.operator) {
-                case BinaryOperator.Equals:
-                    opStr = '==';
-                    break;
-                case BinaryOperator.Identical:
-                    opStr = '===';
-                    break;
-                case BinaryOperator.NotEquals:
-                    opStr = '!=';
-                    break;
-                case BinaryOperator.NotIdentical:
-                    opStr = '!==';
-                    break;
-                case BinaryOperator.And:
-                    opStr = '&&';
-                    break;
-                case BinaryOperator.BitwiseAnd:
-                    opStr = '&';
-                    break;
-                case BinaryOperator.Or:
-                    opStr = '||';
-                    break;
-                case BinaryOperator.Plus:
-                    opStr = '+';
-                    break;
-                case BinaryOperator.Minus:
-                    opStr = '-';
-                    break;
-                case BinaryOperator.Divide:
-                    opStr = '/';
-                    break;
-                case BinaryOperator.Multiply:
-                    opStr = '*';
-                    break;
-                case BinaryOperator.Modulo:
-                    opStr = '%';
-                    break;
-                case BinaryOperator.Lower:
-                    opStr = '<';
-                    break;
-                case BinaryOperator.LowerEquals:
-                    opStr = '<=';
-                    break;
-                case BinaryOperator.Bigger:
-                    opStr = '>';
-                    break;
-                case BinaryOperator.BiggerEquals:
-                    opStr = '>=';
-                    break;
-                default:
-                    throw new Error(`Unknown operator ${ast.operator}`);
-            }
-            if (ast.parens)
-                ctx.print(ast, `(`);
-            ast.lhs.visitExpression(this, ctx);
-            ctx.print(ast, ` ${opStr} `);
-            ast.rhs.visitExpression(this, ctx);
-            if (ast.parens)
-                ctx.print(ast, `)`);
-            return null;
-        }
-        visitReadPropExpr(ast, ctx) {
-            ast.receiver.visitExpression(this, ctx);
-            ctx.print(ast, `.`);
-            ctx.print(ast, ast.name);
-            return null;
-        }
-        visitReadKeyExpr(ast, ctx) {
-            ast.receiver.visitExpression(this, ctx);
-            ctx.print(ast, `[`);
-            ast.index.visitExpression(this, ctx);
-            ctx.print(ast, `]`);
-            return null;
-        }
-        visitLiteralArrayExpr(ast, ctx) {
-            ctx.print(ast, `[`);
-            this.visitAllExpressions(ast.entries, ctx, ',');
-            ctx.print(ast, `]`);
-            return null;
-        }
-        visitLiteralMapExpr(ast, ctx) {
-            ctx.print(ast, `{`);
-            this.visitAllObjects(entry => {
-                ctx.print(ast, `${escapeIdentifier(entry.key, this._escapeDollarInStrings, entry.quoted)}:`);
-                entry.value.visitExpression(this, ctx);
-            }, ast.entries, ctx, ',');
-            ctx.print(ast, `}`);
-            return null;
-        }
-        visitCommaExpr(ast, ctx) {
-            ctx.print(ast, '(');
-            this.visitAllExpressions(ast.parts, ctx, ',');
-            ctx.print(ast, ')');
-            return null;
-        }
-        visitAllExpressions(expressions, ctx, separator) {
-            this.visitAllObjects(expr => expr.visitExpression(this, ctx), expressions, ctx, separator);
-        }
-        visitAllObjects(handler, expressions, ctx, separator) {
-            let incrementedIndent = false;
-            for (let i = 0; i < expressions.length; i++) {
-                if (i > 0) {
-                    if (ctx.lineLength() > 80) {
-                        ctx.print(null, separator, true);
-                        if (!incrementedIndent) {
-                            // continuation are marked with double indent.
-                            ctx.incIndent();
-                            ctx.incIndent();
-                            incrementedIndent = true;
-                        }
-                    }
-                    else {
-                        ctx.print(null, separator, false);
-                    }
-                }
-                handler(expressions[i]);
-            }
-            if (incrementedIndent) {
-                // continuation are marked with double indent.
-                ctx.decIndent();
-                ctx.decIndent();
-            }
-        }
-        visitAllStatements(statements, ctx) {
-            statements.forEach((stmt) => stmt.visitStatement(this, ctx));
-        }
-    }
-    function escapeIdentifier(input, escapeDollar, alwaysQuote = true) {
-        if (input == null) {
-            return null;
-        }
-        const body = input.replace(_SINGLE_QUOTE_ESCAPE_STRING_RE, (...match) => {
-            if (match[0] == '$') {
-                return escapeDollar ? '\\$' : '$';
-            }
-            else if (match[0] == '\n') {
-                return '\\n';
-            }
-            else if (match[0] == '\r') {
-                return '\\r';
-            }
-            else {
-                return `\\${match[0]}`;
-            }
-        });
-        const requiresQuotes = alwaysQuote || !_LEGAL_IDENTIFIER_RE.test(body);
-        return requiresQuotes ? `'${body}'` : body;
-    }
-    function _createIndent(count) {
-        let res = '';
-        for (let i = 0; i < count; i++) {
-            res += _INDENT_WITH;
-        }
-        return res;
-    }
 
     /**
      * @license
@@ -16894,7 +16898,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (propMetadata.hasOwnProperty(field)) {
                 propMetadata[field].forEach(ann => {
                     if (isHostBinding(ann)) {
-                        bindings.properties[ann.hostPropertyName || field] = field;
+                        // Since this is a decorator, we know that the value is a class member. Always access it
+                        // through `this` so that further down the line it can't be confused for a literal value
+                        // (e.g. if there's a property called `true`).
+                        bindings.properties[ann.hostPropertyName || field] =
+                            getSafePropertyAccessString('this', field);
                     }
                     else if (isHostListener(ann)) {
                         bindings.listeners[ann.eventName || field] = `${field}(${(ann.args || []).join(',')})`;
@@ -16935,7 +16943,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+21.sha-266cc9b');
+    const VERSION$1 = new Version('11.1.0-next.4+29.sha-5704372');
 
     /**
      * @license
@@ -17617,7 +17625,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+21.sha-266cc9b'));
+        definitionMap.set('version', literal('11.1.0-next.4+29.sha-5704372'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21057,7 +21065,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+21.sha-266cc9b');
+    const VERSION$2 = new Version('11.1.0-next.4+29.sha-5704372');
 
     /**
      * @license
@@ -28326,7 +28334,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }
                     hostPropertyName = resolved;
                 }
-                bindings.properties[hostPropertyName] = member.name;
+                // Since this is a decorator, we know that the value is a class member. Always access it
+                // through `this` so that further down the line it can't be confused for a literal value
+                // (e.g. if there's a property called `true`). There is no size penalty, because all
+                // values (except literals) are converted to `ctx.propName` eventually.
+                bindings.properties[hostPropertyName] = getSafePropertyAccessString('this', member.name);
             });
         });
         filterToMembersWithDecorator(members, 'HostListener', coreModule)
@@ -37082,21 +37094,46 @@ Either add the @Injectable() decorator to '${provider.node.name
             return scope.ngModule;
         }
         getSymbolOfBoundEvent(eventBinding) {
+            const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
+            if (consumer === null) {
+                return null;
+            }
             // Outputs in the TCB look like one of the two:
             // * _outputHelper(_t1["outputField"]).subscribe(handler);
             // * _t1.addEventListener(handler);
             // Even with strict null checks disabled, we still produce the access as a separate statement
             // so that it can be found here.
-            const outputFieldAccesses = findAllMatchingNodes(this.typeCheckBlock, { withSpan: eventBinding.keySpan, filter: isAccessExpression });
+            let expectedAccess;
+            if (consumer instanceof Template || consumer instanceof Element) {
+                expectedAccess = 'addEventListener';
+            }
+            else {
+                const bindingPropertyNames = consumer.outputs.getByBindingPropertyName(eventBinding.name);
+                if (bindingPropertyNames === null || bindingPropertyNames.length === 0) {
+                    return null;
+                }
+                // Note that we only get the expectedAccess text from a single consumer of the binding. If
+                // there are multiple consumers (not supported in the `boundTarget` API) and one of them has
+                // an alias, it will not get matched here.
+                expectedAccess = bindingPropertyNames[0].classPropertyName;
+            }
+            function filter(n) {
+                if (!isAccessExpression(n)) {
+                    return false;
+                }
+                if (ts$1.isPropertyAccessExpression(n)) {
+                    return n.name.getText() === expectedAccess;
+                }
+                else {
+                    return ts$1.isStringLiteral(n.argumentExpression) &&
+                        n.argumentExpression.text === expectedAccess;
+                }
+            }
+            const outputFieldAccesses = findAllMatchingNodes(this.typeCheckBlock, { withSpan: eventBinding.keySpan, filter });
             const bindings = [];
             for (const outputFieldAccess of outputFieldAccesses) {
-                const consumer = this.templateData.boundTarget.getConsumerOfBinding(eventBinding);
-                if (consumer === null) {
-                    continue;
-                }
                 if (consumer instanceof Template || consumer instanceof Element) {
-                    if (!ts$1.isPropertyAccessExpression(outputFieldAccess) ||
-                        outputFieldAccess.name.text !== 'addEventListener') {
+                    if (!ts$1.isPropertyAccessExpression(outputFieldAccess)) {
                         continue;
                     }
                     const addEventListener = outputFieldAccess.name;
@@ -39946,6 +39983,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         CompletionNodeContext[CompletionNodeContext["ElementAttributeKey"] = 2] = "ElementAttributeKey";
         CompletionNodeContext[CompletionNodeContext["ElementAttributeValue"] = 3] = "ElementAttributeValue";
         CompletionNodeContext[CompletionNodeContext["EventValue"] = 4] = "EventValue";
+        CompletionNodeContext[CompletionNodeContext["TwoWayBinding"] = 5] = "TwoWayBinding";
     })(CompletionNodeContext || (CompletionNodeContext = {}));
     /**
      * Performs autocompletion operations on a given node in the template.
@@ -40265,7 +40303,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return directive === null || directive === void 0 ? void 0 : directive.tsSymbol;
         }
         isElementAttributeCompletion() {
-            return this.nodeContext === CompletionNodeContext.ElementAttributeKey &&
+            return (this.nodeContext === CompletionNodeContext.ElementAttributeKey ||
+                this.nodeContext === CompletionNodeContext.TwoWayBinding) &&
                 (this.node instanceof Element || this.node instanceof BoundAttribute ||
                     this.node instanceof TextAttribute || this.node instanceof BoundEvent);
         }
@@ -40302,6 +40341,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         break;
                     case AttributeCompletionKind.DirectiveInput:
                         if (this.node instanceof BoundEvent) {
+                            continue;
+                        }
+                        if (!completion.twoWayBindingSupported &&
+                            this.nodeContext === CompletionNodeContext.TwoWayBinding) {
                             continue;
                         }
                         break;
@@ -40489,6 +40532,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         TargetNodeKind[TargetNodeKind["ElementInBodyContext"] = 3] = "ElementInBodyContext";
         TargetNodeKind[TargetNodeKind["AttributeInKeyContext"] = 4] = "AttributeInKeyContext";
         TargetNodeKind[TargetNodeKind["AttributeInValueContext"] = 5] = "AttributeInValueContext";
+        TargetNodeKind[TargetNodeKind["TwoWayBindingContext"] = 6] = "TwoWayBindingContext";
     })(TargetNodeKind || (TargetNodeKind = {}));
     /**
      * This special marker is added to the path when the cursor is within the sourceSpan but not the key
@@ -40516,10 +40560,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 context = node;
                 break;
             }
-        }
-        let parent = null;
-        if (path.length >= 2) {
-            parent = path[path.length - 2];
         }
         // Given the candidate node, determine the full targeted context.
         let nodeInContext;
@@ -40551,7 +40591,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         else if ((candidate instanceof BoundAttribute || candidate instanceof BoundEvent ||
             candidate instanceof TextAttribute) &&
             candidate.keySpan !== undefined) {
-            if (isWithin(position, candidate.keySpan)) {
+            const previousCandidate = path[path.length - 2];
+            if (candidate instanceof BoundEvent && previousCandidate instanceof BoundAttribute &&
+                candidate.name === previousCandidate.name + 'Change') {
+                const boundAttribute = previousCandidate;
+                const boundEvent = candidate;
+                nodeInContext = {
+                    kind: TargetNodeKind.TwoWayBindingContext,
+                    nodes: [boundAttribute, boundEvent],
+                };
+            }
+            else if (isWithin(position, candidate.keySpan)) {
                 nodeInContext = {
                     kind: TargetNodeKind.AttributeInKeyContext,
                     node: candidate,
@@ -40570,7 +40620,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 node: candidate,
             };
         }
-        return { position, nodeInContext, template: context, parent };
+        let parent = null;
+        if (nodeInContext.kind === TargetNodeKind.TwoWayBindingContext && path.length >= 3) {
+            parent = path[path.length - 3];
+        }
+        else if (path.length >= 2) {
+            parent = path[path.length - 2];
+        }
+        return { position, context: nodeInContext, template: context, parent };
     }
     /**
      * Visitor which, given a position and a template, identifies the node within the template at that
@@ -40605,17 +40662,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return strictPath;
         }
         visit(node) {
-            const last = this.path[this.path.length - 1];
-            if (last && isTemplateNodeWithKeyAndValue(last) && isWithin(this.position, last.keySpan)) {
-                // We've already identified that we are within a `keySpan` of a node.
-                // We should stop processing nodes at this point to prevent matching
-                // any other nodes. This can happen when the end span of a different node
-                // touches the start of the keySpan for the candidate node. Because
-                // our `isWithin` logic is inclusive on both ends, we can match both nodes.
-                return;
-            }
             const { start, end } = getSpanIncludingEndTag(node);
             if (!isWithin(this.position, { start, end })) {
+                return;
+            }
+            const last = this.path[this.path.length - 1];
+            const withinKeySpanOfLastNode = last && isTemplateNodeWithKeyAndValue(last) && isWithin(this.position, last.keySpan);
+            const withinKeySpanOfCurrentNode = isTemplateNodeWithKeyAndValue(node) && isWithin(this.position, node.keySpan);
+            if (withinKeySpanOfLastNode && !withinKeySpanOfCurrentNode) {
+                // We've already identified that we are within a `keySpan` of a node.
+                // Unless we are _also_ in the `keySpan` of the current node (happens with two way bindings),
+                // we should stop processing nodes at this point to prevent matching any other nodes. This can
+                // happen when the end span of a different node touches the start of the keySpan for the
+                // candidate node. Because our `isWithin` logic is inclusive on both ends, we can match both
+                // nodes.
                 return;
             }
             if (isTemplateNodeWithKeyAndValue(node) && !isWithinKeyValue(this.position, node)) {
@@ -40629,30 +40689,28 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
         }
         visitElement(element) {
+            this.visitElementOrTemplate(element);
+        }
+        visitTemplate(template) {
+            this.visitElementOrTemplate(template);
+        }
+        visitElementOrTemplate(element) {
             this.visitAll(element.attributes);
             this.visitAll(element.inputs);
             this.visitAll(element.outputs);
+            if (element instanceof Template) {
+                this.visitAll(element.templateAttrs);
+            }
             this.visitAll(element.references);
-            const last = this.path[this.path.length - 1];
+            if (element instanceof Template) {
+                this.visitAll(element.variables);
+            }
             // If we get here and have not found a candidate node on the element itself, proceed with
             // looking for a more specific node on the element children.
-            if (last === element) {
-                this.visitAll(element.children);
+            if (this.path[this.path.length - 1] !== element) {
+                return;
             }
-        }
-        visitTemplate(template) {
-            this.visitAll(template.attributes);
-            this.visitAll(template.inputs);
-            this.visitAll(template.outputs);
-            this.visitAll(template.templateAttrs);
-            this.visitAll(template.references);
-            this.visitAll(template.variables);
-            const last = this.path[this.path.length - 1];
-            // If we get here and have not found a candidate node on the template itself, proceed with
-            // looking for a more specific node on the template children.
-            if (last === template) {
-                this.visitAll(template.children);
-            }
+            this.visitAll(element.children);
         }
         visitContent(content) {
             visitAll(this, content.attributes);
@@ -40671,16 +40729,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             visitor.visit(attribute.value, this.path);
         }
         visitBoundEvent(event) {
-            const isTwoWayBinding = this.path.some(n => n instanceof BoundAttribute && event.name === n.name + 'Change');
-            if (isTwoWayBinding) {
-                // For two-way binding aka banana-in-a-box, there are two matches:
-                // BoundAttribute and BoundEvent. Both have the same spans. We choose to
-                // return BoundAttribute because it matches the identifier name verbatim.
-                // TODO: For operations like go to definition, ideally we want to return
-                // both.
-                this.path.pop(); // remove bound event from the AST path
-                return;
-            }
             // An event binding with no value (e.g. `(event|)`) parses to a `BoundEvent` with a
             // `LiteralPrimitive` handler with value `'ERROR'`, as opposed to a property binding with no
             // value which has an `EmptyExpr` as its value. This is a synthetic node created by the binding
@@ -40768,6 +40816,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.compiler = compiler;
         }
         getDefinitionAndBoundSpan(fileName, position) {
+            var _a;
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
             if (templateInfo === undefined) {
                 // We were unable to get a template at the given position. If we are in a TS file, instead
@@ -40778,16 +40827,25 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 }
                 return getDefinitionForExpressionAtPosition(fileName, position, this.compiler);
             }
-            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
-            // The `$event` of event handlers would point to the $event parameter in the shim file, as in
-            // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
-            // If we wanted to return something for this, it would be more appropriate for something like
-            // `getTypeDefinition`.
-            if (definitionMeta === undefined || isDollarEvent(definitionMeta.node)) {
+            const definitionMetas = this.getDefinitionMetaAtPosition(templateInfo, position);
+            if (definitionMetas === undefined) {
                 return undefined;
             }
-            const definitions = this.getDefinitionsForSymbol(Object.assign(Object.assign({}, definitionMeta), templateInfo));
-            return { definitions, textSpan: getTextSpanOfNode(definitionMeta.node) };
+            const definitions = [];
+            for (const definitionMeta of definitionMetas) {
+                // The `$event` of event handlers would point to the $event parameter in the shim file, as in
+                // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
+                // If we wanted to return something for this, it would be more appropriate for something like
+                // `getTypeDefinition`.
+                if (isDollarEvent(definitionMeta.node)) {
+                    continue;
+                }
+                definitions.push(...((_a = this.getDefinitionsForSymbol(Object.assign(Object.assign({}, definitionMeta), templateInfo))) !== null && _a !== void 0 ? _a : []));
+            }
+            if (definitions.length === 0) {
+                return undefined;
+            }
+            return { definitions, textSpan: getTextSpanOfNode(definitionMetas[0].node) };
         }
         getDefinitionsForSymbol({ symbol, node, parent, component }) {
             switch (symbol.kind) {
@@ -40855,41 +40913,52 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (templateInfo === undefined) {
                 return;
             }
-            const definitionMeta = this.getDefinitionMetaAtPosition(templateInfo, position);
-            if (definitionMeta === undefined) {
+            const definitionMetas = this.getDefinitionMetaAtPosition(templateInfo, position);
+            if (definitionMetas === undefined) {
                 return undefined;
             }
-            const { symbol, node } = definitionMeta;
-            switch (symbol.kind) {
-                case SymbolKind.Directive:
-                case SymbolKind.DomBinding:
-                case SymbolKind.Element:
-                case SymbolKind.Template:
-                    return this.getTypeDefinitionsForTemplateInstance(symbol, node);
-                case SymbolKind.Output:
-                case SymbolKind.Input: {
-                    const bindingDefs = this.getTypeDefinitionsForSymbols(...symbol.bindings);
-                    // Also attempt to get directive matches for the input name. If there is a directive that
-                    // has the input name as part of the selector, we want to return that as well.
-                    const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, definitionMeta.parent, templateInfo.component);
-                    return [...bindingDefs, ...directiveDefs];
-                }
-                case SymbolKind.Pipe: {
-                    if (symbol.tsSymbol !== null) {
-                        return this.getTypeDefinitionsForSymbols(symbol);
+            const definitions = [];
+            for (const { symbol, node, parent } of definitionMetas) {
+                switch (symbol.kind) {
+                    case SymbolKind.Directive:
+                    case SymbolKind.DomBinding:
+                    case SymbolKind.Element:
+                    case SymbolKind.Template:
+                        definitions.push(...this.getTypeDefinitionsForTemplateInstance(symbol, node));
+                        break;
+                    case SymbolKind.Output:
+                    case SymbolKind.Input: {
+                        const bindingDefs = this.getTypeDefinitionsForSymbols(...symbol.bindings);
+                        definitions.push(...bindingDefs);
+                        // Also attempt to get directive matches for the input name. If there is a directive that
+                        // has the input name as part of the selector, we want to return that as well.
+                        const directiveDefs = this.getDirectiveTypeDefsForBindingNode(node, parent, templateInfo.component);
+                        definitions.push(...directiveDefs);
+                        break;
                     }
-                    else {
-                        // If there is no `ts.Symbol` for the pipe transform, we want to return the
-                        // type definition (the pipe class).
-                        return this.getTypeDefinitionsForSymbols(symbol.classSymbol);
+                    case SymbolKind.Pipe: {
+                        if (symbol.tsSymbol !== null) {
+                            definitions.push(...this.getTypeDefinitionsForSymbols(symbol));
+                        }
+                        else {
+                            // If there is no `ts.Symbol` for the pipe transform, we want to return the
+                            // type definition (the pipe class).
+                            definitions.push(...this.getTypeDefinitionsForSymbols(symbol.classSymbol));
+                        }
+                        break;
+                    }
+                    case SymbolKind.Reference:
+                        definitions.push(...this.getTypeDefinitionsForSymbols({ shimLocation: symbol.targetLocation }));
+                        break;
+                    case SymbolKind.Expression:
+                        definitions.push(...this.getTypeDefinitionsForSymbols(symbol));
+                        break;
+                    case SymbolKind.Variable: {
+                        definitions.push(...this.getTypeDefinitionsForSymbols({ shimLocation: symbol.initializerLocation }));
+                        break;
                     }
                 }
-                case SymbolKind.Reference:
-                    return this.getTypeDefinitionsForSymbols({ shimLocation: symbol.targetLocation });
-                case SymbolKind.Expression:
-                    return this.getTypeDefinitionsForSymbols(symbol);
-                case SymbolKind.Variable:
-                    return this.getTypeDefinitionsForSymbols({ shimLocation: symbol.initializerLocation });
+                return definitions;
             }
         }
         getTypeDefinitionsForTemplateInstance(symbol, node) {
@@ -40947,12 +41016,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (target === null) {
                 return undefined;
             }
-            const { nodeInContext, parent } = target;
-            const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(nodeInContext.node, component);
-            if (symbol === null) {
-                return undefined;
+            const { context, parent } = target;
+            const nodes = context.kind === TargetNodeKind.TwoWayBindingContext ? context.nodes : [context.node];
+            const definitionMetas = [];
+            for (const node of nodes) {
+                const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(node, component);
+                if (symbol === null) {
+                    continue;
+                }
+                definitionMetas.push({ node, parent, symbol });
             }
-            return { node: nodeInContext.node, parent, symbol };
+            return definitionMetas.length > 0 ? definitionMetas : undefined;
         }
     }
     /**
@@ -41206,74 +41280,88 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 this.getReferencesAtTypescriptPosition(filePath, position);
         }
         getReferencesAtTemplatePosition({ template, component }, position) {
+            var _a, _b, _c, _d, _e, _f, _g, _h;
             // Find the AST node in the template at the position.
             const positionDetails = getTargetAtPosition(template, position);
             if (positionDetails === null) {
                 return undefined;
             }
-            const node = positionDetails.nodeInContext.node;
-            // Get the information about the TCB at the template position.
-            const symbol = this.ttc.getSymbolOfNode(node, component);
-            if (symbol === null) {
-                return undefined;
-            }
-            switch (symbol.kind) {
-                case SymbolKind.Directive:
-                case SymbolKind.Template:
-                    // References to elements, templates, and directives will be through template references
-                    // (#ref). They shouldn't be used directly for a Language Service reference request.
-                    return undefined;
-                case SymbolKind.Element: {
-                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
-                    return this.getReferencesForDirectives(matches);
+            const nodes = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
+                positionDetails.context.nodes :
+                [positionDetails.context.node];
+            const references = [];
+            for (const node of nodes) {
+                // Get the information about the TCB at the template position.
+                const symbol = this.ttc.getSymbolOfNode(node, component);
+                if (symbol === null) {
+                    continue;
                 }
-                case SymbolKind.DomBinding: {
-                    // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
-                    // have a shim location. This means we can't match dom bindings to their lib.dom reference,
-                    // but we can still see if they match to a directive.
-                    if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
-                        return undefined;
+                switch (symbol.kind) {
+                    case SymbolKind.Directive:
+                    case SymbolKind.Template:
+                        // References to elements, templates, and directives will be through template references
+                        // (#ref). They shouldn't be used directly for a Language Service reference request.
+                        break;
+                    case SymbolKind.Element: {
+                        const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
+                        references.push(...(_a = this.getReferencesForDirectives(matches)) !== null && _a !== void 0 ? _a : []);
+                        break;
                     }
-                    const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
-                    return this.getReferencesForDirectives(directives);
-                }
-                case SymbolKind.Reference: {
-                    const { shimPath, positionInShimFile } = symbol.referenceVarLocation;
-                    return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
-                }
-                case SymbolKind.Variable: {
-                    const { positionInShimFile: initializerPosition, shimPath } = symbol.initializerLocation;
-                    const localVarPosition = symbol.localVarLocation.positionInShimFile;
-                    const templateNode = positionDetails.nodeInContext.node;
-                    if ((templateNode instanceof Variable)) {
-                        if (templateNode.valueSpan !== undefined && isWithin(position, templateNode.valueSpan)) {
-                            // In the valueSpan of the variable, we want to get the reference of the initializer.
-                            return this.getReferencesAtTypescriptPosition(shimPath, initializerPosition);
+                    case SymbolKind.DomBinding: {
+                        // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
+                        // have a shim location. This means we can't match dom bindings to their lib.dom
+                        // reference, but we can still see if they match to a directive.
+                        if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
+                            break;
                         }
-                        else if (isWithin(position, templateNode.keySpan)) {
-                            // In the keySpan of the variable, we want to get the reference of the local variable.
-                            return this.getReferencesAtTypescriptPosition(shimPath, localVarPosition);
+                        const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
+                        references.push(...(_b = this.getReferencesForDirectives(directives)) !== null && _b !== void 0 ? _b : []);
+                        break;
+                    }
+                    case SymbolKind.Reference: {
+                        const { shimPath, positionInShimFile } = symbol.referenceVarLocation;
+                        references.push(...(_c = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _c !== void 0 ? _c : []);
+                        break;
+                    }
+                    case SymbolKind.Variable: {
+                        const { positionInShimFile: initializerPosition, shimPath } = symbol.initializerLocation;
+                        const localVarPosition = symbol.localVarLocation.positionInShimFile;
+                        if ((node instanceof Variable)) {
+                            if (node.valueSpan !== undefined && isWithin(position, node.valueSpan)) {
+                                // In the valueSpan of the variable, we want to get the reference of the initializer.
+                                references.push(...(_d = this.getReferencesAtTypescriptPosition(shimPath, initializerPosition)) !== null && _d !== void 0 ? _d : []);
+                            }
+                            else if (isWithin(position, node.keySpan)) {
+                                // In the keySpan of the variable, we want to get the reference of the local variable.
+                                references.push(...(_e = this.getReferencesAtTypescriptPosition(shimPath, localVarPosition)) !== null && _e !== void 0 ? _e : []);
+                            }
                         }
                         else {
-                            return undefined;
+                            // If the templateNode is not the `TmplAstVariable`, it must be a usage of the variable
+                            // somewhere in the template.
+                            references.push(...(_f = this.getReferencesAtTypescriptPosition(shimPath, localVarPosition)) !== null && _f !== void 0 ? _f : []);
                         }
+                        break;
                     }
-                    // If the templateNode is not the `TmplAstVariable`, it must be a usage of the variable
-                    // somewhere in the template.
-                    return this.getReferencesAtTypescriptPosition(shimPath, localVarPosition);
-                }
-                case SymbolKind.Input:
-                case SymbolKind.Output: {
-                    // TODO(atscott): Determine how to handle when the binding maps to several inputs/outputs
-                    const { shimPath, positionInShimFile } = symbol.bindings[0].shimLocation;
-                    return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
-                }
-                case SymbolKind.Pipe:
-                case SymbolKind.Expression: {
-                    const { shimPath, positionInShimFile } = symbol.shimLocation;
-                    return this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile);
+                    case SymbolKind.Input:
+                    case SymbolKind.Output: {
+                        // TODO(atscott): Determine how to handle when the binding maps to several inputs/outputs
+                        const { shimPath, positionInShimFile } = symbol.bindings[0].shimLocation;
+                        references.push(...(_g = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _g !== void 0 ? _g : []);
+                        break;
+                    }
+                    case SymbolKind.Pipe:
+                    case SymbolKind.Expression: {
+                        const { shimPath, positionInShimFile } = symbol.shimLocation;
+                        references.push(...(_h = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _h !== void 0 ? _h : []);
+                        break;
+                    }
                 }
             }
+            if (references.length === 0) {
+                return undefined;
+            }
+            return references;
         }
         getReferencesForDirectives(directives) {
             const allDirectiveRefs = [];
@@ -41425,8 +41513,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (positionDetails === null) {
                 return undefined;
             }
-            const results = new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, positionDetails.nodeInContext.node)
-                .get();
+            // Because we can only show 1 quick info, just use the bound attribute if the target is a two
+            // way binding. We may consider concatenating additional display parts from the other target
+            // nodes or representing the two way binding in some other manner in the future.
+            const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
+                positionDetails.context.nodes[0] :
+                positionDetails.context.node;
+            const results = new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node).get();
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
@@ -41446,7 +41539,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (positionDetails === null) {
                 return null;
             }
-            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, positionDetails.nodeInContext.node, nodeContextFromTarget(positionDetails.nodeInContext), positionDetails.parent, positionDetails.template);
+            // For two-way bindings, we actually only need to be concerned with the bound attribute because
+            // the bindings in the template are written with the attribute name, not the event name.
+            const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
+                positionDetails.context.nodes[0] :
+                positionDetails.context.node;
+            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, nodeContextFromTarget(positionDetails.context), positionDetails.parent, positionDetails.template);
         }
         getCompletionsAtPosition(fileName, position, options) {
             const builder = this.getCompletionBuilder(fileName, position);
@@ -41556,6 +41654,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             case TargetNodeKind.ElementInBodyContext:
                 // Completions in element bodies are for new attributes.
                 return CompletionNodeContext.ElementAttributeKey;
+            case TargetNodeKind.TwoWayBindingContext:
+                return CompletionNodeContext.TwoWayBinding;
             case TargetNodeKind.AttributeInKeyContext:
                 return CompletionNodeContext.ElementAttributeKey;
             case TargetNodeKind.AttributeInValueContext:
