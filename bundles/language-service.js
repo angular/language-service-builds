@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+38.sha-fdbd3ca
+ * @license Angular v11.1.0-next.4+41.sha-1438975
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18951,7 +18951,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+38.sha-fdbd3ca');
+    const VERSION$1 = new Version('11.1.0-next.4+41.sha-1438975');
 
     /**
      * @license
@@ -46737,7 +46737,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+38.sha-fdbd3ca');
+    const VERSION$2 = new Version$1('11.1.0-next.4+41.sha-1438975');
 
     /**
      * @license
@@ -47889,7 +47889,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             this._lView = _lView;
             this._cdRefInjectingView = _cdRefInjectingView;
             this._appRef = null;
-            this._viewContainerRef = null;
+            this._attachedToViewContainer = false;
         }
         get rootNodes() {
             const lView = this._lView;
@@ -47906,12 +47906,19 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             if (this._appRef) {
                 this._appRef.detachView(this);
             }
-            else if (this._viewContainerRef) {
-                const index = this._viewContainerRef.indexOf(this);
-                if (index > -1) {
-                    this._viewContainerRef.detach(index);
+            else if (this._attachedToViewContainer) {
+                const parent = this._lView[PARENT];
+                if (isLContainer(parent)) {
+                    const viewRefs = parent[VIEW_REFS];
+                    const index = viewRefs ? viewRefs.indexOf(this) : -1;
+                    if (index > -1) {
+                        ngDevMode &&
+                            assertEqual(index, parent.indexOf(this._lView) - CONTAINER_HEADER_OFFSET, 'An attached view should be in the same position within its container as its ViewRef in the VIEW_REFS array.');
+                        detachView(parent, index);
+                        removeFromArray(viewRefs, index);
+                    }
                 }
-                this._viewContainerRef = null;
+                this._attachedToViewContainer = false;
             }
             destroyLView(this._lView[TVIEW], this._lView);
         }
@@ -48103,18 +48110,18 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         checkNoChanges() {
             checkNoChangesInternal(this._lView[TVIEW], this._lView, this.context);
         }
-        attachToViewContainerRef(vcRef) {
+        attachToViewContainerRef() {
             if (this._appRef) {
                 throw new Error('This view is already attached directly to the ApplicationRef!');
             }
-            this._viewContainerRef = vcRef;
+            this._attachedToViewContainer = true;
         }
         detachFromAppRef() {
             this._appRef = null;
             renderDetachView(this._lView[TVIEW], this._lView);
         }
         attachToAppRef(appRef) {
-            if (this._viewContainerRef) {
+            if (this._attachedToViewContainer) {
                 throw new Error('This view is already attached to a ViewContainer!');
             }
             this._appRef = appRef;
@@ -48478,7 +48485,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             if (parentRNode !== null) {
                 addViewToContainer(tView, lContainer[T_HOST], renderer, lView, parentRNode, beforeNode);
             }
-            viewRef.attachToViewContainerRef(this);
+            viewRef.attachToViewContainerRef();
             addToArray(getOrCreateViewRefs(lContainer), adjustedIdx, viewRef);
             return viewRef;
         }
