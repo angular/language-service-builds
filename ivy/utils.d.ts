@@ -19,6 +19,7 @@ interface NodeWithKeyAndValue extends t.Node {
     valueSpan?: ParseSourceSpan;
 }
 export declare function isTemplateNodeWithKeyAndValue(node: t.Node | e.AST): node is NodeWithKeyAndValue;
+export declare function isWithinKey(position: number, node: NodeWithKeyAndValue): boolean;
 export declare function isWithinKeyValue(position: number, node: NodeWithKeyAndValue): boolean;
 export declare function isTemplateNode(node: t.Node | e.AST): node is t.Node;
 export declare function isExpressionNode(node: t.Node | e.AST): node is e.AST;
