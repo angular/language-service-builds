@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+38.sha-fdbd3ca
+ * @license Angular v11.1.0-next.4+41.sha-1438975
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18951,7 +18951,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+38.sha-fdbd3ca');
+    const VERSION$1 = new Version('11.1.0-next.4+41.sha-1438975');
 
     /**
      * @license
@@ -27440,6 +27440,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     // T_HOST is index 6
     // We already have this constants in LView, we don't need to re-create it.
     const NATIVE = 7;
+    const VIEW_REFS = 8;
     const MOVED_VIEWS = 9;
     /**
      * Size of LContainer's header. Represents the index after which all views in the
@@ -29664,6 +29665,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function removeFromArray(arr, index) {
+        // perf: array.pop is faster than array.splice!
+        if (index >= arr.length - 1) {
+            return arr.pop();
+        }
+        else {
+            return arr.splice(index, 1)[0];
+        }
+    }
     function newArray$1(size, value) {
         const list = [];
         for (let i = 0; i < size; i++) {
@@ -30627,6 +30637,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     /**
+     * Removes all DOM elements associated with a view.
+     *
+     * Because some root nodes of the view may be containers, we sometimes need
+     * to propagate deeply into the nested containers to remove all elements in the
+     * views beneath it.
+     *
+     * @param tView The `TView' of the `LView` from which elements should be added or removed
+     * @param lView The view from which elements should be added or removed
+     */
+    function removeViewFromContainer(tView, lView) {
+        const renderer = lView[RENDERER];
+        applyView(tView, lView, renderer, 2 /* Detach */, null, null);
+        lView[HOST] = null;
+        lView[T_HOST] = null;
+    }
+    /**
      * Detach a `LView` from the DOM by detaching its nodes.
      *
      * @param tView The `TView' of the `LView` to be detached
@@ -30702,6 +30728,43 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             updateTransplantedViewCount(insertionLContainer, -1);
         }
         movedViews.splice(declarationViewIndex, 1);
+    }
+    /**
+     * Detaches a view from a container.
+     *
+     * This method removes the view from the container's array of active views. It also
+     * removes the view's elements from the DOM.
+     *
+     * @param lContainer The container from which to detach a view
+     * @param removeIndex The index of the view to detach
+     * @returns Detached LView instance.
+     */
+    function detachView(lContainer, removeIndex) {
+        if (lContainer.length <= CONTAINER_HEADER_OFFSET)
+            return;
+        const indexInContainer = CONTAINER_HEADER_OFFSET + removeIndex;
+        const viewToDetach = lContainer[indexInContainer];
+        if (viewToDetach) {
+            const declarationLContainer = viewToDetach[DECLARATION_LCONTAINER];
+            if (declarationLContainer !== null && declarationLContainer !== lContainer) {
+                detachMovedView(declarationLContainer, viewToDetach);
+            }
+            if (removeIndex > 0) {
+                lContainer[indexInContainer - 1][NEXT] = viewToDetach[NEXT];
+            }
+            const removedLView = removeFromArray(lContainer, CONTAINER_HEADER_OFFSET + removeIndex);
+            removeViewFromContainer(viewToDetach[TVIEW], viewToDetach);
+            // notify query that a view has been removed
+            const lQueries = removedLView[QUERIES];
+            if (lQueries !== null) {
+                lQueries.detachView(removedLView[TVIEW]);
+            }
+            viewToDetach[PARENT] = null;
+            viewToDetach[NEXT] = null;
+            // Unsets the attached flag
+            viewToDetach[FLAGS] &= ~128 /* Attached */;
+        }
+        return viewToDetach;
     }
     /**
      * A standalone function which destroys an LView,
@@ -34841,7 +34904,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+38.sha-fdbd3ca');
+    const VERSION$2 = new Version$1('11.1.0-next.4+41.sha-1438975');
 
     /**
      * @license
@@ -35993,7 +36056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._lView = _lView;
             this._cdRefInjectingView = _cdRefInjectingView;
             this._appRef = null;
-            this._viewContainerRef = null;
+            this._attachedToViewContainer = false;
         }
         get rootNodes() {
             const lView = this._lView;
@@ -36010,12 +36073,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this._appRef) {
                 this._appRef.detachView(this);
             }
-            else if (this._viewContainerRef) {
-                const index = this._viewContainerRef.indexOf(this);
-                if (index > -1) {
-                    this._viewContainerRef.detach(index);
+            else if (this._attachedToViewContainer) {
+                const parent = this._lView[PARENT];
+                if (isLContainer(parent)) {
+                    const viewRefs = parent[VIEW_REFS];
+                    const index = viewRefs ? viewRefs.indexOf(this) : -1;
+                    if (index > -1) {
+                        ngDevMode &&
+                            assertEqual(index, parent.indexOf(this._lView) - CONTAINER_HEADER_OFFSET, 'An attached view should be in the same position within its container as its ViewRef in the VIEW_REFS array.');
+                        detachView(parent, index);
+                        removeFromArray(viewRefs, index);
+                    }
                 }
-                this._viewContainerRef = null;
+                this._attachedToViewContainer = false;
             }
             destroyLView(this._lView[TVIEW], this._lView);
         }
@@ -36207,18 +36277,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         checkNoChanges() {
             checkNoChangesInternal(this._lView[TVIEW], this._lView, this.context);
         }
-        attachToViewContainerRef(vcRef) {
+        attachToViewContainerRef() {
             if (this._appRef) {
                 throw new Error('This view is already attached directly to the ApplicationRef!');
             }
-            this._viewContainerRef = vcRef;
+            this._attachedToViewContainer = true;
         }
         detachFromAppRef() {
             this._appRef = null;
             renderDetachView(this._lView[TVIEW], this._lView);
         }
         attachToAppRef(appRef) {
-            if (this._viewContainerRef) {
+            if (this._attachedToViewContainer) {
                 throw new Error('This view is already attached to a ViewContainer!');
             }
             this._appRef = appRef;
