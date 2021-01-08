@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+22.sha-1045465
+ * @license Angular v11.1.0-next.4+35.sha-e27b920
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -11255,16 +11255,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const matches = splitAtPeriod(name, [name, '']);
             const eventName = matches[0];
             const phase = matches[1].toLowerCase();
+            const ast = this._parseAction(expression, handlerSpan);
+            targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan, keySpan));
+            if (eventName.length === 0) {
+                this._reportError(`Animation event name is missing in binding`, sourceSpan);
+            }
             if (phase) {
-                switch (phase) {
-                    case 'start':
-                    case 'done':
-                        const ast = this._parseAction(expression, handlerSpan);
-                        targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan, keySpan));
-                        break;
-                    default:
-                        this._reportError(`The provided animation output phase value "${phase}" for "@${eventName}" is not supported (use start or done)`, sourceSpan);
-                        break;
+                if (phase !== 'start' && phase !== 'done') {
+                    this._reportError(`The provided animation output phase value "${phase}" for "@${eventName}" is not supported (use start or done)`, sourceSpan);
                 }
             }
             else {
@@ -18953,7 +18951,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+22.sha-1045465');
+    const VERSION$1 = new Version('11.1.0-next.4+35.sha-e27b920');
 
     /**
      * @license
@@ -34843,7 +34841,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+22.sha-1045465');
+    const VERSION$2 = new Version$1('11.1.0-next.4+35.sha-e27b920');
 
     /**
      * @license
