@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.8+6.sha-6438a29
+ * @license Angular v11.0.8+19.sha-adf42da
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3133,71 +3133,14 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * A wrapper around the Node.js file-system (i.e the `fs` package).
+     * A wrapper around the Node.js file-system that supports path manipulation.
      */
-    class NodeJSFileSystem {
-        constructor() {
-            this._caseSensitive = undefined;
-        }
-        exists(path) {
-            return fs$2.existsSync(path);
-        }
-        readFile(path) {
-            return fs$2.readFileSync(path, 'utf8');
-        }
-        readFileBuffer(path) {
-            return fs$2.readFileSync(path);
-        }
-        writeFile(path, data, exclusive = false) {
-            fs$2.writeFileSync(path, data, exclusive ? { flag: 'wx' } : undefined);
-        }
-        removeFile(path) {
-            fs$2.unlinkSync(path);
-        }
-        symlink(target, path) {
-            fs$2.symlinkSync(target, path);
-        }
-        readdir(path) {
-            return fs$2.readdirSync(path);
-        }
-        lstat(path) {
-            return fs$2.lstatSync(path);
-        }
-        stat(path) {
-            return fs$2.statSync(path);
-        }
+    class NodeJSPathManipulation {
         pwd() {
             return this.normalize(process.cwd());
         }
         chdir(dir) {
             process.chdir(dir);
-        }
-        copyFile(from, to) {
-            fs$2.copyFileSync(from, to);
-        }
-        moveFile(from, to) {
-            fs$2.renameSync(from, to);
-        }
-        ensureDir(path) {
-            const parents = [];
-            while (!this.isRoot(path) && !this.exists(path)) {
-                parents.push(path);
-                path = this.dirname(path);
-            }
-            while (parents.length) {
-                this.safeMkdir(parents.pop());
-            }
-        }
-        removeDeep(path) {
-            undefined(path);
-        }
-        isCaseSensitive() {
-            if (this._caseSensitive === undefined) {
-                // Note the use of the real file-system is intentional:
-                // `this.exists()` relies upon `isCaseSensitive()` so that would cause an infinite recursion.
-                this._caseSensitive = !fs$2.existsSync(togglePathCase(__filename));
-            }
-            return this._caseSensitive;
         }
         resolve(...paths) {
             return this.normalize(path.resolve(...paths));
@@ -3223,15 +3166,83 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         extname(path$1) {
             return path.extname(path$1);
         }
+        normalize(path) {
+            // Convert backslashes to forward slashes
+            return path.replace(/\\/g, '/');
+        }
+    }
+    /**
+     * A wrapper around the Node.js file-system that supports readonly operations and path manipulation.
+     */
+    class NodeJSReadonlyFileSystem extends NodeJSPathManipulation {
+        constructor() {
+            super(...arguments);
+            this._caseSensitive = undefined;
+        }
+        isCaseSensitive() {
+            if (this._caseSensitive === undefined) {
+                // Note the use of the real file-system is intentional:
+                // `this.exists()` relies upon `isCaseSensitive()` so that would cause an infinite recursion.
+                this._caseSensitive = !fs$2.existsSync(this.normalize(toggleCase(__filename)));
+            }
+            return this._caseSensitive;
+        }
+        exists(path) {
+            return fs$2.existsSync(path);
+        }
+        readFile(path) {
+            return fs$2.readFileSync(path, 'utf8');
+        }
+        readFileBuffer(path) {
+            return fs$2.readFileSync(path);
+        }
+        readdir(path) {
+            return fs$2.readdirSync(path);
+        }
+        lstat(path) {
+            return fs$2.lstatSync(path);
+        }
+        stat(path) {
+            return fs$2.statSync(path);
+        }
         realpath(path) {
             return this.resolve(fs$2.realpathSync(path));
         }
         getDefaultLibLocation() {
             return this.resolve(require.resolve('typescript'), '..');
         }
-        normalize(path) {
-            // Convert backslashes to forward slashes
-            return path.replace(/\\/g, '/');
+    }
+    /**
+     * A wrapper around the Node.js file-system (i.e. the `fs` package).
+     */
+    class NodeJSFileSystem extends NodeJSReadonlyFileSystem {
+        writeFile(path, data, exclusive = false) {
+            fs$2.writeFileSync(path, data, exclusive ? { flag: 'wx' } : undefined);
+        }
+        removeFile(path) {
+            fs$2.unlinkSync(path);
+        }
+        symlink(target, path) {
+            fs$2.symlinkSync(target, path);
+        }
+        copyFile(from, to) {
+            fs$2.copyFileSync(from, to);
+        }
+        moveFile(from, to) {
+            fs$2.renameSync(from, to);
+        }
+        ensureDir(path) {
+            const parents = [];
+            while (!this.isRoot(path) && !this.exists(path)) {
+                parents.push(path);
+                path = this.dirname(path);
+            }
+            while (parents.length) {
+                this.safeMkdir(parents.pop());
+            }
+        }
+        removeDeep(path) {
+            undefined(path);
         }
         safeMkdir(path) {
             try {
@@ -3247,10 +3258,10 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
         }
     }
     /**
-     * Toggle the case of each character in a file path.
+     * Toggle the case of each character in a string.
      */
-    function togglePathCase(str) {
-        return absoluteFrom(str.replace(/\w/g, ch => ch.toUpperCase() === ch ? ch.toLowerCase() : ch.toUpperCase()));
+    function toggleCase(str) {
+        return str.replace(/\w/g, ch => ch.toUpperCase() === ch ? ch.toLowerCase() : ch.toUpperCase());
     }
 
     /**
@@ -19649,7 +19660,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.8+6.sha-6438a29');
+    const VERSION$1 = new Version('11.0.8+19.sha-adf42da');
 
     /**
      * @license
@@ -20284,7 +20295,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.0.8+6.sha-6438a29');
+    const VERSION$2 = new Version('11.0.8+19.sha-adf42da');
 
     /**
      * @license
