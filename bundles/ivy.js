@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+79.sha-bd17610
+ * @license Angular v11.1.0-next.4+80.sha-b48eabd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16817,7 +16817,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function convertDeclareComponentFacadeToMetadata(declaration, typeSourceSpan, sourceMapUrl) {
         var _a, _b, _c, _d, _e;
-        const { template, interpolation } = parseJitTemplate(declaration.template.source, declaration.type.name, sourceMapUrl, (_a = declaration.preserveWhitespaces) !== null && _a !== void 0 ? _a : false, declaration.interpolation);
+        const { template, interpolation } = parseJitTemplate(declaration.template, declaration.type.name, sourceMapUrl, (_a = declaration.preserveWhitespaces) !== null && _a !== void 0 ? _a : false, declaration.interpolation);
         return Object.assign(Object.assign({}, convertDeclareDirectiveFacadeToMetadata(declaration, typeSourceSpan)), { template, styles: (_b = declaration.styles) !== null && _b !== void 0 ? _b : [], directives: ((_c = declaration.directives) !== null && _c !== void 0 ? _c : []).map(convertUsedDirectiveDeclarationToMetadata), pipes: convertUsedPipesToMetadata(declaration.pipes), viewProviders: declaration.viewProviders !== undefined ?
                 new WrappedNodeExpr(declaration.viewProviders) :
                 null, animations: declaration.animations !== undefined ? new WrappedNodeExpr(declaration.animations) :
@@ -16952,7 +16952,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+79.sha-bd17610');
+    const VERSION$1 = new Version('11.1.0-next.4+80.sha-b48eabd');
 
     /**
      * @license
@@ -17609,7 +17609,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+79.sha-bd17610'));
+        definitionMap.set('version', literal('11.1.0-next.4+80.sha-b48eabd'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -17702,8 +17702,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createComponentDefinitionMap(meta, template) {
         const definitionMap = createDirectiveDefinitionMap(meta);
-        const templateMap = compileTemplateDefinition(template);
-        definitionMap.set('template', templateMap);
+        definitionMap.set('template', getTemplateExpression(template));
+        if (template.isInline) {
+            definitionMap.set('isInline', literal(true));
+        }
         definitionMap.set('styles', toOptionalLiteralArray(meta.styles, literal));
         definitionMap.set('directives', compileUsedDirectiveMetadata(meta));
         definitionMap.set('pipes', compileUsedPipeMetadata(meta));
@@ -17723,16 +17725,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             definitionMap.set('preserveWhitespaces', literal(true));
         }
         return definitionMap;
-    }
-    /**
-     * Compiles the provided template into its partial definition.
-     */
-    function compileTemplateDefinition(template) {
-        const templateMap = new DefinitionMap();
-        const templateExpr = getTemplateExpression(template);
-        templateMap.set('source', templateExpr);
-        templateMap.set('isInline', literal(template.isInline));
-        return templateMap.toLiteralMap();
     }
     function getTemplateExpression(template) {
         if (typeof template.template === 'string') {
@@ -21060,7 +21052,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+79.sha-bd17610');
+    const VERSION$2 = new Version('11.1.0-next.4+80.sha-b48eabd');
 
     /**
      * @license
