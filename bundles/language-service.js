@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.8+31.sha-c6ca7b4
+ * @license Angular v11.0.9+7.sha-3f6279d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18457,7 +18457,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.8+31.sha-c6ca7b4');
+    const VERSION$1 = new Version('11.0.9+7.sha-3f6279d');
 
     /**
      * @license
@@ -22358,6 +22358,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
     }
+    /**
+     * Returns an absolute path from the text in `node`. If the text is already
+     * an absolute path, return it as is, otherwise join the path with the filename
+     * of the source file.
+     */
+    function extractAbsoluteFilePath(node) {
+        const url = node.text;
+        return path.isAbsolute(url) ? url : path.join(path.dirname(node.getSourceFile().fileName), url);
+    }
 
     /**
      * @license
@@ -25819,10 +25828,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (!getClassDeclFromDecoratorProp(asgn)) {
             return;
         }
-        const sf = urlNode.getSourceFile();
         // Extract url path specified by the url node, which is relative to the TypeScript source file
         // the url node is defined in.
-        const url = path.join(path.dirname(sf.fileName), urlNode.text);
+        const url = extractAbsoluteFilePath(urlNode);
         // If the file does not exist, bail. It is possible that the TypeScript language service host
         // does not have a `fileExists` method, in which case optimistically assume the file exists.
         if (tsLsHost.fileExists && !tsLsHost.fileExists(url))
@@ -25975,8 +25983,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // picked up by the TS Language Server.
                 continue;
             }
-            const curPath = urlNode.getSourceFile().fileName;
-            const url = path.join(path.dirname(curPath), urlNode.text);
+            const url = extractAbsoluteFilePath(urlNode);
             if (tsLsHost.fileExists(url))
                 continue;
             // Exclude opening and closing quotes in the url span.
@@ -34393,7 +34400,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.8+31.sha-c6ca7b4');
+    const VERSION$2 = new Version$1('11.0.9+7.sha-3f6279d');
 
     /**
      * @license
