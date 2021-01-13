@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+91.sha-2578810
+ * @license Angular v11.1.0-next.4+92.sha-6cff877
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18962,7 +18962,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+91.sha-2578810');
+    const VERSION$1 = new Version('11.1.0-next.4+92.sha-6cff877');
 
     /**
      * @license
@@ -27002,7 +27002,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     var InjectFlags;
     (function (InjectFlags) {
-        // TODO(alxhub): make this 'const' when ngc no longer writes exports of it into ngfactory files.
+        // TODO(alxhub): make this 'const' (and remove `InternalInjectFlags` enum) when ngc no longer
+        // writes exports of it into ngfactory files.
         /** Check self and check parent injector if needed */
         InjectFlags[InjectFlags["Default"] = 0] = "Default";
         /**
@@ -29968,59 +29969,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const ɵ0$2 = (token) => ({ token });
-    /**
-     * Inject decorator and metadata.
-     *
-     * @Annotation
-     * @publicApi
-     */
-    const Inject = makeParamDecorator('Inject', ɵ0$2);
-    /**
-     * Optional decorator and metadata.
-     *
-     * @Annotation
-     * @publicApi
-     */
-    const Optional = makeParamDecorator('Optional');
-    /**
-     * Self decorator and metadata.
-     *
-     * @Annotation
-     * @publicApi
-     */
-    const Self = makeParamDecorator('Self');
-    /**
-     * `SkipSelf` decorator and metadata.
-     *
-     * @Annotation
-     * @publicApi
-     */
-    const SkipSelf = makeParamDecorator('SkipSelf');
-    /**
-     * Host decorator and metadata.
-     *
-     * @Annotation
-     * @publicApi
-     */
-    const Host = makeParamDecorator('Host');
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const _THROW_IF_NOT_FOUND = {};
     const THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+    /*
+     * Name of a property (that we patch onto DI decorator), which is used as an annotation of which
+     * InjectFlag this decorator represents. This allows to avoid direct references to the DI decorators
+     * in the code, thus making them tree-shakable.
+     */
+    const DI_DECORATOR_FLAG = '__NG_DI_FLAG__';
     const NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
     const NG_TOKEN_PATH = 'ngTokenPath';
     const NEW_LINE = /\n/gm;
     const NO_NEW_LINE = 'ɵ';
     const SOURCE = '__source';
-    const ɵ0$3 = getClosureSafeProperty;
-    const USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$3 });
+    const ɵ0$2 = getClosureSafeProperty;
+    const USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$2 });
     /**
      * Current injector value used by `inject`.
      * - `undefined`: it is an error to call `inject`
@@ -30059,20 +30022,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 let flags = InjectFlags.Default;
                 for (let j = 0; j < arg.length; j++) {
                     const meta = arg[j];
-                    if (meta instanceof Optional || meta.ngMetadataName === 'Optional' || meta === Optional) {
-                        flags |= InjectFlags.Optional;
-                    }
-                    else if (meta instanceof SkipSelf || meta.ngMetadataName === 'SkipSelf' || meta === SkipSelf) {
-                        flags |= InjectFlags.SkipSelf;
-                    }
-                    else if (meta instanceof Self || meta.ngMetadataName === 'Self' || meta === Self) {
-                        flags |= InjectFlags.Self;
-                    }
-                    else if (meta instanceof Host || meta.ngMetadataName === 'Host' || meta === Host) {
-                        flags |= InjectFlags.Host;
-                    }
-                    else if (meta instanceof Inject || meta === Inject) {
-                        type = meta.token;
+                    const flag = getInjectFlag(meta);
+                    if (typeof flag === 'number') {
+                        // Special case when we handle @Inject decorator.
+                        if (flag === -1 /* Inject */) {
+                            type = meta.token;
+                        }
+                        else {
+                            flags |= flag;
+                        }
                     }
                     else {
                         type = meta;
@@ -30085,6 +30043,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         return args;
+    }
+    /**
+     * Attaches a given InjectFlag to a given decorator using monkey-patching.
+     * Since DI decorators can be used in providers `deps` array (when provider is configured using
+     * `useFactory`) without initialization (e.g. `Host`) and as an instance (e.g. `new Host()`), we
+     * attach the flag to make it available both as a static property and as a field on decorator
+     * instance.
+     *
+     * @param decorator Provided DI decorator.
+     * @param flag InjectFlag that should be applied.
+     */
+    function attachInjectFlag(decorator, flag) {
+        decorator[DI_DECORATOR_FLAG] = flag;
+        decorator.prototype[DI_DECORATOR_FLAG] = flag;
+        return decorator;
+    }
+    /**
+     * Reads monkey-patched property that contains InjectFlag attached to a decorator.
+     *
+     * @param token Token that may contain monkey-patched DI flags property.
+     */
+    function getInjectFlag(token) {
+        return token[DI_DECORATOR_FLAG];
     }
     function catchInjectorError(e, token, injectorErrorName, source) {
         const tokenPath = e[NG_TEMP_TOKEN_PATH];
@@ -30114,6 +30095,65 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return `${injectorErrorName}${source ? '(' + source + ')' : ''}[${context}]: ${text.replace(NEW_LINE, '\n  ')}`;
     }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const ɵ0$3 = (token) => ({ token });
+    /**
+     * Inject decorator and metadata.
+     *
+     * @Annotation
+     * @publicApi
+     */
+    const Inject = attachInjectFlag(
+    // Disable tslint because `DecoratorFlags` is a const enum which gets inlined.
+    // tslint:disable-next-line: no-toplevel-property-access
+    makeParamDecorator('Inject', ɵ0$3), -1 /* Inject */);
+    /**
+     * Optional decorator and metadata.
+     *
+     * @Annotation
+     * @publicApi
+     */
+    const Optional = 
+    // Disable tslint because `InternalInjectFlags` is a const enum which gets inlined.
+    // tslint:disable-next-line: no-toplevel-property-access
+    attachInjectFlag(makeParamDecorator('Optional'), 8 /* Optional */);
+    /**
+     * Self decorator and metadata.
+     *
+     * @Annotation
+     * @publicApi
+     */
+    const Self = 
+    // Disable tslint because `InternalInjectFlags` is a const enum which gets inlined.
+    // tslint:disable-next-line: no-toplevel-property-access
+    attachInjectFlag(makeParamDecorator('Self'), 2 /* Self */);
+    /**
+     * `SkipSelf` decorator and metadata.
+     *
+     * @Annotation
+     * @publicApi
+     */
+    const SkipSelf = 
+    // Disable tslint because `InternalInjectFlags` is a const enum which gets inlined.
+    // tslint:disable-next-line: no-toplevel-property-access
+    attachInjectFlag(makeParamDecorator('SkipSelf'), 4 /* SkipSelf */);
+    /**
+     * Host decorator and metadata.
+     *
+     * @Annotation
+     * @publicApi
+     */
+    const Host = 
+    // Disable tslint because `InternalInjectFlags` is a const enum which gets inlined.
+    // tslint:disable-next-line: no-toplevel-property-access
+    attachInjectFlag(makeParamDecorator('Host'), 1 /* Host */);
 
     /**
      * @license
@@ -34897,7 +34937,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+91.sha-2578810');
+    const VERSION$2 = new Version$1('11.1.0-next.4+92.sha-6cff877');
 
     /**
      * @license
