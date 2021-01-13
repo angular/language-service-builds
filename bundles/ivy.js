@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+81.sha-625d2c2
+ * @license Angular v11.1.0-next.4+82.sha-4db89f4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16952,7 +16952,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+81.sha-625d2c2');
+    const VERSION$1 = new Version('11.1.0-next.4+82.sha-4db89f4');
 
     /**
      * @license
@@ -17609,7 +17609,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+81.sha-625d2c2'));
+        definitionMap.set('version', literal('11.1.0-next.4+82.sha-4db89f4'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21052,7 +21052,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+81.sha-625d2c2');
+    const VERSION$2 = new Version('11.1.0-next.4+82.sha-4db89f4');
 
     /**
      * @license
@@ -33169,10 +33169,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             throw new Error(`Unexpected source mapping type: ${mapping.type}`);
         }
     }
-    function isTemplateDiagnostic(diagnostic) {
-        return diagnostic.hasOwnProperty('componentFile') &&
-            ts$1.isSourceFile(diagnostic.componentFile);
-    }
 
     /**
      * @license
@@ -38072,11 +38068,12 @@ Either add the @Injectable() decorator to '${provider.node.name
              */
             this.constructionDiagnostics = [];
             /**
-             * Semantic diagnostics related to the program itself.
+             * Non-template diagnostics related to the program itself. Does not include template
+             * diagnostics because the template type checker memoizes them itself.
              *
-             * This is set by (and memoizes) `getDiagnostics`.
+             * This is set by (and memoizes) `getNonTemplateDiagnostics`.
              */
-            this.diagnostics = null;
+            this.nonTemplateDiagnostics = null;
             this.constructionDiagnostics.push(...this.adapter.constructionDiagnostics);
             const incompatibleTypeCheckOptionsDiagnostic = verifyCompatibleTypeCheckOptions(this.options);
             if (incompatibleTypeCheckOptionsDiagnostic !== null) {
@@ -38134,37 +38131,20 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         /**
          * Get all Angular-related diagnostics for this compilation.
+         */
+        getDiagnostics() {
+            return [...this.getNonTemplateDiagnostics(), ...this.getTemplateDiagnostics()];
+        }
+        /**
+         * Get all Angular-related diagnostics for this compilation.
          *
          * If a `ts.SourceFile` is passed, only diagnostics related to that file are returned.
          */
-        getDiagnostics(file) {
-            if (this.diagnostics === null) {
-                const compilation = this.ensureAnalyzed();
-                this.diagnostics =
-                    [...compilation.traitCompiler.diagnostics, ...this.getTemplateDiagnostics()];
-                if (this.entryPoint !== null && compilation.exportReferenceGraph !== null) {
-                    this.diagnostics.push(...checkForPrivateExports(this.entryPoint, this.tsProgram.getTypeChecker(), compilation.exportReferenceGraph));
-                }
-            }
-            if (file === undefined) {
-                return this.diagnostics;
-            }
-            else {
-                return this.diagnostics.filter(diag => {
-                    if (diag.file === file) {
-                        return true;
-                    }
-                    else if (isTemplateDiagnostic(diag) && diag.componentFile === file) {
-                        // Template diagnostics are reported when diagnostics for the component file are
-                        // requested (since no consumer of `getDiagnostics` would ever ask for diagnostics from
-                        // the fake ts.SourceFile for templates).
-                        return true;
-                    }
-                    else {
-                        return false;
-                    }
-                });
-            }
+        getDiagnosticsForFile(file, optimizeFor) {
+            return [
+                ...this.getNonTemplateDiagnostics().filter(diag => diag.file === file),
+                ...this.getTemplateDiagnosticsForFile(file, optimizeFor)
+            ];
         }
         /**
          * Get all setup-related diagnostics for this compilation.
@@ -38491,6 +38471,30 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
             this.nextProgram = program;
             return diagnostics;
+        }
+        getTemplateDiagnosticsForFile(sf, optimizeFor) {
+            const compilation = this.ensureAnalyzed();
+            // Get the diagnostics.
+            const typeCheckSpan = this.perfRecorder.start('typeCheckDiagnostics');
+            const diagnostics = [];
+            if (!sf.isDeclarationFile && !this.adapter.isShim(sf)) {
+                diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, optimizeFor));
+            }
+            const program = this.typeCheckingProgramStrategy.getProgram();
+            this.perfRecorder.stop(typeCheckSpan);
+            this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
+            this.nextProgram = program;
+            return diagnostics;
+        }
+        getNonTemplateDiagnostics() {
+            if (this.nonTemplateDiagnostics === null) {
+                const compilation = this.ensureAnalyzed();
+                this.nonTemplateDiagnostics = [...compilation.traitCompiler.diagnostics];
+                if (this.entryPoint !== null && compilation.exportReferenceGraph !== null) {
+                    this.nonTemplateDiagnostics.push(...checkForPrivateExports(this.entryPoint, this.tsProgram.getTypeChecker(), compilation.exportReferenceGraph));
+                }
+            }
+            return this.nonTemplateDiagnostics;
         }
         /**
          * Reifies the inter-dependencies of NgModules and the components within their compilation scopes
@@ -41455,7 +41459,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 const program = compiler.getNextProgram();
                 const sourceFile = program.getSourceFile(fileName);
                 if (sourceFile) {
-                    diagnostics.push(...ttc.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile));
+                    diagnostics.push(...compiler.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile));
                 }
             }
             else {
