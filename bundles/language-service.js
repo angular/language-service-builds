@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-rc.0+19.sha-63bf613
+ * @license Angular v11.1.0-rc.0+21.sha-d5f696c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -822,9 +822,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const createInject = makeMetadataFactory('Inject', (token) => ({ token }));
     const createInjectionToken = makeMetadataFactory('InjectionToken', (desc) => ({ _desc: desc, ɵprov: undefined }));
     const createAttribute = makeMetadataFactory('Attribute', (attributeName) => ({ attributeName }));
-    const createContentChildren = makeMetadataFactory('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false }, data)));
+    // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
+    // explicitly set. This value will be changed to `true` in v12.
+    // TODO(misko): switch the default in v12 to `true`. See: packages/core/src/metadata/di.ts
+    const emitDistinctChangesOnlyDefaultValue = false;
+    const createContentChildren = makeMetadataFactory('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
     const createContentChild = makeMetadataFactory('ContentChild', (selector, data = {}) => (Object.assign({ selector, first: true, isViewQuery: false, descendants: true }, data)));
-    const createViewChildren = makeMetadataFactory('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true }, data)));
+    const createViewChildren = makeMetadataFactory('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
     const createViewChild = makeMetadataFactory('ViewChild', (selector, data) => (Object.assign({ selector, first: true, isViewQuery: true, descendants: true }, data)));
     const createDirective = makeMetadataFactory('Directive', (dir = {}) => dir);
     var ViewEncapsulation;
@@ -3104,8 +3108,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
     Identifiers$1.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
     Identifiers$1.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
-    Identifiers$1.staticViewQuery = { name: 'ɵɵstaticViewQuery', moduleName: CORE$1 };
-    Identifiers$1.staticContentQuery = { name: 'ɵɵstaticContentQuery', moduleName: CORE$1 };
     Identifiers$1.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
     Identifiers$1.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE$1 };
     Identifiers$1.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE$1 };
@@ -18179,11 +18181,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function prepareQueryParams(query, constantPool) {
-        const parameters = [getQueryPredicate(query, constantPool), literal(query.descendants)];
+        const parameters = [getQueryPredicate(query, constantPool), literal(toQueryFlags(query))];
         if (query.read) {
             parameters.push(query.read);
         }
         return parameters;
+    }
+    /**
+     * Translates query flags into `TQueryFlags` type in packages/core/src/render3/interfaces/query.ts
+     * @param query
+     */
+    function toQueryFlags(query) {
+        return (query.descendants ? 1 /* descendants */ : 0 /* none */) |
+            (query.static ? 2 /* isStatic */ : 0 /* none */) |
+            (query.emitDistinctChangesOnly ? 4 /* emitDistinctChangesOnly */ : 0 /* none */);
     }
     function convertAttributesToExpressions(attributes) {
         const values = [];
@@ -18199,9 +18210,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const updateStatements = [];
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         for (const query of queries) {
-            const queryInstruction = query.static ? Identifiers$1.staticContentQuery : Identifiers$1.contentQuery;
             // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
-            createStatements.push(importExpr(queryInstruction)
+            createStatements.push(importExpr(Identifiers$1.contentQuery)
                 .callFn([variable('dirIndex'), ...prepareQueryParams(query, constantPool)])
                 .toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
@@ -18267,9 +18277,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const updateStatements = [];
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         viewQueries.forEach((query) => {
-            const queryInstruction = query.static ? Identifiers$1.staticViewQuery : Identifiers$1.viewQuery;
             // creation, e.g. r3.viewQuery(somePredicate, true);
-            const queryDefinition = importExpr(queryInstruction).callFn(prepareQueryParams(query, constantPool));
+            const queryDefinition = importExpr(Identifiers$1.viewQuery).callFn(prepareQueryParams(query, constantPool));
             createStatements.push(queryDefinition.toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
             const temporary = tempAllocator();
@@ -18748,10 +18757,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     };
     function convertToR3QueryMetadata(facade) {
         return Object.assign(Object.assign({}, facade), { predicate: Array.isArray(facade.predicate) ? facade.predicate :
-                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static });
+                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static, emitDistinctChangesOnly: facade.emitDistinctChangesOnly });
     }
     function convertQueryDeclarationToMetadata(declaration) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         return {
             propertyName: declaration.propertyName,
             first: (_a = declaration.first) !== null && _a !== void 0 ? _a : false,
@@ -18760,6 +18769,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             descendants: (_b = declaration.descendants) !== null && _b !== void 0 ? _b : false,
             read: declaration.read ? new WrappedNodeExpr(declaration.read) : null,
             static: (_c = declaration.static) !== null && _c !== void 0 ? _c : false,
+            emitDistinctChangesOnly: (_d = declaration.emitDistinctChangesOnly) !== null && _d !== void 0 ? _d : true,
         };
     }
     function convertDirectiveFacadeToMetadata(facade) {
@@ -18962,7 +18972,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-rc.0+19.sha-63bf613');
+    const VERSION$1 = new Version('11.1.0-rc.0+21.sha-d5f696c');
 
     /**
      * @license
@@ -20488,6 +20498,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 selectors,
                 first: q.first,
                 descendants: q.descendants,
+                emitDistinctChangesOnly: q.emitDistinctChangesOnly,
                 propertyName,
                 read: q.read ? this._getTokenMetadata(q.read) : null,
                 static: q.static
@@ -29552,6 +29563,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @deprecated Since 9.0.0. With Ivy, this property is no longer necessary.
      */
     const ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
+    // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
+    // explicitly set. This value will be changed to `true` in v12.
+    // TODO(misko): switch the default in v12 to `true`. See: packages/compiler/src/core.ts
+    const emitDistinctChangesOnlyDefaultValue$1 = false;
     /**
      * Base class for query metadata.
      *
@@ -29564,7 +29579,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     class Query {
     }
-    const ɵ0$1 = (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false }, data));
+    const ɵ0$1 = (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue$1 }, data));
     /**
      * ContentChildren decorator and metadata.
      *
@@ -29583,7 +29598,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @publicApi
      */
     const ContentChild = makePropDecorator('ContentChild', ɵ1, Query);
-    const ɵ2 = (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true }, data));
+    const ɵ2 = (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue$1 }, data));
     /**
      * ViewChildren decorator and metadata.
      *
@@ -34937,7 +34952,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-rc.0+19.sha-63bf613');
+    const VERSION$2 = new Version$1('11.1.0-rc.0+21.sha-d5f696c');
 
     /**
      * @license

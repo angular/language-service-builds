@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-rc.0+19.sha-63bf613
+ * @license Angular v11.1.0-rc.0+21.sha-d5f696c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -827,6 +827,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
+    // explicitly set. This value will be changed to `true` in v12.
+    // TODO(misko): switch the default in v12 to `true`. See: packages/core/src/metadata/di.ts
+    const emitDistinctChangesOnlyDefaultValue = false;
     var ViewEncapsulation;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
@@ -2655,8 +2659,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
     Identifiers$1.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
     Identifiers$1.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
-    Identifiers$1.staticViewQuery = { name: 'ɵɵstaticViewQuery', moduleName: CORE$1 };
-    Identifiers$1.staticContentQuery = { name: 'ɵɵstaticContentQuery', moduleName: CORE$1 };
     Identifiers$1.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
     Identifiers$1.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE$1 };
     Identifiers$1.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE$1 };
@@ -16169,11 +16171,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     function prepareQueryParams(query, constantPool) {
-        const parameters = [getQueryPredicate(query, constantPool), literal(query.descendants)];
+        const parameters = [getQueryPredicate(query, constantPool), literal(toQueryFlags(query))];
         if (query.read) {
             parameters.push(query.read);
         }
         return parameters;
+    }
+    /**
+     * Translates query flags into `TQueryFlags` type in packages/core/src/render3/interfaces/query.ts
+     * @param query
+     */
+    function toQueryFlags(query) {
+        return (query.descendants ? 1 /* descendants */ : 0 /* none */) |
+            (query.static ? 2 /* isStatic */ : 0 /* none */) |
+            (query.emitDistinctChangesOnly ? 4 /* emitDistinctChangesOnly */ : 0 /* none */);
     }
     function convertAttributesToExpressions(attributes) {
         const values = [];
@@ -16189,9 +16200,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const updateStatements = [];
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         for (const query of queries) {
-            const queryInstruction = query.static ? Identifiers$1.staticContentQuery : Identifiers$1.contentQuery;
             // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
-            createStatements.push(importExpr(queryInstruction)
+            createStatements.push(importExpr(Identifiers$1.contentQuery)
                 .callFn([variable('dirIndex'), ...prepareQueryParams(query, constantPool)])
                 .toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
@@ -16257,9 +16267,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const updateStatements = [];
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         viewQueries.forEach((query) => {
-            const queryInstruction = query.static ? Identifiers$1.staticViewQuery : Identifiers$1.viewQuery;
             // creation, e.g. r3.viewQuery(somePredicate, true);
-            const queryDefinition = importExpr(queryInstruction).callFn(prepareQueryParams(query, constantPool));
+            const queryDefinition = importExpr(Identifiers$1.viewQuery).callFn(prepareQueryParams(query, constantPool));
             createStatements.push(queryDefinition.toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
             const temporary = tempAllocator();
@@ -16738,10 +16747,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     };
     function convertToR3QueryMetadata(facade) {
         return Object.assign(Object.assign({}, facade), { predicate: Array.isArray(facade.predicate) ? facade.predicate :
-                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static });
+                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static, emitDistinctChangesOnly: facade.emitDistinctChangesOnly });
     }
     function convertQueryDeclarationToMetadata(declaration) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         return {
             propertyName: declaration.propertyName,
             first: (_a = declaration.first) !== null && _a !== void 0 ? _a : false,
@@ -16750,6 +16759,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             descendants: (_b = declaration.descendants) !== null && _b !== void 0 ? _b : false,
             read: declaration.read ? new WrappedNodeExpr(declaration.read) : null,
             static: (_c = declaration.static) !== null && _c !== void 0 ? _c : false,
+            emitDistinctChangesOnly: (_d = declaration.emitDistinctChangesOnly) !== null && _d !== void 0 ? _d : true,
         };
     }
     function convertDirectiveFacadeToMetadata(facade) {
@@ -16952,7 +16962,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-rc.0+19.sha-63bf613');
+    const VERSION$1 = new Version('11.1.0-rc.0+21.sha-d5f696c');
 
     /**
      * @license
@@ -17609,7 +17619,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-rc.0+19.sha-63bf613'));
+        definitionMap.set('version', literal('11.1.0-rc.0+21.sha-d5f696c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -17649,6 +17659,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             meta.set('first', literal(true));
         }
         meta.set('predicate', Array.isArray(query.predicate) ? asLiteral(query.predicate) : query.predicate);
+        if (!query.emitDistinctChangesOnly) {
+            // `emitDistinctChangesOnly` is special because in future we expect it to be `true`. For this
+            // reason the absence should be interpreted as `true`.
+            meta.set('emitDistinctChangesOnly', literal(false));
+        }
         if (query.descendants) {
             meta.set('descendants', literal(true));
         }
@@ -21052,7 +21067,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-rc.0+19.sha-63bf613');
+    const VERSION$2 = new Version('11.1.0-rc.0+21.sha-d5f696c');
 
     /**
      * @license
@@ -28101,6 +28116,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         let read = null;
         // The default value for descendants is true for every decorator except @ContentChildren.
         let descendants = name !== 'ContentChildren';
+        let emitDistinctChangesOnly = emitDistinctChangesOnlyDefaultValue;
         if (args.length === 2) {
             const optionsExpr = unwrapExpression(args[1]);
             if (!ts$1.isObjectLiteralExpression(optionsExpr)) {
@@ -28117,6 +28133,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                     throw createValueHasWrongTypeError(descendantsExpr, descendantsValue, `@${name} options.descendants must be a boolean`);
                 }
                 descendants = descendantsValue;
+            }
+            if (options.has('emitDistinctChangesOnly')) {
+                const emitDistinctChangesOnlyExpr = options.get('emitDistinctChangesOnly');
+                const emitDistinctChangesOnlyValue = evaluator.evaluate(emitDistinctChangesOnlyExpr);
+                if (typeof emitDistinctChangesOnlyValue !== 'boolean') {
+                    throw createValueHasWrongTypeError(emitDistinctChangesOnlyExpr, emitDistinctChangesOnlyValue, `@${name} options.emitDistinctChangesOnlys must be a boolean`);
+                }
+                emitDistinctChangesOnly = emitDistinctChangesOnlyValue;
             }
             if (options.has('static')) {
                 const staticValue = evaluator.evaluate(options.get('static'));
@@ -28137,6 +28161,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             descendants,
             read,
             static: isStatic,
+            emitDistinctChangesOnly,
         };
     }
     function extractQueriesFromDecorator(queryData, reflector, evaluator, isCore) {
