@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.0.9+12.sha-72e8899
+ * @license Angular v11.0.9+17.sha-2f7e315
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18457,7 +18457,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.0.9+12.sha-72e8899');
+    const VERSION$1 = new Version('11.0.9+17.sha-2f7e315');
 
     /**
      * @license
@@ -26696,7 +26696,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Use Shadow DOM to encapsulate styles.
          *
          * For the DOM this means using modern [Shadow
-         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * DOM](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM) and
          * creating a ShadowRoot for Component's Host Element.
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
@@ -34400,7 +34400,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.0.9+12.sha-72e8899');
+    const VERSION$2 = new Version$1('11.0.9+17.sha-2f7e315');
 
     /**
      * @license
