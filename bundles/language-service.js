@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+104.sha-cf02cf1
+ * @license Angular v11.1.0-next.4+106.sha-d516113
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -822,9 +822,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const createInject = makeMetadataFactory('Inject', (token) => ({ token }));
     const createInjectionToken = makeMetadataFactory('InjectionToken', (desc) => ({ _desc: desc, ɵprov: undefined }));
     const createAttribute = makeMetadataFactory('Attribute', (attributeName) => ({ attributeName }));
-    const createContentChildren = makeMetadataFactory('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false }, data)));
+    // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
+    // explicitly set. This value will be changed to `true` in v12.
+    // TODO(misko): switch the default in v12 to `true`. See: packages/core/src/metadata/di.ts
+    const emitDistinctChangesOnlyDefaultValue = false;
+    const createContentChildren = makeMetadataFactory('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
     const createContentChild = makeMetadataFactory('ContentChild', (selector, data = {}) => (Object.assign({ selector, first: true, isViewQuery: false, descendants: true }, data)));
-    const createViewChildren = makeMetadataFactory('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true }, data)));
+    const createViewChildren = makeMetadataFactory('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
     const createViewChild = makeMetadataFactory('ViewChild', (selector, data) => (Object.assign({ selector, first: true, isViewQuery: true, descendants: true }, data)));
     const createDirective = makeMetadataFactory('Directive', (dir = {}) => dir);
     var ViewEncapsulation;
@@ -3104,8 +3108,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
     Identifiers$1.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
     Identifiers$1.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
-    Identifiers$1.staticViewQuery = { name: 'ɵɵstaticViewQuery', moduleName: CORE$1 };
-    Identifiers$1.staticContentQuery = { name: 'ɵɵstaticContentQuery', moduleName: CORE$1 };
     Identifiers$1.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
     Identifiers$1.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE$1 };
     Identifiers$1.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE$1 };
@@ -18179,11 +18181,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function prepareQueryParams(query, constantPool) {
-        const parameters = [getQueryPredicate(query, constantPool), literal(query.descendants)];
+        const parameters = [getQueryPredicate(query, constantPool), literal(toQueryFlags(query))];
         if (query.read) {
             parameters.push(query.read);
         }
         return parameters;
+    }
+    /**
+     * Translates query flags into `TQueryFlags` type in packages/core/src/render3/interfaces/query.ts
+     * @param query
+     */
+    function toQueryFlags(query) {
+        return (query.descendants ? 1 /* descendants */ : 0 /* none */) |
+            (query.static ? 2 /* isStatic */ : 0 /* none */) |
+            (query.emitDistinctChangesOnly ? 4 /* emitDistinctChangesOnly */ : 0 /* none */);
     }
     function convertAttributesToExpressions(attributes) {
         const values = [];
@@ -18199,9 +18210,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const updateStatements = [];
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         for (const query of queries) {
-            const queryInstruction = query.static ? Identifiers$1.staticContentQuery : Identifiers$1.contentQuery;
             // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
-            createStatements.push(importExpr(queryInstruction)
+            createStatements.push(importExpr(Identifiers$1.contentQuery)
                 .callFn([variable('dirIndex'), ...prepareQueryParams(query, constantPool)])
                 .toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
@@ -18267,9 +18277,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const updateStatements = [];
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         viewQueries.forEach((query) => {
-            const queryInstruction = query.static ? Identifiers$1.staticViewQuery : Identifiers$1.viewQuery;
             // creation, e.g. r3.viewQuery(somePredicate, true);
-            const queryDefinition = importExpr(queryInstruction).callFn(prepareQueryParams(query, constantPool));
+            const queryDefinition = importExpr(Identifiers$1.viewQuery).callFn(prepareQueryParams(query, constantPool));
             createStatements.push(queryDefinition.toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
             const temporary = tempAllocator();
@@ -18748,10 +18757,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     };
     function convertToR3QueryMetadata(facade) {
         return Object.assign(Object.assign({}, facade), { predicate: Array.isArray(facade.predicate) ? facade.predicate :
-                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static });
+                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static, emitDistinctChangesOnly: facade.emitDistinctChangesOnly });
     }
     function convertQueryDeclarationToMetadata(declaration) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         return {
             propertyName: declaration.propertyName,
             first: (_a = declaration.first) !== null && _a !== void 0 ? _a : false,
@@ -18760,6 +18769,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             descendants: (_b = declaration.descendants) !== null && _b !== void 0 ? _b : false,
             read: declaration.read ? new WrappedNodeExpr(declaration.read) : null,
             static: (_c = declaration.static) !== null && _c !== void 0 ? _c : false,
+            emitDistinctChangesOnly: (_d = declaration.emitDistinctChangesOnly) !== null && _d !== void 0 ? _d : true,
         };
     }
     function convertDirectiveFacadeToMetadata(facade) {
@@ -18962,7 +18972,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+104.sha-cf02cf1');
+    const VERSION$1 = new Version('11.1.0-next.4+106.sha-d516113');
 
     /**
      * @license
@@ -20488,6 +20498,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 selectors,
                 first: q.first,
                 descendants: q.descendants,
+                emitDistinctChangesOnly: q.emitDistinctChangesOnly,
                 propertyName,
                 read: q.read ? this._getTokenMetadata(q.read) : null,
                 static: q.static
@@ -30498,6 +30509,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @deprecated Since 9.0.0. With Ivy, this property is no longer necessary.
      */
     const ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
+    // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
+    // explicitly set. This value will be changed to `true` in v12.
+    // TODO(misko): switch the default in v12 to `true`. See: packages/compiler/src/core.ts
+    const emitDistinctChangesOnlyDefaultValue$1 = false;
     /**
      * Base class for query metadata.
      *
@@ -30517,7 +30532,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @Annotation
      * @publicApi
      */
-    const ContentChildren = makePropDecorator('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false }, data)), Query);
+    const ContentChildren = makePropDecorator('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue$1 }, data)), Query);
     /**
      * ContentChild decorator and metadata.
      *
@@ -30533,7 +30548,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @Annotation
      * @publicApi
      */
-    const ViewChildren = makePropDecorator('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true }, data)), Query);
+    const ViewChildren = makePropDecorator('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue$1 }, data)), Query);
     /**
      * ViewChild decorator and metadata.
      *
@@ -30619,6 +30634,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Determines if the contents of two arrays is identical
+     *
+     * @param a first array
+     * @param b second array
+     * @param identityAccessor Optional function for extracting stable object identity from a value in
+     *     the array.
+     */
+    function arrayEquals(a, b, identityAccessor) {
+        if (a.length !== b.length)
+            return false;
+        for (let i = 0; i < a.length; i++) {
+            let valueA = a[i];
+            let valueB = b[i];
+            if (identityAccessor) {
+                valueA = identityAccessor(valueA);
+                valueB = identityAccessor(valueB);
+            }
+            if (valueB !== valueA) {
+                return false;
+            }
+        }
+        return true;
+    }
     /**
      * Flattens an array.
      */
@@ -46668,6 +46707,15 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @nocollapse
      */
     ElementRef.__NG_ELEMENT_ID__ = SWITCH_ELEMENT_REF_FACTORY;
+    /**
+     * Unwraps `ElementRef` and return the `nativeElement`.
+     *
+     * @param value value to unwrap
+     * @returns `nativeElement` if `ElementRef` otherwise returns value as is.
+     */
+    function unwrapElementRef(value) {
+        return value instanceof ElementRef ? value.nativeElement : value;
+    }
 
     /**
      * @license
@@ -46770,7 +46818,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+104.sha-cf02cf1');
+    const VERSION$2 = new Version$1('11.1.0-next.4+106.sha-d516113');
 
     /**
      * @license
@@ -51127,11 +51175,21 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @publicApi
      */
     class QueryList {
-        constructor() {
+        /**
+         * @param emitDistinctChangesOnly Whether `QueryList.changes` should fire only when actual change
+         *     has occurred. Or if it should fire when query is recomputed. (recomputing could resolve in
+         *     the same result) This is set to `false` for backwards compatibility but will be changed to
+         *     true in v12.
+         */
+        constructor(_emitDistinctChangesOnly = false) {
+            this._emitDistinctChangesOnly = _emitDistinctChangesOnly;
             this.dirty = true;
             this._results = [];
-            this.changes = new EventEmitter();
+            this._changesDetected = false;
+            this._changes = null;
             this.length = 0;
+            this.first = undefined;
+            this.last = undefined;
             // This function should be declared on the prototype, but doing so there will cause the class
             // declaration to have side-effects and become not tree-shakable. For this reason we do it in
             // the constructor.
@@ -51140,6 +51198,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             const proto = QueryList.prototype;
             if (!proto[symbol])
                 proto[symbol] = symbolIterator;
+        }
+        /**
+         * Returns `Observable` of `QueryList` notifying the subscriber of changes.
+         */
+        get changes() {
+            return this._changes || (this._changes = new EventEmitter());
         }
         /**
          * Returns the QueryList entry at `index`.
@@ -51204,19 +51268,31 @@ Please check that 1) the type for the parameter at index ${index} is correct and
          * occurs.
          *
          * @param resultsTree The query results to store
+         * @param identityAccessor Optional function for extracting stable object identity from a value
+         *    in the array. This function is executed for each element of the query result list while
+         *    comparing current query list with the new one (provided as a first argument of the `reset`
+         *    function) to detect if the lists are different. If the function is not provided, elements
+         *    are compared as is (without any pre-processing).
          */
-        reset(resultsTree) {
-            this._results = flatten$1(resultsTree);
-            this.dirty = false;
-            this.length = this._results.length;
-            this.last = this._results[this.length - 1];
-            this.first = this._results[0];
+        reset(resultsTree, identityAccessor) {
+            // Cast to `QueryListInternal` so that we can mutate fields which are readonly for the usage of
+            // QueryList (but not for QueryList itself.)
+            const self = this;
+            self.dirty = false;
+            const newResultFlat = flatten$1(resultsTree);
+            if (this._changesDetected = !arrayEquals(self._results, newResultFlat, identityAccessor)) {
+                self._results = newResultFlat;
+                self.length = newResultFlat.length;
+                self.last = newResultFlat[this.length - 1];
+                self.first = newResultFlat[0];
+            }
         }
         /**
          * Triggers a change event by emitting on the `changes` {@link EventEmitter}.
          */
         notifyOnChanges() {
-            this.changes.emit(this);
+            if (this._changes && (this._changesDetected || !this._emitDistinctChangesOnly))
+                this._changes.emit(this);
         }
         /** internal */
         setDirty() {
@@ -51285,10 +51361,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     class TQueryMetadata_ {
-        constructor(predicate, descendants, isStatic, read = null) {
+        constructor(predicate, flags, read = null) {
             this.predicate = predicate;
-            this.descendants = descendants;
-            this.isStatic = isStatic;
+            this.flags = flags;
             this.read = read;
         }
     }
@@ -51381,7 +51456,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return null;
         }
         isApplyingToNode(tNode) {
-            if (this._appliesToNextNode && this.metadata.descendants === false) {
+            if (this._appliesToNextNode &&
+                (this.metadata.flags & 1 /* descendants */) !== 1 /* descendants */) {
                 const declarationNodeIdx = this._declarationNodeIndex;
                 let parent = tNode.parent;
                 // Determine if a given TNode is a "direct" child of a node on which a content query was
@@ -51593,7 +51669,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const queryIndex = getCurrentQueryIndex();
         setCurrentQueryIndex(queryIndex + 1);
         const tQuery = getTQuery(tView, queryIndex);
-        if (queryList.dirty && (isCreationMode(lView) === tQuery.metadata.isStatic)) {
+        if (queryList.dirty &&
+            (isCreationMode(lView) ===
+                ((tQuery.metadata.flags & 2 /* isStatic */) === 2 /* isStatic */))) {
             if (tQuery.matches === null) {
                 queryList.reset([]);
             }
@@ -51601,7 +51679,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 const result = tQuery.crossesNgTemplate ?
                     collectQueryResults(tView, lView, queryIndex, []) :
                     materializeViewResults(tView, lView, tQuery, queryIndex);
-                queryList.reset(result);
+                queryList.reset(result, unwrapElementRef);
                 queryList.notifyOnChanges();
             }
             return true;
@@ -51609,37 +51687,24 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         return false;
     }
     /**
-     * Creates new QueryList for a static view query.
-     *
-     * @param predicate The type for which the query will search
-     * @param descend Whether or not to descend into children
-     * @param read What to save in the query
-     *
-     * @codeGenApi
-     */
-    function ɵɵstaticViewQuery(predicate, descend, read) {
-        viewQueryInternal(getTView(), getLView(), predicate, descend, read, true);
-    }
-    /**
      * Creates new QueryList, stores the reference in LView and returns QueryList.
      *
      * @param predicate The type for which the query will search
-     * @param descend Whether or not to descend into children
+     * @param flags Flags associated with the query
      * @param read What to save in the query
      *
      * @codeGenApi
      */
-    function ɵɵviewQuery(predicate, descend, read) {
-        viewQueryInternal(getTView(), getLView(), predicate, descend, read, false);
-    }
-    function viewQueryInternal(tView, lView, predicate, descend, read, isStatic) {
+    function ɵɵviewQuery(predicate, flags, read) {
+        ngDevMode && assertNumber(flags, 'Expecting flags');
+        const tView = getTView();
         if (tView.firstCreatePass) {
-            createTQuery(tView, new TQueryMetadata_(predicate, descend, isStatic, read), -1);
-            if (isStatic) {
+            createTQuery(tView, new TQueryMetadata_(predicate, flags, read), -1);
+            if ((flags & 2 /* isStatic */) === 2 /* isStatic */) {
                 tView.staticViewQueries = true;
             }
         }
-        createLQuery(tView, lView);
+        createLQuery(tView, getLView(), flags);
     }
     /**
      * Registers a QueryList, associated with a content query, for later refresh (part of a view
@@ -51647,39 +51712,24 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @param directiveIndex Current directive index
      * @param predicate The type for which the query will search
-     * @param descend Whether or not to descend into children
+     * @param flags Flags associated with the query
      * @param read What to save in the query
      * @returns QueryList<T>
      *
      * @codeGenApi
      */
-    function ɵɵcontentQuery(directiveIndex, predicate, descend, read) {
-        contentQueryInternal(getTView(), getLView(), predicate, descend, read, false, getCurrentTNode(), directiveIndex);
-    }
-    /**
-     * Registers a QueryList, associated with a static content query, for later refresh
-     * (part of a view refresh).
-     *
-     * @param directiveIndex Current directive index
-     * @param predicate The type for which the query will search
-     * @param descend Whether or not to descend into children
-     * @param read What to save in the query
-     * @returns QueryList<T>
-     *
-     * @codeGenApi
-     */
-    function ɵɵstaticContentQuery(directiveIndex, predicate, descend, read) {
-        contentQueryInternal(getTView(), getLView(), predicate, descend, read, true, getCurrentTNode(), directiveIndex);
-    }
-    function contentQueryInternal(tView, lView, predicate, descend, read, isStatic, tNode, directiveIndex) {
+    function ɵɵcontentQuery(directiveIndex, predicate, flags, read) {
+        ngDevMode && assertNumber(flags, 'Expecting flags');
+        const tView = getTView();
         if (tView.firstCreatePass) {
-            createTQuery(tView, new TQueryMetadata_(predicate, descend, isStatic, read), tNode.index);
+            const tNode = getCurrentTNode();
+            createTQuery(tView, new TQueryMetadata_(predicate, flags, read), tNode.index);
             saveContentQueryAndDirectiveIndex(tView, directiveIndex);
-            if (isStatic) {
+            if ((flags & 2 /* isStatic */) === 2 /* isStatic */) {
                 tView.staticContentQueries = true;
             }
         }
-        createLQuery(tView, lView);
+        createLQuery(tView, getLView(), flags);
     }
     /**
      * Loads a QueryList corresponding to the current view or content query.
@@ -51695,8 +51745,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         ngDevMode && assertIndexInRange(lView[QUERIES].queries, queryIndex);
         return lView[QUERIES].queries[queryIndex].queryList;
     }
-    function createLQuery(tView, lView) {
-        const queryList = new QueryList();
+    function createLQuery(tView, lView, flags) {
+        const queryList = new QueryList((flags & 4 /* emitDistinctChangesOnly */) === 4 /* emitDistinctChangesOnly */);
         storeCleanupWithContext(tView, lView, queryList, queryList.destroy);
         if (lView[QUERIES] === null)
             lView[QUERIES] = new LQueries_();
@@ -51841,8 +51891,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         'ɵɵpipe': ɵɵpipe,
         'ɵɵqueryRefresh': ɵɵqueryRefresh,
         'ɵɵviewQuery': ɵɵviewQuery,
-        'ɵɵstaticViewQuery': ɵɵstaticViewQuery,
-        'ɵɵstaticContentQuery': ɵɵstaticContentQuery,
         'ɵɵloadQuery': ɵɵloadQuery,
         'ɵɵcontentQuery': ɵɵcontentQuery,
         'ɵɵreference': ɵɵreference,
@@ -52602,7 +52650,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             descendants: ann.descendants,
             first: ann.first,
             read: ann.read ? ann.read : null,
-            static: !!ann.static
+            static: !!ann.static,
+            emitDistinctChangesOnly: !!ann.emitDistinctChangesOnly,
         };
     }
     function extractQueriesMetadata(type, propMetadata, isQueryAnn) {
