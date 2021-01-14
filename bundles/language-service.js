@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-rc.0+12.sha-968b2bb
+ * @license Angular v11.1.0-rc.0+19.sha-63bf613
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18962,7 +18962,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-rc.0+12.sha-968b2bb');
+    const VERSION$1 = new Version('11.1.0-rc.0+19.sha-63bf613');
 
     /**
      * @license
@@ -27194,7 +27194,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * Use Shadow DOM to encapsulate styles.
          *
          * For the DOM this means using modern [Shadow
-         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * DOM](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM) and
          * creating a ShadowRoot for Component's Host Element.
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
@@ -33457,7 +33457,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         ngDevMode && assertIndexInRange(rootView, index);
         rootView[index] = rNode;
         // '#host' is added here as we don't know the real host DOM name (we don't want to read it) and at
-        // the same time we want to communicate the the debug `TNode` that this is a special `TNode`
+        // the same time we want to communicate the debug `TNode` that this is a special `TNode`
         // representing a host element.
         const tNode = getOrCreateTNode(tView, index, 2 /* Element */, '#host', null);
         const mergedAttrs = tNode.mergedAttrs = def.hostAttrs;
@@ -34937,7 +34937,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-rc.0+12.sha-968b2bb');
+    const VERSION$2 = new Version$1('11.1.0-rc.0+19.sha-63bf613');
 
     /**
      * @license
