@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+106.sha-d516113
+ * @license Angular v11.1.0-next.4+107.sha-9a5ac47
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16962,7 +16962,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+106.sha-d516113');
+    const VERSION$1 = new Version('11.1.0-next.4+107.sha-9a5ac47');
 
     /**
      * @license
@@ -17619,7 +17619,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+106.sha-d516113'));
+        definitionMap.set('version', literal('11.1.0-next.4+107.sha-9a5ac47'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21067,7 +21067,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+106.sha-d516113');
+    const VERSION$2 = new Version('11.1.0-next.4+107.sha-9a5ac47');
 
     /**
      * @license
@@ -41281,34 +41281,146 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    class ReferenceBuilder {
+    function toFilePosition(shimLocation) {
+        return { fileName: shimLocation.shimPath, position: shimLocation.positionInShimFile };
+    }
+    var RequestKind;
+    (function (RequestKind) {
+        RequestKind[RequestKind["Template"] = 0] = "Template";
+        RequestKind[RequestKind["TypeScript"] = 1] = "TypeScript";
+    })(RequestKind || (RequestKind = {}));
+    class ReferencesAndRenameBuilder {
         constructor(strategy, tsLS, compiler) {
             this.strategy = strategy;
             this.tsLS = tsLS;
             this.compiler = compiler;
             this.ttc = this.compiler.getTemplateTypeChecker();
         }
-        get(filePath, position) {
+        findRenameLocations(filePath, position) {
             this.ttc.generateAllTypeCheckBlocks();
             const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
-            return templateInfo !== undefined ?
-                this.getReferencesAtTemplatePosition(templateInfo, position) :
-                this.getReferencesAtTypescriptPosition(filePath, position);
+            // We could not get a template at position so we assume the request is came from outside the
+            // template.
+            if (templateInfo === undefined) {
+                const requestNode = this.getTsNodeAtPosition(filePath, position);
+                if (requestNode === null) {
+                    return undefined;
+                }
+                const requestOrigin = { kind: RequestKind.TypeScript, requestNode };
+                return this.findRenameLocationsAtTypescriptPosition(filePath, position, requestOrigin);
+            }
+            return this.findRenameLocationsAtTemplatePosition(templateInfo, position);
         }
-        getReferencesAtTemplatePosition({ template, component }, position) {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
+        findRenameLocationsAtTemplatePosition(templateInfo, position) {
+            const allTargetDetails = this.getTargetDetailsAtTemplatePosition(templateInfo, position);
+            if (allTargetDetails === null) {
+                return undefined;
+            }
+            const allRenameLocations = [];
+            for (const targetDetails of allTargetDetails) {
+                const requestOrigin = {
+                    kind: RequestKind.Template,
+                    requestNode: targetDetails.templateTarget,
+                    position,
+                };
+                for (const location of targetDetails.typescriptLocations) {
+                    const locations = this.findRenameLocationsAtTypescriptPosition(location.fileName, location.position, requestOrigin);
+                    // If we couldn't find rename locations for _any_ result, we should not allow renaming to
+                    // proceed instead of having a partially complete rename.
+                    if (locations === undefined) {
+                        return undefined;
+                    }
+                    allRenameLocations.push(...locations);
+                }
+            }
+            return allRenameLocations.length > 0 ? allRenameLocations : undefined;
+        }
+        getTsNodeAtPosition(filePath, position) {
+            var _a;
+            const sf = this.strategy.getProgram().getSourceFile(filePath);
+            if (!sf) {
+                return null;
+            }
+            return (_a = findTightestNode(sf, position)) !== null && _a !== void 0 ? _a : null;
+        }
+        findRenameLocationsAtTypescriptPosition(filePath, position, requestOrigin) {
+            let originalNodeText;
+            if (requestOrigin.kind === RequestKind.TypeScript) {
+                originalNodeText = requestOrigin.requestNode.getText();
+            }
+            else {
+                const templateNodeText = getTemplateNodeRenameTextAtPosition(requestOrigin.requestNode, requestOrigin.position);
+                if (templateNodeText === null) {
+                    return undefined;
+                }
+                originalNodeText = templateNodeText;
+            }
+            const locations = this.tsLS.findRenameLocations(filePath, position, /*findInStrings*/ false, /*findInComments*/ false);
+            if (locations === undefined) {
+                return undefined;
+            }
+            const entries = [];
+            for (const location of locations) {
+                // TODO(atscott): Determine if a file is a shim file in a more robust way and make the API
+                // available in an appropriate location.
+                if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(location.fileName))) {
+                    const entry = this.convertToTemplateDocumentSpan(location, this.ttc, originalNodeText);
+                    // There is no template node whose text matches the original rename request. Bail on
+                    // renaming completely rather than providing incomplete results.
+                    if (entry === null) {
+                        return undefined;
+                    }
+                    entries.push(entry);
+                }
+                else {
+                    // Ensure we only allow renaming a TS result with matching text
+                    const refNode = this.getTsNodeAtPosition(location.fileName, location.textSpan.start);
+                    if (refNode === null || refNode.getText() !== originalNodeText) {
+                        return undefined;
+                    }
+                    entries.push(location);
+                }
+            }
+            return entries;
+        }
+        getReferencesAtPosition(filePath, position) {
+            this.ttc.generateAllTypeCheckBlocks();
+            const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
+            if (templateInfo === undefined) {
+                return this.getReferencesAtTypescriptPosition(filePath, position);
+            }
+            return this.getReferencesAtTemplatePosition(templateInfo, position);
+        }
+        getReferencesAtTemplatePosition(templateInfo, position) {
+            const allTargetDetails = this.getTargetDetailsAtTemplatePosition(templateInfo, position);
+            if (allTargetDetails === null) {
+                return undefined;
+            }
+            const allReferences = [];
+            for (const targetDetails of allTargetDetails) {
+                for (const location of targetDetails.typescriptLocations) {
+                    const refs = this.getReferencesAtTypescriptPosition(location.fileName, location.position);
+                    if (refs !== undefined) {
+                        allReferences.push(...refs);
+                    }
+                }
+            }
+            return allReferences.length > 0 ? allReferences : undefined;
+        }
+        getTargetDetailsAtTemplatePosition({ template, component }, position) {
             // Find the AST node in the template at the position.
             const positionDetails = getTargetAtPosition(template, position);
             if (positionDetails === null) {
-                return undefined;
+                return null;
             }
             const nodes = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
                 positionDetails.context.nodes :
                 [positionDetails.context.node];
-            const references = [];
+            const details = [];
             for (const node of nodes) {
                 // Get the information about the TCB at the template position.
                 const symbol = this.ttc.getSymbolOfNode(node, component);
+                const templateTarget = node;
                 if (symbol === null) {
                     continue;
                 }
@@ -41320,7 +41432,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         break;
                     case SymbolKind.Element: {
                         const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
-                        references.push(...(_a = this.getReferencesForDirectives(matches)) !== null && _a !== void 0 ? _a : []);
+                        details.push({ typescriptLocations: this.getPositionsForDirectives(matches), templateTarget });
                         break;
                     }
                     case SymbolKind.DomBinding: {
@@ -41328,73 +41440,68 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         // have a shim location. This means we can't match dom bindings to their lib.dom
                         // reference, but we can still see if they match to a directive.
                         if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
-                            break;
+                            return null;
                         }
                         const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
-                        references.push(...(_b = this.getReferencesForDirectives(directives)) !== null && _b !== void 0 ? _b : []);
+                        details.push({ typescriptLocations: this.getPositionsForDirectives(directives), templateTarget });
                         break;
                     }
                     case SymbolKind.Reference: {
-                        const { shimPath, positionInShimFile } = symbol.referenceVarLocation;
-                        references.push(...(_c = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _c !== void 0 ? _c : []);
+                        details.push({ typescriptLocations: [toFilePosition(symbol.referenceVarLocation)], templateTarget });
                         break;
                     }
                     case SymbolKind.Variable: {
-                        const { positionInShimFile: initializerPosition, shimPath } = symbol.initializerLocation;
-                        const localVarPosition = symbol.localVarLocation.positionInShimFile;
-                        if ((node instanceof Variable)) {
-                            if (node.valueSpan !== undefined && isWithin(position, node.valueSpan)) {
+                        if ((templateTarget instanceof Variable)) {
+                            if (templateTarget.valueSpan !== undefined &&
+                                isWithin(position, templateTarget.valueSpan)) {
                                 // In the valueSpan of the variable, we want to get the reference of the initializer.
-                                references.push(...(_d = this.getReferencesAtTypescriptPosition(shimPath, initializerPosition)) !== null && _d !== void 0 ? _d : []);
+                                details.push({
+                                    typescriptLocations: [toFilePosition(symbol.initializerLocation)],
+                                    templateTarget,
+                                });
                             }
-                            else if (isWithin(position, node.keySpan)) {
+                            else if (isWithin(position, templateTarget.keySpan)) {
                                 // In the keySpan of the variable, we want to get the reference of the local variable.
-                                references.push(...(_e = this.getReferencesAtTypescriptPosition(shimPath, localVarPosition)) !== null && _e !== void 0 ? _e : []);
+                                details.push({ typescriptLocations: [toFilePosition(symbol.localVarLocation)], templateTarget });
                             }
                         }
                         else {
-                            // If the templateNode is not the `TmplAstVariable`, it must be a usage of the variable
-                            // somewhere in the template.
-                            references.push(...(_f = this.getReferencesAtTypescriptPosition(shimPath, localVarPosition)) !== null && _f !== void 0 ? _f : []);
+                            // If the templateNode is not the `TmplAstVariable`, it must be a usage of the
+                            // variable somewhere in the template.
+                            details.push({ typescriptLocations: [toFilePosition(symbol.localVarLocation)], templateTarget });
                         }
                         break;
                     }
                     case SymbolKind.Input:
                     case SymbolKind.Output: {
-                        // TODO(atscott): Determine how to handle when the binding maps to several inputs/outputs
-                        const { shimPath, positionInShimFile } = symbol.bindings[0].shimLocation;
-                        references.push(...(_g = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _g !== void 0 ? _g : []);
+                        details.push({
+                            typescriptLocations: symbol.bindings.map(binding => toFilePosition(binding.shimLocation)),
+                            templateTarget,
+                        });
                         break;
                     }
                     case SymbolKind.Pipe:
                     case SymbolKind.Expression: {
-                        const { shimPath, positionInShimFile } = symbol.shimLocation;
-                        references.push(...(_h = this.getReferencesAtTypescriptPosition(shimPath, positionInShimFile)) !== null && _h !== void 0 ? _h : []);
+                        details.push({ typescriptLocations: [toFilePosition(symbol.shimLocation)], templateTarget });
                         break;
                     }
                 }
             }
-            if (references.length === 0) {
-                return undefined;
-            }
-            return references;
+            return details.length > 0 ? details : null;
         }
-        getReferencesForDirectives(directives) {
-            const allDirectiveRefs = [];
+        getPositionsForDirectives(directives) {
+            const allDirectives = [];
             for (const dir of directives.values()) {
                 const dirClass = dir.tsSymbol.valueDeclaration;
                 if (dirClass === undefined || !ts$1.isClassDeclaration(dirClass) ||
                     dirClass.name === undefined) {
                     continue;
                 }
-                const dirFile = dirClass.getSourceFile().fileName;
-                const dirPosition = dirClass.name.getStart();
-                const directiveRefs = this.getReferencesAtTypescriptPosition(dirFile, dirPosition);
-                if (directiveRefs !== undefined) {
-                    allDirectiveRefs.push(...directiveRefs);
-                }
+                const { fileName } = dirClass.getSourceFile();
+                const position = dirClass.name.getStart();
+                allDirectives.push({ fileName, position });
             }
-            return allDirectiveRefs.length > 0 ? allDirectiveRefs : undefined;
+            return allDirectives;
         }
         getReferencesAtTypescriptPosition(fileName, position) {
             const refs = this.tsLS.getReferencesAtPosition(fileName, position);
@@ -41404,7 +41511,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const entries = [];
             for (const ref of refs) {
                 if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(ref.fileName))) {
-                    const entry = this.convertToTemplateReferenceEntry(ref, this.ttc);
+                    const entry = this.convertToTemplateDocumentSpan(ref, this.ttc);
                     if (entry !== null) {
                         entries.push(entry);
                     }
@@ -41415,24 +41522,25 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
             return entries;
         }
-        convertToTemplateReferenceEntry(shimReferenceEntry, templateTypeChecker) {
-            const sf = this.strategy.getProgram().getSourceFile(shimReferenceEntry.fileName);
+        convertToTemplateDocumentSpan(shimDocumentSpan, templateTypeChecker, requiredNodeText) {
+            const sf = this.strategy.getProgram().getSourceFile(shimDocumentSpan.fileName);
             if (sf === undefined) {
                 return null;
             }
-            const tcbNode = findTightestNode(sf, shimReferenceEntry.textSpan.start);
+            const tcbNode = findTightestNode(sf, shimDocumentSpan.textSpan.start);
             if (tcbNode === undefined ||
                 hasExpressionIdentifier(sf, tcbNode, ExpressionIdentifier.EVENT_PARAMETER)) {
-                // If the reference result is the $event parameter in the subscribe/addEventListener function
-                // in the TCB, we want to filter this result out of the references. We really only want to
-                // return references to the parameter in the template itself.
+                // If the reference result is the $event parameter in the subscribe/addEventListener
+                // function in the TCB, we want to filter this result out of the references. We really only
+                // want to return references to the parameter in the template itself.
                 return null;
             }
-            // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project serverHost
-            // or LSParseConfigHost in the adapter. We should have a better defined way to normalize paths.
+            // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project
+            // serverHost or LSParseConfigHost in the adapter. We should have a better defined way to
+            // normalize paths.
             const mapping = templateTypeChecker.getTemplateMappingAtShimLocation({
-                shimPath: absoluteFrom(shimReferenceEntry.fileName),
-                positionInShimFile: shimReferenceEntry.textSpan.start,
+                shimPath: absoluteFrom(shimDocumentSpan.fileName),
+                positionInShimFile: shimDocumentSpan.textSpan.start,
             });
             if (mapping === null) {
                 return null;
@@ -41446,13 +41554,42 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 templateUrl = absoluteFrom(templateSourceMapping.templateUrl);
             }
             else {
-                // This includes indirect mappings, which are difficult to map directly to the code location.
-                // Diagnostics similarly return a synthetic template string for this case rather than a real
-                // location.
+                // This includes indirect mappings, which are difficult to map directly to the code
+                // location. Diagnostics similarly return a synthetic template string for this case rather
+                // than a real location.
                 return null;
             }
-            return Object.assign(Object.assign({}, shimReferenceEntry), { fileName: templateUrl, textSpan: toTextSpan(span) });
+            if (requiredNodeText !== undefined && span.toString() !== requiredNodeText) {
+                return null;
+            }
+            return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span) });
         }
+    }
+    function getTemplateNodeRenameTextAtPosition(node, position) {
+        if (node instanceof BoundAttribute || node instanceof TextAttribute ||
+            node instanceof BoundEvent) {
+            return node.name;
+        }
+        else if (node instanceof Variable || node instanceof Reference) {
+            if (isWithin(position, node.keySpan)) {
+                return node.keySpan.toString();
+            }
+            else if (node.valueSpan && isWithin(position, node.valueSpan)) {
+                return node.valueSpan.toString();
+            }
+        }
+        if (node instanceof BindingPipe) {
+            // TODO(atscott): Add support for renaming pipes
+            return null;
+        }
+        if (node instanceof PropertyRead || node instanceof MethodCall || node instanceof PropertyWrite ||
+            node instanceof SafePropertyRead || node instanceof SafeMethodCall) {
+            return node.name;
+        }
+        else if (node instanceof LiteralPrimitive) {
+            return node.value;
+        }
+        return null;
     }
 
     /**
@@ -41532,7 +41669,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getReferencesAtPosition(fileName, position) {
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
-            const results = new ReferenceBuilder(this.strategy, this.tsLS, compiler).get(fileName, position);
+            const results = new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
+                .getReferencesAtPosition(fileName, position);
+            this.compilerFactory.registerLastKnownProgram();
+            return results;
+        }
+        findRenameLocations(fileName, position) {
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const results = new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
+                .findRenameLocations(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
@@ -41747,8 +41892,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return ngLS.getReferencesAtPosition(fileName, position);
         }
         function findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename) {
-            // TODO(atscott): implement
-            return undefined;
+            // Most operations combine results from all extensions. However, rename locations are exclusive
+            // (results from only one extension are used) so our rename locations are a superset of the TS
+            // rename locations. As a result, we do not check the `angularOnly` flag here because we always
+            // want to include results at TS locations as well as locations in templates.
+            return ngLS.findRenameLocations(fileName, position);
         }
         function getCompletionsAtPosition(fileName, position, options) {
             var _a;
