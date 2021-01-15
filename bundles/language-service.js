@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+113.sha-61792cc
+ * @license Angular v11.1.0-next.4+114.sha-40e0bfd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -11123,6 +11123,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         targetProps, keySpan) {
             if (isAnimationLabel(name)) {
                 name = name.substring(1);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan(keySpan.start.offset + 1, keySpan.end.offset));
+                }
                 if (value) {
                     this._reportError(`Assigning animation triggers via @prop="exp" attributes with an expression is invalid.` +
                         ` Use property bindings (e.g. [@prop]="exp") or use an attribute without a value (e.g. @prop) instead.`, sourceSpan, ParseErrorLevel.ERROR);
@@ -11144,10 +11147,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (name.startsWith(ANIMATE_PROP_PREFIX)) {
                 isAnimationProp = true;
                 name = name.substring(ANIMATE_PROP_PREFIX.length);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan(keySpan.start.offset + ANIMATE_PROP_PREFIX.length, keySpan.end.offset));
+                }
             }
             else if (isAnimationLabel(name)) {
                 isAnimationProp = true;
                 name = name.substring(1);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan(keySpan.start.offset + 1, keySpan.end.offset));
+                }
             }
             if (isAnimationProp) {
                 this._parseAnimation(name, expression, sourceSpan, absoluteOffset, keySpan, valueSpan, targetMatchableAttrs, targetProps);
@@ -11254,6 +11263,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             if (isAnimationLabel(name)) {
                 name = name.substr(1);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan(keySpan.start.offset + 1, keySpan.end.offset));
+                }
                 this._parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents, keySpan);
             }
             else {
@@ -18972,7 +18984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+113.sha-61792cc');
+    const VERSION$1 = new Version('11.1.0-next.4+114.sha-40e0bfd');
 
     /**
      * @license
@@ -46818,7 +46830,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+113.sha-61792cc');
+    const VERSION$2 = new Version$1('11.1.0-next.4+114.sha-40e0bfd');
 
     /**
      * @license
