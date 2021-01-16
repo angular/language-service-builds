@@ -13,7 +13,7 @@ import * as e from '@angular/compiler/src/expression_parser/ast';
 import * as t from '@angular/compiler/src/render3/r3_ast';
 import * as ts from 'typescript';
 export declare function getTextSpanOfNode(node: t.Node | e.AST): ts.TextSpan;
-export declare function toTextSpan(span: AbsoluteSourceSpan | ParseSourceSpan): ts.TextSpan;
+export declare function toTextSpan(span: AbsoluteSourceSpan | ParseSourceSpan | e.ParseSpan): ts.TextSpan;
 interface NodeWithKeyAndValue extends t.Node {
     keySpan: ParseSourceSpan;
     valueSpan?: ParseSourceSpan;

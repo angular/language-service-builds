@@ -30,6 +30,7 @@ export declare class ReferencesAndRenameBuilder {
     private readonly compiler;
     private readonly ttc;
     constructor(strategy: TypeCheckingProgramStrategy, tsLS: ts.LanguageService, compiler: NgCompiler);
+    getRenameInfo(filePath: string, position: number): Omit<ts.RenameInfoSuccess, 'kind' | 'kindModifiers'> | ts.RenameInfoFailure;
     findRenameLocations(filePath: string, position: number): readonly ts.RenameLocation[] | undefined;
     private findRenameLocationsAtTemplatePosition;
     private getTsNodeAtPosition;

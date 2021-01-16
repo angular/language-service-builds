@@ -23,6 +23,7 @@ export declare class LanguageService {
     getTypeDefinitionAtPosition(fileName: string, position: number): readonly ts.DefinitionInfo[] | undefined;
     getQuickInfoAtPosition(fileName: string, position: number): ts.QuickInfo | undefined;
     getReferencesAtPosition(fileName: string, position: number): ts.ReferenceEntry[] | undefined;
+    getRenameInfo(fileName: string, position: number): ts.RenameInfo;
     findRenameLocations(fileName: string, position: number): readonly ts.RenameLocation[] | undefined;
     private getCompletionBuilder;
     getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ts.WithMetadata<ts.CompletionInfo> | undefined;

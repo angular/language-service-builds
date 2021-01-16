@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+114.sha-40e0bfd
+ * @license Angular v11.1.0-next.4+115.sha-4e8198d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16974,7 +16974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+114.sha-40e0bfd');
+    const VERSION$1 = new Version('11.1.0-next.4+115.sha-4e8198d');
 
     /**
      * @license
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+114.sha-40e0bfd'));
+        definitionMap.set('version', literal('11.1.0-next.4+115.sha-4e8198d'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+114.sha-40e0bfd');
+    const VERSION$2 = new Version('11.1.0-next.4+115.sha-4e8198d');
 
     /**
      * @license
@@ -39134,7 +39134,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function toTextSpan(span) {
         let start, end;
-        if (span instanceof AbsoluteSourceSpan) {
+        if (span instanceof AbsoluteSourceSpan || span instanceof ParseSpan) {
             start = span.start;
             end = span.end;
         }
@@ -41308,10 +41308,34 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.compiler = compiler;
             this.ttc = this.compiler.getTemplateTypeChecker();
         }
+        getRenameInfo(filePath, position) {
+            const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
+            // We could not get a template at position so we assume the request came from outside the
+            // template.
+            if (templateInfo === undefined) {
+                return this.tsLS.getRenameInfo(filePath, position);
+            }
+            const allTargetDetails = this.getTargetDetailsAtTemplatePosition(templateInfo, position);
+            if (allTargetDetails === null) {
+                return { canRename: false, localizedErrorMessage: 'Could not find template node at position.' };
+            }
+            const { templateTarget } = allTargetDetails[0];
+            const templateTextAndSpan = getRenameTextAndSpanAtPosition(templateTarget, position);
+            if (templateTextAndSpan === null) {
+                return { canRename: false, localizedErrorMessage: 'Could not determine template node text.' };
+            }
+            const { text, span } = templateTextAndSpan;
+            return {
+                canRename: true,
+                displayName: text,
+                fullDisplayName: text,
+                triggerSpan: toTextSpan(span),
+            };
+        }
         findRenameLocations(filePath, position) {
             this.ttc.generateAllTypeCheckBlocks();
             const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
-            // We could not get a template at position so we assume the request is came from outside the
+            // We could not get a template at position so we assume the request came from outside the
             // template.
             if (templateInfo === undefined) {
                 const requestNode = this.getTsNodeAtPosition(filePath, position);
@@ -41361,11 +41385,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 originalNodeText = requestOrigin.requestNode.getText();
             }
             else {
-                const templateNodeText = getTemplateNodeRenameTextAtPosition(requestOrigin.requestNode, requestOrigin.position);
+                const templateNodeText = getRenameTextAndSpanAtPosition(requestOrigin.requestNode, requestOrigin.position);
                 if (templateNodeText === null) {
                     return undefined;
                 }
-                originalNodeText = templateNodeText;
+                originalNodeText = templateNodeText.text;
             }
             const locations = this.tsLS.findRenameLocations(filePath, position, /*findInStrings*/ false, /*findInComments*/ false);
             if (locations === undefined) {
@@ -41432,10 +41456,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             for (const node of nodes) {
                 // Get the information about the TCB at the template position.
                 const symbol = this.ttc.getSymbolOfNode(node, component);
-                const templateTarget = node;
                 if (symbol === null) {
                     continue;
                 }
+                const templateTarget = node;
                 switch (symbol.kind) {
                     case SymbolKind.Directive:
                     case SymbolKind.Template:
@@ -41455,11 +41479,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                             return null;
                         }
                         const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
-                        details.push({ typescriptLocations: this.getPositionsForDirectives(directives), templateTarget });
+                        details.push({
+                            typescriptLocations: this.getPositionsForDirectives(directives),
+                            templateTarget,
+                        });
                         break;
                     }
                     case SymbolKind.Reference: {
-                        details.push({ typescriptLocations: [toFilePosition(symbol.referenceVarLocation)], templateTarget });
+                        details.push({
+                            typescriptLocations: [toFilePosition(symbol.referenceVarLocation)],
+                            templateTarget,
+                        });
                         break;
                     }
                     case SymbolKind.Variable: {
@@ -41474,13 +41504,19 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                             }
                             else if (isWithin(position, templateTarget.keySpan)) {
                                 // In the keySpan of the variable, we want to get the reference of the local variable.
-                                details.push({ typescriptLocations: [toFilePosition(symbol.localVarLocation)], templateTarget });
+                                details.push({
+                                    typescriptLocations: [toFilePosition(symbol.localVarLocation)],
+                                    templateTarget,
+                                });
                             }
                         }
                         else {
                             // If the templateNode is not the `TmplAstVariable`, it must be a usage of the
                             // variable somewhere in the template.
-                            details.push({ typescriptLocations: [toFilePosition(symbol.localVarLocation)], templateTarget });
+                            details.push({
+                                typescriptLocations: [toFilePosition(symbol.localVarLocation)],
+                                templateTarget,
+                            });
                         }
                         break;
                     }
@@ -41577,17 +41613,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span) });
         }
     }
-    function getTemplateNodeRenameTextAtPosition(node, position) {
+    function getRenameTextAndSpanAtPosition(node, position) {
         if (node instanceof BoundAttribute || node instanceof TextAttribute ||
             node instanceof BoundEvent) {
-            return node.name;
+            if (node.keySpan === undefined) {
+                return null;
+            }
+            return { text: node.name, span: node.keySpan };
         }
         else if (node instanceof Variable || node instanceof Reference) {
             if (isWithin(position, node.keySpan)) {
-                return node.keySpan.toString();
+                return { text: node.keySpan.toString(), span: node.keySpan };
             }
             else if (node.valueSpan && isWithin(position, node.valueSpan)) {
-                return node.valueSpan.toString();
+                return { text: node.valueSpan.toString(), span: node.valueSpan };
             }
         }
         if (node instanceof BindingPipe) {
@@ -41596,10 +41635,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         if (node instanceof PropertyRead || node instanceof MethodCall || node instanceof PropertyWrite ||
             node instanceof SafePropertyRead || node instanceof SafeMethodCall) {
-            return node.name;
+            return { text: node.name, span: node.nameSpan };
         }
         else if (node instanceof LiteralPrimitive) {
-            return node.value;
+            const span = node.span;
+            const text = node.value;
+            if (typeof text === 'string') {
+                // The span of a string literal includes the quotes but they should be removed for renaming.
+                span.start += 1;
+                span.end -= 1;
+            }
+            return { text, span };
         }
         return null;
     }
@@ -41685,6 +41731,19 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 .getReferencesAtPosition(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
+        }
+        getRenameInfo(fileName, position) {
+            var _a, _b, _c;
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const renameInfo = new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
+                .getRenameInfo(absoluteFrom(fileName), position);
+            if (!renameInfo.canRename) {
+                return renameInfo;
+            }
+            const quickInfo = (_a = this.getQuickInfoAtPosition(fileName, position)) !== null && _a !== void 0 ? _a : this.tsLS.getQuickInfoAtPosition(fileName, position);
+            const kind = (_b = quickInfo === null || quickInfo === void 0 ? void 0 : quickInfo.kind) !== null && _b !== void 0 ? _b : ts.ScriptElementKind.unknown;
+            const kindModifiers = (_c = quickInfo === null || quickInfo === void 0 ? void 0 : quickInfo.kindModifiers) !== null && _c !== void 0 ? _c : ts.ScriptElementKind.unknown;
+            return Object.assign(Object.assign({}, renameInfo), { kind, kindModifiers });
         }
         findRenameLocations(fileName, position) {
             const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
@@ -41910,6 +41969,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             // want to include results at TS locations as well as locations in templates.
             return ngLS.findRenameLocations(fileName, position);
         }
+        function getRenameInfo(fileName, position) {
+            // See the comment in `findRenameLocations` explaining why we don't check the `angularOnly`
+            // flag.
+            return ngLS.getRenameInfo(fileName, position);
+        }
         function getCompletionsAtPosition(fileName, position, options) {
             var _a;
             if (angularOnly) {
@@ -41946,6 +42010,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             getDefinitionAndBoundSpan,
             getReferencesAtPosition,
             findRenameLocations,
+            getRenameInfo,
             getCompletionsAtPosition,
             getCompletionEntryDetails,
             getCompletionEntrySymbol });
