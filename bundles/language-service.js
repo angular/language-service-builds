@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-rc.0+32.sha-2047d63
+ * @license Angular v11.1.0-rc.0+34.sha-106df61
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18984,7 +18984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-rc.0+32.sha-2047d63');
+    const VERSION$1 = new Version('11.1.0-rc.0+34.sha-106df61');
 
     /**
      * @license
@@ -27608,16 +27608,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Base URL for the error details page.
+    // Keep this value in sync with a similar const in
+    // `packages/compiler-cli/src/ngtsc/diagnostics/src/error_code.ts`.
+    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
     class RuntimeError extends Error {
         constructor(code, message) {
             super(formatRuntimeError(code, message));
             this.code = code;
         }
     }
+    // Contains a set of error messages that have details guides at angular.io.
+    // Full list of available error guides can be found at https://angular.io/errors
+    /* tslint:disable:no-toplevel-property-access */
+    const RUNTIME_ERRORS_WITH_GUIDES = new Set([
+        "100" /* EXPRESSION_CHANGED_AFTER_CHECKED */,
+        "200" /* CYCLIC_DI_DEPENDENCY */,
+        "201" /* PROVIDER_NOT_FOUND */,
+        "300" /* MULTIPLE_COMPONENTS_MATCH */,
+        "301" /* EXPORT_NOT_FOUND */,
+    ]);
+    /* tslint:enable:no-toplevel-property-access */
     /** Called to format a runtime error */
     function formatRuntimeError(code, message) {
         const fullCode = code ? `NG0${code}: ` : '';
-        return `${fullCode}${message}`;
+        let errorMessage = `${fullCode}${message}`;
+        // Some runtime errors are still thrown without `ngDevMode` (for example
+        // `throwProviderNotFoundError`), so we add `ngDevMode` check here to avoid pulling
+        // `RUNTIME_ERRORS_WITH_GUIDES` symbol into prod bundles.
+        // TODO: revisit all instances where `RuntimeError` is thrown and see if `ngDevMode` can be added
+        // there instead to tree-shake more devmode-only code (and eventually remove `ngDevMode` check
+        // from this code).
+        if (ngDevMode && RUNTIME_ERRORS_WITH_GUIDES.has(code)) {
+            errorMessage = `${errorMessage}. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG0${code}`;
+        }
+        return errorMessage;
     }
 
     /**
@@ -34964,7 +34989,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-rc.0+32.sha-2047d63');
+    const VERSION$2 = new Version$1('11.1.0-rc.0+34.sha-106df61');
 
     /**
      * @license

@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-rc.0+32.sha-2047d63
+ * @license Angular v11.1.0-rc.0+34.sha-106df61
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16974,7 +16974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-rc.0+32.sha-2047d63');
+    const VERSION$1 = new Version('11.1.0-rc.0+34.sha-106df61');
 
     /**
      * @license
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-rc.0+32.sha-2047d63'));
+        definitionMap.set('version', literal('11.1.0-rc.0+34.sha-106df61'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-rc.0+32.sha-2047d63');
+    const VERSION$2 = new Version('11.1.0-rc.0+34.sha-106df61');
 
     /**
      * @license
@@ -21272,6 +21272,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          */
         ErrorCode[ErrorCode["INJECTABLE_DUPLICATE_PROV"] = 9001] = "INJECTABLE_DUPLICATE_PROV";
     })(ErrorCode || (ErrorCode = {}));
+    /**
+     * @internal
+     * Base URL for the error details page.
+     * Keep this value in sync with a similar const in
+     * `packages/core/src/render3/error_code.ts`.
+     */
+    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
+    /**
+     * @internal
+     * Contains a set of error messages that have detailed guides at angular.io.
+     * Full list of available error guides can be found at https://angular.io/errors
+     */
+    const COMPILER_ERRORS_WITH_GUIDES = new Set([
+        ErrorCode.DECORATOR_ARG_NOT_LITERAL,
+        ErrorCode.PARAM_MISSING_TOKEN,
+        ErrorCode.SCHEMA_INVALID_ELEMENT,
+        ErrorCode.SCHEMA_INVALID_ATTRIBUTE,
+        ErrorCode.MISSING_REFERENCE_TARGET,
+    ]);
     /**
      * @internal
      */
@@ -38170,7 +38189,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          * Get all Angular-related diagnostics for this compilation.
          */
         getDiagnostics() {
-            return [...this.getNonTemplateDiagnostics(), ...this.getTemplateDiagnostics()];
+            return this.addMessageTextDetails([...this.getNonTemplateDiagnostics(), ...this.getTemplateDiagnostics()]);
         }
         /**
          * Get all Angular-related diagnostics for this compilation.
@@ -38178,10 +38197,22 @@ Either add the @Injectable() decorator to '${provider.node.name
          * If a `ts.SourceFile` is passed, only diagnostics related to that file are returned.
          */
         getDiagnosticsForFile(file, optimizeFor) {
-            return [
+            return this.addMessageTextDetails([
                 ...this.getNonTemplateDiagnostics().filter(diag => diag.file === file),
                 ...this.getTemplateDiagnosticsForFile(file, optimizeFor)
-            ];
+            ]);
+        }
+        /**
+         * Add Angular.io error guide links to diagnostics for this compilation.
+         */
+        addMessageTextDetails(diagnostics) {
+            return diagnostics.map(diag => {
+                if (diag.code && COMPILER_ERRORS_WITH_GUIDES.has(ngErrorCode(diag.code))) {
+                    return Object.assign(Object.assign({}, diag), { messageText: diag.messageText +
+                            `. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG${ngErrorCode(diag.code)}` });
+                }
+                return diag;
+            });
         }
         /**
          * Get all setup-related diagnostics for this compilation.
