@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+126.sha-5e95153
+ * @license Angular v11.1.0-next.4+127.sha-402e2e6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16974,7 +16974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+126.sha-5e95153');
+    const VERSION$1 = new Version('11.1.0-next.4+127.sha-402e2e6');
 
     /**
      * @license
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+126.sha-5e95153'));
+        definitionMap.set('version', literal('11.1.0-next.4+127.sha-402e2e6'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+126.sha-5e95153');
+    const VERSION$2 = new Version('11.1.0-next.4+127.sha-402e2e6');
 
     /**
      * @license
@@ -41456,7 +41456,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (locations === undefined) {
                 return undefined;
             }
-            const entries = [];
+            const entries = new Map();
             for (const location of locations) {
                 // TODO(atscott): Determine if a file is a shim file in a more robust way and make the API
                 // available in an appropriate location.
@@ -41467,7 +41467,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     if (entry === null) {
                         return undefined;
                     }
-                    entries.push(entry);
+                    entries.set(createLocationKey(entry), entry);
                 }
                 else {
                     // Ensure we only allow renaming a TS result with matching text
@@ -41475,10 +41475,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     if (refNode === null || refNode.getText() !== originalNodeText) {
                         return undefined;
                     }
-                    entries.push(location);
+                    entries.set(createLocationKey(location), location);
                 }
             }
-            return entries;
+            return Array.from(entries.values());
         }
         getReferencesAtPosition(filePath, position) {
             this.ttc.generateAllTypeCheckBlocks();
@@ -41617,19 +41617,19 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (refs === undefined) {
                 return undefined;
             }
-            const entries = [];
+            const entries = new Map();
             for (const ref of refs) {
                 if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(ref.fileName))) {
                     const entry = this.convertToTemplateDocumentSpan(ref, this.ttc);
                     if (entry !== null) {
-                        entries.push(entry);
+                        entries.set(createLocationKey(entry), entry);
                     }
                 }
                 else {
-                    entries.push(ref);
+                    entries.set(createLocationKey(ref), ref);
                 }
             }
-            return entries;
+            return Array.from(entries.values());
         }
         convertToTemplateDocumentSpan(shimDocumentSpan, templateTypeChecker, requiredNodeText) {
             const sf = this.strategy.getProgram().getSourceFile(shimDocumentSpan.fileName);
@@ -41693,6 +41693,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return { text, span };
         }
         return null;
+    }
+    /**
+     * Creates a "key" for a rename/reference location by concatenating file name, span start, and span
+     * length. This allows us to de-duplicate template results when an item may appear several times
+     * in the TCB but map back to the same template location.
+     */
+    function createLocationKey(ds) {
+        return ds.fileName + ds.textSpan.start + ds.textSpan.length;
     }
 
     /**
