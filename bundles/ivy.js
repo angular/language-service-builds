@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+124.sha-1d1304c
+ * @license Angular v11.1.0-next.4+125.sha-3e97a1e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16974,7 +16974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+124.sha-1d1304c');
+    const VERSION$1 = new Version('11.1.0-next.4+125.sha-3e97a1e');
 
     /**
      * @license
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+124.sha-1d1304c'));
+        definitionMap.set('version', literal('11.1.0-next.4+125.sha-3e97a1e'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+124.sha-1d1304c');
+    const VERSION$2 = new Version('11.1.0-next.4+125.sha-3e97a1e');
 
     /**
      * @license
@@ -39413,6 +39413,31 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         // like ¦start and end¦ where ¦ is the cursor.
         return start <= position && position <= end;
     }
+    /**
+     * For a given location in a shim file, retrieves the corresponding file url for the template and
+     * the span in the template.
+     */
+    function getTemplateLocationFromShimLocation(templateTypeChecker, shimPath, positionInShimFile) {
+        const mapping = templateTypeChecker.getTemplateMappingAtShimLocation({ shimPath, positionInShimFile });
+        if (mapping === null) {
+            return null;
+        }
+        const { templateSourceMapping, span } = mapping;
+        let templateUrl;
+        if (templateSourceMapping.type === 'direct') {
+            templateUrl = absoluteFromSourceFile(templateSourceMapping.node.getSourceFile());
+        }
+        else if (templateSourceMapping.type === 'external') {
+            templateUrl = absoluteFrom(templateSourceMapping.templateUrl);
+        }
+        else {
+            // This includes indirect mappings, which are difficult to map directly to the code
+            // location. Diagnostics similarly return a synthetic template string for this case rather
+            // than a real location.
+            return null;
+        }
+        return { templateUrl, span };
+    }
 
     /**
      * @license
@@ -40940,15 +40965,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 case SymbolKind.Reference: {
                     const definitions = [];
                     if (symbol.declaration !== node) {
-                        definitions.push({
-                            name: symbol.declaration.name,
-                            containerName: '',
-                            containerKind: ts$1.ScriptElementKind.unknown,
-                            kind: ts$1.ScriptElementKind.variableElement,
-                            textSpan: getTextSpanOfNode(symbol.declaration),
-                            contextSpan: toTextSpan(symbol.declaration.sourceSpan),
-                            fileName: symbol.declaration.sourceSpan.start.file.url,
-                        });
+                        const shimLocation = symbol.kind === SymbolKind.Variable ? symbol.localVarLocation :
+                            symbol.referenceVarLocation;
+                        const mapping = getTemplateLocationFromShimLocation(this.compiler.getTemplateTypeChecker(), shimLocation.shimPath, shimLocation.positionInShimFile);
+                        if (mapping !== null) {
+                            definitions.push({
+                                name: symbol.declaration.name,
+                                containerName: '',
+                                containerKind: ts$1.ScriptElementKind.unknown,
+                                kind: ts$1.ScriptElementKind.variableElement,
+                                textSpan: getTextSpanOfNode(symbol.declaration),
+                                contextSpan: toTextSpan(symbol.declaration.sourceSpan),
+                                fileName: mapping.templateUrl,
+                            });
+                        }
                     }
                     if (symbol.kind === SymbolKind.Variable) {
                         definitions.push(...this.getDefinitionsForSymbols({ shimLocation: symbol.initializerLocation }));
@@ -41617,27 +41647,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project
             // serverHost or LSParseConfigHost in the adapter. We should have a better defined way to
             // normalize paths.
-            const mapping = templateTypeChecker.getTemplateMappingAtShimLocation({
-                shimPath: absoluteFrom(shimDocumentSpan.fileName),
-                positionInShimFile: shimDocumentSpan.textSpan.start,
-            });
+            const mapping = getTemplateLocationFromShimLocation(templateTypeChecker, absoluteFrom(shimDocumentSpan.fileName), shimDocumentSpan.textSpan.start);
             if (mapping === null) {
                 return null;
             }
-            const { templateSourceMapping, span } = mapping;
-            let templateUrl;
-            if (templateSourceMapping.type === 'direct') {
-                templateUrl = absoluteFromSourceFile(templateSourceMapping.node.getSourceFile());
-            }
-            else if (templateSourceMapping.type === 'external') {
-                templateUrl = absoluteFrom(templateSourceMapping.templateUrl);
-            }
-            else {
-                // This includes indirect mappings, which are difficult to map directly to the code
-                // location. Diagnostics similarly return a synthetic template string for this case rather
-                // than a real location.
-                return null;
-            }
+            const { span, templateUrl } = mapping;
             if (requiredNodeText !== undefined && span.toString() !== requiredNodeText) {
                 return null;
             }

@@ -8,7 +8,8 @@
  */
 import { AbsoluteSourceSpan, ParseSourceSpan } from '@angular/compiler';
 import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
-import { DirectiveSymbol } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
+import { AbsoluteFsPath } from '@angular/compiler-cli/src/ngtsc/file_system';
+import { DirectiveSymbol, TemplateTypeChecker } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
 import * as e from '@angular/compiler/src/expression_parser/ast';
 import * as t from '@angular/compiler/src/render3/r3_ast';
 import * as ts from 'typescript';
@@ -70,4 +71,12 @@ export declare function flatMap<T, R>(items: T[] | readonly T[], f: (item: T) =>
 export declare function isTypeScriptFile(fileName: string): boolean;
 export declare function isExternalTemplate(fileName: string): boolean;
 export declare function isWithin(position: number, span: AbsoluteSourceSpan | ParseSourceSpan): boolean;
+/**
+ * For a given location in a shim file, retrieves the corresponding file url for the template and
+ * the span in the template.
+ */
+export declare function getTemplateLocationFromShimLocation(templateTypeChecker: TemplateTypeChecker, shimPath: AbsoluteFsPath, positionInShimFile: number): {
+    templateUrl: AbsoluteFsPath;
+    span: ParseSourceSpan;
+} | null;
 export {};
