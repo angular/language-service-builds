@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-rc.0+37.sha-2731a4b
+ * @license Angular v11.1.0-rc.0+39.sha-34092a5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18984,7 +18984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-rc.0+37.sha-2731a4b');
+    const VERSION$1 = new Version('11.1.0-rc.0+39.sha-34092a5');
 
     /**
      * @license
@@ -34989,7 +34989,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-rc.0+37.sha-2731a4b');
+    const VERSION$2 = new Version$1('11.1.0-rc.0+39.sha-34092a5');
 
     /**
      * @license
@@ -42149,6 +42149,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.tsLsHost = tsLsHost;
             this.tsLS = tsLS;
             this.staticSymbolCache = new StaticSymbolCache();
+            /**
+             * Key of the `fileToComponent` map must be TS internal normalized path (path
+             * separator must be `/`), value of the map is the StaticSymbol for the
+             * Component class declaration.
+             */
             this.fileToComponent = new Map();
             this.collectedErrors = new Map();
             this.fileVersions = new Map();
@@ -42265,7 +42270,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                         const templateName = this.urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
-                        this.fileToComponent.set(templateName, directive.reference);
+                        this.fileToComponent.set(tss.server.toNormalizedPath(templateName), directive.reference);
                     }
                 }
             }
@@ -42462,7 +42467,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             const source = snapshot.getText(0, snapshot.getLength());
             // Next find the component class symbol
-            const classSymbol = this.fileToComponent.get(fileName);
+            const classSymbol = this.fileToComponent.get(tss.server.toNormalizedPath(fileName));
             if (!classSymbol) {
                 return;
             }
