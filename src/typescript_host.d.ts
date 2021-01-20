@@ -43,6 +43,11 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly reflectorHost;
     private readonly staticSymbolResolver;
     private readonly staticSymbolCache;
+    /**
+     * Key of the `fileToComponent` map must be TS internal normalized path (path
+     * separator must be `/`), value of the map is the StaticSymbol for the
+     * Component class declaration.
+     */
     private readonly fileToComponent;
     private readonly collectedErrors;
     private readonly fileVersions;
@@ -63,7 +68,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     /**
      * Return all known external templates.
      */
-    getExternalTemplates(): string[];
+    getExternalTemplates(): ts.server.NormalizedPath[];
     /**
      * Checks whether the program has changed and returns all analyzed modules.
      * If program has changed, invalidate all caches and update fileToComponent

@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+127.sha-402e2e6
+ * @license Angular v11.1.0-next.4+129.sha-3cfb4b4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18984,7 +18984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+127.sha-402e2e6');
+    const VERSION$1 = new Version('11.1.0-next.4+129.sha-3cfb4b4');
 
     /**
      * @license
@@ -46855,7 +46855,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+127.sha-402e2e6');
+    const VERSION$2 = new Version$1('11.1.0-next.4+129.sha-3cfb4b4');
 
     /**
      * @license
@@ -56771,6 +56771,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             this.tsLsHost = tsLsHost;
             this.tsLS = tsLS;
             this.staticSymbolCache = new StaticSymbolCache();
+            /**
+             * Key of the `fileToComponent` map must be TS internal normalized path (path
+             * separator must be `/`), value of the map is the StaticSymbol for the
+             * Component class declaration.
+             */
             this.fileToComponent = new Map();
             this.collectedErrors = new Map();
             this.fileVersions = new Map();
@@ -56887,7 +56892,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                         const templateName = this.urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
-                        this.fileToComponent.set(templateName, directive.reference);
+                        this.fileToComponent.set(tss.server.toNormalizedPath(templateName), directive.reference);
                     }
                 }
             }
@@ -57084,7 +57089,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
             const source = snapshot.getText(0, snapshot.getLength());
             // Next find the component class symbol
-            const classSymbol = this.fileToComponent.get(fileName);
+            const classSymbol = this.fileToComponent.get(tss.server.toNormalizedPath(fileName));
             if (!classSymbol) {
                 return;
             }
