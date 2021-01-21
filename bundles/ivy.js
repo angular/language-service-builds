@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+139.sha-3cf4e3c
+ * @license Angular v11.1.0-next.4+140.sha-5bbb5ea
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16974,7 +16974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+139.sha-3cf4e3c');
+    const VERSION$1 = new Version('11.1.0-next.4+140.sha-5bbb5ea');
 
     /**
      * @license
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+139.sha-3cf4e3c'));
+        definitionMap.set('version', literal('11.1.0-next.4+140.sha-5bbb5ea'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+139.sha-3cf4e3c');
+    const VERSION$2 = new Version('11.1.0-next.4+140.sha-5bbb5ea');
 
     /**
      * @license
@@ -41390,7 +41390,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 canRename: true,
                 displayName: text,
                 fullDisplayName: text,
-                triggerSpan: toTextSpan(span),
+                triggerSpan: span,
             };
         }
         findRenameLocations(filePath, position) {
@@ -41664,14 +41664,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (node.keySpan === undefined) {
                 return null;
             }
-            return { text: node.name, span: node.keySpan };
+            return { text: node.name, span: toTextSpan(node.keySpan) };
         }
         else if (node instanceof Variable || node instanceof Reference) {
             if (isWithin(position, node.keySpan)) {
-                return { text: node.keySpan.toString(), span: node.keySpan };
+                return { text: node.keySpan.toString(), span: toTextSpan(node.keySpan) };
             }
             else if (node.valueSpan && isWithin(position, node.valueSpan)) {
-                return { text: node.valueSpan.toString(), span: node.valueSpan };
+                return { text: node.valueSpan.toString(), span: toTextSpan(node.valueSpan) };
             }
         }
         if (node instanceof BindingPipe) {
@@ -41680,15 +41680,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         if (node instanceof PropertyRead || node instanceof MethodCall || node instanceof PropertyWrite ||
             node instanceof SafePropertyRead || node instanceof SafeMethodCall) {
-            return { text: node.name, span: node.nameSpan };
+            return { text: node.name, span: toTextSpan(node.nameSpan) };
         }
         else if (node instanceof LiteralPrimitive) {
-            const span = node.span;
+            const span = toTextSpan(node.sourceSpan);
             const text = node.value;
             if (typeof text === 'string') {
                 // The span of a string literal includes the quotes but they should be removed for renaming.
                 span.start += 1;
-                span.end -= 1;
+                span.length -= 2;
             }
             return { text, span };
         }
