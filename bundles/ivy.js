@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+150.sha-575a2d1
+ * @license Angular v11.1.0-next.4+152.sha-d482f5c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16974,7 +16974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+150.sha-575a2d1');
+    const VERSION$1 = new Version('11.1.0-next.4+152.sha-d482f5c');
 
     /**
      * @license
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+150.sha-575a2d1'));
+        definitionMap.set('version', literal('11.1.0-next.4+152.sha-d482f5c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+150.sha-575a2d1');
+    const VERSION$2 = new Version('11.1.0-next.4+152.sha-d482f5c');
 
     /**
      * @license
@@ -41849,6 +41849,53 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.compilerFactory.registerLastKnownProgram();
             return result;
         }
+        getTcb(fileName, position) {
+            return this.withCompiler(fileName, compiler => {
+                const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
+                if (templateInfo === undefined) {
+                    return undefined;
+                }
+                const tcb = compiler.getTemplateTypeChecker().getTypeCheckBlock(templateInfo.component);
+                if (tcb === null) {
+                    return undefined;
+                }
+                const sf = tcb.getSourceFile();
+                let selections = [];
+                const target = getTargetAtPosition(templateInfo.template, position);
+                if (target !== null) {
+                    let selectionSpans;
+                    if ('nodes' in target.context) {
+                        selectionSpans = target.context.nodes.map(n => n.sourceSpan);
+                    }
+                    else {
+                        selectionSpans = [target.context.node.sourceSpan];
+                    }
+                    const selectionNodes = selectionSpans
+                        .map(s => findFirstMatchingNode(tcb, {
+                        withSpan: s,
+                        filter: (node) => true,
+                    }))
+                        .filter((n) => n !== null);
+                    selections = selectionNodes.map(n => {
+                        return {
+                            start: n.getStart(sf),
+                            length: n.getEnd() - n.getStart(sf),
+                        };
+                    });
+                }
+                return {
+                    fileName: sf.fileName,
+                    content: sf.getFullText(),
+                    selections,
+                };
+            });
+        }
+        withCompiler(fileName, p) {
+            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const result = p(compiler);
+            this.compilerFactory.registerLastKnownProgram();
+            return result;
+        }
         watchConfigFile(project) {
             // TODO: Check the case when the project is disposed. An InferredProject
             // could be disposed when a tsconfig.json is added to the workspace,
@@ -42057,6 +42104,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return (_a = tsLS.getCompletionEntrySymbol(fileName, position, name, source)) !== null && _a !== void 0 ? _a : ngLS.getCompletionEntrySymbol(fileName, position, name);
             }
         }
+        function getTcb(fileName, position) {
+            return ngLS.getTcb(fileName, position);
+        }
         return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics,
             getTypeDefinitionAtPosition,
             getQuickInfoAtPosition,
@@ -42066,7 +42116,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             getRenameInfo,
             getCompletionsAtPosition,
             getCompletionEntryDetails,
-            getCompletionEntrySymbol });
+            getCompletionEntrySymbol,
+            getTcb });
     }
     function getExternalFiles(project) {
         if (!project.hasRoots()) {
