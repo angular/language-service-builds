@@ -9,6 +9,24 @@
 import { CompilerOptions } from '@angular/compiler-cli';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { CompilerFactory } from './compiler_factory';
+export declare type GetTcbResponse = {
+    /**
+     * The filename of the SourceFile this typecheck block belongs to.
+     * The filename is entirely opaque and unstable, useful only for debugging
+     * purposes.
+     */
+    fileName: string;
+    /** The content of the SourceFile this typecheck block belongs to. */
+    content: string;
+    /**
+     * Spans over node(s) in the typecheck block corresponding to the
+     * TS code generated for template node under the current cursor position.
+     *
+     * When the cursor position is over a source for which there is no generated
+     * code, `selections` is empty.
+     */
+    selections: ts.TextSpan[];
+} | undefined;
 export declare class LanguageService {
     private readonly tsLS;
     private options;
@@ -29,5 +47,7 @@ export declare class LanguageService {
     getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ts.WithMetadata<ts.CompletionInfo> | undefined;
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined): ts.CompletionEntryDetails | undefined;
     getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
+    getTcb(fileName: string, position: number): GetTcbResponse;
+    private withCompiler;
     private watchConfigFile;
 }
