@@ -28,6 +28,7 @@ export declare type GetTcbResponse = {
     selections: ts.TextSpan[];
 } | undefined;
 export declare class LanguageService {
+    private readonly project;
     private readonly tsLS;
     private options;
     readonly compilerFactory: CompilerFactory;
@@ -49,5 +50,6 @@ export declare class LanguageService {
     getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
     getTcb(fileName: string, position: number): GetTcbResponse;
     private withCompiler;
+    getCompilerOptionsDiagnostics(): ts.Diagnostic[];
     private watchConfigFile;
 }
