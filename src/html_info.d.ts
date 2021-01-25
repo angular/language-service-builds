@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright Google Inc. All Rights Reserved.
+ * Copyright Google LLC All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
@@ -21,8 +21,7 @@ export declare class SchemaInformation {
     propertiesOf(elementName: string): string[];
     typeOf(elementName: string, property: string): string;
     private static _instance;
-    static readonly instance: SchemaInformation;
+    static get instance(): SchemaInformation;
 }
 export declare function eventNames(elementName: string): string[];
 export declare function propertyNames(elementName: string): string[];
-export declare function propertyType(elementName: string, propertyName: string): string;

@@ -1,18 +1,18 @@
 /**
  * @license
- * Copyright Google Inc. All Rights Reserved.
+ * Copyright Google LLC All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/typescript_host" />
-import { CompileMetadataResolver, HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
-import * as ts from 'typescript';
-import { Declarations, LanguageService, LanguageServiceHost, TemplateSource, TemplateSources } from './types';
+import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
+import * as tss from 'typescript/lib/tsserverlibrary';
+import { AstResult, Declaration, LanguageService, LanguageServiceHost, TemplateSource } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
-export declare function createLanguageServiceFromTypescript(host: ts.LanguageServiceHost, service: ts.LanguageService): LanguageService;
+export declare function createLanguageServiceFromTypescript(host: tss.LanguageServiceHost, service: tss.LanguageService): LanguageService;
 /**
  * The language service never needs the normalized versions of the metadata. To avoid parsing
  * the content and resolving references, return an empty file. This also allows normalizing
@@ -26,7 +26,7 @@ export declare class DummyHtmlParser extends HtmlParser {
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
 export declare class DummyResourceLoader extends ResourceLoader {
-    get(url: string): Promise<string>;
+    get(_url: string): Promise<string>;
 }
 /**
  * An implementation of a `LanguageServiceHost` for a TypeScript project.
@@ -37,60 +37,122 @@ export declare class DummyResourceLoader extends ResourceLoader {
  * @publicApi
  */
 export declare class TypeScriptServiceHost implements LanguageServiceHost {
-    private host;
-    private tsService;
-    private _resolver;
-    private _staticSymbolCache;
-    private _summaryResolver;
-    private _staticSymbolResolver;
-    private _reflector;
-    private _reflectorHost;
-    private _checker;
-    private _typeCache;
-    private context;
-    private lastProgram;
-    private modulesOutOfDate;
-    private analyzedModules;
-    private service;
-    private fileToComponent;
-    private templateReferences;
-    private collectedErrors;
-    private fileVersions;
-    constructor(host: ts.LanguageServiceHost, tsService: ts.LanguageService);
-    setSite(service: LanguageService): void;
-    /**
-     * Angular LanguageServiceHost implementation
-     */
-    readonly resolver: CompileMetadataResolver;
-    getTemplateReferences(): string[];
-    getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
-    getAnalyzedModules(): NgAnalyzedModules;
-    private ensureAnalyzedModules;
-    getTemplates(fileName: string): TemplateSources;
-    getDeclarations(fileName: string): Declarations;
-    getSourceFile(fileName: string): ts.SourceFile | undefined;
-    updateAnalyzedModules(): void;
-    private readonly program;
-    private readonly checker;
-    private validate;
-    private clearCaches;
-    private ensureTemplateMap;
-    private getSourceFromDeclaration;
-    private getSourceFromNode;
-    private getSourceFromType;
+    readonly tsLsHost: tss.LanguageServiceHost;
+    readonly tsLS: tss.LanguageService;
+    private readonly summaryResolver;
     private readonly reflectorHost;
-    private collectError;
     private readonly staticSymbolResolver;
-    private readonly reflector;
-    private getTemplateClassFromStaticSymbol;
-    private static missingTemplate;
+    private readonly staticSymbolCache;
     /**
-     * Given a template string node, see if it is an Angular template string, and if so return the
-     * containing class.
+     * Key of the `fileToComponent` map must be TS internal normalized path (path
+     * separator must be `/`), value of the map is the StaticSymbol for the
+     * Component class declaration.
      */
-    private getTemplateClassDeclFromNode;
+    private readonly fileToComponent;
+    private readonly collectedErrors;
+    private readonly fileVersions;
+    private readonly urlResolver;
+    private lastProgram;
+    private analyzedModules;
+    constructor(tsLsHost: tss.LanguageServiceHost, tsLS: tss.LanguageService);
+    private _resolver;
+    /**
+     * Return the singleton instance of the MetadataResolver.
+     */
+    private get resolver();
+    /**
+     * Return the singleton instance of the StaticReflector hosted in the
+     * MetadataResolver.
+     */
+    private get reflector();
+    /**
+     * Return all known external templates.
+     */
+    getExternalTemplates(): ts.server.NormalizedPath[];
+    /**
+     * Checks whether the program has changed and returns all analyzed modules.
+     * If program has changed, invalidate all caches and update fileToComponent
+     * and templateReferences.
+     * In addition to returning information about NgModules, this method plays the
+     * same role as 'synchronizeHostData' in tsserver.
+     */
+    getAnalyzedModules(): NgAnalyzedModules;
+    /**
+     * Checks whether the program has changed, and invalidate static symbols in
+     * the source files that have changed.
+     * Returns true if modules are up-to-date, false otherwise.
+     * This should only be called by getAnalyzedModules().
+     */
+    private upToDate;
+    /**
+     * Find all templates in the specified `file`.
+     * @param fileName TS or HTML file
+     */
+    getTemplates(fileName: string): TemplateSource[];
+    /**
+     * Return metadata about all class declarations in the file that are Angular
+     * directives. Potential matches are `@NgModule`, `@Component`, `@Directive`,
+     * `@Pipes`, etc. class declarations.
+     *
+     * @param fileName TS file
+     */
+    getDeclarations(fileName: string): Declaration[];
+    getSourceFile(fileName: string): tss.SourceFile | undefined;
+    get program(): tss.Program;
+    /**
+     * Return the TemplateSource if `node` is a template node.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>' <-- template node
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param node Potential template node
+     */
+    private getInternalTemplate;
+    /**
+     * Return the external template for `fileName`.
+     * @param fileName HTML file
+     */
+    private getExternalTemplate;
+    private collectError;
     private getCollectedErrors;
-    private getDeclarationFromNode;
-    private stringOf;
-    private findNode;
+    /**
+     * Return the parsed template for the template at the specified `position`.
+     * @param fileName TS or HTML file
+     * @param position Position of the template in the TS file, otherwise ignored.
+     */
+    getTemplateAstAtPosition(fileName: string, position: number): AstResult | undefined;
+    /**
+     * Find the NgModule which the directive associated with the `classSymbol`
+     * belongs to, then return its schema and transitive directives and pipes.
+     * @param classSymbol Angular Symbol that defines a directive
+     */
+    private getModuleMetadataForDirective;
+    /**
+     * Parse the `template` and return its AST, if any.
+     * @param template template to be parsed
+     */
+    getTemplateAst(template: TemplateSource): AstResult | undefined;
+    /**
+     * Log the specified `msg` to file at INFO level. If logging is not enabled
+     * this method is a no-op.
+     * @param msg Log message
+     */
+    log(msg: string): void;
+    /**
+     * Log the specified `msg` to file at ERROR level. If logging is not enabled
+     * this method is a no-op.
+     * @param msg error message
+     */
+    error(msg: string): void;
+    /**
+     * Log debugging info to file at INFO level, only if verbose setting is turned
+     * on. Otherwise, this method is a no-op.
+     * @param msg debugging message
+     */
+    debug(msg: string): void;
 }
