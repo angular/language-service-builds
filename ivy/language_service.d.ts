@@ -10,6 +10,7 @@ import { CompilerOptions } from '@angular/compiler-cli';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { CompilerFactory } from './compiler_factory';
 export declare class LanguageService {
+    private readonly project;
     private readonly tsLS;
     private options;
     readonly compilerFactory: CompilerFactory;
@@ -27,5 +28,6 @@ export declare class LanguageService {
     getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ts.WithMetadata<ts.CompletionInfo> | undefined;
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined): ts.CompletionEntryDetails | undefined;
     getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
+    getCompilerOptionsDiagnostics(): ts.Diagnostic[];
     private watchConfigFile;
 }
