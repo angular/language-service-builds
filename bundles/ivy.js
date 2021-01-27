@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0+49.sha-95e68c4
+ * @license Angular v11.1.0+59.sha-156103c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -11543,13 +11543,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         get currentAbsoluteOffset() {
             return this.absoluteOffset + this.inputIndex;
         }
-        span(start) {
-            return new ParseSpan(start, this.currentEndIndex);
+        /**
+         * Retrieve a `ParseSpan` from `start` to the current position (or to `artificialEndIndex` if
+         * provided).
+         *
+         * @param start Position from which the `ParseSpan` will start.
+         * @param artificialEndIndex Optional ending index to be used if provided (and if greater than the
+         *     natural ending index)
+         */
+        span(start, artificialEndIndex) {
+            let endIndex = this.currentEndIndex;
+            if (artificialEndIndex !== undefined && artificialEndIndex > this.currentEndIndex) {
+                endIndex = artificialEndIndex;
+            }
+            return new ParseSpan(start, endIndex);
         }
-        sourceSpan(start) {
-            const serial = `${start}@${this.inputIndex}`;
+        sourceSpan(start, artificialEndIndex) {
+            const serial = `${start}@${this.inputIndex}:${artificialEndIndex}`;
             if (!this.sourceSpanCache.has(serial)) {
-                this.sourceSpanCache.set(serial, this.span(start).toAbsolute(this.absoluteOffset));
+                this.sourceSpanCache.set(serial, this.span(start, artificialEndIndex).toAbsolute(this.absoluteOffset));
             }
             return this.sourceSpanCache.get(serial);
         }
@@ -11612,7 +11624,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword()) {
                 this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
-                return '';
+                return null;
             }
             this.advance();
             return n.toString();
@@ -11657,15 +11669,36 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 }
                 do {
                     const nameStart = this.inputIndex;
-                    const name = this.expectIdentifierOrKeyword();
-                    const nameSpan = this.sourceSpan(nameStart);
+                    let nameId = this.expectIdentifierOrKeyword();
+                    let nameSpan;
+                    let fullSpanEnd = undefined;
+                    if (nameId !== null) {
+                        nameSpan = this.sourceSpan(nameStart);
+                    }
+                    else {
+                        // No valid identifier was found, so we'll assume an empty pipe name ('').
+                        nameId = '';
+                        // However, there may have been whitespace present between the pipe character and the next
+                        // token in the sequence (or the end of input). We want to track this whitespace so that
+                        // the `BindingPipe` we produce covers not just the pipe character, but any trailing
+                        // whitespace beyond it. Another way of thinking about this is that the zero-length name
+                        // is assumed to be at the end of any whitespace beyond the pipe character.
+                        //
+                        // Therefore, we push the end of the `ParseSpan` for this pipe all the way up to the
+                        // beginning of the next token, or until the end of input if the next token is EOF.
+                        fullSpanEnd = this.next.index !== -1 ? this.next.index : this.inputLength + this.offset;
+                        // The `nameSpan` for an empty pipe name is zero-length at the end of any whitespace
+                        // beyond the pipe character.
+                        nameSpan = new ParseSpan(fullSpanEnd, fullSpanEnd).toAbsolute(this.absoluteOffset);
+                    }
                     const args = [];
                     while (this.consumeOptionalCharacter($COLON)) {
                         args.push(this.parseExpression());
+                        // If there are additional expressions beyond the name, then the artificial end for the
+                        // name is no longer relevant.
                     }
                     const { start } = result.span;
-                    result =
-                        new BindingPipe(this.span(start), this.sourceSpan(start), result, name, args, nameSpan);
+                    result = new BindingPipe(this.span(start), this.sourceSpan(start, fullSpanEnd), result, nameId, args, nameSpan);
                 } while (this.consumeOptionalOperator('|'));
             }
             return result;
@@ -11954,7 +11987,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const start = receiver.span.start;
             const nameStart = this.inputIndex;
             const id = this.withContext(ParseContextFlags.Writable, () => {
-                const id = this.expectIdentifierOrKeyword();
+                var _a;
+                const id = (_a = this.expectIdentifierOrKeyword()) !== null && _a !== void 0 ? _a : '';
                 if (id.length === 0) {
                     this.error(`Expected identifier for property access`, receiver.span.end);
                 }
@@ -16974,7 +17008,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0+49.sha-95e68c4');
+    const VERSION$1 = new Version('11.1.0+59.sha-156103c');
 
     /**
      * @license
@@ -17631,7 +17665,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0+49.sha-95e68c4'));
+        definitionMap.set('version', literal('11.1.0+59.sha-156103c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21113,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0+49.sha-95e68c4');
+    const VERSION$2 = new Version('11.1.0+59.sha-156103c');
 
     /**
      * @license
@@ -25453,6 +25487,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 }
             }
         }
+        updateResources(clazz) {
+            if (!this.reflector.isClass(clazz) || !this.classes.has(clazz)) {
+                return;
+            }
+            const record = this.classes.get(clazz);
+            for (const trait of record.traits) {
+                if (trait.state !== TraitState.Resolved || trait.handler.updateResources === undefined) {
+                    continue;
+                }
+                trait.handler.updateResources(clazz, trait.analysis, trait.resolution);
+            }
+        }
         compile(clazz, constantPool) {
             const original = ts$1.getOriginalNode(clazz);
             if (!this.reflector.isClass(clazz) || !this.reflector.isClass(original) ||
@@ -28592,24 +28638,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                 template = preanalyzed;
             }
             else {
-                // The template was not already parsed. Either there's a templateUrl, or an inline template.
-                if (component.has('templateUrl')) {
-                    const templateUrlExpr = component.get('templateUrl');
-                    const templateUrl = this.evaluator.evaluate(templateUrlExpr);
-                    if (typeof templateUrl !== 'string') {
-                        throw createValueHasWrongTypeError(templateUrlExpr, templateUrl, 'templateUrl must be a string');
-                    }
-                    const resourceUrl = this.resourceLoader.resolve(templateUrl, containingFile);
-                    template = this._extractExternalTemplate(node, component, templateUrlExpr, resourceUrl);
-                }
-                else {
-                    // Expect an inline template to be present.
-                    template = this._extractInlineTemplate(node, decorator, component, containingFile);
-                }
+                const templateDecl = this.parseTemplateDeclaration(decorator, component, containingFile);
+                template = this.extractTemplate(node, templateDecl);
             }
-            const templateResource = template.isInline ?
-                { path: null, expression: component.get('template') } :
-                { path: absoluteFrom(template.templateUrl), expression: template.sourceMapping.node };
+            const templateResource = template.isInline ? { path: null, expression: component.get('template') } : {
+                path: absoluteFrom(template.declaration.resolvedTemplateUrl),
+                expression: template.sourceMapping.node
+            };
             // Figure out the set of styles. The ordering here is important: external resources (styleUrls)
             // precede inline styles, and styles defined in the template override styles defined in the
             // component.
@@ -28629,9 +28664,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }
                 }
             }
+            let inlineStyles = null;
             if (component.has('styles')) {
                 const litStyles = parseFieldArrayValue(component, 'styles', this.evaluator);
                 if (litStyles !== null) {
+                    inlineStyles = [...litStyles];
                     if (styles === null) {
                         styles = litStyles;
                     }
@@ -28671,6 +28708,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     template,
                     providersRequiringFactory,
                     viewProvidersRequiringFactory,
+                    inlineStyles,
+                    styleUrls,
                     resources: {
                         styles: styleResources,
                         template: templateResource,
@@ -28839,6 +28878,33 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return { data };
         }
+        updateResources(node, analysis) {
+            const containingFile = node.getSourceFile().fileName;
+            // If the template is external, re-parse it.
+            const templateDecl = analysis.template.declaration;
+            if (!templateDecl.isInline) {
+                analysis.template = this.extractTemplate(node, templateDecl);
+            }
+            // Update any external stylesheets and rebuild the combined 'styles' list.
+            // TODO(alxhub): write tests for styles when the primary compiler uses the updateResources path
+            let styles = [];
+            if (analysis.styleUrls !== null) {
+                for (const styleUrl of analysis.styleUrls) {
+                    const resolvedStyleUrl = this.resourceLoader.resolve(styleUrl, containingFile);
+                    const styleText = this.resourceLoader.load(resolvedStyleUrl);
+                    styles.push(styleText);
+                }
+            }
+            if (analysis.inlineStyles !== null) {
+                for (const styleText of analysis.inlineStyles) {
+                    styles.push(styleText);
+                }
+            }
+            for (const styleText of analysis.template.styles) {
+                styles.push(styleText);
+            }
+            analysis.meta.styles = styles;
+        }
         compileFull(node, analysis, resolution, pool) {
             if (analysis.template.errors !== null && analysis.template.errors.length > 0) {
                 return [];
@@ -28945,7 +29011,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // URLs to resolve.
                 if (templatePromise !== undefined) {
                     return templatePromise.then(() => {
-                        const template = this._extractExternalTemplate(node, component, templateUrlExpr, resourceUrl);
+                        const templateDecl = this.parseTemplateDeclaration(decorator, component, containingFile);
+                        const template = this.extractTemplate(node, templateDecl);
                         this.preanalyzeTemplateCache.set(node, template);
                         return template;
                     });
@@ -28955,70 +29022,104 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             else {
-                const template = this._extractInlineTemplate(node, decorator, component, containingFile);
+                const templateDecl = this.parseTemplateDeclaration(decorator, component, containingFile);
+                const template = this.extractTemplate(node, templateDecl);
                 this.preanalyzeTemplateCache.set(node, template);
                 return Promise.resolve(template);
             }
         }
-        _extractExternalTemplate(node, component, templateUrlExpr, resourceUrl) {
-            const templateStr = this.resourceLoader.load(resourceUrl);
-            if (this.depTracker !== null) {
-                this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(resourceUrl));
-            }
-            const template = this._parseTemplate(component, templateStr, /* templateLiteral */ null, sourceMapUrl(resourceUrl), 
-            /* templateRange */ undefined, 
-            /* escapedString */ false);
-            return Object.assign(Object.assign({}, template), { sourceMapping: {
-                    type: 'external',
-                    componentClass: node,
-                    node: templateUrlExpr,
-                    template: templateStr,
-                    templateUrl: resourceUrl,
-                } });
-        }
-        _extractInlineTemplate(node, decorator, component, containingFile) {
-            if (!component.has('template')) {
-                throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, Decorator.nodeForError(decorator), 'component is missing a template');
-            }
-            const templateExpr = component.get('template');
-            let templateStr;
-            let templateLiteral = null;
-            let templateUrl = '';
-            let templateRange = undefined;
-            let sourceMapping;
-            let escapedString = false;
-            // We only support SourceMaps for inline templates that are simple string literals.
-            if (ts$1.isStringLiteral(templateExpr) || ts$1.isNoSubstitutionTemplateLiteral(templateExpr)) {
-                // the start and end of the `templateExpr` node includes the quotation marks, which we
-                // must
-                // strip
-                templateRange = getTemplateRange(templateExpr);
-                templateStr = templateExpr.getSourceFile().text;
-                templateLiteral = templateExpr;
-                templateUrl = containingFile;
-                escapedString = true;
-                sourceMapping = {
-                    type: 'direct',
-                    node: templateExpr,
-                };
+        extractTemplate(node, template) {
+            if (template.isInline) {
+                let templateStr;
+                let templateLiteral = null;
+                let templateUrl = '';
+                let templateRange = null;
+                let sourceMapping;
+                let escapedString = false;
+                // We only support SourceMaps for inline templates that are simple string literals.
+                if (ts$1.isStringLiteral(template.expression) ||
+                    ts$1.isNoSubstitutionTemplateLiteral(template.expression)) {
+                    // the start and end of the `templateExpr` node includes the quotation marks, which we must
+                    // strip
+                    templateRange = getTemplateRange(template.expression);
+                    templateStr = template.expression.getSourceFile().text;
+                    templateLiteral = template.expression;
+                    templateUrl = template.templateUrl;
+                    escapedString = true;
+                    sourceMapping = {
+                        type: 'direct',
+                        node: template.expression,
+                    };
+                }
+                else {
+                    const resolvedTemplate = this.evaluator.evaluate(template.expression);
+                    if (typeof resolvedTemplate !== 'string') {
+                        throw createValueHasWrongTypeError(template.expression, resolvedTemplate, 'template must be a string');
+                    }
+                    templateStr = resolvedTemplate;
+                    sourceMapping = {
+                        type: 'indirect',
+                        node: template.expression,
+                        componentClass: node,
+                        template: templateStr,
+                    };
+                }
+                return Object.assign(Object.assign({}, this._parseTemplate(template, templateStr, templateRange, escapedString)), { sourceMapping, declaration: template });
             }
             else {
-                const resolvedTemplate = this.evaluator.evaluate(templateExpr);
-                if (typeof resolvedTemplate !== 'string') {
-                    throw createValueHasWrongTypeError(templateExpr, resolvedTemplate, 'template must be a string');
+                const templateStr = this.resourceLoader.load(template.resolvedTemplateUrl);
+                if (this.depTracker !== null) {
+                    this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(template.resolvedTemplateUrl));
                 }
-                templateStr = resolvedTemplate;
-                sourceMapping = {
-                    type: 'indirect',
-                    node: templateExpr,
-                    componentClass: node,
-                    template: templateStr,
-                };
+                return Object.assign(Object.assign({}, this._parseTemplate(template, templateStr, /* templateRange */ null, 
+                /* escapedString */ false)), { sourceMapping: {
+                        type: 'external',
+                        componentClass: node,
+                        // TODO(alxhub): TS in g3 is unable to make this inference on its own, so cast it here
+                        // until g3 is able to figure this out.
+                        node: template.templateUrlExpression,
+                        template: templateStr,
+                        templateUrl: template.resolvedTemplateUrl,
+                    }, declaration: template });
             }
-            const template = this._parseTemplate(component, templateStr, templateLiteral, templateUrl, templateRange, escapedString);
-            return Object.assign(Object.assign({}, template), { sourceMapping });
         }
-        _parseTemplate(component, templateStr, templateLiteral, templateUrl, templateRange, escapedString) {
+        _parseTemplate(template, templateStr, templateRange, escapedString) {
+            // We always normalize line endings if the template has been escaped (i.e. is inline).
+            const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
+            const parsedTemplate = parseTemplate(templateStr, template.sourceMapUrl, {
+                preserveWhitespaces: template.preserveWhitespaces,
+                interpolationConfig: template.interpolationConfig,
+                range: templateRange !== null && templateRange !== void 0 ? templateRange : undefined,
+                escapedString,
+                enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
+                i18nNormalizeLineEndingsInICUs,
+                isInline: template.isInline,
+            });
+            // Unfortunately, the primary parse of the template above may not contain accurate source map
+            // information. If used directly, it would result in incorrect code locations in template
+            // errors, etc. There are two main problems:
+            //
+            // 1. `preserveWhitespaces: false` annihilates the correctness of template source mapping, as
+            //    the whitespace transformation changes the contents of HTML text nodes before they're
+            //    parsed into Angular expressions.
+            // 2. By default, the template parser strips leading trivia characters (like spaces, tabs, and
+            //    newlines). This also destroys source mapping information.
+            //
+            // In order to guarantee the correctness of diagnostics, templates are parsed a second time
+            // with the above options set to preserve source mappings.
+            const { nodes: diagNodes } = parseTemplate(templateStr, template.sourceMapUrl, {
+                preserveWhitespaces: true,
+                interpolationConfig: template.interpolationConfig,
+                range: templateRange !== null && templateRange !== void 0 ? templateRange : undefined,
+                escapedString,
+                enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
+                i18nNormalizeLineEndingsInICUs,
+                leadingTriviaChars: [],
+                isInline: template.isInline,
+            });
+            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: template.isInline ? new WrappedNodeExpr(template.expression) : templateStr, templateUrl: template.resolvedTemplateUrl, isInline: template.isInline, file: new ParseSourceFile(templateStr, template.resolvedTemplateUrl) });
+        }
+        parseTemplateDeclaration(decorator, component, containingFile) {
             let preserveWhitespaces = this.defaultPreserveWhitespaces;
             if (component.has('preserveWhitespaces')) {
                 const expr = component.get('preserveWhitespaces');
@@ -29038,42 +29139,37 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 interpolationConfig = InterpolationConfig.fromArray(value);
             }
-            // We always normalize line endings if the template has been escaped (i.e. is inline).
-            const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
-            const isInline = component.has('template');
-            const parsedTemplate = parseTemplate(templateStr, templateUrl, {
-                preserveWhitespaces,
-                interpolationConfig,
-                range: templateRange,
-                escapedString,
-                enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
-                i18nNormalizeLineEndingsInICUs,
-                isInline,
-            });
-            // Unfortunately, the primary parse of the template above may not contain accurate source map
-            // information. If used directly, it would result in incorrect code locations in template
-            // errors, etc. There are two main problems:
-            //
-            // 1. `preserveWhitespaces: false` annihilates the correctness of template source mapping, as
-            //    the whitespace transformation changes the contents of HTML text nodes before they're
-            //    parsed into Angular expressions.
-            // 2. By default, the template parser strips leading trivia characters (like spaces, tabs, and
-            //    newlines). This also destroys source mapping information.
-            //
-            // In order to guarantee the correctness of diagnostics, templates are parsed a second time
-            // with the above options set to preserve source mappings.
-            const { nodes: diagNodes } = parseTemplate(templateStr, templateUrl, {
-                preserveWhitespaces: true,
-                interpolationConfig,
-                range: templateRange,
-                escapedString,
-                enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
-                i18nNormalizeLineEndingsInICUs,
-                leadingTriviaChars: [],
-                isInline,
-            });
-            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: templateLiteral !== null ? new WrappedNodeExpr(templateLiteral) : templateStr, templateUrl,
-                isInline, file: new ParseSourceFile(templateStr, templateUrl) });
+            if (component.has('templateUrl')) {
+                const templateUrlExpr = component.get('templateUrl');
+                const templateUrl = this.evaluator.evaluate(templateUrlExpr);
+                if (typeof templateUrl !== 'string') {
+                    throw createValueHasWrongTypeError(templateUrlExpr, templateUrl, 'templateUrl must be a string');
+                }
+                const resourceUrl = this.resourceLoader.resolve(templateUrl, containingFile);
+                return {
+                    isInline: false,
+                    interpolationConfig,
+                    preserveWhitespaces,
+                    templateUrl,
+                    templateUrlExpression: templateUrlExpr,
+                    resolvedTemplateUrl: resourceUrl,
+                    sourceMapUrl: sourceMapUrl(resourceUrl),
+                };
+            }
+            else if (component.has('template')) {
+                return {
+                    isInline: true,
+                    interpolationConfig,
+                    preserveWhitespaces,
+                    expression: component.get('template'),
+                    templateUrl: containingFile,
+                    resolvedTemplateUrl: containingFile,
+                    sourceMapUrl: containingFile,
+                };
+            }
+            else {
+                throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, Decorator.nodeForError(decorator), 'component is missing a template');
+            }
         }
         _expressionToImportedFile(expr, origin) {
             if (!(expr instanceof ExternalExpr)) {
@@ -31315,6 +31411,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             this.cache.set(resolvedUrl, result);
             return result;
+        }
+        /**
+         * Invalidate the entire resource cache.
+         */
+        invalidate() {
+            this.cache.clear();
         }
         /**
          * Attempt to resolve `url` in the context of `fromFile`, while respecting the rootDirs
@@ -37712,6 +37814,22 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return engine.getExpressionCompletionLocation(ast);
         }
+        invalidateClass(clazz) {
+            var _a;
+            this.completionCache.delete(clazz);
+            this.symbolBuilderCache.delete(clazz);
+            this.scopeCache.delete(clazz);
+            this.elementTagCache.delete(clazz);
+            const sf = clazz.getSourceFile();
+            const sfPath = absoluteFromSourceFile(sf);
+            const shimPath = this.typeCheckingStrategy.shimPathForComponent(clazz);
+            const fileData = this.getFileData(sfPath);
+            const templateId = fileData.sourceManager.getTemplateId(clazz);
+            fileData.shimData.delete(shimPath);
+            fileData.isComplete = false;
+            (_a = fileData.templateOverrides) === null || _a === void 0 ? void 0 : _a.delete(templateId);
+            this.isComplete = false;
+        }
         getOrCreateCompletionEngine(component) {
             if (this.completionCache.has(component)) {
                 return this.completionCache.get(component);
@@ -38098,6 +38216,54 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Discriminant type for a `CompilationTicket`.
+     */
+    var CompilationTicketKind;
+    (function (CompilationTicketKind) {
+        CompilationTicketKind[CompilationTicketKind["Fresh"] = 0] = "Fresh";
+        CompilationTicketKind[CompilationTicketKind["IncrementalTypeScript"] = 1] = "IncrementalTypeScript";
+        CompilationTicketKind[CompilationTicketKind["IncrementalResource"] = 2] = "IncrementalResource";
+    })(CompilationTicketKind || (CompilationTicketKind = {}));
+    /**
+     * Create a `CompilationTicket` for a brand new compilation, using no prior state.
+     */
+    function freshCompilationTicket(tsProgram, options, incrementalBuildStrategy, typeCheckingProgramStrategy, enableTemplateTypeChecker, usePoisonedData) {
+        return {
+            kind: CompilationTicketKind.Fresh,
+            tsProgram,
+            options,
+            incrementalBuildStrategy,
+            typeCheckingProgramStrategy,
+            enableTemplateTypeChecker,
+            usePoisonedData,
+        };
+    }
+    /**
+     * Create a `CompilationTicket` as efficiently as possible, based on a previous `NgCompiler`
+     * instance and a new `ts.Program`.
+     */
+    function incrementalFromCompilerTicket(oldCompiler, newProgram, incrementalBuildStrategy, typeCheckingProgramStrategy, modifiedResourceFiles) {
+        const oldProgram = oldCompiler.getNextProgram();
+        const oldDriver = oldCompiler.incrementalStrategy.getIncrementalDriver(oldProgram);
+        if (oldDriver === null) {
+            // No incremental step is possible here, since no IncrementalDriver was found for the old
+            // program.
+            return freshCompilationTicket(newProgram, oldCompiler.options, incrementalBuildStrategy, typeCheckingProgramStrategy, oldCompiler.enableTemplateTypeChecker, oldCompiler.usePoisonedData);
+        }
+        const newDriver = IncrementalDriver.reconcile(oldProgram, oldDriver, newProgram, modifiedResourceFiles);
+        return {
+            kind: CompilationTicketKind.IncrementalTypeScript,
+            enableTemplateTypeChecker: oldCompiler.enableTemplateTypeChecker,
+            usePoisonedData: oldCompiler.usePoisonedData,
+            options: oldCompiler.options,
+            incrementalBuildStrategy,
+            typeCheckingProgramStrategy,
+            newDriver,
+            oldProgram,
+            newProgram,
+        };
+    }
+    /**
      * The heart of the Angular Ivy compiler.
      *
      * The `NgCompiler` provides an API for performing Angular compilation within a custom TypeScript
@@ -38110,12 +38276,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      * See the README.md for more information.
      */
     class NgCompiler {
-        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, enableTemplateTypeChecker, usePoisonedData, oldProgram = null, perfRecorder = NOOP_PERF_RECORDER) {
+        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, incrementalDriver, enableTemplateTypeChecker, usePoisonedData, perfRecorder = NOOP_PERF_RECORDER) {
             this.adapter = adapter;
             this.options = options;
             this.tsProgram = tsProgram;
             this.typeCheckingProgramStrategy = typeCheckingProgramStrategy;
             this.incrementalStrategy = incrementalStrategy;
+            this.incrementalDriver = incrementalDriver;
             this.enableTemplateTypeChecker = enableTemplateTypeChecker;
             this.usePoisonedData = usePoisonedData;
             this.perfRecorder = perfRecorder;
@@ -38159,30 +38326,54 @@ Either add the @Injectable() decorator to '${provider.node.name
                 new ModuleResolver(tsProgram, this.options, this.adapter, moduleResolutionCache);
             this.resourceManager = new AdapterResourceLoader(adapter, this.options);
             this.cycleAnalyzer = new CycleAnalyzer(new ImportGraph(this.moduleResolver));
-            let modifiedResourceFiles = null;
-            if (this.adapter.getModifiedResourceFiles !== undefined) {
-                modifiedResourceFiles = this.adapter.getModifiedResourceFiles() || null;
-            }
-            if (oldProgram === null) {
-                this.incrementalDriver = IncrementalDriver.fresh(tsProgram);
-            }
-            else {
-                const oldDriver = this.incrementalStrategy.getIncrementalDriver(oldProgram);
-                if (oldDriver !== null) {
-                    this.incrementalDriver =
-                        IncrementalDriver.reconcile(oldProgram, oldDriver, tsProgram, modifiedResourceFiles);
-                }
-                else {
-                    // A previous ts.Program was used to create the current one, but it wasn't from an
-                    // `NgCompiler`. That doesn't hurt anything, but the Angular analysis will have to start
-                    // from a fresh state.
-                    this.incrementalDriver = IncrementalDriver.fresh(tsProgram);
-                }
-            }
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, tsProgram);
             this.ignoreForDiagnostics =
                 new Set(tsProgram.getSourceFiles().filter(sf => this.adapter.isShim(sf)));
             this.ignoreForEmit = this.adapter.ignoreForEmit;
+        }
+        /**
+         * Convert a `CompilationTicket` into an `NgCompiler` instance for the requested compilation.
+         *
+         * Depending on the nature of the compilation request, the `NgCompiler` instance may be reused
+         * from a previous compilation and updated with any changes, it may be a new instance which
+         * incrementally reuses state from a previous compilation, or it may represent a fresh compilation
+         * entirely.
+         */
+        static fromTicket(ticket, adapter, perfRecorder) {
+            switch (ticket.kind) {
+                case CompilationTicketKind.Fresh:
+                    return new NgCompiler(adapter, ticket.options, ticket.tsProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, IncrementalDriver.fresh(ticket.tsProgram), ticket.enableTemplateTypeChecker, ticket.usePoisonedData, perfRecorder);
+                case CompilationTicketKind.IncrementalTypeScript:
+                    return new NgCompiler(adapter, ticket.options, ticket.newProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, ticket.newDriver, ticket.enableTemplateTypeChecker, ticket.usePoisonedData, perfRecorder);
+                case CompilationTicketKind.IncrementalResource:
+                    const compiler = ticket.compiler;
+                    compiler.updateWithChangedResources(ticket.modifiedResourceFiles);
+                    return compiler;
+            }
+        }
+        updateWithChangedResources(changedResources) {
+            if (this.compilation === null) {
+                // Analysis hasn't happened yet, so no update is necessary - any changes to resources will be
+                // captured by the inital analysis pass itself.
+                return;
+            }
+            this.resourceManager.invalidate();
+            const classesToUpdate = new Set();
+            for (const resourceFile of changedResources) {
+                for (const templateClass of this.getComponentsWithTemplateFile(resourceFile)) {
+                    classesToUpdate.add(templateClass);
+                }
+                for (const styleClass of this.getComponentsWithStyleFile(resourceFile)) {
+                    classesToUpdate.add(styleClass);
+                }
+            }
+            for (const clazz of classesToUpdate) {
+                this.compilation.traitCompiler.updateResources(clazz);
+                if (!ts$1.isClassDeclaration(clazz)) {
+                    continue;
+                }
+                this.compilation.templateTypeChecker.invalidateClass(clazz);
+            }
         }
         /**
          * Get the resource dependencies of a file.
@@ -39481,6 +39672,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return this.project.projectService.toCanonicalFileName(fileName);
         }
         /**
+         * Return the real path of a symlink. This method is required in order to
+         * resolve symlinks in node_modules.
+         */
+        realpath(path) {
+            var _a, _b, _c;
+            return (_c = (_b = (_a = this.project).realpath) === null || _b === void 0 ? void 0 : _b.call(_a, path)) !== null && _c !== void 0 ? _c : path;
+        }
+        /**
          * readResource() is an Angular-specific method for reading files that are not
          * managed by the TS compiler host, namely templates and stylesheets.
          * It is a method on ExtendedTsCompilerHost, see
@@ -39590,11 +39789,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         getOrCreate() {
             const program = this.programStrategy.getProgram();
             if (this.compiler === null || program !== this.lastKnownProgram) {
-                this.compiler = new NgCompiler(this.adapter, // like compiler host
-                this.options, // angular compiler options
-                program, this.programStrategy, this.incrementalStrategy, true, // enableTemplateTypeChecker
-                true, // usePoisonedData
-                this.lastKnownProgram, undefined);
+                let ticket;
+                if (this.compiler === null || this.lastKnownProgram === null) {
+                    ticket = freshCompilationTicket(program, this.options, this.incrementalStrategy, this.programStrategy, true, true);
+                }
+                else {
+                    ticket = incrementalFromCompilerTicket(this.compiler, program, this.incrementalStrategy, this.programStrategy, new Set());
+                }
+                this.compiler = NgCompiler.fromTicket(ticket, this.adapter);
                 this.lastKnownProgram = program;
             }
             return this.compiler;
