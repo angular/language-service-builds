@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+186.sha-f1cf875
+ * @license Angular v11.1.0-next.4+190.sha-d703d21
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16974,7 +16974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+186.sha-f1cf875');
+    const VERSION$1 = new Version('11.1.0-next.4+190.sha-d703d21');
 
     /**
      * @license
@@ -17631,7 +17631,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+186.sha-f1cf875'));
+        definitionMap.set('version', literal('11.1.0-next.4+190.sha-d703d21'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21079,7 +21079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+186.sha-f1cf875');
+    const VERSION$2 = new Version('11.1.0-next.4+190.sha-d703d21');
 
     /**
      * @license
@@ -39479,6 +39479,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getCanonicalFileName(fileName) {
             return this.project.projectService.toCanonicalFileName(fileName);
+        }
+        /**
+         * Return the real path of a symlink. This method is required in order to
+         * resolve symlinks in node_modules.
+         */
+        realpath(path) {
+            var _a, _b, _c;
+            return (_c = (_b = (_a = this.project).realpath) === null || _b === void 0 ? void 0 : _b.call(_a, path)) !== null && _c !== void 0 ? _c : path;
         }
         /**
          * readResource() is an Angular-specific method for reading files that are not
