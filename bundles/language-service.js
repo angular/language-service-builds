@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+197.sha-d4bb4a0
+ * @license Angular v11.1.0-next.4+208.sha-88f8ddd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9881,7 +9881,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this._advance();
                 selfClosing = false;
             }
-            const end = this._peek.sourceSpan.start;
+            const end = this._peek.sourceSpan.fullStart;
             const span = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
             // Create a separate `startSpan` because `span` will be modified when there is an `end` span.
             const startSpan = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
@@ -11015,8 +11015,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseInterpolation(value, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.fullStart.offset;
             try {
-                const ast = this._exprParser.parseInterpolation(value, sourceInfo, sourceSpan.start.offset, this._interpolationConfig);
+                const ast = this._exprParser.parseInterpolation(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11024,7 +11025,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -11034,8 +11035,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          */
         parseInterpolationExpression(expression, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.start.offset;
             try {
-                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, sourceSpan.start.offset);
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, absoluteOffset);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11043,7 +11045,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -13364,13 +13366,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                     const fullEnd = exprEnd + interpEnd.length;
                     const text = input.substring(exprStart, exprEnd);
-                    if (text.trim().length > 0) {
-                        expressions.push({ text, start: fullStart, end: fullEnd });
-                    }
-                    else {
+                    if (text.trim().length === 0) {
                         this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${i} in`, location);
-                        expressions.push({ text: '$implicit', start: fullStart, end: fullEnd });
                     }
+                    expressions.push({ text, start: fullStart, end: fullEnd });
                     offsets.push(exprStart);
                     i = fullEnd;
                     atInterpolation = false;
@@ -13665,8 +13664,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     this.error(`Unexpected token '${this.next}'`);
                 }
             }
-            if (exprs.length == 0)
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            if (exprs.length == 0) {
+                // We have no expressions so create an empty expression that spans the entire input length
+                const artificialStart = this.offset;
+                const artificialEnd = this.offset + this.inputLength;
+                return new EmptyExpr(this.span(artificialStart, artificialEnd), this.sourceSpan(artificialStart, artificialEnd));
+            }
             if (exprs.length == 1)
                 return exprs[0];
             return new Chain(this.span(start), this.sourceSpan(start), exprs);
@@ -19018,7 +19021,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+197.sha-d4bb4a0');
+    const VERSION$1 = new Version('11.1.0-next.4+208.sha-88f8ddd');
 
     /**
      * @license
@@ -35025,7 +35028,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+197.sha-d4bb4a0');
+    const VERSION$2 = new Version$1('11.1.0-next.4+208.sha-88f8ddd');
 
     /**
      * @license
