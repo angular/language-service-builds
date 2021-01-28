@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.0-next.0+1.sha-e11e6cf
+ * @license Angular v11.2.0-next.0+10.sha-9d396f8
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9881,7 +9881,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this._advance();
                 selfClosing = false;
             }
-            const end = this._peek.sourceSpan.start;
+            const end = this._peek.sourceSpan.fullStart;
             const span = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
             // Create a separate `startSpan` because `span` will be modified when there is an `end` span.
             const startSpan = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
@@ -11015,8 +11015,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseInterpolation(value, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.fullStart.offset;
             try {
-                const ast = this._exprParser.parseInterpolation(value, sourceInfo, sourceSpan.start.offset, this._interpolationConfig);
+                const ast = this._exprParser.parseInterpolation(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11024,7 +11025,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -11034,8 +11035,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          */
         parseInterpolationExpression(expression, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.start.offset;
             try {
-                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, sourceSpan.start.offset);
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, absoluteOffset);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11043,7 +11045,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -13364,13 +13366,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                     const fullEnd = exprEnd + interpEnd.length;
                     const text = input.substring(exprStart, exprEnd);
-                    if (text.trim().length > 0) {
-                        expressions.push({ text, start: fullStart, end: fullEnd });
-                    }
-                    else {
+                    if (text.trim().length === 0) {
                         this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${i} in`, location);
-                        expressions.push({ text: '$implicit', start: fullStart, end: fullEnd });
                     }
+                    expressions.push({ text, start: fullStart, end: fullEnd });
                     offsets.push(exprStart);
                     i = fullEnd;
                     atInterpolation = false;
@@ -13665,8 +13664,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     this.error(`Unexpected token '${this.next}'`);
                 }
             }
-            if (exprs.length == 0)
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            if (exprs.length == 0) {
+                // We have no expressions so create an empty expression that spans the entire input length
+                const artificialStart = this.offset;
+                const artificialEnd = this.offset + this.inputLength;
+                return new EmptyExpr(this.span(artificialStart, artificialEnd), this.sourceSpan(artificialStart, artificialEnd));
+            }
             if (exprs.length == 1)
                 return exprs[0];
             return new Chain(this.span(start), this.sourceSpan(start), exprs);
@@ -19018,7 +19021,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.0-next.0+1.sha-e11e6cf');
+    const VERSION$1 = new Version('11.2.0-next.0+10.sha-9d396f8');
 
     /**
      * @license
@@ -27380,6 +27383,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This file contains reuseable "empty" symbols that can be used as default return values
+     * in different parts of the rendering code. Because the same symbols are returned, this
+     * allows for identity checks against these values to be consistently used by the framework
+     * code.
+     */
+    const EMPTY_OBJ$1 = {};
+    // freezing the values prevents any code from accidentally inserting new values in
+    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
+        // These property accesses can be ignored because ngDevMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // tslint:disable-next-line:no-toplevel-property-access
+        Object.freeze(EMPTY_OBJ$1);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
     const NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
     const NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
@@ -27784,7 +27809,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const current = simpleChangesStore === null || simpleChangesStore === void 0 ? void 0 : simpleChangesStore.current;
         if (current) {
             const previous = simpleChangesStore.previous;
-            if (previous === EMPTY_OBJ) {
+            if (previous === EMPTY_OBJ$1) {
                 simpleChangesStore.previous = current;
             }
             else {
@@ -27800,12 +27825,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function ngOnChangesSetInput(instance, value, publicName, privateName) {
         const simpleChangesStore = getSimpleChangesStore(instance) ||
-            setSimpleChangesStore(instance, { previous: EMPTY_OBJ, current: null });
+            setSimpleChangesStore(instance, { previous: EMPTY_OBJ$1, current: null });
         const current = simpleChangesStore.current || (simpleChangesStore.current = {});
         const previous = simpleChangesStore.previous;
         const declaredName = this.declaredInputs[publicName];
         const previousChange = previous[declaredName];
-        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ);
+        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ$1);
         instance[privateName] = value;
     }
     const SIMPLE_CHANGES_STORE = '__ngSimpleChanges__';
@@ -33712,7 +33737,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     const ɵ0$7 = getClosureSafeProperty;
     const USE_VALUE$4 = getClosureSafeProperty({ provide: String, useValue: ɵ0$7 });
-    const EMPTY_ARRAY$1 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
             const reflectionCapabilities = new ReflectionCapabilities();
@@ -33730,7 +33754,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         else if (provider.useFactory) {
             const factoryProvider = provider;
-            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY$1));
+            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY));
         }
         else if (provider.useClass) {
             const classProvider = provider;
@@ -34663,31 +34687,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * This file contains reuseable "empty" symbols that can be used as default return values
-     * in different parts of the rendering code. Because the same symbols are returned, this
-     * allows for identity checks against these values to be consistently used by the framework
-     * code.
-     */
-    const EMPTY_OBJ$1 = {};
-    const EMPTY_ARRAY$2 = [];
-    // freezing the values prevents any code from accidentally inserting new values in
-    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
-        // These property accesses can be ignored because ngDevMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_OBJ$1);
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$2);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
      */
     if (typeof ngI18nClosureMode === 'undefined') {
@@ -35025,7 +35024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.0-next.0+1.sha-e11e6cf');
+    const VERSION$2 = new Version$1('11.2.0-next.0+10.sha-9d396f8');
 
     /**
      * @license
