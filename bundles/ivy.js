@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+197.sha-d4bb4a0
+ * @license Angular v11.1.0-next.4+208.sha-88f8ddd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9357,7 +9357,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this._advance();
                 selfClosing = false;
             }
-            const end = this._peek.sourceSpan.start;
+            const end = this._peek.sourceSpan.fullStart;
             const span = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
             // Create a separate `startSpan` because `span` will be modified when there is an `end` span.
             const startSpan = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
@@ -9689,8 +9689,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         parseInterpolation(value, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.fullStart.offset;
             try {
-                const ast = this._exprParser.parseInterpolation(value, sourceInfo, sourceSpan.start.offset, this._interpolationConfig);
+                const ast = this._exprParser.parseInterpolation(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -9698,7 +9699,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -9708,8 +9709,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          */
         parseInterpolationExpression(expression, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.start.offset;
             try {
-                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, sourceSpan.start.offset);
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, absoluteOffset);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -9717,7 +9719,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -11354,13 +11356,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     }
                     const fullEnd = exprEnd + interpEnd.length;
                     const text = input.substring(exprStart, exprEnd);
-                    if (text.trim().length > 0) {
-                        expressions.push({ text, start: fullStart, end: fullEnd });
-                    }
-                    else {
+                    if (text.trim().length === 0) {
                         this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${i} in`, location);
-                        expressions.push({ text: '$implicit', start: fullStart, end: fullEnd });
                     }
+                    expressions.push({ text, start: fullStart, end: fullEnd });
                     offsets.push(exprStart);
                     i = fullEnd;
                     atInterpolation = false;
@@ -11655,8 +11654,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     this.error(`Unexpected token '${this.next}'`);
                 }
             }
-            if (exprs.length == 0)
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            if (exprs.length == 0) {
+                // We have no expressions so create an empty expression that spans the entire input length
+                const artificialStart = this.offset;
+                const artificialEnd = this.offset + this.inputLength;
+                return new EmptyExpr(this.span(artificialStart, artificialEnd), this.sourceSpan(artificialStart, artificialEnd));
+            }
             if (exprs.length == 1)
                 return exprs[0];
             return new Chain(this.span(start), this.sourceSpan(start), exprs);
@@ -17008,7 +17011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+197.sha-d4bb4a0');
+    const VERSION$1 = new Version('11.1.0-next.4+208.sha-88f8ddd');
 
     /**
      * @license
@@ -17665,7 +17668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+197.sha-d4bb4a0'));
+        definitionMap.set('version', literal('11.1.0-next.4+208.sha-88f8ddd'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21113,7 +21116,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+197.sha-d4bb4a0');
+    const VERSION$2 = new Version('11.1.0-next.4+208.sha-88f8ddd');
 
     /**
      * @license
@@ -29107,6 +29110,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             //
             // In order to guarantee the correctness of diagnostics, templates are parsed a second time
             // with the above options set to preserve source mappings.
+            //
+            // Note: template parse options should be aligned with `template_target_spec.ts` and
+            // `TemplateTypeCheckerImpl.overrideComponentTemplate`.
             const { nodes: diagNodes } = parseTemplate(templateStr, template.sourceMapUrl, {
                 preserveWhitespaces: true,
                 interpolationConfig: template.interpolationConfig,
@@ -37695,6 +37701,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         overrideComponentTemplate(component, template) {
             const { nodes, errors } = parseTemplate(template, 'override.html', {
+                // Set `leadingTriviaChars` and `preserveWhitespaces` such that whitespace is not stripped
+                // and fully accounted for in source spans. Without these flags the source spans can be
+                // inaccurate.
+                // Note: template parse options should be aligned with `template_target_spec.ts` and the
+                // `diagNodes` in `ComponentDecoratorHandler._parseTemplate`.
                 preserveWhitespaces: true,
                 leadingTriviaChars: [],
             });
@@ -40440,12 +40451,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return undefined;
             }
             const { componentContext, templateContext } = completions;
-            let replacementSpan = undefined;
-            // Non-empty nodes get replaced with the completion.
-            if (!(this.node instanceof EmptyExpr || this.node instanceof LiteralPrimitive ||
-                this.node instanceof BoundEvent)) {
-                replacementSpan = makeReplacementSpanFromAst(this.node);
-            }
+            const replacementSpan = makeReplacementSpanFromAst(this.node);
             // Merge TS completion results with results from the template scope.
             let entries = [];
             const tsLsCompletions = this.tsLS.getCompletionsAtPosition(componentContext.shimPath, componentContext.positionInShimFile, options);
@@ -40776,6 +40782,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         };
     }
     function makeReplacementSpanFromAst(node) {
+        if ((node instanceof EmptyExpr || node instanceof LiteralPrimitive ||
+            node instanceof BoundEvent)) {
+            // empty nodes do not replace any existing text
+            return undefined;
+        }
         return {
             start: node.nameSpan.start,
             length: node.nameSpan.end - node.nameSpan.start,
