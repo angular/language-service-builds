@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+211.sha-2ba62e8
+ * @license Angular v11.1.0-next.4+212.sha-028b383
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19021,7 +19021,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+211.sha-2ba62e8');
+    const VERSION$1 = new Version('11.1.0-next.4+212.sha-028b383');
 
     /**
      * @license
@@ -28047,6 +28047,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         "201" /* PROVIDER_NOT_FOUND */,
         "300" /* MULTIPLE_COMPONENTS_MATCH */,
         "301" /* EXPORT_NOT_FOUND */,
+        "302" /* PIPE_NOT_FOUND */,
     ]);
     /* tslint:enable:no-toplevel-property-access */
     /** Called to format a runtime error */
@@ -46907,7 +46908,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+211.sha-2ba62e8');
+    const VERSION$2 = new Version$1('11.1.0-next.4+212.sha-028b383');
 
     /**
      * @license
