@@ -19,7 +19,12 @@ export declare class LanguageServiceAdapter implements NgCompilerAdapter {
     readonly factoryTracker: null;
     readonly unifiedModulesHost: null;
     readonly rootDirs: AbsoluteFsPath[];
-    private readonly templateVersion;
+    /**
+     * Map of resource filenames to the version of the file last read via `readResource`.
+     *
+     * Used to implement `getModifiedResourceFiles`.
+     */
+    private readonly lastReadResourceVersion;
     constructor(project: ts.server.Project);
     isShim(sf: ts.SourceFile): boolean;
     fileExists(fileName: string): boolean;
@@ -38,7 +43,7 @@ export declare class LanguageServiceAdapter implements NgCompilerAdapter {
      * packages/compiler-cli/src/ngtsc/core/api/src/interfaces.ts
      */
     readResource(fileName: string): string;
-    isTemplateDirty(fileName: string): boolean;
+    getModifiedResourceFiles(): Set<string> | undefined;
 }
 /**
  * Used to read configuration files.
