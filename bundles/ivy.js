@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.0-next.0+30.sha-21994ee
+ * @license Angular v11.2.0-next.0+32.sha-4cc15fe
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17011,7 +17011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.0-next.0+30.sha-21994ee');
+    const VERSION$1 = new Version('11.2.0-next.0+32.sha-4cc15fe');
 
     /**
      * @license
@@ -17668,7 +17668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.0-next.0+30.sha-21994ee'));
+        definitionMap.set('version', literal('11.2.0-next.0+32.sha-4cc15fe'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21116,7 +21116,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.0-next.0+30.sha-21994ee');
+    const VERSION$2 = new Version('11.2.0-next.0+32.sha-4cc15fe');
 
     /**
      * @license
@@ -29112,9 +29112,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             //
             // In order to guarantee the correctness of diagnostics, templates are parsed a second time
             // with the above options set to preserve source mappings.
-            //
-            // Note: template parse options should be aligned with `template_target_spec.ts` and
-            // `TemplateTypeCheckerImpl.overrideComponentTemplate`.
             const { nodes: diagNodes } = parseTemplate(templateStr, template.sourceMapUrl, {
                 preserveWhitespaces: true,
                 preserveLineEndings: true,
@@ -36722,12 +36719,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const shimData = this.pendingShimForComponent(ref.node);
             const templateId = fileData.sourceManager.getTemplateId(ref.node);
             const templateDiagnostics = [];
-            const sfPath = absoluteFromSourceFile(ref.node.getSourceFile());
-            const overrideTemplate = this.host.getTemplateOverride(sfPath, ref.node);
-            if (overrideTemplate !== null) {
-                template = overrideTemplate.nodes;
-                parseErrors = overrideTemplate.errors;
-            }
             if (parseErrors !== null) {
                 templateDiagnostics.push(...this.getTemplateDiagnostics(parseErrors, templateId, sourceMapping));
             }
@@ -37634,37 +37625,21 @@ Either add the @Injectable() decorator to '${provider.node.name
             /**
              * Stores directives and pipes that are in scope for each component.
              *
-             * Unlike other caches, the scope of a component is not affected by its template, so this
-             * cache does not need to be invalidate if the template is overridden. It will be destroyed when
-             * the `ts.Program` changes and the `TemplateTypeCheckerImpl` as a whole is destroyed and
-             * replaced.
+             * Unlike other caches, the scope of a component is not affected by its template. It will be
+             * destroyed when the `ts.Program` changes and the `TemplateTypeCheckerImpl` as a whole is
+             * destroyed and replaced.
              */
             this.scopeCache = new Map();
             /**
              * Stores potential element tags for each component (a union of DOM tags as well as directive
              * tags).
              *
-             * Unlike other caches, the scope of a component is not affected by its template, so this
-             * cache does not need to be invalidate if the template is overridden. It will be destroyed when
-             * the `ts.Program` changes and the `TemplateTypeCheckerImpl` as a whole is destroyed and
-             * replaced.
+             * Unlike other caches, the scope of a component is not affected by its template. It will be
+             * destroyed when the `ts.Program` changes and the `TemplateTypeCheckerImpl` as a whole is
+             * destroyed and replaced.
              */
             this.elementTagCache = new Map();
             this.isComplete = false;
-        }
-        resetOverrides() {
-            for (const fileRecord of this.state.values()) {
-                if (fileRecord.templateOverrides !== null) {
-                    fileRecord.templateOverrides = null;
-                    fileRecord.shimData.clear();
-                    fileRecord.isComplete = false;
-                }
-            }
-            // Ideally only those components with overridden templates would have their caches invalidated,
-            // but the `TemplateTypeCheckerImpl` does not track the class for components with overrides. As
-            // a quick workaround, clear the entire cache instead.
-            this.completionCache.clear();
-            this.symbolBuilderCache.clear();
         }
         getTemplate(component) {
             const { data } = this.getLatestComponentState(component);
@@ -37701,33 +37676,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 data = shimRecord.templates.get(templateId);
             }
             return { data, tcb, shimPath };
-        }
-        overrideComponentTemplate(component, template) {
-            const { nodes, errors } = parseTemplate(template, 'override.html', {
-                // Set `leadingTriviaChars` and `preserveWhitespaces` such that whitespace is not stripped
-                // and fully accounted for in source spans. Without these flags the source spans can be
-                // inaccurate.
-                // Note: template parse options should be aligned with `template_target_spec.ts` and the
-                // `diagNodes` in `ComponentDecoratorHandler._parseTemplate`.
-                preserveWhitespaces: true,
-                leadingTriviaChars: [],
-            });
-            const filePath = absoluteFromSourceFile(component.getSourceFile());
-            const fileRecord = this.getFileData(filePath);
-            const id = fileRecord.sourceManager.getTemplateId(component);
-            if (fileRecord.templateOverrides === null) {
-                fileRecord.templateOverrides = new Map();
-            }
-            fileRecord.templateOverrides.set(id, { nodes, errors });
-            // Clear data for the shim in question, so it'll be regenerated on the next request.
-            const shimFile = this.typeCheckingStrategy.shimPathForComponent(component);
-            fileRecord.shimData.delete(shimFile);
-            fileRecord.isComplete = false;
-            this.isComplete = false;
-            // Overriding a component's template invalidates its cached results.
-            this.completionCache.delete(component);
-            this.symbolBuilderCache.delete(component);
-            return { nodes, errors };
         }
         isTrackedTypeCheckFile(filePath) {
             return this.getFileAndShimRecordsForPath(filePath) !== null;
@@ -37829,7 +37777,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             return engine.getExpressionCompletionLocation(ast);
         }
         invalidateClass(clazz) {
-            var _a;
             this.completionCache.delete(clazz);
             this.symbolBuilderCache.delete(clazz);
             this.scopeCache.delete(clazz);
@@ -37841,7 +37788,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const templateId = fileData.sourceManager.getTemplateId(clazz);
             fileData.shimData.delete(shimPath);
             fileData.isComplete = false;
-            (_a = fileData.templateOverrides) === null || _a === void 0 ? void 0 : _a.delete(templateId);
             this.isComplete = false;
         }
         getOrCreateCompletionEngine(component) {
@@ -37860,18 +37806,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             const sfPath = absoluteFromSourceFile(sf);
             if (this.state.has(sfPath)) {
                 const existingResults = this.state.get(sfPath);
-                if (existingResults.templateOverrides !== null) {
-                    // Cannot adopt prior results if template overrides have been requested.
-                    return;
-                }
                 if (existingResults.isComplete) {
                     // All data for this file has already been generated, so no need to adopt anything.
                     return;
                 }
             }
             const previousResults = this.priorBuild.priorTypeCheckingResultsFor(sf);
-            if (previousResults === null || !previousResults.isComplete ||
-                previousResults.templateOverrides !== null) {
+            if (previousResults === null || !previousResults.isComplete) {
                 return;
             }
             this.state.set(sfPath, previousResults);
@@ -37962,7 +37903,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (!this.state.has(path)) {
                 this.state.set(path, {
                     hasInlines: false,
-                    templateOverrides: null,
                     sourceManager: new TemplateSourceManager(),
                     isComplete: false,
                     shimData: new Map(),
@@ -38115,17 +38055,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             // The component needs to be checked unless the shim which would contain it already exists.
             return !fileData.shimData.has(shimPath);
         }
-        getTemplateOverride(sfPath, node) {
-            const fileData = this.impl.getFileData(sfPath);
-            if (fileData.templateOverrides === null) {
-                return null;
-            }
-            const templateId = fileData.sourceManager.getTemplateId(node);
-            if (fileData.templateOverrides.has(templateId)) {
-                return fileData.templateOverrides.get(templateId);
-            }
-            return null;
-        }
         recordShimData(sfPath, data) {
             const fileData = this.impl.getFileData(sfPath);
             fileData.shimData.set(data.path, data);
@@ -38164,17 +38093,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const shimPath = this.strategy.shimPathForComponent(node);
             // Only need to generate a TCB for the class if no shim exists for it currently.
             return !this.fileData.shimData.has(shimPath);
-        }
-        getTemplateOverride(sfPath, node) {
-            this.assertPath(sfPath);
-            if (this.fileData.templateOverrides === null) {
-                return null;
-            }
-            const templateId = this.fileData.sourceManager.getTemplateId(node);
-            if (this.fileData.templateOverrides.has(templateId)) {
-                return this.fileData.templateOverrides.get(templateId);
-            }
-            return null;
         }
         recordShimData(sfPath, data) {
             this.assertPath(sfPath);
@@ -38275,6 +38193,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             newDriver,
             oldProgram,
             newProgram,
+        };
+    }
+    function resourceChangeTicket(compiler, modifiedResourceFiles) {
+        return {
+            kind: CompilationTicketKind.IncrementalResource,
+            compiler,
+            modifiedResourceFiles,
         };
     }
     /**
@@ -39609,9 +39534,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function isTypeScriptFile(fileName) {
         return fileName.endsWith('.ts');
     }
-    function isExternalTemplate(fileName) {
-        return !isTypeScriptFile(fileName);
-    }
     function isWithin(position, span) {
         let start, end;
         if (span instanceof ParseSourceSpan) {
@@ -39667,7 +39589,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.ignoreForEmit = new Set();
             this.factoryTracker = null; // no .ngfactory shims
             this.unifiedModulesHost = null; // only used in Bazel
-            this.templateVersion = new Map();
+            /**
+             * Map of resource filenames to the version of the file last read via `readResource`.
+             *
+             * Used to implement `getModifiedResourceFiles`.
+             */
+            this.lastReadResourceVersion = new Map();
             this.rootDirs = getRootDirs(this, project.getCompilationSettings());
         }
         isShim(sf) {
@@ -39715,13 +39642,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 throw new Error(`Failed to get script snapshot while trying to read ${fileName}`);
             }
             const version = this.project.getScriptVersion(fileName);
-            this.templateVersion.set(fileName, version);
+            this.lastReadResourceVersion.set(fileName, version);
             return snapshot.getText(0, snapshot.getLength());
         }
-        isTemplateDirty(fileName) {
-            const lastVersion = this.templateVersion.get(fileName);
-            const latestVersion = this.project.getScriptVersion(fileName);
-            return lastVersion !== latestVersion;
+        getModifiedResourceFiles() {
+            const modifiedFiles = new Set();
+            for (const [fileName, oldVersion] of this.lastReadResourceVersion) {
+                if (this.project.getScriptVersion(fileName) !== oldVersion) {
+                    modifiedFiles.add(fileName);
+                }
+            }
+            return modifiedFiles.size > 0 ? modifiedFiles : undefined;
         }
     }
     /**
@@ -39801,49 +39732,27 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.lastKnownProgram = null;
         }
         getOrCreate() {
+            var _a;
             const program = this.programStrategy.getProgram();
-            if (this.compiler === null || program !== this.lastKnownProgram) {
-                let ticket;
-                if (this.compiler === null || this.lastKnownProgram === null) {
-                    ticket = freshCompilationTicket(program, this.options, this.incrementalStrategy, this.programStrategy, true, true);
+            const modifiedResourceFiles = (_a = this.adapter.getModifiedResourceFiles()) !== null && _a !== void 0 ? _a : new Set();
+            if (this.compiler !== null && program === this.lastKnownProgram) {
+                if (modifiedResourceFiles.size > 0) {
+                    // Only resource files have changed since the last NgCompiler was created.
+                    const ticket = resourceChangeTicket(this.compiler, modifiedResourceFiles);
+                    this.compiler = NgCompiler.fromTicket(ticket, this.adapter);
                 }
-                else {
-                    ticket = incrementalFromCompilerTicket(this.compiler, program, this.incrementalStrategy, this.programStrategy, new Set());
-                }
-                this.compiler = NgCompiler.fromTicket(ticket, this.adapter);
-                this.lastKnownProgram = program;
+                return this.compiler;
             }
+            let ticket;
+            if (this.compiler === null || this.lastKnownProgram === null) {
+                ticket = freshCompilationTicket(program, this.options, this.incrementalStrategy, this.programStrategy, true, true);
+            }
+            else {
+                ticket = incrementalFromCompilerTicket(this.compiler, program, this.incrementalStrategy, this.programStrategy, modifiedResourceFiles);
+            }
+            this.compiler = NgCompiler.fromTicket(ticket, this.adapter);
+            this.lastKnownProgram = program;
             return this.compiler;
-        }
-        /**
-         * Create a new instance of the Ivy compiler if the program has changed since
-         * the last time the compiler was instantiated. If the program has not changed,
-         * return the existing instance.
-         * @param fileName override the template if this is an external template file
-         * @param options angular compiler options
-         */
-        getOrCreateWithChangedFile(fileName) {
-            const compiler = this.getOrCreate();
-            if (isExternalTemplate(fileName)) {
-                this.overrideTemplate(fileName, compiler);
-            }
-            return compiler;
-        }
-        overrideTemplate(fileName, compiler) {
-            if (!this.adapter.isTemplateDirty(fileName)) {
-                return;
-            }
-            // 1. Get the latest snapshot
-            const latestTemplate = this.adapter.readResource(fileName);
-            // 2. Find all components that use the template
-            const ttc = compiler.getTemplateTypeChecker();
-            const components = compiler.getComponentsWithTemplateFile(fileName);
-            // 3. Update component template
-            for (const component of components) {
-                if (ts.isClassDeclaration(component)) {
-                    ttc.overrideComponentTemplate(component, latestTemplate);
-                }
-            }
         }
         registerLastKnownProgram() {
             this.lastKnownProgram = this.programStrategy.getProgram();
@@ -41950,7 +41859,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return this.options;
         }
         getSemanticDiagnostics(fileName) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const ttc = compiler.getTemplateTypeChecker();
             const diagnostics = [];
             if (isTypeScriptFile(fileName)) {
@@ -41972,19 +41881,19 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return diagnostics;
         }
         getDefinitionAndBoundSpan(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const results = new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
         getTypeDefinitionAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const results = new DefinitionBuilder(this.tsLS, compiler).getTypeDefinitionsAtPosition(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
         getQuickInfoAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
             if (templateInfo === undefined) {
                 return undefined;
@@ -42004,7 +41913,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return results;
         }
         getReferencesAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const results = new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
                 .getReferencesAtPosition(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
@@ -42012,7 +41921,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getRenameInfo(fileName, position) {
             var _a, _b, _c;
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const renameInfo = new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
                 .getRenameInfo(absoluteFrom(fileName), position);
             if (!renameInfo.canRename) {
@@ -42024,14 +41933,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return Object.assign(Object.assign({}, renameInfo), { kind, kindModifiers });
         }
         findRenameLocations(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const results = new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
                 .findRenameLocations(fileName, position);
             this.compilerFactory.registerLastKnownProgram();
             return results;
         }
         getCompletionBuilder(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+            const compiler = this.compilerFactory.getOrCreate();
             const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
             if (templateInfo === undefined) {
                 return null;
@@ -42075,7 +41984,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return result;
         }
         getTcb(fileName, position) {
-            return this.withCompiler(fileName, compiler => {
+            return this.withCompiler(compiler => {
                 const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
                 if (templateInfo === undefined) {
                     return undefined;
@@ -42115,8 +42024,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 };
             });
         }
-        withCompiler(fileName, p) {
-            const compiler = this.compilerFactory.getOrCreateWithChangedFile(fileName);
+        withCompiler(p) {
+            const compiler = this.compilerFactory.getOrCreate();
             const result = p(compiler);
             this.compilerFactory.registerLastKnownProgram();
             return result;
