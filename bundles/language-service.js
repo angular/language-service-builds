@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.0-next.0+32.sha-4cc15fe
+ * @license Angular v11.2.0-next.0+37.sha-7c38a4a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19021,7 +19021,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.0-next.0+32.sha-4cc15fe');
+    const VERSION$1 = new Version('11.2.0-next.0+37.sha-7c38a4a');
 
     /**
      * @license
@@ -35029,7 +35029,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.0-next.0+32.sha-4cc15fe');
+    const VERSION$2 = new Version$1('11.2.0-next.0+37.sha-7c38a4a');
 
     /**
      * @license
@@ -38302,36 +38302,36 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         emit(value) {
             super.next(value);
         }
-        subscribe(generatorOrNext, error, complete) {
+        subscribe(observerOrNext, error, complete) {
             let schedulerFn;
             let errorFn = (err) => null;
             let completeFn = () => null;
-            if (generatorOrNext && typeof generatorOrNext === 'object') {
+            if (observerOrNext && typeof observerOrNext === 'object') {
                 schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => generatorOrNext.next(value));
+                    setTimeout(() => observerOrNext.next(value));
                 } : (value) => {
-                    generatorOrNext.next(value);
+                    observerOrNext.next(value);
                 };
-                if (generatorOrNext.error) {
+                if (observerOrNext.error) {
                     errorFn = this.__isAsync ? (err) => {
-                        setTimeout(() => generatorOrNext.error(err));
+                        setTimeout(() => observerOrNext.error(err));
                     } : (err) => {
-                        generatorOrNext.error(err);
+                        observerOrNext.error(err);
                     };
                 }
-                if (generatorOrNext.complete) {
+                if (observerOrNext.complete) {
                     completeFn = this.__isAsync ? () => {
-                        setTimeout(() => generatorOrNext.complete());
+                        setTimeout(() => observerOrNext.complete());
                     } : () => {
-                        generatorOrNext.complete();
+                        observerOrNext.complete();
                     };
                 }
             }
             else {
                 schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => generatorOrNext(value));
+                    setTimeout(() => observerOrNext(value));
                 } : (value) => {
-                    generatorOrNext(value);
+                    observerOrNext(value);
                 };
                 if (error) {
                     errorFn = this.__isAsync ? (err) => {
@@ -38349,8 +38349,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
             const sink = super.subscribe(schedulerFn, errorFn, completeFn);
-            if (generatorOrNext instanceof Subscription) {
-                generatorOrNext.add(sink);
+            if (observerOrNext instanceof Subscription) {
+                observerOrNext.add(sink);
             }
             return sink;
         }
