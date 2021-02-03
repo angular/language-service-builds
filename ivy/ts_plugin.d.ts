@@ -7,5 +7,6 @@
  */
 /// <amd-module name="@angular/language-service/ivy/ts_plugin" />
 import * as ts from 'typescript/lib/tsserverlibrary';
-export declare function create(info: ts.server.PluginCreateInfo): ts.LanguageService;
+import { NgLanguageService } from '../api';
+export declare function create(info: ts.server.PluginCreateInfo): NgLanguageService;
 export declare function getExternalFiles(project: ts.server.Project): string[];
