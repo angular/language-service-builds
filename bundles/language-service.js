@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+231.sha-a3b0864
+ * @license Angular v11.1.0-next.4+237.sha-950875c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19021,7 +19021,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+231.sha-a3b0864');
+    const VERSION$1 = new Version('11.1.0-next.4+237.sha-950875c');
 
     /**
      * @license
@@ -35029,7 +35029,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+231.sha-a3b0864');
+    const VERSION$2 = new Version$1('11.1.0-next.4+237.sha-950875c');
 
     /**
      * @license
@@ -38302,36 +38302,36 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         emit(value) {
             super.next(value);
         }
-        subscribe(generatorOrNext, error, complete) {
+        subscribe(observerOrNext, error, complete) {
             let schedulerFn;
             let errorFn = (err) => null;
             let completeFn = () => null;
-            if (generatorOrNext && typeof generatorOrNext === 'object') {
+            if (observerOrNext && typeof observerOrNext === 'object') {
                 schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => generatorOrNext.next(value));
+                    setTimeout(() => observerOrNext.next(value));
                 } : (value) => {
-                    generatorOrNext.next(value);
+                    observerOrNext.next(value);
                 };
-                if (generatorOrNext.error) {
+                if (observerOrNext.error) {
                     errorFn = this.__isAsync ? (err) => {
-                        setTimeout(() => generatorOrNext.error(err));
+                        setTimeout(() => observerOrNext.error(err));
                     } : (err) => {
-                        generatorOrNext.error(err);
+                        observerOrNext.error(err);
                     };
                 }
-                if (generatorOrNext.complete) {
+                if (observerOrNext.complete) {
                     completeFn = this.__isAsync ? () => {
-                        setTimeout(() => generatorOrNext.complete());
+                        setTimeout(() => observerOrNext.complete());
                     } : () => {
-                        generatorOrNext.complete();
+                        observerOrNext.complete();
                     };
                 }
             }
             else {
                 schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => generatorOrNext(value));
+                    setTimeout(() => observerOrNext(value));
                 } : (value) => {
-                    generatorOrNext(value);
+                    observerOrNext(value);
                 };
                 if (error) {
                     errorFn = this.__isAsync ? (err) => {
@@ -38349,8 +38349,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
             const sink = super.subscribe(schedulerFn, errorFn, completeFn);
-            if (generatorOrNext instanceof Subscription) {
-                generatorOrNext.add(sink);
+            if (observerOrNext instanceof Subscription) {
+                observerOrNext.add(sink);
             }
             return sink;
         }
@@ -42151,14 +42151,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Create a `LanguageServiceHost`
-     */
-    function createLanguageServiceFromTypescript(host, service) {
-        const ngHost = new TypeScriptServiceHost(host, service);
-        const ngServer = createLanguageService(ngHost);
-        return ngServer;
-    }
-    /**
      * The language service never needs the normalized versions of the metadata. To avoid parsing
      * the content and resolving references, return an empty file. This also allows normalizing
      * template that are syntatically incorrect which is required to provide completions in
@@ -42838,6 +42830,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // not implemented in VE Language Service
             return undefined;
         }
+        function getTcb(fileName, position) {
+            // Not implemented in VE Language Service
+            return undefined;
+        }
         return Object.assign(Object.assign({}, tsLS), { 
             // Then override the methods supported by Angular language service
             getCompletionsAtPosition,
@@ -42847,13 +42843,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             getDefinitionAndBoundSpan,
             getTypeDefinitionAtPosition,
             getReferencesAtPosition,
-            findRenameLocations });
+            findRenameLocations,
+            getTcb });
     }
 
-    exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.create = create;
-    exports.createLanguageService = createLanguageService;
-    exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
     exports.getExternalFiles = getExternalFiles;
 
     Object.defineProperty(exports, '__esModule', { value: true });

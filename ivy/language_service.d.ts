@@ -8,25 +8,8 @@
 /// <amd-module name="@angular/language-service/ivy/language_service" />
 import { CompilerOptions } from '@angular/compiler-cli';
 import * as ts from 'typescript/lib/tsserverlibrary';
+import { GetTcbResponse } from '../api';
 import { CompilerFactory } from './compiler_factory';
-export declare type GetTcbResponse = {
-    /**
-     * The filename of the SourceFile this typecheck block belongs to.
-     * The filename is entirely opaque and unstable, useful only for debugging
-     * purposes.
-     */
-    fileName: string;
-    /** The content of the SourceFile this typecheck block belongs to. */
-    content: string;
-    /**
-     * Spans over node(s) in the typecheck block corresponding to the
-     * TS code generated for template node under the current cursor position.
-     *
-     * When the cursor position is over a source for which there is no generated
-     * code, `selections` is empty.
-     */
-    selections: ts.TextSpan[];
-} | undefined;
 export declare class LanguageService {
     private readonly project;
     private readonly tsLS;

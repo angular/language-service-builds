@@ -8,11 +8,7 @@
 /// <amd-module name="@angular/language-service/src/typescript_host" />
 import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
 import * as tss from 'typescript/lib/tsserverlibrary';
-import { AstResult, Declaration, LanguageService, LanguageServiceHost, TemplateSource } from './types';
-/**
- * Create a `LanguageServiceHost`
- */
-export declare function createLanguageServiceFromTypescript(host: tss.LanguageServiceHost, service: tss.LanguageService): LanguageService;
+import { AstResult, Declaration, LanguageServiceHost, TemplateSource } from './types';
 /**
  * The language service never needs the normalized versions of the metadata. To avoid parsing
  * the content and resolving references, return an empty file. This also allows normalizing
