@@ -28,14 +28,5 @@ export declare class CompilerFactory {
     private lastKnownProgram;
     constructor(adapter: LanguageServiceAdapter, programStrategy: TypeCheckingProgramStrategy, options: NgCompilerOptions);
     getOrCreate(): NgCompiler;
-    /**
-     * Create a new instance of the Ivy compiler if the program has changed since
-     * the last time the compiler was instantiated. If the program has not changed,
-     * return the existing instance.
-     * @param fileName override the template if this is an external template file
-     * @param options angular compiler options
-     */
-    getOrCreateWithChangedFile(fileName: string): NgCompiler;
-    private overrideTemplate;
     registerLastKnownProgram(): void;
 }
