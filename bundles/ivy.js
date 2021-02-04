@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+241.sha-5324a62
+ * @license Angular v11.1.0-next.4+245.sha-d067dc0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17011,7 +17011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+241.sha-5324a62');
+    const VERSION$1 = new Version('11.1.0-next.4+245.sha-d067dc0');
 
     /**
      * @license
@@ -17668,7 +17668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+241.sha-5324a62'));
+        definitionMap.set('version', literal('11.1.0-next.4+245.sha-d067dc0'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21116,7 +21116,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+241.sha-5324a62');
+    const VERSION$2 = new Version('11.1.0-next.4+245.sha-d067dc0');
 
     /**
      * @license
@@ -41983,6 +41983,28 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.compilerFactory.registerLastKnownProgram();
             return result;
         }
+        getComponentLocationsForTemplate(fileName) {
+            return this.withCompiler((compiler) => {
+                const components = compiler.getComponentsWithTemplateFile(fileName);
+                const componentDeclarationLocations = Array.from(components.values()).map(c => {
+                    let contextSpan = undefined;
+                    let textSpan;
+                    if (isNamedClassDeclaration(c)) {
+                        textSpan = ts.createTextSpanFromBounds(c.name.getStart(), c.name.getEnd());
+                        contextSpan = ts.createTextSpanFromBounds(c.getStart(), c.getEnd());
+                    }
+                    else {
+                        textSpan = ts.createTextSpanFromBounds(c.getStart(), c.getEnd());
+                    }
+                    return {
+                        fileName: c.getSourceFile().fileName,
+                        textSpan,
+                        contextSpan,
+                    };
+                });
+                return componentDeclarationLocations;
+            });
+        }
         getTcb(fileName, position) {
             return this.withCompiler(compiler => {
                 const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
@@ -42274,6 +42296,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         function getTcb(fileName, position) {
             return ngLS.getTcb(fileName, position);
         }
+        /**
+         * Given an external template, finds the associated components that use it as a `templateUrl`.
+         */
+        function getComponentLocationsForTemplate(fileName) {
+            return ngLS.getComponentLocationsForTemplate(fileName);
+        }
         return Object.assign(Object.assign({}, tsLS), { getSemanticDiagnostics,
             getTypeDefinitionAtPosition,
             getQuickInfoAtPosition,
@@ -42285,7 +42313,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             getCompletionEntryDetails,
             getCompletionEntrySymbol,
             getTcb,
-            getCompilerOptionsDiagnostics });
+            getCompilerOptionsDiagnostics,
+            getComponentLocationsForTemplate });
     }
     function getExternalFiles(project) {
         if (!project.hasRoots()) {
