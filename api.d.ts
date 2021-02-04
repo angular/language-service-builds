@@ -30,10 +30,12 @@ export declare type GetTcbResponse = {
      */
     selections: ts.TextSpan[];
 } | undefined;
+export declare type GetComponentLocationsForTemplateResponse = ts.DocumentSpan[];
 /**
  * `NgLanguageService` describes an instance of an Angular language service,
  * whose API surface is a strict superset of TypeScript's language service.
  */
 export interface NgLanguageService extends ts.LanguageService {
     getTcb(fileName: string, position: number): GetTcbResponse;
+    getComponentLocationsForTemplate(fileName: string): GetComponentLocationsForTemplateResponse;
 }

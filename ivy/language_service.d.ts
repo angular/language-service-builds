@@ -8,7 +8,7 @@
 /// <amd-module name="@angular/language-service/ivy/language_service" />
 import { CompilerOptions } from '@angular/compiler-cli';
 import * as ts from 'typescript/lib/tsserverlibrary';
-import { GetTcbResponse } from '../api';
+import { GetComponentLocationsForTemplateResponse, GetTcbResponse } from '../api';
 import { CompilerFactory } from './compiler_factory';
 export declare class LanguageService {
     private readonly project;
@@ -31,6 +31,7 @@ export declare class LanguageService {
     getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ts.WithMetadata<ts.CompletionInfo> | undefined;
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined): ts.CompletionEntryDetails | undefined;
     getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
+    getComponentLocationsForTemplate(fileName: string): GetComponentLocationsForTemplateResponse;
     getTcb(fileName: string, position: number): GetTcbResponse;
     private withCompiler;
     getCompilerOptionsDiagnostics(): ts.Diagnostic[];
