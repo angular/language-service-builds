@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+313.sha-378da71
+ * @license Angular v11.1.0-next.4+316.sha-03f0b15
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19021,7 +19021,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+313.sha-378da71');
+    const VERSION$1 = new Version('11.1.0-next.4+316.sha-03f0b15');
 
     /**
      * @license
@@ -27985,6 +27985,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throwError(`Index out of range (expecting ${lower} <= ${index} < ${upper})`);
         }
     }
+    function assertProjectionSlots(lView, errMessage) {
+        assertDefined(lView[DECLARATION_COMPONENT_VIEW], 'Component views should exist.');
+        assertDefined(lView[DECLARATION_COMPONENT_VIEW][T_HOST].projection, errMessage ||
+            'Components with projection nodes (<ng-content>) must have projection slots defined.');
+    }
+    function assertParentView(lView, errMessage) {
+        assertDefined(lView, errMessage || 'Component views should always have a parent view (component\'s host view)');
+    }
     /**
      * This is a basic sanity check that the `injectorIndex` seems to point to what looks like a
      * NodeInjector data structure.
@@ -33922,17 +33930,29 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 return rNode || unwrapRNode(lView[tNode.index]);
             }
             else {
-                const componentView = lView[DECLARATION_COMPONENT_VIEW];
-                const componentHost = componentView[T_HOST];
-                const parentView = getLViewParent(componentView);
-                const firstProjectedTNode = componentHost.projection[tNode.projection];
-                if (firstProjectedTNode != null) {
-                    return getFirstNativeNode(parentView, firstProjectedTNode);
+                const projectionNodes = getProjectionNodes(lView, tNode);
+                if (projectionNodes !== null) {
+                    if (Array.isArray(projectionNodes)) {
+                        return projectionNodes[0];
+                    }
+                    const parentView = getLViewParent(lView[DECLARATION_COMPONENT_VIEW]);
+                    ngDevMode && assertParentView(parentView);
+                    return getFirstNativeNode(parentView, projectionNodes);
                 }
                 else {
                     return getFirstNativeNode(lView, tNode.next);
                 }
             }
+        }
+        return null;
+    }
+    function getProjectionNodes(lView, tNode) {
+        if (tNode !== null) {
+            const componentView = lView[DECLARATION_COMPONENT_VIEW];
+            const componentHost = componentView[T_HOST];
+            const slotIdx = tNode.projection;
+            ngDevMode && assertProjectionSlots(lView);
+            return componentHost.projection[slotIdx];
         }
         return null;
     }
@@ -46908,7 +46928,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+313.sha-378da71');
+    const VERSION$2 = new Version$1('11.1.0-next.4+316.sha-03f0b15');
 
     /**
      * @license
@@ -48009,19 +48029,13 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 }
             }
             else if (tNodeType & 16 /* Projection */) {
-                const componentView = lView[DECLARATION_COMPONENT_VIEW];
-                const componentHost = componentView[T_HOST];
-                const slotIdx = tNode.projection;
-                ngDevMode &&
-                    assertDefined(componentHost.projection, 'Components with projection nodes (<ng-content>) must have projection slots defined.');
-                const nodesInSlot = componentHost.projection[slotIdx];
+                const nodesInSlot = getProjectionNodes(lView, tNode);
                 if (Array.isArray(nodesInSlot)) {
                     result.push(...nodesInSlot);
                 }
                 else {
-                    const parentView = getLViewParent(componentView);
-                    ngDevMode &&
-                        assertDefined(parentView, 'Component views should always have a parent view (component\'s host view)');
+                    const parentView = getLViewParent(lView[DECLARATION_COMPONENT_VIEW]);
+                    ngDevMode && assertParentView(parentView);
                     collectNativeNodes(parentView[TVIEW], parentView, nodesInSlot, result, true);
                 }
             }
