@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+316.sha-03f0b15
+ * @license Angular v11.1.0-next.4+320.sha-bbf61fc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -11665,6 +11665,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return new Chain(this.span(start), this.sourceSpan(start), exprs);
         }
         parsePipe() {
+            const start = this.inputIndex;
             let result = this.parseExpression();
             if (this.consumeOptionalOperator('|')) {
                 if (this.parseAction) {
@@ -11700,7 +11701,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                         // If there are additional expressions beyond the name, then the artificial end for the
                         // name is no longer relevant.
                     }
-                    const { start } = result.span;
                     result = new BindingPipe(this.span(start), this.sourceSpan(start, fullSpanEnd), result, nameId, args, nameSpan);
                 } while (this.consumeOptionalOperator('|'));
             }
@@ -11732,26 +11732,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         parseLogicalOr() {
             // '||'
+            const start = this.inputIndex;
             let result = this.parseLogicalAnd();
             while (this.consumeOptionalOperator('||')) {
                 const right = this.parseLogicalAnd();
-                const { start } = result.span;
                 result = new Binary(this.span(start), this.sourceSpan(start), '||', result, right);
             }
             return result;
         }
         parseLogicalAnd() {
             // '&&'
+            const start = this.inputIndex;
             let result = this.parseEquality();
             while (this.consumeOptionalOperator('&&')) {
                 const right = this.parseEquality();
-                const { start } = result.span;
                 result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
             }
             return result;
         }
         parseEquality() {
             // '==','!=','===','!=='
+            const start = this.inputIndex;
             let result = this.parseRelational();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -11762,7 +11763,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     case '!==':
                         this.advance();
                         const right = this.parseRelational();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -11772,6 +11772,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         parseRelational() {
             // '<', '>', '<=', '>='
+            const start = this.inputIndex;
             let result = this.parseAdditive();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -11782,7 +11783,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     case '>=':
                         this.advance();
                         const right = this.parseAdditive();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -11792,6 +11792,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         parseAdditive() {
             // '+', '-'
+            const start = this.inputIndex;
             let result = this.parseMultiplicative();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -11800,7 +11801,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     case '-':
                         this.advance();
                         let right = this.parseMultiplicative();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -11810,6 +11810,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         parseMultiplicative() {
             // '*', '%', '/'
+            const start = this.inputIndex;
             let result = this.parsePrefix();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -11819,7 +11820,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     case '/':
                         this.advance();
                         let right = this.parsePrefix();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -11850,14 +11850,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return this.parseCallChain();
         }
         parseCallChain() {
+            const start = this.inputIndex;
             let result = this.parsePrimary();
-            const resultStart = result.span.start;
             while (true) {
                 if (this.consumeOptionalCharacter($PERIOD)) {
-                    result = this.parseAccessMemberOrMethodCall(result, false);
+                    result = this.parseAccessMemberOrMethodCall(result, start, false);
                 }
                 else if (this.consumeOptionalOperator('?.')) {
-                    result = this.parseAccessMemberOrMethodCall(result, true);
+                    result = this.parseAccessMemberOrMethodCall(result, start, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
                     this.withContext(ParseContextFlags.Writable, () => {
@@ -11870,11 +11870,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                         this.expectCharacter($RBRACKET);
                         if (this.consumeOptionalOperator('=')) {
                             const value = this.parseConditional();
-                            result = new KeyedWrite(this.span(resultStart), this.sourceSpan(resultStart), result, key, value);
+                            result = new KeyedWrite(this.span(start), this.sourceSpan(start), result, key, value);
                         }
                         else {
-                            result =
-                                new KeyedRead(this.span(resultStart), this.sourceSpan(resultStart), result, key);
+                            result = new KeyedRead(this.span(start), this.sourceSpan(start), result, key);
                         }
                     });
                 }
@@ -11883,11 +11882,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     const args = this.parseCallArguments();
                     this.rparensExpected--;
                     this.expectCharacter($RPAREN);
-                    result =
-                        new FunctionCall(this.span(resultStart), this.sourceSpan(resultStart), result, args);
+                    result = new FunctionCall(this.span(start), this.sourceSpan(start), result, args);
                 }
                 else if (this.consumeOptionalOperator('!')) {
-                    result = new NonNullAssert(this.span(resultStart), this.sourceSpan(resultStart), result);
+                    result = new NonNullAssert(this.span(start), this.sourceSpan(start), result);
                 }
                 else {
                     return result;
@@ -11934,7 +11932,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return this.parseLiteralMap();
             }
             else if (this.next.isIdentifier()) {
-                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), false);
+                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
             }
             else if (this.next.isNumber()) {
                 const value = this.next.toNumber();
@@ -11986,8 +11984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
         }
-        parseAccessMemberOrMethodCall(receiver, isSafe = false) {
-            const start = receiver.span.start;
+        parseAccessMemberOrMethodCall(receiver, start, isSafe = false) {
             const nameStart = this.inputIndex;
             const id = this.withContext(ParseContextFlags.Writable, () => {
                 var _a;
@@ -13219,6 +13216,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             else if (identifier.length === 0) {
                 this.reportError(`Reference does not have a name`, sourceSpan);
+            }
+            else if (references.some(reference => reference.name === identifier)) {
+                this.reportError(`Reference "#${identifier}" is defined more than once`, sourceSpan);
             }
             references.push(new Reference(identifier, value, sourceSpan, keySpan, valueSpan));
         }
@@ -17011,7 +17011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+316.sha-03f0b15');
+    const VERSION$1 = new Version('11.1.0-next.4+320.sha-bbf61fc');
 
     /**
      * @license
@@ -17668,7 +17668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.1.0-next.4+316.sha-03f0b15'));
+        definitionMap.set('version', literal('11.1.0-next.4+320.sha-bbf61fc'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21116,7 +21116,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.1.0-next.4+316.sha-03f0b15');
+    const VERSION$2 = new Version('11.1.0-next.4+320.sha-bbf61fc');
 
     /**
      * @license
@@ -34140,8 +34140,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.typeCtorStatements = [];
             this.pipeInsts = new Map();
             this.pipeInstStatements = [];
-            this.outputHelperIdent = null;
-            this.helperStatements = [];
         }
         /**
          * Get an expression referring to a type constructor for the given directive.
@@ -34202,85 +34200,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             return pipeInstId;
         }
         /**
-         * Declares a helper function to be able to cast directive outputs of type `EventEmitter<T>` to
-         * have an accurate `subscribe()` method that properly carries over the generic type `T` into the
-         * listener function passed as argument to `subscribe`. This is done to work around a typing
-         * deficiency in `EventEmitter.subscribe`, where the listener function is typed as any.
-         */
-        declareOutputHelper() {
-            if (this.outputHelperIdent !== null) {
-                return this.outputHelperIdent;
-            }
-            const outputHelperIdent = ts$1.createIdentifier('_outputHelper');
-            const genericTypeDecl = ts$1.createTypeParameterDeclaration('T');
-            const genericTypeRef = ts$1.createTypeReferenceNode('T', /* typeParameters */ undefined);
-            const eventEmitter = this.referenceExternalType('@angular/core', 'EventEmitter', [new ExpressionType(new WrappedNodeExpr(genericTypeRef))]);
-            // Declare a type that has a `subscribe` method that carries over type `T` as parameter
-            // into the callback. The below code generates the following type literal:
-            // `{subscribe(cb: (event: T) => any): void;}`
-            const observableLike = ts$1.createTypeLiteralNode([ts$1.createMethodSignature(
-                /* typeParameters */ undefined, 
-                /* parameters */ [ts$1.createParameter(
-                    /* decorators */ undefined, 
-                    /* modifiers */ undefined, 
-                    /* dotDotDotToken */ undefined, 
-                    /* name */ 'cb', 
-                    /* questionToken */ undefined, 
-                    /* type */
-                    ts$1.createFunctionTypeNode(
-                    /* typeParameters */ undefined, 
-                    /* parameters */ [ts$1.createParameter(
-                        /* decorators */ undefined, 
-                        /* modifiers */ undefined, 
-                        /* dotDotDotToken */ undefined, 
-                        /* name */ 'event', 
-                        /* questionToken */ undefined, 
-                        /* type */ genericTypeRef)], 
-                    /* type */ ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword)))], 
-                /* type */ ts$1.createKeywordTypeNode(ts$1.SyntaxKind.VoidKeyword), 
-                /* name */ 'subscribe', 
-                /* questionToken */ undefined)]);
-            // Declares the first signature of `_outputHelper` that matches arguments of type
-            // `EventEmitter`, to convert them into `observableLike` defined above. The following
-            // statement is generated:
-            // `declare function _outputHelper<T>(output: EventEmitter<T>): observableLike;`
-            this.helperStatements.push(ts$1.createFunctionDeclaration(
-            /* decorators */ undefined, 
-            /* modifiers */ [ts$1.createModifier(ts$1.SyntaxKind.DeclareKeyword)], 
-            /* asteriskToken */ undefined, 
-            /* name */ outputHelperIdent, 
-            /* typeParameters */ [genericTypeDecl], 
-            /* parameters */ [ts$1.createParameter(
-                /* decorators */ undefined, 
-                /* modifiers */ undefined, 
-                /* dotDotDotToken */ undefined, 
-                /* name */ 'output', 
-                /* questionToken */ undefined, 
-                /* type */ eventEmitter)], 
-            /* type */ observableLike, 
-            /* body */ undefined));
-            // Declares the second signature of `_outputHelper` that matches all other argument types,
-            // i.e. ensures type identity for output types other than `EventEmitter`. This corresponds
-            // with the following statement:
-            // `declare function _outputHelper<T>(output: T): T;`
-            this.helperStatements.push(ts$1.createFunctionDeclaration(
-            /* decorators */ undefined, 
-            /* modifiers */ [ts$1.createModifier(ts$1.SyntaxKind.DeclareKeyword)], 
-            /* asteriskToken */ undefined, 
-            /* name */ outputHelperIdent, 
-            /* typeParameters */ [genericTypeDecl], 
-            /* parameters */ [ts$1.createParameter(
-                /* decorators */ undefined, 
-                /* modifiers */ undefined, 
-                /* dotDotDotToken */ undefined, 
-                /* name */ 'output', 
-                /* questionToken */ undefined, 
-                /* type */ genericTypeRef)], 
-            /* type */ genericTypeRef, 
-            /* body */ undefined));
-            return this.outputHelperIdent = outputHelperIdent;
-        }
-        /**
          * Generate a `ts.Expression` that references the given node.
          *
          * This may involve importing the node into the file if it's not declared there already.
@@ -34321,7 +34240,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         getPreludeStatements() {
             return [
-                ...this.helperStatements,
                 ...this.pipeInstStatements,
                 ...this.typeCtorStatements,
             ];
@@ -35796,16 +35714,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // For strict checking of directive events, generate a call to the `subscribe` method
                     // on the directive's output field to let type information flow into the handler function's
                     // `$event` parameter.
-                    //
-                    // Note that the `EventEmitter<T>` type from '@angular/core' that is typically used for
-                    // outputs has a typings deficiency in its `subscribe` method. The generic type `T` is not
-                    // carried into the handler function, which is vital for inference of the type of `$event`.
-                    // As a workaround, the directive's field is passed into a helper function that has a
-                    // specially crafted set of signatures, to effectively cast `EventEmitter<T>` to something
-                    // that has a `subscribe` method that properly carries the `T` into the handler function.
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 0 /* Infer */);
-                    const outputHelper = ts$1.createCall(this.tcb.env.declareOutputHelper(), undefined, [outputField]);
-                    const subscribeFn = ts$1.createPropertyAccess(outputHelper, 'subscribe');
+                    const subscribeFn = ts$1.createPropertyAccess(outputField, 'subscribe');
                     const call = ts$1.createCall(subscribeFn, /* typeArguments */ undefined, [handler]);
                     addParseSpanInfo(call, output.sourceSpan);
                     this.scope.addStatement(ts$1.createExpressionStatement(call));
@@ -36713,9 +36623,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 '\n\n';
             const printer = ts$1.createPrinter();
             source += '\n';
-            for (const stmt of this.helperStatements) {
-                source += printer.printNode(ts$1.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
-            }
             for (const stmt of this.pipeInstStatements) {
                 source += printer.printNode(ts$1.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
@@ -37327,7 +37234,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             // Outputs in the TCB look like one of the two:
-            // * _outputHelper(_t1["outputField"]).subscribe(handler);
+            // * _t1["outputField"].subscribe(handler);
             // * _t1.addEventListener(handler);
             // Even with strict null checks disabled, we still produce the access as a separate statement
             // so that it can be found here.
@@ -41130,7 +41037,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const definitions = [];
             for (const definitionMeta of definitionMetas) {
                 // The `$event` of event handlers would point to the $event parameter in the shim file, as in
-                // `_outputHelper(_t3["x"]).subscribe(function ($event): any { $event }) ;`
+                // `_t3["x"].subscribe(function ($event): any { $event }) ;`
                 // If we wanted to return something for this, it would be more appropriate for something like
                 // `getTypeDefinition`.
                 if (isDollarEvent(definitionMeta.node)) {
