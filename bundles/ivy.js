@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+16.sha-dfc9f36
+ * @license Angular v12.0.0-next.0+19.sha-5eb1954
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17011,7 +17011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+16.sha-dfc9f36');
+    const VERSION$1 = new Version('12.0.0-next.0+19.sha-5eb1954');
 
     /**
      * @license
@@ -17668,7 +17668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.0+16.sha-dfc9f36'));
+        definitionMap.set('version', literal('12.0.0-next.0+19.sha-5eb1954'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21126,7 +21126,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.0+16.sha-dfc9f36');
+    const VERSION$2 = new Version('12.0.0-next.0+19.sha-5eb1954');
 
     /**
      * @license
@@ -38995,40 +38995,32 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const basePath = host.resolve(projectDir);
         return { projectFile, basePath };
     }
-    function createNgCompilerOptions(basePath, config, tsOptions) {
-        // enableIvy `ngtsc` is an alias for `true`.
-        const { angularCompilerOptions = {} } = config;
-        const { enableIvy } = angularCompilerOptions;
-        angularCompilerOptions.enableIvy = enableIvy !== false && enableIvy !== 'tsc';
-        return Object.assign(Object.assign(Object.assign({}, tsOptions), angularCompilerOptions), { genDir: basePath, basePath });
-    }
     function readConfiguration(project, existingOptions, host = getFileSystem()) {
+        var _a;
         try {
-            const { projectFile, basePath } = calcProjectFileAndBasePath(project, host);
-            const readExtendedConfigFile = (configFile, existingConfig) => {
-                const { config, error } = ts$1.readConfigFile(configFile, file => host.readFile(host.resolve(file)));
+            const fs = getFileSystem();
+            const readConfigFile = (configFile) => ts$1.readConfigFile(configFile, file => host.readFile(host.resolve(file)));
+            const readAngularCompilerOptions = (configFile, parentOptions = {}) => {
+                const { config, error } = readConfigFile(configFile);
                 if (error) {
-                    return { error };
+                    // Errors are handled later on by 'parseJsonConfigFileContent'
+                    return parentOptions;
                 }
                 // we are only interested into merging 'angularCompilerOptions' as
                 // other options like 'compilerOptions' are merged by TS
-                const baseConfig = existingConfig || config;
-                if (existingConfig) {
-                    baseConfig.angularCompilerOptions = Object.assign(Object.assign({}, config.angularCompilerOptions), baseConfig.angularCompilerOptions);
-                }
-                if (config.extends) {
-                    let extendedConfigPath = host.resolve(host.dirname(configFile), config.extends);
-                    extendedConfigPath = host.extname(extendedConfigPath) ?
-                        extendedConfigPath :
-                        absoluteFrom(`${extendedConfigPath}.json`);
-                    if (host.exists(extendedConfigPath)) {
-                        // Call read config recursively as TypeScript only merges CompilerOptions
-                        return readExtendedConfigFile(extendedConfigPath, baseConfig);
+                const existingNgCompilerOptions = Object.assign(Object.assign({}, config.angularCompilerOptions), parentOptions);
+                if (config.extends && typeof config.extends === 'string') {
+                    const extendedConfigPath = getExtendedConfigPath(configFile, config.extends, host, fs);
+                    if (extendedConfigPath !== null) {
+                        // Call readAngularCompilerOptions recursively to merge NG Compiler options
+                        return readAngularCompilerOptions(extendedConfigPath, existingNgCompilerOptions);
                     }
                 }
-                return { config: baseConfig };
+                return existingNgCompilerOptions;
             };
-            const { config, error } = readExtendedConfigFile(projectFile);
+            const { projectFile, basePath } = calcProjectFileAndBasePath(project, host);
+            const configFileName = host.resolve(host.pwd(), projectFile);
+            const { config, error } = readConfigFile(projectFile);
             if (error) {
                 return {
                     project,
@@ -39038,17 +39030,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     emitFlags: EmitFlags.Default
                 };
             }
-            const parseConfigHost = {
-                useCaseSensitiveFileNames: true,
-                fileExists: host.exists.bind(host),
-                readDirectory: ts$1.sys.readDirectory,
-                readFile: ts$1.sys.readFile
-            };
-            const configFileName = host.resolve(host.pwd(), projectFile);
-            const parsed = ts$1.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingOptions, configFileName);
-            const rootNames = parsed.fileNames;
-            const projectReferences = parsed.projectReferences;
-            const options = createNgCompilerOptions(basePath, config, parsed.options);
+            const existingCompilerOptions = Object.assign(Object.assign({ genDir: basePath, basePath }, readAngularCompilerOptions(configFileName)), existingOptions);
+            const parseConfigHost = createParseConfigHost(host, fs);
+            const { options, errors, fileNames: rootNames, projectReferences } = ts$1.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingCompilerOptions, configFileName);
+            // Coerce to boolean as `enableIvy` can be `ngtsc|true|false|undefined` here.
+            options.enableIvy = !!((_a = options.enableIvy) !== null && _a !== void 0 ? _a : true);
             let emitFlags = EmitFlags.Default;
             if (!(options.skipMetadataEmit || options.flatModuleOutFile)) {
                 emitFlags |= EmitFlags.Metadata;
@@ -39056,14 +39042,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (options.skipTemplateCodegen) {
                 emitFlags = emitFlags & ~EmitFlags.Codegen;
             }
-            return {
-                project: projectFile,
-                rootNames,
-                projectReferences,
-                options,
-                errors: parsed.errors,
-                emitFlags
-            };
+            return { project: projectFile, rootNames, projectReferences, options, errors, emitFlags };
         }
         catch (e) {
             const errors = [{
@@ -39077,6 +39056,35 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 }];
             return { project: '', errors, rootNames: [], options: {}, emitFlags: EmitFlags.Default };
         }
+    }
+    function createParseConfigHost(host, fs = getFileSystem()) {
+        return {
+            fileExists: host.exists.bind(host),
+            readDirectory: ts$1.sys.readDirectory,
+            readFile: host.readFile.bind(host),
+            useCaseSensitiveFileNames: fs.isCaseSensitive(),
+        };
+    }
+    function getExtendedConfigPath(configFile, extendsValue, host, fs) {
+        let extendedConfigPath = null;
+        if (extendsValue.startsWith('.') || fs.isRooted(extendsValue)) {
+            extendedConfigPath = host.resolve(host.dirname(configFile), extendsValue);
+            extendedConfigPath = host.extname(extendedConfigPath) ?
+                extendedConfigPath :
+                absoluteFrom(`${extendedConfigPath}.json`);
+        }
+        else {
+            const parseConfigHost = createParseConfigHost(host, fs);
+            // Path isn't a rooted or relative path, resolve like a module.
+            const { resolvedModule, } = ts$1.nodeModuleNameResolver(extendsValue, configFile, { moduleResolution: ts$1.ModuleResolutionKind.NodeJs, resolveJsonModule: true }, parseConfigHost);
+            if (resolvedModule) {
+                extendedConfigPath = absoluteFrom(resolvedModule.resolvedFileName);
+            }
+        }
+        if (extendedConfigPath !== null && host.exists(extendedConfigPath)) {
+            return extendedConfigPath;
+        }
+        return null;
     }
 
     /**
