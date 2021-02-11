@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.0+3.sha-9cbd9be
+ * @license Angular v11.2.0+13.sha-925e2b7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17011,7 +17011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.0+3.sha-9cbd9be');
+    const VERSION$1 = new Version('11.2.0+13.sha-925e2b7');
 
     /**
      * @license
@@ -17668,7 +17668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.0+3.sha-9cbd9be'));
+        definitionMap.set('version', literal('11.2.0+13.sha-925e2b7'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18684,6 +18684,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
 
     function noop () {}
 
+    function publishQueue(context, queue) {
+      Object.defineProperty(context, gracefulQueue, {
+        get: function() {
+          return queue
+        }
+      });
+    }
+
     var debug = noop;
     if (util.debuglog)
       debug = util.debuglog('gfs4');
@@ -18695,14 +18703,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
       };
 
     // Once time initialization
-    if (!global[gracefulQueue]) {
+    if (!fs$2__default[gracefulQueue]) {
       // This queue can be shared by multiple loaded instances
-      var queue = [];
-      Object.defineProperty(global, gracefulQueue, {
-        get: function() {
-          return queue
-        }
-      });
+      var queue = global[gracefulQueue] || [];
+      publishQueue(fs$2__default, queue);
 
       // Patch fs.close/closeSync to shared queue version, because we need
       // to retry() whenever a close happens *anywhere* in the program.
@@ -18742,10 +18746,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
 
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || '')) {
         process.on('exit', function() {
-          debug(global[gracefulQueue]);
-          assert.equal(global[gracefulQueue].length, 0);
+          debug(fs$2__default[gracefulQueue]);
+          assert.equal(fs$2__default[gracefulQueue].length, 0);
         });
       }
+    }
+
+    if (!global[gracefulQueue]) {
+      publishQueue(global, fs$2__default[gracefulQueue]);
     }
 
     module.exports = patch(clone_1(fs$2__default));
@@ -18897,22 +18905,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
       });
 
       // legacy names
+      var FileReadStream = ReadStream;
       Object.defineProperty(fs, 'FileReadStream', {
         get: function () {
-          return ReadStream
+          return FileReadStream
         },
         set: function (val) {
-          ReadStream = val;
+          FileReadStream = val;
         },
         enumerable: true,
         configurable: true
       });
+      var FileWriteStream = WriteStream;
       Object.defineProperty(fs, 'FileWriteStream', {
         get: function () {
-          return WriteStream
+          return FileWriteStream
         },
         set: function (val) {
-          WriteStream = val;
+          FileWriteStream = val;
         },
         enumerable: true,
         configurable: true
@@ -18995,11 +19005,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
 
     function enqueue (elem) {
       debug('ENQUEUE', elem[0].name, elem[1]);
-      global[gracefulQueue].push(elem);
+      fs$2__default[gracefulQueue].push(elem);
     }
 
     function retry () {
-      var elem = global[gracefulQueue].shift();
+      var elem = fs$2__default[gracefulQueue].shift();
       if (elem) {
         debug('RETRY', elem[0].name, elem[1]);
         elem[0].apply(null, elem[1]);
@@ -21116,7 +21126,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.0+3.sha-9cbd9be');
+    const VERSION$2 = new Version('11.2.0+13.sha-925e2b7');
 
     /**
      * @license
