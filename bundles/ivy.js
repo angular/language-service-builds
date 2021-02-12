@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.0+18.sha-9482a4d
+ * @license Angular v11.2.0+20.sha-8225bb5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2657,6 +2657,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     Identifiers$1.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE$1 };
     Identifiers$1.PipeDefWithMeta = { name: 'ɵɵPipeDefWithMeta', moduleName: CORE$1 };
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
+    Identifiers$1.declarePipe = { name: 'ɵɵngDeclarePipe', moduleName: CORE$1 };
     Identifiers$1.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
     Identifiers$1.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
     Identifiers$1.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
@@ -5905,11 +5906,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // e.g. `pure: true`
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
-        const type = new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
+        const type = createPipeType(metadata);
+        return { expression, type };
+    }
+    function createPipeType(metadata) {
+        return new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
             typeWithParameters(metadata.type.type, metadata.typeArgumentCount),
             new ExpressionType(new LiteralExpr(metadata.pipeName)),
         ]));
-        return { expression, type };
     }
 
     /**
@@ -16670,6 +16674,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const res = compilePipeFromMetadata(metadata);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
+        compilePipeDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const meta = convertDeclarePipeFacadeToMetadata(declaration);
+            return compilePipeFromMetadata(meta);
+        }
         compileInjectable(angularCoreEnv, sourceMapUrl, facade) {
             const { expression, statements } = compileInjectable({
                 name: facade.name,
@@ -16999,6 +17007,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return map;
         }, {});
     }
+    function convertDeclarePipeFacadeToMetadata(declaration) {
+        var _a;
+        return {
+            name: declaration.type.name,
+            type: wrapReference(declaration.type),
+            internalType: new WrappedNodeExpr(declaration.type),
+            typeArgumentCount: 0,
+            pipeName: declaration.name,
+            deps: null,
+            pure: (_a = declaration.pure) !== null && _a !== void 0 ? _a : true,
+        };
+    }
     function publishFacade(global) {
         const ng = global.ng || (global.ng = {});
         ng.ɵcompilerFacade = new CompilerFacadeImpl();
@@ -17011,7 +17031,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.0+18.sha-9482a4d');
+    const VERSION$1 = new Version('11.2.0+20.sha-8225bb5');
 
     /**
      * @license
@@ -17668,7 +17688,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.0+18.sha-9482a4d'));
+        definitionMap.set('version', literal('11.2.0+20.sha-8225bb5'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -17865,6 +17885,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function generateForwardRef(expr) {
         return importExpr(Identifiers$1.forwardRef).callFn([fn([], [new ReturnStatement(expr)])]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Compile a Pipe declaration defined by the `R3PipeMetadata`.
+     */
+    function compileDeclarePipeFromMetadata(meta) {
+        const definitionMap = createPipeDefinitionMap(meta);
+        const expression = importExpr(Identifiers$1.declarePipe).callFn([definitionMap.toLiteralMap()]);
+        const type = createPipeType(meta);
+        return { expression, type };
+    }
+    /**
+     * Gathers the declaration fields for a Pipe into a `DefinitionMap`. This allows for reusing
+     * this logic for components, as they extend the Pipe metadata.
+     */
+    function createPipeDefinitionMap(meta) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('version', literal('11.2.0+20.sha-8225bb5'));
+        definitionMap.set('ngImport', importExpr(Identifiers$1.core));
+        // e.g. `type: MyPipe`
+        definitionMap.set('type', meta.internalType);
+        // e.g. `name: "myPipe"`
+        definitionMap.set('name', literal(meta.pipeName));
+        if (meta.pure === false) {
+            // e.g. `pure: false`
+            definitionMap.set('pure', literal(meta.pure));
+        }
+        return definitionMap;
     }
 
     /**
@@ -21126,7 +21181,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.0+18.sha-9482a4d');
+    const VERSION$2 = new Version('11.2.0+20.sha-8225bb5');
 
     /**
      * @license
@@ -30146,18 +30201,24 @@ Either add the @Injectable() decorator to '${provider.node.name
             return {};
         }
         compileFull(node, analysis) {
-            const meta = analysis.meta;
-            const res = compilePipeFromMetadata(meta);
-            const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Pipe }));
+            const res = compilePipeFromMetadata(analysis.meta);
+            return this.compilePipe(analysis, res);
+        }
+        compilePartial(node, analysis) {
+            const res = compileDeclarePipeFromMetadata(analysis.meta);
+            return this.compilePipe(analysis, res);
+        }
+        compilePipe(analysis, def) {
+            const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, analysis.meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Pipe }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
             }
             return [
                 factoryRes, {
                     name: 'ɵpipe',
-                    initializer: res.expression,
+                    initializer: def.expression,
                     statements: [],
-                    type: res.type,
+                    type: def.type,
                 }
             ];
         }
