@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+24.sha-43ecf8a
+ * @license Angular v12.0.0-next.0+25.sha-9cdf654
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17011,7 +17011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+24.sha-43ecf8a');
+    const VERSION$1 = new Version('12.0.0-next.0+25.sha-9cdf654');
 
     /**
      * @license
@@ -17668,7 +17668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.0+24.sha-43ecf8a'));
+        definitionMap.set('version', literal('12.0.0-next.0+25.sha-9cdf654'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21126,7 +21126,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.0+24.sha-43ecf8a');
+    const VERSION$2 = new Version('12.0.0-next.0+25.sha-9cdf654');
 
     /**
      * @license
