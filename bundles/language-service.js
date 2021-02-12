@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+26.sha-6425a6d
+ * @license Angular v12.0.0-next.0+27.sha-9cb43fb
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3106,6 +3106,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE$1 };
     Identifiers$1.PipeDefWithMeta = { name: 'ɵɵPipeDefWithMeta', moduleName: CORE$1 };
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
+    Identifiers$1.declarePipe = { name: 'ɵɵngDeclarePipe', moduleName: CORE$1 };
     Identifiers$1.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
     Identifiers$1.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
     Identifiers$1.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
@@ -6342,11 +6343,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // e.g. `pure: true`
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
-        const type = new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
+        const type = createPipeType(metadata);
+        return { expression, type };
+    }
+    function createPipeType(metadata) {
+        return new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
             typeWithParameters(metadata.type.type, metadata.typeArgumentCount),
             new ExpressionType(new LiteralExpr(metadata.pipeName)),
         ]));
-        return { expression, type };
     }
 
     /**
@@ -18680,6 +18684,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const res = compilePipeFromMetadata(metadata);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
+        compilePipeDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const meta = convertDeclarePipeFacadeToMetadata(declaration);
+            return compilePipeFromMetadata(meta);
+        }
         compileInjectable(angularCoreEnv, sourceMapUrl, facade) {
             const { expression, statements } = compileInjectable({
                 name: facade.name,
@@ -19009,6 +19017,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return map;
         }, {});
     }
+    function convertDeclarePipeFacadeToMetadata(declaration) {
+        var _a;
+        return {
+            name: declaration.type.name,
+            type: wrapReference(declaration.type),
+            internalType: new WrappedNodeExpr(declaration.type),
+            typeArgumentCount: 0,
+            pipeName: declaration.name,
+            deps: null,
+            pure: (_a = declaration.pure) !== null && _a !== void 0 ? _a : true,
+        };
+    }
     function publishFacade(global) {
         const ng = global.ng || (global.ng = {});
         ng.ɵcompilerFacade = new CompilerFacadeImpl();
@@ -19021,7 +19041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+26.sha-6425a6d');
+    const VERSION$1 = new Version('12.0.0-next.0+27.sha-9cb43fb');
 
     /**
      * @license
@@ -35047,7 +35067,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.0+26.sha-6425a6d');
+    const VERSION$2 = new Version$1('12.0.0-next.0+27.sha-9cb43fb');
 
     /**
      * @license
