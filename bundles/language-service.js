@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+33.sha-5554a3f
+ * @license Angular v12.0.0-next.0+35.sha-980f6a4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5709,9 +5709,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
     }
     /**
-     * Unsafely call the Function constructor with the given string arguments. It
-     * is only available in development mode, and should be stripped out of
-     * production code.
+     * Unsafely call the Function constructor with the given string arguments.
      * @security This is a security-sensitive function; any use of this function
      * must go through security review. In particular, it must be assured that it
      * is only called from the JIT compiler, as use in other code can lead to XSS
@@ -5728,7 +5726,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // below, where the Chromium bug is also referenced:
         // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
         const fnArgs = args.slice(0, -1).join(',');
-        const fnBody = args.pop().toString();
+        const fnBody = args[args.length - 1];
         const body = `(function anonymous(${fnArgs}
 ) { ${fnBody}
 })`;
@@ -5736,6 +5734,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // being stripped out of JS binaries even if not used. The global['eval']
         // indirection fixes that.
         const fn = _global['eval'](trustedScriptFromString(body));
+        if (fn.bind === undefined) {
+            // Workaround for a browser bug that only exists in Chrome 83, where passing
+            // a TrustedScript to eval just returns the TrustedScript back without
+            // evaluating it. In that case, fall back to the most straightforward
+            // implementation:
+            return new Function(...args);
+        }
         // To completely mimic the behavior of calling "new Function", two more
         // things need to happen:
         // 1. Stringifying the resulting function should return its source code
@@ -19041,7 +19046,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+33.sha-5554a3f');
+    const VERSION$1 = new Version('12.0.0-next.0+35.sha-980f6a4');
 
     /**
      * @license
@@ -30329,7 +30334,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // below, where the Chromium bug is also referenced:
         // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
         const fnArgs = args.slice(0, -1).join(',');
-        const fnBody = args.pop().toString();
+        const fnBody = args[args.length - 1];
         const body = `(function anonymous(${fnArgs}
 ) { ${fnBody}
 })`;
@@ -30337,6 +30342,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // being stripped out of JS binaries even if not used. The global['eval']
         // indirection fixes that.
         const fn = _global$1['eval'](trustedScriptFromString$1(body));
+        if (fn.bind === undefined) {
+            // Workaround for a browser bug that only exists in Chrome 83, where passing
+            // a TrustedScript to eval just returns the TrustedScript back without
+            // evaluating it. In that case, fall back to the most straightforward
+            // implementation:
+            return new Function(...args);
+        }
         // To completely mimic the behavior of calling "new Function", two more
         // things need to happen:
         // 1. Stringifying the resulting function should return its source code
@@ -35067,7 +35079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.0+33.sha-5554a3f');
+    const VERSION$2 = new Version$1('12.0.0-next.0+35.sha-980f6a4');
 
     /**
      * @license
