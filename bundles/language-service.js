@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+308.sha-0d8e6b4
+ * @license Angular v12.0.0-next.0+37.sha-1646f8d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3106,6 +3106,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE$1 };
     Identifiers$1.PipeDefWithMeta = { name: 'ɵɵPipeDefWithMeta', moduleName: CORE$1 };
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
+    Identifiers$1.declarePipe = { name: 'ɵɵngDeclarePipe', moduleName: CORE$1 };
     Identifiers$1.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
     Identifiers$1.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
     Identifiers$1.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
@@ -5708,9 +5709,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
     }
     /**
-     * Unsafely call the Function constructor with the given string arguments. It
-     * is only available in development mode, and should be stripped out of
-     * production code.
+     * Unsafely call the Function constructor with the given string arguments.
      * @security This is a security-sensitive function; any use of this function
      * must go through security review. In particular, it must be assured that it
      * is only called from the JIT compiler, as use in other code can lead to XSS
@@ -5727,7 +5726,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // below, where the Chromium bug is also referenced:
         // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
         const fnArgs = args.slice(0, -1).join(',');
-        const fnBody = args.pop().toString();
+        const fnBody = args[args.length - 1];
         const body = `(function anonymous(${fnArgs}
 ) { ${fnBody}
 })`;
@@ -5735,6 +5734,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // being stripped out of JS binaries even if not used. The global['eval']
         // indirection fixes that.
         const fn = _global['eval'](trustedScriptFromString(body));
+        if (fn.bind === undefined) {
+            // Workaround for a browser bug that only exists in Chrome 83, where passing
+            // a TrustedScript to eval just returns the TrustedScript back without
+            // evaluating it. In that case, fall back to the most straightforward
+            // implementation:
+            return new Function(...args);
+        }
         // To completely mimic the behavior of calling "new Function", two more
         // things need to happen:
         // 1. Stringifying the resulting function should return its source code
@@ -6342,11 +6348,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // e.g. `pure: true`
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
-        const type = new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
+        const type = createPipeType(metadata);
+        return { expression, type };
+    }
+    function createPipeType(metadata) {
+        return new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
             typeWithParameters(metadata.type.type, metadata.typeArgumentCount),
             new ExpressionType(new LiteralExpr(metadata.pipeName)),
         ]));
-        return { expression, type };
     }
 
     /**
@@ -13675,6 +13684,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new Chain(this.span(start), this.sourceSpan(start), exprs);
         }
         parsePipe() {
+            const start = this.inputIndex;
             let result = this.parseExpression();
             if (this.consumeOptionalOperator('|')) {
                 if (this.parseAction) {
@@ -13710,7 +13720,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         // If there are additional expressions beyond the name, then the artificial end for the
                         // name is no longer relevant.
                     }
-                    const { start } = result.span;
                     result = new BindingPipe(this.span(start), this.sourceSpan(start, fullSpanEnd), result, nameId, args, nameSpan);
                 } while (this.consumeOptionalOperator('|'));
             }
@@ -13742,26 +13751,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseLogicalOr() {
             // '||'
+            const start = this.inputIndex;
             let result = this.parseLogicalAnd();
             while (this.consumeOptionalOperator('||')) {
                 const right = this.parseLogicalAnd();
-                const { start } = result.span;
                 result = new Binary(this.span(start), this.sourceSpan(start), '||', result, right);
             }
             return result;
         }
         parseLogicalAnd() {
             // '&&'
+            const start = this.inputIndex;
             let result = this.parseEquality();
             while (this.consumeOptionalOperator('&&')) {
                 const right = this.parseEquality();
-                const { start } = result.span;
                 result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
             }
             return result;
         }
         parseEquality() {
             // '==','!=','===','!=='
+            const start = this.inputIndex;
             let result = this.parseRelational();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13772,7 +13782,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '!==':
                         this.advance();
                         const right = this.parseRelational();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13782,6 +13791,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseRelational() {
             // '<', '>', '<=', '>='
+            const start = this.inputIndex;
             let result = this.parseAdditive();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13792,7 +13802,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '>=':
                         this.advance();
                         const right = this.parseAdditive();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13802,6 +13811,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseAdditive() {
             // '+', '-'
+            const start = this.inputIndex;
             let result = this.parseMultiplicative();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13810,7 +13820,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '-':
                         this.advance();
                         let right = this.parseMultiplicative();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13820,6 +13829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseMultiplicative() {
             // '*', '%', '/'
+            const start = this.inputIndex;
             let result = this.parsePrefix();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13829,7 +13839,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '/':
                         this.advance();
                         let right = this.parsePrefix();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13860,14 +13869,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this.parseCallChain();
         }
         parseCallChain() {
+            const start = this.inputIndex;
             let result = this.parsePrimary();
-            const resultStart = result.span.start;
             while (true) {
                 if (this.consumeOptionalCharacter($PERIOD)) {
-                    result = this.parseAccessMemberOrMethodCall(result, false);
+                    result = this.parseAccessMemberOrMethodCall(result, start, false);
                 }
                 else if (this.consumeOptionalOperator('?.')) {
-                    result = this.parseAccessMemberOrMethodCall(result, true);
+                    result = this.parseAccessMemberOrMethodCall(result, start, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
                     this.withContext(ParseContextFlags.Writable, () => {
@@ -13880,11 +13889,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         this.expectCharacter($RBRACKET);
                         if (this.consumeOptionalOperator('=')) {
                             const value = this.parseConditional();
-                            result = new KeyedWrite(this.span(resultStart), this.sourceSpan(resultStart), result, key, value);
+                            result = new KeyedWrite(this.span(start), this.sourceSpan(start), result, key, value);
                         }
                         else {
-                            result =
-                                new KeyedRead(this.span(resultStart), this.sourceSpan(resultStart), result, key);
+                            result = new KeyedRead(this.span(start), this.sourceSpan(start), result, key);
                         }
                     });
                 }
@@ -13893,11 +13901,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     const args = this.parseCallArguments();
                     this.rparensExpected--;
                     this.expectCharacter($RPAREN);
-                    result =
-                        new FunctionCall(this.span(resultStart), this.sourceSpan(resultStart), result, args);
+                    result = new FunctionCall(this.span(start), this.sourceSpan(start), result, args);
                 }
                 else if (this.consumeOptionalOperator('!')) {
-                    result = new NonNullAssert(this.span(resultStart), this.sourceSpan(resultStart), result);
+                    result = new NonNullAssert(this.span(start), this.sourceSpan(start), result);
                 }
                 else {
                     return result;
@@ -13944,7 +13951,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this.parseLiteralMap();
             }
             else if (this.next.isIdentifier()) {
-                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), false);
+                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
             }
             else if (this.next.isNumber()) {
                 const value = this.next.toNumber();
@@ -13996,8 +14003,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
         }
-        parseAccessMemberOrMethodCall(receiver, isSafe = false) {
-            const start = receiver.span.start;
+        parseAccessMemberOrMethodCall(receiver, start, isSafe = false) {
             const nameStart = this.inputIndex;
             const id = this.withContext(ParseContextFlags.Writable, () => {
                 var _a;
@@ -15229,6 +15235,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             else if (identifier.length === 0) {
                 this.reportError(`Reference does not have a name`, sourceSpan);
+            }
+            else if (references.some(reference => reference.name === identifier)) {
+                this.reportError(`Reference "#${identifier}" is defined more than once`, sourceSpan);
             }
             references.push(new Reference(identifier, value, sourceSpan, keySpan, valueSpan));
         }
@@ -18680,6 +18689,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const res = compilePipeFromMetadata(metadata);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
+        compilePipeDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const meta = convertDeclarePipeFacadeToMetadata(declaration);
+            return compilePipeFromMetadata(meta);
+        }
         compileInjectable(angularCoreEnv, sourceMapUrl, facade) {
             const { expression, statements } = compileInjectable({
                 name: facade.name,
@@ -19009,6 +19022,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return map;
         }, {});
     }
+    function convertDeclarePipeFacadeToMetadata(declaration) {
+        var _a;
+        return {
+            name: declaration.type.name,
+            type: wrapReference(declaration.type),
+            internalType: new WrappedNodeExpr(declaration.type),
+            typeArgumentCount: 0,
+            pipeName: declaration.name,
+            deps: null,
+            pure: (_a = declaration.pure) !== null && _a !== void 0 ? _a : true,
+        };
+    }
     function publishFacade(global) {
         const ng = global.ng || (global.ng = {});
         ng.ɵcompilerFacade = new CompilerFacadeImpl();
@@ -19021,7 +19046,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+308.sha-0d8e6b4');
+    const VERSION$1 = new Version('12.0.0-next.0+37.sha-1646f8d');
 
     /**
      * @license
@@ -27602,6 +27627,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throwError(`Index out of range (expecting ${lower} <= ${index} < ${upper})`);
         }
     }
+    function assertProjectionSlots(lView, errMessage) {
+        assertDefined(lView[DECLARATION_COMPONENT_VIEW], 'Component views should exist.');
+        assertDefined(lView[DECLARATION_COMPONENT_VIEW][T_HOST].projection, errMessage ||
+            'Components with projection nodes (<ng-content>) must have projection slots defined.');
+    }
+    function assertParentView(lView, errMessage) {
+        assertDefined(lView, errMessage || 'Component views should always have a parent view (component\'s host view)');
+    }
     /**
      * This is a basic sanity check that the `injectorIndex` seems to point to what looks like a
      * NodeInjector data structure.
@@ -30301,7 +30334,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // below, where the Chromium bug is also referenced:
         // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
         const fnArgs = args.slice(0, -1).join(',');
-        const fnBody = args.pop().toString();
+        const fnBody = args[args.length - 1];
         const body = `(function anonymous(${fnArgs}
 ) { ${fnBody}
 })`;
@@ -30309,6 +30342,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // being stripped out of JS binaries even if not used. The global['eval']
         // indirection fixes that.
         const fn = _global$1['eval'](trustedScriptFromString$1(body));
+        if (fn.bind === undefined) {
+            // Workaround for a browser bug that only exists in Chrome 83, where passing
+            // a TrustedScript to eval just returns the TrustedScript back without
+            // evaluating it. In that case, fall back to the most straightforward
+            // implementation:
+            return new Function(...args);
+        }
         // To completely mimic the behavior of calling "new Function", two more
         // things need to happen:
         // 1. Stringifying the resulting function should return its source code
@@ -31040,6 +31080,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function nativeParentNode(renderer, node) {
         return (isProceduralRenderer(renderer) ? renderer.parentNode(node) : node.parentNode);
+    }
+    function getProjectionNodes(lView, tNode) {
+        if (tNode !== null) {
+            const componentView = lView[DECLARATION_COMPONENT_VIEW];
+            const componentHost = componentView[T_HOST];
+            const slotIdx = tNode.projection;
+            ngDevMode && assertProjectionSlots(lView);
+            return componentHost.projection[slotIdx];
+        }
+        return null;
     }
     /**
      * Removes a native node itself using a given renderer. To remove the node we are looking up its
@@ -35029,7 +35079,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+308.sha-0d8e6b4');
+    const VERSION$2 = new Version$1('12.0.0-next.0+37.sha-1646f8d');
 
     /**
      * @license
@@ -36130,19 +36180,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
             else if (tNodeType & 16 /* Projection */) {
-                const componentView = lView[DECLARATION_COMPONENT_VIEW];
-                const componentHost = componentView[T_HOST];
-                const slotIdx = tNode.projection;
-                ngDevMode &&
-                    assertDefined(componentHost.projection, 'Components with projection nodes (<ng-content>) must have projection slots defined.');
-                const nodesInSlot = componentHost.projection[slotIdx];
+                const nodesInSlot = getProjectionNodes(lView, tNode);
                 if (Array.isArray(nodesInSlot)) {
                     result.push(...nodesInSlot);
                 }
                 else {
-                    const parentView = getLViewParent(componentView);
-                    ngDevMode &&
-                        assertDefined(parentView, 'Component views should always have a parent view (component\'s host view)');
+                    const parentView = getLViewParent(lView[DECLARATION_COMPONENT_VIEW]);
+                    ngDevMode && assertParentView(parentView);
                     collectNativeNodes(parentView[TVIEW], parentView, nodesInSlot, result, true);
                 }
             }
