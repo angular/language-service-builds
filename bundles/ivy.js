@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+72.sha-a4c00c2
+ * @license Angular v12.0.0-next.0+74.sha-13d82ce
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17146,7 +17146,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+72.sha-a4c00c2');
+    const VERSION$1 = new Version('12.0.0-next.0+74.sha-13d82ce');
 
     /**
      * @license
@@ -17803,7 +17803,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.0+72.sha-a4c00c2'));
+        definitionMap.set('version', literal('12.0.0-next.0+74.sha-13d82ce'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18024,7 +18024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.0+72.sha-a4c00c2'));
+        definitionMap.set('version', literal('12.0.0-next.0+74.sha-13d82ce'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21296,7 +21296,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.0+72.sha-a4c00c2');
+    const VERSION$2 = new Version('12.0.0-next.0+74.sha-13d82ce');
 
     /**
      * @license
@@ -21399,6 +21399,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         ErrorCode[ErrorCode["COMPONENT_RESOURCE_NOT_FOUND"] = 2008] = "COMPONENT_RESOURCE_NOT_FOUND";
         ErrorCode[ErrorCode["SYMBOL_NOT_EXPORTED"] = 3001] = "SYMBOL_NOT_EXPORTED";
         ErrorCode[ErrorCode["SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME"] = 3002] = "SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME";
+        /**
+         * Raised when a relationship between directives and/or pipes would cause a cyclic import to be
+         * created that cannot be handled, such as in partial compilation mode.
+         */
+        ErrorCode[ErrorCode["IMPORT_CYCLE_DETECTED"] = 3003] = "IMPORT_CYCLE_DETECTED";
         ErrorCode[ErrorCode["CONFIG_FLAT_MODULE_NO_INDEX"] = 4001] = "CONFIG_FLAT_MODULE_NO_INDEX";
         ErrorCode[ErrorCode["CONFIG_STRICT_TEMPLATES_IMPLIES_FULL_TEMPLATE_TYPECHECK"] = 4002] = "CONFIG_STRICT_TEMPLATES_IMPLIES_FULL_TEMPLATE_TYPECHECK";
         /**
@@ -21516,6 +21521,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     const COMPILER_ERRORS_WITH_GUIDES = new Set([
         ErrorCode.DECORATOR_ARG_NOT_LITERAL,
+        ErrorCode.IMPORT_CYCLE_DETECTED,
         ErrorCode.PARAM_MISSING_TOKEN,
         ErrorCode.SCHEMA_INVALID_ELEMENT,
         ErrorCode.SCHEMA_INVALID_ATTRIBUTE,
@@ -28687,7 +28693,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `DecoratorHandler` which handles the `@Component` annotation.
      */
     class ComponentDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
+        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, annotateForClosureCompiler) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -28706,6 +28712,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.i18nNormalizeLineEndingsInICUs = i18nNormalizeLineEndingsInICUs;
             this.moduleResolver = moduleResolver;
             this.cycleAnalyzer = cycleAnalyzer;
+            this.cycleHandlingStrategy = cycleHandlingStrategy;
             this.refEmitter = refEmitter;
             this.defaultImportRecorder = defaultImportRecorder;
             this.depTracker = depTracker;
@@ -29008,6 +29015,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         inputs: directive.inputs.propertyNames,
                         outputs: directive.outputs.propertyNames,
                         exportAs: directive.exportAs,
+                        isComponent: directive.isComponent,
                     };
                 });
                 const usedPipes = [];
@@ -29024,9 +29032,21 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 // Scan through the directives/pipes actually used in the template and check whether any
                 // import which needs to be generated would create a cycle.
-                const cycleDetected = usedDirectives.some(dir => this._isCyclicImport(dir.type, context)) ||
-                    usedPipes.some(pipe => this._isCyclicImport(pipe.expression, context));
-                if (!cycleDetected) {
+                const cyclesFromDirectives = new Map();
+                for (const usedDirective of usedDirectives) {
+                    const cycle = this._checkForCyclicImport(usedDirective.ref, usedDirective.type, context);
+                    if (cycle !== null) {
+                        cyclesFromDirectives.set(usedDirective, cycle);
+                    }
+                }
+                const cyclesFromPipes = new Map();
+                for (const usedPipe of usedPipes) {
+                    const cycle = this._checkForCyclicImport(usedPipe.ref, usedPipe.expression, context);
+                    if (cycle !== null) {
+                        cyclesFromPipes.set(usedPipe, cycle);
+                    }
+                }
+                if (cyclesFromDirectives.size === 0 && cyclesFromPipes.size === 0) {
                     // No cycle was detected. Record the imports that need to be created in the cycle detector
                     // so that future cyclic import checks consider their production.
                     for (const { type } of usedDirectives) {
@@ -29047,10 +29067,24 @@ Either add the @Injectable() decorator to '${provider.node.name
                         0 /* Direct */;
                 }
                 else {
-                    // Declaring the directiveDefs/pipeDefs arrays directly would require imports that would
-                    // create a cycle. Instead, mark this component as requiring remote scoping, so that the
-                    // NgModule file will take care of setting the directives for the component.
-                    this.scopeRegistry.setComponentRemoteScope(node, usedDirectives.map(dir => dir.ref), usedPipes.map(pipe => pipe.ref));
+                    if (this.cycleHandlingStrategy === 0 /* UseRemoteScoping */) {
+                        // Declaring the directiveDefs/pipeDefs arrays directly would require imports that would
+                        // create a cycle. Instead, mark this component as requiring remote scoping, so that the
+                        // NgModule file will take care of setting the directives for the component.
+                        this.scopeRegistry.setComponentRemoteScope(node, usedDirectives.map(dir => dir.ref), usedPipes.map(pipe => pipe.ref));
+                    }
+                    else {
+                        // We are not able to handle this cycle so throw an error.
+                        const relatedMessages = [];
+                        for (const [dir, cycle] of cyclesFromDirectives) {
+                            relatedMessages.push(makeCyclicImportInfo(dir.ref, dir.isComponent ? 'component' : 'directive', cycle));
+                        }
+                        for (const [pipe, cycle] of cyclesFromPipes) {
+                            relatedMessages.push(makeCyclicImportInfo(pipe.ref, 'pipe', cycle));
+                        }
+                        throw new FatalDiagnosticError(ErrorCode.IMPORT_CYCLE_DETECTED, node, 'One or more import cycles would need to be created to compile this component, ' +
+                            'which is not supported by the current compiler configuration.', relatedMessages);
+                    }
                 }
             }
             const diagnostics = [];
@@ -29408,13 +29442,19 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Figure out what file is being imported.
             return this.moduleResolver.resolveModule(expr.value.moduleName, origin.fileName);
         }
-        _isCyclicImport(expr, origin) {
-            const imported = this._expressionToImportedFile(expr, origin);
-            if (imported === null) {
-                return false;
+        /**
+         * Check whether adding an import from `origin` to the source-file corresponding to `expr` would
+         * create a cyclic import.
+         *
+         * @returns a `Cycle` object if a cycle would be created, otherwise `null`.
+         */
+        _checkForCyclicImport(ref, expr, origin) {
+            const importedFile = this._expressionToImportedFile(expr, origin);
+            if (importedFile === null) {
+                return null;
             }
             // Check whether the import is legal.
-            return this.cycleAnalyzer.wouldCreateCycle(origin, imported);
+            return this.cycleAnalyzer.wouldCreateCycle(origin, importedFile);
         }
         _recordSyntheticImport(expr, origin) {
             const imported = this._expressionToImportedFile(expr, origin);
@@ -29492,6 +29532,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             case false:
                 return declaration.templateUrlExpression;
         }
+    }
+    /**
+     * Generate a diagnostic related information object that describes a potential cyclic import path.
+     */
+    function makeCyclicImportInfo(ref, type, cycle) {
+        const name = ref.debugName || '(unknown)';
+        const path = cycle.getPath().map(sf => sf.fileName).join(' -> ');
+        const message = `The ${type} '${name}' is used in the template but importing it would create a cycle: `;
+        return makeRelatedInformation(ref.node, message + path);
     }
 
     /**
@@ -30370,11 +30419,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.importGraph = importGraph;
         }
         /**
-         * Check whether adding an import from `from` to `to` would create a cycle in the `ts.Program`.
+         * Check for a cycle to be created in the `ts.Program` by adding an import between `from` and
+         * `to`.
+         *
+         * @returns a `Cycle` object if an import between `from` and `to` would create a cycle; `null`
+         *     otherwise.
          */
         wouldCreateCycle(from, to) {
             // Import of 'from' -> 'to' is illegal if an edge 'to' -> 'from' already exists.
-            return this.importGraph.transitiveImportsOf(to).has(from);
+            return this.importGraph.transitiveImportsOf(to).has(from) ?
+                new Cycle(this.importGraph, from, to) :
+                null;
         }
         /**
          * Record a synthetic import from `from` to `to`.
@@ -30384,6 +30439,28 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         recordSyntheticImport(from, to) {
             this.importGraph.addSyntheticImport(from, to);
+        }
+    }
+    /**
+     * Represents an import cycle between `from` and `to` in the program.
+     *
+     * This class allows us to do the work to compute the cyclic path between `from` and `to` only if
+     * needed.
+     */
+    class Cycle {
+        constructor(importGraph, from, to) {
+            this.importGraph = importGraph;
+            this.from = from;
+            this.to = to;
+        }
+        /**
+         * Compute an array of source-files that illustrates the cyclic path between `from` and `to`.
+         *
+         * Note that a `Cycle` will not be created unless a path is available between `to` and `from`,
+         * so `findPath()` will never return `null`.
+         */
+        getPath() {
+            return [this.from, ...this.importGraph.findPath(this.to, this.from)];
         }
     }
 
@@ -30434,6 +30511,41 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         /**
+         * Find an import path from the `start` SourceFile to the `end` SourceFile.
+         *
+         * This function implements a breadth first search that results in finding the
+         * shortest path between the `start` and `end` points.
+         *
+         * @param start the starting point of the path.
+         * @param end the ending point of the path.
+         * @returns an array of source files that connect the `start` and `end` source files, or `null` if
+         *     no path could be found.
+         */
+        findPath(start, end) {
+            if (start === end) {
+                // Escape early for the case where `start` and `end` are the same.
+                return [start];
+            }
+            const found = new Set([start]);
+            const queue = [new Found(start, null)];
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const imports = this.importsOf(current.sourceFile);
+                for (const importedFile of imports) {
+                    if (!found.has(importedFile)) {
+                        const next = new Found(importedFile, current);
+                        if (next.sourceFile === end) {
+                            // We have hit the target `end` path so we can stop here.
+                            return next.toPath();
+                        }
+                        found.add(importedFile);
+                        queue.push(next);
+                    }
+                }
+            }
+            return null;
+        }
+        /**
          * Add a record of an import from `sf` to `imported`, that's not present in the original
          * `ts.Program` but will be remembered by the `ImportGraph`.
          */
@@ -30462,6 +30574,31 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function isLocalFile(sf) {
         return !sf.fileName.endsWith('.d.ts');
+    }
+    /**
+     * A helper class to track which SourceFiles are being processed when searching for a path in
+     * `getPath()` above.
+     */
+    class Found {
+        constructor(sourceFile, parent) {
+            this.sourceFile = sourceFile;
+            this.parent = parent;
+        }
+        /**
+         * Back track through this found SourceFile and its ancestors to generate an array of
+         * SourceFiles that form am import path between two SourceFiles.
+         */
+        toPath() {
+            const array = [];
+            let current = this;
+            while (current !== null) {
+                array.push(current.sourceFile);
+                current = current.parent;
+            }
+            // Pushing and then reversing, O(n), rather than unshifting repeatedly, O(n^2), avoids
+            // manipulating the array on every iteration: https://stackoverflow.com/a/26370620
+            return array.reverse();
+        }
     }
 
     /**
@@ -39042,9 +39179,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             const isCore = isAngularCorePackage(this.tsProgram);
             const defaultImportTracker = new DefaultImportTracker();
             const resourceRegistry = new ResourceRegistry();
+            const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
+            // Cycles are handled in full compilation mode by "remote scoping".
+            // "Remote scoping" does not work well with tree shaking for libraries.
+            // So in partial compilation mode, when building a library, a cycle will cause an error.
+            const cycleHandlingStrategy = compilationMode === CompilationMode.FULL ?
+                0 /* UseRemoteScoping */ :
+                1 /* Error */;
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, this.closureCompilerEnabled),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
@@ -39060,7 +39204,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 new InjectableDecoratorHandler(reflector, defaultImportTracker, isCore, this.options.strictInjectionParameters || false, injectableRegistry),
                 new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.options.i18nInLocale),
             ];
-            const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
             const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms);
             const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry);
             return {
