@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.0+69.sha-572e3a3
+ * @license Angular v11.2.1+2.sha-c8a2e3a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19156,7 +19156,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.0+69.sha-572e3a3');
+    const VERSION$1 = new Version('11.2.1+2.sha-c8a2e3a');
 
     /**
      * @license
@@ -35189,7 +35189,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.0+69.sha-572e3a3');
+    const VERSION$2 = new Version$1('11.2.1+2.sha-c8a2e3a');
 
     /**
      * @license
@@ -40162,9 +40162,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     class ApplicationRef {
         /** @internal */
-        constructor(_zone, _console, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
+        constructor(_zone, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
             this._zone = _zone;
-            this._console = _console;
             this._injector = _injector;
             this._exceptionHandler = _exceptionHandler;
             this._componentFactoryResolver = _componentFactoryResolver;
@@ -40280,8 +40279,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             this._loadComponent(compRef);
-            {
-                this._console.log(`Angular is running in development mode. Call enableProdMode() to enable production mode.`);
+            // Note that we have still left the `isDevMode()` condition in order to avoid
+            // creating a breaking change for projects that still use the View Engine.
+            if ((typeof ngDevMode === 'undefined' || ngDevMode) && isDevMode()) {
+                const _console = this._injector.get(Console);
+                _console.log(`Angular is running in development mode. Call enableProdMode() to enable production mode.`);
             }
             return compRef;
         }
@@ -40363,7 +40365,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     ];
     ApplicationRef.ctorParameters = () => [
         { type: NgZone },
-        { type: Console },
         { type: Injector },
         { type: ErrorHandler },
         { type: ComponentFactoryResolver },
@@ -40450,7 +40451,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         {
             provide: ApplicationRef,
             useClass: ApplicationRef,
-            deps: [NgZone, Console, Injector, ErrorHandler, ComponentFactoryResolver, ApplicationInitStatus]
+            deps: [NgZone, Injector, ErrorHandler, ComponentFactoryResolver, ApplicationInitStatus]
         },
         { provide: SCHEDULER, deps: [NgZone], useFactory: zoneSchedulerFactory },
         {
