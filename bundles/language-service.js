@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+73.sha-322951a
+ * @license Angular v12.0.0-next.0+77.sha-a9936c2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19156,7 +19156,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+73.sha-322951a');
+    const VERSION$1 = new Version('12.0.0-next.0+77.sha-a9936c2');
 
     /**
      * @license
@@ -35189,7 +35189,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.0+73.sha-322951a');
+    const VERSION$2 = new Version$1('12.0.0-next.0+77.sha-a9936c2');
 
     /**
      * @license
