@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+3.sha-cdf1ea1
+ * @license Angular v12.0.0-next.1+2.sha-b7a2d0d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4467,8 +4467,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     const IMPLICIT_REFERENCE = '$implicit';
     /** Non bindable attribute name **/
     const NON_BINDABLE_ATTR = 'ngNonBindable';
-    /** Name for the variable keeping track of the context returned by `ɵɵrestoreView`. */
-    const RESTORED_VIEW_CONTEXT_NAME = 'restoredCtx';
     /**
      * Creates an allocator for a temporary variable.
      *
@@ -14404,10 +14402,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses, EVENT_BINDING_SCOPE_GLOBALS);
         const statements = [];
         if (scope) {
-            // `variableDeclarations` needs to run first, because
-            // `restoreViewStatement` depends on the result.
+            statements.push(...scope.restoreViewStatement());
             statements.push(...scope.variableDeclarations());
-            statements.unshift(...scope.restoreViewStatement());
         }
         statements.push(...bindingExpr.render3Stmts);
         const eventName = type === 1 /* Animation */ ? prepareSyntheticListenerName(name, phase) : name;
@@ -14611,18 +14607,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this._bindingScope.set(retrievalLevel, variable$1.name, lhs, 1 /* CONTEXT */, (scope, relativeLevel) => {
                 let rhs;
                 if (scope.bindingLevel === retrievalLevel) {
-                    if (scope.isListenerScope() && scope.hasRestoreViewVariable()) {
-                        // e.g. restoredCtx.
-                        // We have to get the context from a view reference, if one is available, because
-                        // the context that was passed in during creation may not be correct anymore.
-                        // For more information see: https://github.com/angular/angular/pull/40360.
-                        rhs = variable(RESTORED_VIEW_CONTEXT_NAME);
-                        scope.notifyRestoredViewContextUse();
-                    }
-                    else {
-                        // e.g. ctx
-                        rhs = variable(CONTEXT_NAME);
-                    }
+                    // e.g. ctx
+                    rhs = variable(CONTEXT_NAME);
                 }
                 else {
                     const sharedCtxVar = scope.getSharedContextName(retrievalLevel);
@@ -15665,7 +15651,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.map = new Map();
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
-            this.usesRestoredViewContext = false;
             if (globals !== undefined) {
                 for (const name of globals) {
                     this.set(0, name, variable(name));
@@ -15822,21 +15807,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         }
         restoreViewStatement() {
-            const statements = [];
-            if (this.restoreViewVariable) {
-                const restoreCall = instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]);
-                // Either `const restoredCtx = restoreView($state$);` or `restoreView($state$);`
-                // depending on whether it is being used.
-                statements.push(this.usesRestoredViewContext ?
-                    variable(RESTORED_VIEW_CONTEXT_NAME).set(restoreCall).toConstDecl() :
-                    restoreCall.toStmt());
-            }
-            return statements;
+            // restoreView($state$);
+            return this.restoreViewVariable ?
+                [instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]).toStmt()] :
+                [];
         }
         viewSnapshotStatements() {
             // const $state$ = getCurrentView();
+            const getCurrentViewInstruction = instruction(null, Identifiers$1.getCurrentView, []);
             return this.restoreViewVariable ?
-                [this.restoreViewVariable.set(instruction(null, Identifiers$1.getCurrentView, [])).toConstDecl()] :
+                [this.restoreViewVariable.set(getCurrentViewInstruction).toConstDecl()] :
                 [];
         }
         isListenerScope() {
@@ -15861,12 +15841,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 current = current.parent;
             const ref = `${REFERENCE_PREFIX}${current.referenceNameIndex++}`;
             return ref;
-        }
-        hasRestoreViewVariable() {
-            return !!this.restoreViewVariable;
-        }
-        notifyRestoredViewContextUse() {
-            this.usesRestoredViewContext = true;
         }
     }
     /**
@@ -17172,7 +17146,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+3.sha-cdf1ea1');
+    const VERSION$1 = new Version('12.0.0-next.1+2.sha-b7a2d0d');
 
     /**
      * @license
@@ -17829,7 +17803,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+3.sha-cdf1ea1'));
+        definitionMap.set('version', literal('12.0.0-next.1+2.sha-b7a2d0d'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18050,7 +18024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+3.sha-cdf1ea1'));
+        definitionMap.set('version', literal('12.0.0-next.1+2.sha-b7a2d0d'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21322,7 +21296,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.1+3.sha-cdf1ea1');
+    const VERSION$2 = new Version('12.0.0-next.1+2.sha-b7a2d0d');
 
     /**
      * @license
