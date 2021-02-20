@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+38.sha-44ffa8c
+ * @license Angular v12.0.0-next.1+41.sha-e6bf7c2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17172,7 +17172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+38.sha-44ffa8c');
+    const VERSION$1 = new Version('12.0.0-next.1+41.sha-e6bf7c2');
 
     /**
      * @license
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+38.sha-44ffa8c'));
+        definitionMap.set('version', literal('12.0.0-next.1+41.sha-e6bf7c2'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18050,7 +18050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+38.sha-44ffa8c'));
+        definitionMap.set('version', literal('12.0.0-next.1+41.sha-e6bf7c2'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21322,7 +21322,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.1+38.sha-44ffa8c');
+    const VERSION$2 = new Version('12.0.0-next.1+41.sha-e6bf7c2');
 
     /**
      * @license
@@ -24046,6 +24046,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return false;
         }
         return a.path === b.path && a.identifier === b.identifier;
+    }
+    function isImportPathEqual(a, b) {
+        if (a === null || b === null) {
+            // TODO: is considering null import paths as different a problem for local references which
+            //  won't have an import path and would therefore always be considered different? I don't think
+            //  so, but it's not clear cut. Perhaps this would be better if we track and compare the actual
+            //  Expression.
+            return false;
+        }
+        return a === b;
     }
     function referenceEquality(a, b) {
         return a === b;
@@ -28210,6 +28220,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return needsEmit;
         }
+        getSemanticReference(decl, expr) {
+            return {
+                symbol: this.getSymbol(decl),
+                importPath: getImportPath(expr),
+            };
+        }
         getSymbol(decl) {
             const symbol = this.newGraph.getSymbolByDecl(decl);
             if (symbol === null) {
@@ -28230,6 +28246,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             const symbol = new OpaqueSymbol(decl);
             this.opaqueSymbols.set(decl, symbol);
             return symbol;
+        }
+    }
+    function getImportPath(expr) {
+        // FIXME: this is a bit of a hack; perhaps attach `Expression` itself with the `SemanticReference`
+        // and just compare that, instead of this derived import path.
+        if (expr instanceof ExternalExpr) {
+            return [expr.value.moduleName, expr.value.name].filter(v => v !== null).join('$');
+        }
+        else {
+            return null;
         }
     }
 
@@ -29034,6 +29060,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (previousSymbol.remotelyScopedComponents.length !== this.remotelyScopedComponents.length) {
                 return true;
             }
+            const isSymbolAffected = (current, previous) => isSymbolEqual(current.symbol, previous.symbol) &&
+                isImportPathEqual(current.importPath, previous.importPath);
             for (const currEntry of this.remotelyScopedComponents) {
                 const prevEntry = previousSymbol.remotelyScopedComponents.find(prevEntry => {
                     return isSymbolEqual(prevEntry.component, currEntry.component);
@@ -29043,7 +29071,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // hence this NgModule needs to be re-emitted.
                     return true;
                 }
-                if (!isArrayEqual(currEntry.usedDirectives, prevEntry.usedDirectives, isSymbolEqual)) {
+                if (!isArrayEqual(currEntry.usedDirectives, prevEntry.usedDirectives, isSymbolAffected)) {
                     // The list of used directives or their order has changed. Since this NgModule emits
                     // references to the list of used directives, it should be re-emitted to update this list.
                     // Note: the NgModule does not have to be re-emitted when any of the directives has had
@@ -29051,7 +29079,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // name. Therefore, testing for symbol equality is sufficient.
                     return true;
                 }
-                if (!isArrayEqual(currEntry.usedPipes, prevEntry.usedPipes, isSymbolEqual)) {
+                if (!isArrayEqual(currEntry.usedPipes, prevEntry.usedPipes, isSymbolAffected)) {
                     return true;
                 }
             }
@@ -29536,7 +29564,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Create an equality function that considers symbols equal if they represent the same
             // declaration, but only if the symbol in the current compilation does not have its public API
             // affected.
-            const isSymbolAffected = (current, previous) => isSymbolEqual(current, previous) && !publicApiAffected.has(current);
+            const isSymbolAffected = (current, previous) => isSymbolEqual(current.symbol, previous.symbol) &&
+                isImportPathEqual(current.importPath, previous.importPath) &&
+                !publicApiAffected.has(current.symbol);
             // The emit of a component is affected if either of the following is true:
             //  1. The component used to be remotely scoped but no longer is, or vice versa.
             //  2. The list of used directives has changed or any of those directives have had their public
@@ -29895,10 +29925,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     });
                 }
                 if (this.semanticDepGraphUpdater !== null) {
-                    symbol.usedDirectives =
-                        usedDirectives.map(dir => this.semanticDepGraphUpdater.getSymbol(dir.ref.node));
-                    symbol.usedPipes =
-                        usedPipes.map(pipe => this.semanticDepGraphUpdater.getSymbol(pipe.ref.node));
+                    symbol.usedDirectives = usedDirectives.map(dir => this.semanticDepGraphUpdater.getSemanticReference(dir.ref.node, dir.type));
+                    symbol.usedPipes = usedPipes.map(pipe => this.semanticDepGraphUpdater.getSemanticReference(pipe.ref.node, pipe.expression));
                 }
                 // Scan through the directives/pipes actually used in the template and check whether any
                 // import which needs to be generated would create a cycle.
