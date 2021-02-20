@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+37.sha-1646f8d
+ * @license Angular v12.0.0-next.1+38.sha-44ffa8c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4891,6 +4891,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const IMPLICIT_REFERENCE = '$implicit';
     /** Non bindable attribute name **/
     const NON_BINDABLE_ATTR = 'ngNonBindable';
+    /** Name for the variable keeping track of the context returned by `ɵɵrestoreView`. */
+    const RESTORED_VIEW_CONTEXT_NAME = 'restoredCtx';
     /**
      * Creates an allocator for a temporary variable.
      *
@@ -8222,14 +8224,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * .foo<scopeName> > .bar
          */
         _convertColonHost(cssText) {
-            return this._convertColonRule(cssText, _cssColonHostRe, this._colonHostPartReplacer);
+            return cssText.replace(_cssColonHostRe, (_, hostSelectors, otherSelectors) => {
+                if (hostSelectors) {
+                    const convertedSelectors = [];
+                    const hostSelectorArray = hostSelectors.split(',').map(p => p.trim());
+                    for (const hostSelector of hostSelectorArray) {
+                        if (!hostSelector)
+                            break;
+                        const convertedSelector = _polyfillHostNoCombinator + hostSelector.replace(_polyfillHost, '') + otherSelectors;
+                        convertedSelectors.push(convertedSelector);
+                    }
+                    return convertedSelectors.join(',');
+                }
+                else {
+                    return _polyfillHostNoCombinator + otherSelectors;
+                }
+            });
         }
         /*
          * convert a rule like :host-context(.foo) > .bar { }
          *
          * to
          *
-         * .foo<scopeName> > .bar, .foo scopeName > .bar { }
+         * .foo<scopeName> > .bar, .foo <scopeName> > .bar { }
          *
          * and
          *
@@ -8240,37 +8257,58 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * .foo<scopeName> .bar { ... }
          */
         _convertColonHostContext(cssText) {
-            return this._convertColonRule(cssText, _cssColonHostContextRe, this._colonHostContextPartReplacer);
-        }
-        _convertColonRule(cssText, regExp, partReplacer) {
-            // m[1] = :host(-context), m[2] = contents of (), m[3] rest of rule
-            return cssText.replace(regExp, function (...m) {
-                if (m[2]) {
-                    const parts = m[2].split(',');
-                    const r = [];
-                    for (let i = 0; i < parts.length; i++) {
-                        const p = parts[i].trim();
-                        if (!p)
-                            break;
-                        r.push(partReplacer(_polyfillHostNoCombinator, p, m[3]));
+            return cssText.replace(_cssColonHostContextReGlobal, selectorText => {
+                // We have captured a selector that contains a `:host-context` rule.
+                var _a;
+                // For backward compatibility `:host-context` may contain a comma separated list of selectors.
+                // Each context selector group will contain a list of host-context selectors that must match
+                // an ancestor of the host.
+                // (Normally `contextSelectorGroups` will only contain a single array of context selectors.)
+                const contextSelectorGroups = [[]];
+                // There may be more than `:host-context` in this selector so `selectorText` could look like:
+                // `:host-context(.one):host-context(.two)`.
+                // Execute `_cssColonHostContextRe` over and over until we have extracted all the
+                // `:host-context` selectors from this selector.
+                let match;
+                while (match = _cssColonHostContextRe.exec(selectorText)) {
+                    // `match` = [':host-context(<selectors>)<rest>', <selectors>, <rest>]
+                    // The `<selectors>` could actually be a comma separated list: `:host-context(.one, .two)`.
+                    const newContextSelectors = ((_a = match[1]) !== null && _a !== void 0 ? _a : '').trim().split(',').map(m => m.trim()).filter(m => m !== '');
+                    // We must duplicate the current selector group for each of these new selectors.
+                    // For example if the current groups are:
+                    // ```
+                    // [
+                    //   ['a', 'b', 'c'],
+                    //   ['x', 'y', 'z'],
+                    // ]
+                    // ```
+                    // And we have a new set of comma separated selectors: `:host-context(m,n)` then the new
+                    // groups are:
+                    // ```
+                    // [
+                    //   ['a', 'b', 'c', 'm'],
+                    //   ['x', 'y', 'z', 'm'],
+                    //   ['a', 'b', 'c', 'n'],
+                    //   ['x', 'y', 'z', 'n'],
+                    // ]
+                    // ```
+                    const contextSelectorGroupsLength = contextSelectorGroups.length;
+                    repeatGroups(contextSelectorGroups, newContextSelectors.length);
+                    for (let i = 0; i < newContextSelectors.length; i++) {
+                        for (let j = 0; j < contextSelectorGroupsLength; j++) {
+                            contextSelectorGroups[j + (i * contextSelectorGroupsLength)].push(newContextSelectors[i]);
+                        }
                     }
-                    return r.join(',');
+                    // Update the `selectorText` and see repeat to see if there are more `:host-context`s.
+                    selectorText = match[2];
                 }
-                else {
-                    return _polyfillHostNoCombinator + m[3];
-                }
+                // The context selectors now must be combined with each other to capture all the possible
+                // selectors that `:host-context` can match. See `combineHostContextSelectors()` for more
+                // info about how this is done.
+                return contextSelectorGroups
+                    .map(contextSelectors => combineHostContextSelectors(contextSelectors, selectorText))
+                    .join(', ');
             });
-        }
-        _colonHostContextPartReplacer(host, part, suffix) {
-            if (part.indexOf(_polyfillHost) > -1) {
-                return this._colonHostPartReplacer(host, part, suffix);
-            }
-            else {
-                return host + part + suffix + ', ' + part + ' ' + host + suffix;
-            }
-        }
-        _colonHostPartReplacer(host, part, suffix) {
-            return host + part.replace(_polyfillHost, '') + suffix;
         }
         /*
          * Convert combinators like ::shadow and pseudo-elements like ::content
@@ -8456,11 +8494,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const _polyfillHost = '-shadowcsshost';
     // note: :host-context pre-processed to -shadowcsshostcontext.
     const _polyfillHostContext = '-shadowcsscontext';
-    const _parenSuffix = ')(?:\\((' +
+    const _parenSuffix = '(?:\\((' +
         '(?:\\([^)(]*\\)|[^)(]*)+?' +
         ')\\))?([^,{]*)';
-    const _cssColonHostRe = new RegExp('(' + _polyfillHost + _parenSuffix, 'gim');
-    const _cssColonHostContextRe = new RegExp('(' + _polyfillHostContext + _parenSuffix, 'gim');
+    const _cssColonHostRe = new RegExp(_polyfillHost + _parenSuffix, 'gim');
+    const _cssColonHostContextReGlobal = new RegExp(_polyfillHostContext + _parenSuffix, 'gim');
+    const _cssColonHostContextRe = new RegExp(_polyfillHostContext + _parenSuffix, 'im');
     const _polyfillHostNoCombinator = _polyfillHost + '-no-combinator';
     const _polyfillHostNoCombinatorRe = /-shadowcsshost-no-combinator([^\s]*)/;
     const _shadowDOMSelectorsRe = [
@@ -8567,6 +8606,79 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             resultParts.push(input.substring(nonBlockStartIndex));
         }
         return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
+    }
+    /**
+     * Combine the `contextSelectors` with the `hostMarker` and the `otherSelectors`
+     * to create a selector that matches the same as `:host-context()`.
+     *
+     * Given a single context selector `A` we need to output selectors that match on the host and as an
+     * ancestor of the host:
+     *
+     * ```
+     * A <hostMarker>, A<hostMarker> {}
+     * ```
+     *
+     * When there is more than one context selector we also have to create combinations of those
+     * selectors with each other. For example if there are `A` and `B` selectors the output is:
+     *
+     * ```
+     * AB<hostMarker>, AB <hostMarker>, A B<hostMarker>,
+     * B A<hostMarker>, A B <hostMarker>, B A <hostMarker> {}
+     * ```
+     *
+     * And so on...
+     *
+     * @param hostMarker the string that selects the host element.
+     * @param contextSelectors an array of context selectors that will be combined.
+     * @param otherSelectors the rest of the selectors that are not context selectors.
+     */
+    function combineHostContextSelectors(contextSelectors, otherSelectors) {
+        const hostMarker = _polyfillHostNoCombinator;
+        const otherSelectorsHasHost = _polyfillHostRe.test(otherSelectors);
+        // If there are no context selectors then just output a host marker
+        if (contextSelectors.length === 0) {
+            return hostMarker + otherSelectors;
+        }
+        const combined = [contextSelectors.pop() || ''];
+        while (contextSelectors.length > 0) {
+            const length = combined.length;
+            const contextSelector = contextSelectors.pop();
+            for (let i = 0; i < length; i++) {
+                const previousSelectors = combined[i];
+                // Add the new selector as a descendant of the previous selectors
+                combined[length * 2 + i] = previousSelectors + ' ' + contextSelector;
+                // Add the new selector as an ancestor of the previous selectors
+                combined[length + i] = contextSelector + ' ' + previousSelectors;
+                // Add the new selector to act on the same element as the previous selectors
+                combined[i] = contextSelector + previousSelectors;
+            }
+        }
+        // Finally connect the selector to the `hostMarker`s: either acting directly on the host
+        // (A<hostMarker>) or as an ancestor (A <hostMarker>).
+        return combined
+            .map(s => otherSelectorsHasHost ?
+            `${s}${otherSelectors}` :
+            `${s}${hostMarker}${otherSelectors}, ${s} ${hostMarker}${otherSelectors}`)
+            .join(',');
+    }
+    /**
+     * Mutate the given `groups` array so that there are `multiples` clones of the original array
+     * stored.
+     *
+     * For example `repeatGroups([a, b], 3)` will result in `[a, b, a, b, a, b]` - but importantly the
+     * newly added groups will be clones of the original.
+     *
+     * @param groups An array of groups of strings that will be repeated. This array is mutated
+     *     in-place.
+     * @param multiples The number of times the current groups should appear.
+     */
+    function repeatGroups(groups, multiples) {
+        const length = groups.length;
+        for (let i = 1; i < multiples; i++) {
+            for (let j = 0; j < length; j++) {
+                groups[j + (i * length)] = groups[j].slice(0);
+            }
+        }
     }
 
     /**
@@ -16302,8 +16414,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses, EVENT_BINDING_SCOPE_GLOBALS);
         const statements = [];
         if (scope) {
-            statements.push(...scope.restoreViewStatement());
+            // `variableDeclarations` needs to run first, because
+            // `restoreViewStatement` depends on the result.
             statements.push(...scope.variableDeclarations());
+            statements.unshift(...scope.restoreViewStatement());
         }
         statements.push(...bindingExpr.render3Stmts);
         const eventName = type === 1 /* Animation */ ? prepareSyntheticListenerName(name, phase) : name;
@@ -16507,8 +16621,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._bindingScope.set(retrievalLevel, variable$1.name, lhs, 1 /* CONTEXT */, (scope, relativeLevel) => {
                 let rhs;
                 if (scope.bindingLevel === retrievalLevel) {
-                    // e.g. ctx
-                    rhs = variable(CONTEXT_NAME);
+                    if (scope.isListenerScope() && scope.hasRestoreViewVariable()) {
+                        // e.g. restoredCtx.
+                        // We have to get the context from a view reference, if one is available, because
+                        // the context that was passed in during creation may not be correct anymore.
+                        // For more information see: https://github.com/angular/angular/pull/40360.
+                        rhs = variable(RESTORED_VIEW_CONTEXT_NAME);
+                        scope.notifyRestoredViewContextUse();
+                    }
+                    else {
+                        // e.g. ctx
+                        rhs = variable(CONTEXT_NAME);
+                    }
                 }
                 else {
                     const sharedCtxVar = scope.getSharedContextName(retrievalLevel);
@@ -17551,6 +17675,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.map = new Map();
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
+            this.usesRestoredViewContext = false;
             if (globals !== undefined) {
                 for (const name of globals) {
                     this.set(0, name, variable(name));
@@ -17707,16 +17832,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         restoreViewStatement() {
-            // restoreView($state$);
-            return this.restoreViewVariable ?
-                [instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]).toStmt()] :
-                [];
+            const statements = [];
+            if (this.restoreViewVariable) {
+                const restoreCall = instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]);
+                // Either `const restoredCtx = restoreView($state$);` or `restoreView($state$);`
+                // depending on whether it is being used.
+                statements.push(this.usesRestoredViewContext ?
+                    variable(RESTORED_VIEW_CONTEXT_NAME).set(restoreCall).toConstDecl() :
+                    restoreCall.toStmt());
+            }
+            return statements;
         }
         viewSnapshotStatements() {
             // const $state$ = getCurrentView();
-            const getCurrentViewInstruction = instruction(null, Identifiers$1.getCurrentView, []);
             return this.restoreViewVariable ?
-                [this.restoreViewVariable.set(getCurrentViewInstruction).toConstDecl()] :
+                [this.restoreViewVariable.set(instruction(null, Identifiers$1.getCurrentView, [])).toConstDecl()] :
                 [];
         }
         isListenerScope() {
@@ -17741,6 +17871,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 current = current.parent;
             const ref = `${REFERENCE_PREFIX}${current.referenceNameIndex++}`;
             return ref;
+        }
+        hasRestoreViewVariable() {
+            return !!this.restoreViewVariable;
+        }
+        notifyRestoredViewContextUse() {
+            this.usesRestoredViewContext = true;
         }
     }
     /**
@@ -19046,7 +19182,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+37.sha-1646f8d');
+    const VERSION$1 = new Version('12.0.0-next.1+38.sha-44ffa8c');
 
     /**
      * @license
@@ -26917,6 +27053,98 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Base URL for the error details page.
+    // Keep this value in sync with a similar const in
+    // `packages/compiler-cli/src/ngtsc/diagnostics/src/error_code.ts`.
+    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
+    class RuntimeError extends Error {
+        constructor(code, message) {
+            super(formatRuntimeError(code, message));
+            this.code = code;
+        }
+    }
+    // Contains a set of error messages that have details guides at angular.io.
+    // Full list of available error guides can be found at https://angular.io/errors
+    /* tslint:disable:no-toplevel-property-access */
+    const RUNTIME_ERRORS_WITH_GUIDES = new Set([
+        "100" /* EXPRESSION_CHANGED_AFTER_CHECKED */,
+        "200" /* CYCLIC_DI_DEPENDENCY */,
+        "201" /* PROVIDER_NOT_FOUND */,
+        "300" /* MULTIPLE_COMPONENTS_MATCH */,
+        "301" /* EXPORT_NOT_FOUND */,
+        "302" /* PIPE_NOT_FOUND */,
+    ]);
+    /* tslint:enable:no-toplevel-property-access */
+    /** Called to format a runtime error */
+    function formatRuntimeError(code, message) {
+        const fullCode = code ? `NG0${code}: ` : '';
+        let errorMessage = `${fullCode}${message}`;
+        // Some runtime errors are still thrown without `ngDevMode` (for example
+        // `throwProviderNotFoundError`), so we add `ngDevMode` check here to avoid pulling
+        // `RUNTIME_ERRORS_WITH_GUIDES` symbol into prod bundles.
+        // TODO: revisit all instances where `RuntimeError` is thrown and see if `ngDevMode` can be added
+        // there instead to tree-shake more devmode-only code (and eventually remove `ngDevMode` check
+        // from this code).
+        if (ngDevMode && RUNTIME_ERRORS_WITH_GUIDES.has(code)) {
+            errorMessage = `${errorMessage}. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG0${code}`;
+        }
+        return errorMessage;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Used for stringify render output in Ivy.
+     * Important! This function is very performance-sensitive and we should
+     * be extra careful not to introduce megamorphic reads in it.
+     * Check `core/test/render3/perf/render_stringify` for benchmarks and alternate implementations.
+     */
+    function renderStringify(value) {
+        if (typeof value === 'string')
+            return value;
+        if (value == null)
+            return '';
+        // Use `String` so that it invokes the `toString` method of the value. Note that this
+        // appears to be faster than calling `value.toString` (see `render_stringify` benchmark).
+        return String(value);
+    }
+    /**
+     * Used to stringify a value so that it can be displayed in an error message.
+     * Important! This function contains a megamorphic read and should only be
+     * used for error messages.
+     */
+    function stringifyForError(value) {
+        if (typeof value === 'function')
+            return value.name || value.toString();
+        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
+            return value.type.name || value.type.toString();
+        }
+        return renderStringify(value);
+    }
+
+    /** Called when directives inject each other (creating a circular dependency) */
+    function throwCyclicDependencyError(token, path) {
+        const depPath = path ? `. Dependency path: ${path.join(' > ')} > ${token}` : '';
+        throw new RuntimeError("200" /* CYCLIC_DI_DEPENDENCY */, `Circular dependency in DI detected for ${token}${depPath}`);
+    }
+    /** Throws an error when a token is not found in DI. */
+    function throwProviderNotFoundError(token, injectorName) {
+        const injectorDetails = injectorName ? ` in ${injectorName}` : '';
+        throw new RuntimeError("201" /* PROVIDER_NOT_FOUND */, `No provider for ${stringifyForError(token)} found${injectorDetails}`);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertNumber(actual, msg) {
         if (!(typeof actual === 'number')) {
             throwError(msg, typeof actual, 'number', '===');
@@ -27149,7 +27377,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return null;
         if (notFoundValue !== undefined)
             return notFoundValue;
-        throw new Error(`Injector: NOT_FOUND [${stringify$1(token)}]`);
+        throwProviderNotFoundError(stringify$1(token), 'Injector');
     }
 
     /**
@@ -27669,98 +27897,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throw new Error(`Type ${stringify$1(type)} does not have 'ɵfac' property.`);
         }
         return hasFactoryDef ? type[NG_FACTORY_DEF] : null;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // Base URL for the error details page.
-    // Keep this value in sync with a similar const in
-    // `packages/compiler-cli/src/ngtsc/diagnostics/src/error_code.ts`.
-    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
-    class RuntimeError extends Error {
-        constructor(code, message) {
-            super(formatRuntimeError(code, message));
-            this.code = code;
-        }
-    }
-    // Contains a set of error messages that have details guides at angular.io.
-    // Full list of available error guides can be found at https://angular.io/errors
-    /* tslint:disable:no-toplevel-property-access */
-    const RUNTIME_ERRORS_WITH_GUIDES = new Set([
-        "100" /* EXPRESSION_CHANGED_AFTER_CHECKED */,
-        "200" /* CYCLIC_DI_DEPENDENCY */,
-        "201" /* PROVIDER_NOT_FOUND */,
-        "300" /* MULTIPLE_COMPONENTS_MATCH */,
-        "301" /* EXPORT_NOT_FOUND */,
-        "302" /* PIPE_NOT_FOUND */,
-    ]);
-    /* tslint:enable:no-toplevel-property-access */
-    /** Called to format a runtime error */
-    function formatRuntimeError(code, message) {
-        const fullCode = code ? `NG0${code}: ` : '';
-        let errorMessage = `${fullCode}${message}`;
-        // Some runtime errors are still thrown without `ngDevMode` (for example
-        // `throwProviderNotFoundError`), so we add `ngDevMode` check here to avoid pulling
-        // `RUNTIME_ERRORS_WITH_GUIDES` symbol into prod bundles.
-        // TODO: revisit all instances where `RuntimeError` is thrown and see if `ngDevMode` can be added
-        // there instead to tree-shake more devmode-only code (and eventually remove `ngDevMode` check
-        // from this code).
-        if (ngDevMode && RUNTIME_ERRORS_WITH_GUIDES.has(code)) {
-            errorMessage = `${errorMessage}. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG0${code}`;
-        }
-        return errorMessage;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Used for stringify render output in Ivy.
-     * Important! This function is very performance-sensitive and we should
-     * be extra careful not to introduce megamorphic reads in it.
-     * Check `core/test/render3/perf/render_stringify` for benchmarks and alternate implementations.
-     */
-    function renderStringify(value) {
-        if (typeof value === 'string')
-            return value;
-        if (value == null)
-            return '';
-        // Use `String` so that it invokes the `toString` method of the value. Note that this
-        // appears to be faster than calling `value.toString` (see `render_stringify` benchmark).
-        return String(value);
-    }
-    /**
-     * Used to stringify a value so that it can be displayed in an error message.
-     * Important! This function contains a megamorphic read and should only be
-     * used for error messages.
-     */
-    function stringifyForError(value) {
-        if (typeof value === 'function')
-            return value.name || value.toString();
-        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
-            return value.type.name || value.type.toString();
-        }
-        return renderStringify(value);
-    }
-
-    /** Called when directives inject each other (creating a circular dependency) */
-    function throwCyclicDependencyError(token, path) {
-        const depPath = path ? `. Dependency path: ${path.join(' > ')} > ${token}` : '';
-        throw new RuntimeError("200" /* CYCLIC_DI_DEPENDENCY */, `Circular dependency in DI detected for ${token}${depPath}`);
-    }
-    /** Throws an error when a token is not found in DI. */
-    function throwProviderNotFoundError(token, injectorName) {
-        const injectorDetails = injectorName ? ` in ${injectorName}` : '';
-        throw new RuntimeError("201" /* PROVIDER_NOT_FOUND */, `No provider for ${stringifyForError(token)} found${injectorDetails}`);
     }
 
     /**
@@ -35079,7 +35215,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.0+37.sha-1646f8d');
+    const VERSION$2 = new Version$1('12.0.0-next.1+38.sha-44ffa8c');
 
     /**
      * @license
@@ -40052,9 +40188,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     class ApplicationRef {
         /** @internal */
-        constructor(_zone, _console, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
+        constructor(_zone, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
             this._zone = _zone;
-            this._console = _console;
             this._injector = _injector;
             this._exceptionHandler = _exceptionHandler;
             this._componentFactoryResolver = _componentFactoryResolver;
@@ -40170,8 +40305,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             this._loadComponent(compRef);
-            {
-                this._console.log(`Angular is running in development mode. Call enableProdMode() to enable production mode.`);
+            // Note that we have still left the `isDevMode()` condition in order to avoid
+            // creating a breaking change for projects that still use the View Engine.
+            if ((typeof ngDevMode === 'undefined' || ngDevMode) && isDevMode()) {
+                const _console = this._injector.get(Console);
+                _console.log(`Angular is running in development mode. Call enableProdMode() to enable production mode.`);
             }
             return compRef;
         }
@@ -40253,7 +40391,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     ];
     ApplicationRef.ctorParameters = () => [
         { type: NgZone },
-        { type: Console },
         { type: Injector },
         { type: ErrorHandler },
         { type: ComponentFactoryResolver },
@@ -40340,7 +40477,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         {
             provide: ApplicationRef,
             useClass: ApplicationRef,
-            deps: [NgZone, Console, Injector, ErrorHandler, ComponentFactoryResolver, ApplicationInitStatus]
+            deps: [NgZone, Injector, ErrorHandler, ComponentFactoryResolver, ApplicationInitStatus]
         },
         { provide: SCHEDULER, deps: [NgZone], useFactory: zoneSchedulerFactory },
         {

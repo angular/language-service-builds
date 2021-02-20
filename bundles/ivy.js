@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.0+37.sha-1646f8d
+ * @license Angular v12.0.0-next.1+38.sha-44ffa8c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4467,6 +4467,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     const IMPLICIT_REFERENCE = '$implicit';
     /** Non bindable attribute name **/
     const NON_BINDABLE_ATTR = 'ngNonBindable';
+    /** Name for the variable keeping track of the context returned by `ɵɵrestoreView`. */
+    const RESTORED_VIEW_CONTEXT_NAME = 'restoredCtx';
     /**
      * Creates an allocator for a temporary variable.
      *
@@ -7785,14 +7787,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * .foo<scopeName> > .bar
          */
         _convertColonHost(cssText) {
-            return this._convertColonRule(cssText, _cssColonHostRe, this._colonHostPartReplacer);
+            return cssText.replace(_cssColonHostRe, (_, hostSelectors, otherSelectors) => {
+                if (hostSelectors) {
+                    const convertedSelectors = [];
+                    const hostSelectorArray = hostSelectors.split(',').map(p => p.trim());
+                    for (const hostSelector of hostSelectorArray) {
+                        if (!hostSelector)
+                            break;
+                        const convertedSelector = _polyfillHostNoCombinator + hostSelector.replace(_polyfillHost, '') + otherSelectors;
+                        convertedSelectors.push(convertedSelector);
+                    }
+                    return convertedSelectors.join(',');
+                }
+                else {
+                    return _polyfillHostNoCombinator + otherSelectors;
+                }
+            });
         }
         /*
          * convert a rule like :host-context(.foo) > .bar { }
          *
          * to
          *
-         * .foo<scopeName> > .bar, .foo scopeName > .bar { }
+         * .foo<scopeName> > .bar, .foo <scopeName> > .bar { }
          *
          * and
          *
@@ -7803,37 +7820,58 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * .foo<scopeName> .bar { ... }
          */
         _convertColonHostContext(cssText) {
-            return this._convertColonRule(cssText, _cssColonHostContextRe, this._colonHostContextPartReplacer);
-        }
-        _convertColonRule(cssText, regExp, partReplacer) {
-            // m[1] = :host(-context), m[2] = contents of (), m[3] rest of rule
-            return cssText.replace(regExp, function (...m) {
-                if (m[2]) {
-                    const parts = m[2].split(',');
-                    const r = [];
-                    for (let i = 0; i < parts.length; i++) {
-                        const p = parts[i].trim();
-                        if (!p)
-                            break;
-                        r.push(partReplacer(_polyfillHostNoCombinator, p, m[3]));
+            return cssText.replace(_cssColonHostContextReGlobal, selectorText => {
+                // We have captured a selector that contains a `:host-context` rule.
+                var _a;
+                // For backward compatibility `:host-context` may contain a comma separated list of selectors.
+                // Each context selector group will contain a list of host-context selectors that must match
+                // an ancestor of the host.
+                // (Normally `contextSelectorGroups` will only contain a single array of context selectors.)
+                const contextSelectorGroups = [[]];
+                // There may be more than `:host-context` in this selector so `selectorText` could look like:
+                // `:host-context(.one):host-context(.two)`.
+                // Execute `_cssColonHostContextRe` over and over until we have extracted all the
+                // `:host-context` selectors from this selector.
+                let match;
+                while (match = _cssColonHostContextRe.exec(selectorText)) {
+                    // `match` = [':host-context(<selectors>)<rest>', <selectors>, <rest>]
+                    // The `<selectors>` could actually be a comma separated list: `:host-context(.one, .two)`.
+                    const newContextSelectors = ((_a = match[1]) !== null && _a !== void 0 ? _a : '').trim().split(',').map(m => m.trim()).filter(m => m !== '');
+                    // We must duplicate the current selector group for each of these new selectors.
+                    // For example if the current groups are:
+                    // ```
+                    // [
+                    //   ['a', 'b', 'c'],
+                    //   ['x', 'y', 'z'],
+                    // ]
+                    // ```
+                    // And we have a new set of comma separated selectors: `:host-context(m,n)` then the new
+                    // groups are:
+                    // ```
+                    // [
+                    //   ['a', 'b', 'c', 'm'],
+                    //   ['x', 'y', 'z', 'm'],
+                    //   ['a', 'b', 'c', 'n'],
+                    //   ['x', 'y', 'z', 'n'],
+                    // ]
+                    // ```
+                    const contextSelectorGroupsLength = contextSelectorGroups.length;
+                    repeatGroups(contextSelectorGroups, newContextSelectors.length);
+                    for (let i = 0; i < newContextSelectors.length; i++) {
+                        for (let j = 0; j < contextSelectorGroupsLength; j++) {
+                            contextSelectorGroups[j + (i * contextSelectorGroupsLength)].push(newContextSelectors[i]);
+                        }
                     }
-                    return r.join(',');
+                    // Update the `selectorText` and see repeat to see if there are more `:host-context`s.
+                    selectorText = match[2];
                 }
-                else {
-                    return _polyfillHostNoCombinator + m[3];
-                }
+                // The context selectors now must be combined with each other to capture all the possible
+                // selectors that `:host-context` can match. See `combineHostContextSelectors()` for more
+                // info about how this is done.
+                return contextSelectorGroups
+                    .map(contextSelectors => combineHostContextSelectors(contextSelectors, selectorText))
+                    .join(', ');
             });
-        }
-        _colonHostContextPartReplacer(host, part, suffix) {
-            if (part.indexOf(_polyfillHost) > -1) {
-                return this._colonHostPartReplacer(host, part, suffix);
-            }
-            else {
-                return host + part + suffix + ', ' + part + ' ' + host + suffix;
-            }
-        }
-        _colonHostPartReplacer(host, part, suffix) {
-            return host + part.replace(_polyfillHost, '') + suffix;
         }
         /*
          * Convert combinators like ::shadow and pseudo-elements like ::content
@@ -8019,11 +8057,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     const _polyfillHost = '-shadowcsshost';
     // note: :host-context pre-processed to -shadowcsshostcontext.
     const _polyfillHostContext = '-shadowcsscontext';
-    const _parenSuffix = ')(?:\\((' +
+    const _parenSuffix = '(?:\\((' +
         '(?:\\([^)(]*\\)|[^)(]*)+?' +
         ')\\))?([^,{]*)';
-    const _cssColonHostRe = new RegExp('(' + _polyfillHost + _parenSuffix, 'gim');
-    const _cssColonHostContextRe = new RegExp('(' + _polyfillHostContext + _parenSuffix, 'gim');
+    const _cssColonHostRe = new RegExp(_polyfillHost + _parenSuffix, 'gim');
+    const _cssColonHostContextReGlobal = new RegExp(_polyfillHostContext + _parenSuffix, 'gim');
+    const _cssColonHostContextRe = new RegExp(_polyfillHostContext + _parenSuffix, 'im');
     const _polyfillHostNoCombinator = _polyfillHost + '-no-combinator';
     const _polyfillHostNoCombinatorRe = /-shadowcsshost-no-combinator([^\s]*)/;
     const _shadowDOMSelectorsRe = [
@@ -8130,6 +8169,79 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             resultParts.push(input.substring(nonBlockStartIndex));
         }
         return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
+    }
+    /**
+     * Combine the `contextSelectors` with the `hostMarker` and the `otherSelectors`
+     * to create a selector that matches the same as `:host-context()`.
+     *
+     * Given a single context selector `A` we need to output selectors that match on the host and as an
+     * ancestor of the host:
+     *
+     * ```
+     * A <hostMarker>, A<hostMarker> {}
+     * ```
+     *
+     * When there is more than one context selector we also have to create combinations of those
+     * selectors with each other. For example if there are `A` and `B` selectors the output is:
+     *
+     * ```
+     * AB<hostMarker>, AB <hostMarker>, A B<hostMarker>,
+     * B A<hostMarker>, A B <hostMarker>, B A <hostMarker> {}
+     * ```
+     *
+     * And so on...
+     *
+     * @param hostMarker the string that selects the host element.
+     * @param contextSelectors an array of context selectors that will be combined.
+     * @param otherSelectors the rest of the selectors that are not context selectors.
+     */
+    function combineHostContextSelectors(contextSelectors, otherSelectors) {
+        const hostMarker = _polyfillHostNoCombinator;
+        const otherSelectorsHasHost = _polyfillHostRe.test(otherSelectors);
+        // If there are no context selectors then just output a host marker
+        if (contextSelectors.length === 0) {
+            return hostMarker + otherSelectors;
+        }
+        const combined = [contextSelectors.pop() || ''];
+        while (contextSelectors.length > 0) {
+            const length = combined.length;
+            const contextSelector = contextSelectors.pop();
+            for (let i = 0; i < length; i++) {
+                const previousSelectors = combined[i];
+                // Add the new selector as a descendant of the previous selectors
+                combined[length * 2 + i] = previousSelectors + ' ' + contextSelector;
+                // Add the new selector as an ancestor of the previous selectors
+                combined[length + i] = contextSelector + ' ' + previousSelectors;
+                // Add the new selector to act on the same element as the previous selectors
+                combined[i] = contextSelector + previousSelectors;
+            }
+        }
+        // Finally connect the selector to the `hostMarker`s: either acting directly on the host
+        // (A<hostMarker>) or as an ancestor (A <hostMarker>).
+        return combined
+            .map(s => otherSelectorsHasHost ?
+            `${s}${otherSelectors}` :
+            `${s}${hostMarker}${otherSelectors}, ${s} ${hostMarker}${otherSelectors}`)
+            .join(',');
+    }
+    /**
+     * Mutate the given `groups` array so that there are `multiples` clones of the original array
+     * stored.
+     *
+     * For example `repeatGroups([a, b], 3)` will result in `[a, b, a, b, a, b]` - but importantly the
+     * newly added groups will be clones of the original.
+     *
+     * @param groups An array of groups of strings that will be repeated. This array is mutated
+     *     in-place.
+     * @param multiples The number of times the current groups should appear.
+     */
+    function repeatGroups(groups, multiples) {
+        const length = groups.length;
+        for (let i = 1; i < multiples; i++) {
+            for (let j = 0; j < length; j++) {
+                groups[j + (i * length)] = groups[j].slice(0);
+            }
+        }
     }
 
     /**
@@ -14292,8 +14404,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses, EVENT_BINDING_SCOPE_GLOBALS);
         const statements = [];
         if (scope) {
-            statements.push(...scope.restoreViewStatement());
+            // `variableDeclarations` needs to run first, because
+            // `restoreViewStatement` depends on the result.
             statements.push(...scope.variableDeclarations());
+            statements.unshift(...scope.restoreViewStatement());
         }
         statements.push(...bindingExpr.render3Stmts);
         const eventName = type === 1 /* Animation */ ? prepareSyntheticListenerName(name, phase) : name;
@@ -14497,8 +14611,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this._bindingScope.set(retrievalLevel, variable$1.name, lhs, 1 /* CONTEXT */, (scope, relativeLevel) => {
                 let rhs;
                 if (scope.bindingLevel === retrievalLevel) {
-                    // e.g. ctx
-                    rhs = variable(CONTEXT_NAME);
+                    if (scope.isListenerScope() && scope.hasRestoreViewVariable()) {
+                        // e.g. restoredCtx.
+                        // We have to get the context from a view reference, if one is available, because
+                        // the context that was passed in during creation may not be correct anymore.
+                        // For more information see: https://github.com/angular/angular/pull/40360.
+                        rhs = variable(RESTORED_VIEW_CONTEXT_NAME);
+                        scope.notifyRestoredViewContextUse();
+                    }
+                    else {
+                        // e.g. ctx
+                        rhs = variable(CONTEXT_NAME);
+                    }
                 }
                 else {
                     const sharedCtxVar = scope.getSharedContextName(retrievalLevel);
@@ -15541,6 +15665,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.map = new Map();
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
+            this.usesRestoredViewContext = false;
             if (globals !== undefined) {
                 for (const name of globals) {
                     this.set(0, name, variable(name));
@@ -15697,16 +15822,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         }
         restoreViewStatement() {
-            // restoreView($state$);
-            return this.restoreViewVariable ?
-                [instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]).toStmt()] :
-                [];
+            const statements = [];
+            if (this.restoreViewVariable) {
+                const restoreCall = instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]);
+                // Either `const restoredCtx = restoreView($state$);` or `restoreView($state$);`
+                // depending on whether it is being used.
+                statements.push(this.usesRestoredViewContext ?
+                    variable(RESTORED_VIEW_CONTEXT_NAME).set(restoreCall).toConstDecl() :
+                    restoreCall.toStmt());
+            }
+            return statements;
         }
         viewSnapshotStatements() {
             // const $state$ = getCurrentView();
-            const getCurrentViewInstruction = instruction(null, Identifiers$1.getCurrentView, []);
             return this.restoreViewVariable ?
-                [this.restoreViewVariable.set(getCurrentViewInstruction).toConstDecl()] :
+                [this.restoreViewVariable.set(instruction(null, Identifiers$1.getCurrentView, [])).toConstDecl()] :
                 [];
         }
         isListenerScope() {
@@ -15731,6 +15861,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 current = current.parent;
             const ref = `${REFERENCE_PREFIX}${current.referenceNameIndex++}`;
             return ref;
+        }
+        hasRestoreViewVariable() {
+            return !!this.restoreViewVariable;
+        }
+        notifyRestoredViewContextUse() {
+            this.usesRestoredViewContext = true;
         }
     }
     /**
@@ -17036,7 +17172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.0+37.sha-1646f8d');
+    const VERSION$1 = new Version('12.0.0-next.1+38.sha-44ffa8c');
 
     /**
      * @license
@@ -17693,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.0+37.sha-1646f8d'));
+        definitionMap.set('version', literal('12.0.0-next.1+38.sha-44ffa8c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -17914,7 +18050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.0+37.sha-1646f8d'));
+        definitionMap.set('version', literal('12.0.0-next.1+38.sha-44ffa8c'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21186,7 +21322,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.0+37.sha-1646f8d');
+    const VERSION$2 = new Version('12.0.0-next.1+38.sha-44ffa8c');
 
     /**
      * @license
@@ -21289,6 +21425,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         ErrorCode[ErrorCode["COMPONENT_RESOURCE_NOT_FOUND"] = 2008] = "COMPONENT_RESOURCE_NOT_FOUND";
         ErrorCode[ErrorCode["SYMBOL_NOT_EXPORTED"] = 3001] = "SYMBOL_NOT_EXPORTED";
         ErrorCode[ErrorCode["SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME"] = 3002] = "SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME";
+        /**
+         * Raised when a relationship between directives and/or pipes would cause a cyclic import to be
+         * created that cannot be handled, such as in partial compilation mode.
+         */
+        ErrorCode[ErrorCode["IMPORT_CYCLE_DETECTED"] = 3003] = "IMPORT_CYCLE_DETECTED";
         ErrorCode[ErrorCode["CONFIG_FLAT_MODULE_NO_INDEX"] = 4001] = "CONFIG_FLAT_MODULE_NO_INDEX";
         ErrorCode[ErrorCode["CONFIG_STRICT_TEMPLATES_IMPLIES_FULL_TEMPLATE_TYPECHECK"] = 4002] = "CONFIG_STRICT_TEMPLATES_IMPLIES_FULL_TEMPLATE_TYPECHECK";
         /**
@@ -21406,6 +21547,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     const COMPILER_ERRORS_WITH_GUIDES = new Set([
         ErrorCode.DECORATOR_ARG_NOT_LITERAL,
+        ErrorCode.IMPORT_CYCLE_DETECTED,
         ErrorCode.PARAM_MISSING_TOKEN,
         ErrorCode.SCHEMA_INVALID_ELEMENT,
         ErrorCode.SCHEMA_INVALID_ATTRIBUTE,
@@ -23892,6 +24034,37 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
 
     /**
+     * Determines whether the provided symbols represent the same declaration.
+     */
+    function isSymbolEqual(a, b) {
+        if (a.decl === b.decl) {
+            // If the declaration is identical then it must represent the same symbol.
+            return true;
+        }
+        if (a.identifier === null || b.identifier === null) {
+            // Unidentifiable symbols are assumed to be different.
+            return false;
+        }
+        return a.path === b.path && a.identifier === b.identifier;
+    }
+    function referenceEquality(a, b) {
+        return a === b;
+    }
+    /**
+     * Determines if the provided arrays are equal to each other, using the provided equality tester
+     * that is called for all entries in the array.
+     */
+    function isArrayEqual(a, b, equalityTester = referenceEquality) {
+        if (a === null || b === null) {
+            return a === b;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+        return !a.some((item, index) => !equalityTester(item, b[index]));
+    }
+
+    /**
      * @license
      * Copyright Google LLC All Rights Reserved.
      *
@@ -25152,17 +25325,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         constructor(handler, detected) {
             this.state = TraitState.Pending;
             this.analysis = null;
+            this.symbol = null;
             this.resolution = null;
             this.analysisDiagnostics = null;
             this.resolveDiagnostics = null;
             this.handler = handler;
             this.detected = detected;
         }
-        toAnalyzed(analysis, diagnostics) {
+        toAnalyzed(analysis, diagnostics, symbol) {
             // Only pending traits can be analyzed.
             this.assertTransitionLegal(TraitState.Pending, TraitState.Analyzed);
             this.analysis = analysis;
             this.analysisDiagnostics = diagnostics;
+            this.symbol = symbol;
             this.state = TraitState.Analyzed;
             return this;
         }
@@ -25223,7 +25398,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * class (like adding fields or type declarations).
      */
     class TraitCompiler {
-        constructor(handlers, reflector, perf, incrementalBuild, compileNonExportedClasses, compilationMode, dtsTransforms) {
+        constructor(handlers, reflector, perf, incrementalBuild, compileNonExportedClasses, compilationMode, dtsTransforms, semanticDepGraphUpdater) {
             this.handlers = handlers;
             this.reflector = reflector;
             this.perf = perf;
@@ -25231,6 +25406,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.compileNonExportedClasses = compileNonExportedClasses;
             this.compilationMode = compilationMode;
             this.dtsTransforms = dtsTransforms;
+            this.semanticDepGraphUpdater = semanticDepGraphUpdater;
             /**
              * Maps class declarations to their `ClassRecord`, which tracks the Ivy traits being applied to
              * those classes.
@@ -25321,7 +25497,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 const handler = this.handlersByName.get(priorTrait.handler.name);
                 let trait = Trait.pending(handler, priorTrait.detected);
                 if (priorTrait.state === TraitState.Analyzed || priorTrait.state === TraitState.Resolved) {
-                    trait = trait.toAnalyzed(priorTrait.analysis, priorTrait.analysisDiagnostics);
+                    const symbol = this.makeSymbolForTrait(handler, record.node, priorTrait.analysis);
+                    trait = trait.toAnalyzed(priorTrait.analysis, priorTrait.analysisDiagnostics, symbol);
                     if (trait.analysis !== null && trait.handler.register !== undefined) {
                         trait.handler.register(record.node, trait.analysis);
                     }
@@ -25416,6 +25593,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return foundTraits.length > 0 ? foundTraits : null;
         }
+        makeSymbolForTrait(handler, decl, analysis) {
+            if (analysis === null) {
+                return null;
+            }
+            const symbol = handler.symbol(decl, analysis);
+            if (symbol !== null && this.semanticDepGraphUpdater !== null) {
+                const isPrimary = handler.precedence === HandlerPrecedence.PRIMARY;
+                if (!isPrimary) {
+                    throw new Error(`AssertionError: ${handler.name} returned a symbol but is not a primary handler.`);
+                }
+                this.semanticDepGraphUpdater.registerSymbol(symbol);
+            }
+            return symbol;
+        }
         analyzeClass(clazz, preanalyzeQueue) {
             const traits = this.scanClassForTraits(clazz);
             if (traits === null) {
@@ -25433,7 +25624,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     }
                     catch (err) {
                         if (err instanceof FatalDiagnosticError) {
-                            trait.toAnalyzed(null, [err.toDiagnostic()]);
+                            trait.toAnalyzed(null, [err.toDiagnostic()], null);
                             return;
                         }
                         else {
@@ -25450,7 +25641,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         }
         analyzeTrait(clazz, trait, flags) {
-            var _a, _b;
+            var _a, _b, _c;
             if (trait.state !== TraitState.Pending) {
                 throw new Error(`Attempt to analyze trait of ${clazz.name.text} in state ${TraitState[trait.state]} (expected DETECTED)`);
             }
@@ -25461,17 +25652,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             catch (err) {
                 if (err instanceof FatalDiagnosticError) {
-                    trait.toAnalyzed(null, [err.toDiagnostic()]);
+                    trait.toAnalyzed(null, [err.toDiagnostic()], null);
                     return;
                 }
                 else {
                     throw err;
                 }
             }
+            const symbol = this.makeSymbolForTrait(trait.handler, clazz, (_a = result.analysis) !== null && _a !== void 0 ? _a : null);
             if (result.analysis !== undefined && trait.handler.register !== undefined) {
                 trait.handler.register(clazz, result.analysis);
             }
-            trait = trait.toAnalyzed((_a = result.analysis) !== null && _a !== void 0 ? _a : null, (_b = result.diagnostics) !== null && _b !== void 0 ? _b : null);
+            trait = trait.toAnalyzed((_b = result.analysis) !== null && _b !== void 0 ? _b : null, (_c = result.diagnostics) !== null && _c !== void 0 ? _c : null, symbol);
         }
         resolve() {
             var _a, _b;
@@ -25499,7 +25691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     }
                     let result;
                     try {
-                        result = handler.resolve(clazz, trait.analysis);
+                        result = handler.resolve(clazz, trait.analysis, trait.symbol);
                     }
                     catch (err) {
                         if (err instanceof FatalDiagnosticError) {
@@ -27833,6 +28025,221 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Represents a symbol that is recognizable across incremental rebuilds, which enables the captured
+     * metadata to be compared to the prior compilation. This allows for semantic understanding of
+     * the changes that have been made in a rebuild, which potentially enables more reuse of work
+     * from the prior compilation.
+     */
+    class SemanticSymbol {
+        constructor(
+        /**
+         * The declaration for this symbol.
+         */
+        decl) {
+            this.decl = decl;
+            this.path = absoluteFromSourceFile(decl.getSourceFile());
+            this.identifier = getSymbolIdentifier(decl);
+        }
+    }
+    function getSymbolIdentifier(decl) {
+        if (!ts$1.isSourceFile(decl.parent)) {
+            return null;
+        }
+        // If this is a top-level class declaration, the class name is used as unique identifier.
+        // Other scenarios are currently not supported and causes the symbol not to be identified
+        // across rebuilds, unless the declaration node has not changed.
+        return decl.name.text;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Represents a declaration for which no semantic symbol has been registered. For example,
+     * declarations from external dependencies have not been explicitly registered and are represented
+     * by this symbol. This allows the unresolved symbol to still be compared to a symbol from a prior
+     * compilation.
+     */
+    class OpaqueSymbol extends SemanticSymbol {
+        isPublicApiAffected() {
+            return false;
+        }
+    }
+    /**
+     * The semantic dependency graph of a single compilation.
+     */
+    class SemanticDepGraph {
+        constructor() {
+            this.files = new Map();
+            this.symbolByDecl = new Map();
+        }
+        /**
+         * Registers a symbol for the provided declaration as created by the factory function. The symbol
+         * is given a unique identifier if possible, such that its equivalent symbol can be obtained from
+         * a prior graph even if its declaration node has changed across rebuilds. Symbols without an
+         * identifier are only able to find themselves in a prior graph if their declaration node is
+         * identical.
+         *
+         * @param symbol
+         */
+        registerSymbol(symbol) {
+            this.symbolByDecl.set(symbol.decl, symbol);
+            if (symbol.identifier !== null) {
+                // If the symbol has a unique identifier, record it in the file that declares it. This enables
+                // the symbol to be requested by its unique name.
+                if (!this.files.has(symbol.path)) {
+                    this.files.set(symbol.path, new Map());
+                }
+                this.files.get(symbol.path).set(symbol.identifier, symbol);
+            }
+        }
+        /**
+         * Attempts to resolve a symbol in this graph that represents the given symbol from another graph.
+         * If no matching symbol could be found, null is returned.
+         *
+         * @param symbol The symbol from another graph for which its equivalent in this graph should be
+         * found.
+         */
+        getEquivalentSymbol(symbol) {
+            // First lookup the symbol by its declaration. It is typical for the declaration to not have
+            // changed across rebuilds, so this is likely to find the symbol. Using the declaration also
+            // allows to diff symbols for which no unique identifier could be determined.
+            let previousSymbol = this.getSymbolByDecl(symbol.decl);
+            if (previousSymbol === null && symbol.identifier !== null) {
+                // The declaration could not be resolved to a symbol in a prior compilation, which may
+                // happen because the file containing the declaration has changed. In that case we want to
+                // lookup the symbol based on its unique identifier, as that allows us to still compare the
+                // changed declaration to the prior compilation.
+                previousSymbol = this.getSymbolByName(symbol.path, symbol.identifier);
+            }
+            return previousSymbol;
+        }
+        /**
+         * Attempts to find the symbol by its identifier.
+         */
+        getSymbolByName(path, identifier) {
+            if (!this.files.has(path)) {
+                return null;
+            }
+            const file = this.files.get(path);
+            if (!file.has(identifier)) {
+                return null;
+            }
+            return file.get(identifier);
+        }
+        /**
+         * Attempts to resolve the declaration to its semantic symbol.
+         */
+        getSymbolByDecl(decl) {
+            if (!this.symbolByDecl.has(decl)) {
+                return null;
+            }
+            return this.symbolByDecl.get(decl);
+        }
+    }
+    /**
+     * Implements the logic to go from a previous dependency graph to a new one, along with information
+     * on which files have been affected.
+     */
+    class SemanticDepGraphUpdater {
+        constructor(
+        /**
+         * The semantic dependency graph of the most recently succeeded compilation, or null if this
+         * is the initial build.
+         */
+        priorGraph) {
+            this.priorGraph = priorGraph;
+            this.newGraph = new SemanticDepGraph();
+            /**
+             * Contains opaque symbols that were created for declarations for which there was no symbol
+             * registered, which happens for e.g. external declarations.
+             */
+            this.opaqueSymbols = new Map();
+        }
+        registerSymbol(symbol) {
+            this.newGraph.registerSymbol(symbol);
+        }
+        /**
+         * Takes all facts that have been gathered to create a new semantic dependency graph. In this
+         * process, the semantic impact of the changes is determined which results in a set of files that
+         * need to be emitted and/or type-checked.
+         */
+        finalize() {
+            if (this.priorGraph === null) {
+                // If no prior dependency graph is available then this was the initial build, in which case
+                // we don't need to determine the semantic impact as everything is already considered
+                // logically changed.
+                return {
+                    needsEmit: new Set(),
+                    newGraph: this.newGraph,
+                };
+            }
+            const needsEmit = this.determineInvalidatedFiles(this.priorGraph);
+            return {
+                needsEmit,
+                newGraph: this.newGraph,
+            };
+        }
+        determineInvalidatedFiles(priorGraph) {
+            const isPublicApiAffected = new Set();
+            // The first phase is to collect all symbols which have their public API affected. Any symbols
+            // that cannot be matched up with a symbol from the prior graph are considered affected.
+            for (const symbol of this.newGraph.symbolByDecl.values()) {
+                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
+                if (previousSymbol === null || symbol.isPublicApiAffected(previousSymbol)) {
+                    isPublicApiAffected.add(symbol);
+                }
+            }
+            // The second phase is to find all symbols for which the emit result is affected, either because
+            // their used declarations have changed or any of those used declarations has had its public API
+            // affected as determined in the first phase.
+            const needsEmit = new Set();
+            for (const symbol of this.newGraph.symbolByDecl.values()) {
+                if (symbol.isEmitAffected === undefined) {
+                    continue;
+                }
+                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
+                if (previousSymbol === null || symbol.isEmitAffected(previousSymbol, isPublicApiAffected)) {
+                    needsEmit.add(symbol.path);
+                }
+            }
+            return needsEmit;
+        }
+        getSymbol(decl) {
+            const symbol = this.newGraph.getSymbolByDecl(decl);
+            if (symbol === null) {
+                // No symbol has been recorded for the provided declaration, which would be the case if the
+                // declaration is external. Return an opaque symbol in that case, to allow the external
+                // declaration to be compared to a prior compilation.
+                return this.getOpaqueSymbol(decl);
+            }
+            return symbol;
+        }
+        /**
+         * Gets or creates an `OpaqueSymbol` for the provided class declaration.
+         */
+        getOpaqueSymbol(decl) {
+            if (this.opaqueSymbols.has(decl)) {
+                return this.opaqueSymbols.get(decl);
+            }
+            const symbol = new OpaqueSymbol(decl);
+            this.opaqueSymbols.set(decl, symbol);
+            return symbol;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function compileNgFactoryDefField(metadata) {
         const res = compileFactoryFunction(metadata);
         return { name: 'ɵfac', initializer: res.factory, statements: res.statements, type: res.type };
@@ -28003,6 +28410,36 @@ Either add the @Injectable() decorator to '${provider.node.name
         'ngOnChanges', 'ngOnInit', 'ngOnDestroy', 'ngDoCheck', 'ngAfterViewInit', 'ngAfterViewChecked',
         'ngAfterContentInit', 'ngAfterContentChecked'
     ]);
+    /**
+     * Represents an Angular directive. Components are represented by `ComponentSymbol`, which inherits
+     * from this symbol.
+     */
+    class DirectiveSymbol extends SemanticSymbol {
+        constructor(decl, selector, inputs, outputs, exportAs) {
+            super(decl);
+            this.selector = selector;
+            this.inputs = inputs;
+            this.outputs = outputs;
+            this.exportAs = exportAs;
+        }
+        isPublicApiAffected(previousSymbol) {
+            // Note: since components and directives have exactly the same items contributing to their
+            // public API, it is okay for a directive to change into a component and vice versa without
+            // the API being affected.
+            if (!(previousSymbol instanceof DirectiveSymbol)) {
+                return true;
+            }
+            // Directives and components have a public API of:
+            //  1. Their selector.
+            //  2. The binding names of their inputs and outputs; a change in ordering is also considered
+            //     to be a change in public API.
+            //  3. The list of exportAs names and its ordering.
+            return this.selector !== previousSymbol.selector ||
+                !isArrayEqual(this.inputs, previousSymbol.inputs) ||
+                !isArrayEqual(this.outputs, previousSymbol.outputs) ||
+                !isArrayEqual(this.exportAs, previousSymbol.exportAs);
+        }
+    }
     class DirectiveDecoratorHandler {
         constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures) {
             this.reflector = reflector;
@@ -28063,6 +28500,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                     isStructural: directiveResult.isStructural,
                 }
             };
+        }
+        symbol(node, analysis) {
+            return new DirectiveSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs);
         }
         register(node, analysis) {
             // Register this directive's information with the `MetadataRegistry`. This ensures that
@@ -28571,13 +29011,549 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Represents an Angular NgModule.
+     */
+    class NgModuleSymbol extends SemanticSymbol {
+        constructor() {
+            super(...arguments);
+            this.remotelyScopedComponents = [];
+        }
+        isPublicApiAffected(previousSymbol) {
+            if (!(previousSymbol instanceof NgModuleSymbol)) {
+                return true;
+            }
+            // NgModules don't have a public API that could affect emit of Angular decorated classes.
+            return false;
+        }
+        isEmitAffected(previousSymbol) {
+            if (!(previousSymbol instanceof NgModuleSymbol)) {
+                return true;
+            }
+            // compare our remotelyScopedComponents to the previous symbol
+            if (previousSymbol.remotelyScopedComponents.length !== this.remotelyScopedComponents.length) {
+                return true;
+            }
+            for (const currEntry of this.remotelyScopedComponents) {
+                const prevEntry = previousSymbol.remotelyScopedComponents.find(prevEntry => {
+                    return isSymbolEqual(prevEntry.component, currEntry.component);
+                });
+                if (prevEntry === undefined) {
+                    // No previous entry was found, which means that this component became remotely scoped and
+                    // hence this NgModule needs to be re-emitted.
+                    return true;
+                }
+                if (!isArrayEqual(currEntry.usedDirectives, prevEntry.usedDirectives, isSymbolEqual)) {
+                    // The list of used directives or their order has changed. Since this NgModule emits
+                    // references to the list of used directives, it should be re-emitted to update this list.
+                    // Note: the NgModule does not have to be re-emitted when any of the directives has had
+                    // their public API changed, as the NgModule only emits a reference to the symbol by its
+                    // name. Therefore, testing for symbol equality is sufficient.
+                    return true;
+                }
+                if (!isArrayEqual(currEntry.usedPipes, prevEntry.usedPipes, isSymbolEqual)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        addRemotelyScopedComponent(component, usedDirectives, usedPipes) {
+            this.remotelyScopedComponents.push({ component, usedDirectives, usedPipes });
+        }
+    }
+    /**
+     * Compiles @NgModule annotations to ngModuleDef fields.
+     *
+     * TODO(alxhub): handle injector side of things as well.
+     */
+    class NgModuleDecoratorHandler {
+        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, defaultImportRecorder, annotateForClosureCompiler, injectableRegistry, localeId) {
+            this.reflector = reflector;
+            this.evaluator = evaluator;
+            this.metaReader = metaReader;
+            this.metaRegistry = metaRegistry;
+            this.scopeRegistry = scopeRegistry;
+            this.referencesRegistry = referencesRegistry;
+            this.isCore = isCore;
+            this.routeAnalyzer = routeAnalyzer;
+            this.refEmitter = refEmitter;
+            this.factoryTracker = factoryTracker;
+            this.defaultImportRecorder = defaultImportRecorder;
+            this.annotateForClosureCompiler = annotateForClosureCompiler;
+            this.injectableRegistry = injectableRegistry;
+            this.localeId = localeId;
+            this.precedence = HandlerPrecedence.PRIMARY;
+            this.name = NgModuleDecoratorHandler.name;
+        }
+        detect(node, decorators) {
+            if (!decorators) {
+                return undefined;
+            }
+            const decorator = findAngularDecorator(decorators, 'NgModule', this.isCore);
+            if (decorator !== undefined) {
+                return {
+                    trigger: decorator.node,
+                    decorator: decorator,
+                    metadata: decorator,
+                };
+            }
+            else {
+                return undefined;
+            }
+        }
+        analyze(node, decorator) {
+            const name = node.name.text;
+            if (decorator.args === null || decorator.args.length > 1) {
+                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), `Incorrect number of arguments to @NgModule decorator`);
+            }
+            // @NgModule can be invoked without arguments. In case it is, pretend as if a blank object
+            // literal was specified. This simplifies the code below.
+            const meta = decorator.args.length === 1 ? unwrapExpression(decorator.args[0]) :
+                ts$1.createObjectLiteral([]);
+            if (!ts$1.isObjectLiteralExpression(meta)) {
+                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, '@NgModule argument must be an object literal');
+            }
+            const ngModule = reflectObjectLiteral(meta);
+            if (ngModule.has('jit')) {
+                // The only allowed value is true, so there's no need to expand further.
+                return {};
+            }
+            const moduleResolvers = combineResolvers([
+                ref => this._extractModuleFromModuleWithProvidersFn(ref.node),
+                forwardRefResolver,
+            ]);
+            const diagnostics = [];
+            // Extract the module declarations, imports, and exports.
+            let declarationRefs = [];
+            let rawDeclarations = null;
+            if (ngModule.has('declarations')) {
+                rawDeclarations = ngModule.get('declarations');
+                const declarationMeta = this.evaluator.evaluate(rawDeclarations, forwardRefResolver);
+                declarationRefs =
+                    this.resolveTypeList(rawDeclarations, declarationMeta, name, 'declarations');
+                // Look through the declarations to make sure they're all a part of the current compilation.
+                for (const ref of declarationRefs) {
+                    if (ref.node.getSourceFile().isDeclarationFile) {
+                        const errorNode = ref.getOriginForDiagnostics(rawDeclarations);
+                        diagnostics.push(makeDiagnostic(ErrorCode.NGMODULE_INVALID_DECLARATION, errorNode, `Cannot declare '${ref.node.name
+                        .text}' in an NgModule as it's not a part of the current compilation.`, [makeRelatedInformation(ref.node.name, `'${ref.node.name.text}' is declared here.`)]));
+                    }
+                }
+            }
+            if (diagnostics.length > 0) {
+                return { diagnostics };
+            }
+            let importRefs = [];
+            let rawImports = null;
+            if (ngModule.has('imports')) {
+                rawImports = ngModule.get('imports');
+                const importsMeta = this.evaluator.evaluate(rawImports, moduleResolvers);
+                importRefs = this.resolveTypeList(rawImports, importsMeta, name, 'imports');
+            }
+            let exportRefs = [];
+            let rawExports = null;
+            if (ngModule.has('exports')) {
+                rawExports = ngModule.get('exports');
+                const exportsMeta = this.evaluator.evaluate(rawExports, moduleResolvers);
+                exportRefs = this.resolveTypeList(rawExports, exportsMeta, name, 'exports');
+                this.referencesRegistry.add(node, ...exportRefs);
+            }
+            let bootstrapRefs = [];
+            if (ngModule.has('bootstrap')) {
+                const expr = ngModule.get('bootstrap');
+                const bootstrapMeta = this.evaluator.evaluate(expr, forwardRefResolver);
+                bootstrapRefs = this.resolveTypeList(expr, bootstrapMeta, name, 'bootstrap');
+            }
+            const schemas = [];
+            if (ngModule.has('schemas')) {
+                const rawExpr = ngModule.get('schemas');
+                const result = this.evaluator.evaluate(rawExpr);
+                if (!Array.isArray(result)) {
+                    throw createValueHasWrongTypeError(rawExpr, result, `NgModule.schemas must be an array`);
+                }
+                for (const schemaRef of result) {
+                    if (!(schemaRef instanceof Reference$1)) {
+                        throw createValueHasWrongTypeError(rawExpr, result, 'NgModule.schemas must be an array of schemas');
+                    }
+                    const id = schemaRef.getIdentityIn(schemaRef.node.getSourceFile());
+                    if (id === null || schemaRef.ownedByModuleGuess !== '@angular/core') {
+                        throw createValueHasWrongTypeError(rawExpr, result, 'NgModule.schemas must be an array of schemas');
+                    }
+                    // Since `id` is the `ts.Identifer` within the schema ref's declaration file, it's safe to
+                    // use `id.text` here to figure out which schema is in use. Even if the actual reference was
+                    // renamed when the user imported it, these names will match.
+                    switch (id.text) {
+                        case 'CUSTOM_ELEMENTS_SCHEMA':
+                            schemas.push(CUSTOM_ELEMENTS_SCHEMA);
+                            break;
+                        case 'NO_ERRORS_SCHEMA':
+                            schemas.push(NO_ERRORS_SCHEMA);
+                            break;
+                        default:
+                            throw createValueHasWrongTypeError(rawExpr, schemaRef, `'${schemaRef.debugName}' is not a valid NgModule schema`);
+                    }
+                }
+            }
+            const id = ngModule.has('id') ? new WrappedNodeExpr(ngModule.get('id')) : null;
+            const valueContext = node.getSourceFile();
+            let typeContext = valueContext;
+            const typeNode = this.reflector.getDtsDeclaration(node);
+            if (typeNode !== null) {
+                typeContext = typeNode.getSourceFile();
+            }
+            const bootstrap = bootstrapRefs.map(bootstrap => this._toR3Reference(bootstrap, valueContext, typeContext));
+            const declarations = declarationRefs.map(decl => this._toR3Reference(decl, valueContext, typeContext));
+            const imports = importRefs.map(imp => this._toR3Reference(imp, valueContext, typeContext));
+            const exports = exportRefs.map(exp => this._toR3Reference(exp, valueContext, typeContext));
+            const isForwardReference = (ref) => isExpressionForwardReference(ref.value, node.name, valueContext);
+            const containsForwardDecls = bootstrap.some(isForwardReference) ||
+                declarations.some(isForwardReference) || imports.some(isForwardReference) ||
+                exports.some(isForwardReference);
+            const type = wrapTypeReference(this.reflector, node);
+            const internalType = new WrappedNodeExpr(this.reflector.getInternalNameOfClass(node));
+            const adjacentType = new WrappedNodeExpr(this.reflector.getAdjacentNameOfClass(node));
+            const ngModuleDef = {
+                type,
+                internalType,
+                adjacentType,
+                bootstrap,
+                declarations,
+                exports,
+                imports,
+                containsForwardDecls,
+                id,
+                emitInline: false,
+                // TODO: to be implemented as a part of FW-1004.
+                schemas: [],
+            };
+            const rawProviders = ngModule.has('providers') ? ngModule.get('providers') : null;
+            const wrapperProviders = rawProviders !== null ?
+                new WrappedNodeExpr(this.annotateForClosureCompiler ? wrapFunctionExpressionsInParens(rawProviders) :
+                    rawProviders) :
+                null;
+            // At this point, only add the module's imports as the injectors' imports. Any exported modules
+            // are added during `resolve`, as we need scope information to be able to filter out directives
+            // and pipes from the module exports.
+            const injectorImports = [];
+            if (ngModule.has('imports')) {
+                injectorImports.push(new WrappedNodeExpr(ngModule.get('imports')));
+            }
+            if (this.routeAnalyzer !== null) {
+                this.routeAnalyzer.add(node.getSourceFile(), name, rawImports, rawExports, rawProviders);
+            }
+            const ngInjectorDef = {
+                name,
+                type,
+                internalType,
+                deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
+                providers: wrapperProviders,
+                imports: injectorImports,
+            };
+            return {
+                analysis: {
+                    id,
+                    schemas: schemas,
+                    mod: ngModuleDef,
+                    inj: ngInjectorDef,
+                    declarations: declarationRefs,
+                    rawDeclarations,
+                    imports: importRefs,
+                    exports: exportRefs,
+                    providers: rawProviders,
+                    providersRequiringFactory: rawProviders ?
+                        resolveProvidersRequiringFactory(rawProviders, this.reflector, this.evaluator) :
+                        null,
+                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
+                    factorySymbolName: node.name.text,
+                },
+            };
+        }
+        symbol(node) {
+            return new NgModuleSymbol(node);
+        }
+        register(node, analysis) {
+            // Register this module's information with the LocalModuleScopeRegistry. This ensures that
+            // during the compile() phase, the module's metadata is available for selector scope
+            // computation.
+            this.metaRegistry.registerNgModuleMetadata({
+                ref: new Reference$1(node),
+                schemas: analysis.schemas,
+                declarations: analysis.declarations,
+                imports: analysis.imports,
+                exports: analysis.exports,
+                rawDeclarations: analysis.rawDeclarations,
+            });
+            if (this.factoryTracker !== null) {
+                this.factoryTracker.track(node.getSourceFile(), {
+                    name: analysis.factorySymbolName,
+                    hasId: analysis.id !== null,
+                });
+            }
+            this.injectableRegistry.registerInjectable(node);
+        }
+        resolve(node, analysis) {
+            const scope = this.scopeRegistry.getScopeOfModule(node);
+            const diagnostics = [];
+            const scopeDiagnostics = this.scopeRegistry.getDiagnosticsOfModule(node);
+            if (scopeDiagnostics !== null) {
+                diagnostics.push(...scopeDiagnostics);
+            }
+            if (analysis.providersRequiringFactory !== null) {
+                const providerDiagnostics = getProviderDiagnostics(analysis.providersRequiringFactory, analysis.providers, this.injectableRegistry);
+                diagnostics.push(...providerDiagnostics);
+            }
+            const data = {
+                injectorImports: [],
+            };
+            if (scope !== null && !scope.compilation.isPoisoned) {
+                // Using the scope information, extend the injector's imports using the modules that are
+                // specified as module exports.
+                const context = getSourceFile(node);
+                for (const exportRef of analysis.exports) {
+                    if (isNgModule(exportRef.node, scope.compilation)) {
+                        data.injectorImports.push(this.refEmitter.emit(exportRef, context));
+                    }
+                }
+                for (const decl of analysis.declarations) {
+                    const metadata = this.metaReader.getDirectiveMetadata(decl);
+                    if (metadata !== null && metadata.selector === null) {
+                        throw new FatalDiagnosticError(ErrorCode.DIRECTIVE_MISSING_SELECTOR, decl.node, `Directive ${decl.node.name.text} has no selector, please add it!`);
+                    }
+                }
+            }
+            if (diagnostics.length > 0) {
+                return { diagnostics };
+            }
+            if (scope === null || scope.compilation.isPoisoned || scope.exported.isPoisoned ||
+                scope.reexports === null) {
+                return { data };
+            }
+            else {
+                return {
+                    data,
+                    reexports: scope.reexports,
+                };
+            }
+        }
+        compileFull(node, analysis, resolution) {
+            //  Merge the injector imports (which are 'exports' that were later found to be NgModules)
+            //  computed during resolution with the ones from analysis.
+            const ngInjectorDef = compileInjector(Object.assign(Object.assign({}, analysis.inj), { imports: [...analysis.inj.imports, ...resolution.injectorImports] }));
+            const ngModuleDef = compileNgModule(analysis.mod);
+            const ngModuleStatements = ngModuleDef.additionalStatements;
+            if (analysis.metadataStmt !== null) {
+                ngModuleStatements.push(analysis.metadataStmt);
+            }
+            const context = getSourceFile(node);
+            for (const decl of analysis.declarations) {
+                const remoteScope = this.scopeRegistry.getRemoteScope(decl.node);
+                if (remoteScope !== null) {
+                    const directives = remoteScope.directives.map(directive => this.refEmitter.emit(directive, context));
+                    const pipes = remoteScope.pipes.map(pipe => this.refEmitter.emit(pipe, context));
+                    const directiveArray = new LiteralArrayExpr(directives);
+                    const pipesArray = new LiteralArrayExpr(pipes);
+                    const declExpr = this.refEmitter.emit(decl, context);
+                    const setComponentScope = new ExternalExpr(Identifiers$1.setComponentScope);
+                    const callExpr = new InvokeFunctionExpr(setComponentScope, [declExpr, directiveArray, pipesArray]);
+                    ngModuleStatements.push(callExpr.toStmt());
+                }
+            }
+            const res = [
+                {
+                    name: 'ɵmod',
+                    initializer: ngModuleDef.expression,
+                    statements: ngModuleStatements,
+                    type: ngModuleDef.type,
+                },
+                {
+                    name: 'ɵinj',
+                    initializer: ngInjectorDef.expression,
+                    statements: ngInjectorDef.statements,
+                    type: ngInjectorDef.type,
+                }
+            ];
+            if (this.localeId) {
+                res.push({
+                    name: 'ɵloc',
+                    initializer: new LiteralExpr(this.localeId),
+                    statements: [],
+                    type: STRING_TYPE
+                });
+            }
+            return res;
+        }
+        _toR3Reference(valueRef, valueContext, typeContext) {
+            if (valueRef.hasOwningModuleGuess) {
+                return toR3Reference(valueRef, valueRef, valueContext, valueContext, this.refEmitter);
+            }
+            else {
+                let typeRef = valueRef;
+                let typeNode = this.reflector.getDtsDeclaration(typeRef.node);
+                if (typeNode !== null && isNamedClassDeclaration(typeNode)) {
+                    typeRef = new Reference$1(typeNode);
+                }
+                return toR3Reference(valueRef, typeRef, valueContext, typeContext, this.refEmitter);
+            }
+        }
+        /**
+         * Given a `FunctionDeclaration`, `MethodDeclaration` or `FunctionExpression`, check if it is
+         * typed as a `ModuleWithProviders` and return an expression referencing the module if available.
+         */
+        _extractModuleFromModuleWithProvidersFn(node) {
+            const type = node.type || null;
+            return type &&
+                (this._reflectModuleFromTypeParam(type, node) || this._reflectModuleFromLiteralType(type));
+        }
+        /**
+         * Retrieve an `NgModule` identifier (T) from the specified `type`, if it is of the form:
+         * `ModuleWithProviders<T>`
+         * @param type The type to reflect on.
+         * @returns the identifier of the NgModule type if found, or null otherwise.
+         */
+        _reflectModuleFromTypeParam(type, node) {
+            // Examine the type of the function to see if it's a ModuleWithProviders reference.
+            if (!ts$1.isTypeReferenceNode(type)) {
+                return null;
+            }
+            const typeName = type &&
+                (ts$1.isIdentifier(type.typeName) && type.typeName ||
+                    ts$1.isQualifiedName(type.typeName) && type.typeName.right) ||
+                null;
+            if (typeName === null) {
+                return null;
+            }
+            // Look at the type itself to see where it comes from.
+            const id = this.reflector.getImportOfIdentifier(typeName);
+            // If it's not named ModuleWithProviders, bail.
+            if (id === null || id.name !== 'ModuleWithProviders') {
+                return null;
+            }
+            // If it's not from @angular/core, bail.
+            if (!this.isCore && id.from !== '@angular/core') {
+                return null;
+            }
+            // If there's no type parameter specified, bail.
+            if (type.typeArguments === undefined || type.typeArguments.length !== 1) {
+                const parent = ts$1.isMethodDeclaration(node) && ts$1.isClassDeclaration(node.parent) ? node.parent : null;
+                const symbolName = (parent && parent.name ? parent.name.getText() + '.' : '') +
+                    (node.name ? node.name.getText() : 'anonymous');
+                throw new FatalDiagnosticError(ErrorCode.NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC, type, `${symbolName} returns a ModuleWithProviders type without a generic type argument. ` +
+                    `Please add a generic type argument to the ModuleWithProviders type. If this ` +
+                    `occurrence is in library code you don't control, please contact the library authors.`);
+            }
+            const arg = type.typeArguments[0];
+            return typeNodeToValueExpr(arg);
+        }
+        /**
+         * Retrieve an `NgModule` identifier (T) from the specified `type`, if it is of the form:
+         * `A|B|{ngModule: T}|C`.
+         * @param type The type to reflect on.
+         * @returns the identifier of the NgModule type if found, or null otherwise.
+         */
+        _reflectModuleFromLiteralType(type) {
+            if (!ts$1.isIntersectionTypeNode(type)) {
+                return null;
+            }
+            for (const t of type.types) {
+                if (ts$1.isTypeLiteralNode(t)) {
+                    for (const m of t.members) {
+                        const ngModuleType = ts$1.isPropertySignature(m) && ts$1.isIdentifier(m.name) &&
+                            m.name.text === 'ngModule' && m.type ||
+                            null;
+                        const ngModuleExpression = ngModuleType && typeNodeToValueExpr(ngModuleType);
+                        if (ngModuleExpression) {
+                            return ngModuleExpression;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        // Verify that a "Declaration" reference is a `ClassDeclaration` reference.
+        isClassDeclarationReference(ref) {
+            return this.reflector.isClass(ref.node);
+        }
+        /**
+         * Compute a list of `Reference`s from a resolved metadata value.
+         */
+        resolveTypeList(expr, resolvedList, className, arrayName) {
+            const refList = [];
+            if (!Array.isArray(resolvedList)) {
+                throw createValueHasWrongTypeError(expr, resolvedList, `Expected array when reading the NgModule.${arrayName} of ${className}`);
+            }
+            resolvedList.forEach((entry, idx) => {
+                // Unwrap ModuleWithProviders for modules that are locally declared (and thus static
+                // resolution was able to descend into the function and return an object literal, a Map).
+                if (entry instanceof Map && entry.has('ngModule')) {
+                    entry = entry.get('ngModule');
+                }
+                if (Array.isArray(entry)) {
+                    // Recurse into nested arrays.
+                    refList.push(...this.resolveTypeList(expr, entry, className, arrayName));
+                }
+                else if (entry instanceof Reference$1) {
+                    if (!this.isClassDeclarationReference(entry)) {
+                        throw createValueHasWrongTypeError(entry.node, entry, `Value at position ${idx} in the NgModule.${arrayName} of ${className} is not a class`);
+                    }
+                    refList.push(entry);
+                }
+                else {
+                    // TODO(alxhub): Produce a better diagnostic here - the array index may be an inner array.
+                    throw createValueHasWrongTypeError(expr, entry, `Value at position ${idx} in the NgModule.${arrayName} of ${className} is not a reference`);
+                }
+            });
+            return refList;
+        }
+    }
+    function isNgModule(node, compilation) {
+        return !compilation.directives.some(directive => directive.ref.node === node) &&
+            !compilation.pipes.some(pipe => pipe.ref.node === node);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const EMPTY_MAP = new Map();
     const EMPTY_ARRAY = [];
+    /**
+     * Represents an Angular component.
+     */
+    class ComponentSymbol extends DirectiveSymbol {
+        constructor() {
+            super(...arguments);
+            this.usedDirectives = [];
+            this.usedPipes = [];
+            this.isRemotelyScoped = false;
+        }
+        isEmitAffected(previousSymbol, publicApiAffected) {
+            if (!(previousSymbol instanceof ComponentSymbol)) {
+                return true;
+            }
+            // Create an equality function that considers symbols equal if they represent the same
+            // declaration, but only if the symbol in the current compilation does not have its public API
+            // affected.
+            const isSymbolAffected = (current, previous) => isSymbolEqual(current, previous) && !publicApiAffected.has(current);
+            // The emit of a component is affected if either of the following is true:
+            //  1. The component used to be remotely scoped but no longer is, or vice versa.
+            //  2. The list of used directives has changed or any of those directives have had their public
+            //     API changed. If the used directives have been reordered but not otherwise affected then
+            //     the component must still be re-emitted, as this may affect directive instantiation order.
+            //  3. The list of used pipes has changed, or any of those pipes have had their public API
+            //     changed.
+            return this.isRemotelyScoped !== previousSymbol.isRemotelyScoped ||
+                !isArrayEqual(this.usedDirectives, previousSymbol.usedDirectives, isSymbolAffected) ||
+                !isArrayEqual(this.usedPipes, previousSymbol.usedPipes, isSymbolAffected);
+        }
+    }
     /**
      * `DecoratorHandler` which handles the `@Component` annotation.
      */
     class ComponentDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, componentResolutionRegistry, annotateForClosureCompiler) {
+        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, semanticDepGraphUpdater, annotateForClosureCompiler) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -28596,11 +29572,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.i18nNormalizeLineEndingsInICUs = i18nNormalizeLineEndingsInICUs;
             this.moduleResolver = moduleResolver;
             this.cycleAnalyzer = cycleAnalyzer;
+            this.cycleHandlingStrategy = cycleHandlingStrategy;
             this.refEmitter = refEmitter;
             this.defaultImportRecorder = defaultImportRecorder;
             this.depTracker = depTracker;
             this.injectableRegistry = injectableRegistry;
-            this.componentResolutionRegistry = componentResolutionRegistry;
+            this.semanticDepGraphUpdater = semanticDepGraphUpdater;
             this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.literalCache = new Map();
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
@@ -28808,6 +29785,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return output;
         }
+        symbol(node, analysis) {
+            return new ComponentSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs);
+        }
         register(node, analysis) {
             // Register this component's information with the `MetadataRegistry`. This ensures that
             // the information about the component is available during the compile() phase.
@@ -28862,7 +29842,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const binder = new R3TargetBinder(scope.matcher);
             ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file, meta.template.errors);
         }
-        resolve(node, analysis) {
+        resolve(node, analysis, symbol) {
             if (analysis.isPoisoned && !this.usePoisonedData) {
                 return {};
             }
@@ -28899,6 +29879,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         inputs: directive.inputs.propertyNames,
                         outputs: directive.outputs.propertyNames,
                         exportAs: directive.exportAs,
+                        isComponent: directive.isComponent,
                     };
                 });
                 const usedPipes = [];
@@ -28913,10 +29894,29 @@ Either add the @Injectable() decorator to '${provider.node.name
                         expression: this.refEmitter.emit(pipe, context),
                     });
                 }
+                if (this.semanticDepGraphUpdater !== null) {
+                    symbol.usedDirectives =
+                        usedDirectives.map(dir => this.semanticDepGraphUpdater.getSymbol(dir.ref.node));
+                    symbol.usedPipes =
+                        usedPipes.map(pipe => this.semanticDepGraphUpdater.getSymbol(pipe.ref.node));
+                }
                 // Scan through the directives/pipes actually used in the template and check whether any
                 // import which needs to be generated would create a cycle.
-                const cycleDetected = usedDirectives.some(dir => this._isCyclicImport(dir.type, context)) ||
-                    usedPipes.some(pipe => this._isCyclicImport(pipe.expression, context));
+                const cyclesFromDirectives = new Map();
+                for (const usedDirective of usedDirectives) {
+                    const cycle = this._checkForCyclicImport(usedDirective.ref, usedDirective.type, context);
+                    if (cycle !== null) {
+                        cyclesFromDirectives.set(usedDirective, cycle);
+                    }
+                }
+                const cyclesFromPipes = new Map();
+                for (const usedPipe of usedPipes) {
+                    const cycle = this._checkForCyclicImport(usedPipe.ref, usedPipe.expression, context);
+                    if (cycle !== null) {
+                        cyclesFromPipes.set(usedPipe, cycle);
+                    }
+                }
+                const cycleDetected = cyclesFromDirectives.size !== 0 || cyclesFromPipes.size !== 0;
                 if (!cycleDetected) {
                     // No cycle was detected. Record the imports that need to be created in the cycle detector
                     // so that future cyclic import checks consider their production.
@@ -28938,12 +29938,36 @@ Either add the @Injectable() decorator to '${provider.node.name
                         0 /* Direct */;
                 }
                 else {
-                    // Declaring the directiveDefs/pipeDefs arrays directly would require imports that would
-                    // create a cycle. Instead, mark this component as requiring remote scoping, so that the
-                    // NgModule file will take care of setting the directives for the component.
-                    this.scopeRegistry.setComponentRemoteScope(node, usedDirectives.map(dir => dir.ref), usedPipes.map(pipe => pipe.ref));
+                    if (this.cycleHandlingStrategy === 0 /* UseRemoteScoping */) {
+                        // Declaring the directiveDefs/pipeDefs arrays directly would require imports that would
+                        // create a cycle. Instead, mark this component as requiring remote scoping, so that the
+                        // NgModule file will take care of setting the directives for the component.
+                        this.scopeRegistry.setComponentRemoteScope(node, usedDirectives.map(dir => dir.ref), usedPipes.map(pipe => pipe.ref));
+                        symbol.isRemotelyScoped = true;
+                        // If a semantic graph is being tracked, record the fact that this component is remotely
+                        // scoped with the declaring NgModule symbol as the NgModule's emit becomes dependent on
+                        // the directive/pipe usages of this component.
+                        if (this.semanticDepGraphUpdater !== null) {
+                            const moduleSymbol = this.semanticDepGraphUpdater.getSymbol(scope.ngModule);
+                            if (!(moduleSymbol instanceof NgModuleSymbol)) {
+                                throw new Error(`AssertionError: Expected ${scope.ngModule.name} to be an NgModuleSymbol.`);
+                            }
+                            moduleSymbol.addRemotelyScopedComponent(symbol, symbol.usedDirectives, symbol.usedPipes);
+                        }
+                    }
+                    else {
+                        // We are not able to handle this cycle so throw an error.
+                        const relatedMessages = [];
+                        for (const [dir, cycle] of cyclesFromDirectives) {
+                            relatedMessages.push(makeCyclicImportInfo(dir.ref, dir.isComponent ? 'component' : 'directive', cycle));
+                        }
+                        for (const [pipe, cycle] of cyclesFromPipes) {
+                            relatedMessages.push(makeCyclicImportInfo(pipe.ref, 'pipe', cycle));
+                        }
+                        throw new FatalDiagnosticError(ErrorCode.IMPORT_CYCLE_DETECTED, node, 'One or more import cycles would need to be created to compile this component, ' +
+                            'which is not supported by the current compiler configuration.', relatedMessages);
+                    }
                 }
-                this.componentResolutionRegistry.register(node, usedDirectives.map(dir => dir.ref.node), usedPipes.map(pipe => pipe.ref.node), cycleDetected);
             }
             const diagnostics = [];
             if (analysis.providersRequiringFactory !== null &&
@@ -29300,13 +30324,19 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Figure out what file is being imported.
             return this.moduleResolver.resolveModule(expr.value.moduleName, origin.fileName);
         }
-        _isCyclicImport(expr, origin) {
-            const imported = this._expressionToImportedFile(expr, origin);
-            if (imported === null) {
-                return false;
+        /**
+         * Check whether adding an import from `origin` to the source-file corresponding to `expr` would
+         * create a cyclic import.
+         *
+         * @returns a `Cycle` object if a cycle would be created, otherwise `null`.
+         */
+        _checkForCyclicImport(ref, expr, origin) {
+            const importedFile = this._expressionToImportedFile(expr, origin);
+            if (importedFile === null) {
+                return null;
             }
             // Check whether the import is legal.
-            return this.cycleAnalyzer.wouldCreateCycle(origin, imported);
+            return this.cycleAnalyzer.wouldCreateCycle(origin, importedFile);
         }
         _recordSyntheticImport(expr, origin) {
             const imported = this._expressionToImportedFile(expr, origin);
@@ -29385,6 +30415,15 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return declaration.templateUrlExpression;
         }
     }
+    /**
+     * Generate a diagnostic related information object that describes a potential cyclic import path.
+     */
+    function makeCyclicImportInfo(ref, type, cycle) {
+        const name = ref.debugName || '(unknown)';
+        const path = cycle.getPath().map(sf => sf.fileName).join(' -> ');
+        const message = `The ${type} '${name}' is used in the template but importing it would create a cycle: `;
+        return makeRelatedInformation(ref.node, message + path);
+    }
 
     /**
      * @license
@@ -29444,6 +30483,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                         decorators.every(current => !isAngularCore(current) || current.name === 'Injectable')
                 },
             };
+        }
+        symbol() {
+            return null;
         }
         register(node) {
             this.injectableRegistry.registerInjectable(node);
@@ -29665,458 +30707,20 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Compiles @NgModule annotations to ngModuleDef fields.
-     *
-     * TODO(alxhub): handle injector side of things as well.
+     * Represents an Angular pipe.
      */
-    class NgModuleDecoratorHandler {
-        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, defaultImportRecorder, annotateForClosureCompiler, injectableRegistry, localeId) {
-            this.reflector = reflector;
-            this.evaluator = evaluator;
-            this.metaReader = metaReader;
-            this.metaRegistry = metaRegistry;
-            this.scopeRegistry = scopeRegistry;
-            this.referencesRegistry = referencesRegistry;
-            this.isCore = isCore;
-            this.routeAnalyzer = routeAnalyzer;
-            this.refEmitter = refEmitter;
-            this.factoryTracker = factoryTracker;
-            this.defaultImportRecorder = defaultImportRecorder;
-            this.annotateForClosureCompiler = annotateForClosureCompiler;
-            this.injectableRegistry = injectableRegistry;
-            this.localeId = localeId;
-            this.precedence = HandlerPrecedence.PRIMARY;
-            this.name = NgModuleDecoratorHandler.name;
+    class PipeSymbol extends SemanticSymbol {
+        constructor(decl, name) {
+            super(decl);
+            this.name = name;
         }
-        detect(node, decorators) {
-            if (!decorators) {
-                return undefined;
+        isPublicApiAffected(previousSymbol) {
+            if (!(previousSymbol instanceof PipeSymbol)) {
+                return true;
             }
-            const decorator = findAngularDecorator(decorators, 'NgModule', this.isCore);
-            if (decorator !== undefined) {
-                return {
-                    trigger: decorator.node,
-                    decorator: decorator,
-                    metadata: decorator,
-                };
-            }
-            else {
-                return undefined;
-            }
-        }
-        analyze(node, decorator) {
-            const name = node.name.text;
-            if (decorator.args === null || decorator.args.length > 1) {
-                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), `Incorrect number of arguments to @NgModule decorator`);
-            }
-            // @NgModule can be invoked without arguments. In case it is, pretend as if a blank object
-            // literal was specified. This simplifies the code below.
-            const meta = decorator.args.length === 1 ? unwrapExpression(decorator.args[0]) :
-                ts$1.createObjectLiteral([]);
-            if (!ts$1.isObjectLiteralExpression(meta)) {
-                throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, '@NgModule argument must be an object literal');
-            }
-            const ngModule = reflectObjectLiteral(meta);
-            if (ngModule.has('jit')) {
-                // The only allowed value is true, so there's no need to expand further.
-                return {};
-            }
-            const moduleResolvers = combineResolvers([
-                ref => this._extractModuleFromModuleWithProvidersFn(ref.node),
-                forwardRefResolver,
-            ]);
-            const diagnostics = [];
-            // Extract the module declarations, imports, and exports.
-            let declarationRefs = [];
-            let rawDeclarations = null;
-            if (ngModule.has('declarations')) {
-                rawDeclarations = ngModule.get('declarations');
-                const declarationMeta = this.evaluator.evaluate(rawDeclarations, forwardRefResolver);
-                declarationRefs =
-                    this.resolveTypeList(rawDeclarations, declarationMeta, name, 'declarations');
-                // Look through the declarations to make sure they're all a part of the current compilation.
-                for (const ref of declarationRefs) {
-                    if (ref.node.getSourceFile().isDeclarationFile) {
-                        const errorNode = ref.getOriginForDiagnostics(rawDeclarations);
-                        diagnostics.push(makeDiagnostic(ErrorCode.NGMODULE_INVALID_DECLARATION, errorNode, `Cannot declare '${ref.node.name
-                        .text}' in an NgModule as it's not a part of the current compilation.`, [makeRelatedInformation(ref.node.name, `'${ref.node.name.text}' is declared here.`)]));
-                    }
-                }
-            }
-            if (diagnostics.length > 0) {
-                return { diagnostics };
-            }
-            let importRefs = [];
-            let rawImports = null;
-            if (ngModule.has('imports')) {
-                rawImports = ngModule.get('imports');
-                const importsMeta = this.evaluator.evaluate(rawImports, moduleResolvers);
-                importRefs = this.resolveTypeList(rawImports, importsMeta, name, 'imports');
-            }
-            let exportRefs = [];
-            let rawExports = null;
-            if (ngModule.has('exports')) {
-                rawExports = ngModule.get('exports');
-                const exportsMeta = this.evaluator.evaluate(rawExports, moduleResolvers);
-                exportRefs = this.resolveTypeList(rawExports, exportsMeta, name, 'exports');
-                this.referencesRegistry.add(node, ...exportRefs);
-            }
-            let bootstrapRefs = [];
-            if (ngModule.has('bootstrap')) {
-                const expr = ngModule.get('bootstrap');
-                const bootstrapMeta = this.evaluator.evaluate(expr, forwardRefResolver);
-                bootstrapRefs = this.resolveTypeList(expr, bootstrapMeta, name, 'bootstrap');
-            }
-            const schemas = [];
-            if (ngModule.has('schemas')) {
-                const rawExpr = ngModule.get('schemas');
-                const result = this.evaluator.evaluate(rawExpr);
-                if (!Array.isArray(result)) {
-                    throw createValueHasWrongTypeError(rawExpr, result, `NgModule.schemas must be an array`);
-                }
-                for (const schemaRef of result) {
-                    if (!(schemaRef instanceof Reference$1)) {
-                        throw createValueHasWrongTypeError(rawExpr, result, 'NgModule.schemas must be an array of schemas');
-                    }
-                    const id = schemaRef.getIdentityIn(schemaRef.node.getSourceFile());
-                    if (id === null || schemaRef.ownedByModuleGuess !== '@angular/core') {
-                        throw createValueHasWrongTypeError(rawExpr, result, 'NgModule.schemas must be an array of schemas');
-                    }
-                    // Since `id` is the `ts.Identifer` within the schema ref's declaration file, it's safe to
-                    // use `id.text` here to figure out which schema is in use. Even if the actual reference was
-                    // renamed when the user imported it, these names will match.
-                    switch (id.text) {
-                        case 'CUSTOM_ELEMENTS_SCHEMA':
-                            schemas.push(CUSTOM_ELEMENTS_SCHEMA);
-                            break;
-                        case 'NO_ERRORS_SCHEMA':
-                            schemas.push(NO_ERRORS_SCHEMA);
-                            break;
-                        default:
-                            throw createValueHasWrongTypeError(rawExpr, schemaRef, `'${schemaRef.debugName}' is not a valid NgModule schema`);
-                    }
-                }
-            }
-            const id = ngModule.has('id') ? new WrappedNodeExpr(ngModule.get('id')) : null;
-            const valueContext = node.getSourceFile();
-            let typeContext = valueContext;
-            const typeNode = this.reflector.getDtsDeclaration(node);
-            if (typeNode !== null) {
-                typeContext = typeNode.getSourceFile();
-            }
-            const bootstrap = bootstrapRefs.map(bootstrap => this._toR3Reference(bootstrap, valueContext, typeContext));
-            const declarations = declarationRefs.map(decl => this._toR3Reference(decl, valueContext, typeContext));
-            const imports = importRefs.map(imp => this._toR3Reference(imp, valueContext, typeContext));
-            const exports = exportRefs.map(exp => this._toR3Reference(exp, valueContext, typeContext));
-            const isForwardReference = (ref) => isExpressionForwardReference(ref.value, node.name, valueContext);
-            const containsForwardDecls = bootstrap.some(isForwardReference) ||
-                declarations.some(isForwardReference) || imports.some(isForwardReference) ||
-                exports.some(isForwardReference);
-            const type = wrapTypeReference(this.reflector, node);
-            const internalType = new WrappedNodeExpr(this.reflector.getInternalNameOfClass(node));
-            const adjacentType = new WrappedNodeExpr(this.reflector.getAdjacentNameOfClass(node));
-            const ngModuleDef = {
-                type,
-                internalType,
-                adjacentType,
-                bootstrap,
-                declarations,
-                exports,
-                imports,
-                containsForwardDecls,
-                id,
-                emitInline: false,
-                // TODO: to be implemented as a part of FW-1004.
-                schemas: [],
-            };
-            const rawProviders = ngModule.has('providers') ? ngModule.get('providers') : null;
-            const wrapperProviders = rawProviders !== null ?
-                new WrappedNodeExpr(this.annotateForClosureCompiler ? wrapFunctionExpressionsInParens(rawProviders) :
-                    rawProviders) :
-                null;
-            // At this point, only add the module's imports as the injectors' imports. Any exported modules
-            // are added during `resolve`, as we need scope information to be able to filter out directives
-            // and pipes from the module exports.
-            const injectorImports = [];
-            if (ngModule.has('imports')) {
-                injectorImports.push(new WrappedNodeExpr(ngModule.get('imports')));
-            }
-            if (this.routeAnalyzer !== null) {
-                this.routeAnalyzer.add(node.getSourceFile(), name, rawImports, rawExports, rawProviders);
-            }
-            const ngInjectorDef = {
-                name,
-                type,
-                internalType,
-                deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
-                providers: wrapperProviders,
-                imports: injectorImports,
-            };
-            return {
-                analysis: {
-                    id,
-                    schemas: schemas,
-                    mod: ngModuleDef,
-                    inj: ngInjectorDef,
-                    declarations: declarationRefs,
-                    rawDeclarations,
-                    imports: importRefs,
-                    exports: exportRefs,
-                    providers: rawProviders,
-                    providersRequiringFactory: rawProviders ?
-                        resolveProvidersRequiringFactory(rawProviders, this.reflector, this.evaluator) :
-                        null,
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
-                    factorySymbolName: node.name.text,
-                },
-            };
-        }
-        register(node, analysis) {
-            // Register this module's information with the LocalModuleScopeRegistry. This ensures that
-            // during the compile() phase, the module's metadata is available for selector scope
-            // computation.
-            this.metaRegistry.registerNgModuleMetadata({
-                ref: new Reference$1(node),
-                schemas: analysis.schemas,
-                declarations: analysis.declarations,
-                imports: analysis.imports,
-                exports: analysis.exports,
-                rawDeclarations: analysis.rawDeclarations,
-            });
-            if (this.factoryTracker !== null) {
-                this.factoryTracker.track(node.getSourceFile(), {
-                    name: analysis.factorySymbolName,
-                    hasId: analysis.id !== null,
-                });
-            }
-            this.injectableRegistry.registerInjectable(node);
-        }
-        resolve(node, analysis) {
-            const scope = this.scopeRegistry.getScopeOfModule(node);
-            const diagnostics = [];
-            const scopeDiagnostics = this.scopeRegistry.getDiagnosticsOfModule(node);
-            if (scopeDiagnostics !== null) {
-                diagnostics.push(...scopeDiagnostics);
-            }
-            if (analysis.providersRequiringFactory !== null) {
-                const providerDiagnostics = getProviderDiagnostics(analysis.providersRequiringFactory, analysis.providers, this.injectableRegistry);
-                diagnostics.push(...providerDiagnostics);
-            }
-            const data = {
-                injectorImports: [],
-            };
-            if (scope !== null && !scope.compilation.isPoisoned) {
-                // Using the scope information, extend the injector's imports using the modules that are
-                // specified as module exports.
-                const context = getSourceFile(node);
-                for (const exportRef of analysis.exports) {
-                    if (isNgModule(exportRef.node, scope.compilation)) {
-                        data.injectorImports.push(this.refEmitter.emit(exportRef, context));
-                    }
-                }
-                for (const decl of analysis.declarations) {
-                    const metadata = this.metaReader.getDirectiveMetadata(decl);
-                    if (metadata !== null && metadata.selector === null) {
-                        throw new FatalDiagnosticError(ErrorCode.DIRECTIVE_MISSING_SELECTOR, decl.node, `Directive ${decl.node.name.text} has no selector, please add it!`);
-                    }
-                }
-            }
-            if (diagnostics.length > 0) {
-                return { diagnostics };
-            }
-            if (scope === null || scope.compilation.isPoisoned || scope.exported.isPoisoned ||
-                scope.reexports === null) {
-                return { data };
-            }
-            else {
-                return {
-                    data,
-                    reexports: scope.reexports,
-                };
-            }
-        }
-        compileFull(node, analysis, resolution) {
-            //  Merge the injector imports (which are 'exports' that were later found to be NgModules)
-            //  computed during resolution with the ones from analysis.
-            const ngInjectorDef = compileInjector(Object.assign(Object.assign({}, analysis.inj), { imports: [...analysis.inj.imports, ...resolution.injectorImports] }));
-            const ngModuleDef = compileNgModule(analysis.mod);
-            const ngModuleStatements = ngModuleDef.additionalStatements;
-            if (analysis.metadataStmt !== null) {
-                ngModuleStatements.push(analysis.metadataStmt);
-            }
-            const context = getSourceFile(node);
-            for (const decl of analysis.declarations) {
-                const remoteScope = this.scopeRegistry.getRemoteScope(decl.node);
-                if (remoteScope !== null) {
-                    const directives = remoteScope.directives.map(directive => this.refEmitter.emit(directive, context));
-                    const pipes = remoteScope.pipes.map(pipe => this.refEmitter.emit(pipe, context));
-                    const directiveArray = new LiteralArrayExpr(directives);
-                    const pipesArray = new LiteralArrayExpr(pipes);
-                    const declExpr = this.refEmitter.emit(decl, context);
-                    const setComponentScope = new ExternalExpr(Identifiers$1.setComponentScope);
-                    const callExpr = new InvokeFunctionExpr(setComponentScope, [declExpr, directiveArray, pipesArray]);
-                    ngModuleStatements.push(callExpr.toStmt());
-                }
-            }
-            const res = [
-                {
-                    name: 'ɵmod',
-                    initializer: ngModuleDef.expression,
-                    statements: ngModuleStatements,
-                    type: ngModuleDef.type,
-                },
-                {
-                    name: 'ɵinj',
-                    initializer: ngInjectorDef.expression,
-                    statements: ngInjectorDef.statements,
-                    type: ngInjectorDef.type,
-                }
-            ];
-            if (this.localeId) {
-                res.push({
-                    name: 'ɵloc',
-                    initializer: new LiteralExpr(this.localeId),
-                    statements: [],
-                    type: STRING_TYPE
-                });
-            }
-            return res;
-        }
-        _toR3Reference(valueRef, valueContext, typeContext) {
-            if (valueRef.hasOwningModuleGuess) {
-                return toR3Reference(valueRef, valueRef, valueContext, valueContext, this.refEmitter);
-            }
-            else {
-                let typeRef = valueRef;
-                let typeNode = this.reflector.getDtsDeclaration(typeRef.node);
-                if (typeNode !== null && isNamedClassDeclaration(typeNode)) {
-                    typeRef = new Reference$1(typeNode);
-                }
-                return toR3Reference(valueRef, typeRef, valueContext, typeContext, this.refEmitter);
-            }
-        }
-        /**
-         * Given a `FunctionDeclaration`, `MethodDeclaration` or `FunctionExpression`, check if it is
-         * typed as a `ModuleWithProviders` and return an expression referencing the module if available.
-         */
-        _extractModuleFromModuleWithProvidersFn(node) {
-            const type = node.type || null;
-            return type &&
-                (this._reflectModuleFromTypeParam(type, node) || this._reflectModuleFromLiteralType(type));
-        }
-        /**
-         * Retrieve an `NgModule` identifier (T) from the specified `type`, if it is of the form:
-         * `ModuleWithProviders<T>`
-         * @param type The type to reflect on.
-         * @returns the identifier of the NgModule type if found, or null otherwise.
-         */
-        _reflectModuleFromTypeParam(type, node) {
-            // Examine the type of the function to see if it's a ModuleWithProviders reference.
-            if (!ts$1.isTypeReferenceNode(type)) {
-                return null;
-            }
-            const typeName = type &&
-                (ts$1.isIdentifier(type.typeName) && type.typeName ||
-                    ts$1.isQualifiedName(type.typeName) && type.typeName.right) ||
-                null;
-            if (typeName === null) {
-                return null;
-            }
-            // Look at the type itself to see where it comes from.
-            const id = this.reflector.getImportOfIdentifier(typeName);
-            // If it's not named ModuleWithProviders, bail.
-            if (id === null || id.name !== 'ModuleWithProviders') {
-                return null;
-            }
-            // If it's not from @angular/core, bail.
-            if (!this.isCore && id.from !== '@angular/core') {
-                return null;
-            }
-            // If there's no type parameter specified, bail.
-            if (type.typeArguments === undefined || type.typeArguments.length !== 1) {
-                const parent = ts$1.isMethodDeclaration(node) && ts$1.isClassDeclaration(node.parent) ? node.parent : null;
-                const symbolName = (parent && parent.name ? parent.name.getText() + '.' : '') +
-                    (node.name ? node.name.getText() : 'anonymous');
-                throw new FatalDiagnosticError(ErrorCode.NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC, type, `${symbolName} returns a ModuleWithProviders type without a generic type argument. ` +
-                    `Please add a generic type argument to the ModuleWithProviders type. If this ` +
-                    `occurrence is in library code you don't control, please contact the library authors.`);
-            }
-            const arg = type.typeArguments[0];
-            return typeNodeToValueExpr(arg);
-        }
-        /**
-         * Retrieve an `NgModule` identifier (T) from the specified `type`, if it is of the form:
-         * `A|B|{ngModule: T}|C`.
-         * @param type The type to reflect on.
-         * @returns the identifier of the NgModule type if found, or null otherwise.
-         */
-        _reflectModuleFromLiteralType(type) {
-            if (!ts$1.isIntersectionTypeNode(type)) {
-                return null;
-            }
-            for (const t of type.types) {
-                if (ts$1.isTypeLiteralNode(t)) {
-                    for (const m of t.members) {
-                        const ngModuleType = ts$1.isPropertySignature(m) && ts$1.isIdentifier(m.name) &&
-                            m.name.text === 'ngModule' && m.type ||
-                            null;
-                        const ngModuleExpression = ngModuleType && typeNodeToValueExpr(ngModuleType);
-                        if (ngModuleExpression) {
-                            return ngModuleExpression;
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-        // Verify that a "Declaration" reference is a `ClassDeclaration` reference.
-        isClassDeclarationReference(ref) {
-            return this.reflector.isClass(ref.node);
-        }
-        /**
-         * Compute a list of `Reference`s from a resolved metadata value.
-         */
-        resolveTypeList(expr, resolvedList, className, arrayName) {
-            const refList = [];
-            if (!Array.isArray(resolvedList)) {
-                throw createValueHasWrongTypeError(expr, resolvedList, `Expected array when reading the NgModule.${arrayName} of ${className}`);
-            }
-            resolvedList.forEach((entry, idx) => {
-                // Unwrap ModuleWithProviders for modules that are locally declared (and thus static
-                // resolution was able to descend into the function and return an object literal, a Map).
-                if (entry instanceof Map && entry.has('ngModule')) {
-                    entry = entry.get('ngModule');
-                }
-                if (Array.isArray(entry)) {
-                    // Recurse into nested arrays.
-                    refList.push(...this.resolveTypeList(expr, entry, className, arrayName));
-                }
-                else if (entry instanceof Reference$1) {
-                    if (!this.isClassDeclarationReference(entry)) {
-                        throw createValueHasWrongTypeError(entry.node, entry, `Value at position ${idx} in the NgModule.${arrayName} of ${className} is not a class`);
-                    }
-                    refList.push(entry);
-                }
-                else {
-                    // TODO(alxhub): Produce a better diagnostic here - the array index may be an inner array.
-                    throw createValueHasWrongTypeError(expr, entry, `Value at position ${idx} in the NgModule.${arrayName} of ${className} is not a reference`);
-                }
-            });
-            return refList;
+            return this.name !== previousSymbol.name;
         }
     }
-    function isNgModule(node, compilation) {
-        return !compilation.directives.some(directive => directive.ref.node === node) &&
-            !compilation.pipes.some(pipe => pipe.ref.node === node);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     class PipeDecoratorHandler {
         constructor(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportRecorder, injectableRegistry, isCore) {
             this.reflector = reflector;
@@ -30192,6 +30796,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 },
             };
         }
+        symbol(node, analysis) {
+            return new PipeSymbol(node, analysis.meta.name);
+        }
         register(node, analysis) {
             const ref = new Reference$1(node);
             this.metaRegistry.registerPipeMetadata({ ref, name: analysis.meta.pipeName });
@@ -30262,11 +30869,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.importGraph = importGraph;
         }
         /**
-         * Check whether adding an import from `from` to `to` would create a cycle in the `ts.Program`.
+         * Check for a cycle to be created in the `ts.Program` by adding an import between `from` and
+         * `to`.
+         *
+         * @returns a `Cycle` object if an import between `from` and `to` would create a cycle; `null`
+         *     otherwise.
          */
         wouldCreateCycle(from, to) {
             // Import of 'from' -> 'to' is illegal if an edge 'to' -> 'from' already exists.
-            return this.importGraph.transitiveImportsOf(to).has(from);
+            return this.importGraph.transitiveImportsOf(to).has(from) ?
+                new Cycle(this.importGraph, from, to) :
+                null;
         }
         /**
          * Record a synthetic import from `from` to `to`.
@@ -30276,6 +30889,28 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         recordSyntheticImport(from, to) {
             this.importGraph.addSyntheticImport(from, to);
+        }
+    }
+    /**
+     * Represents an import cycle between `from` and `to` in the program.
+     *
+     * This class allows us to do the work to compute the cyclic path between `from` and `to` only if
+     * needed.
+     */
+    class Cycle {
+        constructor(importGraph, from, to) {
+            this.importGraph = importGraph;
+            this.from = from;
+            this.to = to;
+        }
+        /**
+         * Compute an array of source-files that illustrates the cyclic path between `from` and `to`.
+         *
+         * Note that a `Cycle` will not be created unless a path is available between `to` and `from`,
+         * so `findPath()` will never return `null`.
+         */
+        getPath() {
+            return [this.from, ...this.importGraph.findPath(this.to, this.from)];
         }
     }
 
@@ -30326,6 +30961,41 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         /**
+         * Find an import path from the `start` SourceFile to the `end` SourceFile.
+         *
+         * This function implements a breadth first search that results in finding the
+         * shortest path between the `start` and `end` points.
+         *
+         * @param start the starting point of the path.
+         * @param end the ending point of the path.
+         * @returns an array of source files that connect the `start` and `end` source files, or `null` if
+         *     no path could be found.
+         */
+        findPath(start, end) {
+            if (start === end) {
+                // Escape early for the case where `start` and `end` are the same.
+                return [start];
+            }
+            const found = new Set([start]);
+            const queue = [new Found(start, null)];
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const imports = this.importsOf(current.sourceFile);
+                for (const importedFile of imports) {
+                    if (!found.has(importedFile)) {
+                        const next = new Found(importedFile, current);
+                        if (next.sourceFile === end) {
+                            // We have hit the target `end` path so we can stop here.
+                            return next.toPath();
+                        }
+                        found.add(importedFile);
+                        queue.push(next);
+                    }
+                }
+            }
+            return null;
+        }
+        /**
          * Add a record of an import from `sf` to `imported`, that's not present in the original
          * `ts.Program` but will be remembered by the `ImportGraph`.
          */
@@ -30354,6 +31024,31 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function isLocalFile(sf) {
         return !sf.fileName.endsWith('.d.ts');
+    }
+    /**
+     * A helper class to track which SourceFiles are being processed when searching for a path in
+     * `getPath()` above.
+     */
+    class Found {
+        constructor(sourceFile, parent) {
+            this.sourceFile = sourceFile;
+            this.parent = parent;
+        }
+        /**
+         * Back track through this found SourceFile and its ancestors to generate an array of
+         * SourceFiles that form am import path between two SourceFiles.
+         */
+        toPath() {
+            const array = [];
+            let current = this;
+            while (current !== null) {
+                array.push(current.sourceFile);
+                current = current.parent;
+            }
+            // Pushing and then reversing, O(n), rather than unshifting repeatedly, O(n^2), avoids
+            // manipulating the array on every iteration: https://stackoverflow.com/a/26370620
+            return array.reverse();
+        }
     }
 
     /**
@@ -30546,432 +31241,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }
                 });
             }
-        }
-    }
-
-    /**
-     * Represents a symbol that is recognizable across incremental rebuilds, which enables the captured
-     * metadata to be compared to the prior compilation. This allows for semantic understanding of
-     * the changes that have been made in a rebuild, which potentially enables more reuse of work
-     * from the prior compilation.
-     */
-    class SemanticSymbol {
-        constructor(
-        /**
-         * The path of the file that declares this symbol.
-         */
-        path, 
-        /**
-         * The declaration for this symbol.
-         */
-        decl, 
-        /**
-         * The identifier of this symbol, or null if no identifier could be determined. It should
-         * uniquely identify the symbol relative to `file`. This is typically just the name of a
-         * top-level class declaration, as that uniquely identifies the class within the file.
-         *
-         * If the identifier is null, then this symbol cannot be recognized across rebuilds. In that
-         * case, the symbol is always assumed to have semantically changed to guarantee a proper
-         * rebuild.
-         */
-        identifier) {
-            this.path = path;
-            this.decl = decl;
-            this.identifier = identifier;
-        }
-    }
-
-    /**
-     * Determines whether the provided symbols represent the same declaration.
-     */
-    function isSymbolEqual(a, b) {
-        if (a.decl === b.decl) {
-            // If the declaration is identical then it must represent the same symbol.
-            return true;
-        }
-        if (a.identifier === null || b.identifier === null) {
-            // Unidentifiable symbols are assumed to be different.
-            return false;
-        }
-        return a.path === b.path && a.identifier === b.identifier;
-    }
-    function referenceEquality(a, b) {
-        return a === b;
-    }
-    /**
-     * Determines if the provided arrays are equal to each other, using the provided equality tester
-     * that is called for all entries in the array.
-     */
-    function isArrayEqual(a, b, equalityTester = referenceEquality) {
-        if (a === null || b === null) {
-            return a === b;
-        }
-        if (a.length !== b.length) {
-            return false;
-        }
-        return !a.some((item, index) => !equalityTester(item, b[index]));
-    }
-
-    /**
-     * Represents an Angular pipe.
-     */
-    class PipeSymbol extends SemanticSymbol {
-        constructor(path, decl, symbolName, name) {
-            super(path, decl, symbolName);
-            this.name = name;
-        }
-        isPublicApiAffected(previousSymbol) {
-            if (!(previousSymbol instanceof PipeSymbol)) {
-                return true;
-            }
-            return this.name !== previousSymbol.name;
-        }
-    }
-    /**
-     * Represents an Angular directive. Components are represented by `ComponentSymbol`, which inherits
-     * from this symbol.
-     */
-    class DirectiveSymbol extends SemanticSymbol {
-        constructor(path, decl, symbolName, selector, inputs, outputs, exportAs) {
-            super(path, decl, symbolName);
-            this.selector = selector;
-            this.inputs = inputs;
-            this.outputs = outputs;
-            this.exportAs = exportAs;
-        }
-        isPublicApiAffected(previousSymbol) {
-            // Note: since components and directives have exactly the same items contributing to their
-            // public API, it is okay for a directive to change into a component and vice versa without
-            // the API being affected.
-            if (!(previousSymbol instanceof DirectiveSymbol)) {
-                return true;
-            }
-            // Directives and components have a public API of:
-            //  1. Their selector.
-            //  2. The binding names of their inputs and outputs; a change in ordering is also considered
-            //     to be a change in public API.
-            //  3. The list of exportAs names and its ordering.
-            return this.selector !== previousSymbol.selector ||
-                !isArrayEqual(this.inputs, previousSymbol.inputs) ||
-                !isArrayEqual(this.outputs, previousSymbol.outputs) ||
-                !isArrayEqual(this.exportAs, previousSymbol.exportAs);
-        }
-    }
-    /**
-     * Represents an Angular component.
-     */
-    class ComponentSymbol extends DirectiveSymbol {
-        constructor() {
-            super(...arguments);
-            this.usedDirectives = [];
-            this.usedPipes = [];
-            this.isRemotelyScoped = false;
-        }
-        isEmitAffected(previousSymbol, publicApiAffected) {
-            if (!(previousSymbol instanceof ComponentSymbol)) {
-                return true;
-            }
-            // Create an equality function that considers symbols equal if they represent the same
-            // declaration, but only if the symbol in the current compilation does not have its public API
-            // affected.
-            const isSymbolAffected = (current, previous) => isSymbolEqual(current, previous) && !publicApiAffected.has(current);
-            // The emit of a component is affected if either of the following is true:
-            //  1. The component used to be remotely scoped but no longer is, or vice versa.
-            //  2. The list of used directives has changed or any of those directives have had their public
-            //     API changed. If the used directives have been reordered but not otherwise affected then
-            //     the component must still be re-emitted, as this may affect directive instantiation order.
-            //  3. The list of used pipes has changed, or any of those pipes have had their public API
-            //     changed.
-            return this.isRemotelyScoped !== previousSymbol.isRemotelyScoped ||
-                !isArrayEqual(this.usedDirectives, previousSymbol.usedDirectives, isSymbolAffected) ||
-                !isArrayEqual(this.usedPipes, previousSymbol.usedPipes, isSymbolAffected);
-        }
-    }
-    /**
-     * Represents an Angular NgModule.
-     */
-    class NgModuleSymbol extends SemanticSymbol {
-        constructor(path, decl, symbolName, rawDeclarations) {
-            super(path, decl, symbolName);
-            this.rawDeclarations = rawDeclarations;
-            this.hasRemoteScopes = false;
-        }
-        connect(resolve) {
-            const declarations = this.rawDeclarations.map(resolve);
-            // An NgModule has remote scopes if any of its declared components is remotely scoped.
-            this.hasRemoteScopes =
-                declarations.some(symbol => symbol instanceof ComponentSymbol && symbol.isRemotelyScoped);
-        }
-        isPublicApiAffected(previousSymbol) {
-            if (!(previousSymbol instanceof NgModuleSymbol)) {
-                return true;
-            }
-            // NgModules don't have a public API that could affect emit of Angular decorated classes.
-            return false;
-        }
-        isEmitAffected(previousSymbol) {
-            if (!(previousSymbol instanceof NgModuleSymbol)) {
-                return true;
-            }
-            // The NgModule needs to be re-emitted if it does no longer have any remote scopes, or vice
-            // versa.
-            return this.hasRemoteScopes !== previousSymbol.hasRemoteScopes;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents a declaration for which no semantic symbol has been registered. For example,
-     * declarations from external dependencies have not been explicitly registered and are represented
-     * by this symbol. This allows the unresolved symbol to still be compared to a symbol from a prior
-     * compilation.
-     */
-    class UnresolvedSymbol extends SemanticSymbol {
-        isPublicApiAffected() {
-            throw new Error('Invalid state: unresolved symbols should not be diffed');
-        }
-        distribute() { }
-    }
-    /**
-     * The semantic dependency graph of a single compilation.
-     */
-    class SemanticDepGraph {
-        constructor() {
-            this.files = new Map();
-            this.symbolByDecl = new Map();
-        }
-        /**
-         * Registers a symbol for the provided declaration as created by the factory function. The symbol
-         * is given a unique identifier if possible, such that its equivalent symbol can be obtained from
-         * a prior graph even if its declaration node has changed across rebuilds. Symbols without an
-         * identifier are only able to find themselves in a prior graph if their declaration node is
-         * identical.
-         *
-         * @param decl
-         * @param factory
-         */
-        registerSymbol(decl, factory) {
-            const path = absoluteFromSourceFile(getSourceFile(decl));
-            const identifier = getSymbolIdentifier(decl);
-            const symbol = factory(path, decl, identifier);
-            this.symbolByDecl.set(decl, symbol);
-            if (symbol.identifier !== null) {
-                // If the symbol has a unique identifier, record it in the file that declares it. This enables
-                // the symbol to be requested by its unique name.
-                if (!this.files.has(path)) {
-                    this.files.set(path, new Map());
-                }
-                this.files.get(path).set(symbol.identifier, symbol);
-            }
-        }
-        /**
-         * Attempts to resolve a symbol in this graph that represents the given symbol from another graph.
-         * If no matching symbol could be found, null is returned.
-         *
-         * @param symbol The symbol from another graph for which its equivalent in this graph should be
-         * found.
-         */
-        getEquivalentSymbol(symbol) {
-            // First lookup the symbol by its declaration. It is typical for the declaration to not have
-            // changed across rebuilds, so this is likely to find the symbol. Using the declaration also
-            // allows to diff symbols for which no unique identifier could be determined.
-            let previousSymbol = this.getSymbolByDecl(symbol.decl);
-            if (previousSymbol === null && symbol.identifier !== null) {
-                // The declaration could not be resolved to a symbol in a prior compilation, which may
-                // happen because the file containing the declaration has changed. In that case we want to
-                // lookup the symbol based on its unique identifier, as that allows us to still compare the
-                // changed declaration to the prior compilation.
-                previousSymbol = this.getSymbolByName(symbol.path, symbol.identifier);
-            }
-            return previousSymbol;
-        }
-        /**
-         * Attempts to find the symbol by its identifier.
-         */
-        getSymbolByName(path, identifier) {
-            if (!this.files.has(path)) {
-                return null;
-            }
-            const file = this.files.get(path);
-            if (!file.has(identifier)) {
-                return null;
-            }
-            return file.get(identifier);
-        }
-        /**
-         * Attempts to resolve the declaration to its semantic symbol.
-         */
-        getSymbolByDecl(decl) {
-            if (!this.symbolByDecl.has(decl)) {
-                return null;
-            }
-            return this.symbolByDecl.get(decl);
-        }
-    }
-    function getSymbolIdentifier(decl) {
-        if (!ts$1.isSourceFile(decl.parent)) {
-            return null;
-        }
-        // If this is a top-level class declaration, the class name is used as unique identifier.
-        // Other scenarios are currently not supported and causes the symbol not to be identified
-        // across rebuilds, unless the declaration node has not changed.
-        return decl.name.text;
-    }
-    /**
-     * Implements the logic to go from a previous dependency graph to a new one, along with information
-     * on which files have been affected.
-     */
-    class SemanticDepGraphUpdater {
-        constructor(
-        /**
-         * The semantic dependency graph of the most recently succeeded compilation, or null if this
-         * is the initial build.
-         */
-        priorGraph) {
-            this.priorGraph = priorGraph;
-            this.newGraph = new SemanticDepGraph();
-            /**
-             * Contains unresolved symbols that were created for declarations for which there was no symbol
-             * registered, which happens for e.g. external declarations.
-             */
-            this.unresolvedSymbols = new Map();
-        }
-        addNgModule(metadata) {
-            this.newGraph.registerSymbol(metadata.ref.node, (path, decl, identifier) => {
-                return new NgModuleSymbol(path, decl, identifier, metadata.declarations.map(decl => decl.node));
-            });
-        }
-        addDirective(metadata) {
-            this.newGraph.registerSymbol(metadata.ref.node, (path, decl, identifier) => {
-                if (metadata.isComponent) {
-                    return new ComponentSymbol(path, decl, identifier, metadata.selector, metadata.inputs.propertyNames, metadata.outputs.propertyNames, metadata.exportAs);
-                }
-                return new DirectiveSymbol(path, decl, identifier, metadata.selector, metadata.inputs.propertyNames, metadata.outputs.propertyNames, metadata.exportAs);
-            });
-        }
-        addPipe(metadata) {
-            this.newGraph.registerSymbol(metadata.ref.node, (path, decl, identifier) => {
-                return new PipeSymbol(path, decl, identifier, metadata.name);
-            });
-        }
-        register(component, usedDirectives, usedPipes, isRemotelyScoped) {
-            const symbol = this.newGraph.getSymbolByDecl(component);
-            // The fact that the component is being registered requires that its analysis data has been
-            // recorded as a symbol, so it's an error for `symbol` to be missing or not to be a
-            // `ComponentSymbol`.
-            if (symbol === null) {
-                throw new Error(`Illegal state: no symbol information available for component ${component.name.text}`);
-            }
-            else if (!(symbol instanceof ComponentSymbol)) {
-                throw new Error(`Illegal state: symbol information should be for a component, got ${symbol.constructor.name} for ${component.name.text}`);
-            }
-            symbol.usedDirectives = usedDirectives.map(dir => this.getSymbol(dir));
-            symbol.usedPipes = usedPipes.map(pipe => this.getSymbol(pipe));
-            symbol.isRemotelyScoped = isRemotelyScoped;
-        }
-        /**
-         * Takes all facts that have been gathered to create a new semantic dependency graph. In this
-         * process, the semantic impact of the changes is determined which results in a set of files that
-         * need to be emitted and/or type-checked.
-         */
-        finalize() {
-            this.connect();
-            if (this.priorGraph === null) {
-                // If no prior dependency graph is available then this was the initial build, in which case
-                // we don't need to determine the semantic impact as everything is already considered
-                // logically changed.
-                return {
-                    needsEmit: new Set(),
-                    newGraph: this.newGraph,
-                };
-            }
-            const needsEmit = this.determineInvalidatedFiles(this.priorGraph);
-            return {
-                needsEmit,
-                newGraph: this.newGraph,
-            };
-        }
-        /**
-         * Implements the first phase of the semantic invalidation algorithm by connecting all symbols
-         * together.
-         */
-        connect() {
-            const symbolResolver = decl => this.getSymbol(decl);
-            for (const symbol of this.newGraph.symbolByDecl.values()) {
-                if (symbol.connect === undefined) {
-                    continue;
-                }
-                symbol.connect(symbolResolver);
-            }
-        }
-        determineInvalidatedFiles(priorGraph) {
-            const isPublicApiAffected = new Set();
-            // The first phase is to collect all symbols which have their public API affected. Any symbols
-            // that cannot be matched up with a symbol from the prior graph are considered affected.
-            for (const symbol of this.newGraph.symbolByDecl.values()) {
-                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
-                if (previousSymbol === null || symbol.isPublicApiAffected(previousSymbol)) {
-                    isPublicApiAffected.add(symbol);
-                }
-            }
-            // The second phase is to find all symbols for which the emit result is affected, either because
-            // their used declarations have changed or any of those used declarations has had its public API
-            // affected as determined in the first phase.
-            const needsEmit = new Set();
-            for (const symbol of this.newGraph.symbolByDecl.values()) {
-                if (symbol.isEmitAffected === undefined) {
-                    continue;
-                }
-                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
-                if (previousSymbol === null || symbol.isEmitAffected(previousSymbol, isPublicApiAffected)) {
-                    needsEmit.add(symbol.path);
-                }
-            }
-            return needsEmit;
-        }
-        getSymbol(decl) {
-            const symbol = this.newGraph.getSymbolByDecl(decl);
-            if (symbol === null) {
-                // No symbol has been recorded for the provided declaration, which would be the case if the
-                // declaration is external. Return an unresolved symbol in that case, to allow the external
-                // declaration to be compared to a prior compilation.
-                return this.getUnresolvedSymbol(decl);
-            }
-            return symbol;
-        }
-        /**
-         * Gets or creates an `UnresolvedSymbol` for the provided class declaration.
-         */
-        getUnresolvedSymbol(decl) {
-            if (this.unresolvedSymbols.has(decl)) {
-                return this.unresolvedSymbols.get(decl);
-            }
-            const path = absoluteFromSourceFile(getSourceFile(decl));
-            const identifier = getSymbolIdentifier(decl);
-            const symbol = new UnresolvedSymbol(path, decl, identifier);
-            this.unresolvedSymbols.set(decl, symbol);
-            return symbol;
-        }
-    }
-
-    class SemanticDepGraphAdapter {
-        constructor(updater) {
-            this.updater = updater;
-        }
-        registerDirectiveMetadata(meta) {
-            this.updater.addDirective(meta);
-        }
-        registerNgModuleMetadata(meta) {
-            this.updater.addNgModule(meta);
-        }
-        registerPipeMetadata(meta) {
-            this.updater.addPipe(meta);
         }
     }
 
@@ -39254,10 +39523,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             const scopeRegistry = new LocalModuleScopeRegistry(localMetaReader, depScopeReader, refEmitter, aliasingHost);
             const scopeReader = scopeRegistry;
             const semanticDepGraphUpdater = this.incrementalDriver.getSemanticDepGraphUpdater();
-            const semanticDepRegistry = new SemanticDepGraphAdapter(semanticDepGraphUpdater);
-            const metaRegistry = new CompoundMetadataRegistry([localMetaRegistry, scopeRegistry, semanticDepRegistry]);
+            const metaRegistry = new CompoundMetadataRegistry([localMetaRegistry, scopeRegistry]);
             const injectableRegistry = new InjectableClassRegistry(reflector);
-            const componentResolutionRegistry = semanticDepGraphUpdater;
             const metaReader = new CompoundMetadataReader([localMetaReader, dtsReader]);
             const typeCheckScopeRegistry = new TypeCheckScopeRegistry(scopeReader, metaReader);
             // If a flat module entrypoint was specified, then track references via a `ReferenceGraph` in
@@ -39278,9 +39545,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             const isCore = isAngularCorePackage(this.tsProgram);
             const defaultImportTracker = new DefaultImportTracker();
             const resourceRegistry = new ResourceRegistry();
+            const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
+            // Cycles are handled in full compilation mode by "remote scoping".
+            // "Remote scoping" does not work well with tree shaking for libraries.
+            // So in partial compilation mode, when building a library, a cycle will cause an error.
+            const cycleHandlingStrategy = compilationMode === CompilationMode.FULL ?
+                0 /* UseRemoteScoping */ :
+                1 /* Error */;
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, componentResolutionRegistry, this.closureCompilerEnabled),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, semanticDepGraphUpdater, this.closureCompilerEnabled),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
@@ -39296,8 +39570,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 new InjectableDecoratorHandler(reflector, defaultImportTracker, isCore, this.options.strictInjectionParameters || false, injectableRegistry),
                 new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.options.i18nInLocale),
             ];
-            const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
-            const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms);
+            const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
             const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry);
             return {
                 isCore,
