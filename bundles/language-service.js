@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+37.sha-53c65f4
+ * @license Angular v12.0.0-next.1+39.sha-995adb2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19182,7 +19182,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+37.sha-53c65f4');
+    const VERSION$1 = new Version('12.0.0-next.1+39.sha-995adb2');
 
     /**
      * @license
@@ -47098,7 +47098,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.1+37.sha-53c65f4');
+    const VERSION$2 = new Version$1('12.0.0-next.1+39.sha-995adb2');
 
     /**
      * @license
@@ -53224,8 +53224,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * one or more initialization functions.
      *
      * The provided functions are injected at application startup and executed during
-     * app initialization. If any of these functions returns a Promise, initialization
-     * does not complete until the Promise is resolved.
+     * app initialization. If any of these functions returns a Promise or an Observable, initialization
+     * does not complete until the Promise is resolved or the Observable is completed.
      *
      * You can, for example, create a factory function that loads language data
      * or an external configuration, and provide that function to the `APP_INITIALIZER` token.
@@ -53269,6 +53269,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     const initResult = this.appInits[i]();
                     if (isPromise$1(initResult)) {
                         asyncInitPromises.push(initResult);
+                    }
+                    else if (isObservable(initResult)) {
+                        const observableAsPromise = new Promise((resolve, reject) => {
+                            initResult.subscribe({ complete: resolve, error: reject });
+                        });
+                        asyncInitPromises.push(observableAsPromise);
                     }
                 }
             }
