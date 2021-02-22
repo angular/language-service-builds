@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+44.sha-a58f066
+ * @license Angular v12.0.0-next.1+45.sha-ddf7970
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17172,7 +17172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+44.sha-a58f066');
+    const VERSION$1 = new Version('12.0.0-next.1+45.sha-ddf7970');
 
     /**
      * @license
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+44.sha-a58f066'));
+        definitionMap.set('version', literal('12.0.0-next.1+45.sha-ddf7970'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18050,7 +18050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+44.sha-a58f066'));
+        definitionMap.set('version', literal('12.0.0-next.1+45.sha-ddf7970'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21322,7 +21322,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.1+44.sha-a58f066');
+    const VERSION$2 = new Version('12.0.0-next.1+45.sha-ddf7970');
 
     /**
      * @license
@@ -38495,6 +38495,21 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // This file exists as a target for g3 patches which change the Angular compiler's behavior.
+    // Separating the patched code in a separate file eliminates the possibility of conflicts with the
+    // patch diffs when making changes to the rest of the compiler codebase.
+    // In ngtsc we no longer want to compile undecorated classes with Angular features.
+    // Migrations for these patterns ran as part of `ng update` and we want to ensure
+    // that projects do not regress. See https://hackmd.io/@alx/ryfYYuvzH for more details.
+    const compileUndecoratedClassesWithAngularFeatures = false;
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Discriminant type for a `CompilationTicket`.
      */
@@ -39218,11 +39233,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
-                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, this.closureCompilerEnabled, 
-                // In ngtsc we no longer want to compile undecorated classes with Angular features.
-                // Migrations for these patterns ran as part of `ng update` and we want to ensure
-                // that projects do not regress. See https://hackmd.io/@alx/ryfYYuvzH for more details.
-                /* compileUndecoratedClassesWithAngularFeatures */ false),
+                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures),
                 // clang-format on
                 // Pipe handler must be before injectable handler in list so pipe factories are printed
                 // before injectable factories (so injectable factories can delegate to them)
