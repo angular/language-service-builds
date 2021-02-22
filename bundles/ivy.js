@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+42.sha-b84f719
+ * @license Angular v12.0.0-next.1+43.sha-f31a601
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17172,7 +17172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+42.sha-b84f719');
+    const VERSION$1 = new Version('12.0.0-next.1+43.sha-f31a601');
 
     /**
      * @license
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+42.sha-b84f719'));
+        definitionMap.set('version', literal('12.0.0-next.1+43.sha-f31a601'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18050,7 +18050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+42.sha-b84f719'));
+        definitionMap.set('version', literal('12.0.0-next.1+43.sha-f31a601'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21322,7 +21322,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.1+42.sha-b84f719');
+    const VERSION$2 = new Version('12.0.0-next.1+43.sha-f31a601');
 
     /**
      * @license
@@ -39640,6 +39640,53 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         return undefined;
     }
+    /**
+     * Returns a property assignment from the assignment value if the property name
+     * matches the specified `key`, or `null` if there is no match.
+     */
+    function getPropertyAssignmentFromValue(value, key) {
+        const propAssignment = value.parent;
+        if (!propAssignment || !ts$1.isPropertyAssignment(propAssignment) ||
+            propAssignment.name.getText() !== key) {
+            return null;
+        }
+        return propAssignment;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgnNode property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !ts$1.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        const objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !ts$1.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        const callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !ts$1.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        const decorator = callExprNode.parent;
+        if (!decorator.parent || !ts$1.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        const classDeclNode = decorator.parent;
+        return classDeclNode;
+    }
 
     /**
      * @license
@@ -42243,16 +42290,22 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return diagnostics;
         }
         getDefinitionAndBoundSpan(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreate();
-            const results = new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
-            this.compilerFactory.registerLastKnownProgram();
-            return results;
+            return this.withCompiler((compiler) => {
+                if (!isInAngularContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                return new DefinitionBuilder(this.tsLS, compiler)
+                    .getDefinitionAndBoundSpan(fileName, position);
+            });
         }
         getTypeDefinitionAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreate();
-            const results = new DefinitionBuilder(this.tsLS, compiler).getTypeDefinitionsAtPosition(fileName, position);
-            this.compilerFactory.registerLastKnownProgram();
-            return results;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                return new DefinitionBuilder(this.tsLS, compiler)
+                    .getTypeDefinitionsAtPosition(fileName, position);
+            });
         }
         getQuickInfoAtPosition(fileName, position) {
             const compiler = this.compilerFactory.getOrCreate();
@@ -42319,31 +42372,42 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, nodeContextFromTarget(positionDetails.context), positionDetails.parent, positionDetails.template);
         }
         getCompletionsAtPosition(fileName, position, options) {
-            const builder = this.getCompletionBuilder(fileName, position);
-            if (builder === null) {
-                return undefined;
-            }
-            const result = builder.getCompletionsAtPosition(options);
-            this.compilerFactory.registerLastKnownProgram();
-            return result;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const builder = this.getCompletionBuilder(fileName, position);
+                if (builder === null) {
+                    return undefined;
+                }
+                return builder.getCompletionsAtPosition(options);
+            });
         }
         getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences) {
-            const builder = this.getCompletionBuilder(fileName, position);
-            if (builder === null) {
-                return undefined;
-            }
-            const result = builder.getCompletionEntryDetails(entryName, formatOptions, preferences);
-            this.compilerFactory.registerLastKnownProgram();
-            return result;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const builder = this.getCompletionBuilder(fileName, position);
+                if (builder === null) {
+                    return undefined;
+                }
+                return builder.getCompletionEntryDetails(entryName, formatOptions, preferences);
+            });
         }
         getCompletionEntrySymbol(fileName, position, entryName) {
-            const builder = this.getCompletionBuilder(fileName, position);
-            if (builder === null) {
-                return undefined;
-            }
-            const result = builder.getCompletionEntrySymbol(entryName);
-            this.compilerFactory.registerLastKnownProgram();
-            return result;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const builder = this.getCompletionBuilder(fileName, position);
+                if (builder === null) {
+                    return undefined;
+                }
+                const result = builder.getCompletionEntrySymbol(entryName);
+                this.compilerFactory.registerLastKnownProgram();
+                return result;
+            });
         }
         getComponentLocationsForTemplate(fileName) {
             return this.withCompiler((compiler) => {
@@ -42548,6 +42612,40 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 // No special context is available.
                 return CompletionNodeContext.None;
         }
+    }
+    function isTemplateContext(program, fileName, position) {
+        if (!isTypeScriptFile(fileName)) {
+            // If we aren't in a TS file, we must be in an HTML file, which we treat as template context
+            return true;
+        }
+        const node = findTightestNodeAtPosition(program, fileName, position);
+        if (node === undefined) {
+            return false;
+        }
+        let asgn = getPropertyAssignmentFromValue(node, 'template');
+        if (asgn === null) {
+            return false;
+        }
+        return getClassDeclFromDecoratorProp(asgn) !== null;
+    }
+    function isInAngularContext(program, fileName, position) {
+        var _a, _b;
+        if (!isTypeScriptFile(fileName)) {
+            return true;
+        }
+        const node = findTightestNodeAtPosition(program, fileName, position);
+        if (node === undefined) {
+            return false;
+        }
+        const asgn = (_b = (_a = getPropertyAssignmentFromValue(node, 'template')) !== null && _a !== void 0 ? _a : getPropertyAssignmentFromValue(node, 'templateUrl')) !== null && _b !== void 0 ? _b : getPropertyAssignmentFromValue(node.parent, 'styleUrls');
+        return asgn !== null && getClassDeclFromDecoratorProp(asgn) !== null;
+    }
+    function findTightestNodeAtPosition(program, fileName, position) {
+        const sourceFile = program.getSourceFile(fileName);
+        if (sourceFile === undefined) {
+            return undefined;
+        }
+        return findTightestNode(sourceFile, position);
     }
 
     /**
