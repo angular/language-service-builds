@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+40.sha-d28197d
+ * @license Angular v12.0.0-next.1+41.sha-dc9fd1a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19182,7 +19182,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+40.sha-d28197d');
+    const VERSION$1 = new Version('12.0.0-next.1+41.sha-dc9fd1a');
 
     /**
      * @license
@@ -35231,7 +35231,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.1+40.sha-d28197d');
+    const VERSION$2 = new Version$1('12.0.0-next.1+41.sha-dc9fd1a');
 
     /**
      * @license
@@ -39409,6 +39409,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     const EMPTY_PAYLOAD = {};
     function checkStable(zone) {
+        // TODO: @JiaLiPassion, should check zone.isCheckStableRunning to prevent
+        // re-entry. The case is:
+        //
+        // @Component({...})
+        // export class AppComponent {
+        // constructor(private ngZone: NgZone) {
+        //   this.ngZone.onStable.subscribe(() => {
+        //     this.ngZone.run(() => console.log('stable'););
+        //   });
+        // }
+        //
+        // The onStable subscriber run another function inside ngZone
+        // which causes `checkStable()` re-entry.
+        // But this fix causes some issues in g3, so this fix will be
+        // launched in another PR.
         if (zone._nesting == 0 && !zone.hasPendingMicrotasks && !zone.isStable) {
             try {
                 zone._nesting++;
@@ -39428,7 +39443,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function delayChangeDetectionForEvents(zone) {
-        if (zone.lastRequestAnimationFrameId !== -1) {
+        /**
+         * We also need to check _nesting here
+         * Consider the following case with shouldCoalesceRunChangeDetection = true
+         *
+         * ngZone.run(() => {});
+         * ngZone.run(() => {});
+         *
+         * We want the two `ngZone.run()` only trigger one change detection
+         * when shouldCoalesceRunChangeDetection is true.
+         * And because in this case, change detection run in async way(requestAnimationFrame),
+         * so we also need to check the _nesting here to prevent multiple
+         * change detections.
+         */
+        if (zone.isCheckStableRunning || zone.lastRequestAnimationFrameId !== -1) {
             return;
         }
         zone.lastRequestAnimationFrameId = zone.nativeRequestAnimationFrame.call(_global$1, () => {
@@ -39445,7 +39473,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 zone.fakeTopEventTask = Zone.root.scheduleEventTask('fakeTopEventTask', () => {
                     zone.lastRequestAnimationFrameId = -1;
                     updateMicroTaskStatus(zone);
+                    zone.isCheckStableRunning = true;
                     checkStable(zone);
+                    zone.isCheckStableRunning = false;
                 }, undefined, () => { }, () => { });
             }
             zone.fakeTopEventTask.invoke();
