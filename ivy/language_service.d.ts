@@ -32,7 +32,7 @@ export declare class LanguageService {
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined): ts.CompletionEntryDetails | undefined;
     getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
     getComponentLocationsForTemplate(fileName: string): GetComponentLocationsForTemplateResponse;
-    getTcb(fileName: string, position: number): GetTcbResponse;
+    getTcb(fileName: string, position: number): GetTcbResponse | undefined;
     private withCompiler;
     getCompilerOptionsDiagnostics(): ts.Diagnostic[];
     private watchConfigFile;
