@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.2+10.sha-c6e2234
+ * @license Angular v11.2.2+13.sha-db28ed2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -28,6 +28,17 @@ module.exports = function(provided) {
 };
 
 define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], function (exports, tss, ts, path) { 'use strict';
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function isNgLanguageService(ls) {
+        return 'getTcb' in ls;
+    }
 
     /**
      * @license
@@ -19156,7 +19167,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.2+10.sha-c6e2234');
+    const VERSION$1 = new Version('11.2.2+13.sha-db28ed2');
 
     /**
      * @license
@@ -35189,7 +35200,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.2+10.sha-c6e2234');
+    const VERSION$2 = new Version$1('11.2.2+13.sha-db28ed2');
 
     /**
      * @license
@@ -43004,6 +43015,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
 
     exports.create = create;
     exports.getExternalFiles = getExternalFiles;
+    exports.isNgLanguageService = isNgLanguageService;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
