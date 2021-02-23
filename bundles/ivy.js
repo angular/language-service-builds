@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.2+1.sha-09b92d7
+ * @license Angular v11.2.2+10.sha-c6e2234
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17146,7 +17146,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.2+1.sha-09b92d7');
+    const VERSION$1 = new Version('11.2.2+10.sha-c6e2234');
 
     /**
      * @license
@@ -17803,7 +17803,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.2+1.sha-09b92d7'));
+        definitionMap.set('version', literal('11.2.2+10.sha-c6e2234'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18024,7 +18024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.2+1.sha-09b92d7'));
+        definitionMap.set('version', literal('11.2.2+10.sha-c6e2234'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21296,7 +21296,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.2+1.sha-09b92d7');
+    const VERSION$2 = new Version('11.2.2+10.sha-c6e2234');
 
     /**
      * @license
@@ -42285,24 +42285,26 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             });
         }
         getQuickInfoAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreate();
-            const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
-            if (templateInfo === undefined) {
-                return undefined;
-            }
-            const positionDetails = getTargetAtPosition(templateInfo.template, position);
-            if (positionDetails === null) {
-                return undefined;
-            }
-            // Because we can only show 1 quick info, just use the bound attribute if the target is a two
-            // way binding. We may consider concatenating additional display parts from the other target
-            // nodes or representing the two way binding in some other manner in the future.
-            const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
-                positionDetails.context.nodes[0] :
-                positionDetails.context.node;
-            const results = new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node).get();
-            this.compilerFactory.registerLastKnownProgram();
-            return results;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
+                if (templateInfo === undefined) {
+                    return undefined;
+                }
+                const positionDetails = getTargetAtPosition(templateInfo.template, position);
+                if (positionDetails === null) {
+                    return undefined;
+                }
+                // Because we can only show 1 quick info, just use the bound attribute if the target is a two
+                // way binding. We may consider concatenating additional display parts from the other target
+                // nodes or representing the two way binding in some other manner in the future.
+                const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
+                    positionDetails.context.nodes[0] :
+                    positionDetails.context.node;
+                return new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node).get();
+            });
         }
         getReferencesAtPosition(fileName, position) {
             const compiler = this.compilerFactory.getOrCreate();
