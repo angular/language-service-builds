@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+41.sha-e6bf7c2
+ * @license Angular v12.0.0-next.1+51.sha-206ec9b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19182,7 +19182,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+41.sha-e6bf7c2');
+    const VERSION$1 = new Version('12.0.0-next.1+51.sha-206ec9b');
 
     /**
      * @license
@@ -34844,6 +34844,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // It's up to the caller to ensure that obj.then conforms to the spec
         return !!obj && typeof obj.then === 'function';
     }
+    /**
+     * Determine if the argument is a Subscribable
+     */
+    function isSubscribable(obj) {
+        return !!obj && typeof obj.subscribe === 'function';
+    }
+    /**
+     * Determine if the argument is an Observable
+     *
+     * Strictly this tests that the `obj` is `Subscribable`, since `Observable`
+     * types need additional methods, such as `lift()`. But it is adequate for our
+     * needs since within the Angular framework code we only ever need to use the
+     * `subscribe()` method, and RxJS has mechanisms to wrap `Subscribable` objects
+     * into `Observable` as needed.
+     */
+    const isObservable = isSubscribable;
 
     /**
      * @license
@@ -35215,7 +35231,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.1+41.sha-e6bf7c2');
+    const VERSION$2 = new Version$1('12.0.0-next.1+51.sha-206ec9b');
 
     /**
      * @license
@@ -38746,8 +38762,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * one or more initialization functions.
      *
      * The provided functions are injected at application startup and executed during
-     * app initialization. If any of these functions returns a Promise, initialization
-     * does not complete until the Promise is resolved.
+     * app initialization. If any of these functions returns a Promise or an Observable, initialization
+     * does not complete until the Promise is resolved or the Observable is completed.
      *
      * You can, for example, create a factory function that loads language data
      * or an external configuration, and provide that function to the `APP_INITIALIZER` token.
@@ -38791,6 +38807,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     const initResult = this.appInits[i]();
                     if (isPromise$1(initResult)) {
                         asyncInitPromises.push(initResult);
+                    }
+                    else if (isObservable(initResult)) {
+                        const observableAsPromise = new Promise((resolve, reject) => {
+                            initResult.subscribe({ complete: resolve, error: reject });
+                        });
+                        asyncInitPromises.push(observableAsPromise);
                     }
                 }
             }
@@ -39387,6 +39409,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     const EMPTY_PAYLOAD = {};
     function checkStable(zone) {
+        // TODO: @JiaLiPassion, should check zone.isCheckStableRunning to prevent
+        // re-entry. The case is:
+        //
+        // @Component({...})
+        // export class AppComponent {
+        // constructor(private ngZone: NgZone) {
+        //   this.ngZone.onStable.subscribe(() => {
+        //     this.ngZone.run(() => console.log('stable'););
+        //   });
+        // }
+        //
+        // The onStable subscriber run another function inside ngZone
+        // which causes `checkStable()` re-entry.
+        // But this fix causes some issues in g3, so this fix will be
+        // launched in another PR.
         if (zone._nesting == 0 && !zone.hasPendingMicrotasks && !zone.isStable) {
             try {
                 zone._nesting++;
@@ -39406,7 +39443,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function delayChangeDetectionForEvents(zone) {
-        if (zone.lastRequestAnimationFrameId !== -1) {
+        /**
+         * We also need to check _nesting here
+         * Consider the following case with shouldCoalesceRunChangeDetection = true
+         *
+         * ngZone.run(() => {});
+         * ngZone.run(() => {});
+         *
+         * We want the two `ngZone.run()` only trigger one change detection
+         * when shouldCoalesceRunChangeDetection is true.
+         * And because in this case, change detection run in async way(requestAnimationFrame),
+         * so we also need to check the _nesting here to prevent multiple
+         * change detections.
+         */
+        if (zone.isCheckStableRunning || zone.lastRequestAnimationFrameId !== -1) {
             return;
         }
         zone.lastRequestAnimationFrameId = zone.nativeRequestAnimationFrame.call(_global$1, () => {
@@ -39423,7 +39473,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 zone.fakeTopEventTask = Zone.root.scheduleEventTask('fakeTopEventTask', () => {
                     zone.lastRequestAnimationFrameId = -1;
                     updateMicroTaskStatus(zone);
+                    zone.isCheckStableRunning = true;
                     checkStable(zone);
+                    zone.isCheckStableRunning = false;
                 }, undefined, () => { }, () => { });
             }
             zone.fakeTopEventTask.invoke();

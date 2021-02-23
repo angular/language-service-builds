@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+41.sha-e6bf7c2
+ * @license Angular v12.0.0-next.1+51.sha-206ec9b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17172,7 +17172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+41.sha-e6bf7c2');
+    const VERSION$1 = new Version('12.0.0-next.1+51.sha-206ec9b');
 
     /**
      * @license
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+41.sha-e6bf7c2'));
+        definitionMap.set('version', literal('12.0.0-next.1+51.sha-206ec9b'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18050,7 +18050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+41.sha-e6bf7c2'));
+        definitionMap.set('version', literal('12.0.0-next.1+51.sha-206ec9b'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21322,7 +21322,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.1+41.sha-e6bf7c2');
+    const VERSION$2 = new Version('12.0.0-next.1+51.sha-206ec9b');
 
     /**
      * @license
@@ -24047,15 +24047,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return a.path === b.path && a.identifier === b.identifier;
     }
-    function isImportPathEqual(a, b) {
-        if (a === null || b === null) {
-            // TODO: is considering null import paths as different a problem for local references which
-            //  won't have an import path and would therefore always be considered different? I don't think
-            //  so, but it's not clear cut. Perhaps this would be better if we track and compare the actual
-            //  Expression.
+    /**
+     * Determines whether the provided references to a semantic symbol are still equal, i.e. represent
+     * the same symbol and are imported by the same path.
+     */
+    function isReferenceEqual(a, b) {
+        if (!isSymbolEqual(a.symbol, b.symbol)) {
+            // If the reference's target symbols are different, the reference itself is different.
             return false;
         }
-        return a === b;
+        if (a.importPath === null || b.importPath === null) {
+            // If no import path is known for either of the references they are considered different.
+            return false;
+        }
+        return a.importPath === b.importPath;
     }
     function referenceEquality(a, b) {
         return a === b;
@@ -28249,10 +28254,8 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     function getImportPath(expr) {
-        // FIXME: this is a bit of a hack; perhaps attach `Expression` itself with the `SemanticReference`
-        // and just compare that, instead of this derived import path.
         if (expr instanceof ExternalExpr) {
-            return [expr.value.moduleName, expr.value.name].filter(v => v !== null).join('$');
+            return `${expr.value.moduleName}\$${expr.value.name}`;
         }
         else {
             return null;
@@ -29060,8 +29063,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (previousSymbol.remotelyScopedComponents.length !== this.remotelyScopedComponents.length) {
                 return true;
             }
-            const isSymbolAffected = (current, previous) => isSymbolEqual(current.symbol, previous.symbol) &&
-                isImportPathEqual(current.importPath, previous.importPath);
             for (const currEntry of this.remotelyScopedComponents) {
                 const prevEntry = previousSymbol.remotelyScopedComponents.find(prevEntry => {
                     return isSymbolEqual(prevEntry.component, currEntry.component);
@@ -29071,7 +29072,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // hence this NgModule needs to be re-emitted.
                     return true;
                 }
-                if (!isArrayEqual(currEntry.usedDirectives, prevEntry.usedDirectives, isSymbolAffected)) {
+                if (!isArrayEqual(currEntry.usedDirectives, prevEntry.usedDirectives, isReferenceEqual)) {
                     // The list of used directives or their order has changed. Since this NgModule emits
                     // references to the list of used directives, it should be re-emitted to update this list.
                     // Note: the NgModule does not have to be re-emitted when any of the directives has had
@@ -29079,7 +29080,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // name. Therefore, testing for symbol equality is sufficient.
                     return true;
                 }
-                if (!isArrayEqual(currEntry.usedPipes, prevEntry.usedPipes, isSymbolAffected)) {
+                if (!isArrayEqual(currEntry.usedPipes, prevEntry.usedPipes, isReferenceEqual)) {
                     return true;
                 }
             }
@@ -29564,9 +29565,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Create an equality function that considers symbols equal if they represent the same
             // declaration, but only if the symbol in the current compilation does not have its public API
             // affected.
-            const isSymbolAffected = (current, previous) => isSymbolEqual(current.symbol, previous.symbol) &&
-                isImportPathEqual(current.importPath, previous.importPath) &&
-                !publicApiAffected.has(current.symbol);
+            const isSymbolAffected = (current, previous) => isReferenceEqual(current, previous) && !publicApiAffected.has(current.symbol);
             // The emit of a component is affected if either of the following is true:
             //  1. The component used to be remotely scoped but no longer is, or vice versa.
             //  2. The list of used directives has changed or any of those directives have had their public
@@ -38924,6 +38923,21 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // This file exists as a target for g3 patches which change the Angular compiler's behavior.
+    // Separating the patched code in a separate file eliminates the possibility of conflicts with the
+    // patch diffs when making changes to the rest of the compiler codebase.
+    // In ngtsc we no longer want to compile undecorated classes with Angular features.
+    // Migrations for these patterns ran as part of `ng update` and we want to ensure
+    // that projects do not regress. See https://hackmd.io/@alx/ryfYYuvzH for more details.
+    const compileUndecoratedClassesWithAngularFeatures = false;
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Discriminant type for a `CompilationTicket`.
      */
@@ -39586,11 +39600,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
-                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, this.closureCompilerEnabled, 
-                // In ngtsc we no longer want to compile undecorated classes with Angular features.
-                // Migrations for these patterns ran as part of `ng update` and we want to ensure
-                // that projects do not regress. See https://hackmd.io/@alx/ryfYYuvzH for more details.
-                /* compileUndecoratedClassesWithAngularFeatures */ false),
+                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures),
                 // clang-format on
                 // Pipe handler must be before injectable handler in list so pipe factories are printed
                 // before injectable factories (so injectable factories can delegate to them)
@@ -40007,6 +40017,53 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             startNode = startNode.parent;
         }
         return undefined;
+    }
+    /**
+     * Returns a property assignment from the assignment value if the property name
+     * matches the specified `key`, or `null` if there is no match.
+     */
+    function getPropertyAssignmentFromValue(value, key) {
+        const propAssignment = value.parent;
+        if (!propAssignment || !ts$1.isPropertyAssignment(propAssignment) ||
+            propAssignment.name.getText() !== key) {
+            return null;
+        }
+        return propAssignment;
+    }
+    /**
+     * Given a decorator property assignment, return the ClassDeclaration node that corresponds to the
+     * directive class the property applies to.
+     * If the property assignment is not on a class decorator, no declaration is returned.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>'
+     *   ^^^^^^^^^^^^^^^^^^^^^^^---- property assignment
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     * @param propAsgnNode property assignment
+     */
+    function getClassDeclFromDecoratorProp(propAsgnNode) {
+        if (!propAsgnNode.parent || !ts$1.isObjectLiteralExpression(propAsgnNode.parent)) {
+            return;
+        }
+        const objLitExprNode = propAsgnNode.parent;
+        if (!objLitExprNode.parent || !ts$1.isCallExpression(objLitExprNode.parent)) {
+            return;
+        }
+        const callExprNode = objLitExprNode.parent;
+        if (!callExprNode.parent || !ts$1.isDecorator(callExprNode.parent)) {
+            return;
+        }
+        const decorator = callExprNode.parent;
+        if (!decorator.parent || !ts$1.isClassDeclaration(decorator.parent)) {
+            return;
+        }
+        const classDeclNode = decorator.parent;
+        return classDeclNode;
     }
 
     /**
@@ -42611,16 +42668,22 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return diagnostics;
         }
         getDefinitionAndBoundSpan(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreate();
-            const results = new DefinitionBuilder(this.tsLS, compiler).getDefinitionAndBoundSpan(fileName, position);
-            this.compilerFactory.registerLastKnownProgram();
-            return results;
+            return this.withCompiler((compiler) => {
+                if (!isInAngularContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                return new DefinitionBuilder(this.tsLS, compiler)
+                    .getDefinitionAndBoundSpan(fileName, position);
+            });
         }
         getTypeDefinitionAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreate();
-            const results = new DefinitionBuilder(this.tsLS, compiler).getTypeDefinitionsAtPosition(fileName, position);
-            this.compilerFactory.registerLastKnownProgram();
-            return results;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                return new DefinitionBuilder(this.tsLS, compiler)
+                    .getTypeDefinitionsAtPosition(fileName, position);
+            });
         }
         getQuickInfoAtPosition(fileName, position) {
             const compiler = this.compilerFactory.getOrCreate();
@@ -42687,31 +42750,42 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, nodeContextFromTarget(positionDetails.context), positionDetails.parent, positionDetails.template);
         }
         getCompletionsAtPosition(fileName, position, options) {
-            const builder = this.getCompletionBuilder(fileName, position);
-            if (builder === null) {
-                return undefined;
-            }
-            const result = builder.getCompletionsAtPosition(options);
-            this.compilerFactory.registerLastKnownProgram();
-            return result;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const builder = this.getCompletionBuilder(fileName, position);
+                if (builder === null) {
+                    return undefined;
+                }
+                return builder.getCompletionsAtPosition(options);
+            });
         }
         getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences) {
-            const builder = this.getCompletionBuilder(fileName, position);
-            if (builder === null) {
-                return undefined;
-            }
-            const result = builder.getCompletionEntryDetails(entryName, formatOptions, preferences);
-            this.compilerFactory.registerLastKnownProgram();
-            return result;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const builder = this.getCompletionBuilder(fileName, position);
+                if (builder === null) {
+                    return undefined;
+                }
+                return builder.getCompletionEntryDetails(entryName, formatOptions, preferences);
+            });
         }
         getCompletionEntrySymbol(fileName, position, entryName) {
-            const builder = this.getCompletionBuilder(fileName, position);
-            if (builder === null) {
-                return undefined;
-            }
-            const result = builder.getCompletionEntrySymbol(entryName);
-            this.compilerFactory.registerLastKnownProgram();
-            return result;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const builder = this.getCompletionBuilder(fileName, position);
+                if (builder === null) {
+                    return undefined;
+                }
+                const result = builder.getCompletionEntrySymbol(entryName);
+                this.compilerFactory.registerLastKnownProgram();
+                return result;
+            });
         }
         getComponentLocationsForTemplate(fileName) {
             return this.withCompiler((compiler) => {
@@ -42916,6 +42990,40 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 // No special context is available.
                 return CompletionNodeContext.None;
         }
+    }
+    function isTemplateContext(program, fileName, position) {
+        if (!isTypeScriptFile(fileName)) {
+            // If we aren't in a TS file, we must be in an HTML file, which we treat as template context
+            return true;
+        }
+        const node = findTightestNodeAtPosition(program, fileName, position);
+        if (node === undefined) {
+            return false;
+        }
+        let asgn = getPropertyAssignmentFromValue(node, 'template');
+        if (asgn === null) {
+            return false;
+        }
+        return getClassDeclFromDecoratorProp(asgn) !== null;
+    }
+    function isInAngularContext(program, fileName, position) {
+        var _a, _b;
+        if (!isTypeScriptFile(fileName)) {
+            return true;
+        }
+        const node = findTightestNodeAtPosition(program, fileName, position);
+        if (node === undefined) {
+            return false;
+        }
+        const asgn = (_b = (_a = getPropertyAssignmentFromValue(node, 'template')) !== null && _a !== void 0 ? _a : getPropertyAssignmentFromValue(node, 'templateUrl')) !== null && _b !== void 0 ? _b : getPropertyAssignmentFromValue(node.parent, 'styleUrls');
+        return asgn !== null && getClassDeclFromDecoratorProp(asgn) !== null;
+    }
+    function findTightestNodeAtPosition(program, fileName, position) {
+        const sourceFile = program.getSourceFile(fileName);
+        if (sourceFile === undefined) {
+            return undefined;
+        }
+        return findTightestNode(sourceFile, position);
     }
 
     /**
