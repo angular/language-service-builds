@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.2+15.sha-3551434
+ * @license Angular v11.2.2+25.sha-3fe759e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17146,7 +17146,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.2+15.sha-3551434');
+    const VERSION$1 = new Version('11.2.2+25.sha-3fe759e');
 
     /**
      * @license
@@ -17803,7 +17803,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.2+15.sha-3551434'));
+        definitionMap.set('version', literal('11.2.2+25.sha-3fe759e'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18024,7 +18024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.2+15.sha-3551434'));
+        definitionMap.set('version', literal('11.2.2+25.sha-3fe759e'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21296,7 +21296,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.2+15.sha-3551434');
+    const VERSION$2 = new Version('11.2.2+25.sha-3fe759e');
 
     /**
      * @license
@@ -42174,7 +42174,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (requiredNodeText !== undefined && span.toString() !== requiredNodeText) {
                 return null;
             }
-            return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span) });
+            return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span), 
+                // Specifically clear other text span values because we do not have enough knowledge to
+                // convert these to spans in the template.
+                contextSpan: undefined, originalContextSpan: undefined, originalTextSpan: undefined });
         }
     }
     function getRenameTextAndSpanAtPosition(node, position) {
