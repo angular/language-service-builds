@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+51.sha-206ec9b
+ * @license Angular v12.0.0-next.1+47.sha-b5f9d86
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17172,7 +17172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+51.sha-206ec9b');
+    const VERSION$1 = new Version('12.0.0-next.1+47.sha-b5f9d86');
 
     /**
      * @license
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+51.sha-206ec9b'));
+        definitionMap.set('version', literal('12.0.0-next.1+47.sha-b5f9d86'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18050,7 +18050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+51.sha-206ec9b'));
+        definitionMap.set('version', literal('12.0.0-next.1+47.sha-b5f9d86'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21322,7 +21322,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.1+51.sha-206ec9b');
+    const VERSION$2 = new Version('12.0.0-next.1+47.sha-b5f9d86');
 
     /**
      * @license
@@ -22501,6 +22501,281 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return getSourceFileOrNull(this.program, absoluteFrom(resolved.resolvedFileName));
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Represents a symbol that is recognizable across incremental rebuilds, which enables the captured
+     * metadata to be compared to the prior compilation. This allows for semantic understanding of
+     * the changes that have been made in a rebuild, which potentially enables more reuse of work
+     * from the prior compilation.
+     */
+    class SemanticSymbol {
+        constructor(
+        /**
+         * The declaration for this symbol.
+         */
+        decl) {
+            this.decl = decl;
+            this.path = absoluteFromSourceFile(decl.getSourceFile());
+            this.identifier = getSymbolIdentifier(decl);
+        }
+    }
+    function getSymbolIdentifier(decl) {
+        if (!ts$1.isSourceFile(decl.parent)) {
+            return null;
+        }
+        // If this is a top-level class declaration, the class name is used as unique identifier.
+        // Other scenarios are currently not supported and causes the symbol not to be identified
+        // across rebuilds, unless the declaration node has not changed.
+        return decl.name.text;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Represents a declaration for which no semantic symbol has been registered. For example,
+     * declarations from external dependencies have not been explicitly registered and are represented
+     * by this symbol. This allows the unresolved symbol to still be compared to a symbol from a prior
+     * compilation.
+     */
+    class OpaqueSymbol extends SemanticSymbol {
+        isPublicApiAffected() {
+            return false;
+        }
+    }
+    /**
+     * The semantic dependency graph of a single compilation.
+     */
+    class SemanticDepGraph {
+        constructor() {
+            this.files = new Map();
+            this.symbolByDecl = new Map();
+        }
+        /**
+         * Registers a symbol for the provided declaration as created by the factory function. The symbol
+         * is given a unique identifier if possible, such that its equivalent symbol can be obtained from
+         * a prior graph even if its declaration node has changed across rebuilds. Symbols without an
+         * identifier are only able to find themselves in a prior graph if their declaration node is
+         * identical.
+         *
+         * @param symbol
+         */
+        registerSymbol(symbol) {
+            this.symbolByDecl.set(symbol.decl, symbol);
+            if (symbol.identifier !== null) {
+                // If the symbol has a unique identifier, record it in the file that declares it. This enables
+                // the symbol to be requested by its unique name.
+                if (!this.files.has(symbol.path)) {
+                    this.files.set(symbol.path, new Map());
+                }
+                this.files.get(symbol.path).set(symbol.identifier, symbol);
+            }
+        }
+        /**
+         * Attempts to resolve a symbol in this graph that represents the given symbol from another graph.
+         * If no matching symbol could be found, null is returned.
+         *
+         * @param symbol The symbol from another graph for which its equivalent in this graph should be
+         * found.
+         */
+        getEquivalentSymbol(symbol) {
+            // First lookup the symbol by its declaration. It is typical for the declaration to not have
+            // changed across rebuilds, so this is likely to find the symbol. Using the declaration also
+            // allows to diff symbols for which no unique identifier could be determined.
+            let previousSymbol = this.getSymbolByDecl(symbol.decl);
+            if (previousSymbol === null && symbol.identifier !== null) {
+                // The declaration could not be resolved to a symbol in a prior compilation, which may
+                // happen because the file containing the declaration has changed. In that case we want to
+                // lookup the symbol based on its unique identifier, as that allows us to still compare the
+                // changed declaration to the prior compilation.
+                previousSymbol = this.getSymbolByName(symbol.path, symbol.identifier);
+            }
+            return previousSymbol;
+        }
+        /**
+         * Attempts to find the symbol by its identifier.
+         */
+        getSymbolByName(path, identifier) {
+            if (!this.files.has(path)) {
+                return null;
+            }
+            const file = this.files.get(path);
+            if (!file.has(identifier)) {
+                return null;
+            }
+            return file.get(identifier);
+        }
+        /**
+         * Attempts to resolve the declaration to its semantic symbol.
+         */
+        getSymbolByDecl(decl) {
+            if (!this.symbolByDecl.has(decl)) {
+                return null;
+            }
+            return this.symbolByDecl.get(decl);
+        }
+    }
+    /**
+     * Implements the logic to go from a previous dependency graph to a new one, along with information
+     * on which files have been affected.
+     */
+    class SemanticDepGraphUpdater {
+        constructor(
+        /**
+         * The semantic dependency graph of the most recently succeeded compilation, or null if this
+         * is the initial build.
+         */
+        priorGraph) {
+            this.priorGraph = priorGraph;
+            this.newGraph = new SemanticDepGraph();
+            /**
+             * Contains opaque symbols that were created for declarations for which there was no symbol
+             * registered, which happens for e.g. external declarations.
+             */
+            this.opaqueSymbols = new Map();
+        }
+        registerSymbol(symbol) {
+            this.newGraph.registerSymbol(symbol);
+        }
+        /**
+         * Takes all facts that have been gathered to create a new semantic dependency graph. In this
+         * process, the semantic impact of the changes is determined which results in a set of files that
+         * need to be emitted and/or type-checked.
+         */
+        finalize() {
+            if (this.priorGraph === null) {
+                // If no prior dependency graph is available then this was the initial build, in which case
+                // we don't need to determine the semantic impact as everything is already considered
+                // logically changed.
+                return {
+                    needsEmit: new Set(),
+                    newGraph: this.newGraph,
+                };
+            }
+            const needsEmit = this.determineInvalidatedFiles(this.priorGraph);
+            return {
+                needsEmit,
+                newGraph: this.newGraph,
+            };
+        }
+        determineInvalidatedFiles(priorGraph) {
+            const isPublicApiAffected = new Set();
+            // The first phase is to collect all symbols which have their public API affected. Any symbols
+            // that cannot be matched up with a symbol from the prior graph are considered affected.
+            for (const symbol of this.newGraph.symbolByDecl.values()) {
+                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
+                if (previousSymbol === null || symbol.isPublicApiAffected(previousSymbol)) {
+                    isPublicApiAffected.add(symbol);
+                }
+            }
+            // The second phase is to find all symbols for which the emit result is affected, either because
+            // their used declarations have changed or any of those used declarations has had its public API
+            // affected as determined in the first phase.
+            const needsEmit = new Set();
+            for (const symbol of this.newGraph.symbolByDecl.values()) {
+                if (symbol.isEmitAffected === undefined) {
+                    continue;
+                }
+                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
+                if (previousSymbol === null || symbol.isEmitAffected(previousSymbol, isPublicApiAffected)) {
+                    needsEmit.add(symbol.path);
+                }
+            }
+            return needsEmit;
+        }
+        getSemanticReference(decl, expr) {
+            return {
+                symbol: this.getSymbol(decl),
+                importPath: getImportPath(expr),
+            };
+        }
+        getSymbol(decl) {
+            const symbol = this.newGraph.getSymbolByDecl(decl);
+            if (symbol === null) {
+                // No symbol has been recorded for the provided declaration, which would be the case if the
+                // declaration is external. Return an opaque symbol in that case, to allow the external
+                // declaration to be compared to a prior compilation.
+                return this.getOpaqueSymbol(decl);
+            }
+            return symbol;
+        }
+        /**
+         * Gets or creates an `OpaqueSymbol` for the provided class declaration.
+         */
+        getOpaqueSymbol(decl) {
+            if (this.opaqueSymbols.has(decl)) {
+                return this.opaqueSymbols.get(decl);
+            }
+            const symbol = new OpaqueSymbol(decl);
+            this.opaqueSymbols.set(decl, symbol);
+            return symbol;
+        }
+    }
+    function getImportPath(expr) {
+        if (expr instanceof ExternalExpr) {
+            return `${expr.value.moduleName}\$${expr.value.name}`;
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Determines whether the provided symbols represent the same declaration.
+     */
+    function isSymbolEqual(a, b) {
+        if (a.decl === b.decl) {
+            // If the declaration is identical then it must represent the same symbol.
+            return true;
+        }
+        if (a.identifier === null || b.identifier === null) {
+            // Unidentifiable symbols are assumed to be different.
+            return false;
+        }
+        return a.path === b.path && a.identifier === b.identifier;
+    }
+    /**
+     * Determines whether the provided references to a semantic symbol are still equal, i.e. represent
+     * the same symbol and are imported by the same path.
+     */
+    function isReferenceEqual(a, b) {
+        if (!isSymbolEqual(a.symbol, b.symbol)) {
+            // If the reference's target symbols are different, the reference itself is different.
+            return false;
+        }
+        if (a.importPath === null || b.importPath === null) {
+            // If no import path is known for either of the references they are considered different.
+            return false;
+        }
+        return a.importPath === b.importPath;
+    }
+    function referenceEquality(a, b) {
+        return a === b;
+    }
+    /**
+     * Determines if the provided arrays are equal to each other, using the provided equality tester
+     * that is called for all entries in the array.
+     */
+    function isArrayEqual(a, b, equalityTester = referenceEquality) {
+        if (a === null || b === null) {
+            return a === b;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+        return !a.some((item, index) => !equalityTester(item, b[index]));
     }
 
     /**
@@ -24031,52 +24306,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return this.externalStyleToComponentsMap.get(styleUrl);
         }
-    }
-
-    /**
-     * Determines whether the provided symbols represent the same declaration.
-     */
-    function isSymbolEqual(a, b) {
-        if (a.decl === b.decl) {
-            // If the declaration is identical then it must represent the same symbol.
-            return true;
-        }
-        if (a.identifier === null || b.identifier === null) {
-            // Unidentifiable symbols are assumed to be different.
-            return false;
-        }
-        return a.path === b.path && a.identifier === b.identifier;
-    }
-    /**
-     * Determines whether the provided references to a semantic symbol are still equal, i.e. represent
-     * the same symbol and are imported by the same path.
-     */
-    function isReferenceEqual(a, b) {
-        if (!isSymbolEqual(a.symbol, b.symbol)) {
-            // If the reference's target symbols are different, the reference itself is different.
-            return false;
-        }
-        if (a.importPath === null || b.importPath === null) {
-            // If no import path is known for either of the references they are considered different.
-            return false;
-        }
-        return a.importPath === b.importPath;
-    }
-    function referenceEquality(a, b) {
-        return a === b;
-    }
-    /**
-     * Determines if the provided arrays are equal to each other, using the provided equality tester
-     * that is called for all entries in the array.
-     */
-    function isArrayEqual(a, b, equalityTester = referenceEquality) {
-        if (a === null || b === null) {
-            return a === b;
-        }
-        if (a.length !== b.length) {
-            return false;
-        }
-        return !a.some((item, index) => !equalityTester(item, b[index]));
     }
 
     /**
@@ -28031,235 +28260,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             `but the latter does not have an Angular decorator of its own. Dependency injection will not be able to ` +
             `resolve the parameters of ${baseClassName}'s constructor. Either add a @Directive decorator ` +
             `to ${baseClassName}, or add an explicit constructor to ${node.name.text}.`);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents a symbol that is recognizable across incremental rebuilds, which enables the captured
-     * metadata to be compared to the prior compilation. This allows for semantic understanding of
-     * the changes that have been made in a rebuild, which potentially enables more reuse of work
-     * from the prior compilation.
-     */
-    class SemanticSymbol {
-        constructor(
-        /**
-         * The declaration for this symbol.
-         */
-        decl) {
-            this.decl = decl;
-            this.path = absoluteFromSourceFile(decl.getSourceFile());
-            this.identifier = getSymbolIdentifier(decl);
-        }
-    }
-    function getSymbolIdentifier(decl) {
-        if (!ts$1.isSourceFile(decl.parent)) {
-            return null;
-        }
-        // If this is a top-level class declaration, the class name is used as unique identifier.
-        // Other scenarios are currently not supported and causes the symbol not to be identified
-        // across rebuilds, unless the declaration node has not changed.
-        return decl.name.text;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents a declaration for which no semantic symbol has been registered. For example,
-     * declarations from external dependencies have not been explicitly registered and are represented
-     * by this symbol. This allows the unresolved symbol to still be compared to a symbol from a prior
-     * compilation.
-     */
-    class OpaqueSymbol extends SemanticSymbol {
-        isPublicApiAffected() {
-            return false;
-        }
-    }
-    /**
-     * The semantic dependency graph of a single compilation.
-     */
-    class SemanticDepGraph {
-        constructor() {
-            this.files = new Map();
-            this.symbolByDecl = new Map();
-        }
-        /**
-         * Registers a symbol for the provided declaration as created by the factory function. The symbol
-         * is given a unique identifier if possible, such that its equivalent symbol can be obtained from
-         * a prior graph even if its declaration node has changed across rebuilds. Symbols without an
-         * identifier are only able to find themselves in a prior graph if their declaration node is
-         * identical.
-         *
-         * @param symbol
-         */
-        registerSymbol(symbol) {
-            this.symbolByDecl.set(symbol.decl, symbol);
-            if (symbol.identifier !== null) {
-                // If the symbol has a unique identifier, record it in the file that declares it. This enables
-                // the symbol to be requested by its unique name.
-                if (!this.files.has(symbol.path)) {
-                    this.files.set(symbol.path, new Map());
-                }
-                this.files.get(symbol.path).set(symbol.identifier, symbol);
-            }
-        }
-        /**
-         * Attempts to resolve a symbol in this graph that represents the given symbol from another graph.
-         * If no matching symbol could be found, null is returned.
-         *
-         * @param symbol The symbol from another graph for which its equivalent in this graph should be
-         * found.
-         */
-        getEquivalentSymbol(symbol) {
-            // First lookup the symbol by its declaration. It is typical for the declaration to not have
-            // changed across rebuilds, so this is likely to find the symbol. Using the declaration also
-            // allows to diff symbols for which no unique identifier could be determined.
-            let previousSymbol = this.getSymbolByDecl(symbol.decl);
-            if (previousSymbol === null && symbol.identifier !== null) {
-                // The declaration could not be resolved to a symbol in a prior compilation, which may
-                // happen because the file containing the declaration has changed. In that case we want to
-                // lookup the symbol based on its unique identifier, as that allows us to still compare the
-                // changed declaration to the prior compilation.
-                previousSymbol = this.getSymbolByName(symbol.path, symbol.identifier);
-            }
-            return previousSymbol;
-        }
-        /**
-         * Attempts to find the symbol by its identifier.
-         */
-        getSymbolByName(path, identifier) {
-            if (!this.files.has(path)) {
-                return null;
-            }
-            const file = this.files.get(path);
-            if (!file.has(identifier)) {
-                return null;
-            }
-            return file.get(identifier);
-        }
-        /**
-         * Attempts to resolve the declaration to its semantic symbol.
-         */
-        getSymbolByDecl(decl) {
-            if (!this.symbolByDecl.has(decl)) {
-                return null;
-            }
-            return this.symbolByDecl.get(decl);
-        }
-    }
-    /**
-     * Implements the logic to go from a previous dependency graph to a new one, along with information
-     * on which files have been affected.
-     */
-    class SemanticDepGraphUpdater {
-        constructor(
-        /**
-         * The semantic dependency graph of the most recently succeeded compilation, or null if this
-         * is the initial build.
-         */
-        priorGraph) {
-            this.priorGraph = priorGraph;
-            this.newGraph = new SemanticDepGraph();
-            /**
-             * Contains opaque symbols that were created for declarations for which there was no symbol
-             * registered, which happens for e.g. external declarations.
-             */
-            this.opaqueSymbols = new Map();
-        }
-        registerSymbol(symbol) {
-            this.newGraph.registerSymbol(symbol);
-        }
-        /**
-         * Takes all facts that have been gathered to create a new semantic dependency graph. In this
-         * process, the semantic impact of the changes is determined which results in a set of files that
-         * need to be emitted and/or type-checked.
-         */
-        finalize() {
-            if (this.priorGraph === null) {
-                // If no prior dependency graph is available then this was the initial build, in which case
-                // we don't need to determine the semantic impact as everything is already considered
-                // logically changed.
-                return {
-                    needsEmit: new Set(),
-                    newGraph: this.newGraph,
-                };
-            }
-            const needsEmit = this.determineInvalidatedFiles(this.priorGraph);
-            return {
-                needsEmit,
-                newGraph: this.newGraph,
-            };
-        }
-        determineInvalidatedFiles(priorGraph) {
-            const isPublicApiAffected = new Set();
-            // The first phase is to collect all symbols which have their public API affected. Any symbols
-            // that cannot be matched up with a symbol from the prior graph are considered affected.
-            for (const symbol of this.newGraph.symbolByDecl.values()) {
-                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
-                if (previousSymbol === null || symbol.isPublicApiAffected(previousSymbol)) {
-                    isPublicApiAffected.add(symbol);
-                }
-            }
-            // The second phase is to find all symbols for which the emit result is affected, either because
-            // their used declarations have changed or any of those used declarations has had its public API
-            // affected as determined in the first phase.
-            const needsEmit = new Set();
-            for (const symbol of this.newGraph.symbolByDecl.values()) {
-                if (symbol.isEmitAffected === undefined) {
-                    continue;
-                }
-                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
-                if (previousSymbol === null || symbol.isEmitAffected(previousSymbol, isPublicApiAffected)) {
-                    needsEmit.add(symbol.path);
-                }
-            }
-            return needsEmit;
-        }
-        getSemanticReference(decl, expr) {
-            return {
-                symbol: this.getSymbol(decl),
-                importPath: getImportPath(expr),
-            };
-        }
-        getSymbol(decl) {
-            const symbol = this.newGraph.getSymbolByDecl(decl);
-            if (symbol === null) {
-                // No symbol has been recorded for the provided declaration, which would be the case if the
-                // declaration is external. Return an opaque symbol in that case, to allow the external
-                // declaration to be compared to a prior compilation.
-                return this.getOpaqueSymbol(decl);
-            }
-            return symbol;
-        }
-        /**
-         * Gets or creates an `OpaqueSymbol` for the provided class declaration.
-         */
-        getOpaqueSymbol(decl) {
-            if (this.opaqueSymbols.has(decl)) {
-                return this.opaqueSymbols.get(decl);
-            }
-            const symbol = new OpaqueSymbol(decl);
-            this.opaqueSymbols.set(decl, symbol);
-            return symbol;
-        }
-    }
-    function getImportPath(expr) {
-        if (expr instanceof ExternalExpr) {
-            return `${expr.value.moduleName}\$${expr.value.name}`;
-        }
-        else {
-            return null;
-        }
     }
 
     /**
