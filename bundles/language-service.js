@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.3+3.sha-ca271b8
+ * @license Angular v11.2.3+4.sha-55eb7b5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18812,7 +18812,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         compilePipeDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
             const meta = convertDeclarePipeFacadeToMetadata(declaration);
-            return compilePipeFromMetadata(meta);
+            const res = compilePipeFromMetadata(meta);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileInjectable(angularCoreEnv, sourceMapUrl, facade) {
             const { expression, statements } = compileInjectable({
@@ -19167,7 +19168,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.3+3.sha-ca271b8');
+    const VERSION$1 = new Version('11.2.3+4.sha-55eb7b5');
 
     /**
      * @license
@@ -35200,7 +35201,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.3+3.sha-ca271b8');
+    const VERSION$2 = new Version$1('11.2.3+4.sha-55eb7b5');
 
     /**
      * @license
