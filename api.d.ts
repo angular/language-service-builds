@@ -12,6 +12,18 @@
  * Entry point for all public APIs of the language service package.
  */
 import * as ts from 'typescript';
+export interface NgLanguageServiceConfig {
+    /**
+     * If true, return only Angular results. Otherwise, return Angular + TypeScript
+     * results.
+     */
+    angularOnly: boolean;
+    /**
+     * If true, return factory function for Ivy LS during plugin initialization.
+     * Otherwise return factory function for View Engine LS.
+     */
+    ivy: boolean;
+}
 export declare type GetTcbResponse = {
     /**
      * The filename of the SourceFile this typecheck block belongs to.

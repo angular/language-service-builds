@@ -7,4 +7,3 @@
  */
 /// <amd-module name="@angular/language-service" />
 export * from './api';
-export { create, getExternalFiles } from './src/ts_plugin';
