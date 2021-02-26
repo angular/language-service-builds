@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+16.sha-3df1582
+ * @license Angular v12.0.0-next.2+16.sha-8d159b0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17173,7 +17173,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+16.sha-3df1582');
+    const VERSION$1 = new Version('12.0.0-next.2+16.sha-8d159b0');
 
     /**
      * @license
@@ -17830,7 +17830,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+16.sha-3df1582'));
+        definitionMap.set('version', literal('12.0.0-next.2+16.sha-8d159b0'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18051,7 +18051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+16.sha-3df1582'));
+        definitionMap.set('version', literal('12.0.0-next.2+16.sha-8d159b0'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21323,7 +21323,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.2+16.sha-3df1582');
+    const VERSION$2 = new Version('12.0.0-next.2+16.sha-8d159b0');
 
     /**
      * @license
@@ -22555,7 +22555,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         isPublicApiAffected() {
             return false;
         }
-        isTypeCheckEmitAffected() {
+        isTypeCheckApiAffected() {
             return false;
         }
     }
@@ -22703,10 +22703,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return needsEmit;
         }
         determineInvalidatedTypeCheckFiles(priorGraph) {
-            const needsTypeCheckEmit = new Set();
+            const isTypeCheckApiAffected = new Set();
+            // The first phase is to collect all symbols which have their public API affected. Any symbols
+            // that cannot be matched up with a symbol from the prior graph are considered affected.
             for (const symbol of this.newGraph.symbolByDecl.values()) {
                 const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
-                if (previousSymbol === null || symbol.isTypeCheckEmitAffected(previousSymbol)) {
+                if (previousSymbol === null || symbol.isTypeCheckApiAffected(previousSymbol)) {
+                    isTypeCheckApiAffected.add(symbol);
+                }
+            }
+            // The second phase is to find all symbols for which the emit result is affected, either because
+            // their used declarations have changed or any of those used declarations has had its public API
+            // affected as determined in the first phase.
+            const needsTypeCheckEmit = new Set();
+            for (const symbol of this.newGraph.symbolByDecl.values()) {
+                if (symbol.isTypeCheckBlockAffected === undefined) {
+                    continue;
+                }
+                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
+                if (previousSymbol === null ||
+                    symbol.isTypeCheckBlockAffected(previousSymbol, isTypeCheckApiAffected)) {
                     needsTypeCheckEmit.add(symbol.path);
                 }
             }
@@ -28457,7 +28473,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         'ngAfterContentInit', 'ngAfterContentChecked'
     ]);
     function extractSemanticTypeParameters(node) {
-        if (!(ts$1.isClassDeclaration(node) && node.typeParameters !== undefined)) {
+        if (!ts$1.isClassDeclaration(node) || node.typeParameters === undefined) {
             return null;
         }
         return node.typeParameters.map(typeParam => ({ hasGenericTypeBound: typeParam.constraint !== undefined }));
@@ -28474,6 +28490,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.outputs = outputs;
             this.exportAs = exportAs;
             this.typeParameters = typeParameters;
+            this.baseClass = null;
         }
         isPublicApiAffected(previousSymbol) {
             // Note: since components and directives have exactly the same items contributing to their
@@ -28492,7 +28509,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 !isArrayEqual(this.outputs, previousSymbol.outputs) ||
                 !isArrayEqual(this.exportAs, previousSymbol.exportAs);
         }
-        isTypeCheckEmitAffected(previousSymbol) {
+        isTypeCheckApiAffected(previousSymbol) {
             if (this.isPublicApiAffected(previousSymbol)) {
                 return true;
             }
@@ -28506,16 +28523,16 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     function isTypeParameterAffected(current, previous) {
-        if (current === null || previous === null) {
-            return current === previous;
-        }
-        if (current.length !== previous.length) {
+        if (!isArrayEqual(current, previous, isTypeParameterEqual)) {
             return true;
         }
-        if (current.some(typeParam => typeParam.hasGenericTypeBound)) {
+        if (current !== null && current.some(typeParam => typeParam.hasGenericTypeBound)) {
             return true;
         }
         return false;
+    }
+    function isTypeParameterEqual(a, b) {
+        return a.hasGenericTypeBound === b.hasGenericTypeBound;
     }
     class DirectiveDecoratorHandler {
         constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures) {
@@ -29135,7 +29152,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return false;
         }
-        isTypeCheckEmitAffected(previousSymbol) {
+        isTypeCheckApiAffected(previousSymbol) {
             if (!(previousSymbol instanceof NgModuleSymbol)) {
                 return true;
             }
@@ -29620,7 +29637,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Create an equality function that considers symbols equal if they represent the same
             // declaration, but only if the symbol in the current compilation does not have its public API
             // affected.
-            const isSymbolAffected = (current, previous) => isReferenceEqual(current, previous) && !publicApiAffected.has(current.symbol);
+            const isSymbolUnaffected = (current, previous) => isReferenceEqual(current, previous) && !publicApiAffected.has(current.symbol);
             // The emit of a component is affected if either of the following is true:
             //  1. The component used to be remotely scoped but no longer is, or vice versa.
             //  2. The list of used directives has changed or any of those directives have had their public
@@ -29629,8 +29646,26 @@ Either add the @Injectable() decorator to '${provider.node.name
             //  3. The list of used pipes has changed, or any of those pipes have had their public API
             //     changed.
             return this.isRemotelyScoped !== previousSymbol.isRemotelyScoped ||
-                !isArrayEqual(this.usedDirectives, previousSymbol.usedDirectives, isSymbolAffected) ||
-                !isArrayEqual(this.usedPipes, previousSymbol.usedPipes, isSymbolAffected);
+                !isArrayEqual(this.usedDirectives, previousSymbol.usedDirectives, isSymbolUnaffected) ||
+                !isArrayEqual(this.usedPipes, previousSymbol.usedPipes, isSymbolUnaffected);
+        }
+        isTypeCheckBlockAffected(previousSymbol, typeCheckApiAffected) {
+            if (!(previousSymbol instanceof ComponentSymbol)) {
+                return true;
+            }
+            // Create an equality function that considers symbols equal if they represent the same
+            // declaration, but only if the symbol in the current compilation does not have its public API
+            // affected.
+            const isSymbolUnaffected = (current, previous) => isReferenceEqual(current, previous) && !typeCheckApiAffected.has(current.symbol);
+            // The emit of a component is affected if either of the following is true:
+            //  1. The component used to be remotely scoped but no longer is, or vice versa.
+            //  2. The list of used directives has changed or any of those directives have had their public
+            //     API changed. If the used directives have been reordered but not otherwise affected then
+            //     the component must still be re-emitted, as this may affect directive instantiation order.
+            //  3. The list of used pipes has changed, or any of those pipes have had their public API
+            //     changed.
+            return !isArrayEqual(this.usedDirectives, previousSymbol.usedDirectives, isSymbolUnaffected) ||
+                !isArrayEqual(this.usedPipes, previousSymbol.usedPipes, isSymbolUnaffected);
         }
     }
     /**
@@ -30803,7 +30838,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return this.name !== previousSymbol.name;
         }
-        isTypeCheckEmitAffected(previousSymbol) {
+        isTypeCheckApiAffected(previousSymbol) {
             return this.isPublicApiAffected(previousSymbol);
         }
     }
@@ -31532,6 +31567,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // The next step is to remove any deleted files from the state.
             for (const filePath of deletedTsPaths) {
                 state.pendingEmit.delete(filePath);
+                state.pendingTypeCheckEmit.delete(filePath);
                 // Even if the file doesn't exist in the current compilation, it still might have been changed
                 // in a previous one, so delete it from the set of changed TS files, just in case.
                 state.changedTsPaths.delete(filePath);
@@ -31558,6 +31594,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // re-emitted.
                 for (const change of logicalChanges) {
                     state.pendingEmit.add(change);
+                    state.pendingTypeCheckEmit.add(change);
                 }
             }
             // `state` now reflects the initial pending state of the current compilation.
