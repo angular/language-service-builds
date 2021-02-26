@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+47.sha-b5f9d86
+ * @license Angular v12.0.0-next.2+16.sha-3df1582
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16817,7 +16817,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         compilePipeDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
             const meta = convertDeclarePipeFacadeToMetadata(declaration);
-            return compilePipeFromMetadata(meta);
+            const res = compilePipeFromMetadata(meta);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileInjectable(angularCoreEnv, sourceMapUrl, facade) {
             const { expression, statements } = compileInjectable({
@@ -17172,7 +17173,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+47.sha-b5f9d86');
+    const VERSION$1 = new Version('12.0.0-next.2+16.sha-3df1582');
 
     /**
      * @license
@@ -17829,7 +17830,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+47.sha-b5f9d86'));
+        definitionMap.set('version', literal('12.0.0-next.2+16.sha-3df1582'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18050,7 +18051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.1+47.sha-b5f9d86'));
+        definitionMap.set('version', literal('12.0.0-next.2+16.sha-3df1582'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21322,7 +21323,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.1+47.sha-b5f9d86');
+    const VERSION$2 = new Version('12.0.0-next.2+16.sha-3df1582');
 
     /**
      * @license
@@ -22554,6 +22555,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         isPublicApiAffected() {
             return false;
         }
+        isTypeCheckEmitAffected() {
+            return false;
+        }
     }
     /**
      * The semantic dependency graph of a single compilation.
@@ -22661,12 +22665,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // logically changed.
                 return {
                     needsEmit: new Set(),
+                    needsTypeCheckEmit: new Set(),
                     newGraph: this.newGraph,
                 };
             }
             const needsEmit = this.determineInvalidatedFiles(this.priorGraph);
+            const needsTypeCheckEmit = this.determineInvalidatedTypeCheckFiles(this.priorGraph);
             return {
                 needsEmit,
+                needsTypeCheckEmit,
                 newGraph: this.newGraph,
             };
         }
@@ -22694,6 +22701,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 }
             }
             return needsEmit;
+        }
+        determineInvalidatedTypeCheckFiles(priorGraph) {
+            const needsTypeCheckEmit = new Set();
+            for (const symbol of this.newGraph.symbolByDecl.values()) {
+                const previousSymbol = priorGraph.getEquivalentSymbol(symbol);
+                if (previousSymbol === null || symbol.isTypeCheckEmitAffected(previousSymbol)) {
+                    needsTypeCheckEmit.add(symbol.path);
+                }
+            }
+            return needsTypeCheckEmit;
         }
         getSemanticReference(decl, expr) {
             return {
@@ -28439,17 +28456,24 @@ Either add the @Injectable() decorator to '${provider.node.name
         'ngOnChanges', 'ngOnInit', 'ngOnDestroy', 'ngDoCheck', 'ngAfterViewInit', 'ngAfterViewChecked',
         'ngAfterContentInit', 'ngAfterContentChecked'
     ]);
+    function extractSemanticTypeParameters(node) {
+        if (!(ts$1.isClassDeclaration(node) && node.typeParameters !== undefined)) {
+            return null;
+        }
+        return node.typeParameters.map(typeParam => ({ hasGenericTypeBound: typeParam.constraint !== undefined }));
+    }
     /**
      * Represents an Angular directive. Components are represented by `ComponentSymbol`, which inherits
      * from this symbol.
      */
     class DirectiveSymbol extends SemanticSymbol {
-        constructor(decl, selector, inputs, outputs, exportAs) {
+        constructor(decl, selector, inputs, outputs, exportAs, typeParameters) {
             super(decl);
             this.selector = selector;
             this.inputs = inputs;
             this.outputs = outputs;
             this.exportAs = exportAs;
+            this.typeParameters = typeParameters;
         }
         isPublicApiAffected(previousSymbol) {
             // Note: since components and directives have exactly the same items contributing to their
@@ -28468,6 +28492,30 @@ Either add the @Injectable() decorator to '${provider.node.name
                 !isArrayEqual(this.outputs, previousSymbol.outputs) ||
                 !isArrayEqual(this.exportAs, previousSymbol.exportAs);
         }
+        isTypeCheckEmitAffected(previousSymbol) {
+            if (this.isPublicApiAffected(previousSymbol)) {
+                return true;
+            }
+            if (!(previousSymbol instanceof DirectiveSymbol)) {
+                return true;
+            }
+            if (isTypeParameterAffected(this.typeParameters, previousSymbol.typeParameters)) {
+                return true;
+            }
+            return false;
+        }
+    }
+    function isTypeParameterAffected(current, previous) {
+        if (current === null || previous === null) {
+            return current === previous;
+        }
+        if (current.length !== previous.length) {
+            return true;
+        }
+        if (current.some(typeParam => typeParam.hasGenericTypeBound)) {
+            return true;
+        }
+        return false;
     }
     class DirectiveDecoratorHandler {
         constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures) {
@@ -28531,7 +28579,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             };
         }
         symbol(node, analysis) {
-            return new DirectiveSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs);
+            const typeParameters = extractSemanticTypeParameters(node);
+            return new DirectiveSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs, typeParameters);
         }
         register(node, analysis) {
             // Register this directive's information with the `MetadataRegistry`. This ensures that
@@ -29083,6 +29132,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (!isArrayEqual(currEntry.usedPipes, prevEntry.usedPipes, isReferenceEqual)) {
                     return true;
                 }
+            }
+            return false;
+        }
+        isTypeCheckEmitAffected(previousSymbol) {
+            if (!(previousSymbol instanceof NgModuleSymbol)) {
+                return true;
             }
             return false;
         }
@@ -29815,7 +29870,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             return output;
         }
         symbol(node, analysis) {
-            return new ComponentSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs);
+            const typeParameters = extractSemanticTypeParameters(node);
+            return new ComponentSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs, typeParameters);
         }
         register(node, analysis) {
             // Register this component's information with the `MetadataRegistry`. This ensures that
@@ -30747,6 +30803,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return this.name !== previousSymbol.name;
         }
+        isTypeCheckEmitAffected(previousSymbol) {
+            return this.isPublicApiAffected(previousSymbol);
+        }
     }
     class PipeDecoratorHandler {
         constructor(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportRecorder, injectableRegistry, isCore) {
@@ -31426,6 +31485,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 state = {
                     kind: BuildStateKind.Pending,
                     pendingEmit: oldDriver.state.pendingEmit,
+                    pendingTypeCheckEmit: oldDriver.state.pendingTypeCheckEmit,
                     changedResourcePaths: new Set(),
                     changedTsPaths: new Set(),
                     lastGood: oldDriver.state.lastGood,
@@ -31510,6 +31570,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const state = {
                 kind: BuildStateKind.Pending,
                 pendingEmit: new Set(tsFiles.map(sf => sf.fileName)),
+                pendingTypeCheckEmit: new Set(tsFiles.map(sf => sf.fileName)),
                 changedResourcePaths: new Set(),
                 changedTsPaths: new Set(),
                 lastGood: null,
@@ -31528,15 +31589,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Changes have already been incorporated.
                 return;
             }
+            const { needsEmit, needsTypeCheckEmit, newGraph } = this.state.semanticDepGraphUpdater.finalize();
             const pendingEmit = this.state.pendingEmit;
-            const { needsEmit, newGraph } = this.state.semanticDepGraphUpdater.finalize();
             for (const path of needsEmit) {
                 pendingEmit.add(path);
+            }
+            const pendingTypeCheckEmit = this.state.pendingTypeCheckEmit;
+            for (const path of needsTypeCheckEmit) {
+                pendingTypeCheckEmit.add(path);
             }
             // Update the state to an `AnalyzedBuildState`.
             this.state = {
                 kind: BuildStateKind.Analyzed,
                 pendingEmit,
+                pendingTypeCheckEmit,
                 // Since this compilation was successfully analyzed, update the "last good" artifacts to the
                 // ones from the current compilation.
                 lastGood: {
@@ -31553,6 +31619,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return;
             }
             this.state.lastGood.typeCheckingResults = results;
+            for (const fileName of results.keys()) {
+                this.state.pendingTypeCheckEmit.delete(fileName);
+            }
         }
         recordSuccessfulEmit(sf) {
             this.state.pendingEmit.delete(sf.fileName);
@@ -31579,7 +31648,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 this.state.priorTypeCheckingResults === null || this.logicalChanges === null) {
                 return null;
             }
-            if (this.logicalChanges.has(sf.fileName) || this.state.pendingEmit.has(sf.fileName)) {
+            if (this.logicalChanges.has(sf.fileName) || this.state.pendingTypeCheckEmit.has(sf.fileName)) {
                 return null;
             }
             const fileName = absoluteFromSourceFile(sf);
@@ -42575,7 +42644,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (requiredNodeText !== undefined && span.toString() !== requiredNodeText) {
                 return null;
             }
-            return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span) });
+            return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span), 
+                // Specifically clear other text span values because we do not have enough knowledge to
+                // convert these to spans in the template.
+                contextSpan: undefined, originalContextSpan: undefined, originalTextSpan: undefined });
         }
     }
     function getRenameTextAndSpanAtPosition(node, position) {
@@ -42686,24 +42758,26 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             });
         }
         getQuickInfoAtPosition(fileName, position) {
-            const compiler = this.compilerFactory.getOrCreate();
-            const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
-            if (templateInfo === undefined) {
-                return undefined;
-            }
-            const positionDetails = getTargetAtPosition(templateInfo.template, position);
-            if (positionDetails === null) {
-                return undefined;
-            }
-            // Because we can only show 1 quick info, just use the bound attribute if the target is a two
-            // way binding. We may consider concatenating additional display parts from the other target
-            // nodes or representing the two way binding in some other manner in the future.
-            const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
-                positionDetails.context.nodes[0] :
-                positionDetails.context.node;
-            const results = new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node).get();
-            this.compilerFactory.registerLastKnownProgram();
-            return results;
+            return this.withCompiler((compiler) => {
+                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                    return undefined;
+                }
+                const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
+                if (templateInfo === undefined) {
+                    return undefined;
+                }
+                const positionDetails = getTargetAtPosition(templateInfo.template, position);
+                if (positionDetails === null) {
+                    return undefined;
+                }
+                // Because we can only show 1 quick info, just use the bound attribute if the target is a two
+                // way binding. We may consider concatenating additional display parts from the other target
+                // nodes or representing the two way binding in some other manner in the future.
+                const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
+                    positionDetails.context.nodes[0] :
+                    positionDetails.context.node;
+                return new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node).get();
+            });
         }
         getReferencesAtPosition(fileName, position) {
             const compiler = this.compilerFactory.getOrCreate();

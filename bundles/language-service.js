@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.1+47.sha-b5f9d86
+ * @license Angular v12.0.0-next.2+16.sha-3df1582
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18827,7 +18827,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         compilePipeDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
             const meta = convertDeclarePipeFacadeToMetadata(declaration);
-            return compilePipeFromMetadata(meta);
+            const res = compilePipeFromMetadata(meta);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileInjectable(angularCoreEnv, sourceMapUrl, facade) {
             const { expression, statements } = compileInjectable({
@@ -19182,7 +19183,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.1+47.sha-b5f9d86');
+    const VERSION$1 = new Version('12.0.0-next.2+16.sha-3df1582');
 
     /**
      * @license
@@ -35231,7 +35232,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.1+47.sha-b5f9d86');
+    const VERSION$2 = new Version$1('12.0.0-next.2+16.sha-3df1582');
 
     /**
      * @license
@@ -36387,6 +36388,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         get context() {
             return this._lView[CONTEXT];
+        }
+        set context(value) {
+            this._lView[CONTEXT] = value;
         }
         get destroyed() {
             return (this._lView[FLAGS] & 256 /* Destroyed */) === 256 /* Destroyed */;
@@ -39729,7 +39733,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         whenStable(doneCb, timeout, updateCb) {
             if (updateCb && !this.taskTrackingZone) {
                 throw new Error('Task tracking zone is required when passing an update callback to ' +
-                    'whenStable(). Is "zone.js/dist/task-tracking.js" loaded?');
+                    'whenStable(). Is "zone.js/plugins/task-tracking" loaded?');
             }
             // These arguments are 'Function' above to keep the public API simple.
             this.addCallback(doneCb, timeout, updateCb);
