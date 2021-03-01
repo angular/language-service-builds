@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+40.sha-356d9a0
+ * @license Angular v12.0.0-next.2+41.sha-6c783c7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19179,7 +19179,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+40.sha-356d9a0');
+    const VERSION$1 = new Version('12.0.0-next.2+41.sha-6c783c7');
 
     /**
      * @license
@@ -25885,7 +25885,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * These directives allows declaration of "let" variables, adds context-specific
          * symbols like $implicit, index, count, among other behaviors.
          * For a complete description of such format, see
-         * https://angular.io/guide/structural-directives#the-asterisk--prefix
+         * https://angular.io/guide/structural-directives#asterisk
          *
          * @param attr descriptor for attribute name and value pair
          * @param binding template binding for the expression in the attribute
@@ -47090,7 +47090,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.2+40.sha-356d9a0');
+    const VERSION$2 = new Version$1('12.0.0-next.2+41.sha-6c783c7');
 
     /**
      * @license
