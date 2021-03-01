@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+34.sha-be8893f
+ * @license Angular v12.0.0-next.2+35.sha-e12d9de
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19183,7 +19183,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+34.sha-be8893f');
+    const VERSION$1 = new Version('12.0.0-next.2+35.sha-e12d9de');
 
     /**
      * @license
@@ -27637,6 +27637,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This file contains reuseable "empty" symbols that can be used as default return values
+     * in different parts of the rendering code. Because the same symbols are returned, this
+     * allows for identity checks against these values to be consistently used by the framework
+     * code.
+     */
+    const EMPTY_OBJ$1 = {};
+    // freezing the values prevents any code from accidentally inserting new values in
+    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
+        // These property accesses can be ignored because ngDevMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // tslint:disable-next-line:no-toplevel-property-access
+        Object.freeze(EMPTY_OBJ$1);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
     const NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
     const NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
@@ -27958,7 +27980,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const current = simpleChangesStore === null || simpleChangesStore === void 0 ? void 0 : simpleChangesStore.current;
         if (current) {
             const previous = simpleChangesStore.previous;
-            if (previous === EMPTY_OBJ) {
+            if (previous === EMPTY_OBJ$1) {
                 simpleChangesStore.previous = current;
             }
             else {
@@ -27974,12 +27996,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function ngOnChangesSetInput(instance, value, publicName, privateName) {
         const simpleChangesStore = getSimpleChangesStore(instance) ||
-            setSimpleChangesStore(instance, { previous: EMPTY_OBJ, current: null });
+            setSimpleChangesStore(instance, { previous: EMPTY_OBJ$1, current: null });
         const current = simpleChangesStore.current || (simpleChangesStore.current = {});
         const previous = simpleChangesStore.previous;
         const declaredName = this.declaredInputs[publicName];
         const previousChange = previous[declaredName];
-        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ);
+        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ$1);
         instance[privateName] = value;
     }
     const SIMPLE_CHANGES_STORE = '__ngSimpleChanges__';
@@ -33903,7 +33925,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     const ɵ0$7 = getClosureSafeProperty;
     const USE_VALUE$4 = getClosureSafeProperty({ provide: String, useValue: ɵ0$7 });
-    const EMPTY_ARRAY$1 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
             const reflectionCapabilities = new ReflectionCapabilities();
@@ -33921,7 +33942,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         else if (provider.useFactory) {
             const factoryProvider = provider;
-            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY$1));
+            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY));
         }
         else if (provider.useClass) {
             const classProvider = provider;
@@ -34870,31 +34891,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * This file contains reuseable "empty" symbols that can be used as default return values
-     * in different parts of the rendering code. Because the same symbols are returned, this
-     * allows for identity checks against these values to be consistently used by the framework
-     * code.
-     */
-    const EMPTY_OBJ$1 = {};
-    const EMPTY_ARRAY$2 = [];
-    // freezing the values prevents any code from accidentally inserting new values in
-    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
-        // These property accesses can be ignored because ngDevMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_OBJ$1);
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$2);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
      */
     if (typeof ngI18nClosureMode === 'undefined') {
@@ -35232,7 +35228,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.2+34.sha-be8893f');
+    const VERSION$2 = new Version$1('12.0.0-next.2+35.sha-e12d9de');
 
     /**
      * @license
