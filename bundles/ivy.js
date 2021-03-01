@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+35.sha-e12d9de
+ * @license Angular v12.0.0-next.2+37.sha-8110cf0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17173,7 +17173,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+35.sha-e12d9de');
+    const VERSION$1 = new Version('12.0.0-next.2+37.sha-8110cf0');
 
     /**
      * @license
@@ -17830,7 +17830,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+35.sha-e12d9de'));
+        definitionMap.set('version', literal('12.0.0-next.2+37.sha-8110cf0'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18051,7 +18051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+35.sha-e12d9de'));
+        definitionMap.set('version', literal('12.0.0-next.2+37.sha-8110cf0'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21323,7 +21323,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.2+35.sha-e12d9de');
+    const VERSION$2 = new Version('12.0.0-next.2+37.sha-8110cf0');
 
     /**
      * @license
@@ -40258,7 +40258,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (meta === null) {
                     continue;
                 }
-                for (const [propertyName, classPropertyName] of meta.inputs) {
+                for (const [classPropertyName, propertyName] of meta.inputs) {
                     if (table.has(propertyName)) {
                         continue;
                     }
@@ -40270,7 +40270,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         twoWayBindingSupported: meta.outputs.hasBindingPropertyName(propertyName + 'Change'),
                     });
                 }
-                for (const [propertyName, classPropertyName] of meta.outputs) {
+                for (const [classPropertyName, propertyName] of meta.outputs) {
                     if (table.has(propertyName)) {
                         continue;
                     }
