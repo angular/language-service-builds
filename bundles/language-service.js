@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+34.sha-be8893f
+ * @license Angular v12.0.0-next.2+35.sha-e12d9de
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19183,7 +19183,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+34.sha-be8893f');
+    const VERSION$1 = new Version('12.0.0-next.2+35.sha-e12d9de');
 
     /**
      * @license
@@ -27734,6 +27734,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This file contains reuseable "empty" symbols that can be used as default return values
+     * in different parts of the rendering code. Because the same symbols are returned, this
+     * allows for identity checks against these values to be consistently used by the framework
+     * code.
+     */
+    const EMPTY_OBJ$1 = {};
+    // freezing the values prevents any code from accidentally inserting new values in
+    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
+        // These property accesses can be ignored because ngDevMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // tslint:disable-next-line:no-toplevel-property-access
+        Object.freeze(EMPTY_OBJ$1);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
     const NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
     const NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
@@ -27956,7 +27978,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function invertObject(obj, secondary) {
         if (obj == null)
-            return EMPTY_OBJ;
+            return EMPTY_OBJ$1;
         const newLookup = {};
         for (const minifiedKey in obj) {
             if (obj.hasOwnProperty(minifiedKey)) {
@@ -28383,7 +28405,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const current = simpleChangesStore === null || simpleChangesStore === void 0 ? void 0 : simpleChangesStore.current;
         if (current) {
             const previous = simpleChangesStore.previous;
-            if (previous === EMPTY_OBJ) {
+            if (previous === EMPTY_OBJ$1) {
                 simpleChangesStore.previous = current;
             }
             else {
@@ -28399,12 +28421,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function ngOnChangesSetInput(instance, value, publicName, privateName) {
         const simpleChangesStore = getSimpleChangesStore(instance) ||
-            setSimpleChangesStore(instance, { previous: EMPTY_OBJ, current: null });
+            setSimpleChangesStore(instance, { previous: EMPTY_OBJ$1, current: null });
         const current = simpleChangesStore.current || (simpleChangesStore.current = {});
         const previous = simpleChangesStore.previous;
         const declaredName = this.declaredInputs[publicName];
         const previousChange = previous[declaredName];
-        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ);
+        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ$1);
         instance[privateName] = value;
     }
     const SIMPLE_CHANGES_STORE = '__ngSimpleChanges__';
@@ -37570,7 +37592,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * a circular dependency among the providers.
      */
     const CIRCULAR = {};
-    const EMPTY_ARRAY$1 = [];
     /**
      * A lazily initialized NullInjector.
      */
@@ -37805,7 +37826,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 if (importTypesWithProviders !== undefined) {
                     for (let i = 0; i < importTypesWithProviders.length; i++) {
                         const { ngModule, providers } = importTypesWithProviders[i];
-                        deepForEach(providers, provider => this.processProvider(provider, ngModule, providers || EMPTY_ARRAY$1));
+                        deepForEach(providers, provider => this.processProvider(provider, ngModule, providers || EMPTY_ARRAY));
                     }
                 }
             }
@@ -38613,7 +38634,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     function maybeUnwrapEmpty(value) {
-        if (value === EMPTY_OBJ) {
+        if (value === EMPTY_OBJ$1) {
             return {};
         }
         else if (value === EMPTY_ARRAY) {
@@ -41090,7 +41111,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // add native event listener - applicable to elements only
         if (tNode.type & 3 /* AnyRNode */) {
             const native = getNativeByTNode(tNode, lView);
-            const resolved = eventTargetResolver ? eventTargetResolver(native) : EMPTY_OBJ;
+            const resolved = eventTargetResolver ? eventTargetResolver(native) : EMPTY_OBJ$1;
             const target = resolved.target || native;
             const lCleanupIndex = lCleanup.length;
             const idxOrTargetGetter = eventTargetResolver ?
@@ -41828,31 +41849,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
         }
         return ɵɵpropertyInterpolateV;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * This file contains reuseable "empty" symbols that can be used as default return values
-     * in different parts of the rendering code. Because the same symbols are returned, this
-     * allows for identity checks against these values to be consistently used by the framework
-     * code.
-     */
-    const EMPTY_OBJ$1 = {};
-    const EMPTY_ARRAY$2 = [];
-    // freezing the values prevents any code from accidentally inserting new values in
-    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
-        // These property accesses can be ignored because ngDevMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_OBJ$1);
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$2);
     }
 
     /**
@@ -42883,7 +42879,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function toStylingKeyValueArray(keyValueArraySet, stringParser, value) {
         if (value == null /*|| value === undefined */ || value === '')
-            return EMPTY_ARRAY$2;
+            return EMPTY_ARRAY;
         const styleKeyValueArray = [];
         const unwrappedValue = unwrapSafeValue(value);
         if (Array.isArray(unwrappedValue)) {
@@ -42940,7 +42936,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     function updateStylingMap(tView, tNode, lView, renderer, oldKeyValueArray, newKeyValueArray, isClassBased, bindingIndex) {
         if (oldKeyValueArray === NO_CHANGE) {
             // On first execution the oldKeyValueArray is NO_CHANGE => treat it as empty KeyValueArray.
-            oldKeyValueArray = EMPTY_ARRAY$2;
+            oldKeyValueArray = EMPTY_ARRAY;
         }
         let oldIndex = 0;
         let newIndex = 0;
@@ -43078,7 +43074,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 // we have `undefined` (or empty array in case of styling-map instruction) instead. This
                 // allows the resolution to apply the value (which may later be overwritten when the
                 // binding actually executes.)
-                valueAtLViewIndex = isStylingMap ? EMPTY_ARRAY$2 : undefined;
+                valueAtLViewIndex = isStylingMap ? EMPTY_ARRAY : undefined;
             }
             let currentValue = isStylingMap ? keyValueArrayGet(valueAtLViewIndex, prop) :
                 key === prop ? valueAtLViewIndex : undefined;
@@ -47099,7 +47095,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.2+34.sha-be8893f');
+    const VERSION$2 = new Version$1('12.0.0-next.2+35.sha-e12d9de');
 
     /**
      * @license
@@ -52268,7 +52264,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const EMPTY_ARRAY$3 = [];
     const moduleQueue = [];
     /**
      * Enqueues moduleDef to be checked later to see if scope can be set on its
@@ -52334,7 +52329,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     function compileNgModuleDefs(moduleType, ngModule, allowDuplicateDeclarationsInRoot = false) {
         ngDevMode && assertDefined(moduleType, 'Required value moduleType');
         ngDevMode && assertDefined(ngModule, 'Required value ngModule');
-        const declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$3);
+        const declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY);
         let ngModuleDef = null;
         Object.defineProperty(moduleType, NG_MOD_DEF, {
             configurable: true,
@@ -52347,12 +52342,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     }
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, `ng:///${moduleType.name}/ɵmod.js`, {
                         type: moduleType,
-                        bootstrap: flatten$1(ngModule.bootstrap || EMPTY_ARRAY$3).map(resolveForwardRef$1),
+                        bootstrap: flatten$1(ngModule.bootstrap || EMPTY_ARRAY).map(resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
-                        imports: flatten$1(ngModule.imports || EMPTY_ARRAY$3)
+                        imports: flatten$1(ngModule.imports || EMPTY_ARRAY)
                             .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
-                        exports: flatten$1(ngModule.exports || EMPTY_ARRAY$3)
+                        exports: flatten$1(ngModule.exports || EMPTY_ARRAY)
                             .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
                         schemas: ngModule.schemas ? flatten$1(ngModule.schemas) : null,
@@ -52379,10 +52374,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                         name: moduleType.name,
                         type: moduleType,
                         deps: reflectDependencies(moduleType),
-                        providers: ngModule.providers || EMPTY_ARRAY$3,
+                        providers: ngModule.providers || EMPTY_ARRAY,
                         imports: [
-                            (ngModule.imports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
-                            (ngModule.exports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
+                            (ngModule.imports || EMPTY_ARRAY).map(resolveForwardRef$1),
+                            (ngModule.exports || EMPTY_ARRAY).map(resolveForwardRef$1),
                         ],
                     };
                     ngInjectorDef = getCompilerFacade().compileInjector(angularCoreEnv, `ng:///${moduleType.name}/ɵinj.js`, meta);
@@ -52580,7 +52575,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * the `ngSelectorScope` property of the declared type.
      */
     function setScopeOnDeclaredComponents(moduleType, ngModule) {
-        const declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY$3);
+        const declarations = flatten$1(ngModule.declarations || EMPTY_ARRAY);
         const transitiveScopes = transitiveScopesFor(moduleType);
         declarations.forEach(declaration => {
             if (declaration.hasOwnProperty(NG_COMP_DEF)) {
@@ -52889,7 +52884,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             typeArgumentCount: 0,
             selector: metadata.selector !== undefined ? metadata.selector : null,
             deps: reflectDependencies(type),
-            host: metadata.host || EMPTY_OBJ,
+            host: metadata.host || EMPTY_OBJ$1,
             propMetadata: propMetadata,
             inputs: metadata.inputs || EMPTY_ARRAY,
             outputs: metadata.outputs || EMPTY_ARRAY,
