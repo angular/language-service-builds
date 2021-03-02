@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+16.sha-8d159b0
+ * @license Angular v12.0.0-next.2+52.sha-cba03bd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1901,211 +1901,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const DASH_CASE_REGEXP = /-+([a-z0-9])/g;
-    function dashCaseToCamelCase(input) {
-        return input.replace(DASH_CASE_REGEXP, (...m) => m[1].toUpperCase());
-    }
-    function splitAtColon(input, defaultValues) {
-        return _splitAt(input, ':', defaultValues);
-    }
-    function splitAtPeriod(input, defaultValues) {
-        return _splitAt(input, '.', defaultValues);
-    }
-    function _splitAt(input, character, defaultValues) {
-        const characterIndex = input.indexOf(character);
-        if (characterIndex == -1)
-            return defaultValues;
-        return [input.slice(0, characterIndex).trim(), input.slice(characterIndex + 1).trim()];
-    }
-    function visitValue(value, visitor, context) {
-        if (Array.isArray(value)) {
-            return visitor.visitArray(value, context);
-        }
-        if (isStrictStringMap(value)) {
-            return visitor.visitStringMap(value, context);
-        }
-        if (value == null || typeof value == 'string' || typeof value == 'number' ||
-            typeof value == 'boolean') {
-            return visitor.visitPrimitive(value, context);
-        }
-        return visitor.visitOther(value, context);
-    }
-    function isDefined(val) {
-        return val !== null && val !== undefined;
-    }
-    function noUndefined(val) {
-        return val === undefined ? null : val;
-    }
-    class ValueTransformer {
-        visitArray(arr, context) {
-            return arr.map(value => visitValue(value, this, context));
-        }
-        visitStringMap(map, context) {
-            const result = {};
-            Object.keys(map).forEach(key => {
-                result[key] = visitValue(map[key], this, context);
-            });
-            return result;
-        }
-        visitPrimitive(value, context) {
-            return value;
-        }
-        visitOther(value, context) {
-            return value;
-        }
-    }
-    const SyncAsync = {
-        assertSync: (value) => {
-            if (isPromise(value)) {
-                throw new Error(`Illegal state: value cannot be a promise`);
-            }
-            return value;
-        },
-        then: (value, cb) => {
-            return isPromise(value) ? value.then(cb) : cb(value);
-        },
-        all: (syncAsyncValues) => {
-            return syncAsyncValues.some(isPromise) ? Promise.all(syncAsyncValues) : syncAsyncValues;
-        }
-    };
-    function error(msg) {
-        throw new Error(`Internal Error: ${msg}`);
-    }
-    function syntaxError(msg, parseErrors) {
-        const error = Error(msg);
-        error[ERROR_SYNTAX_ERROR] = true;
-        if (parseErrors)
-            error[ERROR_PARSE_ERRORS] = parseErrors;
-        return error;
-    }
-    const ERROR_SYNTAX_ERROR = 'ngSyntaxError';
-    const ERROR_PARSE_ERRORS = 'ngParseErrors';
-    const STRING_MAP_PROTO = Object.getPrototypeOf({});
-    function isStrictStringMap(obj) {
-        return typeof obj === 'object' && obj !== null && Object.getPrototypeOf(obj) === STRING_MAP_PROTO;
-    }
-    function utf8Encode(str) {
-        let encoded = [];
-        for (let index = 0; index < str.length; index++) {
-            let codePoint = str.charCodeAt(index);
-            // decode surrogate
-            // see https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-            if (codePoint >= 0xd800 && codePoint <= 0xdbff && str.length > (index + 1)) {
-                const low = str.charCodeAt(index + 1);
-                if (low >= 0xdc00 && low <= 0xdfff) {
-                    index++;
-                    codePoint = ((codePoint - 0xd800) << 10) + low - 0xdc00 + 0x10000;
-                }
-            }
-            if (codePoint <= 0x7f) {
-                encoded.push(codePoint);
-            }
-            else if (codePoint <= 0x7ff) {
-                encoded.push(((codePoint >> 6) & 0x1F) | 0xc0, (codePoint & 0x3f) | 0x80);
-            }
-            else if (codePoint <= 0xffff) {
-                encoded.push((codePoint >> 12) | 0xe0, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
-            }
-            else if (codePoint <= 0x1fffff) {
-                encoded.push(((codePoint >> 18) & 0x07) | 0xf0, ((codePoint >> 12) & 0x3f) | 0x80, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
-            }
-        }
-        return encoded;
-    }
-    function stringify(token) {
-        if (typeof token === 'string') {
-            return token;
-        }
-        if (Array.isArray(token)) {
-            return '[' + token.map(stringify).join(', ') + ']';
-        }
-        if (token == null) {
-            return '' + token;
-        }
-        if (token.overriddenName) {
-            return `${token.overriddenName}`;
-        }
-        if (token.name) {
-            return `${token.name}`;
-        }
-        if (!token.toString) {
-            return 'object';
-        }
-        // WARNING: do not try to `JSON.stringify(token)` here
-        // see https://github.com/angular/angular/issues/23440
-        const res = token.toString();
-        if (res == null) {
-            return '' + res;
-        }
-        const newLineIndex = res.indexOf('\n');
-        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
-    }
-    /**
-     * Lazily retrieves the reference value from a forwardRef.
-     */
-    function resolveForwardRef(type) {
-        if (typeof type === 'function' && type.hasOwnProperty('__forward_ref__')) {
-            return type();
-        }
-        else {
-            return type;
-        }
-    }
-    /**
-     * Determine if the argument is shaped like a Promise
-     */
-    function isPromise(obj) {
-        // allow any Promise/A+ compliant thenable.
-        // It's up to the caller to ensure that obj.then conforms to the spec
-        return !!obj && typeof obj.then === 'function';
-    }
-    class Version {
-        constructor(full) {
-            this.full = full;
-            const splits = full.split('.');
-            this.major = splits[0];
-            this.minor = splits[1];
-            this.patch = splits.slice(2).join('.');
-        }
-    }
-    const __window = typeof window !== 'undefined' && window;
-    const __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
-        self instanceof WorkerGlobalScope && self;
-    const __global = typeof global !== 'undefined' && global;
-    // Check __global first, because in Node tests both __global and __window may be defined and _global
-    // should be __global in that case.
-    const _global = __global || __window || __self;
-    function newArray(size, value) {
-        const list = [];
-        for (let i = 0; i < size; i++) {
-            list.push(value);
-        }
-        return list;
-    }
-    /**
-     * Partitions a given array into 2 arrays, based on a boolean value returned by the condition
-     * function.
-     *
-     * @param arr Input array that should be partitioned
-     * @param conditionFn Condition function that is called for each item in a given array and returns a
-     * boolean value.
-     */
-    function partitionArray(arr, conditionFn) {
-        const truthy = [];
-        const falsy = [];
-        for (const item of arr) {
-            (conditionFn(item) ? truthy : falsy).push(item);
-        }
-        return [truthy, falsy];
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const CONSTANT_PREFIX = '_c';
     /**
      * `ConstantPool` tries to reuse literal factories when two or more literals are identical.
@@ -2308,8 +2103,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case 3 /* Pipe */:
                     return this.pipeDefinitions;
             }
-            error(`Unknown definition kind ${kind}`);
-            return this.componentDefinitions;
         }
         propertyNameOf(kind) {
             switch (kind) {
@@ -2322,8 +2115,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case 3 /* Pipe */:
                     return 'ɵpipe';
             }
-            error(`Unknown definition kind ${kind}`);
-            return '<unknown>';
         }
         freshName() {
             return this.uniqueName(CONSTANT_PREFIX);
@@ -2555,6 +2346,211 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return result;
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const DASH_CASE_REGEXP = /-+([a-z0-9])/g;
+    function dashCaseToCamelCase(input) {
+        return input.replace(DASH_CASE_REGEXP, (...m) => m[1].toUpperCase());
+    }
+    function splitAtColon(input, defaultValues) {
+        return _splitAt(input, ':', defaultValues);
+    }
+    function splitAtPeriod(input, defaultValues) {
+        return _splitAt(input, '.', defaultValues);
+    }
+    function _splitAt(input, character, defaultValues) {
+        const characterIndex = input.indexOf(character);
+        if (characterIndex == -1)
+            return defaultValues;
+        return [input.slice(0, characterIndex).trim(), input.slice(characterIndex + 1).trim()];
+    }
+    function visitValue(value, visitor, context) {
+        if (Array.isArray(value)) {
+            return visitor.visitArray(value, context);
+        }
+        if (isStrictStringMap(value)) {
+            return visitor.visitStringMap(value, context);
+        }
+        if (value == null || typeof value == 'string' || typeof value == 'number' ||
+            typeof value == 'boolean') {
+            return visitor.visitPrimitive(value, context);
+        }
+        return visitor.visitOther(value, context);
+    }
+    function isDefined(val) {
+        return val !== null && val !== undefined;
+    }
+    function noUndefined(val) {
+        return val === undefined ? null : val;
+    }
+    class ValueTransformer {
+        visitArray(arr, context) {
+            return arr.map(value => visitValue(value, this, context));
+        }
+        visitStringMap(map, context) {
+            const result = {};
+            Object.keys(map).forEach(key => {
+                result[key] = visitValue(map[key], this, context);
+            });
+            return result;
+        }
+        visitPrimitive(value, context) {
+            return value;
+        }
+        visitOther(value, context) {
+            return value;
+        }
+    }
+    const SyncAsync = {
+        assertSync: (value) => {
+            if (isPromise(value)) {
+                throw new Error(`Illegal state: value cannot be a promise`);
+            }
+            return value;
+        },
+        then: (value, cb) => {
+            return isPromise(value) ? value.then(cb) : cb(value);
+        },
+        all: (syncAsyncValues) => {
+            return syncAsyncValues.some(isPromise) ? Promise.all(syncAsyncValues) : syncAsyncValues;
+        }
+    };
+    function error(msg) {
+        throw new Error(`Internal Error: ${msg}`);
+    }
+    function syntaxError(msg, parseErrors) {
+        const error = Error(msg);
+        error[ERROR_SYNTAX_ERROR] = true;
+        if (parseErrors)
+            error[ERROR_PARSE_ERRORS] = parseErrors;
+        return error;
+    }
+    const ERROR_SYNTAX_ERROR = 'ngSyntaxError';
+    const ERROR_PARSE_ERRORS = 'ngParseErrors';
+    const STRING_MAP_PROTO = Object.getPrototypeOf({});
+    function isStrictStringMap(obj) {
+        return typeof obj === 'object' && obj !== null && Object.getPrototypeOf(obj) === STRING_MAP_PROTO;
+    }
+    function utf8Encode(str) {
+        let encoded = [];
+        for (let index = 0; index < str.length; index++) {
+            let codePoint = str.charCodeAt(index);
+            // decode surrogate
+            // see https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+            if (codePoint >= 0xd800 && codePoint <= 0xdbff && str.length > (index + 1)) {
+                const low = str.charCodeAt(index + 1);
+                if (low >= 0xdc00 && low <= 0xdfff) {
+                    index++;
+                    codePoint = ((codePoint - 0xd800) << 10) + low - 0xdc00 + 0x10000;
+                }
+            }
+            if (codePoint <= 0x7f) {
+                encoded.push(codePoint);
+            }
+            else if (codePoint <= 0x7ff) {
+                encoded.push(((codePoint >> 6) & 0x1F) | 0xc0, (codePoint & 0x3f) | 0x80);
+            }
+            else if (codePoint <= 0xffff) {
+                encoded.push((codePoint >> 12) | 0xe0, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
+            }
+            else if (codePoint <= 0x1fffff) {
+                encoded.push(((codePoint >> 18) & 0x07) | 0xf0, ((codePoint >> 12) & 0x3f) | 0x80, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
+            }
+        }
+        return encoded;
+    }
+    function stringify(token) {
+        if (typeof token === 'string') {
+            return token;
+        }
+        if (Array.isArray(token)) {
+            return '[' + token.map(stringify).join(', ') + ']';
+        }
+        if (token == null) {
+            return '' + token;
+        }
+        if (token.overriddenName) {
+            return `${token.overriddenName}`;
+        }
+        if (token.name) {
+            return `${token.name}`;
+        }
+        if (!token.toString) {
+            return 'object';
+        }
+        // WARNING: do not try to `JSON.stringify(token)` here
+        // see https://github.com/angular/angular/issues/23440
+        const res = token.toString();
+        if (res == null) {
+            return '' + res;
+        }
+        const newLineIndex = res.indexOf('\n');
+        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
+    }
+    /**
+     * Lazily retrieves the reference value from a forwardRef.
+     */
+    function resolveForwardRef(type) {
+        if (typeof type === 'function' && type.hasOwnProperty('__forward_ref__')) {
+            return type();
+        }
+        else {
+            return type;
+        }
+    }
+    /**
+     * Determine if the argument is shaped like a Promise
+     */
+    function isPromise(obj) {
+        // allow any Promise/A+ compliant thenable.
+        // It's up to the caller to ensure that obj.then conforms to the spec
+        return !!obj && typeof obj.then === 'function';
+    }
+    class Version {
+        constructor(full) {
+            this.full = full;
+            const splits = full.split('.');
+            this.major = splits[0];
+            this.minor = splits[1];
+            this.patch = splits.slice(2).join('.');
+        }
+    }
+    const __window = typeof window !== 'undefined' && window;
+    const __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+        self instanceof WorkerGlobalScope && self;
+    const __global = typeof global !== 'undefined' && global;
+    // Check __global first, because in Node tests both __global and __window may be defined and _global
+    // should be __global in that case.
+    const _global = __global || __window || __self;
+    function newArray(size, value) {
+        const list = [];
+        for (let i = 0; i < size; i++) {
+            list.push(value);
+        }
+        return list;
+    }
+    /**
+     * Partitions a given array into 2 arrays, based on a boolean value returned by the condition
+     * function.
+     *
+     * @param arr Input array that should be partitioned
+     * @param conditionFn Condition function that is called for each item in a given array and returns a
+     * boolean value.
+     */
+    function partitionArray(arr, conditionFn) {
+        const truthy = [];
+        const falsy = [];
+        for (const item of arr) {
+            (conditionFn(item) ? truthy : falsy).push(item);
+        }
+        return [truthy, falsy];
     }
 
     /**
@@ -19183,7 +19179,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+16.sha-8d159b0');
+    const VERSION$1 = new Version('12.0.0-next.2+52.sha-cba03bd');
 
     /**
      * @license
@@ -25889,7 +25885,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * These directives allows declaration of "let" variables, adds context-specific
          * symbols like $implicit, index, count, among other behaviors.
          * For a complete description of such format, see
-         * https://angular.io/guide/structural-directives#the-asterisk--prefix
+         * https://angular.io/guide/structural-directives#asterisk
          *
          * @param attr descriptor for attribute name and value pair
          * @param binding template binding for the expression in the attribute
@@ -27637,6 +27633,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This file contains reuseable "empty" symbols that can be used as default return values
+     * in different parts of the rendering code. Because the same symbols are returned, this
+     * allows for identity checks against these values to be consistently used by the framework
+     * code.
+     */
+    const EMPTY_OBJ$1 = {};
+    // freezing the values prevents any code from accidentally inserting new values in
+    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
+        // These property accesses can be ignored because ngDevMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // tslint:disable-next-line:no-toplevel-property-access
+        Object.freeze(EMPTY_OBJ$1);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
     const NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
     const NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
@@ -27958,7 +27976,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const current = simpleChangesStore === null || simpleChangesStore === void 0 ? void 0 : simpleChangesStore.current;
         if (current) {
             const previous = simpleChangesStore.previous;
-            if (previous === EMPTY_OBJ) {
+            if (previous === EMPTY_OBJ$1) {
                 simpleChangesStore.previous = current;
             }
             else {
@@ -27974,12 +27992,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function ngOnChangesSetInput(instance, value, publicName, privateName) {
         const simpleChangesStore = getSimpleChangesStore(instance) ||
-            setSimpleChangesStore(instance, { previous: EMPTY_OBJ, current: null });
+            setSimpleChangesStore(instance, { previous: EMPTY_OBJ$1, current: null });
         const current = simpleChangesStore.current || (simpleChangesStore.current = {});
         const previous = simpleChangesStore.previous;
         const declaredName = this.declaredInputs[publicName];
         const previousChange = previous[declaredName];
-        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ);
+        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ$1);
         instance[privateName] = value;
     }
     const SIMPLE_CHANGES_STORE = '__ngSimpleChanges__';
@@ -31697,7 +31715,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return embeddedArray;
         }
-        throw new Error('unreachable code');
     }
     function nameSuffix(text) {
         if (text == null)
@@ -33903,7 +33920,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     const ɵ0$7 = getClosureSafeProperty;
     const USE_VALUE$4 = getClosureSafeProperty({ provide: String, useValue: ɵ0$7 });
-    const EMPTY_ARRAY$1 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
             const reflectionCapabilities = new ReflectionCapabilities();
@@ -33921,7 +33937,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         else if (provider.useFactory) {
             const factoryProvider = provider;
-            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY$1));
+            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY));
         }
         else if (provider.useClass) {
             const classProvider = provider;
@@ -34870,31 +34886,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * This file contains reuseable "empty" symbols that can be used as default return values
-     * in different parts of the rendering code. Because the same symbols are returned, this
-     * allows for identity checks against these values to be consistently used by the framework
-     * code.
-     */
-    const EMPTY_OBJ$1 = {};
-    const EMPTY_ARRAY$2 = [];
-    // freezing the values prevents any code from accidentally inserting new values in
-    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
-        // These property accesses can be ignored because ngDevMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_OBJ$1);
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$2);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
      */
     if (typeof ngI18nClosureMode === 'undefined') {
@@ -35232,7 +35223,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.2+16.sha-8d159b0');
+    const VERSION$2 = new Version$1('12.0.0-next.2+52.sha-cba03bd');
 
     /**
      * @license

@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+16.sha-8d159b0
+ * @license Angular v12.0.0-next.2+52.sha-cba03bd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1882,128 +1882,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const DASH_CASE_REGEXP = /-+([a-z0-9])/g;
-    function dashCaseToCamelCase(input) {
-        return input.replace(DASH_CASE_REGEXP, (...m) => m[1].toUpperCase());
-    }
-    function splitAtColon(input, defaultValues) {
-        return _splitAt(input, ':', defaultValues);
-    }
-    function splitAtPeriod(input, defaultValues) {
-        return _splitAt(input, '.', defaultValues);
-    }
-    function _splitAt(input, character, defaultValues) {
-        const characterIndex = input.indexOf(character);
-        if (characterIndex == -1)
-            return defaultValues;
-        return [input.slice(0, characterIndex).trim(), input.slice(characterIndex + 1).trim()];
-    }
-    function error(msg) {
-        throw new Error(`Internal Error: ${msg}`);
-    }
-    function utf8Encode(str) {
-        let encoded = [];
-        for (let index = 0; index < str.length; index++) {
-            let codePoint = str.charCodeAt(index);
-            // decode surrogate
-            // see https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-            if (codePoint >= 0xd800 && codePoint <= 0xdbff && str.length > (index + 1)) {
-                const low = str.charCodeAt(index + 1);
-                if (low >= 0xdc00 && low <= 0xdfff) {
-                    index++;
-                    codePoint = ((codePoint - 0xd800) << 10) + low - 0xdc00 + 0x10000;
-                }
-            }
-            if (codePoint <= 0x7f) {
-                encoded.push(codePoint);
-            }
-            else if (codePoint <= 0x7ff) {
-                encoded.push(((codePoint >> 6) & 0x1F) | 0xc0, (codePoint & 0x3f) | 0x80);
-            }
-            else if (codePoint <= 0xffff) {
-                encoded.push((codePoint >> 12) | 0xe0, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
-            }
-            else if (codePoint <= 0x1fffff) {
-                encoded.push(((codePoint >> 18) & 0x07) | 0xf0, ((codePoint >> 12) & 0x3f) | 0x80, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
-            }
-        }
-        return encoded;
-    }
-    function stringify(token) {
-        if (typeof token === 'string') {
-            return token;
-        }
-        if (Array.isArray(token)) {
-            return '[' + token.map(stringify).join(', ') + ']';
-        }
-        if (token == null) {
-            return '' + token;
-        }
-        if (token.overriddenName) {
-            return `${token.overriddenName}`;
-        }
-        if (token.name) {
-            return `${token.name}`;
-        }
-        if (!token.toString) {
-            return 'object';
-        }
-        // WARNING: do not try to `JSON.stringify(token)` here
-        // see https://github.com/angular/angular/issues/23440
-        const res = token.toString();
-        if (res == null) {
-            return '' + res;
-        }
-        const newLineIndex = res.indexOf('\n');
-        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
-    }
-    class Version {
-        constructor(full) {
-            this.full = full;
-            const splits = full.split('.');
-            this.major = splits[0];
-            this.minor = splits[1];
-            this.patch = splits.slice(2).join('.');
-        }
-    }
-    const __window = typeof window !== 'undefined' && window;
-    const __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
-        self instanceof WorkerGlobalScope && self;
-    const __global = typeof global !== 'undefined' && global;
-    // Check __global first, because in Node tests both __global and __window may be defined and _global
-    // should be __global in that case.
-    const _global = __global || __window || __self;
-    function newArray(size, value) {
-        const list = [];
-        for (let i = 0; i < size; i++) {
-            list.push(value);
-        }
-        return list;
-    }
-    /**
-     * Partitions a given array into 2 arrays, based on a boolean value returned by the condition
-     * function.
-     *
-     * @param arr Input array that should be partitioned
-     * @param conditionFn Condition function that is called for each item in a given array and returns a
-     * boolean value.
-     */
-    function partitionArray(arr, conditionFn) {
-        const truthy = [];
-        const falsy = [];
-        for (const item of arr) {
-            (conditionFn(item) ? truthy : falsy).push(item);
-        }
-        return [truthy, falsy];
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const CONSTANT_PREFIX = '_c';
     /**
      * `ConstantPool` tries to reuse literal factories when two or more literals are identical.
@@ -2206,8 +2084,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case 3 /* Pipe */:
                     return this.pipeDefinitions;
             }
-            error(`Unknown definition kind ${kind}`);
-            return this.componentDefinitions;
         }
         propertyNameOf(kind) {
             switch (kind) {
@@ -2220,8 +2096,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case 3 /* Pipe */:
                     return 'ɵpipe';
             }
-            error(`Unknown definition kind ${kind}`);
-            return '<unknown>';
         }
         freshName() {
             return this.uniqueName(CONSTANT_PREFIX);
@@ -2427,6 +2301,128 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 throw new Error(`Illegal state: symbol without members expected, but got ${JSON.stringify(this)}.`);
             }
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const DASH_CASE_REGEXP = /-+([a-z0-9])/g;
+    function dashCaseToCamelCase(input) {
+        return input.replace(DASH_CASE_REGEXP, (...m) => m[1].toUpperCase());
+    }
+    function splitAtColon(input, defaultValues) {
+        return _splitAt(input, ':', defaultValues);
+    }
+    function splitAtPeriod(input, defaultValues) {
+        return _splitAt(input, '.', defaultValues);
+    }
+    function _splitAt(input, character, defaultValues) {
+        const characterIndex = input.indexOf(character);
+        if (characterIndex == -1)
+            return defaultValues;
+        return [input.slice(0, characterIndex).trim(), input.slice(characterIndex + 1).trim()];
+    }
+    function error(msg) {
+        throw new Error(`Internal Error: ${msg}`);
+    }
+    function utf8Encode(str) {
+        let encoded = [];
+        for (let index = 0; index < str.length; index++) {
+            let codePoint = str.charCodeAt(index);
+            // decode surrogate
+            // see https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+            if (codePoint >= 0xd800 && codePoint <= 0xdbff && str.length > (index + 1)) {
+                const low = str.charCodeAt(index + 1);
+                if (low >= 0xdc00 && low <= 0xdfff) {
+                    index++;
+                    codePoint = ((codePoint - 0xd800) << 10) + low - 0xdc00 + 0x10000;
+                }
+            }
+            if (codePoint <= 0x7f) {
+                encoded.push(codePoint);
+            }
+            else if (codePoint <= 0x7ff) {
+                encoded.push(((codePoint >> 6) & 0x1F) | 0xc0, (codePoint & 0x3f) | 0x80);
+            }
+            else if (codePoint <= 0xffff) {
+                encoded.push((codePoint >> 12) | 0xe0, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
+            }
+            else if (codePoint <= 0x1fffff) {
+                encoded.push(((codePoint >> 18) & 0x07) | 0xf0, ((codePoint >> 12) & 0x3f) | 0x80, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
+            }
+        }
+        return encoded;
+    }
+    function stringify(token) {
+        if (typeof token === 'string') {
+            return token;
+        }
+        if (Array.isArray(token)) {
+            return '[' + token.map(stringify).join(', ') + ']';
+        }
+        if (token == null) {
+            return '' + token;
+        }
+        if (token.overriddenName) {
+            return `${token.overriddenName}`;
+        }
+        if (token.name) {
+            return `${token.name}`;
+        }
+        if (!token.toString) {
+            return 'object';
+        }
+        // WARNING: do not try to `JSON.stringify(token)` here
+        // see https://github.com/angular/angular/issues/23440
+        const res = token.toString();
+        if (res == null) {
+            return '' + res;
+        }
+        const newLineIndex = res.indexOf('\n');
+        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
+    }
+    class Version {
+        constructor(full) {
+            this.full = full;
+            const splits = full.split('.');
+            this.major = splits[0];
+            this.minor = splits[1];
+            this.patch = splits.slice(2).join('.');
+        }
+    }
+    const __window = typeof window !== 'undefined' && window;
+    const __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+        self instanceof WorkerGlobalScope && self;
+    const __global = typeof global !== 'undefined' && global;
+    // Check __global first, because in Node tests both __global and __window may be defined and _global
+    // should be __global in that case.
+    const _global = __global || __window || __self;
+    function newArray(size, value) {
+        const list = [];
+        for (let i = 0; i < size; i++) {
+            list.push(value);
+        }
+        return list;
+    }
+    /**
+     * Partitions a given array into 2 arrays, based on a boolean value returned by the condition
+     * function.
+     *
+     * @param arr Input array that should be partitioned
+     * @param conditionFn Condition function that is called for each item in a given array and returns a
+     * boolean value.
+     */
+    function partitionArray(arr, conditionFn) {
+        const truthy = [];
+        const falsy = [];
+        for (const item of arr) {
+            (conditionFn(item) ? truthy : falsy).push(item);
+        }
+        return [truthy, falsy];
     }
 
     /**
@@ -17173,7 +17169,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+16.sha-8d159b0');
+    const VERSION$1 = new Version('12.0.0-next.2+52.sha-cba03bd');
 
     /**
      * @license
@@ -17830,7 +17826,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+16.sha-8d159b0'));
+        definitionMap.set('version', literal('12.0.0-next.2+52.sha-cba03bd'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18051,7 +18047,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+16.sha-8d159b0'));
+        definitionMap.set('version', literal('12.0.0-next.2+52.sha-cba03bd'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21323,7 +21319,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.2+16.sha-8d159b0');
+    const VERSION$2 = new Version('12.0.0-next.2+52.sha-cba03bd');
 
     /**
      * @license
@@ -22568,13 +22564,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.symbolByDecl = new Map();
         }
         /**
-         * Registers a symbol for the provided declaration as created by the factory function. The symbol
-         * is given a unique identifier if possible, such that its equivalent symbol can be obtained from
-         * a prior graph even if its declaration node has changed across rebuilds. Symbols without an
-         * identifier are only able to find themselves in a prior graph if their declaration node is
-         * identical.
-         *
-         * @param symbol
+         * Registers a symbol in the graph. The symbol is given a unique identifier if possible, such that
+         * its equivalent symbol can be obtained from a prior graph even if its declaration node has
+         * changed across rebuilds. Symbols without an identifier are only able to find themselves in a
+         * prior graph if their declaration node is identical.
          */
         registerSymbol(symbol) {
             this.symbolByDecl.set(symbol.decl, symbol);
@@ -22650,6 +22643,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
              */
             this.opaqueSymbols = new Map();
         }
+        /**
+         * Registers the symbol in the new graph that is being created.
+         */
         registerSymbol(symbol) {
             this.newGraph.registerSymbol(symbol);
         }
@@ -22728,12 +22724,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return needsTypeCheckEmit;
         }
+        /**
+         * Creates a `SemanticReference` for the reference to `decl` using the expression `expr`. See
+         * the documentation of `SemanticReference` for details.
+         */
         getSemanticReference(decl, expr) {
             return {
                 symbol: this.getSymbol(decl),
                 importPath: getImportPath(expr),
             };
         }
+        /**
+         * Gets the `SemanticSymbol` that was registered for `decl` during the current compilation, or
+         * returns an opaque symbol that represents `decl`.
+         */
         getSymbol(decl) {
             const symbol = this.newGraph.getSymbolByDecl(decl);
             if (symbol === null) {
@@ -22809,6 +22813,69 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return false;
         }
         return !a.some((item, index) => !equalityTester(item, b[index]));
+    }
+    /**
+     * Determines if the provided sets are equal to each other, using the provided equality tester.
+     * Sets that only differ in ordering are considered equal.
+     */
+    function isSetEqual(a, b, equalityTester = referenceEquality) {
+        if (a === null || b === null) {
+            return a === b;
+        }
+        if (a.size !== b.size) {
+            return false;
+        }
+        for (const itemA of a) {
+            let found = false;
+            for (const itemB of b) {
+                if (equalityTester(itemA, itemB)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Converts the type parameters of the given class into their semantic representation. If the class
+     * does not have any type parameters, then `null` is returned.
+     */
+    function extractSemanticTypeParameters(node) {
+        if (!ts$1.isClassDeclaration(node) || node.typeParameters === undefined) {
+            return null;
+        }
+        return node.typeParameters.map(typeParam => ({ hasGenericTypeBound: typeParam.constraint !== undefined }));
+    }
+    /**
+     * Compares the list of type parameters to determine if they can be considered equal.
+     */
+    function areTypeParametersEqual(current, previous) {
+        // First compare all type parameters one-to-one; any differences mean that the list of type
+        // parameters has changed.
+        if (!isArrayEqual(current, previous, isTypeParameterEqual)) {
+            return false;
+        }
+        // If there is a current list of type parameters and if any of them has a generic type constraint,
+        // then the meaning of that type parameter may have changed without us being aware; as such we
+        // have to assume that the type parameters have in fact changed.
+        if (current !== null && current.some(typeParam => typeParam.hasGenericTypeBound)) {
+            return false;
+        }
+        return true;
+    }
+    function isTypeParameterEqual(a, b) {
+        return a.hasGenericTypeBound === b.hasGenericTypeBound;
     }
 
     /**
@@ -28472,23 +28539,18 @@ Either add the @Injectable() decorator to '${provider.node.name
         'ngOnChanges', 'ngOnInit', 'ngOnDestroy', 'ngDoCheck', 'ngAfterViewInit', 'ngAfterViewChecked',
         'ngAfterContentInit', 'ngAfterContentChecked'
     ]);
-    function extractSemanticTypeParameters(node) {
-        if (!ts$1.isClassDeclaration(node) || node.typeParameters === undefined) {
-            return null;
-        }
-        return node.typeParameters.map(typeParam => ({ hasGenericTypeBound: typeParam.constraint !== undefined }));
-    }
     /**
      * Represents an Angular directive. Components are represented by `ComponentSymbol`, which inherits
      * from this symbol.
      */
     class DirectiveSymbol extends SemanticSymbol {
-        constructor(decl, selector, inputs, outputs, exportAs, typeParameters) {
+        constructor(decl, selector, inputs, outputs, exportAs, typeCheckMeta, typeParameters) {
             super(decl);
             this.selector = selector;
             this.inputs = inputs;
             this.outputs = outputs;
             this.exportAs = exportAs;
+            this.typeCheckMeta = typeCheckMeta;
             this.typeParameters = typeParameters;
             this.baseClass = null;
         }
@@ -28505,37 +28567,78 @@ Either add the @Injectable() decorator to '${provider.node.name
             //     to be a change in public API.
             //  3. The list of exportAs names and its ordering.
             return this.selector !== previousSymbol.selector ||
-                !isArrayEqual(this.inputs, previousSymbol.inputs) ||
-                !isArrayEqual(this.outputs, previousSymbol.outputs) ||
+                !isArrayEqual(this.inputs.propertyNames, previousSymbol.inputs.propertyNames) ||
+                !isArrayEqual(this.outputs.propertyNames, previousSymbol.outputs.propertyNames) ||
                 !isArrayEqual(this.exportAs, previousSymbol.exportAs);
         }
         isTypeCheckApiAffected(previousSymbol) {
+            // If the public API of the directive has changed, then so has its type-check API.
             if (this.isPublicApiAffected(previousSymbol)) {
                 return true;
             }
             if (!(previousSymbol instanceof DirectiveSymbol)) {
                 return true;
             }
-            if (isTypeParameterAffected(this.typeParameters, previousSymbol.typeParameters)) {
+            // The type-check block also depends on the class property names, as writes property bindings
+            // directly into the backing fields.
+            if (!isArrayEqual(this.inputs.classPropertyNames, previousSymbol.inputs.classPropertyNames) ||
+                !isArrayEqual(this.outputs.classPropertyNames, previousSymbol.outputs.classPropertyNames)) {
+                return true;
+            }
+            // The type parameters of a directive are emitted into the type constructors in the type-check
+            // block of a component, so if the type parameters are not considered equal then consider the
+            // type-check API of this directive to be affected.
+            if (!areTypeParametersEqual(this.typeParameters, previousSymbol.typeParameters)) {
+                return true;
+            }
+            // The type-check metadata is used during TCB code generation, so any changes should invalidate
+            // prior type-check files.
+            if (!isTypeCheckMetaEqual(this.typeCheckMeta, previousSymbol.typeCheckMeta)) {
+                return true;
+            }
+            // Changing the base class of a directive means that its inputs/outputs etc may have changed,
+            // so the type-check block of components that use this directive needs to be regenerated.
+            if (!isBaseClassEqual(this.baseClass, previousSymbol.baseClass)) {
                 return true;
             }
             return false;
         }
     }
-    function isTypeParameterAffected(current, previous) {
-        if (!isArrayEqual(current, previous, isTypeParameterEqual)) {
-            return true;
+    function isTypeCheckMetaEqual(current, previous) {
+        if (current.hasNgTemplateContextGuard !== previous.hasNgTemplateContextGuard) {
+            return false;
         }
-        if (current !== null && current.some(typeParam => typeParam.hasGenericTypeBound)) {
-            return true;
+        if (current.isGeneric !== previous.isGeneric) {
+            return false;
         }
-        return false;
+        if (!isArrayEqual(current.ngTemplateGuards, previous.ngTemplateGuards, isTemplateGuardEqual)) {
+            return false;
+        }
+        if (!isSetEqual(current.coercedInputFields, previous.coercedInputFields)) {
+            return false;
+        }
+        if (!isSetEqual(current.restrictedInputFields, previous.restrictedInputFields)) {
+            return false;
+        }
+        if (!isSetEqual(current.stringLiteralInputFields, previous.stringLiteralInputFields)) {
+            return false;
+        }
+        if (!isSetEqual(current.undeclaredInputFields, previous.undeclaredInputFields)) {
+            return false;
+        }
+        return true;
     }
-    function isTypeParameterEqual(a, b) {
-        return a.hasGenericTypeBound === b.hasGenericTypeBound;
+    function isTemplateGuardEqual(current, previous) {
+        return current.inputName === previous.inputName && current.type === previous.type;
+    }
+    function isBaseClassEqual(current, previous) {
+        if (current === null || previous === null) {
+            return current === previous;
+        }
+        return isSymbolEqual(current, previous);
     }
     class DirectiveDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures) {
+        constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, semanticDepGraphUpdater, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -28544,6 +28647,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.defaultImportRecorder = defaultImportRecorder;
             this.injectableRegistry = injectableRegistry;
             this.isCore = isCore;
+            this.semanticDepGraphUpdater = semanticDepGraphUpdater;
             this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.compileUndecoratedClassesWithAngularFeatures = compileUndecoratedClassesWithAngularFeatures;
             this.precedence = HandlerPrecedence.PRIMARY;
@@ -28597,7 +28701,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         symbol(node, analysis) {
             const typeParameters = extractSemanticTypeParameters(node);
-            return new DirectiveSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs, typeParameters);
+            return new DirectiveSymbol(node, analysis.meta.selector, analysis.inputs, analysis.outputs, analysis.meta.exportAs, analysis.typeCheckMeta, typeParameters);
         }
         register(node, analysis) {
             // Register this directive's information with the `MetadataRegistry`. This ensures that
@@ -28606,7 +28710,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.metaRegistry.registerDirectiveMetadata(Object.assign(Object.assign({ ref, name: node.name.text, selector: analysis.meta.selector, exportAs: analysis.meta.exportAs, inputs: analysis.inputs, outputs: analysis.outputs, queries: analysis.meta.queries.map(query => query.propertyName), isComponent: false, baseClass: analysis.baseClass }, analysis.typeCheckMeta), { isPoisoned: analysis.isPoisoned, isStructural: analysis.isStructural }));
             this.injectableRegistry.registerInjectable(node);
         }
-        resolve(node, analysis) {
+        resolve(node, analysis, symbol) {
+            if (this.semanticDepGraphUpdater !== null && analysis.baseClass instanceof Reference$1) {
+                symbol.baseClass = this.semanticDepGraphUpdater.getSymbol(analysis.baseClass.node);
+            }
             const diagnostics = [];
             if (analysis.providersRequiringFactory !== null &&
                 analysis.meta.providers instanceof WrappedNodeExpr) {
@@ -29653,19 +29760,33 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (!(previousSymbol instanceof ComponentSymbol)) {
                 return true;
             }
-            // Create an equality function that considers symbols equal if they represent the same
-            // declaration, but only if the symbol in the current compilation does not have its public API
-            // affected.
-            const isSymbolUnaffected = (current, previous) => isReferenceEqual(current, previous) && !typeCheckApiAffected.has(current.symbol);
-            // The emit of a component is affected if either of the following is true:
-            //  1. The component used to be remotely scoped but no longer is, or vice versa.
-            //  2. The list of used directives has changed or any of those directives have had their public
-            //     API changed. If the used directives have been reordered but not otherwise affected then
-            //     the component must still be re-emitted, as this may affect directive instantiation order.
-            //  3. The list of used pipes has changed, or any of those pipes have had their public API
+            // To verify that a used directive is not affected we need to verify that its full inheritance
+            // chain is not present in `typeCheckApiAffected`.
+            const isInheritanceChainAffected = (symbol) => {
+                let currentSymbol = symbol;
+                while (currentSymbol instanceof DirectiveSymbol) {
+                    if (typeCheckApiAffected.has(currentSymbol)) {
+                        return true;
+                    }
+                    currentSymbol = currentSymbol.baseClass;
+                }
+                return false;
+            };
+            // Create an equality function that considers directives equal if they represent the same
+            // declaration and if the symbol and all symbols it inherits from in the current compilation
+            // do not have their type-check API affected.
+            const isDirectiveUnaffected = (current, previous) => isReferenceEqual(current, previous) && !isInheritanceChainAffected(current.symbol);
+            // Create an equality function that considers pipes equal if they represent the same
+            // declaration and if the symbol in the current compilation does not have its type-check
+            // API affected.
+            const isPipeUnaffected = (current, previous) => isReferenceEqual(current, previous) && !typeCheckApiAffected.has(current.symbol);
+            // The emit of a type-check block of a component is affected if either of the following is true:
+            //  1. The list of used directives has changed or any of those directives have had their
+            //     type-check API changed.
+            //  2. The list of used pipes has changed, or any of those pipes have had their type-check API
             //     changed.
-            return !isArrayEqual(this.usedDirectives, previousSymbol.usedDirectives, isSymbolUnaffected) ||
-                !isArrayEqual(this.usedPipes, previousSymbol.usedPipes, isSymbolUnaffected);
+            return !isArrayEqual(this.usedDirectives, previousSymbol.usedDirectives, isDirectiveUnaffected) ||
+                !isArrayEqual(this.usedPipes, previousSymbol.usedPipes, isPipeUnaffected);
         }
     }
     /**
@@ -29906,7 +30027,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         symbol(node, analysis) {
             const typeParameters = extractSemanticTypeParameters(node);
-            return new ComponentSymbol(node, analysis.meta.selector, analysis.inputs.propertyNames, analysis.outputs.propertyNames, analysis.meta.exportAs, typeParameters);
+            return new ComponentSymbol(node, analysis.meta.selector, analysis.inputs, analysis.outputs, analysis.meta.exportAs, analysis.typeCheckMeta, typeParameters);
         }
         register(node, analysis) {
             // Register this component's information with the `MetadataRegistry`. This ensures that
@@ -29963,6 +30084,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file, meta.template.errors);
         }
         resolve(node, analysis, symbol) {
+            if (this.semanticDepGraphUpdater !== null && analysis.baseClass instanceof Reference$1) {
+                symbol.baseClass = this.semanticDepGraphUpdater.getSymbol(analysis.baseClass.node);
+            }
             if (analysis.isPoisoned && !this.usePoisonedData) {
                 return {};
             }
@@ -31656,6 +31780,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return;
             }
             this.state.lastGood.typeCheckingResults = results;
+            // Delete the files for which type-check code was generated from the set of pending type-check
+            // files.
             for (const fileName of results.keys()) {
                 this.state.pendingTypeCheckEmit.delete(fileName);
             }
@@ -32895,6 +33021,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }
                 }
                 continue;
+                // The export was not a directive, a pipe, or a module. This is an error.
+                // TODO(alxhub): produce a ts.Diagnostic
             }
             const exportScope = {
                 exported: {
@@ -39706,7 +39834,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
-                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures),
+                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, semanticDepGraphUpdater, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures),
                 // clang-format on
                 // Pipe handler must be before injectable handler in list so pipe factories are printed
                 // before injectable factories (so injectable factories can delegate to them)
@@ -40730,7 +40858,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (meta === null) {
                     continue;
                 }
-                for (const [propertyName, classPropertyName] of meta.inputs) {
+                for (const [classPropertyName, propertyName] of meta.inputs) {
                     if (table.has(propertyName)) {
                         continue;
                     }
@@ -40742,7 +40870,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         twoWayBindingSupported: meta.outputs.hasBindingPropertyName(propertyName + 'Change'),
                     });
                 }
-                for (const [propertyName, classPropertyName] of meta.outputs) {
+                for (const [classPropertyName, propertyName] of meta.outputs) {
                     if (table.has(propertyName)) {
                         continue;
                     }
