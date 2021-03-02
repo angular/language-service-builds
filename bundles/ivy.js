@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.3+28.sha-2e0dea6
+ * @license Angular v11.2.3+38.sha-78bf697
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1882,128 +1882,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const DASH_CASE_REGEXP = /-+([a-z0-9])/g;
-    function dashCaseToCamelCase(input) {
-        return input.replace(DASH_CASE_REGEXP, (...m) => m[1].toUpperCase());
-    }
-    function splitAtColon(input, defaultValues) {
-        return _splitAt(input, ':', defaultValues);
-    }
-    function splitAtPeriod(input, defaultValues) {
-        return _splitAt(input, '.', defaultValues);
-    }
-    function _splitAt(input, character, defaultValues) {
-        const characterIndex = input.indexOf(character);
-        if (characterIndex == -1)
-            return defaultValues;
-        return [input.slice(0, characterIndex).trim(), input.slice(characterIndex + 1).trim()];
-    }
-    function error(msg) {
-        throw new Error(`Internal Error: ${msg}`);
-    }
-    function utf8Encode(str) {
-        let encoded = [];
-        for (let index = 0; index < str.length; index++) {
-            let codePoint = str.charCodeAt(index);
-            // decode surrogate
-            // see https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-            if (codePoint >= 0xd800 && codePoint <= 0xdbff && str.length > (index + 1)) {
-                const low = str.charCodeAt(index + 1);
-                if (low >= 0xdc00 && low <= 0xdfff) {
-                    index++;
-                    codePoint = ((codePoint - 0xd800) << 10) + low - 0xdc00 + 0x10000;
-                }
-            }
-            if (codePoint <= 0x7f) {
-                encoded.push(codePoint);
-            }
-            else if (codePoint <= 0x7ff) {
-                encoded.push(((codePoint >> 6) & 0x1F) | 0xc0, (codePoint & 0x3f) | 0x80);
-            }
-            else if (codePoint <= 0xffff) {
-                encoded.push((codePoint >> 12) | 0xe0, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
-            }
-            else if (codePoint <= 0x1fffff) {
-                encoded.push(((codePoint >> 18) & 0x07) | 0xf0, ((codePoint >> 12) & 0x3f) | 0x80, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
-            }
-        }
-        return encoded;
-    }
-    function stringify(token) {
-        if (typeof token === 'string') {
-            return token;
-        }
-        if (Array.isArray(token)) {
-            return '[' + token.map(stringify).join(', ') + ']';
-        }
-        if (token == null) {
-            return '' + token;
-        }
-        if (token.overriddenName) {
-            return `${token.overriddenName}`;
-        }
-        if (token.name) {
-            return `${token.name}`;
-        }
-        if (!token.toString) {
-            return 'object';
-        }
-        // WARNING: do not try to `JSON.stringify(token)` here
-        // see https://github.com/angular/angular/issues/23440
-        const res = token.toString();
-        if (res == null) {
-            return '' + res;
-        }
-        const newLineIndex = res.indexOf('\n');
-        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
-    }
-    class Version {
-        constructor(full) {
-            this.full = full;
-            const splits = full.split('.');
-            this.major = splits[0];
-            this.minor = splits[1];
-            this.patch = splits.slice(2).join('.');
-        }
-    }
-    const __window = typeof window !== 'undefined' && window;
-    const __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
-        self instanceof WorkerGlobalScope && self;
-    const __global = typeof global !== 'undefined' && global;
-    // Check __global first, because in Node tests both __global and __window may be defined and _global
-    // should be __global in that case.
-    const _global = __global || __window || __self;
-    function newArray(size, value) {
-        const list = [];
-        for (let i = 0; i < size; i++) {
-            list.push(value);
-        }
-        return list;
-    }
-    /**
-     * Partitions a given array into 2 arrays, based on a boolean value returned by the condition
-     * function.
-     *
-     * @param arr Input array that should be partitioned
-     * @param conditionFn Condition function that is called for each item in a given array and returns a
-     * boolean value.
-     */
-    function partitionArray(arr, conditionFn) {
-        const truthy = [];
-        const falsy = [];
-        for (const item of arr) {
-            (conditionFn(item) ? truthy : falsy).push(item);
-        }
-        return [truthy, falsy];
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const CONSTANT_PREFIX = '_c';
     /**
      * `ConstantPool` tries to reuse literal factories when two or more literals are identical.
@@ -2206,8 +2084,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case 3 /* Pipe */:
                     return this.pipeDefinitions;
             }
-            error(`Unknown definition kind ${kind}`);
-            return this.componentDefinitions;
         }
         propertyNameOf(kind) {
             switch (kind) {
@@ -2220,8 +2096,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case 3 /* Pipe */:
                     return 'ɵpipe';
             }
-            error(`Unknown definition kind ${kind}`);
-            return '<unknown>';
         }
         freshName() {
             return this.uniqueName(CONSTANT_PREFIX);
@@ -2427,6 +2301,128 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 throw new Error(`Illegal state: symbol without members expected, but got ${JSON.stringify(this)}.`);
             }
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const DASH_CASE_REGEXP = /-+([a-z0-9])/g;
+    function dashCaseToCamelCase(input) {
+        return input.replace(DASH_CASE_REGEXP, (...m) => m[1].toUpperCase());
+    }
+    function splitAtColon(input, defaultValues) {
+        return _splitAt(input, ':', defaultValues);
+    }
+    function splitAtPeriod(input, defaultValues) {
+        return _splitAt(input, '.', defaultValues);
+    }
+    function _splitAt(input, character, defaultValues) {
+        const characterIndex = input.indexOf(character);
+        if (characterIndex == -1)
+            return defaultValues;
+        return [input.slice(0, characterIndex).trim(), input.slice(characterIndex + 1).trim()];
+    }
+    function error(msg) {
+        throw new Error(`Internal Error: ${msg}`);
+    }
+    function utf8Encode(str) {
+        let encoded = [];
+        for (let index = 0; index < str.length; index++) {
+            let codePoint = str.charCodeAt(index);
+            // decode surrogate
+            // see https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+            if (codePoint >= 0xd800 && codePoint <= 0xdbff && str.length > (index + 1)) {
+                const low = str.charCodeAt(index + 1);
+                if (low >= 0xdc00 && low <= 0xdfff) {
+                    index++;
+                    codePoint = ((codePoint - 0xd800) << 10) + low - 0xdc00 + 0x10000;
+                }
+            }
+            if (codePoint <= 0x7f) {
+                encoded.push(codePoint);
+            }
+            else if (codePoint <= 0x7ff) {
+                encoded.push(((codePoint >> 6) & 0x1F) | 0xc0, (codePoint & 0x3f) | 0x80);
+            }
+            else if (codePoint <= 0xffff) {
+                encoded.push((codePoint >> 12) | 0xe0, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
+            }
+            else if (codePoint <= 0x1fffff) {
+                encoded.push(((codePoint >> 18) & 0x07) | 0xf0, ((codePoint >> 12) & 0x3f) | 0x80, ((codePoint >> 6) & 0x3f) | 0x80, (codePoint & 0x3f) | 0x80);
+            }
+        }
+        return encoded;
+    }
+    function stringify(token) {
+        if (typeof token === 'string') {
+            return token;
+        }
+        if (Array.isArray(token)) {
+            return '[' + token.map(stringify).join(', ') + ']';
+        }
+        if (token == null) {
+            return '' + token;
+        }
+        if (token.overriddenName) {
+            return `${token.overriddenName}`;
+        }
+        if (token.name) {
+            return `${token.name}`;
+        }
+        if (!token.toString) {
+            return 'object';
+        }
+        // WARNING: do not try to `JSON.stringify(token)` here
+        // see https://github.com/angular/angular/issues/23440
+        const res = token.toString();
+        if (res == null) {
+            return '' + res;
+        }
+        const newLineIndex = res.indexOf('\n');
+        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
+    }
+    class Version {
+        constructor(full) {
+            this.full = full;
+            const splits = full.split('.');
+            this.major = splits[0];
+            this.minor = splits[1];
+            this.patch = splits.slice(2).join('.');
+        }
+    }
+    const __window = typeof window !== 'undefined' && window;
+    const __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+        self instanceof WorkerGlobalScope && self;
+    const __global = typeof global !== 'undefined' && global;
+    // Check __global first, because in Node tests both __global and __window may be defined and _global
+    // should be __global in that case.
+    const _global = __global || __window || __self;
+    function newArray(size, value) {
+        const list = [];
+        for (let i = 0; i < size; i++) {
+            list.push(value);
+        }
+        return list;
+    }
+    /**
+     * Partitions a given array into 2 arrays, based on a boolean value returned by the condition
+     * function.
+     *
+     * @param arr Input array that should be partitioned
+     * @param conditionFn Condition function that is called for each item in a given array and returns a
+     * boolean value.
+     */
+    function partitionArray(arr, conditionFn) {
+        const truthy = [];
+        const falsy = [];
+        for (const item of arr) {
+            (conditionFn(item) ? truthy : falsy).push(item);
+        }
+        return [truthy, falsy];
     }
 
     /**
@@ -17147,7 +17143,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.3+28.sha-2e0dea6');
+    const VERSION$1 = new Version('11.2.3+38.sha-78bf697');
 
     /**
      * @license
@@ -17804,7 +17800,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.3+28.sha-2e0dea6'));
+        definitionMap.set('version', literal('11.2.3+38.sha-78bf697'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18025,7 +18021,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.3+28.sha-2e0dea6'));
+        definitionMap.set('version', literal('11.2.3+38.sha-78bf697'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21297,7 +21293,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.3+28.sha-2e0dea6');
+    const VERSION$2 = new Version('11.2.3+38.sha-78bf697');
 
     /**
      * @license
@@ -32323,6 +32319,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }
                 }
                 continue;
+                // The export was not a directive, a pipe, or a module. This is an error.
+                // TODO(alxhub): produce a ts.Diagnostic
             }
             const exportScope = {
                 exported: {
@@ -39339,40 +39337,32 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const basePath = host.resolve(projectDir);
         return { projectFile, basePath };
     }
-    function createNgCompilerOptions(basePath, config, tsOptions) {
-        // enableIvy `ngtsc` is an alias for `true`.
-        const { angularCompilerOptions = {} } = config;
-        const { enableIvy } = angularCompilerOptions;
-        angularCompilerOptions.enableIvy = enableIvy !== false && enableIvy !== 'tsc';
-        return Object.assign(Object.assign(Object.assign({}, tsOptions), angularCompilerOptions), { genDir: basePath, basePath });
-    }
     function readConfiguration(project, existingOptions, host = getFileSystem()) {
+        var _a;
         try {
-            const { projectFile, basePath } = calcProjectFileAndBasePath(project, host);
-            const readExtendedConfigFile = (configFile, existingConfig) => {
-                const { config, error } = ts$1.readConfigFile(configFile, file => host.readFile(host.resolve(file)));
+            const fs = getFileSystem();
+            const readConfigFile = (configFile) => ts$1.readConfigFile(configFile, file => host.readFile(host.resolve(file)));
+            const readAngularCompilerOptions = (configFile, parentOptions = {}) => {
+                const { config, error } = readConfigFile(configFile);
                 if (error) {
-                    return { error };
+                    // Errors are handled later on by 'parseJsonConfigFileContent'
+                    return parentOptions;
                 }
                 // we are only interested into merging 'angularCompilerOptions' as
                 // other options like 'compilerOptions' are merged by TS
-                const baseConfig = existingConfig || config;
-                if (existingConfig) {
-                    baseConfig.angularCompilerOptions = Object.assign(Object.assign({}, config.angularCompilerOptions), baseConfig.angularCompilerOptions);
-                }
-                if (config.extends) {
-                    let extendedConfigPath = host.resolve(host.dirname(configFile), config.extends);
-                    extendedConfigPath = host.extname(extendedConfigPath) ?
-                        extendedConfigPath :
-                        absoluteFrom(`${extendedConfigPath}.json`);
-                    if (host.exists(extendedConfigPath)) {
-                        // Call read config recursively as TypeScript only merges CompilerOptions
-                        return readExtendedConfigFile(extendedConfigPath, baseConfig);
+                const existingNgCompilerOptions = Object.assign(Object.assign({}, config.angularCompilerOptions), parentOptions);
+                if (config.extends && typeof config.extends === 'string') {
+                    const extendedConfigPath = getExtendedConfigPath(configFile, config.extends, host, fs);
+                    if (extendedConfigPath !== null) {
+                        // Call readAngularCompilerOptions recursively to merge NG Compiler options
+                        return readAngularCompilerOptions(extendedConfigPath, existingNgCompilerOptions);
                     }
                 }
-                return { config: baseConfig };
+                return existingNgCompilerOptions;
             };
-            const { config, error } = readExtendedConfigFile(projectFile);
+            const { projectFile, basePath } = calcProjectFileAndBasePath(project, host);
+            const configFileName = host.resolve(host.pwd(), projectFile);
+            const { config, error } = readConfigFile(projectFile);
             if (error) {
                 return {
                     project,
@@ -39382,17 +39372,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     emitFlags: EmitFlags.Default
                 };
             }
-            const parseConfigHost = {
-                useCaseSensitiveFileNames: true,
-                fileExists: host.exists.bind(host),
-                readDirectory: ts$1.sys.readDirectory,
-                readFile: ts$1.sys.readFile
-            };
-            const configFileName = host.resolve(host.pwd(), projectFile);
-            const parsed = ts$1.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingOptions, configFileName);
-            const rootNames = parsed.fileNames;
-            const projectReferences = parsed.projectReferences;
-            const options = createNgCompilerOptions(basePath, config, parsed.options);
+            const existingCompilerOptions = Object.assign(Object.assign({ genDir: basePath, basePath }, readAngularCompilerOptions(configFileName)), existingOptions);
+            const parseConfigHost = createParseConfigHost(host, fs);
+            const { options, errors, fileNames: rootNames, projectReferences } = ts$1.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingCompilerOptions, configFileName);
+            // Coerce to boolean as `enableIvy` can be `ngtsc|true|false|undefined` here.
+            options.enableIvy = !!((_a = options.enableIvy) !== null && _a !== void 0 ? _a : true);
             let emitFlags = EmitFlags.Default;
             if (!(options.skipMetadataEmit || options.flatModuleOutFile)) {
                 emitFlags |= EmitFlags.Metadata;
@@ -39400,14 +39384,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             if (options.skipTemplateCodegen) {
                 emitFlags = emitFlags & ~EmitFlags.Codegen;
             }
-            return {
-                project: projectFile,
-                rootNames,
-                projectReferences,
-                options,
-                errors: parsed.errors,
-                emitFlags
-            };
+            return { project: projectFile, rootNames, projectReferences, options, errors, emitFlags };
         }
         catch (e) {
             const errors = [{
@@ -39421,6 +39398,35 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 }];
             return { project: '', errors, rootNames: [], options: {}, emitFlags: EmitFlags.Default };
         }
+    }
+    function createParseConfigHost(host, fs = getFileSystem()) {
+        return {
+            fileExists: host.exists.bind(host),
+            readDirectory: ts$1.sys.readDirectory,
+            readFile: host.readFile.bind(host),
+            useCaseSensitiveFileNames: fs.isCaseSensitive(),
+        };
+    }
+    function getExtendedConfigPath(configFile, extendsValue, host, fs) {
+        let extendedConfigPath = null;
+        if (extendsValue.startsWith('.') || fs.isRooted(extendsValue)) {
+            extendedConfigPath = host.resolve(host.dirname(configFile), extendsValue);
+            extendedConfigPath = host.extname(extendedConfigPath) ?
+                extendedConfigPath :
+                absoluteFrom(`${extendedConfigPath}.json`);
+        }
+        else {
+            const parseConfigHost = createParseConfigHost(host, fs);
+            // Path isn't a rooted or relative path, resolve like a module.
+            const { resolvedModule, } = ts$1.nodeModuleNameResolver(extendsValue, configFile, { moduleResolution: ts$1.ModuleResolutionKind.NodeJs, resolveJsonModule: true }, parseConfigHost);
+            if (resolvedModule) {
+                extendedConfigPath = absoluteFrom(resolvedModule.resolvedFileName);
+            }
+        }
+        if (extendedConfigPath !== null && host.exists(extendedConfigPath)) {
+            return extendedConfigPath;
+        }
+        return null;
     }
 
     /**
@@ -40224,7 +40230,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (meta === null) {
                     continue;
                 }
-                for (const [propertyName, classPropertyName] of meta.inputs) {
+                for (const [classPropertyName, propertyName] of meta.inputs) {
                     if (table.has(propertyName)) {
                         continue;
                     }
@@ -40236,7 +40242,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         twoWayBindingSupported: meta.outputs.hasBindingPropertyName(propertyName + 'Change'),
                     });
                 }
-                for (const [propertyName, classPropertyName] of meta.outputs) {
+                for (const [classPropertyName, propertyName] of meta.outputs) {
                     if (table.has(propertyName)) {
                         continue;
                     }
