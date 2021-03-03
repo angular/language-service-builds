@@ -10,15 +10,23 @@ import { CompilerOptions } from '@angular/compiler-cli';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import { GetTcbResponse } from '../api';
 import { CompilerFactory } from './compiler_factory';
+interface LanguageServiceConfig {
+    /**
+     * If true, enable `strictTemplates` in Angular compiler options regardless
+     * of its value in tsconfig.json.
+     */
+    forceStrictTemplates?: true;
+}
 export declare class LanguageService {
     private readonly project;
     private readonly tsLS;
+    private readonly config;
     private options;
     readonly compilerFactory: CompilerFactory;
     private readonly strategy;
     private readonly adapter;
     private readonly parseConfigHost;
-    constructor(project: ts.server.Project, tsLS: ts.LanguageService);
+    constructor(project: ts.server.Project, tsLS: ts.LanguageService, config: LanguageServiceConfig);
     getCompilerOptions(): CompilerOptions;
     getSemanticDiagnostics(fileName: string): ts.Diagnostic[];
     getDefinitionAndBoundSpan(fileName: string, position: number): ts.DefinitionInfoAndBoundSpan | undefined;
@@ -36,3 +44,4 @@ export declare class LanguageService {
     getCompilerOptionsDiagnostics(): ts.Diagnostic[];
     private watchConfigFile;
 }
+export {};
