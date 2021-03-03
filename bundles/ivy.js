@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+57.sha-0847a03
+ * @license Angular v12.0.0-next.2+58.sha-bb6e5e2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20411,7 +20411,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+57.sha-0847a03');
+    const VERSION$1 = new Version('12.0.0-next.2+58.sha-bb6e5e2');
 
     /**
      * @license
@@ -21068,7 +21068,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+57.sha-0847a03'));
+        definitionMap.set('version', literal('12.0.0-next.2+58.sha-bb6e5e2'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21289,7 +21289,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+57.sha-0847a03'));
+        definitionMap.set('version', literal('12.0.0-next.2+58.sha-bb6e5e2'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21321,7 +21321,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.2+57.sha-0847a03');
+    const VERSION$2 = new Version('12.0.0-next.2+58.sha-bb6e5e2');
 
     /**
      * @license
@@ -42333,7 +42333,27 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 const program = compiler.getNextProgram();
                 const sourceFile = program.getSourceFile(fileName);
                 if (sourceFile) {
-                    diagnostics.push(...compiler.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile));
+                    const ngDiagnostics = compiler.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile);
+                    // There are several kinds of diagnostics returned by `NgCompiler` for a source file:
+                    //
+                    // 1. Angular-related non-template diagnostics from decorated classes within that file.
+                    // 2. Template diagnostics for components with direct inline templates (a string literal).
+                    // 3. Template diagnostics for components with indirect inline templates (templates computed
+                    //    by expression).
+                    // 4. Template diagnostics for components with external templates.
+                    //
+                    // When showing diagnostics for a TS source file, we want to only include kinds 1 and 2 -
+                    // those diagnostics which are reported at a location within the TS file itself. Diagnostics
+                    // for external templates will be shown when editing that template file (the `else` block)
+                    // below.
+                    //
+                    // Currently, indirect inline template diagnostics (kind 3) are not shown at all by the
+                    // Language Service, because there is no sensible location in the user's code for them. Such
+                    // templates are an edge case, though, and should not be common.
+                    //
+                    // TODO(alxhub): figure out a good user experience for indirect template diagnostics and
+                    // show them from within the Language Service.
+                    diagnostics.push(...ngDiagnostics.filter(diag => diag.file !== undefined && diag.file.fileName === sourceFile.fileName));
                 }
             }
             else {
