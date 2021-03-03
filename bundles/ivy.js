@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+49.sha-21f0dee
+ * @license Angular v12.0.0-next.2+50.sha-e9e7c33
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17169,7 +17169,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+49.sha-21f0dee');
+    const VERSION$1 = new Version('12.0.0-next.2+50.sha-e9e7c33');
 
     /**
      * @license
@@ -17826,7 +17826,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+49.sha-21f0dee'));
+        definitionMap.set('version', literal('12.0.0-next.2+50.sha-e9e7c33'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18047,7 +18047,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+49.sha-21f0dee'));
+        definitionMap.set('version', literal('12.0.0-next.2+50.sha-e9e7c33'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21319,7 +21319,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.2+49.sha-21f0dee');
+    const VERSION$2 = new Version('12.0.0-next.2+50.sha-e9e7c33');
 
     /**
      * @license
@@ -42263,11 +42263,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     class LanguageService {
-        constructor(project, tsLS) {
+        constructor(project, tsLS, config) {
             this.project = project;
             this.tsLS = tsLS;
+            this.config = config;
             this.parseConfigHost = new LSParseConfigHost(project.projectService.host);
-            this.options = parseNgCompilerOptions(project, this.parseConfigHost);
+            this.options = parseNgCompilerOptions(project, this.parseConfigHost, config);
             logCompilerOptions(project, this.options);
             this.strategy = createTypeCheckingProgramStrategy(project);
             this.adapter = new LanguageServiceAdapter(project);
@@ -42524,7 +42525,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             host.watchFile(project.getConfigFilePath(), (fileName, eventKind) => {
                 project.log(`Config file changed: ${fileName}`);
                 if (eventKind === ts.FileWatcherEventKind.Changed) {
-                    this.options = parseNgCompilerOptions(project, this.parseConfigHost);
+                    this.options = parseNgCompilerOptions(project, this.parseConfigHost, this.config);
                     logCompilerOptions(project, this.options);
                 }
             });
@@ -42535,7 +42536,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const projectName = project.getProjectName();
         logger.info(`Angular compiler options for ${projectName}: ` + JSON.stringify(options, null, 2));
     }
-    function parseNgCompilerOptions(project, host) {
+    function parseNgCompilerOptions(project, host, config) {
         if (!(project instanceof ts.server.ConfiguredProject)) {
             return {};
         }
@@ -42553,6 +42554,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         // are not exported. In many cases, this ensures the test NgModules are ignored by the compiler
         // and only the real component declaration is used.
         options.compileNonExportedClasses = false;
+        // If `forceStrictTemplates` is true, always enable `strictTemplates`
+        // regardless of its value in tsconfig.json.
+        if (config.forceStrictTemplates === true) {
+            options.strictTemplates = true;
+        }
         return options;
     }
     function createTypeCheckingProgramStrategy(project) {
@@ -42670,7 +42676,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function create(info) {
         const { project, languageService: tsLS, config } = info;
         const angularOnly = (config === null || config === void 0 ? void 0 : config.angularOnly) === true;
-        const ngLS = new LanguageService(project, tsLS);
+        const ngLS = new LanguageService(project, tsLS, config);
         function getSemanticDiagnostics(fileName) {
             const diagnostics = [];
             if (!angularOnly) {
