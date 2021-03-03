@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+55.sha-7765b64
+ * @license Angular v12.0.0-next.2+57.sha-0847a03
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -36,6 +36,3246 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     util = util && Object.prototype.hasOwnProperty.call(util, 'default') ? util['default'] : util;
     assert = assert && Object.prototype.hasOwnProperty.call(assert, 'default') ? assert['default'] : assert;
     var path__default = 'default' in path ? path['default'] : path;
+
+    /**
+     * The default `FileSystem` that will always fail.
+     *
+     * This is a way of ensuring that the developer consciously chooses and
+     * configures the `FileSystem` before using it; particularly important when
+     * considering static functions like `absoluteFrom()` which rely on
+     * the `FileSystem` under the hood.
+     */
+    class InvalidFileSystem {
+        exists(path) {
+            throw makeError();
+        }
+        readFile(path) {
+            throw makeError();
+        }
+        readFileBuffer(path) {
+            throw makeError();
+        }
+        writeFile(path, data, exclusive) {
+            throw makeError();
+        }
+        removeFile(path) {
+            throw makeError();
+        }
+        symlink(target, path) {
+            throw makeError();
+        }
+        readdir(path) {
+            throw makeError();
+        }
+        lstat(path) {
+            throw makeError();
+        }
+        stat(path) {
+            throw makeError();
+        }
+        pwd() {
+            throw makeError();
+        }
+        chdir(path) {
+            throw makeError();
+        }
+        extname(path) {
+            throw makeError();
+        }
+        copyFile(from, to) {
+            throw makeError();
+        }
+        moveFile(from, to) {
+            throw makeError();
+        }
+        ensureDir(path) {
+            throw makeError();
+        }
+        removeDeep(path) {
+            throw makeError();
+        }
+        isCaseSensitive() {
+            throw makeError();
+        }
+        resolve(...paths) {
+            throw makeError();
+        }
+        dirname(file) {
+            throw makeError();
+        }
+        join(basePath, ...paths) {
+            throw makeError();
+        }
+        isRoot(path) {
+            throw makeError();
+        }
+        isRooted(path) {
+            throw makeError();
+        }
+        relative(from, to) {
+            throw makeError();
+        }
+        basename(filePath, extension) {
+            throw makeError();
+        }
+        realpath(filePath) {
+            throw makeError();
+        }
+        getDefaultLibLocation() {
+            throw makeError();
+        }
+        normalize(path) {
+            throw makeError();
+        }
+    }
+    function makeError() {
+        return new Error('FileSystem has not been configured. Please call `setFileSystem()` before calling this method.');
+    }
+
+    const TS_DTS_JS_EXTENSION = /(?:\.d)?\.ts$|\.js$/;
+    /**
+     * Remove a .ts, .d.ts, or .js extension from a file name.
+     */
+    function stripExtension(path) {
+        return path.replace(TS_DTS_JS_EXTENSION, '');
+    }
+    function getSourceFileOrError(program, fileName) {
+        const sf = program.getSourceFile(fileName);
+        if (sf === undefined) {
+            throw new Error(`Program does not contain "${fileName}" - available files are ${program.getSourceFiles().map(sf => sf.fileName).join(', ')}`);
+        }
+        return sf;
+    }
+
+    let fs = new InvalidFileSystem();
+    function getFileSystem() {
+        return fs;
+    }
+    function setFileSystem(fileSystem) {
+        fs = fileSystem;
+    }
+    /**
+     * Convert the path `path` to an `AbsoluteFsPath`, throwing an error if it's not an absolute path.
+     */
+    function absoluteFrom(path) {
+        if (!fs.isRooted(path)) {
+            throw new Error(`Internal Error: absoluteFrom(${path}): path is not absolute`);
+        }
+        return fs.resolve(path);
+    }
+    /**
+     * Extract an `AbsoluteFsPath` from a `ts.SourceFile`.
+     */
+    function absoluteFromSourceFile(sf) {
+        return fs.resolve(sf.fileName);
+    }
+    /**
+     * Static access to `dirname`.
+     */
+    function dirname(file) {
+        return fs.dirname(file);
+    }
+    /**
+     * Static access to `join`.
+     */
+    function join(basePath, ...paths) {
+        return fs.join(basePath, ...paths);
+    }
+    /**
+     * Static access to `resolve`s.
+     */
+    function resolve(basePath, ...paths) {
+        return fs.resolve(basePath, ...paths);
+    }
+    /**
+     * Static access to `isRooted`.
+     */
+    function isRooted(path) {
+        return fs.isRooted(path);
+    }
+    /**
+     * Static access to `relative`.
+     */
+    function relative(from, to) {
+        return fs.relative(from, to);
+    }
+    /**
+     * Returns true if the given path is locally relative.
+     *
+     * This is used to work out if the given path is relative (i.e. not absolute) but also is not
+     * escaping the current directory.
+     */
+    function isLocalRelativePath(relativePath) {
+        return !isRooted(relativePath) && !relativePath.startsWith('..');
+    }
+    /**
+     * Converts a path to a form suitable for use as a relative module import specifier.
+     *
+     * In other words it adds the `./` to the path if it is locally relative.
+     */
+    function toRelativeImport(relativePath) {
+        return isLocalRelativePath(relativePath) ? `./${relativePath}` : relativePath;
+    }
+
+    const LogicalProjectPath = {
+        /**
+         * Get the relative path between two `LogicalProjectPath`s.
+         *
+         * This will return a `PathSegment` which would be a valid module specifier to use in `from` when
+         * importing from `to`.
+         */
+        relativePathBetween: function (from, to) {
+            const relativePath = relative(dirname(resolve(from)), resolve(to));
+            return toRelativeImport(relativePath);
+        },
+    };
+    /**
+     * A utility class which can translate absolute paths to source files into logical paths in
+     * TypeScript's logical file system, based on the root directories of the project.
+     */
+    class LogicalFileSystem {
+        constructor(rootDirs, compilerHost) {
+            this.compilerHost = compilerHost;
+            /**
+             * A cache of file paths to project paths, because computation of these paths is slightly
+             * expensive.
+             */
+            this.cache = new Map();
+            // Make a copy and sort it by length in reverse order (longest first). This speeds up lookups,
+            // since there's no need to keep going through the array once a match is found.
+            this.rootDirs = rootDirs.concat([]).sort((a, b) => b.length - a.length);
+            this.canonicalRootDirs =
+                this.rootDirs.map(dir => this.compilerHost.getCanonicalFileName(dir));
+        }
+        /**
+         * Get the logical path in the project of a `ts.SourceFile`.
+         *
+         * This method is provided as a convenient alternative to calling
+         * `logicalPathOfFile(absoluteFromSourceFile(sf))`.
+         */
+        logicalPathOfSf(sf) {
+            return this.logicalPathOfFile(absoluteFrom(sf.fileName));
+        }
+        /**
+         * Get the logical path in the project of a source file.
+         *
+         * @returns A `LogicalProjectPath` to the source file, or `null` if the source file is not in any
+         * of the TS project's root directories.
+         */
+        logicalPathOfFile(physicalFile) {
+            const canonicalFilePath = this.compilerHost.getCanonicalFileName(physicalFile);
+            if (!this.cache.has(canonicalFilePath)) {
+                let logicalFile = null;
+                for (let i = 0; i < this.rootDirs.length; i++) {
+                    const rootDir = this.rootDirs[i];
+                    const canonicalRootDir = this.canonicalRootDirs[i];
+                    if (isWithinBasePath(canonicalRootDir, canonicalFilePath)) {
+                        // Note that we match against canonical paths but then create the logical path from
+                        // original paths.
+                        logicalFile = this.createLogicalProjectPath(physicalFile, rootDir);
+                        // The logical project does not include any special "node_modules" nested directories.
+                        if (logicalFile.indexOf('/node_modules/') !== -1) {
+                            logicalFile = null;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+                this.cache.set(canonicalFilePath, logicalFile);
+            }
+            return this.cache.get(canonicalFilePath);
+        }
+        createLogicalProjectPath(file, rootDir) {
+            const logicalPath = stripExtension(file.substr(rootDir.length));
+            return (logicalPath.startsWith('/') ? logicalPath : '/' + logicalPath);
+        }
+    }
+    /**
+     * Is the `path` a descendant of the `base`?
+     * E.g. `foo/bar/zee` is within `foo/bar` but not within `foo/car`.
+     */
+    function isWithinBasePath(base, path) {
+        return isLocalRelativePath(relative(base, path));
+    }
+
+    // simple mutable assign
+    function assign () {
+      const args = [].slice.call(arguments).filter(i => i);
+      const dest = args.shift();
+      args.forEach(src => {
+        Object.keys(src).forEach(key => {
+          dest[key] = src[key];
+        });
+      });
+
+      return dest
+    }
+
+    var assign_1 = assign;
+
+    function createCommonjsModule(fn, module) {
+    	return module = { exports: {} }, fn(module, module.exports), module.exports;
+    }
+
+    var fromCallback = function (fn) {
+      return Object.defineProperty(function () {
+        if (typeof arguments[arguments.length - 1] === 'function') fn.apply(this, arguments);
+        else {
+          return new Promise((resolve, reject) => {
+            arguments[arguments.length] = (err, res) => {
+              if (err) return reject(err)
+              resolve(res);
+            };
+            arguments.length++;
+            fn.apply(this, arguments);
+          })
+        }
+      }, 'name', { value: fn.name })
+    };
+
+    var fromPromise = function (fn) {
+      return Object.defineProperty(function () {
+        const cb = arguments[arguments.length - 1];
+        if (typeof cb !== 'function') return fn.apply(this, arguments)
+        else fn.apply(this, arguments).then(r => cb(null, r), cb);
+      }, 'name', { value: fn.name })
+    };
+
+    var universalify = {
+    	fromCallback: fromCallback,
+    	fromPromise: fromPromise
+    };
+
+    var origCwd = process.cwd;
+    var cwd = null;
+
+    var platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
+
+    process.cwd = function() {
+      if (!cwd)
+        cwd = origCwd.call(process);
+      return cwd
+    };
+    try {
+      process.cwd();
+    } catch (er) {}
+
+    var chdir = process.chdir;
+    process.chdir = function(d) {
+      cwd = null;
+      chdir.call(process, d);
+    };
+
+    var polyfills = patch;
+
+    function patch (fs) {
+      // (re-)implement some things that are known busted or missing.
+
+      // lchmod, broken prior to 0.6.2
+      // back-port the fix here.
+      if (constants.hasOwnProperty('O_SYMLINK') &&
+          process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
+        patchLchmod(fs);
+      }
+
+      // lutimes implementation, or no-op
+      if (!fs.lutimes) {
+        patchLutimes(fs);
+      }
+
+      // https://github.com/isaacs/node-graceful-fs/issues/4
+      // Chown should not fail on einval or eperm if non-root.
+      // It should not fail on enosys ever, as this just indicates
+      // that a fs doesn't support the intended operation.
+
+      fs.chown = chownFix(fs.chown);
+      fs.fchown = chownFix(fs.fchown);
+      fs.lchown = chownFix(fs.lchown);
+
+      fs.chmod = chmodFix(fs.chmod);
+      fs.fchmod = chmodFix(fs.fchmod);
+      fs.lchmod = chmodFix(fs.lchmod);
+
+      fs.chownSync = chownFixSync(fs.chownSync);
+      fs.fchownSync = chownFixSync(fs.fchownSync);
+      fs.lchownSync = chownFixSync(fs.lchownSync);
+
+      fs.chmodSync = chmodFixSync(fs.chmodSync);
+      fs.fchmodSync = chmodFixSync(fs.fchmodSync);
+      fs.lchmodSync = chmodFixSync(fs.lchmodSync);
+
+      fs.stat = statFix(fs.stat);
+      fs.fstat = statFix(fs.fstat);
+      fs.lstat = statFix(fs.lstat);
+
+      fs.statSync = statFixSync(fs.statSync);
+      fs.fstatSync = statFixSync(fs.fstatSync);
+      fs.lstatSync = statFixSync(fs.lstatSync);
+
+      // if lchmod/lchown do not exist, then make them no-ops
+      if (!fs.lchmod) {
+        fs.lchmod = function (path, mode, cb) {
+          if (cb) process.nextTick(cb);
+        };
+        fs.lchmodSync = function () {};
+      }
+      if (!fs.lchown) {
+        fs.lchown = function (path, uid, gid, cb) {
+          if (cb) process.nextTick(cb);
+        };
+        fs.lchownSync = function () {};
+      }
+
+      // on Windows, A/V software can lock the directory, causing this
+      // to fail with an EACCES or EPERM if the directory contains newly
+      // created files.  Try again on failure, for up to 60 seconds.
+
+      // Set the timeout this long because some Windows Anti-Virus, such as Parity
+      // bit9, may lock files for up to a minute, causing npm package install
+      // failures. Also, take care to yield the scheduler. Windows scheduling gives
+      // CPU to a busy looping process, which can cause the program causing the lock
+      // contention to be starved of CPU by node, so the contention doesn't resolve.
+      if (platform === "win32") {
+        fs.rename = (function (fs$rename) { return function (from, to, cb) {
+          var start = Date.now();
+          var backoff = 0;
+          fs$rename(from, to, function CB (er) {
+            if (er
+                && (er.code === "EACCES" || er.code === "EPERM")
+                && Date.now() - start < 60000) {
+              setTimeout(function() {
+                fs.stat(to, function (stater, st) {
+                  if (stater && stater.code === "ENOENT")
+                    fs$rename(from, to, CB);
+                  else
+                    cb(er);
+                });
+              }, backoff);
+              if (backoff < 100)
+                backoff += 10;
+              return;
+            }
+            if (cb) cb(er);
+          });
+        }})(fs.rename);
+      }
+
+      // if read() returns EAGAIN, then just try it again.
+      fs.read = (function (fs$read) {
+        function read (fd, buffer, offset, length, position, callback_) {
+          var callback;
+          if (callback_ && typeof callback_ === 'function') {
+            var eagCounter = 0;
+            callback = function (er, _, __) {
+              if (er && er.code === 'EAGAIN' && eagCounter < 10) {
+                eagCounter ++;
+                return fs$read.call(fs, fd, buffer, offset, length, position, callback)
+              }
+              callback_.apply(this, arguments);
+            };
+          }
+          return fs$read.call(fs, fd, buffer, offset, length, position, callback)
+        }
+
+        // This ensures `util.promisify` works as it does for native `fs.read`.
+        read.__proto__ = fs$read;
+        return read
+      })(fs.read);
+
+      fs.readSync = (function (fs$readSync) { return function (fd, buffer, offset, length, position) {
+        var eagCounter = 0;
+        while (true) {
+          try {
+            return fs$readSync.call(fs, fd, buffer, offset, length, position)
+          } catch (er) {
+            if (er.code === 'EAGAIN' && eagCounter < 10) {
+              eagCounter ++;
+              continue
+            }
+            throw er
+          }
+        }
+      }})(fs.readSync);
+
+      function patchLchmod (fs) {
+        fs.lchmod = function (path, mode, callback) {
+          fs.open( path
+                 , constants.O_WRONLY | constants.O_SYMLINK
+                 , mode
+                 , function (err, fd) {
+            if (err) {
+              if (callback) callback(err);
+              return
+            }
+            // prefer to return the chmod error, if one occurs,
+            // but still try to close, and report closing errors if they occur.
+            fs.fchmod(fd, mode, function (err) {
+              fs.close(fd, function(err2) {
+                if (callback) callback(err || err2);
+              });
+            });
+          });
+        };
+
+        fs.lchmodSync = function (path, mode) {
+          var fd = fs.openSync(path, constants.O_WRONLY | constants.O_SYMLINK, mode);
+
+          // prefer to return the chmod error, if one occurs,
+          // but still try to close, and report closing errors if they occur.
+          var threw = true;
+          var ret;
+          try {
+            ret = fs.fchmodSync(fd, mode);
+            threw = false;
+          } finally {
+            if (threw) {
+              try {
+                fs.closeSync(fd);
+              } catch (er) {}
+            } else {
+              fs.closeSync(fd);
+            }
+          }
+          return ret
+        };
+      }
+
+      function patchLutimes (fs) {
+        if (constants.hasOwnProperty("O_SYMLINK")) {
+          fs.lutimes = function (path, at, mt, cb) {
+            fs.open(path, constants.O_SYMLINK, function (er, fd) {
+              if (er) {
+                if (cb) cb(er);
+                return
+              }
+              fs.futimes(fd, at, mt, function (er) {
+                fs.close(fd, function (er2) {
+                  if (cb) cb(er || er2);
+                });
+              });
+            });
+          };
+
+          fs.lutimesSync = function (path, at, mt) {
+            var fd = fs.openSync(path, constants.O_SYMLINK);
+            var ret;
+            var threw = true;
+            try {
+              ret = fs.futimesSync(fd, at, mt);
+              threw = false;
+            } finally {
+              if (threw) {
+                try {
+                  fs.closeSync(fd);
+                } catch (er) {}
+              } else {
+                fs.closeSync(fd);
+              }
+            }
+            return ret
+          };
+
+        } else {
+          fs.lutimes = function (_a, _b, _c, cb) { if (cb) process.nextTick(cb); };
+          fs.lutimesSync = function () {};
+        }
+      }
+
+      function chmodFix (orig) {
+        if (!orig) return orig
+        return function (target, mode, cb) {
+          return orig.call(fs, target, mode, function (er) {
+            if (chownErOk(er)) er = null;
+            if (cb) cb.apply(this, arguments);
+          })
+        }
+      }
+
+      function chmodFixSync (orig) {
+        if (!orig) return orig
+        return function (target, mode) {
+          try {
+            return orig.call(fs, target, mode)
+          } catch (er) {
+            if (!chownErOk(er)) throw er
+          }
+        }
+      }
+
+
+      function chownFix (orig) {
+        if (!orig) return orig
+        return function (target, uid, gid, cb) {
+          return orig.call(fs, target, uid, gid, function (er) {
+            if (chownErOk(er)) er = null;
+            if (cb) cb.apply(this, arguments);
+          })
+        }
+      }
+
+      function chownFixSync (orig) {
+        if (!orig) return orig
+        return function (target, uid, gid) {
+          try {
+            return orig.call(fs, target, uid, gid)
+          } catch (er) {
+            if (!chownErOk(er)) throw er
+          }
+        }
+      }
+
+      function statFix (orig) {
+        if (!orig) return orig
+        // Older versions of Node erroneously returned signed integers for
+        // uid + gid.
+        return function (target, options, cb) {
+          if (typeof options === 'function') {
+            cb = options;
+            options = null;
+          }
+          function callback (er, stats) {
+            if (stats) {
+              if (stats.uid < 0) stats.uid += 0x100000000;
+              if (stats.gid < 0) stats.gid += 0x100000000;
+            }
+            if (cb) cb.apply(this, arguments);
+          }
+          return options ? orig.call(fs, target, options, callback)
+            : orig.call(fs, target, callback)
+        }
+      }
+
+      function statFixSync (orig) {
+        if (!orig) return orig
+        // Older versions of Node erroneously returned signed integers for
+        // uid + gid.
+        return function (target, options) {
+          var stats = options ? orig.call(fs, target, options)
+            : orig.call(fs, target);
+          if (stats.uid < 0) stats.uid += 0x100000000;
+          if (stats.gid < 0) stats.gid += 0x100000000;
+          return stats;
+        }
+      }
+
+      // ENOSYS means that the fs doesn't support the op. Just ignore
+      // that, because it doesn't matter.
+      //
+      // if there's no getuid, or if getuid() is something other
+      // than 0, and the error is EINVAL or EPERM, then just ignore
+      // it.
+      //
+      // This specific case is a silent failure in cp, install, tar,
+      // and most other unix tools that manage permissions.
+      //
+      // When running as root, or if other types of errors are
+      // encountered, then it's strict.
+      function chownErOk (er) {
+        if (!er)
+          return true
+
+        if (er.code === "ENOSYS")
+          return true
+
+        var nonroot = !process.getuid || process.getuid() !== 0;
+        if (nonroot) {
+          if (er.code === "EINVAL" || er.code === "EPERM")
+            return true
+        }
+
+        return false
+      }
+    }
+
+    var Stream = stream.Stream;
+
+    var legacyStreams = legacy;
+
+    function legacy (fs) {
+      return {
+        ReadStream: ReadStream,
+        WriteStream: WriteStream
+      }
+
+      function ReadStream (path, options) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path, options);
+
+        Stream.call(this);
+
+        var self = this;
+
+        this.path = path;
+        this.fd = null;
+        this.readable = true;
+        this.paused = false;
+
+        this.flags = 'r';
+        this.mode = 438; /*=0666*/
+        this.bufferSize = 64 * 1024;
+
+        options = options || {};
+
+        // Mixin options into this
+        var keys = Object.keys(options);
+        for (var index = 0, length = keys.length; index < length; index++) {
+          var key = keys[index];
+          this[key] = options[key];
+        }
+
+        if (this.encoding) this.setEncoding(this.encoding);
+
+        if (this.start !== undefined) {
+          if ('number' !== typeof this.start) {
+            throw TypeError('start must be a Number');
+          }
+          if (this.end === undefined) {
+            this.end = Infinity;
+          } else if ('number' !== typeof this.end) {
+            throw TypeError('end must be a Number');
+          }
+
+          if (this.start > this.end) {
+            throw new Error('start must be <= end');
+          }
+
+          this.pos = this.start;
+        }
+
+        if (this.fd !== null) {
+          process.nextTick(function() {
+            self._read();
+          });
+          return;
+        }
+
+        fs.open(this.path, this.flags, this.mode, function (err, fd) {
+          if (err) {
+            self.emit('error', err);
+            self.readable = false;
+            return;
+          }
+
+          self.fd = fd;
+          self.emit('open', fd);
+          self._read();
+        });
+      }
+
+      function WriteStream (path, options) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path, options);
+
+        Stream.call(this);
+
+        this.path = path;
+        this.fd = null;
+        this.writable = true;
+
+        this.flags = 'w';
+        this.encoding = 'binary';
+        this.mode = 438; /*=0666*/
+        this.bytesWritten = 0;
+
+        options = options || {};
+
+        // Mixin options into this
+        var keys = Object.keys(options);
+        for (var index = 0, length = keys.length; index < length; index++) {
+          var key = keys[index];
+          this[key] = options[key];
+        }
+
+        if (this.start !== undefined) {
+          if ('number' !== typeof this.start) {
+            throw TypeError('start must be a Number');
+          }
+          if (this.start < 0) {
+            throw new Error('start must be >= zero');
+          }
+
+          this.pos = this.start;
+        }
+
+        this.busy = false;
+        this._queue = [];
+
+        if (this.fd === null) {
+          this._open = fs.open;
+          this._queue.push([this._open, this.path, this.flags, this.mode, undefined]);
+          this.flush();
+        }
+      }
+    }
+
+    var clone_1 = clone;
+
+    function clone (obj) {
+      if (obj === null || typeof obj !== 'object')
+        return obj
+
+      if (obj instanceof Object)
+        var copy = { __proto__: obj.__proto__ };
+      else
+        var copy = Object.create(null);
+
+      Object.getOwnPropertyNames(obj).forEach(function (key) {
+        Object.defineProperty(copy, key, Object.getOwnPropertyDescriptor(obj, key));
+      });
+
+      return copy
+    }
+
+    var gracefulFs = createCommonjsModule(function (module) {
+    /* istanbul ignore next - node 0.x polyfill */
+    var gracefulQueue;
+    var previousSymbol;
+
+    /* istanbul ignore else - node 0.x polyfill */
+    if (typeof Symbol === 'function' && typeof Symbol.for === 'function') {
+      gracefulQueue = Symbol.for('graceful-fs.queue');
+      // This is used in testing by future versions
+      previousSymbol = Symbol.for('graceful-fs.previous');
+    } else {
+      gracefulQueue = '___graceful-fs.queue';
+      previousSymbol = '___graceful-fs.previous';
+    }
+
+    function noop () {}
+
+    function publishQueue(context, queue) {
+      Object.defineProperty(context, gracefulQueue, {
+        get: function() {
+          return queue
+        }
+      });
+    }
+
+    var debug = noop;
+    if (util.debuglog)
+      debug = util.debuglog('gfs4');
+    else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ''))
+      debug = function() {
+        var m = util.format.apply(util, arguments);
+        m = 'GFS4: ' + m.split(/\n/).join('\nGFS4: ');
+        console.error(m);
+      };
+
+    // Once time initialization
+    if (!fs$2__default[gracefulQueue]) {
+      // This queue can be shared by multiple loaded instances
+      var queue = global[gracefulQueue] || [];
+      publishQueue(fs$2__default, queue);
+
+      // Patch fs.close/closeSync to shared queue version, because we need
+      // to retry() whenever a close happens *anywhere* in the program.
+      // This is essential when multiple graceful-fs instances are
+      // in play at the same time.
+      fs$2__default.close = (function (fs$close) {
+        function close (fd, cb) {
+          return fs$close.call(fs$2__default, fd, function (err) {
+            // This function uses the graceful-fs shared queue
+            if (!err) {
+              retry();
+            }
+
+            if (typeof cb === 'function')
+              cb.apply(this, arguments);
+          })
+        }
+
+        Object.defineProperty(close, previousSymbol, {
+          value: fs$close
+        });
+        return close
+      })(fs$2__default.close);
+
+      fs$2__default.closeSync = (function (fs$closeSync) {
+        function closeSync (fd) {
+          // This function uses the graceful-fs shared queue
+          fs$closeSync.apply(fs$2__default, arguments);
+          retry();
+        }
+
+        Object.defineProperty(closeSync, previousSymbol, {
+          value: fs$closeSync
+        });
+        return closeSync
+      })(fs$2__default.closeSync);
+
+      if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || '')) {
+        process.on('exit', function() {
+          debug(fs$2__default[gracefulQueue]);
+          assert.equal(fs$2__default[gracefulQueue].length, 0);
+        });
+      }
+    }
+
+    if (!global[gracefulQueue]) {
+      publishQueue(global, fs$2__default[gracefulQueue]);
+    }
+
+    module.exports = patch(clone_1(fs$2__default));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs$2__default.__patched) {
+        module.exports = patch(fs$2__default);
+        fs$2__default.__patched = true;
+    }
+
+    function patch (fs) {
+      // Everything that references the open() function needs to be in here
+      polyfills(fs);
+      fs.gracefulify = patch;
+
+      fs.createReadStream = createReadStream;
+      fs.createWriteStream = createWriteStream;
+      var fs$readFile = fs.readFile;
+      fs.readFile = readFile;
+      function readFile (path, options, cb) {
+        if (typeof options === 'function')
+          cb = options, options = null;
+
+        return go$readFile(path, options, cb)
+
+        function go$readFile (path, options, cb) {
+          return fs$readFile(path, options, function (err) {
+            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+              enqueue([go$readFile, [path, options, cb]]);
+            else {
+              if (typeof cb === 'function')
+                cb.apply(this, arguments);
+              retry();
+            }
+          })
+        }
+      }
+
+      var fs$writeFile = fs.writeFile;
+      fs.writeFile = writeFile;
+      function writeFile (path, data, options, cb) {
+        if (typeof options === 'function')
+          cb = options, options = null;
+
+        return go$writeFile(path, data, options, cb)
+
+        function go$writeFile (path, data, options, cb) {
+          return fs$writeFile(path, data, options, function (err) {
+            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+              enqueue([go$writeFile, [path, data, options, cb]]);
+            else {
+              if (typeof cb === 'function')
+                cb.apply(this, arguments);
+              retry();
+            }
+          })
+        }
+      }
+
+      var fs$appendFile = fs.appendFile;
+      if (fs$appendFile)
+        fs.appendFile = appendFile;
+      function appendFile (path, data, options, cb) {
+        if (typeof options === 'function')
+          cb = options, options = null;
+
+        return go$appendFile(path, data, options, cb)
+
+        function go$appendFile (path, data, options, cb) {
+          return fs$appendFile(path, data, options, function (err) {
+            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+              enqueue([go$appendFile, [path, data, options, cb]]);
+            else {
+              if (typeof cb === 'function')
+                cb.apply(this, arguments);
+              retry();
+            }
+          })
+        }
+      }
+
+      var fs$readdir = fs.readdir;
+      fs.readdir = readdir;
+      function readdir (path, options, cb) {
+        var args = [path];
+        if (typeof options !== 'function') {
+          args.push(options);
+        } else {
+          cb = options;
+        }
+        args.push(go$readdir$cb);
+
+        return go$readdir(args)
+
+        function go$readdir$cb (err, files) {
+          if (files && files.sort)
+            files.sort();
+
+          if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+            enqueue([go$readdir, [args]]);
+
+          else {
+            if (typeof cb === 'function')
+              cb.apply(this, arguments);
+            retry();
+          }
+        }
+      }
+
+      function go$readdir (args) {
+        return fs$readdir.apply(fs, args)
+      }
+
+      if (process.version.substr(0, 4) === 'v0.8') {
+        var legStreams = legacyStreams(fs);
+        ReadStream = legStreams.ReadStream;
+        WriteStream = legStreams.WriteStream;
+      }
+
+      var fs$ReadStream = fs.ReadStream;
+      if (fs$ReadStream) {
+        ReadStream.prototype = Object.create(fs$ReadStream.prototype);
+        ReadStream.prototype.open = ReadStream$open;
+      }
+
+      var fs$WriteStream = fs.WriteStream;
+      if (fs$WriteStream) {
+        WriteStream.prototype = Object.create(fs$WriteStream.prototype);
+        WriteStream.prototype.open = WriteStream$open;
+      }
+
+      Object.defineProperty(fs, 'ReadStream', {
+        get: function () {
+          return ReadStream
+        },
+        set: function (val) {
+          ReadStream = val;
+        },
+        enumerable: true,
+        configurable: true
+      });
+      Object.defineProperty(fs, 'WriteStream', {
+        get: function () {
+          return WriteStream
+        },
+        set: function (val) {
+          WriteStream = val;
+        },
+        enumerable: true,
+        configurable: true
+      });
+
+      // legacy names
+      var FileReadStream = ReadStream;
+      Object.defineProperty(fs, 'FileReadStream', {
+        get: function () {
+          return FileReadStream
+        },
+        set: function (val) {
+          FileReadStream = val;
+        },
+        enumerable: true,
+        configurable: true
+      });
+      var FileWriteStream = WriteStream;
+      Object.defineProperty(fs, 'FileWriteStream', {
+        get: function () {
+          return FileWriteStream
+        },
+        set: function (val) {
+          FileWriteStream = val;
+        },
+        enumerable: true,
+        configurable: true
+      });
+
+      function ReadStream (path, options) {
+        if (this instanceof ReadStream)
+          return fs$ReadStream.apply(this, arguments), this
+        else
+          return ReadStream.apply(Object.create(ReadStream.prototype), arguments)
+      }
+
+      function ReadStream$open () {
+        var that = this;
+        open(that.path, that.flags, that.mode, function (err, fd) {
+          if (err) {
+            if (that.autoClose)
+              that.destroy();
+
+            that.emit('error', err);
+          } else {
+            that.fd = fd;
+            that.emit('open', fd);
+            that.read();
+          }
+        });
+      }
+
+      function WriteStream (path, options) {
+        if (this instanceof WriteStream)
+          return fs$WriteStream.apply(this, arguments), this
+        else
+          return WriteStream.apply(Object.create(WriteStream.prototype), arguments)
+      }
+
+      function WriteStream$open () {
+        var that = this;
+        open(that.path, that.flags, that.mode, function (err, fd) {
+          if (err) {
+            that.destroy();
+            that.emit('error', err);
+          } else {
+            that.fd = fd;
+            that.emit('open', fd);
+          }
+        });
+      }
+
+      function createReadStream (path, options) {
+        return new fs.ReadStream(path, options)
+      }
+
+      function createWriteStream (path, options) {
+        return new fs.WriteStream(path, options)
+      }
+
+      var fs$open = fs.open;
+      fs.open = open;
+      function open (path, flags, mode, cb) {
+        if (typeof mode === 'function')
+          cb = mode, mode = null;
+
+        return go$open(path, flags, mode, cb)
+
+        function go$open (path, flags, mode, cb) {
+          return fs$open(path, flags, mode, function (err, fd) {
+            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+              enqueue([go$open, [path, flags, mode, cb]]);
+            else {
+              if (typeof cb === 'function')
+                cb.apply(this, arguments);
+              retry();
+            }
+          })
+        }
+      }
+
+      return fs
+    }
+
+    function enqueue (elem) {
+      debug('ENQUEUE', elem[0].name, elem[1]);
+      fs$2__default[gracefulQueue].push(elem);
+    }
+
+    function retry () {
+      var elem = fs$2__default[gracefulQueue].shift();
+      if (elem) {
+        debug('RETRY', elem[0].name, elem[1]);
+        elem[0].apply(null, elem[1]);
+      }
+    }
+    });
+
+    var fs_1 = createCommonjsModule(function (module, exports) {
+    // This is adapted from https://github.com/normalize/mz
+    // Copyright (c) 2014-2016 Jonathan Ong me@jongleberry.com and Contributors
+    const u = universalify.fromCallback;
+
+
+    const api = [
+      'access',
+      'appendFile',
+      'chmod',
+      'chown',
+      'close',
+      'fchmod',
+      'fchown',
+      'fdatasync',
+      'fstat',
+      'fsync',
+      'ftruncate',
+      'futimes',
+      'lchown',
+      'link',
+      'lstat',
+      'mkdir',
+      'open',
+      'readFile',
+      'readdir',
+      'readlink',
+      'realpath',
+      'rename',
+      'rmdir',
+      'stat',
+      'symlink',
+      'truncate',
+      'unlink',
+      'utimes',
+      'writeFile'
+    ];
+    // Add methods that are only in some Node.js versions
+    // fs.copyFile was added in Node.js v8.5.0
+    typeof gracefulFs.copyFile === 'function' && api.push('copyFile');
+    // fs.mkdtemp() was added in Node.js v5.10.0
+    typeof gracefulFs.mkdtemp === 'function' && api.push('mkdtemp');
+
+    // Export all keys:
+    Object.keys(gracefulFs).forEach(key => {
+      exports[key] = gracefulFs[key];
+    });
+
+    // Universalify async methods:
+    api.forEach(method => {
+      exports[method] = u(gracefulFs[method]);
+    });
+
+    // We differ from mz/fs in that we still ship the old, broken, fs.exists()
+    // since we are a drop-in replacement for the native module
+    exports.exists = function (filename, callback) {
+      if (typeof callback === 'function') {
+        return gracefulFs.exists(filename, callback)
+      }
+      return new Promise(resolve => {
+        return gracefulFs.exists(filename, resolve)
+      })
+    };
+
+    // fs.read() & fs.write need special treatment due to multiple callback args
+
+    exports.read = function (fd, buffer, offset, length, position, callback) {
+      if (typeof callback === 'function') {
+        return gracefulFs.read(fd, buffer, offset, length, position, callback)
+      }
+      return new Promise((resolve, reject) => {
+        gracefulFs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
+          if (err) return reject(err)
+          resolve({ bytesRead, buffer });
+        });
+      })
+    };
+
+    // Function signature can be
+    // fs.write(fd, buffer[, offset[, length[, position]]], callback)
+    // OR
+    // fs.write(fd, string[, position[, encoding]], callback)
+    // so we need to handle both cases
+    exports.write = function (fd, buffer, a, b, c, callback) {
+      if (typeof arguments[arguments.length - 1] === 'function') {
+        return gracefulFs.write(fd, buffer, a, b, c, callback)
+      }
+
+      // Check for old, depricated fs.write(fd, string[, position[, encoding]], callback)
+      if (typeof buffer === 'string') {
+        return new Promise((resolve, reject) => {
+          gracefulFs.write(fd, buffer, a, b, (err, bytesWritten, buffer) => {
+            if (err) return reject(err)
+            resolve({ bytesWritten, buffer });
+          });
+        })
+      }
+
+      return new Promise((resolve, reject) => {
+        gracefulFs.write(fd, buffer, a, b, c, (err, bytesWritten, buffer) => {
+          if (err) return reject(err)
+          resolve({ bytesWritten, buffer });
+        });
+      })
+    };
+    });
+    var fs_2 = fs_1.exists;
+    var fs_3 = fs_1.read;
+    var fs_4 = fs_1.write;
+
+    // HFS, ext{2,3}, FAT do not, Node.js v0.10 does not
+    function hasMillisResSync () {
+      let tmpfile = path__default.join('millis-test-sync' + Date.now().toString() + Math.random().toString().slice(2));
+      tmpfile = path__default.join(os__default.tmpdir(), tmpfile);
+
+      // 550 millis past UNIX epoch
+      const d = new Date(1435410243862);
+      gracefulFs.writeFileSync(tmpfile, 'https://github.com/jprichardson/node-fs-extra/pull/141');
+      const fd = gracefulFs.openSync(tmpfile, 'r+');
+      gracefulFs.futimesSync(fd, d, d);
+      gracefulFs.closeSync(fd);
+      return gracefulFs.statSync(tmpfile).mtime > 1435410243000
+    }
+
+    function hasMillisRes (callback) {
+      let tmpfile = path__default.join('millis-test' + Date.now().toString() + Math.random().toString().slice(2));
+      tmpfile = path__default.join(os__default.tmpdir(), tmpfile);
+
+      // 550 millis past UNIX epoch
+      const d = new Date(1435410243862);
+      gracefulFs.writeFile(tmpfile, 'https://github.com/jprichardson/node-fs-extra/pull/141', err => {
+        if (err) return callback(err)
+        gracefulFs.open(tmpfile, 'r+', (err, fd) => {
+          if (err) return callback(err)
+          gracefulFs.futimes(fd, d, d, err => {
+            if (err) return callback(err)
+            gracefulFs.close(fd, err => {
+              if (err) return callback(err)
+              gracefulFs.stat(tmpfile, (err, stats) => {
+                if (err) return callback(err)
+                callback(null, stats.mtime > 1435410243000);
+              });
+            });
+          });
+        });
+      });
+    }
+
+    function timeRemoveMillis (timestamp) {
+      if (typeof timestamp === 'number') {
+        return Math.floor(timestamp / 1000) * 1000
+      } else if (timestamp instanceof Date) {
+        return new Date(Math.floor(timestamp.getTime() / 1000) * 1000)
+      } else {
+        throw new Error('fs-extra: timeRemoveMillis() unknown parameter type')
+      }
+    }
+
+    function utimesMillis (path, atime, mtime, callback) {
+      // if (!HAS_MILLIS_RES) return fs.utimes(path, atime, mtime, callback)
+      gracefulFs.open(path, 'r+', (err, fd) => {
+        if (err) return callback(err)
+        gracefulFs.futimes(fd, atime, mtime, futimesErr => {
+          gracefulFs.close(fd, closeErr => {
+            if (callback) callback(futimesErr || closeErr);
+          });
+        });
+      });
+    }
+
+    var utimes = {
+      hasMillisRes,
+      hasMillisResSync,
+      timeRemoveMillis,
+      utimesMillis
+    };
+
+    // imported from ncp (this is temporary, will rewrite)
+
+
+
+
+
+    function ncp (source, dest, options, callback) {
+      if (!callback) {
+        callback = options;
+        options = {};
+      }
+
+      var basePath = process.cwd();
+      var currentPath = path__default.resolve(basePath, source);
+      var targetPath = path__default.resolve(basePath, dest);
+
+      var filter = options.filter;
+      var transform = options.transform;
+      var overwrite = options.overwrite;
+      // If overwrite is undefined, use clobber, otherwise default to true:
+      if (overwrite === undefined) overwrite = options.clobber;
+      if (overwrite === undefined) overwrite = true;
+      var errorOnExist = options.errorOnExist;
+      var dereference = options.dereference;
+      var preserveTimestamps = options.preserveTimestamps === true;
+
+      var started = 0;
+      var finished = 0;
+      var running = 0;
+
+      var errored = false;
+
+      startCopy(currentPath);
+
+      function startCopy (source) {
+        started++;
+        if (filter) {
+          if (filter instanceof RegExp) {
+            console.warn('Warning: fs-extra: Passing a RegExp filter is deprecated, use a function');
+            if (!filter.test(source)) {
+              return doneOne(true)
+            }
+          } else if (typeof filter === 'function') {
+            if (!filter(source, dest)) {
+              return doneOne(true)
+            }
+          }
+        }
+        return getStats(source)
+      }
+
+      function getStats (source) {
+        var stat = dereference ? gracefulFs.stat : gracefulFs.lstat;
+        running++;
+        stat(source, function (err, stats) {
+          if (err) return onError(err)
+
+          // We need to get the mode from the stats object and preserve it.
+          var item = {
+            name: source,
+            mode: stats.mode,
+            mtime: stats.mtime, // modified time
+            atime: stats.atime, // access time
+            stats: stats // temporary
+          };
+
+          if (stats.isDirectory()) {
+            return onDir(item)
+          } else if (stats.isFile() || stats.isCharacterDevice() || stats.isBlockDevice()) {
+            return onFile(item)
+          } else if (stats.isSymbolicLink()) {
+            // Symlinks don't really need to know about the mode.
+            return onLink(source)
+          }
+        });
+      }
+
+      function onFile (file) {
+        var target = file.name.replace(currentPath, targetPath.replace('$', '$$$$')); // escapes '$' with '$$'
+        isWritable(target, function (writable) {
+          if (writable) {
+            copyFile(file, target);
+          } else {
+            if (overwrite) {
+              rmFile(target, function () {
+                copyFile(file, target);
+              });
+            } else if (errorOnExist) {
+              onError(new Error(target + ' already exists'));
+            } else {
+              doneOne();
+            }
+          }
+        });
+      }
+
+      function copyFile (file, target) {
+        var readStream = gracefulFs.createReadStream(file.name);
+        var writeStream = gracefulFs.createWriteStream(target, { mode: file.mode });
+
+        readStream.on('error', onError);
+        writeStream.on('error', onError);
+
+        if (transform) {
+          transform(readStream, writeStream, file);
+        } else {
+          writeStream.on('open', function () {
+            readStream.pipe(writeStream);
+          });
+        }
+
+        writeStream.once('close', function () {
+          gracefulFs.chmod(target, file.mode, function (err) {
+            if (err) return onError(err)
+            if (preserveTimestamps) {
+              utimes.utimesMillis(target, file.atime, file.mtime, function (err) {
+                if (err) return onError(err)
+                return doneOne()
+              });
+            } else {
+              doneOne();
+            }
+          });
+        });
+      }
+
+      function rmFile (file, done) {
+        gracefulFs.unlink(file, function (err) {
+          if (err) return onError(err)
+          return done()
+        });
+      }
+
+      function onDir (dir) {
+        var target = dir.name.replace(currentPath, targetPath.replace('$', '$$$$')); // escapes '$' with '$$'
+        isWritable(target, function (writable) {
+          if (writable) {
+            return mkDir(dir, target)
+          }
+          copyDir(dir.name);
+        });
+      }
+
+      function mkDir (dir, target) {
+        gracefulFs.mkdir(target, dir.mode, function (err) {
+          if (err) return onError(err)
+          // despite setting mode in fs.mkdir, doesn't seem to work
+          // so we set it here.
+          gracefulFs.chmod(target, dir.mode, function (err) {
+            if (err) return onError(err)
+            copyDir(dir.name);
+          });
+        });
+      }
+
+      function copyDir (dir) {
+        gracefulFs.readdir(dir, function (err, items) {
+          if (err) return onError(err)
+          items.forEach(function (item) {
+            startCopy(path__default.join(dir, item));
+          });
+          return doneOne()
+        });
+      }
+
+      function onLink (link) {
+        var target = link.replace(currentPath, targetPath);
+        gracefulFs.readlink(link, function (err, resolvedPath) {
+          if (err) return onError(err)
+          checkLink(resolvedPath, target);
+        });
+      }
+
+      function checkLink (resolvedPath, target) {
+        if (dereference) {
+          resolvedPath = path__default.resolve(basePath, resolvedPath);
+        }
+        isWritable(target, function (writable) {
+          if (writable) {
+            return makeLink(resolvedPath, target)
+          }
+          gracefulFs.readlink(target, function (err, targetDest) {
+            if (err) return onError(err)
+
+            if (dereference) {
+              targetDest = path__default.resolve(basePath, targetDest);
+            }
+            if (targetDest === resolvedPath) {
+              return doneOne()
+            }
+            return rmFile(target, function () {
+              makeLink(resolvedPath, target);
+            })
+          });
+        });
+      }
+
+      function makeLink (linkPath, target) {
+        gracefulFs.symlink(linkPath, target, function (err) {
+          if (err) return onError(err)
+          return doneOne()
+        });
+      }
+
+      function isWritable (path, done) {
+        gracefulFs.lstat(path, function (err) {
+          if (err) {
+            if (err.code === 'ENOENT') return done(true)
+            return done(false)
+          }
+          return done(false)
+        });
+      }
+
+      function onError (err) {
+        // ensure callback is defined & called only once:
+        if (!errored && callback !== undefined) {
+          errored = true;
+          return callback(err)
+        }
+      }
+
+      function doneOne (skipped) {
+        if (!skipped) running--;
+        finished++;
+        if ((started === finished) && (running === 0)) {
+          if (callback !== undefined) {
+            return callback(null)
+          }
+        }
+      }
+    }
+
+    var ncp_1 = ncp;
+
+    // get drive on windows
+    function getRootPath (p) {
+      p = path__default.normalize(path__default.resolve(p)).split(path__default.sep);
+      if (p.length > 0) return p[0]
+      return null
+    }
+
+    // http://stackoverflow.com/a/62888/10333 contains more accurate
+    // TODO: expand to include the rest
+    const INVALID_PATH_CHARS = /[<>:"|?*]/;
+
+    function invalidWin32Path (p) {
+      const rp = getRootPath(p);
+      p = p.replace(rp, '');
+      return INVALID_PATH_CHARS.test(p)
+    }
+
+    var win32 = {
+      getRootPath,
+      invalidWin32Path
+    };
+
+    const invalidWin32Path$1 = win32.invalidWin32Path;
+
+    const o777 = parseInt('0777', 8);
+
+    function mkdirs (p, opts, callback, made) {
+      if (typeof opts === 'function') {
+        callback = opts;
+        opts = {};
+      } else if (!opts || typeof opts !== 'object') {
+        opts = { mode: opts };
+      }
+
+      if (process.platform === 'win32' && invalidWin32Path$1(p)) {
+        const errInval = new Error(p + ' contains invalid WIN32 path characters.');
+        errInval.code = 'EINVAL';
+        return callback(errInval)
+      }
+
+      let mode = opts.mode;
+      const xfs = opts.fs || gracefulFs;
+
+      if (mode === undefined) {
+        mode = o777 & (~process.umask());
+      }
+      if (!made) made = null;
+
+      callback = callback || function () {};
+      p = path__default.resolve(p);
+
+      xfs.mkdir(p, mode, er => {
+        if (!er) {
+          made = made || p;
+          return callback(null, made)
+        }
+        switch (er.code) {
+          case 'ENOENT':
+            if (path__default.dirname(p) === p) return callback(er)
+            mkdirs(path__default.dirname(p), opts, (er, made) => {
+              if (er) callback(er, made);
+              else mkdirs(p, opts, callback, made);
+            });
+            break
+
+          // In the case of any other error, just see if there's a dir
+          // there already.  If so, then hooray!  If not, then something
+          // is borked.
+          default:
+            xfs.stat(p, (er2, stat) => {
+              // if the stat fails, then that's super weird.
+              // let the original error be the failure reason.
+              if (er2 || !stat.isDirectory()) callback(er, made);
+              else callback(null, made);
+            });
+            break
+        }
+      });
+    }
+
+    var mkdirs_1 = mkdirs;
+
+    const invalidWin32Path$2 = win32.invalidWin32Path;
+
+    const o777$1 = parseInt('0777', 8);
+
+    function mkdirsSync (p, opts, made) {
+      if (!opts || typeof opts !== 'object') {
+        opts = { mode: opts };
+      }
+
+      let mode = opts.mode;
+      const xfs = opts.fs || gracefulFs;
+
+      if (process.platform === 'win32' && invalidWin32Path$2(p)) {
+        const errInval = new Error(p + ' contains invalid WIN32 path characters.');
+        errInval.code = 'EINVAL';
+        throw errInval
+      }
+
+      if (mode === undefined) {
+        mode = o777$1 & (~process.umask());
+      }
+      if (!made) made = null;
+
+      p = path__default.resolve(p);
+
+      try {
+        xfs.mkdirSync(p, mode);
+        made = made || p;
+      } catch (err0) {
+        switch (err0.code) {
+          case 'ENOENT':
+            if (path__default.dirname(p) === p) throw err0
+            made = mkdirsSync(path__default.dirname(p), opts, made);
+            mkdirsSync(p, opts, made);
+            break
+
+          // In the case of any other error, just see if there's a dir
+          // there already.  If so, then hooray!  If not, then something
+          // is borked.
+          default:
+            let stat;
+            try {
+              stat = xfs.statSync(p);
+            } catch (err1) {
+              throw err0
+            }
+            if (!stat.isDirectory()) throw err0
+            break
+        }
+      }
+
+      return made
+    }
+
+    var mkdirsSync_1 = mkdirsSync;
+
+    const u = universalify.fromCallback;
+    const mkdirs$1 = u(mkdirs_1);
+
+
+    var mkdirs_1$1 = {
+      mkdirs: mkdirs$1,
+      mkdirsSync: mkdirsSync_1,
+      // alias
+      mkdirp: mkdirs$1,
+      mkdirpSync: mkdirsSync_1,
+      ensureDir: mkdirs$1,
+      ensureDirSync: mkdirsSync_1
+    };
+
+    const u$1 = universalify.fromPromise;
+
+
+    function pathExists (path) {
+      return fs_1.access(path).then(() => true).catch(() => false)
+    }
+
+    var pathExists_1 = {
+      pathExists: u$1(pathExists),
+      pathExistsSync: fs_1.existsSync
+    };
+
+    const pathExists$1 = pathExists_1.pathExists;
+
+    function copy (src, dest, options, callback) {
+      if (typeof options === 'function' && !callback) {
+        callback = options;
+        options = {};
+      } else if (typeof options === 'function' || options instanceof RegExp) {
+        options = {filter: options};
+      }
+      callback = callback || function () {};
+      options = options || {};
+
+      // Warn about using preserveTimestamps on 32-bit node:
+      if (options.preserveTimestamps && process.arch === 'ia32') {
+        console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;\n
+    see https://github.com/jprichardson/node-fs-extra/issues/269`);
+      }
+
+      // don't allow src and dest to be the same
+      const basePath = process.cwd();
+      const currentPath = path__default.resolve(basePath, src);
+      const targetPath = path__default.resolve(basePath, dest);
+      if (currentPath === targetPath) return callback(new Error('Source and destination must not be the same.'))
+
+      gracefulFs.lstat(src, (err, stats) => {
+        if (err) return callback(err)
+
+        let dir = null;
+        if (stats.isDirectory()) {
+          const parts = dest.split(path__default.sep);
+          parts.pop();
+          dir = parts.join(path__default.sep);
+        } else {
+          dir = path__default.dirname(dest);
+        }
+
+        pathExists$1(dir, (err, dirExists) => {
+          if (err) return callback(err)
+          if (dirExists) return ncp_1(src, dest, options, callback)
+          mkdirs_1$1.mkdirs(dir, err => {
+            if (err) return callback(err)
+            ncp_1(src, dest, options, callback);
+          });
+        });
+      });
+    }
+
+    var copy_1 = copy;
+
+    const u$2 = universalify.fromCallback;
+    var copy$1 = {
+      copy: u$2(copy_1)
+    };
+
+    /* eslint-disable node/no-deprecated-api */
+    var buffer = function (size) {
+      if (typeof Buffer.allocUnsafe === 'function') {
+        try {
+          return Buffer.allocUnsafe(size)
+        } catch (e) {
+          return new Buffer(size)
+        }
+      }
+      return new Buffer(size)
+    };
+
+    const BUF_LENGTH = 64 * 1024;
+    const _buff = buffer(BUF_LENGTH);
+
+    function copyFileSync (srcFile, destFile, options) {
+      const overwrite = options.overwrite;
+      const errorOnExist = options.errorOnExist;
+      const preserveTimestamps = options.preserveTimestamps;
+
+      if (gracefulFs.existsSync(destFile)) {
+        if (overwrite) {
+          gracefulFs.unlinkSync(destFile);
+        } else if (errorOnExist) {
+          throw new Error(`${destFile} already exists`)
+        } else return
+      }
+
+      const fdr = gracefulFs.openSync(srcFile, 'r');
+      const stat = gracefulFs.fstatSync(fdr);
+      const fdw = gracefulFs.openSync(destFile, 'w', stat.mode);
+      let bytesRead = 1;
+      let pos = 0;
+
+      while (bytesRead > 0) {
+        bytesRead = gracefulFs.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
+        gracefulFs.writeSync(fdw, _buff, 0, bytesRead);
+        pos += bytesRead;
+      }
+
+      if (preserveTimestamps) {
+        gracefulFs.futimesSync(fdw, stat.atime, stat.mtime);
+      }
+
+      gracefulFs.closeSync(fdr);
+      gracefulFs.closeSync(fdw);
+    }
+
+    var copyFileSync_1 = copyFileSync;
+
+    function copySync (src, dest, options) {
+      if (typeof options === 'function' || options instanceof RegExp) {
+        options = {filter: options};
+      }
+
+      options = options || {};
+      options.recursive = !!options.recursive;
+
+      // default to true for now
+      options.clobber = 'clobber' in options ? !!options.clobber : true;
+      // overwrite falls back to clobber
+      options.overwrite = 'overwrite' in options ? !!options.overwrite : options.clobber;
+      options.dereference = 'dereference' in options ? !!options.dereference : false;
+      options.preserveTimestamps = 'preserveTimestamps' in options ? !!options.preserveTimestamps : false;
+
+      options.filter = options.filter || function () { return true };
+
+      // Warn about using preserveTimestamps on 32-bit node:
+      if (options.preserveTimestamps && process.arch === 'ia32') {
+        console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;\n
+    see https://github.com/jprichardson/node-fs-extra/issues/269`);
+      }
+
+      const stats = (options.recursive && !options.dereference) ? gracefulFs.lstatSync(src) : gracefulFs.statSync(src);
+      const destFolder = path__default.dirname(dest);
+      const destFolderExists = gracefulFs.existsSync(destFolder);
+      let performCopy = false;
+
+      if (options.filter instanceof RegExp) {
+        console.warn('Warning: fs-extra: Passing a RegExp filter is deprecated, use a function');
+        performCopy = options.filter.test(src);
+      } else if (typeof options.filter === 'function') performCopy = options.filter(src, dest);
+
+      if (stats.isFile() && performCopy) {
+        if (!destFolderExists) mkdirs_1$1.mkdirsSync(destFolder);
+        copyFileSync_1(src, dest, {
+          overwrite: options.overwrite,
+          errorOnExist: options.errorOnExist,
+          preserveTimestamps: options.preserveTimestamps
+        });
+      } else if (stats.isDirectory() && performCopy) {
+        if (!gracefulFs.existsSync(dest)) mkdirs_1$1.mkdirsSync(dest);
+        const contents = gracefulFs.readdirSync(src);
+        contents.forEach(content => {
+          const opts = options;
+          opts.recursive = true;
+          copySync(path__default.join(src, content), path__default.join(dest, content), opts);
+        });
+      } else if (options.recursive && stats.isSymbolicLink() && performCopy) {
+        const srcPath = gracefulFs.readlinkSync(src);
+        gracefulFs.symlinkSync(srcPath, dest);
+      }
+    }
+
+    var copySync_1 = copySync;
+
+    var copySync$1 = {
+      copySync: copySync_1
+    };
+
+    const isWindows = (process.platform === 'win32');
+
+    function defaults (options) {
+      const methods = [
+        'unlink',
+        'chmod',
+        'stat',
+        'lstat',
+        'rmdir',
+        'readdir'
+      ];
+      methods.forEach(m => {
+        options[m] = options[m] || gracefulFs[m];
+        m = m + 'Sync';
+        options[m] = options[m] || gracefulFs[m];
+      });
+
+      options.maxBusyTries = options.maxBusyTries || 3;
+    }
+
+    function rimraf (p, options, cb) {
+      let busyTries = 0;
+
+      if (typeof options === 'function') {
+        cb = options;
+        options = {};
+      }
+
+      assert(p, 'rimraf: missing path');
+      assert.equal(typeof p, 'string', 'rimraf: path should be a string');
+      assert.equal(typeof cb, 'function', 'rimraf: callback function required');
+      assert(options, 'rimraf: invalid options argument provided');
+      assert.equal(typeof options, 'object', 'rimraf: options should be object');
+
+      defaults(options);
+
+      rimraf_(p, options, function CB (er) {
+        if (er) {
+          if ((er.code === 'EBUSY' || er.code === 'ENOTEMPTY' || er.code === 'EPERM') &&
+              busyTries < options.maxBusyTries) {
+            busyTries++;
+            let time = busyTries * 100;
+            // try again, with the same exact callback as this one.
+            return setTimeout(() => rimraf_(p, options, CB), time)
+          }
+
+          // already gone
+          if (er.code === 'ENOENT') er = null;
+        }
+
+        cb(er);
+      });
+    }
+
+    // Two possible strategies.
+    // 1. Assume it's a file.  unlink it, then do the dir stuff on EPERM or EISDIR
+    // 2. Assume it's a directory.  readdir, then do the file stuff on ENOTDIR
+    //
+    // Both result in an extra syscall when you guess wrong.  However, there
+    // are likely far more normal files in the world than directories.  This
+    // is based on the assumption that a the average number of files per
+    // directory is >= 1.
+    //
+    // If anyone ever complains about this, then I guess the strategy could
+    // be made configurable somehow.  But until then, YAGNI.
+    function rimraf_ (p, options, cb) {
+      assert(p);
+      assert(options);
+      assert(typeof cb === 'function');
+
+      // sunos lets the root user unlink directories, which is... weird.
+      // so we have to lstat here and make sure it's not a dir.
+      options.lstat(p, (er, st) => {
+        if (er && er.code === 'ENOENT') {
+          return cb(null)
+        }
+
+        // Windows can EPERM on stat.  Life is suffering.
+        if (er && er.code === 'EPERM' && isWindows) {
+          return fixWinEPERM(p, options, er, cb)
+        }
+
+        if (st && st.isDirectory()) {
+          return rmdir(p, options, er, cb)
+        }
+
+        options.unlink(p, er => {
+          if (er) {
+            if (er.code === 'ENOENT') {
+              return cb(null)
+            }
+            if (er.code === 'EPERM') {
+              return (isWindows)
+                ? fixWinEPERM(p, options, er, cb)
+                : rmdir(p, options, er, cb)
+            }
+            if (er.code === 'EISDIR') {
+              return rmdir(p, options, er, cb)
+            }
+          }
+          return cb(er)
+        });
+      });
+    }
+
+    function fixWinEPERM (p, options, er, cb) {
+      assert(p);
+      assert(options);
+      assert(typeof cb === 'function');
+      if (er) {
+        assert(er instanceof Error);
+      }
+
+      options.chmod(p, 666, er2 => {
+        if (er2) {
+          cb(er2.code === 'ENOENT' ? null : er);
+        } else {
+          options.stat(p, (er3, stats) => {
+            if (er3) {
+              cb(er3.code === 'ENOENT' ? null : er);
+            } else if (stats.isDirectory()) {
+              rmdir(p, options, er, cb);
+            } else {
+              options.unlink(p, cb);
+            }
+          });
+        }
+      });
+    }
+
+    function fixWinEPERMSync (p, options, er) {
+      let stats;
+
+      assert(p);
+      assert(options);
+      if (er) {
+        assert(er instanceof Error);
+      }
+
+      try {
+        options.chmodSync(p, 666);
+      } catch (er2) {
+        if (er2.code === 'ENOENT') {
+          return
+        } else {
+          throw er
+        }
+      }
+
+      try {
+        stats = options.statSync(p);
+      } catch (er3) {
+        if (er3.code === 'ENOENT') {
+          return
+        } else {
+          throw er
+        }
+      }
+
+      if (stats.isDirectory()) {
+        rmdirSync(p, options, er);
+      } else {
+        options.unlinkSync(p);
+      }
+    }
+
+    function rmdir (p, options, originalEr, cb) {
+      assert(p);
+      assert(options);
+      if (originalEr) {
+        assert(originalEr instanceof Error);
+      }
+      assert(typeof cb === 'function');
+
+      // try to rmdir first, and only readdir on ENOTEMPTY or EEXIST (SunOS)
+      // if we guessed wrong, and it's not a directory, then
+      // raise the original error.
+      options.rmdir(p, er => {
+        if (er && (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM')) {
+          rmkids(p, options, cb);
+        } else if (er && er.code === 'ENOTDIR') {
+          cb(originalEr);
+        } else {
+          cb(er);
+        }
+      });
+    }
+
+    function rmkids (p, options, cb) {
+      assert(p);
+      assert(options);
+      assert(typeof cb === 'function');
+
+      options.readdir(p, (er, files) => {
+        if (er) return cb(er)
+
+        let n = files.length;
+        let errState;
+
+        if (n === 0) return options.rmdir(p, cb)
+
+        files.forEach(f => {
+          rimraf(path__default.join(p, f), options, er => {
+            if (errState) {
+              return
+            }
+            if (er) return cb(errState = er)
+            if (--n === 0) {
+              options.rmdir(p, cb);
+            }
+          });
+        });
+      });
+    }
+
+    // this looks simpler, and is strictly *faster*, but will
+    // tie up the JavaScript thread and fail on excessively
+    // deep directory trees.
+    function rimrafSync (p, options) {
+      let st;
+
+      options = options || {};
+      defaults(options);
+
+      assert(p, 'rimraf: missing path');
+      assert.equal(typeof p, 'string', 'rimraf: path should be a string');
+      assert(options, 'rimraf: missing options');
+      assert.equal(typeof options, 'object', 'rimraf: options should be object');
+
+      try {
+        st = options.lstatSync(p);
+      } catch (er) {
+        if (er.code === 'ENOENT') {
+          return
+        }
+
+        // Windows can EPERM on stat.  Life is suffering.
+        if (er.code === 'EPERM' && isWindows) {
+          fixWinEPERMSync(p, options, er);
+        }
+      }
+
+      try {
+        // sunos lets the root user unlink directories, which is... weird.
+        if (st && st.isDirectory()) {
+          rmdirSync(p, options, null);
+        } else {
+          options.unlinkSync(p);
+        }
+      } catch (er) {
+        if (er.code === 'ENOENT') {
+          return
+        } else if (er.code === 'EPERM') {
+          return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er)
+        } else if (er.code !== 'EISDIR') {
+          throw er
+        }
+        rmdirSync(p, options, er);
+      }
+    }
+
+    function rmdirSync (p, options, originalEr) {
+      assert(p);
+      assert(options);
+      if (originalEr) {
+        assert(originalEr instanceof Error);
+      }
+
+      try {
+        options.rmdirSync(p);
+      } catch (er) {
+        if (er.code === 'ENOTDIR') {
+          throw originalEr
+        } else if (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM') {
+          rmkidsSync(p, options);
+        } else if (er.code !== 'ENOENT') {
+          throw er
+        }
+      }
+    }
+
+    function rmkidsSync (p, options) {
+      assert(p);
+      assert(options);
+      options.readdirSync(p).forEach(f => rimrafSync(path__default.join(p, f), options));
+
+      // We only end up here once we got ENOTEMPTY at least once, and
+      // at this point, we are guaranteed to have removed all the kids.
+      // So, we know that it won't be ENOENT or ENOTDIR or anything else.
+      // try really hard to delete stuff on windows, because it has a
+      // PROFOUNDLY annoying habit of not closing handles promptly when
+      // files are deleted, resulting in spurious ENOTEMPTY errors.
+      const retries = isWindows ? 100 : 1;
+      let i = 0;
+      do {
+        let threw = true;
+        try {
+          const ret = options.rmdirSync(p, options);
+          threw = false;
+          return ret
+        } finally {
+          if (++i < retries && threw) continue // eslint-disable-line
+        }
+      } while (true)
+    }
+
+    var rimraf_1 = rimraf;
+    rimraf.sync = rimrafSync;
+
+    const u$3 = universalify.fromCallback;
+
+
+    var remove = {
+      remove: u$3(rimraf_1),
+      removeSync: rimraf_1.sync
+    };
+
+    var _fs;
+    try {
+      _fs = gracefulFs;
+    } catch (_) {
+      _fs = fs$2__default;
+    }
+
+    function readFile (file, options, callback) {
+      if (callback == null) {
+        callback = options;
+        options = {};
+      }
+
+      if (typeof options === 'string') {
+        options = {encoding: options};
+      }
+
+      options = options || {};
+      var fs = options.fs || _fs;
+
+      var shouldThrow = true;
+      if ('throws' in options) {
+        shouldThrow = options.throws;
+      }
+
+      fs.readFile(file, options, function (err, data) {
+        if (err) return callback(err)
+
+        data = stripBom(data);
+
+        var obj;
+        try {
+          obj = JSON.parse(data, options ? options.reviver : null);
+        } catch (err2) {
+          if (shouldThrow) {
+            err2.message = file + ': ' + err2.message;
+            return callback(err2)
+          } else {
+            return callback(null, null)
+          }
+        }
+
+        callback(null, obj);
+      });
+    }
+
+    function readFileSync (file, options) {
+      options = options || {};
+      if (typeof options === 'string') {
+        options = {encoding: options};
+      }
+
+      var fs = options.fs || _fs;
+
+      var shouldThrow = true;
+      if ('throws' in options) {
+        shouldThrow = options.throws;
+      }
+
+      try {
+        var content = fs.readFileSync(file, options);
+        content = stripBom(content);
+        return JSON.parse(content, options.reviver)
+      } catch (err) {
+        if (shouldThrow) {
+          err.message = file + ': ' + err.message;
+          throw err
+        } else {
+          return null
+        }
+      }
+    }
+
+    function stringify (obj, options) {
+      var spaces;
+      var EOL = '\n';
+      if (typeof options === 'object' && options !== null) {
+        if (options.spaces) {
+          spaces = options.spaces;
+        }
+        if (options.EOL) {
+          EOL = options.EOL;
+        }
+      }
+
+      var str = JSON.stringify(obj, options ? options.replacer : null, spaces);
+
+      return str.replace(/\n/g, EOL) + EOL
+    }
+
+    function writeFile (file, obj, options, callback) {
+      if (callback == null) {
+        callback = options;
+        options = {};
+      }
+      options = options || {};
+      var fs = options.fs || _fs;
+
+      var str = '';
+      try {
+        str = stringify(obj, options);
+      } catch (err) {
+        // Need to return whether a callback was passed or not
+        if (callback) callback(err, null);
+        return
+      }
+
+      fs.writeFile(file, str, options, callback);
+    }
+
+    function writeFileSync (file, obj, options) {
+      options = options || {};
+      var fs = options.fs || _fs;
+
+      var str = stringify(obj, options);
+      // not sure if fs.writeFileSync returns anything, but just in case
+      return fs.writeFileSync(file, str, options)
+    }
+
+    function stripBom (content) {
+      // we do this because JSON.parse would convert it to a utf8 string if encoding wasn't specified
+      if (Buffer.isBuffer(content)) content = content.toString('utf8');
+      content = content.replace(/^\uFEFF/, '');
+      return content
+    }
+
+    var jsonfile = {
+      readFile: readFile,
+      readFileSync: readFileSync,
+      writeFile: writeFile,
+      writeFileSync: writeFileSync
+    };
+
+    var jsonfile_1 = jsonfile;
+
+    const u$4 = universalify.fromCallback;
+
+
+    var jsonfile$1 = {
+      // jsonfile exports
+      readJson: u$4(jsonfile_1.readFile),
+      readJsonSync: jsonfile_1.readFileSync,
+      writeJson: u$4(jsonfile_1.writeFile),
+      writeJsonSync: jsonfile_1.writeFileSync
+    };
+
+    const pathExists$2 = pathExists_1.pathExists;
+
+
+    function outputJson (file, data, options, callback) {
+      if (typeof options === 'function') {
+        callback = options;
+        options = {};
+      }
+
+      const dir = path__default.dirname(file);
+
+      pathExists$2(dir, (err, itDoes) => {
+        if (err) return callback(err)
+        if (itDoes) return jsonfile$1.writeJson(file, data, options, callback)
+
+        mkdirs_1$1.mkdirs(dir, err => {
+          if (err) return callback(err)
+          jsonfile$1.writeJson(file, data, options, callback);
+        });
+      });
+    }
+
+    var outputJson_1 = outputJson;
+
+    function outputJsonSync (file, data, options) {
+      const dir = path__default.dirname(file);
+
+      if (!gracefulFs.existsSync(dir)) {
+        mkdirs_1$1.mkdirsSync(dir);
+      }
+
+      jsonfile$1.writeJsonSync(file, data, options);
+    }
+
+    var outputJsonSync_1 = outputJsonSync;
+
+    const u$5 = universalify.fromCallback;
+
+
+    jsonfile$1.outputJson = u$5(outputJson_1);
+    jsonfile$1.outputJsonSync = outputJsonSync_1;
+    // aliases
+    jsonfile$1.outputJSON = jsonfile$1.outputJson;
+    jsonfile$1.outputJSONSync = jsonfile$1.outputJsonSync;
+    jsonfile$1.writeJSON = jsonfile$1.writeJson;
+    jsonfile$1.writeJSONSync = jsonfile$1.writeJsonSync;
+    jsonfile$1.readJSON = jsonfile$1.readJson;
+    jsonfile$1.readJSONSync = jsonfile$1.readJsonSync;
+
+    var json = jsonfile$1;
+
+    // most of this code was written by Andrew Kelley
+    // licensed under the BSD license: see
+    // https://github.com/andrewrk/node-mv/blob/master/package.json
+
+    // this needs a cleanup
+
+    const u$6 = universalify.fromCallback;
+
+
+
+    const remove$1 = remove.remove;
+    const mkdirp = mkdirs_1$1.mkdirs;
+
+    function move (src, dest, options, callback) {
+      if (typeof options === 'function') {
+        callback = options;
+        options = {};
+      }
+
+      const overwrite = options.overwrite || options.clobber || false;
+
+      isSrcSubdir(src, dest, (err, itIs) => {
+        if (err) return callback(err)
+        if (itIs) return callback(new Error(`Cannot move '${src}' to a subdirectory of itself, '${dest}'.`))
+        mkdirp(path__default.dirname(dest), err => {
+          if (err) return callback(err)
+          doRename();
+        });
+      });
+
+      function doRename () {
+        if (path__default.resolve(src) === path__default.resolve(dest)) {
+          gracefulFs.access(src, callback);
+        } else if (overwrite) {
+          gracefulFs.rename(src, dest, err => {
+            if (!err) return callback()
+
+            if (err.code === 'ENOTEMPTY' || err.code === 'EEXIST') {
+              remove$1(dest, err => {
+                if (err) return callback(err)
+                options.overwrite = false; // just overwriteed it, no need to do it again
+                move(src, dest, options, callback);
+              });
+              return
+            }
+
+            // weird Windows shit
+            if (err.code === 'EPERM') {
+              setTimeout(() => {
+                remove$1(dest, err => {
+                  if (err) return callback(err)
+                  options.overwrite = false;
+                  move(src, dest, options, callback);
+                });
+              }, 200);
+              return
+            }
+
+            if (err.code !== 'EXDEV') return callback(err)
+            moveAcrossDevice(src, dest, overwrite, callback);
+          });
+        } else {
+          gracefulFs.link(src, dest, err => {
+            if (err) {
+              if (err.code === 'EXDEV' || err.code === 'EISDIR' || err.code === 'EPERM' || err.code === 'ENOTSUP') {
+                return moveAcrossDevice(src, dest, overwrite, callback)
+              }
+              return callback(err)
+            }
+            return gracefulFs.unlink(src, callback)
+          });
+        }
+      }
+    }
+
+    function moveAcrossDevice (src, dest, overwrite, callback) {
+      gracefulFs.stat(src, (err, stat) => {
+        if (err) return callback(err)
+
+        if (stat.isDirectory()) {
+          moveDirAcrossDevice(src, dest, overwrite, callback);
+        } else {
+          moveFileAcrossDevice(src, dest, overwrite, callback);
+        }
+      });
+    }
+
+    function moveFileAcrossDevice (src, dest, overwrite, callback) {
+      const flags = overwrite ? 'w' : 'wx';
+      const ins = gracefulFs.createReadStream(src);
+      const outs = gracefulFs.createWriteStream(dest, { flags });
+
+      ins.on('error', err => {
+        ins.destroy();
+        outs.destroy();
+        outs.removeListener('close', onClose);
+
+        // may want to create a directory but `out` line above
+        // creates an empty file for us: See #108
+        // don't care about error here
+        gracefulFs.unlink(dest, () => {
+          // note: `err` here is from the input stream errror
+          if (err.code === 'EISDIR' || err.code === 'EPERM') {
+            moveDirAcrossDevice(src, dest, overwrite, callback);
+          } else {
+            callback(err);
+          }
+        });
+      });
+
+      outs.on('error', err => {
+        ins.destroy();
+        outs.destroy();
+        outs.removeListener('close', onClose);
+        callback(err);
+      });
+
+      outs.once('close', onClose);
+      ins.pipe(outs);
+
+      function onClose () {
+        gracefulFs.unlink(src, callback);
+      }
+    }
+
+    function moveDirAcrossDevice (src, dest, overwrite, callback) {
+      const options = {
+        overwrite: false
+      };
+
+      if (overwrite) {
+        remove$1(dest, err => {
+          if (err) return callback(err)
+          startNcp();
+        });
+      } else {
+        startNcp();
+      }
+
+      function startNcp () {
+        ncp_1(src, dest, options, err => {
+          if (err) return callback(err)
+          remove$1(src, callback);
+        });
+      }
+    }
+
+    // return true if dest is a subdir of src, otherwise false.
+    // extract dest base dir and check if that is the same as src basename
+    function isSrcSubdir (src, dest, cb) {
+      gracefulFs.stat(src, (err, st) => {
+        if (err) return cb(err)
+        if (st.isDirectory()) {
+          const baseDir = dest.split(path__default.dirname(src) + path__default.sep)[1];
+          if (baseDir) {
+            const destBasename = baseDir.split(path__default.sep)[0];
+            if (destBasename) return cb(null, src !== dest && dest.indexOf(src) > -1 && destBasename === path__default.basename(src))
+            return cb(null, false)
+          }
+          return cb(null, false)
+        }
+        return cb(null, false)
+      });
+    }
+
+    var move_1 = {
+      move: u$6(move)
+    };
+
+    const copySync$2 = copySync$1.copySync;
+    const removeSync = remove.removeSync;
+    const mkdirpSync = mkdirs_1$1.mkdirsSync;
+
+
+    function moveSync (src, dest, options) {
+      options = options || {};
+      const overwrite = options.overwrite || options.clobber || false;
+
+      src = path__default.resolve(src);
+      dest = path__default.resolve(dest);
+
+      if (src === dest) return gracefulFs.accessSync(src)
+
+      if (isSrcSubdir$1(src, dest)) throw new Error(`Cannot move '${src}' into itself '${dest}'.`)
+
+      mkdirpSync(path__default.dirname(dest));
+      tryRenameSync();
+
+      function tryRenameSync () {
+        if (overwrite) {
+          try {
+            return gracefulFs.renameSync(src, dest)
+          } catch (err) {
+            if (err.code === 'ENOTEMPTY' || err.code === 'EEXIST' || err.code === 'EPERM') {
+              removeSync(dest);
+              options.overwrite = false; // just overwriteed it, no need to do it again
+              return moveSync(src, dest, options)
+            }
+
+            if (err.code !== 'EXDEV') throw err
+            return moveSyncAcrossDevice(src, dest, overwrite)
+          }
+        } else {
+          try {
+            gracefulFs.linkSync(src, dest);
+            return gracefulFs.unlinkSync(src)
+          } catch (err) {
+            if (err.code === 'EXDEV' || err.code === 'EISDIR' || err.code === 'EPERM' || err.code === 'ENOTSUP') {
+              return moveSyncAcrossDevice(src, dest, overwrite)
+            }
+            throw err
+          }
+        }
+      }
+    }
+
+    function moveSyncAcrossDevice (src, dest, overwrite) {
+      const stat = gracefulFs.statSync(src);
+
+      if (stat.isDirectory()) {
+        return moveDirSyncAcrossDevice(src, dest, overwrite)
+      } else {
+        return moveFileSyncAcrossDevice(src, dest, overwrite)
+      }
+    }
+
+    function moveFileSyncAcrossDevice (src, dest, overwrite) {
+      const BUF_LENGTH = 64 * 1024;
+      const _buff = buffer(BUF_LENGTH);
+
+      const flags = overwrite ? 'w' : 'wx';
+
+      const fdr = gracefulFs.openSync(src, 'r');
+      const stat = gracefulFs.fstatSync(fdr);
+      const fdw = gracefulFs.openSync(dest, flags, stat.mode);
+      let bytesRead = 1;
+      let pos = 0;
+
+      while (bytesRead > 0) {
+        bytesRead = gracefulFs.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
+        gracefulFs.writeSync(fdw, _buff, 0, bytesRead);
+        pos += bytesRead;
+      }
+
+      gracefulFs.closeSync(fdr);
+      gracefulFs.closeSync(fdw);
+      return gracefulFs.unlinkSync(src)
+    }
+
+    function moveDirSyncAcrossDevice (src, dest, overwrite) {
+      const options = {
+        overwrite: false
+      };
+
+      if (overwrite) {
+        removeSync(dest);
+        tryCopySync();
+      } else {
+        tryCopySync();
+      }
+
+      function tryCopySync () {
+        copySync$2(src, dest, options);
+        return removeSync(src)
+      }
+    }
+
+    // return true if dest is a subdir of src, otherwise false.
+    // extract dest base dir and check if that is the same as src basename
+    function isSrcSubdir$1 (src, dest) {
+      try {
+        return gracefulFs.statSync(src).isDirectory() &&
+               src !== dest &&
+               dest.indexOf(src) > -1 &&
+               dest.split(path__default.dirname(src) + path__default.sep)[1].split(path__default.sep)[0] === path__default.basename(src)
+      } catch (e) {
+        return false
+      }
+    }
+
+    var moveSync_1 = {
+      moveSync
+    };
+
+    const u$7 = universalify.fromCallback;
+
+
+
+
+
+    const emptyDir = u$7(function emptyDir (dir, callback) {
+      callback = callback || function () {};
+      fs$2__default.readdir(dir, (err, items) => {
+        if (err) return mkdirs_1$1.mkdirs(dir, callback)
+
+        items = items.map(item => path__default.join(dir, item));
+
+        deleteItem();
+
+        function deleteItem () {
+          const item = items.pop();
+          if (!item) return callback()
+          remove.remove(item, err => {
+            if (err) return callback(err)
+            deleteItem();
+          });
+        }
+      });
+    });
+
+    function emptyDirSync (dir) {
+      let items;
+      try {
+        items = fs$2__default.readdirSync(dir);
+      } catch (err) {
+        return mkdirs_1$1.mkdirsSync(dir)
+      }
+
+      items.forEach(item => {
+        item = path__default.join(dir, item);
+        remove.removeSync(item);
+      });
+    }
+
+    var empty = {
+      emptyDirSync,
+      emptydirSync: emptyDirSync,
+      emptyDir,
+      emptydir: emptyDir
+    };
+
+    const u$8 = universalify.fromCallback;
+
+
+
+    const pathExists$3 = pathExists_1.pathExists;
+
+    function createFile (file, callback) {
+      function makeFile () {
+        gracefulFs.writeFile(file, '', err => {
+          if (err) return callback(err)
+          callback();
+        });
+      }
+
+      gracefulFs.stat(file, (err, stats) => { // eslint-disable-line handle-callback-err
+        if (!err && stats.isFile()) return callback()
+        const dir = path__default.dirname(file);
+        pathExists$3(dir, (err, dirExists) => {
+          if (err) return callback(err)
+          if (dirExists) return makeFile()
+          mkdirs_1$1.mkdirs(dir, err => {
+            if (err) return callback(err)
+            makeFile();
+          });
+        });
+      });
+    }
+
+    function createFileSync (file) {
+      let stats;
+      try {
+        stats = gracefulFs.statSync(file);
+      } catch (e) {}
+      if (stats && stats.isFile()) return
+
+      const dir = path__default.dirname(file);
+      if (!gracefulFs.existsSync(dir)) {
+        mkdirs_1$1.mkdirsSync(dir);
+      }
+
+      gracefulFs.writeFileSync(file, '');
+    }
+
+    var file = {
+      createFile: u$8(createFile),
+      createFileSync
+    };
+
+    const u$9 = universalify.fromCallback;
+
+
+
+    const pathExists$4 = pathExists_1.pathExists;
+
+    function createLink (srcpath, dstpath, callback) {
+      function makeLink (srcpath, dstpath) {
+        gracefulFs.link(srcpath, dstpath, err => {
+          if (err) return callback(err)
+          callback(null);
+        });
+      }
+
+      pathExists$4(dstpath, (err, destinationExists) => {
+        if (err) return callback(err)
+        if (destinationExists) return callback(null)
+        gracefulFs.lstat(srcpath, (err, stat) => {
+          if (err) {
+            err.message = err.message.replace('lstat', 'ensureLink');
+            return callback(err)
+          }
+
+          const dir = path__default.dirname(dstpath);
+          pathExists$4(dir, (err, dirExists) => {
+            if (err) return callback(err)
+            if (dirExists) return makeLink(srcpath, dstpath)
+            mkdirs_1$1.mkdirs(dir, err => {
+              if (err) return callback(err)
+              makeLink(srcpath, dstpath);
+            });
+          });
+        });
+      });
+    }
+
+    function createLinkSync (srcpath, dstpath, callback) {
+      const destinationExists = gracefulFs.existsSync(dstpath);
+      if (destinationExists) return undefined
+
+      try {
+        gracefulFs.lstatSync(srcpath);
+      } catch (err) {
+        err.message = err.message.replace('lstat', 'ensureLink');
+        throw err
+      }
+
+      const dir = path__default.dirname(dstpath);
+      const dirExists = gracefulFs.existsSync(dir);
+      if (dirExists) return gracefulFs.linkSync(srcpath, dstpath)
+      mkdirs_1$1.mkdirsSync(dir);
+
+      return gracefulFs.linkSync(srcpath, dstpath)
+    }
+
+    var link = {
+      createLink: u$9(createLink),
+      createLinkSync
+    };
+
+    const pathExists$5 = pathExists_1.pathExists;
+
+    /**
+     * Function that returns two types of paths, one relative to symlink, and one
+     * relative to the current working directory. Checks if path is absolute or
+     * relative. If the path is relative, this function checks if the path is
+     * relative to symlink or relative to current working directory. This is an
+     * initiative to find a smarter `srcpath` to supply when building symlinks.
+     * This allows you to determine which path to use out of one of three possible
+     * types of source paths. The first is an absolute path. This is detected by
+     * `path.isAbsolute()`. When an absolute path is provided, it is checked to
+     * see if it exists. If it does it's used, if not an error is returned
+     * (callback)/ thrown (sync). The other two options for `srcpath` are a
+     * relative url. By default Node's `fs.symlink` works by creating a symlink
+     * using `dstpath` and expects the `srcpath` to be relative to the newly
+     * created symlink. If you provide a `srcpath` that does not exist on the file
+     * system it results in a broken symlink. To minimize this, the function
+     * checks to see if the 'relative to symlink' source file exists, and if it
+     * does it will use it. If it does not, it checks if there's a file that
+     * exists that is relative to the current working directory, if does its used.
+     * This preserves the expectations of the original fs.symlink spec and adds
+     * the ability to pass in `relative to current working direcotry` paths.
+     */
+
+    function symlinkPaths (srcpath, dstpath, callback) {
+      if (path__default.isAbsolute(srcpath)) {
+        return gracefulFs.lstat(srcpath, (err, stat) => {
+          if (err) {
+            err.message = err.message.replace('lstat', 'ensureSymlink');
+            return callback(err)
+          }
+          return callback(null, {
+            'toCwd': srcpath,
+            'toDst': srcpath
+          })
+        })
+      } else {
+        const dstdir = path__default.dirname(dstpath);
+        const relativeToDst = path__default.join(dstdir, srcpath);
+        return pathExists$5(relativeToDst, (err, exists) => {
+          if (err) return callback(err)
+          if (exists) {
+            return callback(null, {
+              'toCwd': relativeToDst,
+              'toDst': srcpath
+            })
+          } else {
+            return gracefulFs.lstat(srcpath, (err, stat) => {
+              if (err) {
+                err.message = err.message.replace('lstat', 'ensureSymlink');
+                return callback(err)
+              }
+              return callback(null, {
+                'toCwd': srcpath,
+                'toDst': path__default.relative(dstdir, srcpath)
+              })
+            })
+          }
+        })
+      }
+    }
+
+    function symlinkPathsSync (srcpath, dstpath) {
+      let exists;
+      if (path__default.isAbsolute(srcpath)) {
+        exists = gracefulFs.existsSync(srcpath);
+        if (!exists) throw new Error('absolute srcpath does not exist')
+        return {
+          'toCwd': srcpath,
+          'toDst': srcpath
+        }
+      } else {
+        const dstdir = path__default.dirname(dstpath);
+        const relativeToDst = path__default.join(dstdir, srcpath);
+        exists = gracefulFs.existsSync(relativeToDst);
+        if (exists) {
+          return {
+            'toCwd': relativeToDst,
+            'toDst': srcpath
+          }
+        } else {
+          exists = gracefulFs.existsSync(srcpath);
+          if (!exists) throw new Error('relative srcpath does not exist')
+          return {
+            'toCwd': srcpath,
+            'toDst': path__default.relative(dstdir, srcpath)
+          }
+        }
+      }
+    }
+
+    var symlinkPaths_1 = {
+      symlinkPaths,
+      symlinkPathsSync
+    };
+
+    function symlinkType (srcpath, type, callback) {
+      callback = (typeof type === 'function') ? type : callback;
+      type = (typeof type === 'function') ? false : type;
+      if (type) return callback(null, type)
+      gracefulFs.lstat(srcpath, (err, stats) => {
+        if (err) return callback(null, 'file')
+        type = (stats && stats.isDirectory()) ? 'dir' : 'file';
+        callback(null, type);
+      });
+    }
+
+    function symlinkTypeSync (srcpath, type) {
+      let stats;
+
+      if (type) return type
+      try {
+        stats = gracefulFs.lstatSync(srcpath);
+      } catch (e) {
+        return 'file'
+      }
+      return (stats && stats.isDirectory()) ? 'dir' : 'file'
+    }
+
+    var symlinkType_1 = {
+      symlinkType,
+      symlinkTypeSync
+    };
+
+    const u$a = universalify.fromCallback;
+
+
+
+    const mkdirs$2 = mkdirs_1$1.mkdirs;
+    const mkdirsSync$1 = mkdirs_1$1.mkdirsSync;
+
+
+    const symlinkPaths$1 = symlinkPaths_1.symlinkPaths;
+    const symlinkPathsSync$1 = symlinkPaths_1.symlinkPathsSync;
+
+
+    const symlinkType$1 = symlinkType_1.symlinkType;
+    const symlinkTypeSync$1 = symlinkType_1.symlinkTypeSync;
+
+    const pathExists$6 = pathExists_1.pathExists;
+
+    function createSymlink (srcpath, dstpath, type, callback) {
+      callback = (typeof type === 'function') ? type : callback;
+      type = (typeof type === 'function') ? false : type;
+
+      pathExists$6(dstpath, (err, destinationExists) => {
+        if (err) return callback(err)
+        if (destinationExists) return callback(null)
+        symlinkPaths$1(srcpath, dstpath, (err, relative) => {
+          if (err) return callback(err)
+          srcpath = relative.toDst;
+          symlinkType$1(relative.toCwd, type, (err, type) => {
+            if (err) return callback(err)
+            const dir = path__default.dirname(dstpath);
+            pathExists$6(dir, (err, dirExists) => {
+              if (err) return callback(err)
+              if (dirExists) return gracefulFs.symlink(srcpath, dstpath, type, callback)
+              mkdirs$2(dir, err => {
+                if (err) return callback(err)
+                gracefulFs.symlink(srcpath, dstpath, type, callback);
+              });
+            });
+          });
+        });
+      });
+    }
+
+    function createSymlinkSync (srcpath, dstpath, type, callback) {
+      type = (typeof type === 'function') ? false : type;
+
+      const destinationExists = gracefulFs.existsSync(dstpath);
+      if (destinationExists) return undefined
+
+      const relative = symlinkPathsSync$1(srcpath, dstpath);
+      srcpath = relative.toDst;
+      type = symlinkTypeSync$1(relative.toCwd, type);
+      const dir = path__default.dirname(dstpath);
+      const exists = gracefulFs.existsSync(dir);
+      if (exists) return gracefulFs.symlinkSync(srcpath, dstpath, type)
+      mkdirsSync$1(dir);
+      return gracefulFs.symlinkSync(srcpath, dstpath, type)
+    }
+
+    var symlink = {
+      createSymlink: u$a(createSymlink),
+      createSymlinkSync
+    };
+
+    var ensure = {
+      // file
+      createFile: file.createFile,
+      createFileSync: file.createFileSync,
+      ensureFile: file.createFile,
+      ensureFileSync: file.createFileSync,
+      // link
+      createLink: link.createLink,
+      createLinkSync: link.createLinkSync,
+      ensureLink: link.createLink,
+      ensureLinkSync: link.createLinkSync,
+      // symlink
+      createSymlink: symlink.createSymlink,
+      createSymlinkSync: symlink.createSymlinkSync,
+      ensureSymlink: symlink.createSymlink,
+      ensureSymlinkSync: symlink.createSymlinkSync
+    };
+
+    const u$b = universalify.fromCallback;
+
+
+
+    const pathExists$7 = pathExists_1.pathExists;
+
+    function outputFile (file, data, encoding, callback) {
+      if (typeof encoding === 'function') {
+        callback = encoding;
+        encoding = 'utf8';
+      }
+
+      const dir = path__default.dirname(file);
+      pathExists$7(dir, (err, itDoes) => {
+        if (err) return callback(err)
+        if (itDoes) return gracefulFs.writeFile(file, data, encoding, callback)
+
+        mkdirs_1$1.mkdirs(dir, err => {
+          if (err) return callback(err)
+
+          gracefulFs.writeFile(file, data, encoding, callback);
+        });
+      });
+    }
+
+    function outputFileSync (file, data, encoding) {
+      const dir = path__default.dirname(file);
+      if (gracefulFs.existsSync(dir)) {
+        return gracefulFs.writeFileSync.apply(gracefulFs, arguments)
+      }
+      mkdirs_1$1.mkdirsSync(dir);
+      gracefulFs.writeFileSync.apply(gracefulFs, arguments);
+    }
+
+    var output = {
+      outputFile: u$b(outputFile),
+      outputFileSync
+    };
+
+    const fs$1 = {};
+
+    // Export graceful-fs:
+    assign_1(fs$1, fs_1);
+    // Export extra methods:
+    assign_1(fs$1, copy$1);
+    assign_1(fs$1, copySync$1);
+    assign_1(fs$1, mkdirs_1$1);
+    assign_1(fs$1, remove);
+    assign_1(fs$1, json);
+    assign_1(fs$1, move_1);
+    assign_1(fs$1, moveSync_1);
+    assign_1(fs$1, empty);
+    assign_1(fs$1, ensure);
+    assign_1(fs$1, output);
+    assign_1(fs$1, pathExists_1);
+
+    var lib = fs$1;
+
+    var fsExtra = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        'default': lib,
+        __moduleExports: lib
+    });
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A wrapper around the Node.js file-system that supports path manipulation.
+     */
+    class NodeJSPathManipulation {
+        pwd() {
+            return this.normalize(process.cwd());
+        }
+        chdir(dir) {
+            process.chdir(dir);
+        }
+        resolve(...paths) {
+            return this.normalize(path.resolve(...paths));
+        }
+        dirname(file) {
+            return this.normalize(path.dirname(file));
+        }
+        join(basePath, ...paths) {
+            return this.normalize(path.join(basePath, ...paths));
+        }
+        isRoot(path) {
+            return this.dirname(path) === this.normalize(path);
+        }
+        isRooted(path$1) {
+            return path.isAbsolute(path$1);
+        }
+        relative(from, to) {
+            return this.normalize(path.relative(from, to));
+        }
+        basename(filePath, extension) {
+            return path.basename(filePath, extension);
+        }
+        extname(path$1) {
+            return path.extname(path$1);
+        }
+        normalize(path) {
+            // Convert backslashes to forward slashes
+            return path.replace(/\\/g, '/');
+        }
+    }
+    /**
+     * A wrapper around the Node.js file-system that supports readonly operations and path manipulation.
+     */
+    class NodeJSReadonlyFileSystem extends NodeJSPathManipulation {
+        constructor() {
+            super(...arguments);
+            this._caseSensitive = undefined;
+        }
+        isCaseSensitive() {
+            if (this._caseSensitive === undefined) {
+                // Note the use of the real file-system is intentional:
+                // `this.exists()` relies upon `isCaseSensitive()` so that would cause an infinite recursion.
+                this._caseSensitive = !fs$2.existsSync(this.normalize(toggleCase(__filename)));
+            }
+            return this._caseSensitive;
+        }
+        exists(path) {
+            return fs$2.existsSync(path);
+        }
+        readFile(path) {
+            return fs$2.readFileSync(path, 'utf8');
+        }
+        readFileBuffer(path) {
+            return fs$2.readFileSync(path);
+        }
+        readdir(path) {
+            return fs$2.readdirSync(path);
+        }
+        lstat(path) {
+            return fs$2.lstatSync(path);
+        }
+        stat(path) {
+            return fs$2.statSync(path);
+        }
+        realpath(path) {
+            return this.resolve(fs$2.realpathSync(path));
+        }
+        getDefaultLibLocation() {
+            return this.resolve(require.resolve('typescript'), '..');
+        }
+    }
+    /**
+     * A wrapper around the Node.js file-system (i.e. the `fs` package).
+     */
+    class NodeJSFileSystem extends NodeJSReadonlyFileSystem {
+        writeFile(path, data, exclusive = false) {
+            fs$2.writeFileSync(path, data, exclusive ? { flag: 'wx' } : undefined);
+        }
+        removeFile(path) {
+            fs$2.unlinkSync(path);
+        }
+        symlink(target, path) {
+            fs$2.symlinkSync(target, path);
+        }
+        copyFile(from, to) {
+            fs$2.copyFileSync(from, to);
+        }
+        moveFile(from, to) {
+            fs$2.renameSync(from, to);
+        }
+        ensureDir(path) {
+            const parents = [];
+            while (!this.isRoot(path) && !this.exists(path)) {
+                parents.push(path);
+                path = this.dirname(path);
+            }
+            while (parents.length) {
+                this.safeMkdir(parents.pop());
+            }
+        }
+        removeDeep(path) {
+            undefined(path);
+        }
+        safeMkdir(path) {
+            try {
+                fs$2.mkdirSync(path);
+            }
+            catch (err) {
+                // Ignore the error, if the path already exists and points to a directory.
+                // Re-throw otherwise.
+                if (!this.exists(path) || !this.stat(path).isDirectory()) {
+                    throw err;
+                }
+            }
+        }
+    }
+    /**
+     * Toggle the case of each character in a string.
+     */
+    function toggleCase(str) {
+        return str.replace(/\w/g, ch => ch.toUpperCase() === ch ? ch.toLowerCase() : ch.toUpperCase());
+    }
 
     /**
      * @license
@@ -2357,12 +5597,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return encoded;
     }
-    function stringify(token) {
+    function stringify$1(token) {
         if (typeof token === 'string') {
             return token;
         }
         if (Array.isArray(token)) {
-            return '[' + token.map(stringify).join(', ') + ']';
+            return '[' + token.map(stringify$1).join(', ') + ']';
         }
         if (token == null) {
             return '' + token;
@@ -2447,7 +5687,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         if (ref['__anonymousType']) {
             return ref['__anonymousType'];
         }
-        let identifier = stringify(ref);
+        let identifier = stringify$1(ref);
         if (identifier.indexOf('(') >= 0) {
             // case: anonymous functions!
             identifier = `anonymous_${_anonymousTypeIndex++}`;
@@ -15990,9 +19230,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
-        if (parseResult.errors && parseResult.errors.length > 0) {
-            // TODO(ayazhafiz): we may not always want to bail out at this point (e.g. in
-            // the context of a language service).
+        if (!options.alwaysAttemptHtmlToR3AstConversion && parseResult.errors &&
+            parseResult.errors.length > 0) {
             return {
                 interpolationConfig,
                 preserveWhitespaces,
@@ -16013,7 +19252,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // message ids
         const i18nMetaVisitor = new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ !preserveWhitespaces, enableI18nLegacyMessageIdFormat);
         const i18nMetaResult = i18nMetaVisitor.visitAllWithErrors(rootNodes);
-        if (i18nMetaResult.errors && i18nMetaResult.errors.length > 0) {
+        if (!options.alwaysAttemptHtmlToR3AstConversion && i18nMetaResult.errors &&
+            i18nMetaResult.errors.length > 0) {
             return {
                 interpolationConfig,
                 preserveWhitespaces,
@@ -16039,6 +19279,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         }
         const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
+        errors.push(...parseResult.errors, ...i18nMetaResult.errors);
         return {
             interpolationConfig,
             preserveWhitespaces,
@@ -17170,7 +20411,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+55.sha-7765b64');
+    const VERSION$1 = new Version('12.0.0-next.2+57.sha-0847a03');
 
     /**
      * @license
@@ -17827,7 +21068,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+55.sha-7765b64'));
+        definitionMap.set('version', literal('12.0.0-next.2+57.sha-0847a03'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18048,7 +21289,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+55.sha-7765b64'));
+        definitionMap.set('version', literal('12.0.0-next.2+57.sha-0847a03'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18074,3253 +21315,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     publishFacade(_global);
 
     /**
-     * The default `FileSystem` that will always fail.
-     *
-     * This is a way of ensuring that the developer consciously chooses and
-     * configures the `FileSystem` before using it; particularly important when
-     * considering static functions like `absoluteFrom()` which rely on
-     * the `FileSystem` under the hood.
-     */
-    class InvalidFileSystem {
-        exists(path) {
-            throw makeError();
-        }
-        readFile(path) {
-            throw makeError();
-        }
-        readFileBuffer(path) {
-            throw makeError();
-        }
-        writeFile(path, data, exclusive) {
-            throw makeError();
-        }
-        removeFile(path) {
-            throw makeError();
-        }
-        symlink(target, path) {
-            throw makeError();
-        }
-        readdir(path) {
-            throw makeError();
-        }
-        lstat(path) {
-            throw makeError();
-        }
-        stat(path) {
-            throw makeError();
-        }
-        pwd() {
-            throw makeError();
-        }
-        chdir(path) {
-            throw makeError();
-        }
-        extname(path) {
-            throw makeError();
-        }
-        copyFile(from, to) {
-            throw makeError();
-        }
-        moveFile(from, to) {
-            throw makeError();
-        }
-        ensureDir(path) {
-            throw makeError();
-        }
-        removeDeep(path) {
-            throw makeError();
-        }
-        isCaseSensitive() {
-            throw makeError();
-        }
-        resolve(...paths) {
-            throw makeError();
-        }
-        dirname(file) {
-            throw makeError();
-        }
-        join(basePath, ...paths) {
-            throw makeError();
-        }
-        isRoot(path) {
-            throw makeError();
-        }
-        isRooted(path) {
-            throw makeError();
-        }
-        relative(from, to) {
-            throw makeError();
-        }
-        basename(filePath, extension) {
-            throw makeError();
-        }
-        realpath(filePath) {
-            throw makeError();
-        }
-        getDefaultLibLocation() {
-            throw makeError();
-        }
-        normalize(path) {
-            throw makeError();
-        }
-    }
-    function makeError() {
-        return new Error('FileSystem has not been configured. Please call `setFileSystem()` before calling this method.');
-    }
-
-    const TS_DTS_JS_EXTENSION = /(?:\.d)?\.ts$|\.js$/;
-    /**
-     * Remove a .ts, .d.ts, or .js extension from a file name.
-     */
-    function stripExtension(path) {
-        return path.replace(TS_DTS_JS_EXTENSION, '');
-    }
-    function getSourceFileOrError(program, fileName) {
-        const sf = program.getSourceFile(fileName);
-        if (sf === undefined) {
-            throw new Error(`Program does not contain "${fileName}" - available files are ${program.getSourceFiles().map(sf => sf.fileName).join(', ')}`);
-        }
-        return sf;
-    }
-
-    let fs = new InvalidFileSystem();
-    function getFileSystem() {
-        return fs;
-    }
-    function setFileSystem(fileSystem) {
-        fs = fileSystem;
-    }
-    /**
-     * Convert the path `path` to an `AbsoluteFsPath`, throwing an error if it's not an absolute path.
-     */
-    function absoluteFrom(path) {
-        if (!fs.isRooted(path)) {
-            throw new Error(`Internal Error: absoluteFrom(${path}): path is not absolute`);
-        }
-        return fs.resolve(path);
-    }
-    /**
-     * Extract an `AbsoluteFsPath` from a `ts.SourceFile`.
-     */
-    function absoluteFromSourceFile(sf) {
-        return fs.resolve(sf.fileName);
-    }
-    /**
-     * Static access to `dirname`.
-     */
-    function dirname(file) {
-        return fs.dirname(file);
-    }
-    /**
-     * Static access to `join`.
-     */
-    function join(basePath, ...paths) {
-        return fs.join(basePath, ...paths);
-    }
-    /**
-     * Static access to `resolve`s.
-     */
-    function resolve(basePath, ...paths) {
-        return fs.resolve(basePath, ...paths);
-    }
-    /**
-     * Static access to `isRooted`.
-     */
-    function isRooted(path) {
-        return fs.isRooted(path);
-    }
-    /**
-     * Static access to `relative`.
-     */
-    function relative(from, to) {
-        return fs.relative(from, to);
-    }
-    /**
-     * Returns true if the given path is locally relative.
-     *
-     * This is used to work out if the given path is relative (i.e. not absolute) but also is not
-     * escaping the current directory.
-     */
-    function isLocalRelativePath(relativePath) {
-        return !isRooted(relativePath) && !relativePath.startsWith('..');
-    }
-    /**
-     * Converts a path to a form suitable for use as a relative module import specifier.
-     *
-     * In other words it adds the `./` to the path if it is locally relative.
-     */
-    function toRelativeImport(relativePath) {
-        return isLocalRelativePath(relativePath) ? `./${relativePath}` : relativePath;
-    }
-
-    const LogicalProjectPath = {
-        /**
-         * Get the relative path between two `LogicalProjectPath`s.
-         *
-         * This will return a `PathSegment` which would be a valid module specifier to use in `from` when
-         * importing from `to`.
-         */
-        relativePathBetween: function (from, to) {
-            const relativePath = relative(dirname(resolve(from)), resolve(to));
-            return toRelativeImport(relativePath);
-        },
-    };
-    /**
-     * A utility class which can translate absolute paths to source files into logical paths in
-     * TypeScript's logical file system, based on the root directories of the project.
-     */
-    class LogicalFileSystem {
-        constructor(rootDirs, compilerHost) {
-            this.compilerHost = compilerHost;
-            /**
-             * A cache of file paths to project paths, because computation of these paths is slightly
-             * expensive.
-             */
-            this.cache = new Map();
-            // Make a copy and sort it by length in reverse order (longest first). This speeds up lookups,
-            // since there's no need to keep going through the array once a match is found.
-            this.rootDirs = rootDirs.concat([]).sort((a, b) => b.length - a.length);
-            this.canonicalRootDirs =
-                this.rootDirs.map(dir => this.compilerHost.getCanonicalFileName(dir));
-        }
-        /**
-         * Get the logical path in the project of a `ts.SourceFile`.
-         *
-         * This method is provided as a convenient alternative to calling
-         * `logicalPathOfFile(absoluteFromSourceFile(sf))`.
-         */
-        logicalPathOfSf(sf) {
-            return this.logicalPathOfFile(absoluteFrom(sf.fileName));
-        }
-        /**
-         * Get the logical path in the project of a source file.
-         *
-         * @returns A `LogicalProjectPath` to the source file, or `null` if the source file is not in any
-         * of the TS project's root directories.
-         */
-        logicalPathOfFile(physicalFile) {
-            const canonicalFilePath = this.compilerHost.getCanonicalFileName(physicalFile);
-            if (!this.cache.has(canonicalFilePath)) {
-                let logicalFile = null;
-                for (let i = 0; i < this.rootDirs.length; i++) {
-                    const rootDir = this.rootDirs[i];
-                    const canonicalRootDir = this.canonicalRootDirs[i];
-                    if (isWithinBasePath(canonicalRootDir, canonicalFilePath)) {
-                        // Note that we match against canonical paths but then create the logical path from
-                        // original paths.
-                        logicalFile = this.createLogicalProjectPath(physicalFile, rootDir);
-                        // The logical project does not include any special "node_modules" nested directories.
-                        if (logicalFile.indexOf('/node_modules/') !== -1) {
-                            logicalFile = null;
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                }
-                this.cache.set(canonicalFilePath, logicalFile);
-            }
-            return this.cache.get(canonicalFilePath);
-        }
-        createLogicalProjectPath(file, rootDir) {
-            const logicalPath = stripExtension(file.substr(rootDir.length));
-            return (logicalPath.startsWith('/') ? logicalPath : '/' + logicalPath);
-        }
-    }
-    /**
-     * Is the `path` a descendant of the `base`?
-     * E.g. `foo/bar/zee` is within `foo/bar` but not within `foo/car`.
-     */
-    function isWithinBasePath(base, path) {
-        return isLocalRelativePath(relative(base, path));
-    }
-
-    // simple mutable assign
-    function assign () {
-      const args = [].slice.call(arguments).filter(i => i);
-      const dest = args.shift();
-      args.forEach(src => {
-        Object.keys(src).forEach(key => {
-          dest[key] = src[key];
-        });
-      });
-
-      return dest
-    }
-
-    var assign_1 = assign;
-
-    function createCommonjsModule(fn, module) {
-    	return module = { exports: {} }, fn(module, module.exports), module.exports;
-    }
-
-    var fromCallback = function (fn) {
-      return Object.defineProperty(function () {
-        if (typeof arguments[arguments.length - 1] === 'function') fn.apply(this, arguments);
-        else {
-          return new Promise((resolve, reject) => {
-            arguments[arguments.length] = (err, res) => {
-              if (err) return reject(err)
-              resolve(res);
-            };
-            arguments.length++;
-            fn.apply(this, arguments);
-          })
-        }
-      }, 'name', { value: fn.name })
-    };
-
-    var fromPromise = function (fn) {
-      return Object.defineProperty(function () {
-        const cb = arguments[arguments.length - 1];
-        if (typeof cb !== 'function') return fn.apply(this, arguments)
-        else fn.apply(this, arguments).then(r => cb(null, r), cb);
-      }, 'name', { value: fn.name })
-    };
-
-    var universalify = {
-    	fromCallback: fromCallback,
-    	fromPromise: fromPromise
-    };
-
-    var origCwd = process.cwd;
-    var cwd = null;
-
-    var platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
-
-    process.cwd = function() {
-      if (!cwd)
-        cwd = origCwd.call(process);
-      return cwd
-    };
-    try {
-      process.cwd();
-    } catch (er) {}
-
-    var chdir = process.chdir;
-    process.chdir = function(d) {
-      cwd = null;
-      chdir.call(process, d);
-    };
-
-    var polyfills = patch;
-
-    function patch (fs) {
-      // (re-)implement some things that are known busted or missing.
-
-      // lchmod, broken prior to 0.6.2
-      // back-port the fix here.
-      if (constants.hasOwnProperty('O_SYMLINK') &&
-          process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs);
-      }
-
-      // lutimes implementation, or no-op
-      if (!fs.lutimes) {
-        patchLutimes(fs);
-      }
-
-      // https://github.com/isaacs/node-graceful-fs/issues/4
-      // Chown should not fail on einval or eperm if non-root.
-      // It should not fail on enosys ever, as this just indicates
-      // that a fs doesn't support the intended operation.
-
-      fs.chown = chownFix(fs.chown);
-      fs.fchown = chownFix(fs.fchown);
-      fs.lchown = chownFix(fs.lchown);
-
-      fs.chmod = chmodFix(fs.chmod);
-      fs.fchmod = chmodFix(fs.fchmod);
-      fs.lchmod = chmodFix(fs.lchmod);
-
-      fs.chownSync = chownFixSync(fs.chownSync);
-      fs.fchownSync = chownFixSync(fs.fchownSync);
-      fs.lchownSync = chownFixSync(fs.lchownSync);
-
-      fs.chmodSync = chmodFixSync(fs.chmodSync);
-      fs.fchmodSync = chmodFixSync(fs.fchmodSync);
-      fs.lchmodSync = chmodFixSync(fs.lchmodSync);
-
-      fs.stat = statFix(fs.stat);
-      fs.fstat = statFix(fs.fstat);
-      fs.lstat = statFix(fs.lstat);
-
-      fs.statSync = statFixSync(fs.statSync);
-      fs.fstatSync = statFixSync(fs.fstatSync);
-      fs.lstatSync = statFixSync(fs.lstatSync);
-
-      // if lchmod/lchown do not exist, then make them no-ops
-      if (!fs.lchmod) {
-        fs.lchmod = function (path, mode, cb) {
-          if (cb) process.nextTick(cb);
-        };
-        fs.lchmodSync = function () {};
-      }
-      if (!fs.lchown) {
-        fs.lchown = function (path, uid, gid, cb) {
-          if (cb) process.nextTick(cb);
-        };
-        fs.lchownSync = function () {};
-      }
-
-      // on Windows, A/V software can lock the directory, causing this
-      // to fail with an EACCES or EPERM if the directory contains newly
-      // created files.  Try again on failure, for up to 60 seconds.
-
-      // Set the timeout this long because some Windows Anti-Virus, such as Parity
-      // bit9, may lock files for up to a minute, causing npm package install
-      // failures. Also, take care to yield the scheduler. Windows scheduling gives
-      // CPU to a busy looping process, which can cause the program causing the lock
-      // contention to be starved of CPU by node, so the contention doesn't resolve.
-      if (platform === "win32") {
-        fs.rename = (function (fs$rename) { return function (from, to, cb) {
-          var start = Date.now();
-          var backoff = 0;
-          fs$rename(from, to, function CB (er) {
-            if (er
-                && (er.code === "EACCES" || er.code === "EPERM")
-                && Date.now() - start < 60000) {
-              setTimeout(function() {
-                fs.stat(to, function (stater, st) {
-                  if (stater && stater.code === "ENOENT")
-                    fs$rename(from, to, CB);
-                  else
-                    cb(er);
-                });
-              }, backoff);
-              if (backoff < 100)
-                backoff += 10;
-              return;
-            }
-            if (cb) cb(er);
-          });
-        }})(fs.rename);
-      }
-
-      // if read() returns EAGAIN, then just try it again.
-      fs.read = (function (fs$read) {
-        function read (fd, buffer, offset, length, position, callback_) {
-          var callback;
-          if (callback_ && typeof callback_ === 'function') {
-            var eagCounter = 0;
-            callback = function (er, _, __) {
-              if (er && er.code === 'EAGAIN' && eagCounter < 10) {
-                eagCounter ++;
-                return fs$read.call(fs, fd, buffer, offset, length, position, callback)
-              }
-              callback_.apply(this, arguments);
-            };
-          }
-          return fs$read.call(fs, fd, buffer, offset, length, position, callback)
-        }
-
-        // This ensures `util.promisify` works as it does for native `fs.read`.
-        read.__proto__ = fs$read;
-        return read
-      })(fs.read);
-
-      fs.readSync = (function (fs$readSync) { return function (fd, buffer, offset, length, position) {
-        var eagCounter = 0;
-        while (true) {
-          try {
-            return fs$readSync.call(fs, fd, buffer, offset, length, position)
-          } catch (er) {
-            if (er.code === 'EAGAIN' && eagCounter < 10) {
-              eagCounter ++;
-              continue
-            }
-            throw er
-          }
-        }
-      }})(fs.readSync);
-
-      function patchLchmod (fs) {
-        fs.lchmod = function (path, mode, callback) {
-          fs.open( path
-                 , constants.O_WRONLY | constants.O_SYMLINK
-                 , mode
-                 , function (err, fd) {
-            if (err) {
-              if (callback) callback(err);
-              return
-            }
-            // prefer to return the chmod error, if one occurs,
-            // but still try to close, and report closing errors if they occur.
-            fs.fchmod(fd, mode, function (err) {
-              fs.close(fd, function(err2) {
-                if (callback) callback(err || err2);
-              });
-            });
-          });
-        };
-
-        fs.lchmodSync = function (path, mode) {
-          var fd = fs.openSync(path, constants.O_WRONLY | constants.O_SYMLINK, mode);
-
-          // prefer to return the chmod error, if one occurs,
-          // but still try to close, and report closing errors if they occur.
-          var threw = true;
-          var ret;
-          try {
-            ret = fs.fchmodSync(fd, mode);
-            threw = false;
-          } finally {
-            if (threw) {
-              try {
-                fs.closeSync(fd);
-              } catch (er) {}
-            } else {
-              fs.closeSync(fd);
-            }
-          }
-          return ret
-        };
-      }
-
-      function patchLutimes (fs) {
-        if (constants.hasOwnProperty("O_SYMLINK")) {
-          fs.lutimes = function (path, at, mt, cb) {
-            fs.open(path, constants.O_SYMLINK, function (er, fd) {
-              if (er) {
-                if (cb) cb(er);
-                return
-              }
-              fs.futimes(fd, at, mt, function (er) {
-                fs.close(fd, function (er2) {
-                  if (cb) cb(er || er2);
-                });
-              });
-            });
-          };
-
-          fs.lutimesSync = function (path, at, mt) {
-            var fd = fs.openSync(path, constants.O_SYMLINK);
-            var ret;
-            var threw = true;
-            try {
-              ret = fs.futimesSync(fd, at, mt);
-              threw = false;
-            } finally {
-              if (threw) {
-                try {
-                  fs.closeSync(fd);
-                } catch (er) {}
-              } else {
-                fs.closeSync(fd);
-              }
-            }
-            return ret
-          };
-
-        } else {
-          fs.lutimes = function (_a, _b, _c, cb) { if (cb) process.nextTick(cb); };
-          fs.lutimesSync = function () {};
-        }
-      }
-
-      function chmodFix (orig) {
-        if (!orig) return orig
-        return function (target, mode, cb) {
-          return orig.call(fs, target, mode, function (er) {
-            if (chownErOk(er)) er = null;
-            if (cb) cb.apply(this, arguments);
-          })
-        }
-      }
-
-      function chmodFixSync (orig) {
-        if (!orig) return orig
-        return function (target, mode) {
-          try {
-            return orig.call(fs, target, mode)
-          } catch (er) {
-            if (!chownErOk(er)) throw er
-          }
-        }
-      }
-
-
-      function chownFix (orig) {
-        if (!orig) return orig
-        return function (target, uid, gid, cb) {
-          return orig.call(fs, target, uid, gid, function (er) {
-            if (chownErOk(er)) er = null;
-            if (cb) cb.apply(this, arguments);
-          })
-        }
-      }
-
-      function chownFixSync (orig) {
-        if (!orig) return orig
-        return function (target, uid, gid) {
-          try {
-            return orig.call(fs, target, uid, gid)
-          } catch (er) {
-            if (!chownErOk(er)) throw er
-          }
-        }
-      }
-
-      function statFix (orig) {
-        if (!orig) return orig
-        // Older versions of Node erroneously returned signed integers for
-        // uid + gid.
-        return function (target, options, cb) {
-          if (typeof options === 'function') {
-            cb = options;
-            options = null;
-          }
-          function callback (er, stats) {
-            if (stats) {
-              if (stats.uid < 0) stats.uid += 0x100000000;
-              if (stats.gid < 0) stats.gid += 0x100000000;
-            }
-            if (cb) cb.apply(this, arguments);
-          }
-          return options ? orig.call(fs, target, options, callback)
-            : orig.call(fs, target, callback)
-        }
-      }
-
-      function statFixSync (orig) {
-        if (!orig) return orig
-        // Older versions of Node erroneously returned signed integers for
-        // uid + gid.
-        return function (target, options) {
-          var stats = options ? orig.call(fs, target, options)
-            : orig.call(fs, target);
-          if (stats.uid < 0) stats.uid += 0x100000000;
-          if (stats.gid < 0) stats.gid += 0x100000000;
-          return stats;
-        }
-      }
-
-      // ENOSYS means that the fs doesn't support the op. Just ignore
-      // that, because it doesn't matter.
-      //
-      // if there's no getuid, or if getuid() is something other
-      // than 0, and the error is EINVAL or EPERM, then just ignore
-      // it.
-      //
-      // This specific case is a silent failure in cp, install, tar,
-      // and most other unix tools that manage permissions.
-      //
-      // When running as root, or if other types of errors are
-      // encountered, then it's strict.
-      function chownErOk (er) {
-        if (!er)
-          return true
-
-        if (er.code === "ENOSYS")
-          return true
-
-        var nonroot = !process.getuid || process.getuid() !== 0;
-        if (nonroot) {
-          if (er.code === "EINVAL" || er.code === "EPERM")
-            return true
-        }
-
-        return false
-      }
-    }
-
-    var Stream = stream.Stream;
-
-    var legacyStreams = legacy;
-
-    function legacy (fs) {
-      return {
-        ReadStream: ReadStream,
-        WriteStream: WriteStream
-      }
-
-      function ReadStream (path, options) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path, options);
-
-        Stream.call(this);
-
-        var self = this;
-
-        this.path = path;
-        this.fd = null;
-        this.readable = true;
-        this.paused = false;
-
-        this.flags = 'r';
-        this.mode = 438; /*=0666*/
-        this.bufferSize = 64 * 1024;
-
-        options = options || {};
-
-        // Mixin options into this
-        var keys = Object.keys(options);
-        for (var index = 0, length = keys.length; index < length; index++) {
-          var key = keys[index];
-          this[key] = options[key];
-        }
-
-        if (this.encoding) this.setEncoding(this.encoding);
-
-        if (this.start !== undefined) {
-          if ('number' !== typeof this.start) {
-            throw TypeError('start must be a Number');
-          }
-          if (this.end === undefined) {
-            this.end = Infinity;
-          } else if ('number' !== typeof this.end) {
-            throw TypeError('end must be a Number');
-          }
-
-          if (this.start > this.end) {
-            throw new Error('start must be <= end');
-          }
-
-          this.pos = this.start;
-        }
-
-        if (this.fd !== null) {
-          process.nextTick(function() {
-            self._read();
-          });
-          return;
-        }
-
-        fs.open(this.path, this.flags, this.mode, function (err, fd) {
-          if (err) {
-            self.emit('error', err);
-            self.readable = false;
-            return;
-          }
-
-          self.fd = fd;
-          self.emit('open', fd);
-          self._read();
-        });
-      }
-
-      function WriteStream (path, options) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path, options);
-
-        Stream.call(this);
-
-        this.path = path;
-        this.fd = null;
-        this.writable = true;
-
-        this.flags = 'w';
-        this.encoding = 'binary';
-        this.mode = 438; /*=0666*/
-        this.bytesWritten = 0;
-
-        options = options || {};
-
-        // Mixin options into this
-        var keys = Object.keys(options);
-        for (var index = 0, length = keys.length; index < length; index++) {
-          var key = keys[index];
-          this[key] = options[key];
-        }
-
-        if (this.start !== undefined) {
-          if ('number' !== typeof this.start) {
-            throw TypeError('start must be a Number');
-          }
-          if (this.start < 0) {
-            throw new Error('start must be >= zero');
-          }
-
-          this.pos = this.start;
-        }
-
-        this.busy = false;
-        this._queue = [];
-
-        if (this.fd === null) {
-          this._open = fs.open;
-          this._queue.push([this._open, this.path, this.flags, this.mode, undefined]);
-          this.flush();
-        }
-      }
-    }
-
-    var clone_1 = clone;
-
-    function clone (obj) {
-      if (obj === null || typeof obj !== 'object')
-        return obj
-
-      if (obj instanceof Object)
-        var copy = { __proto__: obj.__proto__ };
-      else
-        var copy = Object.create(null);
-
-      Object.getOwnPropertyNames(obj).forEach(function (key) {
-        Object.defineProperty(copy, key, Object.getOwnPropertyDescriptor(obj, key));
-      });
-
-      return copy
-    }
-
-    var gracefulFs = createCommonjsModule(function (module) {
-    /* istanbul ignore next - node 0.x polyfill */
-    var gracefulQueue;
-    var previousSymbol;
-
-    /* istanbul ignore else - node 0.x polyfill */
-    if (typeof Symbol === 'function' && typeof Symbol.for === 'function') {
-      gracefulQueue = Symbol.for('graceful-fs.queue');
-      // This is used in testing by future versions
-      previousSymbol = Symbol.for('graceful-fs.previous');
-    } else {
-      gracefulQueue = '___graceful-fs.queue';
-      previousSymbol = '___graceful-fs.previous';
-    }
-
-    function noop () {}
-
-    function publishQueue(context, queue) {
-      Object.defineProperty(context, gracefulQueue, {
-        get: function() {
-          return queue
-        }
-      });
-    }
-
-    var debug = noop;
-    if (util.debuglog)
-      debug = util.debuglog('gfs4');
-    else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ''))
-      debug = function() {
-        var m = util.format.apply(util, arguments);
-        m = 'GFS4: ' + m.split(/\n/).join('\nGFS4: ');
-        console.error(m);
-      };
-
-    // Once time initialization
-    if (!fs$2__default[gracefulQueue]) {
-      // This queue can be shared by multiple loaded instances
-      var queue = global[gracefulQueue] || [];
-      publishQueue(fs$2__default, queue);
-
-      // Patch fs.close/closeSync to shared queue version, because we need
-      // to retry() whenever a close happens *anywhere* in the program.
-      // This is essential when multiple graceful-fs instances are
-      // in play at the same time.
-      fs$2__default.close = (function (fs$close) {
-        function close (fd, cb) {
-          return fs$close.call(fs$2__default, fd, function (err) {
-            // This function uses the graceful-fs shared queue
-            if (!err) {
-              retry();
-            }
-
-            if (typeof cb === 'function')
-              cb.apply(this, arguments);
-          })
-        }
-
-        Object.defineProperty(close, previousSymbol, {
-          value: fs$close
-        });
-        return close
-      })(fs$2__default.close);
-
-      fs$2__default.closeSync = (function (fs$closeSync) {
-        function closeSync (fd) {
-          // This function uses the graceful-fs shared queue
-          fs$closeSync.apply(fs$2__default, arguments);
-          retry();
-        }
-
-        Object.defineProperty(closeSync, previousSymbol, {
-          value: fs$closeSync
-        });
-        return closeSync
-      })(fs$2__default.closeSync);
-
-      if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || '')) {
-        process.on('exit', function() {
-          debug(fs$2__default[gracefulQueue]);
-          assert.equal(fs$2__default[gracefulQueue].length, 0);
-        });
-      }
-    }
-
-    if (!global[gracefulQueue]) {
-      publishQueue(global, fs$2__default[gracefulQueue]);
-    }
-
-    module.exports = patch(clone_1(fs$2__default));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs$2__default.__patched) {
-        module.exports = patch(fs$2__default);
-        fs$2__default.__patched = true;
-    }
-
-    function patch (fs) {
-      // Everything that references the open() function needs to be in here
-      polyfills(fs);
-      fs.gracefulify = patch;
-
-      fs.createReadStream = createReadStream;
-      fs.createWriteStream = createWriteStream;
-      var fs$readFile = fs.readFile;
-      fs.readFile = readFile;
-      function readFile (path, options, cb) {
-        if (typeof options === 'function')
-          cb = options, options = null;
-
-        return go$readFile(path, options, cb)
-
-        function go$readFile (path, options, cb) {
-          return fs$readFile(path, options, function (err) {
-            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
-              enqueue([go$readFile, [path, options, cb]]);
-            else {
-              if (typeof cb === 'function')
-                cb.apply(this, arguments);
-              retry();
-            }
-          })
-        }
-      }
-
-      var fs$writeFile = fs.writeFile;
-      fs.writeFile = writeFile;
-      function writeFile (path, data, options, cb) {
-        if (typeof options === 'function')
-          cb = options, options = null;
-
-        return go$writeFile(path, data, options, cb)
-
-        function go$writeFile (path, data, options, cb) {
-          return fs$writeFile(path, data, options, function (err) {
-            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
-              enqueue([go$writeFile, [path, data, options, cb]]);
-            else {
-              if (typeof cb === 'function')
-                cb.apply(this, arguments);
-              retry();
-            }
-          })
-        }
-      }
-
-      var fs$appendFile = fs.appendFile;
-      if (fs$appendFile)
-        fs.appendFile = appendFile;
-      function appendFile (path, data, options, cb) {
-        if (typeof options === 'function')
-          cb = options, options = null;
-
-        return go$appendFile(path, data, options, cb)
-
-        function go$appendFile (path, data, options, cb) {
-          return fs$appendFile(path, data, options, function (err) {
-            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
-              enqueue([go$appendFile, [path, data, options, cb]]);
-            else {
-              if (typeof cb === 'function')
-                cb.apply(this, arguments);
-              retry();
-            }
-          })
-        }
-      }
-
-      var fs$readdir = fs.readdir;
-      fs.readdir = readdir;
-      function readdir (path, options, cb) {
-        var args = [path];
-        if (typeof options !== 'function') {
-          args.push(options);
-        } else {
-          cb = options;
-        }
-        args.push(go$readdir$cb);
-
-        return go$readdir(args)
-
-        function go$readdir$cb (err, files) {
-          if (files && files.sort)
-            files.sort();
-
-          if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
-            enqueue([go$readdir, [args]]);
-
-          else {
-            if (typeof cb === 'function')
-              cb.apply(this, arguments);
-            retry();
-          }
-        }
-      }
-
-      function go$readdir (args) {
-        return fs$readdir.apply(fs, args)
-      }
-
-      if (process.version.substr(0, 4) === 'v0.8') {
-        var legStreams = legacyStreams(fs);
-        ReadStream = legStreams.ReadStream;
-        WriteStream = legStreams.WriteStream;
-      }
-
-      var fs$ReadStream = fs.ReadStream;
-      if (fs$ReadStream) {
-        ReadStream.prototype = Object.create(fs$ReadStream.prototype);
-        ReadStream.prototype.open = ReadStream$open;
-      }
-
-      var fs$WriteStream = fs.WriteStream;
-      if (fs$WriteStream) {
-        WriteStream.prototype = Object.create(fs$WriteStream.prototype);
-        WriteStream.prototype.open = WriteStream$open;
-      }
-
-      Object.defineProperty(fs, 'ReadStream', {
-        get: function () {
-          return ReadStream
-        },
-        set: function (val) {
-          ReadStream = val;
-        },
-        enumerable: true,
-        configurable: true
-      });
-      Object.defineProperty(fs, 'WriteStream', {
-        get: function () {
-          return WriteStream
-        },
-        set: function (val) {
-          WriteStream = val;
-        },
-        enumerable: true,
-        configurable: true
-      });
-
-      // legacy names
-      var FileReadStream = ReadStream;
-      Object.defineProperty(fs, 'FileReadStream', {
-        get: function () {
-          return FileReadStream
-        },
-        set: function (val) {
-          FileReadStream = val;
-        },
-        enumerable: true,
-        configurable: true
-      });
-      var FileWriteStream = WriteStream;
-      Object.defineProperty(fs, 'FileWriteStream', {
-        get: function () {
-          return FileWriteStream
-        },
-        set: function (val) {
-          FileWriteStream = val;
-        },
-        enumerable: true,
-        configurable: true
-      });
-
-      function ReadStream (path, options) {
-        if (this instanceof ReadStream)
-          return fs$ReadStream.apply(this, arguments), this
-        else
-          return ReadStream.apply(Object.create(ReadStream.prototype), arguments)
-      }
-
-      function ReadStream$open () {
-        var that = this;
-        open(that.path, that.flags, that.mode, function (err, fd) {
-          if (err) {
-            if (that.autoClose)
-              that.destroy();
-
-            that.emit('error', err);
-          } else {
-            that.fd = fd;
-            that.emit('open', fd);
-            that.read();
-          }
-        });
-      }
-
-      function WriteStream (path, options) {
-        if (this instanceof WriteStream)
-          return fs$WriteStream.apply(this, arguments), this
-        else
-          return WriteStream.apply(Object.create(WriteStream.prototype), arguments)
-      }
-
-      function WriteStream$open () {
-        var that = this;
-        open(that.path, that.flags, that.mode, function (err, fd) {
-          if (err) {
-            that.destroy();
-            that.emit('error', err);
-          } else {
-            that.fd = fd;
-            that.emit('open', fd);
-          }
-        });
-      }
-
-      function createReadStream (path, options) {
-        return new fs.ReadStream(path, options)
-      }
-
-      function createWriteStream (path, options) {
-        return new fs.WriteStream(path, options)
-      }
-
-      var fs$open = fs.open;
-      fs.open = open;
-      function open (path, flags, mode, cb) {
-        if (typeof mode === 'function')
-          cb = mode, mode = null;
-
-        return go$open(path, flags, mode, cb)
-
-        function go$open (path, flags, mode, cb) {
-          return fs$open(path, flags, mode, function (err, fd) {
-            if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
-              enqueue([go$open, [path, flags, mode, cb]]);
-            else {
-              if (typeof cb === 'function')
-                cb.apply(this, arguments);
-              retry();
-            }
-          })
-        }
-      }
-
-      return fs
-    }
-
-    function enqueue (elem) {
-      debug('ENQUEUE', elem[0].name, elem[1]);
-      fs$2__default[gracefulQueue].push(elem);
-    }
-
-    function retry () {
-      var elem = fs$2__default[gracefulQueue].shift();
-      if (elem) {
-        debug('RETRY', elem[0].name, elem[1]);
-        elem[0].apply(null, elem[1]);
-      }
-    }
-    });
-
-    var fs_1 = createCommonjsModule(function (module, exports) {
-    // This is adapted from https://github.com/normalize/mz
-    // Copyright (c) 2014-2016 Jonathan Ong me@jongleberry.com and Contributors
-    const u = universalify.fromCallback;
-
-
-    const api = [
-      'access',
-      'appendFile',
-      'chmod',
-      'chown',
-      'close',
-      'fchmod',
-      'fchown',
-      'fdatasync',
-      'fstat',
-      'fsync',
-      'ftruncate',
-      'futimes',
-      'lchown',
-      'link',
-      'lstat',
-      'mkdir',
-      'open',
-      'readFile',
-      'readdir',
-      'readlink',
-      'realpath',
-      'rename',
-      'rmdir',
-      'stat',
-      'symlink',
-      'truncate',
-      'unlink',
-      'utimes',
-      'writeFile'
-    ];
-    // Add methods that are only in some Node.js versions
-    // fs.copyFile was added in Node.js v8.5.0
-    typeof gracefulFs.copyFile === 'function' && api.push('copyFile');
-    // fs.mkdtemp() was added in Node.js v5.10.0
-    typeof gracefulFs.mkdtemp === 'function' && api.push('mkdtemp');
-
-    // Export all keys:
-    Object.keys(gracefulFs).forEach(key => {
-      exports[key] = gracefulFs[key];
-    });
-
-    // Universalify async methods:
-    api.forEach(method => {
-      exports[method] = u(gracefulFs[method]);
-    });
-
-    // We differ from mz/fs in that we still ship the old, broken, fs.exists()
-    // since we are a drop-in replacement for the native module
-    exports.exists = function (filename, callback) {
-      if (typeof callback === 'function') {
-        return gracefulFs.exists(filename, callback)
-      }
-      return new Promise(resolve => {
-        return gracefulFs.exists(filename, resolve)
-      })
-    };
-
-    // fs.read() & fs.write need special treatment due to multiple callback args
-
-    exports.read = function (fd, buffer, offset, length, position, callback) {
-      if (typeof callback === 'function') {
-        return gracefulFs.read(fd, buffer, offset, length, position, callback)
-      }
-      return new Promise((resolve, reject) => {
-        gracefulFs.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
-          if (err) return reject(err)
-          resolve({ bytesRead, buffer });
-        });
-      })
-    };
-
-    // Function signature can be
-    // fs.write(fd, buffer[, offset[, length[, position]]], callback)
-    // OR
-    // fs.write(fd, string[, position[, encoding]], callback)
-    // so we need to handle both cases
-    exports.write = function (fd, buffer, a, b, c, callback) {
-      if (typeof arguments[arguments.length - 1] === 'function') {
-        return gracefulFs.write(fd, buffer, a, b, c, callback)
-      }
-
-      // Check for old, depricated fs.write(fd, string[, position[, encoding]], callback)
-      if (typeof buffer === 'string') {
-        return new Promise((resolve, reject) => {
-          gracefulFs.write(fd, buffer, a, b, (err, bytesWritten, buffer) => {
-            if (err) return reject(err)
-            resolve({ bytesWritten, buffer });
-          });
-        })
-      }
-
-      return new Promise((resolve, reject) => {
-        gracefulFs.write(fd, buffer, a, b, c, (err, bytesWritten, buffer) => {
-          if (err) return reject(err)
-          resolve({ bytesWritten, buffer });
-        });
-      })
-    };
-    });
-    var fs_2 = fs_1.exists;
-    var fs_3 = fs_1.read;
-    var fs_4 = fs_1.write;
-
-    // HFS, ext{2,3}, FAT do not, Node.js v0.10 does not
-    function hasMillisResSync () {
-      let tmpfile = path__default.join('millis-test-sync' + Date.now().toString() + Math.random().toString().slice(2));
-      tmpfile = path__default.join(os__default.tmpdir(), tmpfile);
-
-      // 550 millis past UNIX epoch
-      const d = new Date(1435410243862);
-      gracefulFs.writeFileSync(tmpfile, 'https://github.com/jprichardson/node-fs-extra/pull/141');
-      const fd = gracefulFs.openSync(tmpfile, 'r+');
-      gracefulFs.futimesSync(fd, d, d);
-      gracefulFs.closeSync(fd);
-      return gracefulFs.statSync(tmpfile).mtime > 1435410243000
-    }
-
-    function hasMillisRes (callback) {
-      let tmpfile = path__default.join('millis-test' + Date.now().toString() + Math.random().toString().slice(2));
-      tmpfile = path__default.join(os__default.tmpdir(), tmpfile);
-
-      // 550 millis past UNIX epoch
-      const d = new Date(1435410243862);
-      gracefulFs.writeFile(tmpfile, 'https://github.com/jprichardson/node-fs-extra/pull/141', err => {
-        if (err) return callback(err)
-        gracefulFs.open(tmpfile, 'r+', (err, fd) => {
-          if (err) return callback(err)
-          gracefulFs.futimes(fd, d, d, err => {
-            if (err) return callback(err)
-            gracefulFs.close(fd, err => {
-              if (err) return callback(err)
-              gracefulFs.stat(tmpfile, (err, stats) => {
-                if (err) return callback(err)
-                callback(null, stats.mtime > 1435410243000);
-              });
-            });
-          });
-        });
-      });
-    }
-
-    function timeRemoveMillis (timestamp) {
-      if (typeof timestamp === 'number') {
-        return Math.floor(timestamp / 1000) * 1000
-      } else if (timestamp instanceof Date) {
-        return new Date(Math.floor(timestamp.getTime() / 1000) * 1000)
-      } else {
-        throw new Error('fs-extra: timeRemoveMillis() unknown parameter type')
-      }
-    }
-
-    function utimesMillis (path, atime, mtime, callback) {
-      // if (!HAS_MILLIS_RES) return fs.utimes(path, atime, mtime, callback)
-      gracefulFs.open(path, 'r+', (err, fd) => {
-        if (err) return callback(err)
-        gracefulFs.futimes(fd, atime, mtime, futimesErr => {
-          gracefulFs.close(fd, closeErr => {
-            if (callback) callback(futimesErr || closeErr);
-          });
-        });
-      });
-    }
-
-    var utimes = {
-      hasMillisRes,
-      hasMillisResSync,
-      timeRemoveMillis,
-      utimesMillis
-    };
-
-    // imported from ncp (this is temporary, will rewrite)
-
-
-
-
-
-    function ncp (source, dest, options, callback) {
-      if (!callback) {
-        callback = options;
-        options = {};
-      }
-
-      var basePath = process.cwd();
-      var currentPath = path__default.resolve(basePath, source);
-      var targetPath = path__default.resolve(basePath, dest);
-
-      var filter = options.filter;
-      var transform = options.transform;
-      var overwrite = options.overwrite;
-      // If overwrite is undefined, use clobber, otherwise default to true:
-      if (overwrite === undefined) overwrite = options.clobber;
-      if (overwrite === undefined) overwrite = true;
-      var errorOnExist = options.errorOnExist;
-      var dereference = options.dereference;
-      var preserveTimestamps = options.preserveTimestamps === true;
-
-      var started = 0;
-      var finished = 0;
-      var running = 0;
-
-      var errored = false;
-
-      startCopy(currentPath);
-
-      function startCopy (source) {
-        started++;
-        if (filter) {
-          if (filter instanceof RegExp) {
-            console.warn('Warning: fs-extra: Passing a RegExp filter is deprecated, use a function');
-            if (!filter.test(source)) {
-              return doneOne(true)
-            }
-          } else if (typeof filter === 'function') {
-            if (!filter(source, dest)) {
-              return doneOne(true)
-            }
-          }
-        }
-        return getStats(source)
-      }
-
-      function getStats (source) {
-        var stat = dereference ? gracefulFs.stat : gracefulFs.lstat;
-        running++;
-        stat(source, function (err, stats) {
-          if (err) return onError(err)
-
-          // We need to get the mode from the stats object and preserve it.
-          var item = {
-            name: source,
-            mode: stats.mode,
-            mtime: stats.mtime, // modified time
-            atime: stats.atime, // access time
-            stats: stats // temporary
-          };
-
-          if (stats.isDirectory()) {
-            return onDir(item)
-          } else if (stats.isFile() || stats.isCharacterDevice() || stats.isBlockDevice()) {
-            return onFile(item)
-          } else if (stats.isSymbolicLink()) {
-            // Symlinks don't really need to know about the mode.
-            return onLink(source)
-          }
-        });
-      }
-
-      function onFile (file) {
-        var target = file.name.replace(currentPath, targetPath.replace('$', '$$$$')); // escapes '$' with '$$'
-        isWritable(target, function (writable) {
-          if (writable) {
-            copyFile(file, target);
-          } else {
-            if (overwrite) {
-              rmFile(target, function () {
-                copyFile(file, target);
-              });
-            } else if (errorOnExist) {
-              onError(new Error(target + ' already exists'));
-            } else {
-              doneOne();
-            }
-          }
-        });
-      }
-
-      function copyFile (file, target) {
-        var readStream = gracefulFs.createReadStream(file.name);
-        var writeStream = gracefulFs.createWriteStream(target, { mode: file.mode });
-
-        readStream.on('error', onError);
-        writeStream.on('error', onError);
-
-        if (transform) {
-          transform(readStream, writeStream, file);
-        } else {
-          writeStream.on('open', function () {
-            readStream.pipe(writeStream);
-          });
-        }
-
-        writeStream.once('close', function () {
-          gracefulFs.chmod(target, file.mode, function (err) {
-            if (err) return onError(err)
-            if (preserveTimestamps) {
-              utimes.utimesMillis(target, file.atime, file.mtime, function (err) {
-                if (err) return onError(err)
-                return doneOne()
-              });
-            } else {
-              doneOne();
-            }
-          });
-        });
-      }
-
-      function rmFile (file, done) {
-        gracefulFs.unlink(file, function (err) {
-          if (err) return onError(err)
-          return done()
-        });
-      }
-
-      function onDir (dir) {
-        var target = dir.name.replace(currentPath, targetPath.replace('$', '$$$$')); // escapes '$' with '$$'
-        isWritable(target, function (writable) {
-          if (writable) {
-            return mkDir(dir, target)
-          }
-          copyDir(dir.name);
-        });
-      }
-
-      function mkDir (dir, target) {
-        gracefulFs.mkdir(target, dir.mode, function (err) {
-          if (err) return onError(err)
-          // despite setting mode in fs.mkdir, doesn't seem to work
-          // so we set it here.
-          gracefulFs.chmod(target, dir.mode, function (err) {
-            if (err) return onError(err)
-            copyDir(dir.name);
-          });
-        });
-      }
-
-      function copyDir (dir) {
-        gracefulFs.readdir(dir, function (err, items) {
-          if (err) return onError(err)
-          items.forEach(function (item) {
-            startCopy(path__default.join(dir, item));
-          });
-          return doneOne()
-        });
-      }
-
-      function onLink (link) {
-        var target = link.replace(currentPath, targetPath);
-        gracefulFs.readlink(link, function (err, resolvedPath) {
-          if (err) return onError(err)
-          checkLink(resolvedPath, target);
-        });
-      }
-
-      function checkLink (resolvedPath, target) {
-        if (dereference) {
-          resolvedPath = path__default.resolve(basePath, resolvedPath);
-        }
-        isWritable(target, function (writable) {
-          if (writable) {
-            return makeLink(resolvedPath, target)
-          }
-          gracefulFs.readlink(target, function (err, targetDest) {
-            if (err) return onError(err)
-
-            if (dereference) {
-              targetDest = path__default.resolve(basePath, targetDest);
-            }
-            if (targetDest === resolvedPath) {
-              return doneOne()
-            }
-            return rmFile(target, function () {
-              makeLink(resolvedPath, target);
-            })
-          });
-        });
-      }
-
-      function makeLink (linkPath, target) {
-        gracefulFs.symlink(linkPath, target, function (err) {
-          if (err) return onError(err)
-          return doneOne()
-        });
-      }
-
-      function isWritable (path, done) {
-        gracefulFs.lstat(path, function (err) {
-          if (err) {
-            if (err.code === 'ENOENT') return done(true)
-            return done(false)
-          }
-          return done(false)
-        });
-      }
-
-      function onError (err) {
-        // ensure callback is defined & called only once:
-        if (!errored && callback !== undefined) {
-          errored = true;
-          return callback(err)
-        }
-      }
-
-      function doneOne (skipped) {
-        if (!skipped) running--;
-        finished++;
-        if ((started === finished) && (running === 0)) {
-          if (callback !== undefined) {
-            return callback(null)
-          }
-        }
-      }
-    }
-
-    var ncp_1 = ncp;
-
-    // get drive on windows
-    function getRootPath (p) {
-      p = path__default.normalize(path__default.resolve(p)).split(path__default.sep);
-      if (p.length > 0) return p[0]
-      return null
-    }
-
-    // http://stackoverflow.com/a/62888/10333 contains more accurate
-    // TODO: expand to include the rest
-    const INVALID_PATH_CHARS = /[<>:"|?*]/;
-
-    function invalidWin32Path (p) {
-      const rp = getRootPath(p);
-      p = p.replace(rp, '');
-      return INVALID_PATH_CHARS.test(p)
-    }
-
-    var win32 = {
-      getRootPath,
-      invalidWin32Path
-    };
-
-    const invalidWin32Path$1 = win32.invalidWin32Path;
-
-    const o777 = parseInt('0777', 8);
-
-    function mkdirs (p, opts, callback, made) {
-      if (typeof opts === 'function') {
-        callback = opts;
-        opts = {};
-      } else if (!opts || typeof opts !== 'object') {
-        opts = { mode: opts };
-      }
-
-      if (process.platform === 'win32' && invalidWin32Path$1(p)) {
-        const errInval = new Error(p + ' contains invalid WIN32 path characters.');
-        errInval.code = 'EINVAL';
-        return callback(errInval)
-      }
-
-      let mode = opts.mode;
-      const xfs = opts.fs || gracefulFs;
-
-      if (mode === undefined) {
-        mode = o777 & (~process.umask());
-      }
-      if (!made) made = null;
-
-      callback = callback || function () {};
-      p = path__default.resolve(p);
-
-      xfs.mkdir(p, mode, er => {
-        if (!er) {
-          made = made || p;
-          return callback(null, made)
-        }
-        switch (er.code) {
-          case 'ENOENT':
-            if (path__default.dirname(p) === p) return callback(er)
-            mkdirs(path__default.dirname(p), opts, (er, made) => {
-              if (er) callback(er, made);
-              else mkdirs(p, opts, callback, made);
-            });
-            break
-
-          // In the case of any other error, just see if there's a dir
-          // there already.  If so, then hooray!  If not, then something
-          // is borked.
-          default:
-            xfs.stat(p, (er2, stat) => {
-              // if the stat fails, then that's super weird.
-              // let the original error be the failure reason.
-              if (er2 || !stat.isDirectory()) callback(er, made);
-              else callback(null, made);
-            });
-            break
-        }
-      });
-    }
-
-    var mkdirs_1 = mkdirs;
-
-    const invalidWin32Path$2 = win32.invalidWin32Path;
-
-    const o777$1 = parseInt('0777', 8);
-
-    function mkdirsSync (p, opts, made) {
-      if (!opts || typeof opts !== 'object') {
-        opts = { mode: opts };
-      }
-
-      let mode = opts.mode;
-      const xfs = opts.fs || gracefulFs;
-
-      if (process.platform === 'win32' && invalidWin32Path$2(p)) {
-        const errInval = new Error(p + ' contains invalid WIN32 path characters.');
-        errInval.code = 'EINVAL';
-        throw errInval
-      }
-
-      if (mode === undefined) {
-        mode = o777$1 & (~process.umask());
-      }
-      if (!made) made = null;
-
-      p = path__default.resolve(p);
-
-      try {
-        xfs.mkdirSync(p, mode);
-        made = made || p;
-      } catch (err0) {
-        switch (err0.code) {
-          case 'ENOENT':
-            if (path__default.dirname(p) === p) throw err0
-            made = mkdirsSync(path__default.dirname(p), opts, made);
-            mkdirsSync(p, opts, made);
-            break
-
-          // In the case of any other error, just see if there's a dir
-          // there already.  If so, then hooray!  If not, then something
-          // is borked.
-          default:
-            let stat;
-            try {
-              stat = xfs.statSync(p);
-            } catch (err1) {
-              throw err0
-            }
-            if (!stat.isDirectory()) throw err0
-            break
-        }
-      }
-
-      return made
-    }
-
-    var mkdirsSync_1 = mkdirsSync;
-
-    const u = universalify.fromCallback;
-    const mkdirs$1 = u(mkdirs_1);
-
-
-    var mkdirs_1$1 = {
-      mkdirs: mkdirs$1,
-      mkdirsSync: mkdirsSync_1,
-      // alias
-      mkdirp: mkdirs$1,
-      mkdirpSync: mkdirsSync_1,
-      ensureDir: mkdirs$1,
-      ensureDirSync: mkdirsSync_1
-    };
-
-    const u$1 = universalify.fromPromise;
-
-
-    function pathExists (path) {
-      return fs_1.access(path).then(() => true).catch(() => false)
-    }
-
-    var pathExists_1 = {
-      pathExists: u$1(pathExists),
-      pathExistsSync: fs_1.existsSync
-    };
-
-    const pathExists$1 = pathExists_1.pathExists;
-
-    function copy (src, dest, options, callback) {
-      if (typeof options === 'function' && !callback) {
-        callback = options;
-        options = {};
-      } else if (typeof options === 'function' || options instanceof RegExp) {
-        options = {filter: options};
-      }
-      callback = callback || function () {};
-      options = options || {};
-
-      // Warn about using preserveTimestamps on 32-bit node:
-      if (options.preserveTimestamps && process.arch === 'ia32') {
-        console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;\n
-    see https://github.com/jprichardson/node-fs-extra/issues/269`);
-      }
-
-      // don't allow src and dest to be the same
-      const basePath = process.cwd();
-      const currentPath = path__default.resolve(basePath, src);
-      const targetPath = path__default.resolve(basePath, dest);
-      if (currentPath === targetPath) return callback(new Error('Source and destination must not be the same.'))
-
-      gracefulFs.lstat(src, (err, stats) => {
-        if (err) return callback(err)
-
-        let dir = null;
-        if (stats.isDirectory()) {
-          const parts = dest.split(path__default.sep);
-          parts.pop();
-          dir = parts.join(path__default.sep);
-        } else {
-          dir = path__default.dirname(dest);
-        }
-
-        pathExists$1(dir, (err, dirExists) => {
-          if (err) return callback(err)
-          if (dirExists) return ncp_1(src, dest, options, callback)
-          mkdirs_1$1.mkdirs(dir, err => {
-            if (err) return callback(err)
-            ncp_1(src, dest, options, callback);
-          });
-        });
-      });
-    }
-
-    var copy_1 = copy;
-
-    const u$2 = universalify.fromCallback;
-    var copy$1 = {
-      copy: u$2(copy_1)
-    };
-
-    /* eslint-disable node/no-deprecated-api */
-    var buffer = function (size) {
-      if (typeof Buffer.allocUnsafe === 'function') {
-        try {
-          return Buffer.allocUnsafe(size)
-        } catch (e) {
-          return new Buffer(size)
-        }
-      }
-      return new Buffer(size)
-    };
-
-    const BUF_LENGTH = 64 * 1024;
-    const _buff = buffer(BUF_LENGTH);
-
-    function copyFileSync (srcFile, destFile, options) {
-      const overwrite = options.overwrite;
-      const errorOnExist = options.errorOnExist;
-      const preserveTimestamps = options.preserveTimestamps;
-
-      if (gracefulFs.existsSync(destFile)) {
-        if (overwrite) {
-          gracefulFs.unlinkSync(destFile);
-        } else if (errorOnExist) {
-          throw new Error(`${destFile} already exists`)
-        } else return
-      }
-
-      const fdr = gracefulFs.openSync(srcFile, 'r');
-      const stat = gracefulFs.fstatSync(fdr);
-      const fdw = gracefulFs.openSync(destFile, 'w', stat.mode);
-      let bytesRead = 1;
-      let pos = 0;
-
-      while (bytesRead > 0) {
-        bytesRead = gracefulFs.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
-        gracefulFs.writeSync(fdw, _buff, 0, bytesRead);
-        pos += bytesRead;
-      }
-
-      if (preserveTimestamps) {
-        gracefulFs.futimesSync(fdw, stat.atime, stat.mtime);
-      }
-
-      gracefulFs.closeSync(fdr);
-      gracefulFs.closeSync(fdw);
-    }
-
-    var copyFileSync_1 = copyFileSync;
-
-    function copySync (src, dest, options) {
-      if (typeof options === 'function' || options instanceof RegExp) {
-        options = {filter: options};
-      }
-
-      options = options || {};
-      options.recursive = !!options.recursive;
-
-      // default to true for now
-      options.clobber = 'clobber' in options ? !!options.clobber : true;
-      // overwrite falls back to clobber
-      options.overwrite = 'overwrite' in options ? !!options.overwrite : options.clobber;
-      options.dereference = 'dereference' in options ? !!options.dereference : false;
-      options.preserveTimestamps = 'preserveTimestamps' in options ? !!options.preserveTimestamps : false;
-
-      options.filter = options.filter || function () { return true };
-
-      // Warn about using preserveTimestamps on 32-bit node:
-      if (options.preserveTimestamps && process.arch === 'ia32') {
-        console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;\n
-    see https://github.com/jprichardson/node-fs-extra/issues/269`);
-      }
-
-      const stats = (options.recursive && !options.dereference) ? gracefulFs.lstatSync(src) : gracefulFs.statSync(src);
-      const destFolder = path__default.dirname(dest);
-      const destFolderExists = gracefulFs.existsSync(destFolder);
-      let performCopy = false;
-
-      if (options.filter instanceof RegExp) {
-        console.warn('Warning: fs-extra: Passing a RegExp filter is deprecated, use a function');
-        performCopy = options.filter.test(src);
-      } else if (typeof options.filter === 'function') performCopy = options.filter(src, dest);
-
-      if (stats.isFile() && performCopy) {
-        if (!destFolderExists) mkdirs_1$1.mkdirsSync(destFolder);
-        copyFileSync_1(src, dest, {
-          overwrite: options.overwrite,
-          errorOnExist: options.errorOnExist,
-          preserveTimestamps: options.preserveTimestamps
-        });
-      } else if (stats.isDirectory() && performCopy) {
-        if (!gracefulFs.existsSync(dest)) mkdirs_1$1.mkdirsSync(dest);
-        const contents = gracefulFs.readdirSync(src);
-        contents.forEach(content => {
-          const opts = options;
-          opts.recursive = true;
-          copySync(path__default.join(src, content), path__default.join(dest, content), opts);
-        });
-      } else if (options.recursive && stats.isSymbolicLink() && performCopy) {
-        const srcPath = gracefulFs.readlinkSync(src);
-        gracefulFs.symlinkSync(srcPath, dest);
-      }
-    }
-
-    var copySync_1 = copySync;
-
-    var copySync$1 = {
-      copySync: copySync_1
-    };
-
-    const isWindows = (process.platform === 'win32');
-
-    function defaults (options) {
-      const methods = [
-        'unlink',
-        'chmod',
-        'stat',
-        'lstat',
-        'rmdir',
-        'readdir'
-      ];
-      methods.forEach(m => {
-        options[m] = options[m] || gracefulFs[m];
-        m = m + 'Sync';
-        options[m] = options[m] || gracefulFs[m];
-      });
-
-      options.maxBusyTries = options.maxBusyTries || 3;
-    }
-
-    function rimraf (p, options, cb) {
-      let busyTries = 0;
-
-      if (typeof options === 'function') {
-        cb = options;
-        options = {};
-      }
-
-      assert(p, 'rimraf: missing path');
-      assert.equal(typeof p, 'string', 'rimraf: path should be a string');
-      assert.equal(typeof cb, 'function', 'rimraf: callback function required');
-      assert(options, 'rimraf: invalid options argument provided');
-      assert.equal(typeof options, 'object', 'rimraf: options should be object');
-
-      defaults(options);
-
-      rimraf_(p, options, function CB (er) {
-        if (er) {
-          if ((er.code === 'EBUSY' || er.code === 'ENOTEMPTY' || er.code === 'EPERM') &&
-              busyTries < options.maxBusyTries) {
-            busyTries++;
-            let time = busyTries * 100;
-            // try again, with the same exact callback as this one.
-            return setTimeout(() => rimraf_(p, options, CB), time)
-          }
-
-          // already gone
-          if (er.code === 'ENOENT') er = null;
-        }
-
-        cb(er);
-      });
-    }
-
-    // Two possible strategies.
-    // 1. Assume it's a file.  unlink it, then do the dir stuff on EPERM or EISDIR
-    // 2. Assume it's a directory.  readdir, then do the file stuff on ENOTDIR
-    //
-    // Both result in an extra syscall when you guess wrong.  However, there
-    // are likely far more normal files in the world than directories.  This
-    // is based on the assumption that a the average number of files per
-    // directory is >= 1.
-    //
-    // If anyone ever complains about this, then I guess the strategy could
-    // be made configurable somehow.  But until then, YAGNI.
-    function rimraf_ (p, options, cb) {
-      assert(p);
-      assert(options);
-      assert(typeof cb === 'function');
-
-      // sunos lets the root user unlink directories, which is... weird.
-      // so we have to lstat here and make sure it's not a dir.
-      options.lstat(p, (er, st) => {
-        if (er && er.code === 'ENOENT') {
-          return cb(null)
-        }
-
-        // Windows can EPERM on stat.  Life is suffering.
-        if (er && er.code === 'EPERM' && isWindows) {
-          return fixWinEPERM(p, options, er, cb)
-        }
-
-        if (st && st.isDirectory()) {
-          return rmdir(p, options, er, cb)
-        }
-
-        options.unlink(p, er => {
-          if (er) {
-            if (er.code === 'ENOENT') {
-              return cb(null)
-            }
-            if (er.code === 'EPERM') {
-              return (isWindows)
-                ? fixWinEPERM(p, options, er, cb)
-                : rmdir(p, options, er, cb)
-            }
-            if (er.code === 'EISDIR') {
-              return rmdir(p, options, er, cb)
-            }
-          }
-          return cb(er)
-        });
-      });
-    }
-
-    function fixWinEPERM (p, options, er, cb) {
-      assert(p);
-      assert(options);
-      assert(typeof cb === 'function');
-      if (er) {
-        assert(er instanceof Error);
-      }
-
-      options.chmod(p, 666, er2 => {
-        if (er2) {
-          cb(er2.code === 'ENOENT' ? null : er);
-        } else {
-          options.stat(p, (er3, stats) => {
-            if (er3) {
-              cb(er3.code === 'ENOENT' ? null : er);
-            } else if (stats.isDirectory()) {
-              rmdir(p, options, er, cb);
-            } else {
-              options.unlink(p, cb);
-            }
-          });
-        }
-      });
-    }
-
-    function fixWinEPERMSync (p, options, er) {
-      let stats;
-
-      assert(p);
-      assert(options);
-      if (er) {
-        assert(er instanceof Error);
-      }
-
-      try {
-        options.chmodSync(p, 666);
-      } catch (er2) {
-        if (er2.code === 'ENOENT') {
-          return
-        } else {
-          throw er
-        }
-      }
-
-      try {
-        stats = options.statSync(p);
-      } catch (er3) {
-        if (er3.code === 'ENOENT') {
-          return
-        } else {
-          throw er
-        }
-      }
-
-      if (stats.isDirectory()) {
-        rmdirSync(p, options, er);
-      } else {
-        options.unlinkSync(p);
-      }
-    }
-
-    function rmdir (p, options, originalEr, cb) {
-      assert(p);
-      assert(options);
-      if (originalEr) {
-        assert(originalEr instanceof Error);
-      }
-      assert(typeof cb === 'function');
-
-      // try to rmdir first, and only readdir on ENOTEMPTY or EEXIST (SunOS)
-      // if we guessed wrong, and it's not a directory, then
-      // raise the original error.
-      options.rmdir(p, er => {
-        if (er && (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM')) {
-          rmkids(p, options, cb);
-        } else if (er && er.code === 'ENOTDIR') {
-          cb(originalEr);
-        } else {
-          cb(er);
-        }
-      });
-    }
-
-    function rmkids (p, options, cb) {
-      assert(p);
-      assert(options);
-      assert(typeof cb === 'function');
-
-      options.readdir(p, (er, files) => {
-        if (er) return cb(er)
-
-        let n = files.length;
-        let errState;
-
-        if (n === 0) return options.rmdir(p, cb)
-
-        files.forEach(f => {
-          rimraf(path__default.join(p, f), options, er => {
-            if (errState) {
-              return
-            }
-            if (er) return cb(errState = er)
-            if (--n === 0) {
-              options.rmdir(p, cb);
-            }
-          });
-        });
-      });
-    }
-
-    // this looks simpler, and is strictly *faster*, but will
-    // tie up the JavaScript thread and fail on excessively
-    // deep directory trees.
-    function rimrafSync (p, options) {
-      let st;
-
-      options = options || {};
-      defaults(options);
-
-      assert(p, 'rimraf: missing path');
-      assert.equal(typeof p, 'string', 'rimraf: path should be a string');
-      assert(options, 'rimraf: missing options');
-      assert.equal(typeof options, 'object', 'rimraf: options should be object');
-
-      try {
-        st = options.lstatSync(p);
-      } catch (er) {
-        if (er.code === 'ENOENT') {
-          return
-        }
-
-        // Windows can EPERM on stat.  Life is suffering.
-        if (er.code === 'EPERM' && isWindows) {
-          fixWinEPERMSync(p, options, er);
-        }
-      }
-
-      try {
-        // sunos lets the root user unlink directories, which is... weird.
-        if (st && st.isDirectory()) {
-          rmdirSync(p, options, null);
-        } else {
-          options.unlinkSync(p);
-        }
-      } catch (er) {
-        if (er.code === 'ENOENT') {
-          return
-        } else if (er.code === 'EPERM') {
-          return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er)
-        } else if (er.code !== 'EISDIR') {
-          throw er
-        }
-        rmdirSync(p, options, er);
-      }
-    }
-
-    function rmdirSync (p, options, originalEr) {
-      assert(p);
-      assert(options);
-      if (originalEr) {
-        assert(originalEr instanceof Error);
-      }
-
-      try {
-        options.rmdirSync(p);
-      } catch (er) {
-        if (er.code === 'ENOTDIR') {
-          throw originalEr
-        } else if (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM') {
-          rmkidsSync(p, options);
-        } else if (er.code !== 'ENOENT') {
-          throw er
-        }
-      }
-    }
-
-    function rmkidsSync (p, options) {
-      assert(p);
-      assert(options);
-      options.readdirSync(p).forEach(f => rimrafSync(path__default.join(p, f), options));
-
-      // We only end up here once we got ENOTEMPTY at least once, and
-      // at this point, we are guaranteed to have removed all the kids.
-      // So, we know that it won't be ENOENT or ENOTDIR or anything else.
-      // try really hard to delete stuff on windows, because it has a
-      // PROFOUNDLY annoying habit of not closing handles promptly when
-      // files are deleted, resulting in spurious ENOTEMPTY errors.
-      const retries = isWindows ? 100 : 1;
-      let i = 0;
-      do {
-        let threw = true;
-        try {
-          const ret = options.rmdirSync(p, options);
-          threw = false;
-          return ret
-        } finally {
-          if (++i < retries && threw) continue // eslint-disable-line
-        }
-      } while (true)
-    }
-
-    var rimraf_1 = rimraf;
-    rimraf.sync = rimrafSync;
-
-    const u$3 = universalify.fromCallback;
-
-
-    var remove = {
-      remove: u$3(rimraf_1),
-      removeSync: rimraf_1.sync
-    };
-
-    var _fs;
-    try {
-      _fs = gracefulFs;
-    } catch (_) {
-      _fs = fs$2__default;
-    }
-
-    function readFile (file, options, callback) {
-      if (callback == null) {
-        callback = options;
-        options = {};
-      }
-
-      if (typeof options === 'string') {
-        options = {encoding: options};
-      }
-
-      options = options || {};
-      var fs = options.fs || _fs;
-
-      var shouldThrow = true;
-      if ('throws' in options) {
-        shouldThrow = options.throws;
-      }
-
-      fs.readFile(file, options, function (err, data) {
-        if (err) return callback(err)
-
-        data = stripBom(data);
-
-        var obj;
-        try {
-          obj = JSON.parse(data, options ? options.reviver : null);
-        } catch (err2) {
-          if (shouldThrow) {
-            err2.message = file + ': ' + err2.message;
-            return callback(err2)
-          } else {
-            return callback(null, null)
-          }
-        }
-
-        callback(null, obj);
-      });
-    }
-
-    function readFileSync (file, options) {
-      options = options || {};
-      if (typeof options === 'string') {
-        options = {encoding: options};
-      }
-
-      var fs = options.fs || _fs;
-
-      var shouldThrow = true;
-      if ('throws' in options) {
-        shouldThrow = options.throws;
-      }
-
-      try {
-        var content = fs.readFileSync(file, options);
-        content = stripBom(content);
-        return JSON.parse(content, options.reviver)
-      } catch (err) {
-        if (shouldThrow) {
-          err.message = file + ': ' + err.message;
-          throw err
-        } else {
-          return null
-        }
-      }
-    }
-
-    function stringify$1 (obj, options) {
-      var spaces;
-      var EOL = '\n';
-      if (typeof options === 'object' && options !== null) {
-        if (options.spaces) {
-          spaces = options.spaces;
-        }
-        if (options.EOL) {
-          EOL = options.EOL;
-        }
-      }
-
-      var str = JSON.stringify(obj, options ? options.replacer : null, spaces);
-
-      return str.replace(/\n/g, EOL) + EOL
-    }
-
-    function writeFile (file, obj, options, callback) {
-      if (callback == null) {
-        callback = options;
-        options = {};
-      }
-      options = options || {};
-      var fs = options.fs || _fs;
-
-      var str = '';
-      try {
-        str = stringify$1(obj, options);
-      } catch (err) {
-        // Need to return whether a callback was passed or not
-        if (callback) callback(err, null);
-        return
-      }
-
-      fs.writeFile(file, str, options, callback);
-    }
-
-    function writeFileSync (file, obj, options) {
-      options = options || {};
-      var fs = options.fs || _fs;
-
-      var str = stringify$1(obj, options);
-      // not sure if fs.writeFileSync returns anything, but just in case
-      return fs.writeFileSync(file, str, options)
-    }
-
-    function stripBom (content) {
-      // we do this because JSON.parse would convert it to a utf8 string if encoding wasn't specified
-      if (Buffer.isBuffer(content)) content = content.toString('utf8');
-      content = content.replace(/^\uFEFF/, '');
-      return content
-    }
-
-    var jsonfile = {
-      readFile: readFile,
-      readFileSync: readFileSync,
-      writeFile: writeFile,
-      writeFileSync: writeFileSync
-    };
-
-    var jsonfile_1 = jsonfile;
-
-    const u$4 = universalify.fromCallback;
-
-
-    var jsonfile$1 = {
-      // jsonfile exports
-      readJson: u$4(jsonfile_1.readFile),
-      readJsonSync: jsonfile_1.readFileSync,
-      writeJson: u$4(jsonfile_1.writeFile),
-      writeJsonSync: jsonfile_1.writeFileSync
-    };
-
-    const pathExists$2 = pathExists_1.pathExists;
-
-
-    function outputJson (file, data, options, callback) {
-      if (typeof options === 'function') {
-        callback = options;
-        options = {};
-      }
-
-      const dir = path__default.dirname(file);
-
-      pathExists$2(dir, (err, itDoes) => {
-        if (err) return callback(err)
-        if (itDoes) return jsonfile$1.writeJson(file, data, options, callback)
-
-        mkdirs_1$1.mkdirs(dir, err => {
-          if (err) return callback(err)
-          jsonfile$1.writeJson(file, data, options, callback);
-        });
-      });
-    }
-
-    var outputJson_1 = outputJson;
-
-    function outputJsonSync (file, data, options) {
-      const dir = path__default.dirname(file);
-
-      if (!gracefulFs.existsSync(dir)) {
-        mkdirs_1$1.mkdirsSync(dir);
-      }
-
-      jsonfile$1.writeJsonSync(file, data, options);
-    }
-
-    var outputJsonSync_1 = outputJsonSync;
-
-    const u$5 = universalify.fromCallback;
-
-
-    jsonfile$1.outputJson = u$5(outputJson_1);
-    jsonfile$1.outputJsonSync = outputJsonSync_1;
-    // aliases
-    jsonfile$1.outputJSON = jsonfile$1.outputJson;
-    jsonfile$1.outputJSONSync = jsonfile$1.outputJsonSync;
-    jsonfile$1.writeJSON = jsonfile$1.writeJson;
-    jsonfile$1.writeJSONSync = jsonfile$1.writeJsonSync;
-    jsonfile$1.readJSON = jsonfile$1.readJson;
-    jsonfile$1.readJSONSync = jsonfile$1.readJsonSync;
-
-    var json = jsonfile$1;
-
-    // most of this code was written by Andrew Kelley
-    // licensed under the BSD license: see
-    // https://github.com/andrewrk/node-mv/blob/master/package.json
-
-    // this needs a cleanup
-
-    const u$6 = universalify.fromCallback;
-
-
-
-    const remove$1 = remove.remove;
-    const mkdirp = mkdirs_1$1.mkdirs;
-
-    function move (src, dest, options, callback) {
-      if (typeof options === 'function') {
-        callback = options;
-        options = {};
-      }
-
-      const overwrite = options.overwrite || options.clobber || false;
-
-      isSrcSubdir(src, dest, (err, itIs) => {
-        if (err) return callback(err)
-        if (itIs) return callback(new Error(`Cannot move '${src}' to a subdirectory of itself, '${dest}'.`))
-        mkdirp(path__default.dirname(dest), err => {
-          if (err) return callback(err)
-          doRename();
-        });
-      });
-
-      function doRename () {
-        if (path__default.resolve(src) === path__default.resolve(dest)) {
-          gracefulFs.access(src, callback);
-        } else if (overwrite) {
-          gracefulFs.rename(src, dest, err => {
-            if (!err) return callback()
-
-            if (err.code === 'ENOTEMPTY' || err.code === 'EEXIST') {
-              remove$1(dest, err => {
-                if (err) return callback(err)
-                options.overwrite = false; // just overwriteed it, no need to do it again
-                move(src, dest, options, callback);
-              });
-              return
-            }
-
-            // weird Windows shit
-            if (err.code === 'EPERM') {
-              setTimeout(() => {
-                remove$1(dest, err => {
-                  if (err) return callback(err)
-                  options.overwrite = false;
-                  move(src, dest, options, callback);
-                });
-              }, 200);
-              return
-            }
-
-            if (err.code !== 'EXDEV') return callback(err)
-            moveAcrossDevice(src, dest, overwrite, callback);
-          });
-        } else {
-          gracefulFs.link(src, dest, err => {
-            if (err) {
-              if (err.code === 'EXDEV' || err.code === 'EISDIR' || err.code === 'EPERM' || err.code === 'ENOTSUP') {
-                return moveAcrossDevice(src, dest, overwrite, callback)
-              }
-              return callback(err)
-            }
-            return gracefulFs.unlink(src, callback)
-          });
-        }
-      }
-    }
-
-    function moveAcrossDevice (src, dest, overwrite, callback) {
-      gracefulFs.stat(src, (err, stat) => {
-        if (err) return callback(err)
-
-        if (stat.isDirectory()) {
-          moveDirAcrossDevice(src, dest, overwrite, callback);
-        } else {
-          moveFileAcrossDevice(src, dest, overwrite, callback);
-        }
-      });
-    }
-
-    function moveFileAcrossDevice (src, dest, overwrite, callback) {
-      const flags = overwrite ? 'w' : 'wx';
-      const ins = gracefulFs.createReadStream(src);
-      const outs = gracefulFs.createWriteStream(dest, { flags });
-
-      ins.on('error', err => {
-        ins.destroy();
-        outs.destroy();
-        outs.removeListener('close', onClose);
-
-        // may want to create a directory but `out` line above
-        // creates an empty file for us: See #108
-        // don't care about error here
-        gracefulFs.unlink(dest, () => {
-          // note: `err` here is from the input stream errror
-          if (err.code === 'EISDIR' || err.code === 'EPERM') {
-            moveDirAcrossDevice(src, dest, overwrite, callback);
-          } else {
-            callback(err);
-          }
-        });
-      });
-
-      outs.on('error', err => {
-        ins.destroy();
-        outs.destroy();
-        outs.removeListener('close', onClose);
-        callback(err);
-      });
-
-      outs.once('close', onClose);
-      ins.pipe(outs);
-
-      function onClose () {
-        gracefulFs.unlink(src, callback);
-      }
-    }
-
-    function moveDirAcrossDevice (src, dest, overwrite, callback) {
-      const options = {
-        overwrite: false
-      };
-
-      if (overwrite) {
-        remove$1(dest, err => {
-          if (err) return callback(err)
-          startNcp();
-        });
-      } else {
-        startNcp();
-      }
-
-      function startNcp () {
-        ncp_1(src, dest, options, err => {
-          if (err) return callback(err)
-          remove$1(src, callback);
-        });
-      }
-    }
-
-    // return true if dest is a subdir of src, otherwise false.
-    // extract dest base dir and check if that is the same as src basename
-    function isSrcSubdir (src, dest, cb) {
-      gracefulFs.stat(src, (err, st) => {
-        if (err) return cb(err)
-        if (st.isDirectory()) {
-          const baseDir = dest.split(path__default.dirname(src) + path__default.sep)[1];
-          if (baseDir) {
-            const destBasename = baseDir.split(path__default.sep)[0];
-            if (destBasename) return cb(null, src !== dest && dest.indexOf(src) > -1 && destBasename === path__default.basename(src))
-            return cb(null, false)
-          }
-          return cb(null, false)
-        }
-        return cb(null, false)
-      });
-    }
-
-    var move_1 = {
-      move: u$6(move)
-    };
-
-    const copySync$2 = copySync$1.copySync;
-    const removeSync = remove.removeSync;
-    const mkdirpSync = mkdirs_1$1.mkdirsSync;
-
-
-    function moveSync (src, dest, options) {
-      options = options || {};
-      const overwrite = options.overwrite || options.clobber || false;
-
-      src = path__default.resolve(src);
-      dest = path__default.resolve(dest);
-
-      if (src === dest) return gracefulFs.accessSync(src)
-
-      if (isSrcSubdir$1(src, dest)) throw new Error(`Cannot move '${src}' into itself '${dest}'.`)
-
-      mkdirpSync(path__default.dirname(dest));
-      tryRenameSync();
-
-      function tryRenameSync () {
-        if (overwrite) {
-          try {
-            return gracefulFs.renameSync(src, dest)
-          } catch (err) {
-            if (err.code === 'ENOTEMPTY' || err.code === 'EEXIST' || err.code === 'EPERM') {
-              removeSync(dest);
-              options.overwrite = false; // just overwriteed it, no need to do it again
-              return moveSync(src, dest, options)
-            }
-
-            if (err.code !== 'EXDEV') throw err
-            return moveSyncAcrossDevice(src, dest, overwrite)
-          }
-        } else {
-          try {
-            gracefulFs.linkSync(src, dest);
-            return gracefulFs.unlinkSync(src)
-          } catch (err) {
-            if (err.code === 'EXDEV' || err.code === 'EISDIR' || err.code === 'EPERM' || err.code === 'ENOTSUP') {
-              return moveSyncAcrossDevice(src, dest, overwrite)
-            }
-            throw err
-          }
-        }
-      }
-    }
-
-    function moveSyncAcrossDevice (src, dest, overwrite) {
-      const stat = gracefulFs.statSync(src);
-
-      if (stat.isDirectory()) {
-        return moveDirSyncAcrossDevice(src, dest, overwrite)
-      } else {
-        return moveFileSyncAcrossDevice(src, dest, overwrite)
-      }
-    }
-
-    function moveFileSyncAcrossDevice (src, dest, overwrite) {
-      const BUF_LENGTH = 64 * 1024;
-      const _buff = buffer(BUF_LENGTH);
-
-      const flags = overwrite ? 'w' : 'wx';
-
-      const fdr = gracefulFs.openSync(src, 'r');
-      const stat = gracefulFs.fstatSync(fdr);
-      const fdw = gracefulFs.openSync(dest, flags, stat.mode);
-      let bytesRead = 1;
-      let pos = 0;
-
-      while (bytesRead > 0) {
-        bytesRead = gracefulFs.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
-        gracefulFs.writeSync(fdw, _buff, 0, bytesRead);
-        pos += bytesRead;
-      }
-
-      gracefulFs.closeSync(fdr);
-      gracefulFs.closeSync(fdw);
-      return gracefulFs.unlinkSync(src)
-    }
-
-    function moveDirSyncAcrossDevice (src, dest, overwrite) {
-      const options = {
-        overwrite: false
-      };
-
-      if (overwrite) {
-        removeSync(dest);
-        tryCopySync();
-      } else {
-        tryCopySync();
-      }
-
-      function tryCopySync () {
-        copySync$2(src, dest, options);
-        return removeSync(src)
-      }
-    }
-
-    // return true if dest is a subdir of src, otherwise false.
-    // extract dest base dir and check if that is the same as src basename
-    function isSrcSubdir$1 (src, dest) {
-      try {
-        return gracefulFs.statSync(src).isDirectory() &&
-               src !== dest &&
-               dest.indexOf(src) > -1 &&
-               dest.split(path__default.dirname(src) + path__default.sep)[1].split(path__default.sep)[0] === path__default.basename(src)
-      } catch (e) {
-        return false
-      }
-    }
-
-    var moveSync_1 = {
-      moveSync
-    };
-
-    const u$7 = universalify.fromCallback;
-
-
-
-
-
-    const emptyDir = u$7(function emptyDir (dir, callback) {
-      callback = callback || function () {};
-      fs$2__default.readdir(dir, (err, items) => {
-        if (err) return mkdirs_1$1.mkdirs(dir, callback)
-
-        items = items.map(item => path__default.join(dir, item));
-
-        deleteItem();
-
-        function deleteItem () {
-          const item = items.pop();
-          if (!item) return callback()
-          remove.remove(item, err => {
-            if (err) return callback(err)
-            deleteItem();
-          });
-        }
-      });
-    });
-
-    function emptyDirSync (dir) {
-      let items;
-      try {
-        items = fs$2__default.readdirSync(dir);
-      } catch (err) {
-        return mkdirs_1$1.mkdirsSync(dir)
-      }
-
-      items.forEach(item => {
-        item = path__default.join(dir, item);
-        remove.removeSync(item);
-      });
-    }
-
-    var empty = {
-      emptyDirSync,
-      emptydirSync: emptyDirSync,
-      emptyDir,
-      emptydir: emptyDir
-    };
-
-    const u$8 = universalify.fromCallback;
-
-
-
-    const pathExists$3 = pathExists_1.pathExists;
-
-    function createFile (file, callback) {
-      function makeFile () {
-        gracefulFs.writeFile(file, '', err => {
-          if (err) return callback(err)
-          callback();
-        });
-      }
-
-      gracefulFs.stat(file, (err, stats) => { // eslint-disable-line handle-callback-err
-        if (!err && stats.isFile()) return callback()
-        const dir = path__default.dirname(file);
-        pathExists$3(dir, (err, dirExists) => {
-          if (err) return callback(err)
-          if (dirExists) return makeFile()
-          mkdirs_1$1.mkdirs(dir, err => {
-            if (err) return callback(err)
-            makeFile();
-          });
-        });
-      });
-    }
-
-    function createFileSync (file) {
-      let stats;
-      try {
-        stats = gracefulFs.statSync(file);
-      } catch (e) {}
-      if (stats && stats.isFile()) return
-
-      const dir = path__default.dirname(file);
-      if (!gracefulFs.existsSync(dir)) {
-        mkdirs_1$1.mkdirsSync(dir);
-      }
-
-      gracefulFs.writeFileSync(file, '');
-    }
-
-    var file = {
-      createFile: u$8(createFile),
-      createFileSync
-    };
-
-    const u$9 = universalify.fromCallback;
-
-
-
-    const pathExists$4 = pathExists_1.pathExists;
-
-    function createLink (srcpath, dstpath, callback) {
-      function makeLink (srcpath, dstpath) {
-        gracefulFs.link(srcpath, dstpath, err => {
-          if (err) return callback(err)
-          callback(null);
-        });
-      }
-
-      pathExists$4(dstpath, (err, destinationExists) => {
-        if (err) return callback(err)
-        if (destinationExists) return callback(null)
-        gracefulFs.lstat(srcpath, (err, stat) => {
-          if (err) {
-            err.message = err.message.replace('lstat', 'ensureLink');
-            return callback(err)
-          }
-
-          const dir = path__default.dirname(dstpath);
-          pathExists$4(dir, (err, dirExists) => {
-            if (err) return callback(err)
-            if (dirExists) return makeLink(srcpath, dstpath)
-            mkdirs_1$1.mkdirs(dir, err => {
-              if (err) return callback(err)
-              makeLink(srcpath, dstpath);
-            });
-          });
-        });
-      });
-    }
-
-    function createLinkSync (srcpath, dstpath, callback) {
-      const destinationExists = gracefulFs.existsSync(dstpath);
-      if (destinationExists) return undefined
-
-      try {
-        gracefulFs.lstatSync(srcpath);
-      } catch (err) {
-        err.message = err.message.replace('lstat', 'ensureLink');
-        throw err
-      }
-
-      const dir = path__default.dirname(dstpath);
-      const dirExists = gracefulFs.existsSync(dir);
-      if (dirExists) return gracefulFs.linkSync(srcpath, dstpath)
-      mkdirs_1$1.mkdirsSync(dir);
-
-      return gracefulFs.linkSync(srcpath, dstpath)
-    }
-
-    var link = {
-      createLink: u$9(createLink),
-      createLinkSync
-    };
-
-    const pathExists$5 = pathExists_1.pathExists;
-
-    /**
-     * Function that returns two types of paths, one relative to symlink, and one
-     * relative to the current working directory. Checks if path is absolute or
-     * relative. If the path is relative, this function checks if the path is
-     * relative to symlink or relative to current working directory. This is an
-     * initiative to find a smarter `srcpath` to supply when building symlinks.
-     * This allows you to determine which path to use out of one of three possible
-     * types of source paths. The first is an absolute path. This is detected by
-     * `path.isAbsolute()`. When an absolute path is provided, it is checked to
-     * see if it exists. If it does it's used, if not an error is returned
-     * (callback)/ thrown (sync). The other two options for `srcpath` are a
-     * relative url. By default Node's `fs.symlink` works by creating a symlink
-     * using `dstpath` and expects the `srcpath` to be relative to the newly
-     * created symlink. If you provide a `srcpath` that does not exist on the file
-     * system it results in a broken symlink. To minimize this, the function
-     * checks to see if the 'relative to symlink' source file exists, and if it
-     * does it will use it. If it does not, it checks if there's a file that
-     * exists that is relative to the current working directory, if does its used.
-     * This preserves the expectations of the original fs.symlink spec and adds
-     * the ability to pass in `relative to current working direcotry` paths.
-     */
-
-    function symlinkPaths (srcpath, dstpath, callback) {
-      if (path__default.isAbsolute(srcpath)) {
-        return gracefulFs.lstat(srcpath, (err, stat) => {
-          if (err) {
-            err.message = err.message.replace('lstat', 'ensureSymlink');
-            return callback(err)
-          }
-          return callback(null, {
-            'toCwd': srcpath,
-            'toDst': srcpath
-          })
-        })
-      } else {
-        const dstdir = path__default.dirname(dstpath);
-        const relativeToDst = path__default.join(dstdir, srcpath);
-        return pathExists$5(relativeToDst, (err, exists) => {
-          if (err) return callback(err)
-          if (exists) {
-            return callback(null, {
-              'toCwd': relativeToDst,
-              'toDst': srcpath
-            })
-          } else {
-            return gracefulFs.lstat(srcpath, (err, stat) => {
-              if (err) {
-                err.message = err.message.replace('lstat', 'ensureSymlink');
-                return callback(err)
-              }
-              return callback(null, {
-                'toCwd': srcpath,
-                'toDst': path__default.relative(dstdir, srcpath)
-              })
-            })
-          }
-        })
-      }
-    }
-
-    function symlinkPathsSync (srcpath, dstpath) {
-      let exists;
-      if (path__default.isAbsolute(srcpath)) {
-        exists = gracefulFs.existsSync(srcpath);
-        if (!exists) throw new Error('absolute srcpath does not exist')
-        return {
-          'toCwd': srcpath,
-          'toDst': srcpath
-        }
-      } else {
-        const dstdir = path__default.dirname(dstpath);
-        const relativeToDst = path__default.join(dstdir, srcpath);
-        exists = gracefulFs.existsSync(relativeToDst);
-        if (exists) {
-          return {
-            'toCwd': relativeToDst,
-            'toDst': srcpath
-          }
-        } else {
-          exists = gracefulFs.existsSync(srcpath);
-          if (!exists) throw new Error('relative srcpath does not exist')
-          return {
-            'toCwd': srcpath,
-            'toDst': path__default.relative(dstdir, srcpath)
-          }
-        }
-      }
-    }
-
-    var symlinkPaths_1 = {
-      symlinkPaths,
-      symlinkPathsSync
-    };
-
-    function symlinkType (srcpath, type, callback) {
-      callback = (typeof type === 'function') ? type : callback;
-      type = (typeof type === 'function') ? false : type;
-      if (type) return callback(null, type)
-      gracefulFs.lstat(srcpath, (err, stats) => {
-        if (err) return callback(null, 'file')
-        type = (stats && stats.isDirectory()) ? 'dir' : 'file';
-        callback(null, type);
-      });
-    }
-
-    function symlinkTypeSync (srcpath, type) {
-      let stats;
-
-      if (type) return type
-      try {
-        stats = gracefulFs.lstatSync(srcpath);
-      } catch (e) {
-        return 'file'
-      }
-      return (stats && stats.isDirectory()) ? 'dir' : 'file'
-    }
-
-    var symlinkType_1 = {
-      symlinkType,
-      symlinkTypeSync
-    };
-
-    const u$a = universalify.fromCallback;
-
-
-
-    const mkdirs$2 = mkdirs_1$1.mkdirs;
-    const mkdirsSync$1 = mkdirs_1$1.mkdirsSync;
-
-
-    const symlinkPaths$1 = symlinkPaths_1.symlinkPaths;
-    const symlinkPathsSync$1 = symlinkPaths_1.symlinkPathsSync;
-
-
-    const symlinkType$1 = symlinkType_1.symlinkType;
-    const symlinkTypeSync$1 = symlinkType_1.symlinkTypeSync;
-
-    const pathExists$6 = pathExists_1.pathExists;
-
-    function createSymlink (srcpath, dstpath, type, callback) {
-      callback = (typeof type === 'function') ? type : callback;
-      type = (typeof type === 'function') ? false : type;
-
-      pathExists$6(dstpath, (err, destinationExists) => {
-        if (err) return callback(err)
-        if (destinationExists) return callback(null)
-        symlinkPaths$1(srcpath, dstpath, (err, relative) => {
-          if (err) return callback(err)
-          srcpath = relative.toDst;
-          symlinkType$1(relative.toCwd, type, (err, type) => {
-            if (err) return callback(err)
-            const dir = path__default.dirname(dstpath);
-            pathExists$6(dir, (err, dirExists) => {
-              if (err) return callback(err)
-              if (dirExists) return gracefulFs.symlink(srcpath, dstpath, type, callback)
-              mkdirs$2(dir, err => {
-                if (err) return callback(err)
-                gracefulFs.symlink(srcpath, dstpath, type, callback);
-              });
-            });
-          });
-        });
-      });
-    }
-
-    function createSymlinkSync (srcpath, dstpath, type, callback) {
-      type = (typeof type === 'function') ? false : type;
-
-      const destinationExists = gracefulFs.existsSync(dstpath);
-      if (destinationExists) return undefined
-
-      const relative = symlinkPathsSync$1(srcpath, dstpath);
-      srcpath = relative.toDst;
-      type = symlinkTypeSync$1(relative.toCwd, type);
-      const dir = path__default.dirname(dstpath);
-      const exists = gracefulFs.existsSync(dir);
-      if (exists) return gracefulFs.symlinkSync(srcpath, dstpath, type)
-      mkdirsSync$1(dir);
-      return gracefulFs.symlinkSync(srcpath, dstpath, type)
-    }
-
-    var symlink = {
-      createSymlink: u$a(createSymlink),
-      createSymlinkSync
-    };
-
-    var ensure = {
-      // file
-      createFile: file.createFile,
-      createFileSync: file.createFileSync,
-      ensureFile: file.createFile,
-      ensureFileSync: file.createFileSync,
-      // link
-      createLink: link.createLink,
-      createLinkSync: link.createLinkSync,
-      ensureLink: link.createLink,
-      ensureLinkSync: link.createLinkSync,
-      // symlink
-      createSymlink: symlink.createSymlink,
-      createSymlinkSync: symlink.createSymlinkSync,
-      ensureSymlink: symlink.createSymlink,
-      ensureSymlinkSync: symlink.createSymlinkSync
-    };
-
-    const u$b = universalify.fromCallback;
-
-
-
-    const pathExists$7 = pathExists_1.pathExists;
-
-    function outputFile (file, data, encoding, callback) {
-      if (typeof encoding === 'function') {
-        callback = encoding;
-        encoding = 'utf8';
-      }
-
-      const dir = path__default.dirname(file);
-      pathExists$7(dir, (err, itDoes) => {
-        if (err) return callback(err)
-        if (itDoes) return gracefulFs.writeFile(file, data, encoding, callback)
-
-        mkdirs_1$1.mkdirs(dir, err => {
-          if (err) return callback(err)
-
-          gracefulFs.writeFile(file, data, encoding, callback);
-        });
-      });
-    }
-
-    function outputFileSync (file, data, encoding) {
-      const dir = path__default.dirname(file);
-      if (gracefulFs.existsSync(dir)) {
-        return gracefulFs.writeFileSync.apply(gracefulFs, arguments)
-      }
-      mkdirs_1$1.mkdirsSync(dir);
-      gracefulFs.writeFileSync.apply(gracefulFs, arguments);
-    }
-
-    var output = {
-      outputFile: u$b(outputFile),
-      outputFileSync
-    };
-
-    const fs$1 = {};
-
-    // Export graceful-fs:
-    assign_1(fs$1, fs_1);
-    // Export extra methods:
-    assign_1(fs$1, copy$1);
-    assign_1(fs$1, copySync$1);
-    assign_1(fs$1, mkdirs_1$1);
-    assign_1(fs$1, remove);
-    assign_1(fs$1, json);
-    assign_1(fs$1, move_1);
-    assign_1(fs$1, moveSync_1);
-    assign_1(fs$1, empty);
-    assign_1(fs$1, ensure);
-    assign_1(fs$1, output);
-    assign_1(fs$1, pathExists_1);
-
-    var lib = fs$1;
-
-    var fsExtra = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        'default': lib,
-        __moduleExports: lib
-    });
-
-    /**
      * @license
      * Copyright Google LLC All Rights Reserved.
      *
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * A wrapper around the Node.js file-system that supports path manipulation.
-     */
-    class NodeJSPathManipulation {
-        pwd() {
-            return this.normalize(process.cwd());
-        }
-        chdir(dir) {
-            process.chdir(dir);
-        }
-        resolve(...paths) {
-            return this.normalize(path.resolve(...paths));
-        }
-        dirname(file) {
-            return this.normalize(path.dirname(file));
-        }
-        join(basePath, ...paths) {
-            return this.normalize(path.join(basePath, ...paths));
-        }
-        isRoot(path) {
-            return this.dirname(path) === this.normalize(path);
-        }
-        isRooted(path$1) {
-            return path.isAbsolute(path$1);
-        }
-        relative(from, to) {
-            return this.normalize(path.relative(from, to));
-        }
-        basename(filePath, extension) {
-            return path.basename(filePath, extension);
-        }
-        extname(path$1) {
-            return path.extname(path$1);
-        }
-        normalize(path) {
-            // Convert backslashes to forward slashes
-            return path.replace(/\\/g, '/');
-        }
-    }
-    /**
-     * A wrapper around the Node.js file-system that supports readonly operations and path manipulation.
-     */
-    class NodeJSReadonlyFileSystem extends NodeJSPathManipulation {
-        constructor() {
-            super(...arguments);
-            this._caseSensitive = undefined;
-        }
-        isCaseSensitive() {
-            if (this._caseSensitive === undefined) {
-                // Note the use of the real file-system is intentional:
-                // `this.exists()` relies upon `isCaseSensitive()` so that would cause an infinite recursion.
-                this._caseSensitive = !fs$2.existsSync(this.normalize(toggleCase(__filename)));
-            }
-            return this._caseSensitive;
-        }
-        exists(path) {
-            return fs$2.existsSync(path);
-        }
-        readFile(path) {
-            return fs$2.readFileSync(path, 'utf8');
-        }
-        readFileBuffer(path) {
-            return fs$2.readFileSync(path);
-        }
-        readdir(path) {
-            return fs$2.readdirSync(path);
-        }
-        lstat(path) {
-            return fs$2.lstatSync(path);
-        }
-        stat(path) {
-            return fs$2.statSync(path);
-        }
-        realpath(path) {
-            return this.resolve(fs$2.realpathSync(path));
-        }
-        getDefaultLibLocation() {
-            return this.resolve(require.resolve('typescript'), '..');
-        }
-    }
-    /**
-     * A wrapper around the Node.js file-system (i.e. the `fs` package).
-     */
-    class NodeJSFileSystem extends NodeJSReadonlyFileSystem {
-        writeFile(path, data, exclusive = false) {
-            fs$2.writeFileSync(path, data, exclusive ? { flag: 'wx' } : undefined);
-        }
-        removeFile(path) {
-            fs$2.unlinkSync(path);
-        }
-        symlink(target, path) {
-            fs$2.symlinkSync(target, path);
-        }
-        copyFile(from, to) {
-            fs$2.copyFileSync(from, to);
-        }
-        moveFile(from, to) {
-            fs$2.renameSync(from, to);
-        }
-        ensureDir(path) {
-            const parents = [];
-            while (!this.isRoot(path) && !this.exists(path)) {
-                parents.push(path);
-                path = this.dirname(path);
-            }
-            while (parents.length) {
-                this.safeMkdir(parents.pop());
-            }
-        }
-        removeDeep(path) {
-            undefined(path);
-        }
-        safeMkdir(path) {
-            try {
-                fs$2.mkdirSync(path);
-            }
-            catch (err) {
-                // Ignore the error, if the path already exists and points to a directory.
-                // Re-throw otherwise.
-                if (!this.exists(path) || !this.stat(path).isDirectory()) {
-                    throw err;
-                }
-            }
-        }
-    }
-    /**
-     * Toggle the case of each character in a string.
-     */
-    function toggleCase(str) {
-        return str.replace(/\w/g, ch => ch.toUpperCase() === ch ? ch.toLowerCase() : ch.toUpperCase());
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const VERSION$2 = new Version('12.0.0-next.2+55.sha-7765b64');
+    const VERSION$2 = new Version('12.0.0-next.2+57.sha-0847a03');
 
     /**
      * @license
@@ -29379,6 +29380,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
                 isInline: template.isInline,
+                alwaysAttemptHtmlToR3AstConversion: this.usePoisonedData,
             });
             // Unfortunately, the primary parse of the template above may not contain accurate source map
             // information. If used directly, it would result in incorrect code locations in template
@@ -29404,6 +29406,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 i18nNormalizeLineEndingsInICUs,
                 leadingTriviaChars: [],
                 isInline: template.isInline,
+                alwaysAttemptHtmlToR3AstConversion: this.usePoisonedData,
             });
             return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: template.isInline ? new WrappedNodeExpr(template.expression) : templateStr, templateUrl: template.resolvedTemplateUrl, isInline: template.isInline, file: new ParseSourceFile(templateStr, template.resolvedTemplateUrl) });
         }
@@ -40613,551 +40616,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var CompletionNodeContext;
-    (function (CompletionNodeContext) {
-        CompletionNodeContext[CompletionNodeContext["None"] = 0] = "None";
-        CompletionNodeContext[CompletionNodeContext["ElementTag"] = 1] = "ElementTag";
-        CompletionNodeContext[CompletionNodeContext["ElementAttributeKey"] = 2] = "ElementAttributeKey";
-        CompletionNodeContext[CompletionNodeContext["ElementAttributeValue"] = 3] = "ElementAttributeValue";
-        CompletionNodeContext[CompletionNodeContext["EventValue"] = 4] = "EventValue";
-        CompletionNodeContext[CompletionNodeContext["TwoWayBinding"] = 5] = "TwoWayBinding";
-    })(CompletionNodeContext || (CompletionNodeContext = {}));
-    /**
-     * Performs autocompletion operations on a given node in the template.
-     *
-     * This class acts as a closure around all of the context required to perform the 3 autocompletion
-     * operations (completions, get details, and get symbol) at a specific node.
-     *
-     * The generic `N` type for the template node is narrowed internally for certain operations, as the
-     * compiler operations required to implement completion may be different for different node types.
-     *
-     * @param N type of the template node in question, narrowed accordingly.
-     */
-    class CompletionBuilder {
-        constructor(tsLS, compiler, component, node, nodeContext, nodeParent, template) {
-            this.tsLS = tsLS;
-            this.compiler = compiler;
-            this.component = component;
-            this.node = node;
-            this.nodeContext = nodeContext;
-            this.nodeParent = nodeParent;
-            this.template = template;
-            this.typeChecker = this.compiler.getNextProgram().getTypeChecker();
-            this.templateTypeChecker = this.compiler.getTemplateTypeChecker();
-        }
-        /**
-         * Analogue for `ts.LanguageService.getCompletionsAtPosition`.
-         */
-        getCompletionsAtPosition(options) {
-            if (this.isPropertyExpressionCompletion()) {
-                return this.getPropertyExpressionCompletion(options);
-            }
-            else if (this.isElementTagCompletion()) {
-                return this.getElementTagCompletion();
-            }
-            else if (this.isElementAttributeCompletion()) {
-                return this.getElementAttributeCompletions();
-            }
-            else if (this.isPipeCompletion()) {
-                return this.getPipeCompletions();
-            }
-            else {
-                return undefined;
-            }
-        }
-        /**
-         * Analogue for `ts.LanguageService.getCompletionEntryDetails`.
-         */
-        getCompletionEntryDetails(entryName, formatOptions, preferences) {
-            if (this.isPropertyExpressionCompletion()) {
-                return this.getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
-            }
-            else if (this.isElementTagCompletion()) {
-                return this.getElementTagCompletionDetails(entryName);
-            }
-            else if (this.isElementAttributeCompletion()) {
-                return this.getElementAttributeCompletionDetails(entryName);
-            }
-        }
-        /**
-         * Analogue for `ts.LanguageService.getCompletionEntrySymbol`.
-         */
-        getCompletionEntrySymbol(name) {
-            if (this.isPropertyExpressionCompletion()) {
-                return this.getPropertyExpressionCompletionSymbol(name);
-            }
-            else if (this.isElementTagCompletion()) {
-                return this.getElementTagCompletionSymbol(name);
-            }
-            else if (this.isElementAttributeCompletion()) {
-                return this.getElementAttributeCompletionSymbol(name);
-            }
-            else {
-                return undefined;
-            }
-        }
-        /**
-         * Determine if the current node is the completion of a property expression, and narrow the type
-         * of `this.node` if so.
-         *
-         * This narrowing gives access to additional methods related to completion of property
-         * expressions.
-         */
-        isPropertyExpressionCompletion() {
-            return this.node instanceof PropertyRead || this.node instanceof MethodCall ||
-                this.node instanceof SafePropertyRead || this.node instanceof SafeMethodCall ||
-                this.node instanceof PropertyWrite || this.node instanceof EmptyExpr ||
-                // BoundEvent nodes only count as property completions if in an EventValue context.
-                (this.node instanceof BoundEvent && this.nodeContext === CompletionNodeContext.EventValue);
-        }
-        /**
-         * Get completions for property expressions.
-         */
-        getPropertyExpressionCompletion(options) {
-            if (this.node instanceof EmptyExpr || this.node instanceof BoundEvent ||
-                this.node.receiver instanceof ImplicitReceiver) {
-                return this.getGlobalPropertyExpressionCompletion(options);
-            }
-            else {
-                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
-                if (location === null) {
-                    return undefined;
-                }
-                const tsResults = this.tsLS.getCompletionsAtPosition(location.shimPath, location.positionInShimFile, options);
-                if (tsResults === undefined) {
-                    return undefined;
-                }
-                const replacementSpan = makeReplacementSpanFromAst(this.node);
-                let ngResults = [];
-                for (const result of tsResults.entries) {
-                    ngResults.push(Object.assign(Object.assign({}, result), { replacementSpan }));
-                }
-                return Object.assign(Object.assign({}, tsResults), { entries: ngResults });
-            }
-        }
-        /**
-         * Get the details of a specific completion for a property expression.
-         */
-        getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
-            let details = undefined;
-            if (this.node instanceof EmptyExpr || this.node instanceof BoundEvent ||
-                this.node.receiver instanceof ImplicitReceiver) {
-                details =
-                    this.getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
-            }
-            else {
-                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
-                if (location === null) {
-                    return undefined;
-                }
-                details = this.tsLS.getCompletionEntryDetails(location.shimPath, location.positionInShimFile, entryName, formatOptions, 
-                /* source */ undefined, preferences);
-            }
-            if (details !== undefined) {
-                details.displayParts = filterAliasImports(details.displayParts);
-            }
-            return details;
-        }
-        /**
-         * Get the `ts.Symbol` for a specific completion for a property expression.
-         */
-        getPropertyExpressionCompletionSymbol(name) {
-            if (this.node instanceof EmptyExpr || this.node instanceof LiteralPrimitive ||
-                this.node instanceof BoundEvent || this.node.receiver instanceof ImplicitReceiver) {
-                return this.getGlobalPropertyExpressionCompletionSymbol(name);
-            }
-            else {
-                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
-                if (location === null) {
-                    return undefined;
-                }
-                return this.tsLS.getCompletionEntrySymbol(location.shimPath, location.positionInShimFile, name, /* source */ undefined);
-            }
-        }
-        /**
-         * Get completions for a property expression in a global context (e.g. `{{y|}}`).
-         */
-        getGlobalPropertyExpressionCompletion(options) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
-            if (completions === null) {
-                return undefined;
-            }
-            const { componentContext, templateContext } = completions;
-            const replacementSpan = makeReplacementSpanFromAst(this.node);
-            // Merge TS completion results with results from the template scope.
-            let entries = [];
-            const tsLsCompletions = this.tsLS.getCompletionsAtPosition(componentContext.shimPath, componentContext.positionInShimFile, options);
-            if (tsLsCompletions !== undefined) {
-                for (const tsCompletion of tsLsCompletions.entries) {
-                    // Skip completions that are shadowed by a template entity definition.
-                    if (templateContext.has(tsCompletion.name)) {
-                        continue;
-                    }
-                    entries.push(Object.assign(Object.assign({}, tsCompletion), { 
-                        // Substitute the TS completion's `replacementSpan` (which uses offsets within the TCB)
-                        // with the `replacementSpan` within the template source.
-                        replacementSpan }));
-                }
-            }
-            for (const [name, entity] of templateContext) {
-                entries.push({
-                    name,
-                    sortText: name,
-                    replacementSpan,
-                    kindModifiers: ts$1.ScriptElementKindModifier.none,
-                    kind: unsafeCastDisplayInfoKindToScriptElementKind(entity.kind === CompletionKind.Reference ? DisplayInfoKind.REFERENCE :
-                        DisplayInfoKind.VARIABLE),
-                });
-            }
-            return {
-                entries,
-                // Although this completion is "global" in the sense of an Angular expression (there is no
-                // explicit receiver), it is not "global" in a TypeScript sense since Angular expressions have
-                // the component as an implicit receiver.
-                isGlobalCompletion: false,
-                isMemberCompletion: true,
-                isNewIdentifierLocation: false,
-            };
-        }
-        /**
-         * Get the details of a specific completion for a property expression in a global context (e.g.
-         * `{{y|}}`).
-         */
-        getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
-            if (completions === null) {
-                return undefined;
-            }
-            const { componentContext, templateContext } = completions;
-            if (templateContext.has(entryName)) {
-                const entry = templateContext.get(entryName);
-                // Entries that reference a symbol in the template context refer either to local references or
-                // variables.
-                const symbol = this.templateTypeChecker.getSymbolOfNode(entry.node, this.component);
-                if (symbol === null) {
-                    return undefined;
-                }
-                const { kind, displayParts, documentation } = getSymbolDisplayInfo(this.tsLS, this.typeChecker, symbol);
-                return {
-                    kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
-                    name: entryName,
-                    kindModifiers: ts$1.ScriptElementKindModifier.none,
-                    displayParts,
-                    documentation,
-                };
-            }
-            else {
-                return this.tsLS.getCompletionEntryDetails(componentContext.shimPath, componentContext.positionInShimFile, entryName, formatOptions, 
-                /* source */ undefined, preferences);
-            }
-        }
-        /**
-         * Get the `ts.Symbol` of a specific completion for a property expression in a global context
-         * (e.g.
-         * `{{y|}}`).
-         */
-        getGlobalPropertyExpressionCompletionSymbol(entryName) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
-            if (completions === null) {
-                return undefined;
-            }
-            const { componentContext, templateContext } = completions;
-            if (templateContext.has(entryName)) {
-                const node = templateContext.get(entryName).node;
-                const symbol = this.templateTypeChecker.getSymbolOfNode(node, this.component);
-                if (symbol === null || symbol.tsSymbol === null) {
-                    return undefined;
-                }
-                return symbol.tsSymbol;
-            }
-            else {
-                return this.tsLS.getCompletionEntrySymbol(componentContext.shimPath, componentContext.positionInShimFile, entryName, 
-                /* source */ undefined);
-            }
-        }
-        isElementTagCompletion() {
-            return this.node instanceof Element &&
-                this.nodeContext === CompletionNodeContext.ElementTag;
-        }
-        getElementTagCompletion() {
-            const templateTypeChecker = this.compiler.getTemplateTypeChecker();
-            // The replacementSpan is the tag name.
-            const replacementSpan = {
-                start: this.node.sourceSpan.start.offset + 1,
-                length: this.node.name.length,
-            };
-            const entries = Array.from(templateTypeChecker.getPotentialElementTags(this.component))
-                .map(([tag, directive]) => ({
-                kind: tagCompletionKind(directive),
-                name: tag,
-                sortText: tag,
-                replacementSpan,
-            }));
-            return {
-                entries,
-                isGlobalCompletion: false,
-                isMemberCompletion: false,
-                isNewIdentifierLocation: false,
-            };
-        }
-        getElementTagCompletionDetails(entryName) {
-            const templateTypeChecker = this.compiler.getTemplateTypeChecker();
-            const tagMap = templateTypeChecker.getPotentialElementTags(this.component);
-            if (!tagMap.has(entryName)) {
-                return undefined;
-            }
-            const directive = tagMap.get(entryName);
-            let displayParts;
-            let documentation = undefined;
-            if (directive === null) {
-                displayParts = [];
-            }
-            else {
-                const displayInfo = getDirectiveDisplayInfo(this.tsLS, directive);
-                displayParts = displayInfo.displayParts;
-                documentation = displayInfo.documentation;
-            }
-            return {
-                kind: tagCompletionKind(directive),
-                name: entryName,
-                kindModifiers: ts$1.ScriptElementKindModifier.none,
-                displayParts,
-                documentation,
-            };
-        }
-        getElementTagCompletionSymbol(entryName) {
-            const templateTypeChecker = this.compiler.getTemplateTypeChecker();
-            const tagMap = templateTypeChecker.getPotentialElementTags(this.component);
-            if (!tagMap.has(entryName)) {
-                return undefined;
-            }
-            const directive = tagMap.get(entryName);
-            return directive === null || directive === void 0 ? void 0 : directive.tsSymbol;
-        }
-        isElementAttributeCompletion() {
-            return (this.nodeContext === CompletionNodeContext.ElementAttributeKey ||
-                this.nodeContext === CompletionNodeContext.TwoWayBinding) &&
-                (this.node instanceof Element || this.node instanceof BoundAttribute ||
-                    this.node instanceof TextAttribute || this.node instanceof BoundEvent);
-        }
-        getElementAttributeCompletions() {
-            let element;
-            if (this.node instanceof Element) {
-                element = this.node;
-            }
-            else if (this.nodeParent instanceof Element || this.nodeParent instanceof Template) {
-                element = this.nodeParent;
-            }
-            else {
-                // Nothing to do without an element to process.
-                return undefined;
-            }
-            let replacementSpan = undefined;
-            if ((this.node instanceof BoundAttribute || this.node instanceof BoundEvent ||
-                this.node instanceof TextAttribute) &&
-                this.node.keySpan !== undefined) {
-                replacementSpan = makeReplacementSpanFromParseSourceSpan(this.node.keySpan);
-            }
-            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
-            let entries = [];
-            for (const completion of attrTable.values()) {
-                // First, filter out completions that don't make sense for the current node. For example, if
-                // the user is completing on a property binding `[foo|]`, don't offer output event
-                // completions.
-                switch (completion.kind) {
-                    case AttributeCompletionKind.DomAttribute:
-                    case AttributeCompletionKind.DomProperty:
-                        if (this.node instanceof BoundEvent) {
-                            continue;
-                        }
-                        break;
-                    case AttributeCompletionKind.DirectiveInput:
-                        if (this.node instanceof BoundEvent) {
-                            continue;
-                        }
-                        if (!completion.twoWayBindingSupported &&
-                            this.nodeContext === CompletionNodeContext.TwoWayBinding) {
-                            continue;
-                        }
-                        break;
-                    case AttributeCompletionKind.DirectiveOutput:
-                        if (this.node instanceof BoundAttribute) {
-                            continue;
-                        }
-                        break;
-                    case AttributeCompletionKind.DirectiveAttribute:
-                        if (this.node instanceof BoundAttribute ||
-                            this.node instanceof BoundEvent) {
-                            continue;
-                        }
-                        break;
-                }
-                // Is the completion in an attribute context (instead of a property context)?
-                const isAttributeContext = (this.node instanceof Element || this.node instanceof TextAttribute);
-                // Is the completion for an element (not an <ng-template>)?
-                const isElementContext = this.node instanceof Element || this.nodeParent instanceof Element;
-                addAttributeCompletionEntries(entries, completion, isAttributeContext, isElementContext, replacementSpan);
-            }
-            return {
-                entries,
-                isGlobalCompletion: false,
-                isMemberCompletion: false,
-                isNewIdentifierLocation: true,
-            };
-        }
-        getElementAttributeCompletionDetails(entryName) {
-            // `entryName` here may be `foo` or `[foo]`, depending on which suggested completion the user
-            // chose. Strip off any binding syntax to get the real attribute name.
-            const { name, kind } = stripBindingSugar(entryName);
-            let element;
-            if (this.node instanceof Element || this.node instanceof Template) {
-                element = this.node;
-            }
-            else if (this.nodeParent instanceof Element || this.nodeParent instanceof Template) {
-                element = this.nodeParent;
-            }
-            else {
-                // Nothing to do without an element to process.
-                return undefined;
-            }
-            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
-            if (!attrTable.has(name)) {
-                return undefined;
-            }
-            const completion = attrTable.get(name);
-            let displayParts;
-            let documentation = undefined;
-            let info;
-            switch (completion.kind) {
-                case AttributeCompletionKind.DomAttribute:
-                case AttributeCompletionKind.DomProperty:
-                    // TODO(alxhub): ideally we would show the same documentation as quick info here. However,
-                    // since these bindings don't exist in the TCB, there is no straightforward way to retrieve
-                    // a `ts.Symbol` for the field in the TS DOM definition.
-                    displayParts = [];
-                    break;
-                case AttributeCompletionKind.DirectiveAttribute:
-                    info = getDirectiveDisplayInfo(this.tsLS, completion.directive);
-                    displayParts = info.displayParts;
-                    documentation = info.documentation;
-                    break;
-                case AttributeCompletionKind.DirectiveInput:
-                case AttributeCompletionKind.DirectiveOutput:
-                    const propertySymbol = getAttributeCompletionSymbol(completion, this.typeChecker);
-                    if (propertySymbol === null) {
-                        return undefined;
-                    }
-                    info = getTsSymbolDisplayInfo(this.tsLS, this.typeChecker, propertySymbol, completion.kind === AttributeCompletionKind.DirectiveInput ? DisplayInfoKind.PROPERTY :
-                        DisplayInfoKind.EVENT, completion.directive.tsSymbol.name);
-                    if (info === null) {
-                        return undefined;
-                    }
-                    displayParts = info.displayParts;
-                    documentation = info.documentation;
-            }
-            return {
-                name: entryName,
-                kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
-                kindModifiers: ts$1.ScriptElementKindModifier.none,
-                displayParts: [],
-                documentation,
-            };
-        }
-        getElementAttributeCompletionSymbol(attribute) {
-            var _a;
-            const { name } = stripBindingSugar(attribute);
-            let element;
-            if (this.node instanceof Element || this.node instanceof Template) {
-                element = this.node;
-            }
-            else if (this.nodeParent instanceof Element || this.nodeParent instanceof Template) {
-                element = this.nodeParent;
-            }
-            else {
-                // Nothing to do without an element to process.
-                return undefined;
-            }
-            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
-            if (!attrTable.has(name)) {
-                return undefined;
-            }
-            const completion = attrTable.get(name);
-            return (_a = getAttributeCompletionSymbol(completion, this.typeChecker)) !== null && _a !== void 0 ? _a : undefined;
-        }
-        isPipeCompletion() {
-            return this.node instanceof BindingPipe;
-        }
-        getPipeCompletions() {
-            const pipes = this.templateTypeChecker.getPipesInScope(this.component);
-            if (pipes === null) {
-                return undefined;
-            }
-            const replacementSpan = makeReplacementSpanFromAst(this.node);
-            const entries = pipes.map(pipe => ({
-                name: pipe.name,
-                sortText: pipe.name,
-                kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PIPE),
-                replacementSpan,
-            }));
-            return {
-                entries,
-                isGlobalCompletion: false,
-                isMemberCompletion: false,
-                isNewIdentifierLocation: false,
-            };
-        }
-    }
-    function makeReplacementSpanFromParseSourceSpan(span) {
-        return {
-            start: span.start.offset,
-            length: span.end.offset - span.start.offset,
-        };
-    }
-    function makeReplacementSpanFromAst(node) {
-        if ((node instanceof EmptyExpr || node instanceof LiteralPrimitive ||
-            node instanceof BoundEvent)) {
-            // empty nodes do not replace any existing text
-            return undefined;
-        }
-        return {
-            start: node.nameSpan.start,
-            length: node.nameSpan.end - node.nameSpan.start,
-        };
-    }
-    function tagCompletionKind(directive) {
-        let kind;
-        if (directive === null) {
-            kind = DisplayInfoKind.ELEMENT;
-        }
-        else if (directive.isComponent) {
-            kind = DisplayInfoKind.COMPONENT;
-        }
-        else {
-            kind = DisplayInfoKind.DIRECTIVE;
-        }
-        return unsafeCastDisplayInfoKindToScriptElementKind(kind);
-    }
-    const BINDING_SUGAR = /[\[\(\)\]]/g;
-    function stripBindingSugar(binding) {
-        const name = binding.replace(BINDING_SUGAR, '');
-        if (binding.startsWith('[')) {
-            return { name, kind: DisplayInfoKind.PROPERTY };
-        }
-        else if (binding.startsWith('(')) {
-            return { name, kind: DisplayInfoKind.EVENT };
-        }
-        else {
-            return { name, kind: DisplayInfoKind.ATTRIBUTE };
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Differentiates the various kinds of `TargetNode`s.
      */
@@ -41438,6 +40896,594 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             result.end = ast.endSourceSpan.end.offset;
         }
         return result;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var CompletionNodeContext;
+    (function (CompletionNodeContext) {
+        CompletionNodeContext[CompletionNodeContext["None"] = 0] = "None";
+        CompletionNodeContext[CompletionNodeContext["ElementTag"] = 1] = "ElementTag";
+        CompletionNodeContext[CompletionNodeContext["ElementAttributeKey"] = 2] = "ElementAttributeKey";
+        CompletionNodeContext[CompletionNodeContext["ElementAttributeValue"] = 3] = "ElementAttributeValue";
+        CompletionNodeContext[CompletionNodeContext["EventValue"] = 4] = "EventValue";
+        CompletionNodeContext[CompletionNodeContext["TwoWayBinding"] = 5] = "TwoWayBinding";
+    })(CompletionNodeContext || (CompletionNodeContext = {}));
+    /**
+     * Performs autocompletion operations on a given node in the template.
+     *
+     * This class acts as a closure around all of the context required to perform the 3 autocompletion
+     * operations (completions, get details, and get symbol) at a specific node.
+     *
+     * The generic `N` type for the template node is narrowed internally for certain operations, as the
+     * compiler operations required to implement completion may be different for different node types.
+     *
+     * @param N type of the template node in question, narrowed accordingly.
+     */
+    class CompletionBuilder {
+        constructor(tsLS, compiler, component, node, targetDetails) {
+            this.tsLS = tsLS;
+            this.compiler = compiler;
+            this.component = component;
+            this.node = node;
+            this.targetDetails = targetDetails;
+            this.typeChecker = this.compiler.getNextProgram().getTypeChecker();
+            this.templateTypeChecker = this.compiler.getTemplateTypeChecker();
+            this.nodeParent = this.targetDetails.parent;
+            this.nodeContext = nodeContextFromTarget(this.targetDetails.context);
+            this.template = this.targetDetails.template;
+            this.position = this.targetDetails.position;
+        }
+        /**
+         * Analogue for `ts.LanguageService.getCompletionsAtPosition`.
+         */
+        getCompletionsAtPosition(options) {
+            if (this.isPropertyExpressionCompletion()) {
+                return this.getPropertyExpressionCompletion(options);
+            }
+            else if (this.isElementTagCompletion()) {
+                return this.getElementTagCompletion();
+            }
+            else if (this.isElementAttributeCompletion()) {
+                return this.getElementAttributeCompletions();
+            }
+            else if (this.isPipeCompletion()) {
+                return this.getPipeCompletions();
+            }
+            else {
+                return undefined;
+            }
+        }
+        /**
+         * Analogue for `ts.LanguageService.getCompletionEntryDetails`.
+         */
+        getCompletionEntryDetails(entryName, formatOptions, preferences) {
+            if (this.isPropertyExpressionCompletion()) {
+                return this.getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
+            }
+            else if (this.isElementTagCompletion()) {
+                return this.getElementTagCompletionDetails(entryName);
+            }
+            else if (this.isElementAttributeCompletion()) {
+                return this.getElementAttributeCompletionDetails(entryName);
+            }
+        }
+        /**
+         * Analogue for `ts.LanguageService.getCompletionEntrySymbol`.
+         */
+        getCompletionEntrySymbol(name) {
+            if (this.isPropertyExpressionCompletion()) {
+                return this.getPropertyExpressionCompletionSymbol(name);
+            }
+            else if (this.isElementTagCompletion()) {
+                return this.getElementTagCompletionSymbol(name);
+            }
+            else if (this.isElementAttributeCompletion()) {
+                return this.getElementAttributeCompletionSymbol(name);
+            }
+            else {
+                return undefined;
+            }
+        }
+        /**
+         * Determine if the current node is the completion of a property expression, and narrow the type
+         * of `this.node` if so.
+         *
+         * This narrowing gives access to additional methods related to completion of property
+         * expressions.
+         */
+        isPropertyExpressionCompletion() {
+            return this.node instanceof PropertyRead || this.node instanceof MethodCall ||
+                this.node instanceof SafePropertyRead || this.node instanceof SafeMethodCall ||
+                this.node instanceof PropertyWrite || this.node instanceof EmptyExpr ||
+                // BoundEvent nodes only count as property completions if in an EventValue context.
+                (this.node instanceof BoundEvent && this.nodeContext === CompletionNodeContext.EventValue);
+        }
+        /**
+         * Get completions for property expressions.
+         */
+        getPropertyExpressionCompletion(options) {
+            if (this.node instanceof EmptyExpr || this.node instanceof BoundEvent ||
+                this.node.receiver instanceof ImplicitReceiver) {
+                return this.getGlobalPropertyExpressionCompletion(options);
+            }
+            else {
+                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
+                if (location === null) {
+                    return undefined;
+                }
+                const tsResults = this.tsLS.getCompletionsAtPosition(location.shimPath, location.positionInShimFile, options);
+                if (tsResults === undefined) {
+                    return undefined;
+                }
+                const replacementSpan = makeReplacementSpanFromAst(this.node);
+                let ngResults = [];
+                for (const result of tsResults.entries) {
+                    ngResults.push(Object.assign(Object.assign({}, result), { replacementSpan }));
+                }
+                return Object.assign(Object.assign({}, tsResults), { entries: ngResults });
+            }
+        }
+        /**
+         * Get the details of a specific completion for a property expression.
+         */
+        getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
+            let details = undefined;
+            if (this.node instanceof EmptyExpr || this.node instanceof BoundEvent ||
+                this.node.receiver instanceof ImplicitReceiver) {
+                details =
+                    this.getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
+            }
+            else {
+                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
+                if (location === null) {
+                    return undefined;
+                }
+                details = this.tsLS.getCompletionEntryDetails(location.shimPath, location.positionInShimFile, entryName, formatOptions, 
+                /* source */ undefined, preferences);
+            }
+            if (details !== undefined) {
+                details.displayParts = filterAliasImports(details.displayParts);
+            }
+            return details;
+        }
+        /**
+         * Get the `ts.Symbol` for a specific completion for a property expression.
+         */
+        getPropertyExpressionCompletionSymbol(name) {
+            if (this.node instanceof EmptyExpr || this.node instanceof LiteralPrimitive ||
+                this.node instanceof BoundEvent || this.node.receiver instanceof ImplicitReceiver) {
+                return this.getGlobalPropertyExpressionCompletionSymbol(name);
+            }
+            else {
+                const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
+                if (location === null) {
+                    return undefined;
+                }
+                return this.tsLS.getCompletionEntrySymbol(location.shimPath, location.positionInShimFile, name, /* source */ undefined);
+            }
+        }
+        /**
+         * Get completions for a property expression in a global context (e.g. `{{y|}}`).
+         */
+        getGlobalPropertyExpressionCompletion(options) {
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
+            if (completions === null) {
+                return undefined;
+            }
+            const { componentContext, templateContext } = completions;
+            const replacementSpan = makeReplacementSpanFromAst(this.node);
+            // Merge TS completion results with results from the template scope.
+            let entries = [];
+            const tsLsCompletions = this.tsLS.getCompletionsAtPosition(componentContext.shimPath, componentContext.positionInShimFile, options);
+            if (tsLsCompletions !== undefined) {
+                for (const tsCompletion of tsLsCompletions.entries) {
+                    // Skip completions that are shadowed by a template entity definition.
+                    if (templateContext.has(tsCompletion.name)) {
+                        continue;
+                    }
+                    entries.push(Object.assign(Object.assign({}, tsCompletion), { 
+                        // Substitute the TS completion's `replacementSpan` (which uses offsets within the TCB)
+                        // with the `replacementSpan` within the template source.
+                        replacementSpan }));
+                }
+            }
+            for (const [name, entity] of templateContext) {
+                entries.push({
+                    name,
+                    sortText: name,
+                    replacementSpan,
+                    kindModifiers: ts$1.ScriptElementKindModifier.none,
+                    kind: unsafeCastDisplayInfoKindToScriptElementKind(entity.kind === CompletionKind.Reference ? DisplayInfoKind.REFERENCE :
+                        DisplayInfoKind.VARIABLE),
+                });
+            }
+            return {
+                entries,
+                // Although this completion is "global" in the sense of an Angular expression (there is no
+                // explicit receiver), it is not "global" in a TypeScript sense since Angular expressions have
+                // the component as an implicit receiver.
+                isGlobalCompletion: false,
+                isMemberCompletion: true,
+                isNewIdentifierLocation: false,
+            };
+        }
+        /**
+         * Get the details of a specific completion for a property expression in a global context (e.g.
+         * `{{y|}}`).
+         */
+        getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
+            if (completions === null) {
+                return undefined;
+            }
+            const { componentContext, templateContext } = completions;
+            if (templateContext.has(entryName)) {
+                const entry = templateContext.get(entryName);
+                // Entries that reference a symbol in the template context refer either to local references or
+                // variables.
+                const symbol = this.templateTypeChecker.getSymbolOfNode(entry.node, this.component);
+                if (symbol === null) {
+                    return undefined;
+                }
+                const { kind, displayParts, documentation } = getSymbolDisplayInfo(this.tsLS, this.typeChecker, symbol);
+                return {
+                    kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
+                    name: entryName,
+                    kindModifiers: ts$1.ScriptElementKindModifier.none,
+                    displayParts,
+                    documentation,
+                };
+            }
+            else {
+                return this.tsLS.getCompletionEntryDetails(componentContext.shimPath, componentContext.positionInShimFile, entryName, formatOptions, 
+                /* source */ undefined, preferences);
+            }
+        }
+        /**
+         * Get the `ts.Symbol` of a specific completion for a property expression in a global context
+         * (e.g.
+         * `{{y|}}`).
+         */
+        getGlobalPropertyExpressionCompletionSymbol(entryName) {
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
+            if (completions === null) {
+                return undefined;
+            }
+            const { componentContext, templateContext } = completions;
+            if (templateContext.has(entryName)) {
+                const node = templateContext.get(entryName).node;
+                const symbol = this.templateTypeChecker.getSymbolOfNode(node, this.component);
+                if (symbol === null || symbol.tsSymbol === null) {
+                    return undefined;
+                }
+                return symbol.tsSymbol;
+            }
+            else {
+                return this.tsLS.getCompletionEntrySymbol(componentContext.shimPath, componentContext.positionInShimFile, entryName, 
+                /* source */ undefined);
+            }
+        }
+        isElementTagCompletion() {
+            if (this.node instanceof Text) {
+                const positionInTextNode = this.position - this.node.sourceSpan.start.offset;
+                // We only provide element completions in a text node when there is an open tag immediately to
+                // the left of the position.
+                return this.node.value.substring(0, positionInTextNode).endsWith('<');
+            }
+            else if (this.node instanceof Element) {
+                return this.nodeContext === CompletionNodeContext.ElementTag;
+            }
+            return false;
+        }
+        getElementTagCompletion() {
+            const templateTypeChecker = this.compiler.getTemplateTypeChecker();
+            let start;
+            let length;
+            if (this.node instanceof Element) {
+                // The replacementSpan is the tag name.
+                start = this.node.sourceSpan.start.offset + 1; // account for leading '<'
+                length = this.node.name.length;
+            }
+            else {
+                const positionInTextNode = this.position - this.node.sourceSpan.start.offset;
+                const textToLeftOfPosition = this.node.value.substring(0, positionInTextNode);
+                start = this.node.sourceSpan.start.offset + textToLeftOfPosition.lastIndexOf('<') + 1;
+                // We only autocomplete immediately after the < so we don't replace any existing text
+                length = 0;
+            }
+            const replacementSpan = { start, length };
+            const entries = Array.from(templateTypeChecker.getPotentialElementTags(this.component))
+                .map(([tag, directive]) => ({
+                kind: tagCompletionKind(directive),
+                name: tag,
+                sortText: tag,
+                replacementSpan,
+            }));
+            return {
+                entries,
+                isGlobalCompletion: false,
+                isMemberCompletion: false,
+                isNewIdentifierLocation: false,
+            };
+        }
+        getElementTagCompletionDetails(entryName) {
+            const templateTypeChecker = this.compiler.getTemplateTypeChecker();
+            const tagMap = templateTypeChecker.getPotentialElementTags(this.component);
+            if (!tagMap.has(entryName)) {
+                return undefined;
+            }
+            const directive = tagMap.get(entryName);
+            let displayParts;
+            let documentation = undefined;
+            if (directive === null) {
+                displayParts = [];
+            }
+            else {
+                const displayInfo = getDirectiveDisplayInfo(this.tsLS, directive);
+                displayParts = displayInfo.displayParts;
+                documentation = displayInfo.documentation;
+            }
+            return {
+                kind: tagCompletionKind(directive),
+                name: entryName,
+                kindModifiers: ts$1.ScriptElementKindModifier.none,
+                displayParts,
+                documentation,
+            };
+        }
+        getElementTagCompletionSymbol(entryName) {
+            const templateTypeChecker = this.compiler.getTemplateTypeChecker();
+            const tagMap = templateTypeChecker.getPotentialElementTags(this.component);
+            if (!tagMap.has(entryName)) {
+                return undefined;
+            }
+            const directive = tagMap.get(entryName);
+            return directive === null || directive === void 0 ? void 0 : directive.tsSymbol;
+        }
+        isElementAttributeCompletion() {
+            return (this.nodeContext === CompletionNodeContext.ElementAttributeKey ||
+                this.nodeContext === CompletionNodeContext.TwoWayBinding) &&
+                (this.node instanceof Element || this.node instanceof BoundAttribute ||
+                    this.node instanceof TextAttribute || this.node instanceof BoundEvent);
+        }
+        getElementAttributeCompletions() {
+            let element;
+            if (this.node instanceof Element) {
+                element = this.node;
+            }
+            else if (this.nodeParent instanceof Element || this.nodeParent instanceof Template) {
+                element = this.nodeParent;
+            }
+            else {
+                // Nothing to do without an element to process.
+                return undefined;
+            }
+            let replacementSpan = undefined;
+            if ((this.node instanceof BoundAttribute || this.node instanceof BoundEvent ||
+                this.node instanceof TextAttribute) &&
+                this.node.keySpan !== undefined) {
+                replacementSpan = makeReplacementSpanFromParseSourceSpan(this.node.keySpan);
+            }
+            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
+            let entries = [];
+            for (const completion of attrTable.values()) {
+                // First, filter out completions that don't make sense for the current node. For example, if
+                // the user is completing on a property binding `[foo|]`, don't offer output event
+                // completions.
+                switch (completion.kind) {
+                    case AttributeCompletionKind.DomAttribute:
+                    case AttributeCompletionKind.DomProperty:
+                        if (this.node instanceof BoundEvent) {
+                            continue;
+                        }
+                        break;
+                    case AttributeCompletionKind.DirectiveInput:
+                        if (this.node instanceof BoundEvent) {
+                            continue;
+                        }
+                        if (!completion.twoWayBindingSupported &&
+                            this.nodeContext === CompletionNodeContext.TwoWayBinding) {
+                            continue;
+                        }
+                        break;
+                    case AttributeCompletionKind.DirectiveOutput:
+                        if (this.node instanceof BoundAttribute) {
+                            continue;
+                        }
+                        break;
+                    case AttributeCompletionKind.DirectiveAttribute:
+                        if (this.node instanceof BoundAttribute ||
+                            this.node instanceof BoundEvent) {
+                            continue;
+                        }
+                        break;
+                }
+                // Is the completion in an attribute context (instead of a property context)?
+                const isAttributeContext = (this.node instanceof Element || this.node instanceof TextAttribute);
+                // Is the completion for an element (not an <ng-template>)?
+                const isElementContext = this.node instanceof Element || this.nodeParent instanceof Element;
+                addAttributeCompletionEntries(entries, completion, isAttributeContext, isElementContext, replacementSpan);
+            }
+            return {
+                entries,
+                isGlobalCompletion: false,
+                isMemberCompletion: false,
+                isNewIdentifierLocation: true,
+            };
+        }
+        getElementAttributeCompletionDetails(entryName) {
+            // `entryName` here may be `foo` or `[foo]`, depending on which suggested completion the user
+            // chose. Strip off any binding syntax to get the real attribute name.
+            const { name, kind } = stripBindingSugar(entryName);
+            let element;
+            if (this.node instanceof Element || this.node instanceof Template) {
+                element = this.node;
+            }
+            else if (this.nodeParent instanceof Element || this.nodeParent instanceof Template) {
+                element = this.nodeParent;
+            }
+            else {
+                // Nothing to do without an element to process.
+                return undefined;
+            }
+            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
+            if (!attrTable.has(name)) {
+                return undefined;
+            }
+            const completion = attrTable.get(name);
+            let displayParts;
+            let documentation = undefined;
+            let info;
+            switch (completion.kind) {
+                case AttributeCompletionKind.DomAttribute:
+                case AttributeCompletionKind.DomProperty:
+                    // TODO(alxhub): ideally we would show the same documentation as quick info here. However,
+                    // since these bindings don't exist in the TCB, there is no straightforward way to retrieve
+                    // a `ts.Symbol` for the field in the TS DOM definition.
+                    displayParts = [];
+                    break;
+                case AttributeCompletionKind.DirectiveAttribute:
+                    info = getDirectiveDisplayInfo(this.tsLS, completion.directive);
+                    displayParts = info.displayParts;
+                    documentation = info.documentation;
+                    break;
+                case AttributeCompletionKind.DirectiveInput:
+                case AttributeCompletionKind.DirectiveOutput:
+                    const propertySymbol = getAttributeCompletionSymbol(completion, this.typeChecker);
+                    if (propertySymbol === null) {
+                        return undefined;
+                    }
+                    info = getTsSymbolDisplayInfo(this.tsLS, this.typeChecker, propertySymbol, completion.kind === AttributeCompletionKind.DirectiveInput ? DisplayInfoKind.PROPERTY :
+                        DisplayInfoKind.EVENT, completion.directive.tsSymbol.name);
+                    if (info === null) {
+                        return undefined;
+                    }
+                    displayParts = info.displayParts;
+                    documentation = info.documentation;
+            }
+            return {
+                name: entryName,
+                kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
+                kindModifiers: ts$1.ScriptElementKindModifier.none,
+                displayParts: [],
+                documentation,
+            };
+        }
+        getElementAttributeCompletionSymbol(attribute) {
+            var _a;
+            const { name } = stripBindingSugar(attribute);
+            let element;
+            if (this.node instanceof Element || this.node instanceof Template) {
+                element = this.node;
+            }
+            else if (this.nodeParent instanceof Element || this.nodeParent instanceof Template) {
+                element = this.nodeParent;
+            }
+            else {
+                // Nothing to do without an element to process.
+                return undefined;
+            }
+            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
+            if (!attrTable.has(name)) {
+                return undefined;
+            }
+            const completion = attrTable.get(name);
+            return (_a = getAttributeCompletionSymbol(completion, this.typeChecker)) !== null && _a !== void 0 ? _a : undefined;
+        }
+        isPipeCompletion() {
+            return this.node instanceof BindingPipe;
+        }
+        getPipeCompletions() {
+            const pipes = this.templateTypeChecker.getPipesInScope(this.component);
+            if (pipes === null) {
+                return undefined;
+            }
+            const replacementSpan = makeReplacementSpanFromAst(this.node);
+            const entries = pipes.map(pipe => ({
+                name: pipe.name,
+                sortText: pipe.name,
+                kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PIPE),
+                replacementSpan,
+            }));
+            return {
+                entries,
+                isGlobalCompletion: false,
+                isMemberCompletion: false,
+                isNewIdentifierLocation: false,
+            };
+        }
+    }
+    function makeReplacementSpanFromParseSourceSpan(span) {
+        return {
+            start: span.start.offset,
+            length: span.end.offset - span.start.offset,
+        };
+    }
+    function makeReplacementSpanFromAst(node) {
+        if ((node instanceof EmptyExpr || node instanceof LiteralPrimitive ||
+            node instanceof BoundEvent)) {
+            // empty nodes do not replace any existing text
+            return undefined;
+        }
+        return {
+            start: node.nameSpan.start,
+            length: node.nameSpan.end - node.nameSpan.start,
+        };
+    }
+    function tagCompletionKind(directive) {
+        let kind;
+        if (directive === null) {
+            kind = DisplayInfoKind.ELEMENT;
+        }
+        else if (directive.isComponent) {
+            kind = DisplayInfoKind.COMPONENT;
+        }
+        else {
+            kind = DisplayInfoKind.DIRECTIVE;
+        }
+        return unsafeCastDisplayInfoKindToScriptElementKind(kind);
+    }
+    const BINDING_SUGAR = /[\[\(\)\]]/g;
+    function stripBindingSugar(binding) {
+        const name = binding.replace(BINDING_SUGAR, '');
+        if (binding.startsWith('[')) {
+            return { name, kind: DisplayInfoKind.PROPERTY };
+        }
+        else if (binding.startsWith('(')) {
+            return { name, kind: DisplayInfoKind.EVENT };
+        }
+        else {
+            return { name, kind: DisplayInfoKind.ATTRIBUTE };
+        }
+    }
+    function nodeContextFromTarget(target) {
+        switch (target.kind) {
+            case TargetNodeKind.ElementInTagContext:
+                return CompletionNodeContext.ElementTag;
+            case TargetNodeKind.ElementInBodyContext:
+                // Completions in element bodies are for new attributes.
+                return CompletionNodeContext.ElementAttributeKey;
+            case TargetNodeKind.TwoWayBindingContext:
+                return CompletionNodeContext.TwoWayBinding;
+            case TargetNodeKind.AttributeInKeyContext:
+                return CompletionNodeContext.ElementAttributeKey;
+            case TargetNodeKind.AttributeInValueContext:
+                if (target.node instanceof BoundEvent) {
+                    return CompletionNodeContext.EventValue;
+                }
+                else {
+                    return CompletionNodeContext.None;
+                }
+            default:
+                // No special context is available.
+                return CompletionNodeContext.None;
+        }
     }
 
     /**
@@ -42383,7 +42429,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
                 positionDetails.context.nodes[0] :
                 positionDetails.context.node;
-            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, nodeContextFromTarget(positionDetails.context), positionDetails.parent, positionDetails.template);
+            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, positionDetails);
         }
         getCompletionsAtPosition(fileName, position, options) {
             return this.withCompiler((compiler) => {
@@ -42608,29 +42654,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             project.addRoot(scriptInfo);
         }
         return scriptInfo;
-    }
-    function nodeContextFromTarget(target) {
-        switch (target.kind) {
-            case TargetNodeKind.ElementInTagContext:
-                return CompletionNodeContext.ElementTag;
-            case TargetNodeKind.ElementInBodyContext:
-                // Completions in element bodies are for new attributes.
-                return CompletionNodeContext.ElementAttributeKey;
-            case TargetNodeKind.TwoWayBindingContext:
-                return CompletionNodeContext.TwoWayBinding;
-            case TargetNodeKind.AttributeInKeyContext:
-                return CompletionNodeContext.ElementAttributeKey;
-            case TargetNodeKind.AttributeInValueContext:
-                if (target.node instanceof BoundEvent) {
-                    return CompletionNodeContext.EventValue;
-                }
-                else {
-                    return CompletionNodeContext.None;
-                }
-            default:
-                // No special context is available.
-                return CompletionNodeContext.None;
-        }
     }
     function isTemplateContext(program, fileName, position) {
         if (!isTypeScriptFile(fileName)) {
