@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+52.sha-736b1f9
+ * @license Angular v12.0.0-next.2+53.sha-97b88f3
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -12646,7 +12646,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         'progress^[HTMLElement]|#max,#value',
         'q,blockquote,cite^[HTMLElement]|',
         'script^[HTMLElement]|!async,charset,%crossOrigin,!defer,event,htmlFor,integrity,src,text,type',
-        'select^[HTMLElement]|!autofocus,!disabled,#length,!multiple,name,!required,#selectedIndex,#size,value',
+        'select^[HTMLElement]|autocomplete,!autofocus,!disabled,#length,!multiple,name,!required,#selectedIndex,#size,value',
         'shadow^[HTMLElement]|',
         'slot^[HTMLElement]|name',
         'source^[HTMLElement]|media,sizes,src,srcset,type',
@@ -12659,7 +12659,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         'tr^[HTMLElement]|align,bgColor,ch,chOff,vAlign',
         'tfoot,thead,tbody^[HTMLElement]|align,ch,chOff,vAlign',
         'template^[HTMLElement]|',
-        'textarea^[HTMLElement]|autocapitalize,!autofocus,#cols,defaultValue,dirName,!disabled,#maxLength,#minLength,name,placeholder,!readOnly,!required,#rows,selectionDirection,#selectionEnd,#selectionStart,value,wrap',
+        'textarea^[HTMLElement]|autocapitalize,autocomplete,!autofocus,#cols,defaultValue,dirName,!disabled,#maxLength,#minLength,name,placeholder,!readOnly,!required,#rows,selectionDirection,#selectionEnd,#selectionStart,value,wrap',
         'title^[HTMLElement]|text',
         'track^[HTMLElement]|!default,kind,label,src,srclang',
         'ul^[HTMLElement]|!compact,type',
@@ -17170,7 +17170,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+52.sha-736b1f9');
+    const VERSION$1 = new Version('12.0.0-next.2+53.sha-97b88f3');
 
     /**
      * @license
@@ -17827,7 +17827,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+52.sha-736b1f9'));
+        definitionMap.set('version', literal('12.0.0-next.2+53.sha-97b88f3'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18048,7 +18048,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+52.sha-736b1f9'));
+        definitionMap.set('version', literal('12.0.0-next.2+53.sha-97b88f3'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21320,7 +21320,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.2+52.sha-736b1f9');
+    const VERSION$2 = new Version('12.0.0-next.2+53.sha-97b88f3');
 
     /**
      * @license
