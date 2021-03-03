@@ -6,9 +6,10 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/ivy/completions" />
-import { AST, TmplAstNode, TmplAstTemplate } from '@angular/compiler';
+import { AST, TmplAstNode } from '@angular/compiler';
 import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
 import * as ts from 'typescript';
+import { TemplateTarget } from './template_target';
 export declare enum CompletionNodeContext {
     None = 0,
     ElementTag = 1,
@@ -33,12 +34,14 @@ export declare class CompletionBuilder<N extends TmplAstNode | AST> {
     private readonly compiler;
     private readonly component;
     private readonly node;
-    private readonly nodeContext;
-    private readonly nodeParent;
-    private readonly template;
+    private readonly targetDetails;
     private readonly typeChecker;
     private readonly templateTypeChecker;
-    constructor(tsLS: ts.LanguageService, compiler: NgCompiler, component: ts.ClassDeclaration, node: N, nodeContext: CompletionNodeContext, nodeParent: TmplAstNode | AST | null, template: TmplAstTemplate | null);
+    private readonly nodeParent;
+    private readonly nodeContext;
+    private readonly template;
+    private readonly position;
+    constructor(tsLS: ts.LanguageService, compiler: NgCompiler, component: ts.ClassDeclaration, node: N, targetDetails: TemplateTarget);
     /**
      * Analogue for `ts.LanguageService.getCompletionsAtPosition`.
      */

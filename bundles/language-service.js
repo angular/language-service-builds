@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.3+46.sha-e4774da
+ * @license Angular v11.2.3+48.sha-6dd5497
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17985,9 +17985,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
-        if (parseResult.errors && parseResult.errors.length > 0) {
-            // TODO(ayazhafiz): we may not always want to bail out at this point (e.g. in
-            // the context of a language service).
+        if (!options.alwaysAttemptHtmlToR3AstConversion && parseResult.errors &&
+            parseResult.errors.length > 0) {
             return {
                 interpolationConfig,
                 preserveWhitespaces,
@@ -18008,7 +18007,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // message ids
         const i18nMetaVisitor = new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ !preserveWhitespaces, enableI18nLegacyMessageIdFormat);
         const i18nMetaResult = i18nMetaVisitor.visitAllWithErrors(rootNodes);
-        if (i18nMetaResult.errors && i18nMetaResult.errors.length > 0) {
+        if (!options.alwaysAttemptHtmlToR3AstConversion && i18nMetaResult.errors &&
+            i18nMetaResult.errors.length > 0) {
             return {
                 interpolationConfig,
                 preserveWhitespaces,
@@ -18034,6 +18034,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
+        errors.push(...parseResult.errors, ...i18nMetaResult.errors);
         return {
             interpolationConfig,
             preserveWhitespaces,
@@ -19165,7 +19166,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.3+46.sha-e4774da');
+    const VERSION$1 = new Version('11.2.3+48.sha-6dd5497');
 
     /**
      * @license
@@ -35197,7 +35198,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.3+46.sha-e4774da');
+    const VERSION$2 = new Version$1('11.2.3+48.sha-6dd5497');
 
     /**
      * @license
