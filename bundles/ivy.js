@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+46.sha-cb16035
+ * @license Angular v12.0.0-next.2+47.sha-10aa564
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17169,7 +17169,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+46.sha-cb16035');
+    const VERSION$1 = new Version('12.0.0-next.2+47.sha-10aa564');
 
     /**
      * @license
@@ -17826,7 +17826,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+46.sha-cb16035'));
+        definitionMap.set('version', literal('12.0.0-next.2+47.sha-10aa564'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18047,7 +18047,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.2+46.sha-cb16035'));
+        definitionMap.set('version', literal('12.0.0-next.2+47.sha-10aa564'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21319,7 +21319,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.2+46.sha-cb16035');
+    const VERSION$2 = new Version('12.0.0-next.2+47.sha-10aa564');
 
     /**
      * @license
@@ -42176,9 +42176,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     if (entry !== null) {
                         entries.set(createLocationKey(entry), entry);
                     }
-                }
-                else {
-                    entries.set(createLocationKey(ref), ref);
                 }
             }
             return Array.from(entries.values());
