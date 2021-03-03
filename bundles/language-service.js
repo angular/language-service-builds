@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.2+51.sha-ffbacbb
+ * @license Angular v12.0.0-next.2+52.sha-736b1f9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9277,7 +9277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 tagName = openTagToken.parts[1];
                 this._attemptCharCodeUntilFn(isNotWhitespace);
                 while (this._cursor.peek() !== $SLASH && this._cursor.peek() !== $GT &&
-                    this._cursor.peek() !== $LT) {
+                    this._cursor.peek() !== $LT && this._cursor.peek() !== $EOF) {
                     this._consumeAttributeName();
                     this._attemptCharCodeUntilFn(isNotWhitespace);
                     if (this._attemptCharCode($EQ)) {
@@ -9503,7 +9503,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function isNameEnd(code) {
         return isWhitespace(code) || code === $GT || code === $LT ||
-            code === $SLASH || code === $SQ || code === $DQ || code === $EQ;
+            code === $SLASH || code === $SQ || code === $DQ || code === $EQ ||
+            code === $EOF;
     }
     function isPrefixEnd(code) {
         return (code < $a || $z < code) && (code < $A || $Z < code) &&
@@ -19179,7 +19180,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.2+51.sha-ffbacbb');
+    const VERSION$1 = new Version('12.0.0-next.2+52.sha-736b1f9');
 
     /**
      * @license
@@ -47090,7 +47091,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.2+51.sha-ffbacbb');
+    const VERSION$2 = new Version$1('12.0.0-next.2+52.sha-736b1f9');
 
     /**
      * @license
