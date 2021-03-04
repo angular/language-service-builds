@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+11.sha-bf158e7
+ * @license Angular v12.0.0-next.3+12.sha-ca721c2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19164,7 +19164,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+11.sha-bf158e7');
+    const VERSION$1 = new Version('12.0.0-next.3+12.sha-ca721c2');
 
     /**
      * @license
@@ -35186,7 +35186,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.3+11.sha-bf158e7');
+    const VERSION$2 = new Version$1('12.0.0-next.3+12.sha-ca721c2');
 
     /**
      * @license
@@ -38791,7 +38791,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         { type: Injectable }
     ];
     ApplicationInitStatus.ctorParameters = () => [
-        { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
+        { type: undefined, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
     ];
 
     /**
