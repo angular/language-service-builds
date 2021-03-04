@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+4.sha-d9acaa8
+ * @license Angular v12.0.0-next.3+10.sha-d44c7c2
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3112,10 +3112,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.CopyDefinitionFeature = { name: 'ɵɵCopyDefinitionFeature', moduleName: CORE$1 };
     Identifiers$1.ProvidersFeature = { name: 'ɵɵProvidersFeature', moduleName: CORE$1 };
     Identifiers$1.listener = { name: 'ɵɵlistener', moduleName: CORE$1 };
-    Identifiers$1.getFactoryOf = {
-        name: 'ɵɵgetFactoryOf',
-        moduleName: CORE$1,
-    };
     Identifiers$1.getInheritedFactory = {
         name: 'ɵɵgetInheritedFactory',
         moduleName: CORE$1,
@@ -5072,7 +5068,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     (function (R3FactoryDelegateType) {
         R3FactoryDelegateType[R3FactoryDelegateType["Class"] = 0] = "Class";
         R3FactoryDelegateType[R3FactoryDelegateType["Function"] = 1] = "Function";
-        R3FactoryDelegateType[R3FactoryDelegateType["Factory"] = 2] = "Factory";
     })(R3FactoryDelegateType || (R3FactoryDelegateType = {}));
     var R3FactoryTarget;
     (function (R3FactoryTarget) {
@@ -5160,19 +5155,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             body.push(ifStmt(t, [ctorStmt], [r.set(nonCtorExpr).toStmt()]));
             return r;
         }
-        if (isDelegatedMetadata(meta) && meta.delegateType === R3FactoryDelegateType.Factory) {
-            const delegateFactory = variable(`ɵ${meta.name}_BaseFactory`);
-            const getFactoryOf = importExpr(Identifiers$1.getFactoryOf);
-            if (meta.delegate.isEquivalent(meta.internalType)) {
-                throw new Error(`Illegal state: compiling factory that delegates to itself`);
-            }
-            const delegateFactoryStmt = delegateFactory.set(getFactoryOf.callFn([meta.delegate])).toDeclStmt(INFERRED_TYPE, [
-                StmtModifier.Exported, StmtModifier.Final
-            ]);
-            statements.push(delegateFactoryStmt);
-            retExpr = makeConditionalFactory(delegateFactory.callFn([]));
-        }
-        else if (isDelegatedMetadata(meta)) {
+        if (isDelegatedMetadata(meta)) {
             // This type is created with a delegated factory. If a type parameter is not specified, call
             // the factory instead.
             const delegateArgs = injectDependencies(meta.delegateDeps, meta.injectFn, meta.target === R3FactoryTarget.Pipe);
@@ -6192,21 +6175,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         componentModuleUrl(type, cmpMetadata) {
             throw new Error('Not implemented.');
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function mapLiteral(obj, quoted = false) {
-        return literalMap(Object.keys(obj).map(key => ({
-            key,
-            quoted,
-            value: obj[key],
-        })));
     }
 
     /**
@@ -14464,6 +14432,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function mapLiteral(obj, quoted = false) {
+        return literalMap(Object.keys(obj).map(key => ({
+            key,
+            quoted,
+            value: obj[key],
+        })));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // =================================================================================================
     // =================================================================================================
     // =========== S T O P   -  S T O P   -  S T O P   -  S T O P   -  S T O P   -  S T O P  ===========
@@ -19181,7 +19164,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+4.sha-d9acaa8');
+    const VERSION$1 = new Version('12.0.0-next.3+10.sha-d44c7c2');
 
     /**
      * @license
@@ -35225,7 +35208,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.3+4.sha-d9acaa8');
+    const VERSION$2 = new Version$1('12.0.0-next.3+10.sha-d44c7c2');
 
     /**
      * @license
