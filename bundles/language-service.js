@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+10.sha-d44c7c2
+ * @license Angular v12.0.0-next.3+11.sha-bf158e7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19164,7 +19164,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+10.sha-d44c7c2');
+    const VERSION$1 = new Version('12.0.0-next.3+11.sha-bf158e7');
 
     /**
      * @license
@@ -27715,28 +27715,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * This file contains reuseable "empty" symbols that can be used as default return values
-     * in different parts of the rendering code. Because the same symbols are returned, this
-     * allows for identity checks against these values to be consistently used by the framework
-     * code.
-     */
-    const EMPTY_OBJ$1 = {};
-    // freezing the values prevents any code from accidentally inserting new values in
-    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
-        // These property accesses can be ignored because ngDevMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_OBJ$1);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const NG_COMP_DEF = getClosureSafeProperty({ ɵcmp: getClosureSafeProperty });
     const NG_DIR_DEF = getClosureSafeProperty({ ɵdir: getClosureSafeProperty });
     const NG_PIPE_DEF = getClosureSafeProperty({ ɵpipe: getClosureSafeProperty });
@@ -27958,7 +27936,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function invertObject(obj, secondary) {
         if (obj == null)
-            return EMPTY_OBJ$1;
+            return EMPTY_OBJ;
         const newLookup = {};
         for (const minifiedKey in obj) {
             if (obj.hasOwnProperty(minifiedKey)) {
@@ -28385,7 +28363,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const current = simpleChangesStore === null || simpleChangesStore === void 0 ? void 0 : simpleChangesStore.current;
         if (current) {
             const previous = simpleChangesStore.previous;
-            if (previous === EMPTY_OBJ$1) {
+            if (previous === EMPTY_OBJ) {
                 simpleChangesStore.previous = current;
             }
             else {
@@ -28401,12 +28379,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function ngOnChangesSetInput(instance, value, publicName, privateName) {
         const simpleChangesStore = getSimpleChangesStore(instance) ||
-            setSimpleChangesStore(instance, { previous: EMPTY_OBJ$1, current: null });
+            setSimpleChangesStore(instance, { previous: EMPTY_OBJ, current: null });
         const current = simpleChangesStore.current || (simpleChangesStore.current = {});
         const previous = simpleChangesStore.previous;
         const declaredName = this.declaredInputs[publicName];
         const previousChange = previous[declaredName];
-        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ$1);
+        current[declaredName] = new SimpleChange(previousChange && previousChange.currentValue, value, previous === EMPTY_OBJ);
         instance[privateName] = value;
     }
     const SIMPLE_CHANGES_STORE = '__ngSimpleChanges__';
@@ -38610,7 +38588,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     function maybeUnwrapEmpty(value) {
-        if (value === EMPTY_OBJ$1) {
+        if (value === EMPTY_OBJ) {
             return {};
         }
         else if (value === EMPTY_ARRAY) {
@@ -41072,7 +41050,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // add native event listener - applicable to elements only
         if (tNode.type & 3 /* AnyRNode */) {
             const native = getNativeByTNode(tNode, lView);
-            const resolved = eventTargetResolver ? eventTargetResolver(native) : EMPTY_OBJ$1;
+            const resolved = eventTargetResolver ? eventTargetResolver(native) : EMPTY_OBJ;
             const target = resolved.target || native;
             const lCleanupIndex = lCleanup.length;
             const idxOrTargetGetter = eventTargetResolver ?
@@ -47056,7 +47034,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.3+10.sha-d44c7c2');
+    const VERSION$2 = new Version$1('12.0.0-next.3+11.sha-bf158e7');
 
     /**
      * @license
@@ -52844,7 +52822,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             typeArgumentCount: 0,
             selector: metadata.selector !== undefined ? metadata.selector : null,
             deps: reflectDependencies(type),
-            host: metadata.host || EMPTY_OBJ$1,
+            host: metadata.host || EMPTY_OBJ,
             propMetadata: propMetadata,
             inputs: metadata.inputs || EMPTY_ARRAY,
             outputs: metadata.outputs || EMPTY_ARRAY,
