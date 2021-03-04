@@ -148,7 +148,7 @@ export declare type AttributeCompletion = DomAttributeCompletion | DomPropertyCo
  * input shares the same name as a DOM attribute, the `Map` will reflect the directive input
  * completion, not the DOM completion for that name.
  */
-export declare function buildAttributeCompletionTable(component: ts.ClassDeclaration, element: TmplAstElement | TmplAstTemplate, checker: TemplateTypeChecker): Map<string, AttributeCompletion>;
+export declare function buildAttributeCompletionTable(component: ts.ClassDeclaration, element: TmplAstElement | TmplAstTemplate, checker: TemplateTypeChecker, includeDomSchemaAttributes: boolean): Map<string, AttributeCompletion>;
 /**
  * Given an `AttributeCompletion`, add any available completions to a `ts.CompletionEntry` array of
  * results.

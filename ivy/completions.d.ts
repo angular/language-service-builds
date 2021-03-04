@@ -35,13 +35,14 @@ export declare class CompletionBuilder<N extends TmplAstNode | AST> {
     private readonly component;
     private readonly node;
     private readonly targetDetails;
+    private readonly inlineTemplate;
     private readonly typeChecker;
     private readonly templateTypeChecker;
     private readonly nodeParent;
     private readonly nodeContext;
     private readonly template;
     private readonly position;
-    constructor(tsLS: ts.LanguageService, compiler: NgCompiler, component: ts.ClassDeclaration, node: N, targetDetails: TemplateTarget);
+    constructor(tsLS: ts.LanguageService, compiler: NgCompiler, component: ts.ClassDeclaration, node: N, targetDetails: TemplateTarget, inlineTemplate: boolean);
     /**
      * Analogue for `ts.LanguageService.getCompletionsAtPosition`.
      */
