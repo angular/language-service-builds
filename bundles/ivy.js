@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+14.sha-45216cc
+ * @license Angular v12.0.0-next.3+15.sha-fbc9df1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20394,7 +20394,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+14.sha-45216cc');
+    const VERSION$1 = new Version('12.0.0-next.3+15.sha-fbc9df1');
 
     /**
      * @license
@@ -21051,7 +21051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.3+14.sha-45216cc'));
+        definitionMap.set('version', literal('12.0.0-next.3+15.sha-fbc9df1'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21272,7 +21272,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.3+14.sha-45216cc'));
+        definitionMap.set('version', literal('12.0.0-next.3+15.sha-fbc9df1'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21304,7 +21304,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.3+14.sha-45216cc');
+    const VERSION$2 = new Version('12.0.0-next.3+15.sha-fbc9df1');
 
     /**
      * @license
@@ -26382,6 +26382,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Different optimizers use different annotations on a function or method call to indicate its pure
+     * status.
+     */
+    var PureAnnotation;
+    (function (PureAnnotation) {
+        /**
+         * Closure's annotation for purity is `@pureOrBreakMyCode`, but this needs to be in a semantic
+         * (jsdoc) enabled comment. Thus, the actual comment text for Closure must include the `*` that
+         * turns a `/*` comment into a `/**` comment, as well as surrounding whitespace.
+         */
+        PureAnnotation["CLOSURE"] = "* @pureOrBreakMyCode ";
+        PureAnnotation["TERSER"] = "@__PURE__";
+    })(PureAnnotation || (PureAnnotation = {}));
     const UNARY_OPERATORS$2 = {
         '+': ts$1.SyntaxKind.PlusToken,
         '-': ts$1.SyntaxKind.MinusToken,
@@ -26414,7 +26428,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * A TypeScript flavoured implementation of the AstFactory.
      */
     class TypeScriptAstFactory {
-        constructor() {
+        constructor(annotateForClosureCompiler) {
+            this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.externalSourceFiles = new Map();
             this.attachComments = attachComments;
             this.createArrayLiteral = ts$1.createArrayLiteral;
@@ -26439,7 +26454,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         createCallExpression(callee, args, pure) {
             const call = ts$1.createCall(callee, undefined, args);
             if (pure) {
-                ts$1.addSyntheticLeadingComment(call, ts$1.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', /* trailing newline */ false);
+                ts$1.addSyntheticLeadingComment(call, ts$1.SyntaxKind.MultiLineCommentTrivia, this.annotateForClosureCompiler ? PureAnnotation.CLOSURE : PureAnnotation.TERSER, 
+                /* trailing newline */ false);
             }
             return call;
         }
@@ -26576,10 +26592,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     function translateExpression(expression, imports, options = {}) {
-        return expression.visitExpression(new ExpressionTranslatorVisitor(new TypeScriptAstFactory(), imports, options), new Context(false));
+        return expression.visitExpression(new ExpressionTranslatorVisitor(new TypeScriptAstFactory(options.annotateForClosureCompiler === true), imports, options), new Context(false));
     }
     function translateStatement(statement, imports, options = {}) {
-        return statement.visitStatement(new ExpressionTranslatorVisitor(new TypeScriptAstFactory(), imports, options), new Context(true));
+        return statement.visitStatement(new ExpressionTranslatorVisitor(new TypeScriptAstFactory(options.annotateForClosureCompiler === true), imports, options), new Context(true));
     }
 
     /**
@@ -27032,12 +27048,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!this.classCompilationMap.has(node)) {
                 return { node };
             }
+            const translateOptions = {
+                recordWrappedNodeExpr: this.recordWrappedNodeExpr,
+                annotateForClosureCompiler: this.isClosureCompilerEnabled,
+            };
             // There is at least one field to add.
             const statements = [];
             const members = [...node.members];
             for (const field of this.classCompilationMap.get(node)) {
                 // Translate the initializer for the field into TS nodes.
-                const exprNode = translateExpression(field.initializer, this.importManager, { recordWrappedNodeExpr: this.recordWrappedNodeExpr });
+                const exprNode = translateExpression(field.initializer, this.importManager, translateOptions);
                 // Create a static property declaration for the new field.
                 const property = ts$1.createProperty(undefined, [ts$1.createToken(ts$1.SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
                 if (this.isClosureCompilerEnabled) {
@@ -27048,8 +27068,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     ts$1.addSyntheticLeadingComment(property, ts$1.SyntaxKind.MultiLineCommentTrivia, '* @nocollapse ', 
                     /* hasTrailingNewLine */ false);
                 }
-                field.statements
-                    .map(stmt => translateStatement(stmt, this.importManager, { recordWrappedNodeExpr: this.recordWrappedNodeExpr }))
+                field.statements.map(stmt => translateStatement(stmt, this.importManager, translateOptions))
                     .forEach(stmt => statements.push(stmt));
                 members.push(property);
             }
@@ -27179,6 +27198,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             recordWrappedNodeExpr,
             downlevelTaggedTemplates: downlevelTranslatedCode,
             downlevelVariableDeclarations: downlevelTranslatedCode,
+            annotateForClosureCompiler: isClosureCompilerEnabled,
         }));
         // Preserve @fileoverview comments required by Closure, since the location might change as a
         // result of adding extra imports and constant pool statements.
