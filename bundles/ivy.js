@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+23.sha-7854c4d
+ * @license Angular v12.0.0-next.3+26.sha-2d69f0c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20394,7 +20394,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+23.sha-7854c4d');
+    const VERSION$1 = new Version('12.0.0-next.3+26.sha-2d69f0c');
 
     /**
      * @license
@@ -21051,7 +21051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.3+23.sha-7854c4d'));
+        definitionMap.set('version', literal('12.0.0-next.3+26.sha-2d69f0c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21272,7 +21272,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.3+23.sha-7854c4d'));
+        definitionMap.set('version', literal('12.0.0-next.3+26.sha-2d69f0c'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21304,7 +21304,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.3+23.sha-7854c4d');
+    const VERSION$2 = new Version('12.0.0-next.3+26.sha-2d69f0c');
 
     /**
      * @license
