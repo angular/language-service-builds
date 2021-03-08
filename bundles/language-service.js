@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+40.sha-bdf13fe
+ * @license Angular v12.0.0-next.3+42.sha-2ebe2bc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6268,18 +6268,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return iifeCall.toStmt();
     }
     function compileInjector(meta) {
-        const result = compileFactoryFunction({
-            name: meta.name,
-            type: meta.type,
-            internalType: meta.internalType,
-            typeArgumentCount: 0,
-            deps: meta.deps,
-            injectFn: Identifiers$1.inject,
-            target: R3FactoryTarget.NgModule,
-        });
-        const definitionMap = {
-            factory: result.factory,
-        };
+        const definitionMap = {};
         if (meta.providers !== null) {
             definitionMap.providers = meta.providers;
         }
@@ -6288,7 +6277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
-        return { expression, type, statements: result.statements };
+        return { expression, type };
     }
     function tupleTypeOf(exp) {
         const types = exp.map(ref => typeofExpr(ref.type));
@@ -18832,12 +18821,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 name: facade.name,
                 type: wrapReference(facade.type),
                 internalType: new WrappedNodeExpr(facade.type),
-                deps: convertR3DependencyMetadataArray(facade.deps),
                 providers: new WrappedNodeExpr(facade.providers),
                 imports: facade.imports.map(i => new WrappedNodeExpr(i)),
             };
             const res = compileInjector(meta);
-            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileNgModule(angularCoreEnv, sourceMapUrl, facade) {
             const meta = {
@@ -19165,7 +19153,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+40.sha-bdf13fe');
+    const VERSION$1 = new Version('12.0.0-next.3+42.sha-2ebe2bc');
 
     /**
      * @license
@@ -27243,9 +27231,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * Options:
      *
-     * * `factory`: an `InjectorType` is an instantiable type, so a zero argument `factory` function to
-     *   create the type must be provided. If that factory function needs to inject arguments, it can
-     *   use the `inject` function.
      * * `providers`: an optional array of providers to add to the injector. Each provider must
      *   either have a factory or point to a type which has a `ɵprov` static property (the
      *   type must be an `InjectableType`).
@@ -27256,11 +27241,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @codeGenApi
      */
     function ɵɵdefineInjector(options) {
-        return {
-            factory: options.factory,
-            providers: options.providers || [],
-            imports: options.imports || [],
-        };
+        return { providers: options.providers || [], imports: options.imports || [] };
     }
     /**
      * Read the injectable def (`ɵprov`) for `type` in a way which is immune to accidentally reading
@@ -35180,7 +35161,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.3+40.sha-bdf13fe');
+    const VERSION$2 = new Version$1('12.0.0-next.3+42.sha-2ebe2bc');
 
     /**
      * @license
@@ -38649,11 +38630,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (metadata && metadata.exports) {
             imports = [...imports, metadata.exports];
         }
-        moduleType.ɵinj = ɵɵdefineInjector({
-            factory: convertInjectableProviderToFactory(moduleType, { useClass: moduleType }),
-            providers: metadata && metadata.providers,
-            imports: imports,
-        });
+        const moduleInjectorType = moduleType;
+        moduleInjectorType.ɵfac = convertInjectableProviderToFactory(moduleType, { useClass: moduleType });
+        moduleInjectorType.ɵinj =
+            ɵɵdefineInjector({ providers: metadata && metadata.providers, imports: imports });
     }
     const SWITCH_COMPILE_NGMODULE__PRE_R3__ = preR3NgModuleCompile;
     const SWITCH_COMPILE_NGMODULE = SWITCH_COMPILE_NGMODULE__PRE_R3__;
