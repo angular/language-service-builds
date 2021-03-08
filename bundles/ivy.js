@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.4+27.sha-ed342f4
+ * @license Angular v11.2.4+30.sha-35935b4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20368,7 +20368,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.4+27.sha-ed342f4');
+    const VERSION$1 = new Version('11.2.4+30.sha-35935b4');
 
     /**
      * @license
@@ -21025,7 +21025,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.4+27.sha-ed342f4'));
+        definitionMap.set('version', literal('11.2.4+30.sha-35935b4'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21246,7 +21246,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.4+27.sha-ed342f4'));
+        definitionMap.set('version', literal('11.2.4+30.sha-35935b4'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21278,7 +21278,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.4+27.sha-ed342f4');
+    const VERSION$2 = new Version('11.2.4+30.sha-35935b4');
 
     /**
      * @license
@@ -21769,13 +21769,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // such a case, the reference's `identities` property would be `[foo]`, which would result in an
             // invalid emission of a free-standing `foo` identifier, rather than `exports.foo`.
             if (!isDeclaration(ref.node) && refSf === context) {
-                return new WrappedNodeExpr(ref.node);
+                return {
+                    expression: new WrappedNodeExpr(ref.node),
+                    importedFile: null,
+                };
             }
             // A Reference can have multiple identities in different files, so it may already have an
             // Identifier in the requested context file.
             const identifier = ref.getIdentityIn(context);
             if (identifier !== null) {
-                return new WrappedNodeExpr(identifier);
+                return {
+                    expression: new WrappedNodeExpr(identifier),
+                    importedFile: null,
+                };
             }
             else {
                 return null;
@@ -21818,22 +21824,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             // Try to find the exported name of the declaration, if one is available.
             const { specifier, resolutionContext } = ref.bestGuessOwningModule;
-            const symbolName = this.resolveImportName(specifier, ref.node, resolutionContext);
-            if (symbolName === null) {
+            const exports = this.getExportsOfModule(specifier, resolutionContext);
+            if (exports === null || !exports.exportMap.has(ref.node)) {
                 // TODO(alxhub): make this error a ts.Diagnostic pointing at whatever caused this import to be
                 // triggered.
                 throw new Error(`Symbol ${ref.debugName} declared in ${getSourceFile(ref.node).fileName} is not exported from ${specifier} (import into ${context.fileName})`);
             }
-            return new ExternalExpr(new ExternalReference(specifier, symbolName));
-        }
-        resolveImportName(moduleName, target, fromFile) {
-            const exports = this.getExportsOfModule(moduleName, fromFile);
-            if (exports !== null && exports.has(target)) {
-                return exports.get(target);
-            }
-            else {
-                return null;
-            }
+            const symbolName = exports.exportMap.get(ref.node);
+            return {
+                expression: new ExternalExpr(new ExternalReference(specifier, symbolName)),
+                importedFile: exports.module,
+            };
         }
         getExportsOfModule(moduleName, fromFile) {
             if (!this.moduleExportsCache.has(moduleName)) {
@@ -21855,7 +21856,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             exports.forEach((declaration, name) => {
                 exportMap.set(declaration.node, name);
             });
-            return exportMap;
+            return { module: entryPointFile, exportMap };
         }
     }
     /**
@@ -21896,7 +21897,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // With both files expressed as LogicalProjectPaths, getting the module specifier as a relative
             // path is now straightforward.
             const moduleName = LogicalProjectPath.relativePathBetween(originPath, destPath);
-            return new ExternalExpr({ moduleName, name });
+            return {
+                expression: new ExternalExpr({ moduleName, name }),
+                importedFile: destSf,
+            };
         }
     }
     /**
@@ -21914,7 +21918,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const relativePath = relative(dirname(absoluteFromSourceFile(context)), absoluteFromSourceFile(destSf));
             const moduleName = toRelativeImport(stripExtension(relativePath));
             const name = findExportedNameOfNode(ref.node, destSf, this.reflector);
-            return new ExternalExpr({ moduleName, name });
+            return { expression: new ExternalExpr({ moduleName, name }), importedFile: destSf };
         }
     }
     /**
@@ -21933,7 +21937,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return null;
             }
             const moduleName = this.unifiedModulesHost.fileNameToModuleName(destSf.fileName, context.fileName);
-            return new ExternalExpr({ moduleName, name });
+            return {
+                expression: new ExternalExpr({ moduleName, name }),
+                importedFile: destSf,
+            };
         }
     }
 
@@ -22065,10 +22072,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     class AliasStrategy {
         emit(ref, context, importMode) {
-            if (importMode & ImportFlags.NoAliasing) {
+            if (importMode & ImportFlags.NoAliasing || ref.alias === null) {
                 return null;
             }
-            return ref.alias;
+            return { expression: ref.alias, importedFile: 'unknown' };
         }
     }
 
@@ -27923,12 +27930,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return new FatalDiagnosticError(ErrorCode.PARAM_MISSING_TOKEN, param.nameNode, chain, hints);
     }
     function toR3Reference(valueRef, typeRef, valueContext, typeContext, refEmitter) {
-        const value = refEmitter.emit(valueRef, valueContext);
-        const type = refEmitter.emit(typeRef, typeContext, ImportFlags.ForceNewImport | ImportFlags.AllowTypeImports);
-        if (value === null || type === null) {
-            throw new Error(`Could not refer to ${ts$1.SyntaxKind[valueRef.node.kind]}`);
-        }
-        return { value, type };
+        return {
+            value: refEmitter.emit(valueRef, valueContext).expression,
+            type: refEmitter
+                .emit(typeRef, typeContext, ImportFlags.ForceNewImport | ImportFlags.AllowTypeImports)
+                .expression,
+        };
     }
     function isAngularCore(decorator) {
         return decorator.import !== null && decorator.import.from === '@angular/core';
@@ -29482,7 +29489,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const context = getSourceFile(node);
                 for (const exportRef of analysis.exports) {
                     if (isNgModule(exportRef.node, scope.compilation)) {
-                        data.injectorImports.push(this.refEmitter.emit(exportRef, context));
+                        data.injectorImports.push(this.refEmitter.emit(exportRef, context).expression);
                     }
                 }
                 for (const decl of analysis.declarations) {
@@ -29519,11 +29526,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             for (const decl of analysis.declarations) {
                 const remoteScope = this.scopeRegistry.getRemoteScope(decl.node);
                 if (remoteScope !== null) {
-                    const directives = remoteScope.directives.map(directive => this.refEmitter.emit(directive, context));
-                    const pipes = remoteScope.pipes.map(pipe => this.refEmitter.emit(pipe, context));
+                    const directives = remoteScope.directives.map(directive => this.refEmitter.emit(directive, context).expression);
+                    const pipes = remoteScope.pipes.map(pipe => this.refEmitter.emit(pipe, context).expression);
                     const directiveArray = new LiteralArrayExpr(directives);
                     const pipesArray = new LiteralArrayExpr(pipes);
-                    const declExpr = this.refEmitter.emit(decl, context);
+                    const declExpr = this.refEmitter.emit(decl, context).expression;
                     const setComponentScope = new ExternalExpr(Identifiers$1.setComponentScope);
                     const callExpr = new InvokeFunctionExpr(setComponentScope, [declExpr, directiveArray, pipesArray]);
                     ngModuleStatements.push(callExpr.toStmt());
@@ -30079,9 +30086,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const binder = new R3TargetBinder(matcher);
                 const bound = binder.bind({ template: metadata.template.nodes });
                 const usedDirectives = bound.getUsedDirectives().map(directive => {
+                    const type = this.refEmitter.emit(directive.ref, context);
                     return {
                         ref: directive.ref,
-                        type: this.refEmitter.emit(directive.ref, context),
+                        type: type.expression,
+                        importedFile: type.importedFile,
                         selector: directive.selector,
                         inputs: directive.inputs.propertyNames,
                         outputs: directive.outputs.propertyNames,
@@ -30095,10 +30104,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                         continue;
                     }
                     const pipe = pipes.get(pipeName);
+                    const type = this.refEmitter.emit(pipe, context);
                     usedPipes.push({
                         ref: pipe,
                         pipeName,
-                        expression: this.refEmitter.emit(pipe, context),
+                        expression: type.expression,
+                        importedFile: type.importedFile,
                     });
                 }
                 if (this.semanticDepGraphUpdater !== null) {
@@ -30109,14 +30120,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // import which needs to be generated would create a cycle.
                 const cyclesFromDirectives = new Map();
                 for (const usedDirective of usedDirectives) {
-                    const cycle = this._checkForCyclicImport(usedDirective.ref, usedDirective.type, context);
+                    const cycle = this._checkForCyclicImport(usedDirective.importedFile, usedDirective.type, context);
                     if (cycle !== null) {
                         cyclesFromDirectives.set(usedDirective, cycle);
                     }
                 }
                 const cyclesFromPipes = new Map();
                 for (const usedPipe of usedPipes) {
-                    const cycle = this._checkForCyclicImport(usedPipe.ref, usedPipe.expression, context);
+                    const cycle = this._checkForCyclicImport(usedPipe.importedFile, usedPipe.expression, context);
                     if (cycle !== null) {
                         cyclesFromPipes.set(usedPipe, cycle);
                     }
@@ -30125,11 +30136,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (!cycleDetected) {
                     // No cycle was detected. Record the imports that need to be created in the cycle detector
                     // so that future cyclic import checks consider their production.
-                    for (const { type } of usedDirectives) {
-                        this._recordSyntheticImport(type, context);
+                    for (const { type, importedFile } of usedDirectives) {
+                        this._recordSyntheticImport(importedFile, type, context);
                     }
-                    for (const { expression } of usedPipes) {
-                        this._recordSyntheticImport(expression, context);
+                    for (const { expression, importedFile } of usedPipes) {
+                        this._recordSyntheticImport(importedFile, expression, context);
                     }
                     // Check whether the directive/pipe arrays in ɵcmp need to be wrapped in closures.
                     // This is required if any directive/pipe reference is to a declaration in the same file
@@ -30524,7 +30535,15 @@ Either add the @Injectable() decorator to '${provider.node.name
                 throw new FatalDiagnosticError(ErrorCode.COMPONENT_MISSING_TEMPLATE, Decorator.nodeForError(decorator), 'component is missing a template');
             }
         }
-        _expressionToImportedFile(expr, origin) {
+        _resolveImportedFile(importedFile, expr, origin) {
+            // If `importedFile` is not 'unknown' then it accurately reflects the source file that is
+            // being imported.
+            if (importedFile !== 'unknown') {
+                return importedFile;
+            }
+            // Otherwise `expr` has to be inspected to determine the file that is being imported. If `expr`
+            // is not an `ExternalExpr` then it does not correspond with an import, so return null in that
+            // case.
             if (!(expr instanceof ExternalExpr)) {
                 return null;
             }
@@ -30537,16 +30556,16 @@ Either add the @Injectable() decorator to '${provider.node.name
          *
          * @returns a `Cycle` object if a cycle would be created, otherwise `null`.
          */
-        _checkForCyclicImport(ref, expr, origin) {
-            const importedFile = this._expressionToImportedFile(expr, origin);
-            if (importedFile === null) {
+        _checkForCyclicImport(importedFile, expr, origin) {
+            const imported = this._resolveImportedFile(importedFile, expr, origin);
+            if (imported === null) {
                 return null;
             }
             // Check whether the import is legal.
-            return this.cycleAnalyzer.wouldCreateCycle(origin, importedFile);
+            return this.cycleAnalyzer.wouldCreateCycle(origin, imported);
         }
-        _recordSyntheticImport(expr, origin) {
-            const imported = this._expressionToImportedFile(expr, origin);
+        _recordSyntheticImport(importedFile, expr, origin) {
+            const imported = this._resolveImportedFile(importedFile, expr, origin);
             if (imported === null) {
                 return;
             }
@@ -31138,8 +31157,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * dependencies within the same program are tracked; imports into packages on NPM are not.
      */
     class ImportGraph {
-        constructor(resolver) {
-            this.resolver = resolver;
+        constructor(checker) {
+            this.checker = checker;
             this.map = new Map();
         }
         /**
@@ -31216,24 +31235,28 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         scanImports(sf) {
             const imports = new Set();
-            // Look through the source file for import statements.
-            sf.statements.forEach(stmt => {
-                if ((ts$1.isImportDeclaration(stmt) || ts$1.isExportDeclaration(stmt)) &&
-                    stmt.moduleSpecifier !== undefined && ts$1.isStringLiteral(stmt.moduleSpecifier)) {
-                    // Resolve the module to a file, and check whether that file is in the ts.Program.
-                    const moduleName = stmt.moduleSpecifier.text;
-                    const moduleFile = this.resolver.resolveModule(moduleName, sf.fileName);
-                    if (moduleFile !== null && isLocalFile(moduleFile)) {
-                        // Record this local import.
-                        imports.add(moduleFile);
-                    }
+            // Look through the source file for import and export statements.
+            for (const stmt of sf.statements) {
+                if ((!ts$1.isImportDeclaration(stmt) && !ts$1.isExportDeclaration(stmt)) ||
+                    stmt.moduleSpecifier === undefined) {
+                    continue;
                 }
-            });
+                const symbol = this.checker.getSymbolAtLocation(stmt.moduleSpecifier);
+                if (symbol === undefined || symbol.valueDeclaration === undefined) {
+                    // No symbol could be found to skip over this import/export.
+                    continue;
+                }
+                const moduleFile = symbol.valueDeclaration;
+                if (ts$1.isSourceFile(moduleFile) && isLocalFile(moduleFile)) {
+                    // Record this local import.
+                    imports.add(moduleFile);
+                }
+            }
             return imports;
         }
     }
     function isLocalFile(sf) {
-        return !sf.fileName.endsWith('.d.ts');
+        return !sf.isDeclarationFile;
     }
     /**
      * A helper class to track which SourceFiles are being processed when searching for a path in
@@ -32314,7 +32337,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return;
             }
             const ngModuleExpr = this.emitter.emit(ngModule, decl.getSourceFile(), ImportFlags.ForceNewImport);
-            const ngModuleType = new ExpressionType(ngModuleExpr);
+            const ngModuleType = new ExpressionType(ngModuleExpr.expression);
             const mwpNgType = new ExpressionType(new ExternalExpr(Identifiers$1.ModuleWithProviders), [ /* modifiers */], [ngModuleType]);
             dts.addTypeReplacement(decl, mwpNgType);
         }
@@ -33445,7 +33468,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         });
                     }
                     else {
-                        const expr = this.refEmitter.emit(exportRef.cloneWithNoIdentifiers(), sourceFile);
+                        const expr = this.refEmitter.emit(exportRef.cloneWithNoIdentifiers(), sourceFile).expression;
                         if (!(expr instanceof ExternalExpr) || expr.value.moduleName === null ||
                             expr.value.name === null) {
                             throw new Error('Expected ExternalExpr');
@@ -35200,7 +35223,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // pass.
             const ngExpr = this.refEmitter.emit(ref, this.contextFile, ImportFlags.NoAliasing);
             // Use `translateExpression` to convert the `Expression` into a `ts.Expression`.
-            return translateExpression(ngExpr, this.importManager);
+            return translateExpression(ngExpr.expression, this.importManager);
         }
         /**
          * Generate a `ts.TypeNode` that references the given node as a type.
@@ -35211,7 +35234,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const ngExpr = this.refEmitter.emit(ref, this.contextFile, ImportFlags.NoAliasing | ImportFlags.AllowTypeImports);
             // Create an `ExpressionType` from the `Expression` and translate it via `translateType`.
             // TODO(alxhub): support references to types with generic arguments in a clean way.
-            return translateType(new ExpressionType(ngExpr), this.importManager);
+            return translateType(new ExpressionType(ngExpr.expression), this.importManager);
         }
         emitTypeParameters(declaration) {
             const emitter = new TypeParameterEmitter(declaration.typeParameters, this.reflector);
@@ -39254,7 +39277,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.moduleResolver =
                 new ModuleResolver(tsProgram, this.options, this.adapter, moduleResolutionCache);
             this.resourceManager = new AdapterResourceLoader(adapter, this.options);
-            this.cycleAnalyzer = new CycleAnalyzer(new ImportGraph(this.moduleResolver));
+            this.cycleAnalyzer = new CycleAnalyzer(new ImportGraph(tsProgram.getTypeChecker()));
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, tsProgram);
             this.ignoreForDiagnostics =
                 new Set(tsProgram.getSourceFiles().filter(sf => this.adapter.isShim(sf)));
