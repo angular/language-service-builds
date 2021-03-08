@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+40.sha-bdf13fe
+ * @license Angular v12.0.0-next.3+42.sha-2ebe2bc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9071,18 +9071,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return iifeCall.toStmt();
     }
     function compileInjector(meta) {
-        const result = compileFactoryFunction({
-            name: meta.name,
-            type: meta.type,
-            internalType: meta.internalType,
-            typeArgumentCount: 0,
-            deps: meta.deps,
-            injectFn: Identifiers$1.inject,
-            target: R3FactoryTarget.NgModule,
-        });
-        const definitionMap = {
-            factory: result.factory,
-        };
+        const definitionMap = {};
         if (meta.providers !== null) {
             definitionMap.providers = meta.providers;
         }
@@ -9091,7 +9080,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
-        return { expression, type, statements: result.statements };
+        return { expression, type };
     }
     function tupleTypeOf(exp) {
         const types = exp.map(ref => typeofExpr(ref.type));
@@ -20062,12 +20051,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 name: facade.name,
                 type: wrapReference(facade.type),
                 internalType: new WrappedNodeExpr(facade.type),
-                deps: convertR3DependencyMetadataArray(facade.deps),
                 providers: new WrappedNodeExpr(facade.providers),
                 imports: facade.imports.map(i => new WrappedNodeExpr(i)),
             };
             const res = compileInjector(meta);
-            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileNgModule(angularCoreEnv, sourceMapUrl, facade) {
             const meta = {
@@ -20395,7 +20383,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+40.sha-bdf13fe');
+    const VERSION$1 = new Version('12.0.0-next.3+42.sha-2ebe2bc');
 
     /**
      * @license
@@ -21052,7 +21040,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.3+40.sha-bdf13fe'));
+        definitionMap.set('version', literal('12.0.0-next.3+42.sha-2ebe2bc'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21273,7 +21261,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.3+40.sha-bdf13fe'));
+        definitionMap.set('version', literal('12.0.0-next.3+42.sha-2ebe2bc'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21305,7 +21293,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.3+40.sha-bdf13fe');
+    const VERSION$2 = new Version('12.0.0-next.3+42.sha-2ebe2bc');
 
     /**
      * @license
@@ -29288,8 +29276,6 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     /**
      * Compiles @NgModule annotations to ngModuleDef fields.
-     *
-     * TODO(alxhub): handle injector side of things as well.
      */
     class NgModuleDecoratorHandler {
         constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, defaultImportRecorder, annotateForClosureCompiler, injectableRegistry, localeId) {
@@ -29470,7 +29456,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 name,
                 type,
                 internalType,
-                deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
                 providers: wrapperProviders,
                 imports: injectorImports,
             };
@@ -29480,6 +29465,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     schemas: schemas,
                     mod: ngModuleDef,
                     inj: ngInjectorDef,
+                    deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
                     declarations: declarationRefs,
                     rawDeclarations,
                     imports: importRefs,
@@ -29560,17 +29546,17 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
         }
-        compileFull(node, analysis, resolution) {
+        compileFull(node, { inj, mod, deps, metadataStmt, declarations }, resolution) {
             //  Merge the injector imports (which are 'exports' that were later found to be NgModules)
             //  computed during resolution with the ones from analysis.
-            const ngInjectorDef = compileInjector(Object.assign(Object.assign({}, analysis.inj), { imports: [...analysis.inj.imports, ...resolution.injectorImports] }));
-            const ngModuleDef = compileNgModule(analysis.mod);
+            const ngInjectorDef = compileInjector(Object.assign(Object.assign({}, inj), { imports: [...inj.imports, ...resolution.injectorImports] }));
+            const ngModuleDef = compileNgModule(mod);
             const ngModuleStatements = ngModuleDef.additionalStatements;
-            if (analysis.metadataStmt !== null) {
-                ngModuleStatements.push(analysis.metadataStmt);
+            if (metadataStmt !== null) {
+                ngModuleStatements.push(metadataStmt);
             }
             const context = getSourceFile(node);
-            for (const decl of analysis.declarations) {
+            for (const decl of declarations) {
                 const remoteScope = this.scopeRegistry.getRemoteScope(decl.node);
                 if (remoteScope !== null) {
                     const directives = remoteScope.directives.map(directive => this.refEmitter.emit(directive, context).expression);
@@ -29584,6 +29570,15 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             const res = [
+                compileNgFactoryDefField({
+                    name: inj.name,
+                    type: inj.type,
+                    internalType: inj.internalType,
+                    typeArgumentCount: 0,
+                    deps,
+                    injectFn: Identifiers.inject,
+                    target: R3FactoryTarget.NgModule,
+                }),
                 {
                     name: 'ɵmod',
                     initializer: ngModuleDef.expression,
@@ -29593,9 +29588,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 {
                     name: 'ɵinj',
                     initializer: ngInjectorDef.expression,
-                    statements: ngInjectorDef.statements,
+                    statements: [],
                     type: ngInjectorDef.type,
-                }
+                },
             ];
             if (this.localeId) {
                 res.push({

@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+40.sha-bdf13fe
+ * @license Angular v12.0.0-next.3+42.sha-2ebe2bc
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6268,18 +6268,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return iifeCall.toStmt();
     }
     function compileInjector(meta) {
-        const result = compileFactoryFunction({
-            name: meta.name,
-            type: meta.type,
-            internalType: meta.internalType,
-            typeArgumentCount: 0,
-            deps: meta.deps,
-            injectFn: Identifiers$1.inject,
-            target: R3FactoryTarget.NgModule,
-        });
-        const definitionMap = {
-            factory: result.factory,
-        };
+        const definitionMap = {};
         if (meta.providers !== null) {
             definitionMap.providers = meta.providers;
         }
@@ -6288,7 +6277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
-        return { expression, type, statements: result.statements };
+        return { expression, type };
     }
     function tupleTypeOf(exp) {
         const types = exp.map(ref => typeofExpr(ref.type));
@@ -18832,12 +18821,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 name: facade.name,
                 type: wrapReference(facade.type),
                 internalType: new WrappedNodeExpr(facade.type),
-                deps: convertR3DependencyMetadataArray(facade.deps),
                 providers: new WrappedNodeExpr(facade.providers),
                 imports: facade.imports.map(i => new WrappedNodeExpr(i)),
             };
             const res = compileInjector(meta);
-            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileNgModule(angularCoreEnv, sourceMapUrl, facade) {
             const meta = {
@@ -19165,7 +19153,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+40.sha-bdf13fe');
+    const VERSION$1 = new Version('12.0.0-next.3+42.sha-2ebe2bc');
 
     /**
      * @license
@@ -27283,9 +27271,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * Options:
      *
-     * * `factory`: an `InjectorType` is an instantiable type, so a zero argument `factory` function to
-     *   create the type must be provided. If that factory function needs to inject arguments, it can
-     *   use the `inject` function.
      * * `providers`: an optional array of providers to add to the injector. Each provider must
      *   either have a factory or point to a type which has a `ɵprov` static property (the
      *   type must be an `InjectableType`).
@@ -27296,11 +27281,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @codeGenApi
      */
     function ɵɵdefineInjector(options) {
-        return {
-            factory: options.factory,
-            providers: options.providers || [],
-            imports: options.imports || [],
-        };
+        return { providers: options.providers || [], imports: options.imports || [] };
     }
     /**
      * Read the injectable def (`ɵprov`) for `type` in a way which is immune to accidentally reading
@@ -30404,19 +30385,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         });
     }
     function getFactoryOf(type) {
-        const typeAny = type;
         if (isForwardRef(type)) {
-            return (() => {
-                const factory = getFactoryOf(resolveForwardRef$1(typeAny));
-                return factory ? factory() : null;
-            });
+            return () => {
+                const factory = getFactoryOf(resolveForwardRef$1(type));
+                return factory && factory();
+            };
         }
-        let factory = getFactoryDef(typeAny);
-        if (factory === null) {
-            const injectorDef = getInjectorDef(typeAny);
-            factory = injectorDef && injectorDef.factory;
-        }
-        return factory || null;
+        return getFactoryDef(type);
     }
 
     /**
@@ -37781,7 +37756,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             // Track the InjectorType and add a provider for it. It's important that this is done after the
             // def's imports.
             this.injectorDefTypes.add(defType);
-            this.records.set(defType, makeRecord(def.factory, NOT_YET));
+            const factory = getFactoryDef(defType) || (() => new defType());
+            this.records.set(defType, makeRecord(factory, NOT_YET));
             // Next, include providers listed on the definition itself.
             const defProviders = def.providers;
             if (defProviders != null && !isDuplicate) {
@@ -37858,12 +37834,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const factory = injectableDef !== null ? injectableDef.factory : getFactoryDef(token);
         if (factory !== null) {
             return factory;
-        }
-        // If the token is an NgModule, it's also injectable but the factory is on its injector def
-        // (`ɵinj`)
-        const injectorDef = getInjectorDef(token);
-        if (injectorDef !== null) {
-            return injectorDef.factory;
         }
         // InjectionTokens should have an injectable def (ɵprov) and thus should be handled above.
         // If it's missing that, it's an error.
@@ -47028,7 +46998,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.3+40.sha-bdf13fe');
+    const VERSION$2 = new Version$1('12.0.0-next.3+42.sha-2ebe2bc');
 
     /**
      * @license
@@ -52253,7 +52223,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         enqueueModuleForDelayedScoping(moduleType, ngModule);
     }
     /**
-     * Compiles and adds the `ɵmod` and `ɵinj` properties to the module class.
+     * Compiles and adds the `ɵmod`, `ɵfac` and `ɵinj` properties to the module class.
      *
      * It's possible to compile a module via this API which will allow duplicate declarations in its
      * root.
@@ -52296,6 +52266,25 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 return ngModuleDef;
             }
         });
+        let ngFactoryDef = null;
+        Object.defineProperty(moduleType, NG_FACTORY_DEF, {
+            get: () => {
+                if (ngFactoryDef === null) {
+                    const compiler = getCompilerFacade();
+                    ngFactoryDef = compiler.compileFactory(angularCoreEnv, `ng:///${moduleType.name}/ɵfac.js`, {
+                        name: moduleType.name,
+                        type: moduleType,
+                        deps: reflectDependencies(moduleType),
+                        injectFn: 'inject',
+                        target: compiler.R3FactoryTarget.NgModule,
+                        typeArgumentCount: 0,
+                    });
+                }
+                return ngFactoryDef;
+            },
+            // Make the property configurable in dev mode to allow overriding in tests
+            configurable: !!ngDevMode,
+        });
         let ngInjectorDef = null;
         Object.defineProperty(moduleType, NG_INJ_DEF, {
             get: () => {
@@ -52305,7 +52294,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     const meta = {
                         name: moduleType.name,
                         type: moduleType,
-                        deps: reflectDependencies(moduleType),
                         providers: ngModule.providers || EMPTY_ARRAY,
                         imports: [
                             (ngModule.imports || EMPTY_ARRAY).map(resolveForwardRef$1),
@@ -55163,8 +55151,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // Inject ApplicationRef to make it eager...
         constructor(appRef) { }
     }
+    ApplicationModule.ɵfac = function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(ɵɵinject(ApplicationRef)); };
     ApplicationModule.ɵmod = /*@__PURE__*/ ɵɵdefineNgModule({ type: ApplicationModule });
-    ApplicationModule.ɵinj = /*@__PURE__*/ ɵɵdefineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(ɵɵinject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
+    ApplicationModule.ɵinj = /*@__PURE__*/ ɵɵdefineInjector({ providers: APPLICATION_MODULE_PROVIDERS });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApplicationModule, [{
             type: NgModule,
             args: [{ providers: APPLICATION_MODULE_PROVIDERS }]
