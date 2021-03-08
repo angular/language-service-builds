@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+26.sha-2d69f0c
+ * @license Angular v12.0.0-next.3+27.sha-32dd3c5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19164,7 +19164,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+26.sha-2d69f0c');
+    const VERSION$1 = new Version('12.0.0-next.3+27.sha-32dd3c5');
 
     /**
      * @license
@@ -27989,18 +27989,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * This property will be monkey-patched on elements, components and directives
-     */
-    const MONKEY_PATCH_KEY_NAME = '__ngContext__';
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Access the object that represents the `document` for this platform.
      *
      * Ivy calls this whenever it needs to access the `document` object.
@@ -28104,21 +28092,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const slotValue = hostView[nodeIndex];
         const lView = isLView(slotValue) ? slotValue : slotValue[HOST];
         return lView;
-    }
-    /**
-     * Returns the monkey-patch value data present on the target (which could be
-     * a component, directive or a DOM node).
-     */
-    function readPatchedData(target) {
-        ngDevMode && assertDefined(target, 'Target expected');
-        return target[MONKEY_PATCH_KEY_NAME] || null;
-    }
-    function readPatchedLView(target) {
-        const value = readPatchedData(target);
-        if (value) {
-            return Array.isArray(value) ? value : value.lView;
-        }
-        return null;
     }
     /** Checks whether a given view is in creation mode */
     function isCreationMode(view) {
@@ -30585,6 +30558,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This property will be monkey-patched on elements, components and directives.
+     */
+    const MONKEY_PATCH_KEY_NAME = '__ngContext__';
+    /**
+     * Assigns the given data to the given target (which could be a component,
+     * directive or DOM node instance) using monkey-patching.
+     */
+    function attachPatchData(target, data) {
+        ngDevMode && assertDefined(target, 'Target expected');
+        target[MONKEY_PATCH_KEY_NAME] = data;
+    }
+    /**
+     * Returns the monkey-patch value data present on the target (which could be
+     * a component, directive or a DOM node).
+     */
+    function readPatchedData(target) {
+        ngDevMode && assertDefined(target, 'Target expected');
+        return target[MONKEY_PATCH_KEY_NAME] || null;
+    }
+    function readPatchedLView(target) {
+        const value = readPatchedData(target);
+        if (value) {
+            return Array.isArray(value) ? value : value.lView;
+        }
+        return null;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const ERROR_DEBUG_CONTEXT = 'ngDebugContext';
     const ERROR_ORIGINAL_ERROR = 'ngOriginalError';
     const ERROR_LOGGER = 'ngErrorLogger';
@@ -30722,21 +30730,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         else {
             throw new Error('Looks like we are in \'prod mode\', but we are creating a named Array type, which is wrong! Check your code');
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Assigns the given data to the given target (which could be a component,
-     * directive or DOM node instance) using monkey-patching.
-     */
-    function attachPatchData(target, data) {
-        target[MONKEY_PATCH_KEY_NAME] = data;
     }
 
     /**
@@ -35186,7 +35179,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.3+26.sha-2d69f0c');
+    const VERSION$2 = new Version$1('12.0.0-next.3+27.sha-32dd3c5');
 
     /**
      * @license
