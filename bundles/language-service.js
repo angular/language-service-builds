@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.3+33.sha-1735430
+ * @license Angular v12.0.0-next.3+36.sha-03d47d5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5337,7 +5337,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (meta.providedIn.value !== null) {
             injectableProps.providedIn = meta.providedIn;
         }
-        const expression = importExpr(Identifiers.ɵɵdefineInjectable).callFn([mapToMapExpression(injectableProps)]);
+        const expression = importExpr(Identifiers.ɵɵdefineInjectable)
+            .callFn([mapToMapExpression(injectableProps)], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type.type, meta.typeArgumentCount)]));
         return {
             expression,
@@ -6222,7 +6223,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (id) {
             definitionMap.id = id;
         }
-        const expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)]);
+        const expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
             new ExpressionType(moduleType.type), tupleTypeOf(declarations), tupleTypeOf(imports),
             tupleTypeOf(exports)
@@ -6285,7 +6286,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (meta.imports.length > 0) {
             definitionMap.imports = literalArr(meta.imports);
         }
-        const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)]);
+        const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
         return { expression, type, statements: result.statements };
     }
@@ -6313,7 +6314,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         definitionMapValues.push({ key: 'type', value: metadata.type.value, quoted: false });
         // e.g. `pure: true`
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
-        const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
+        const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)], undefined, true);
         const type = createPipeType(metadata);
         return { expression, type };
     }
@@ -18221,7 +18222,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function compileDirectiveFromMetadata(meta, constantPool, bindingParser) {
         const definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         addFeatures(definitionMap, meta);
-        const expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
+        const expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createDirectiveType(meta);
         return { expression, type };
     }
@@ -18324,7 +18325,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (changeDetection != null && changeDetection !== ChangeDetectionStrategy.Default) {
             definitionMap.set('changeDetection', literal(changeDetection));
         }
-        const expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
+        const expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createComponentType(meta);
         return { expression, type };
     }
@@ -19164,7 +19165,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.3+33.sha-1735430');
+    const VERSION$1 = new Version('12.0.0-next.3+36.sha-03d47d5');
 
     /**
      * @license
@@ -47027,7 +47028,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.3+33.sha-1735430');
+    const VERSION$2 = new Version$1('12.0.0-next.3+36.sha-03d47d5');
 
     /**
      * @license
@@ -53268,7 +53269,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     ApplicationInitStatus.ɵfac = function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(ɵɵinject(APP_INITIALIZER, 8)); };
-    ApplicationInitStatus.ɵprov = ɵɵdefineInjectable({ token: ApplicationInitStatus, factory: ApplicationInitStatus.ɵfac });
+    ApplicationInitStatus.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: ApplicationInitStatus, factory: ApplicationInitStatus.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApplicationInitStatus, [{
             type: Injectable
         }], function () { return [{ type: undefined, decorators: [{
@@ -53359,7 +53360,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     Console.ɵfac = function Console_Factory(t) { return new (t || Console)(); };
-    Console.ɵprov = ɵɵdefineInjectable({ token: Console, factory: Console.ɵfac });
+    Console.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: Console, factory: Console.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Console, [{
             type: Injectable
         }], null, null); })();
@@ -53609,7 +53610,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     Compiler.ɵfac = function Compiler_Factory(t) { return new (t || Compiler)(); };
-    Compiler.ɵprov = ɵɵdefineInjectable({ token: Compiler, factory: Compiler.ɵfac });
+    Compiler.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: Compiler, factory: Compiler.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Compiler, [{
             type: Injectable
         }], null, null); })();
@@ -54217,7 +54218,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     Testability.ɵfac = function Testability_Factory(t) { return new (t || Testability)(ɵɵinject(NgZone)); };
-    Testability.ɵprov = ɵɵdefineInjectable({ token: Testability, factory: Testability.ɵfac });
+    Testability.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: Testability, factory: Testability.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Testability, [{
             type: Injectable
         }], function () { return [{ type: NgZone }]; }, null); })();
@@ -54282,7 +54283,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     TestabilityRegistry.ɵfac = function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); };
-    TestabilityRegistry.ɵprov = ɵɵdefineInjectable({ token: TestabilityRegistry, factory: TestabilityRegistry.ɵfac });
+    TestabilityRegistry.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: TestabilityRegistry, factory: TestabilityRegistry.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TestabilityRegistry, [{
             type: Injectable
         }], function () { return []; }, null); })();
@@ -54596,7 +54597,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     PlatformRef.ɵfac = function PlatformRef_Factory(t) { return new (t || PlatformRef)(ɵɵinject(Injector)); };
-    PlatformRef.ɵprov = ɵɵdefineInjectable({ token: PlatformRef, factory: PlatformRef.ɵfac });
+    PlatformRef.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: PlatformRef, factory: PlatformRef.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PlatformRef, [{
             type: Injectable
         }], function () { return [{ type: Injector }]; }, null); })();
@@ -54935,7 +54936,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     ApplicationRef.ɵfac = function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(ɵɵinject(NgZone), ɵɵinject(Injector), ɵɵinject(ErrorHandler), ɵɵinject(ComponentFactoryResolver), ɵɵinject(ApplicationInitStatus)); };
-    ApplicationRef.ɵprov = ɵɵdefineInjectable({ token: ApplicationRef, factory: ApplicationRef.ɵfac });
+    ApplicationRef.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: ApplicationRef, factory: ApplicationRef.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApplicationRef, [{
             type: Injectable
         }], function () { return [{ type: NgZone }, { type: Injector }, { type: ErrorHandler }, { type: ComponentFactoryResolver }, { type: ApplicationInitStatus }]; }, null); })();
@@ -55019,7 +55020,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
     SystemJsNgModuleLoader.ɵfac = function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(ɵɵinject(Compiler), ɵɵinject(SystemJsNgModuleLoaderConfig, 8)); };
-    SystemJsNgModuleLoader.ɵprov = ɵɵdefineInjectable({ token: SystemJsNgModuleLoader, factory: SystemJsNgModuleLoader.ɵfac });
+    SystemJsNgModuleLoader.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: SystemJsNgModuleLoader, factory: SystemJsNgModuleLoader.ɵfac });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SystemJsNgModuleLoader, [{
             type: Injectable
         }], function () { return [{ type: Compiler }, { type: SystemJsNgModuleLoaderConfig, decorators: [{
@@ -55162,8 +55163,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // Inject ApplicationRef to make it eager...
         constructor(appRef) { }
     }
-    ApplicationModule.ɵmod = ɵɵdefineNgModule({ type: ApplicationModule });
-    ApplicationModule.ɵinj = ɵɵdefineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(ɵɵinject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
+    ApplicationModule.ɵmod = /*@__PURE__*/ ɵɵdefineNgModule({ type: ApplicationModule });
+    ApplicationModule.ɵinj = /*@__PURE__*/ ɵɵdefineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(ɵɵinject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
     (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApplicationModule, [{
             type: NgModule,
             args: [{ providers: APPLICATION_MODULE_PROVIDERS }]
