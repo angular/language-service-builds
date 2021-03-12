@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+11.sha-012a2b5
+ * @license Angular v12.0.0-next.4+12.sha-7096246
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -823,9 +823,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const createInjectionToken = makeMetadataFactory('InjectionToken', (desc) => ({ _desc: desc, ɵprov: undefined }));
     const createAttribute = makeMetadataFactory('Attribute', (attributeName) => ({ attributeName }));
     // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
-    // explicitly set. This value will be changed to `true` in v12.
-    // TODO(misko): switch the default in v12 to `true`. See: packages/core/src/metadata/di.ts
-    const emitDistinctChangesOnlyDefaultValue = false;
+    // explicitly set.
+    const emitDistinctChangesOnlyDefaultValue = true;
     const createContentChildren = makeMetadataFactory('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
     const createContentChild = makeMetadataFactory('ContentChild', (selector, data = {}) => (Object.assign({ selector, first: true, isViewQuery: false, descendants: true }, data)));
     const createViewChildren = makeMetadataFactory('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
@@ -19153,7 +19152,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+11.sha-012a2b5');
+    const VERSION$1 = new Version('12.0.0-next.4+12.sha-7096246');
 
     /**
      * @license
@@ -29730,9 +29729,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     const ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
     // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
-    // explicitly set. This value will be changed to `true` in v12.
-    // TODO(misko): switch the default in v12 to `true`. See: packages/compiler/src/core.ts
-    const emitDistinctChangesOnlyDefaultValue$1 = false;
+    // explicitly set.
+    const emitDistinctChangesOnlyDefaultValue$1 = true;
     /**
      * Base class for query metadata.
      *
@@ -35161,7 +35159,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.4+11.sha-012a2b5');
+    const VERSION$2 = new Version$1('12.0.0-next.4+12.sha-7096246');
 
     /**
      * @license
