@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+11.sha-012a2b5
+ * @license Angular v12.0.0-next.4+12.sha-7096246
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4068,9 +4068,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
-    // explicitly set. This value will be changed to `true` in v12.
-    // TODO(misko): switch the default in v12 to `true`. See: packages/core/src/metadata/di.ts
-    const emitDistinctChangesOnlyDefaultValue = false;
+    // explicitly set.
+    const emitDistinctChangesOnlyDefaultValue = true;
     var ViewEncapsulation;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
@@ -20383,7 +20382,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+11.sha-012a2b5');
+    const VERSION$1 = new Version('12.0.0-next.4+12.sha-7096246');
 
     /**
      * @license
@@ -21040,7 +21039,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+11.sha-012a2b5'));
+        definitionMap.set('version', literal('12.0.0-next.4+12.sha-7096246'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21081,8 +21080,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         meta.set('predicate', Array.isArray(query.predicate) ? asLiteral(query.predicate) : query.predicate);
         if (!query.emitDistinctChangesOnly) {
-            // `emitDistinctChangesOnly` is special because in future we expect it to be `true`. For this
-            // reason the absence should be interpreted as `true`.
+            // `emitDistinctChangesOnly` is special because we expect it to be `true`.
+            // Therefore we explicitly emit the field, and explicitly place it only when it's `false`.
             meta.set('emitDistinctChangesOnly', literal(false));
         }
         if (query.descendants) {
@@ -21261,7 +21260,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+11.sha-012a2b5'));
+        definitionMap.set('version', literal('12.0.0-next.4+12.sha-7096246'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21293,7 +21292,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.4+11.sha-012a2b5');
+    const VERSION$2 = new Version('12.0.0-next.4+12.sha-7096246');
 
     /**
      * @license
@@ -28961,7 +28960,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const emitDistinctChangesOnlyExpr = options.get('emitDistinctChangesOnly');
                 const emitDistinctChangesOnlyValue = evaluator.evaluate(emitDistinctChangesOnlyExpr);
                 if (typeof emitDistinctChangesOnlyValue !== 'boolean') {
-                    throw createValueHasWrongTypeError(emitDistinctChangesOnlyExpr, emitDistinctChangesOnlyValue, `@${name} options.emitDistinctChangesOnlys must be a boolean`);
+                    throw createValueHasWrongTypeError(emitDistinctChangesOnlyExpr, emitDistinctChangesOnlyValue, `@${name} options.emitDistinctChangesOnly must be a boolean`);
                 }
                 emitDistinctChangesOnly = emitDistinctChangesOnlyValue;
             }
