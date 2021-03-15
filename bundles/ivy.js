@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+26.sha-cc75e1d
+ * @license Angular v12.0.0-next.4+34.sha-1a9f526
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5876,10 +5876,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         name: 'ɵɵInjectorDef',
         moduleName: CORE$1,
     };
-    Identifiers$1.defineInjector = {
-        name: 'ɵɵdefineInjector',
-        moduleName: CORE$1,
-    };
+    Identifiers$1.defineInjector = { name: 'ɵɵdefineInjector', moduleName: CORE$1 };
+    Identifiers$1.declareInjector = { name: 'ɵɵngDeclareInjector', moduleName: CORE$1 };
     Identifiers$1.NgModuleDefWithMeta = {
         name: 'ɵɵNgModuleDefWithMeta',
         moduleName: CORE$1,
@@ -5889,6 +5887,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         moduleName: CORE$1,
     };
     Identifiers$1.defineNgModule = { name: 'ɵɵdefineNgModule', moduleName: CORE$1 };
+    Identifiers$1.declareNgModule = { name: 'ɵɵngDeclareNgModule', moduleName: CORE$1 };
     Identifiers$1.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE$1 };
     Identifiers$1.PipeDefWithMeta = { name: 'ɵɵPipeDefWithMeta', moduleName: CORE$1 };
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
@@ -6638,19 +6637,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Convert an object map with `Expression` values into a `LiteralMapExpr`.
-     */
-    function mapToMapExpression(map) {
-        const result = Object.keys(map).map(key => ({
-            key,
-            // The assertion here is because really TypeScript doesn't allow us to express that if the
-            // key is present, it will have a value, but this is true in reality.
-            value: map[key],
-            quoted: false,
-        }));
-        return literalMap(result);
-    }
     function typeWithParameters(type, numParams) {
         if (numParams === 0) {
             return expressionType(type);
@@ -6687,6 +6673,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const guardUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, guardNotDefined, guardExpr, /* type */ undefined, 
         /* sourceSpan */ undefined, true);
         return new BinaryOperatorExpr(BinaryOperator.And, guardUndefinedOrTrue, expr);
+    }
+    function wrapReference(value) {
+        const wrapped = new WrappedNodeExpr(value);
+        return { value: wrapped, type: wrapped };
+    }
+    function refsToArray(refs, shouldForwardDeclare) {
+        const values = literalArr(refs.map(ref => ref.value));
+        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
     /**
@@ -7994,7 +7988,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             body.push(importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt());
         }
         return {
-            factory: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, `${meta.name}_Factory`),
+            expression: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, `${meta.name}_Factory`),
             statements,
             type: expressionType(importExpr(Identifiers$1.FactoryDef, [typeWithParameters(meta.type.type, meta.typeArgumentCount), ctorDepsType]))
         };
@@ -8129,7 +8123,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             else {
                 result = {
                     statements: [],
-                    factory: fn([], [new ReturnStatement(meta.useFactory.callFn([]))])
+                    expression: fn([], [new ReturnStatement(meta.useFactory.callFn([]))])
                 };
             }
         }
@@ -8147,13 +8141,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             result = delegateToFactory(meta.type.value, meta.internalType);
         }
         const token = meta.internalType;
-        const injectableProps = { token, factory: result.factory };
+        const injectableProps = new DefinitionMap();
+        injectableProps.set('token', token);
+        injectableProps.set('factory', result.expression);
         // Only generate providedIn property if it has a non-null value
         if (meta.providedIn.value !== null) {
-            injectableProps.providedIn = meta.providedIn;
+            injectableProps.set('providedIn', meta.providedIn);
         }
         const expression = importExpr(Identifiers.ɵɵdefineInjectable)
-            .callFn([mapToMapExpression(injectableProps)], undefined, true);
+            .callFn([injectableProps.toLiteralMap()], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type.type, meta.typeArgumentCount)]));
         return {
             expression,
@@ -8167,7 +8163,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // If types are the same, we can generate `factory: type.ɵfac`
             // If types are different, we have to generate a wrapper function to ensure
             // the internal type has been resolved (`factory: function(t) { return type.ɵfac(t); }`)
-            factory: type.node === internalType.node ?
+            expression: type.node === internalType.node ?
                 internalType.prop('ɵfac') :
                 fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(internalType.callMethod('ɵfac', [variable('t')]))])
         };
@@ -8934,6 +8930,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function compileInjector(meta) {
+        const definitionMap = new DefinitionMap();
+        if (meta.providers !== null) {
+            definitionMap.set('providers', meta.providers);
+        }
+        if (meta.imports.length > 0) {
+            definitionMap.set('imports', literalArr(meta.imports));
+        }
+        const expression = importExpr(Identifiers$1.defineInjector).callFn([definitionMap.toLiteralMap()], undefined, true);
+        const type = createInjectorType(meta);
+        return { expression, type, statements: [] };
+    }
+    function createInjectorType(meta) {
+        return new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Implementation of `CompileReflector` which resolves references to @angular/core
      * symbols at runtime, according to a consumer-provided mapping.
@@ -8991,24 +9010,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        const { internalType, type: moduleType, bootstrap, declarations, imports, exports, schemas, containsForwardDecls, emitInline, id } = meta;
-        const additionalStatements = [];
-        const definitionMap = { type: internalType };
-        // Only generate the keys in the metadata if the arrays have values.
-        if (bootstrap.length) {
-            definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
+        const { internalType, bootstrap, declarations, imports, exports, schemas, containsForwardDecls, emitInline, id } = meta;
+        const statements = [];
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('type', internalType);
+        if (bootstrap.length > 0) {
+            definitionMap.set('bootstrap', refsToArray(bootstrap, containsForwardDecls));
         }
-        // If requested to emit scope information inline, pass the declarations, imports and exports to
-        // the `ɵɵdefineNgModule` call. The JIT compilation uses this.
+        // If requested to emit scope information inline, pass the `declarations`, `imports` and `exports`
+        // to the `ɵɵdefineNgModule()` call. The JIT compilation uses this.
         if (emitInline) {
-            if (declarations.length) {
-                definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
+            if (declarations.length > 0) {
+                definitionMap.set('declarations', refsToArray(declarations, containsForwardDecls));
             }
-            if (imports.length) {
-                definitionMap.imports = refsToArray(imports, containsForwardDecls);
+            if (imports.length > 0) {
+                definitionMap.set('imports', refsToArray(imports, containsForwardDecls));
             }
-            if (exports.length) {
-                definitionMap.exports = refsToArray(exports, containsForwardDecls);
+            if (exports.length > 0) {
+                definitionMap.set('exports', refsToArray(exports, containsForwardDecls));
             }
         }
         // If not emitting inline, the scope information is not passed into `ɵɵdefineNgModule` as it would
@@ -9016,21 +9035,51 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         else {
             const setNgModuleScopeCall = generateSetNgModuleScopeCall(meta);
             if (setNgModuleScopeCall !== null) {
-                additionalStatements.push(setNgModuleScopeCall);
+                statements.push(setNgModuleScopeCall);
             }
         }
-        if (schemas && schemas.length) {
-            definitionMap.schemas = literalArr(schemas.map(ref => ref.value));
+        if (schemas !== null && schemas.length > 0) {
+            definitionMap.set('schemas', literalArr(schemas.map(ref => ref.value)));
         }
-        if (id) {
-            definitionMap.id = id;
+        if (id !== null) {
+            definitionMap.set('id', id);
         }
-        const expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)], undefined, true);
-        const type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
+        const expression = importExpr(Identifiers$1.defineNgModule).callFn([definitionMap.toLiteralMap()], undefined, true);
+        const type = createNgModuleType(meta);
+        return { expression, type, statements };
+    }
+    /**
+     * This function is used in JIT mode to generate the call to `ɵɵdefineNgModule()` from a call to
+     * `ɵɵngDeclareNgModule()`.
+     */
+    function compileNgModuleDeclarationExpression(meta) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('type', new WrappedNodeExpr(meta.type));
+        if (meta.bootstrap !== undefined) {
+            definitionMap.set('bootstrap', new WrappedNodeExpr(meta.bootstrap));
+        }
+        if (meta.declarations !== undefined) {
+            definitionMap.set('declarations', new WrappedNodeExpr(meta.declarations));
+        }
+        if (meta.imports !== undefined) {
+            definitionMap.set('imports', new WrappedNodeExpr(meta.imports));
+        }
+        if (meta.exports !== undefined) {
+            definitionMap.set('exports', new WrappedNodeExpr(meta.exports));
+        }
+        if (meta.schemas !== undefined) {
+            definitionMap.set('schemas', new WrappedNodeExpr(meta.schemas));
+        }
+        if (meta.id !== undefined) {
+            definitionMap.set('id', new WrappedNodeExpr(meta.id));
+        }
+        return importExpr(Identifiers$1.defineNgModule).callFn([definitionMap.toLiteralMap()]);
+    }
+    function createNgModuleType({ type: moduleType, declarations, imports, exports }) {
+        return new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
             new ExpressionType(moduleType.type), tupleTypeOf(declarations), tupleTypeOf(imports),
             tupleTypeOf(exports)
         ]));
-        return { expression, type, additionalStatements };
     }
     /**
      * Generates a function call to `ɵɵsetNgModuleScope` with all necessary information so that the
@@ -9040,23 +9089,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function generateSetNgModuleScopeCall(meta) {
         const { adjacentType: moduleType, declarations, imports, exports, containsForwardDecls } = meta;
-        const scopeMap = {};
-        if (declarations.length) {
-            scopeMap.declarations = refsToArray(declarations, containsForwardDecls);
+        const scopeMap = new DefinitionMap();
+        if (declarations.length > 0) {
+            scopeMap.set('declarations', refsToArray(declarations, containsForwardDecls));
         }
-        if (imports.length) {
-            scopeMap.imports = refsToArray(imports, containsForwardDecls);
+        if (imports.length > 0) {
+            scopeMap.set('imports', refsToArray(imports, containsForwardDecls));
         }
-        if (exports.length) {
-            scopeMap.exports = refsToArray(exports, containsForwardDecls);
+        if (exports.length > 0) {
+            scopeMap.set('exports', refsToArray(exports, containsForwardDecls));
         }
-        if (Object.keys(scopeMap).length === 0) {
+        if (Object.keys(scopeMap.values).length === 0) {
             return null;
         }
         // setNgModuleScope(...)
         const fnCall = new InvokeFunctionExpr(
         /* fn */ importExpr(Identifiers$1.setNgModuleScope), 
-        /* args */ [moduleType, mapToMapExpression(scopeMap)]);
+        /* args */ [moduleType, scopeMap.toLiteralMap()]);
         // (ngJitMode guard) && setNgModuleScope(...)
         const guardedCall = jitOnlyGuardedExpression(fnCall);
         // function() { (ngJitMode guard) && setNgModuleScope(...); }
@@ -9069,25 +9118,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         /* args */ []);
         return iifeCall.toStmt();
     }
-    function compileInjector(meta) {
-        const definitionMap = {};
-        if (meta.providers !== null) {
-            definitionMap.providers = meta.providers;
-        }
-        if (meta.imports.length > 0) {
-            definitionMap.imports = literalArr(meta.imports);
-        }
-        const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)], undefined, true);
-        const type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
-        return { expression, type };
-    }
     function tupleTypeOf(exp) {
         const types = exp.map(ref => typeofExpr(ref.type));
         return exp.length > 0 ? expressionType(literalArr(types)) : NONE_TYPE;
-    }
-    function refsToArray(refs, shouldForwardDeclare) {
-        const values = literalArr(refs.map(ref => ref.value));
-        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
     /**
@@ -9107,7 +9140,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)], undefined, true);
         const type = createPipeType(metadata);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     function createPipeType(metadata) {
         return new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
@@ -19442,7 +19475,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         addFeatures(definitionMap, meta);
         const expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createDirectiveType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
@@ -19545,7 +19578,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         const expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createComponentType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Creates the type specification from the component meta. This type is inserted into .d.ts files
@@ -20056,6 +20089,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const res = compileInjector(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
+        compileInjectorDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const meta = convertDeclareInjectorFacadeToMetadata(declaration);
+            const res = compileInjector(meta);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+        }
         compileNgModule(angularCoreEnv, sourceMapUrl, facade) {
             const meta = {
                 type: wrapReference(facade.type),
@@ -20072,6 +20110,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             };
             const res = compileNgModule(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+        }
+        compileNgModuleDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const expression = compileNgModuleDeclarationExpression(declaration);
+            return this.jitExpression(expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileDirective(angularCoreEnv, sourceMapUrl, facade) {
             const meta = convertDirectiveFacadeToMetadata(facade);
@@ -20119,7 +20161,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     Identifiers.inject,
                 target: meta.target,
             });
-            return this.jitExpression(factoryRes.factory, angularCoreEnv, sourceMapUrl, factoryRes.statements);
+            return this.jitExpression(factoryRes.expression, angularCoreEnv, sourceMapUrl, factoryRes.statements);
         }
         createParseSourceSpan(kind, typeName, sourceUrl) {
             return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
@@ -20149,10 +20191,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     const USE_FACTORY = Object.keys({ useFactory: null })[0];
     const USE_VALUE = Object.keys({ useValue: null })[0];
     const USE_EXISTING = Object.keys({ useExisting: null })[0];
-    const wrapReference = function (value) {
-        const wrapped = new WrappedNodeExpr(value);
-        return { value: wrapped, type: wrapped };
-    };
     function convertToR3QueryMetadata(facade) {
         return Object.assign(Object.assign({}, facade), { predicate: Array.isArray(facade.predicate) ? facade.predicate :
                 new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static, emitDistinctChangesOnly: facade.emitDistinctChangesOnly });
@@ -20370,6 +20408,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             pure: (_a = declaration.pure) !== null && _a !== void 0 ? _a : true,
         };
     }
+    function convertDeclareInjectorFacadeToMetadata(declaration) {
+        return {
+            name: declaration.type.name,
+            type: wrapReference(declaration.type),
+            internalType: new WrappedNodeExpr(declaration.type),
+            providers: declaration.providers !== undefined ? new WrappedNodeExpr(declaration.providers) :
+                null,
+            imports: declaration.imports !== undefined ?
+                declaration.imports.map(i => new WrappedNodeExpr(i)) :
+                [],
+        };
+    }
     function publishFacade(global) {
         const ng = global.ng || (global.ng = {});
         ng.ɵcompilerFacade = new CompilerFacadeImpl();
@@ -20382,7 +20432,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+26.sha-cc75e1d');
+    const VERSION$1 = new Version('12.0.0-next.4+34.sha-1a9f526');
 
     /**
      * @license
@@ -21031,7 +21081,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const definitionMap = createDirectiveDefinitionMap(meta);
         const expression = importExpr(Identifiers$1.declareDirective).callFn([definitionMap.toLiteralMap()]);
         const type = createDirectiveType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Gathers the declaration fields for a directive into a `DefinitionMap`. This allows for reusing
@@ -21039,7 +21089,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+26.sha-cc75e1d'));
+        definitionMap.set('version', literal('12.0.0-next.4+34.sha-1a9f526'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21130,7 +21180,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const definitionMap = createComponentDefinitionMap(meta, template);
         const expression = importExpr(Identifiers$1.declareComponent).callFn([definitionMap.toLiteralMap()]);
         const type = createComponentType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Gathers the declaration fields for a component into a `DefinitionMap`.
@@ -21245,6 +21295,74 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function compileDeclareInjectorFromMetadata(meta) {
+        const definitionMap = createInjectorDefinitionMap(meta);
+        const expression = importExpr(Identifiers$1.declareInjector).callFn([definitionMap.toLiteralMap()]);
+        const type = createInjectorType(meta);
+        return { expression, type, statements: [] };
+    }
+    function createInjectorDefinitionMap(meta) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('version', literal('12.0.0-next.4+34.sha-1a9f526'));
+        definitionMap.set('ngImport', importExpr(Identifiers$1.core));
+        definitionMap.set('type', meta.internalType);
+        definitionMap.set('providers', meta.providers);
+        if (meta.imports.length > 0) {
+            definitionMap.set('imports', literalArr(meta.imports));
+        }
+        return definitionMap;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function compileDeclareNgModuleFromMetadata(meta) {
+        const definitionMap = createNgModuleDefinitionMap(meta);
+        const expression = importExpr(Identifiers$1.declareNgModule).callFn([definitionMap.toLiteralMap()]);
+        const type = createNgModuleType(meta);
+        return { expression, type, statements: [] };
+    }
+    function createNgModuleDefinitionMap(meta) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('version', literal('12.0.0-next.4+34.sha-1a9f526'));
+        definitionMap.set('ngImport', importExpr(Identifiers$1.core));
+        definitionMap.set('type', meta.internalType);
+        // We only generate the keys in the metadata if the arrays contain values.
+        // We must wrap the arrays inside a function if any of the values are a forward reference to a
+        // not-yet-declared class. This is to support JIT execution of the `ɵɵngDeclareNgModule()` call.
+        // In the linker these wrappers are stripped and then reapplied for the `ɵɵdefineNgModule()` call.
+        if (meta.bootstrap.length > 0) {
+            definitionMap.set('bootstrap', refsToArray(meta.bootstrap, meta.containsForwardDecls));
+        }
+        if (meta.declarations.length > 0) {
+            definitionMap.set('declarations', refsToArray(meta.declarations, meta.containsForwardDecls));
+        }
+        if (meta.imports.length > 0) {
+            definitionMap.set('imports', refsToArray(meta.imports, meta.containsForwardDecls));
+        }
+        if (meta.exports.length > 0) {
+            definitionMap.set('exports', refsToArray(meta.exports, meta.containsForwardDecls));
+        }
+        if (meta.schemas !== null && meta.schemas.length > 0) {
+            definitionMap.set('schemas', literalArr(meta.schemas.map(ref => ref.value)));
+        }
+        if (meta.id !== null) {
+            definitionMap.set('id', meta.id);
+        }
+        return definitionMap;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Compile a Pipe declaration defined by the `R3PipeMetadata`.
      */
@@ -21252,7 +21370,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const definitionMap = createPipeDefinitionMap(meta);
         const expression = importExpr(Identifiers$1.declarePipe).callFn([definitionMap.toLiteralMap()]);
         const type = createPipeType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Gathers the declaration fields for a Pipe into a `DefinitionMap`. This allows for reusing
@@ -21260,7 +21378,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+26.sha-cc75e1d'));
+        definitionMap.set('version', literal('12.0.0-next.4+34.sha-1a9f526'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21292,7 +21410,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.4+26.sha-cc75e1d');
+    const VERSION$2 = new Version('12.0.0-next.4+34.sha-1a9f526');
 
     /**
      * @license
@@ -28369,7 +28487,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function compileNgFactoryDefField(metadata) {
         const res = compileFactoryFunction(metadata);
-        return { name: 'ɵfac', initializer: res.factory, statements: res.statements, type: res.type };
+        return { name: 'ɵfac', initializer: res.expression, statements: res.statements, type: res.type };
     }
 
     /**
@@ -28738,7 +28856,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const def = compileDeclareDirectiveFromMetadata(analysis.meta);
             return this.compileDirective(analysis, def);
         }
-        compileDirective(analysis, { expression: initializer, type }) {
+        compileDirective(analysis, { expression: initializer, statements, type }) {
             const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, analysis.meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Directive }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
@@ -28747,7 +28865,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 factoryRes, {
                     name: 'ɵdir',
                     initializer,
-                    statements: [],
+                    statements,
                     type,
                 }
             ];
@@ -29422,7 +29540,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const type = wrapTypeReference(this.reflector, node);
             const internalType = new WrappedNodeExpr(this.reflector.getInternalNameOfClass(node));
             const adjacentType = new WrappedNodeExpr(this.reflector.getAdjacentNameOfClass(node));
-            const ngModuleDef = {
+            const ngModuleMetadata = {
                 type,
                 internalType,
                 adjacentType,
@@ -29451,20 +29569,29 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (this.routeAnalyzer !== null) {
                 this.routeAnalyzer.add(node.getSourceFile(), name, rawImports, rawExports, rawProviders);
             }
-            const ngInjectorDef = {
+            const injectorMetadata = {
                 name,
                 type,
                 internalType,
                 providers: wrapperProviders,
                 imports: injectorImports,
             };
+            const factoryMetadata = {
+                name,
+                type,
+                internalType,
+                typeArgumentCount: 0,
+                deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
+                injectFn: Identifiers.inject,
+                target: R3FactoryTarget.NgModule,
+            };
             return {
                 analysis: {
                     id,
-                    schemas: schemas,
-                    mod: ngModuleDef,
-                    inj: ngInjectorDef,
-                    deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
+                    schemas,
+                    mod: ngModuleMetadata,
+                    inj: injectorMetadata,
+                    fac: factoryMetadata,
                     declarations: declarationRefs,
                     rawDeclarations,
                     imports: importRefs,
@@ -29545,15 +29672,42 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
         }
-        compileFull(node, { inj, mod, deps, metadataStmt, declarations }, resolution) {
-            //  Merge the injector imports (which are 'exports' that were later found to be NgModules)
-            //  computed during resolution with the ones from analysis.
-            const ngInjectorDef = compileInjector(Object.assign(Object.assign({}, inj), { imports: [...inj.imports, ...resolution.injectorImports] }));
+        compileFull(node, { inj, mod, fac, metadataStmt, declarations }, { injectorImports }) {
+            const factoryFn = compileFactoryFunction(fac);
+            const ngInjectorDef = compileInjector(this.mergeInjectorImports(inj, injectorImports));
             const ngModuleDef = compileNgModule(mod);
-            const ngModuleStatements = ngModuleDef.additionalStatements;
+            const statements = ngModuleDef.statements;
+            this.insertMetadataStatement(statements, metadataStmt);
+            this.appendRemoteScopingStatements(statements, node, declarations);
+            return this.compileNgModule(factoryFn, ngInjectorDef, ngModuleDef);
+        }
+        compilePartial(node, { inj, fac, mod, metadataStmt }, { injectorImports }) {
+            const factoryFn = compileFactoryFunction(fac);
+            const injectorDef = compileDeclareInjectorFromMetadata(this.mergeInjectorImports(inj, injectorImports));
+            const ngModuleDef = compileDeclareNgModuleFromMetadata(mod);
+            this.insertMetadataStatement(ngModuleDef.statements, metadataStmt);
+            // NOTE: no remote scoping required as this is banned in partial compilation.
+            return this.compileNgModule(factoryFn, injectorDef, ngModuleDef);
+        }
+        /**
+         *  Merge the injector imports (which are 'exports' that were later found to be NgModules)
+         *  computed during resolution with the ones from analysis.
+         */
+        mergeInjectorImports(inj, injectorImports) {
+            return Object.assign(Object.assign({}, inj), { imports: [...inj.imports, ...injectorImports] });
+        }
+        /**
+         * Add class metadata statements, if provided, to the `ngModuleStatements`.
+         */
+        insertMetadataStatement(ngModuleStatements, metadataStmt) {
             if (metadataStmt !== null) {
-                ngModuleStatements.push(metadataStmt);
+                ngModuleStatements.unshift(metadataStmt);
             }
+        }
+        /**
+         * Add remote scoping statements, as needed, to the `ngModuleStatements`.
+         */
+        appendRemoteScopingStatements(ngModuleStatements, node, declarations) {
             const context = getSourceFile(node);
             for (const decl of declarations) {
                 const remoteScope = this.scopeRegistry.getRemoteScope(decl.node);
@@ -29568,30 +29722,30 @@ Either add the @Injectable() decorator to '${provider.node.name
                     ngModuleStatements.push(callExpr.toStmt());
                 }
             }
+        }
+        compileNgModule(factoryFn, injectorDef, ngModuleDef) {
             const res = [
-                compileNgFactoryDefField({
-                    name: inj.name,
-                    type: inj.type,
-                    internalType: inj.internalType,
-                    typeArgumentCount: 0,
-                    deps,
-                    injectFn: Identifiers.inject,
-                    target: R3FactoryTarget.NgModule,
-                }),
+                {
+                    name: 'ɵfac',
+                    initializer: factoryFn.expression,
+                    statements: factoryFn.statements,
+                    type: factoryFn.type,
+                },
                 {
                     name: 'ɵmod',
                     initializer: ngModuleDef.expression,
-                    statements: ngModuleStatements,
+                    statements: ngModuleDef.statements,
                     type: ngModuleDef.type,
                 },
                 {
                     name: 'ɵinj',
-                    initializer: ngInjectorDef.expression,
-                    statements: [],
-                    type: ngInjectorDef.type,
+                    initializer: injectorDef.expression,
+                    statements: injectorDef.statements,
+                    type: injectorDef.type,
                 },
             ];
             if (this.localeId) {
+                // QUESTION: can this stuff be removed?
                 res.push({
                     name: 'ɵloc',
                     initializer: new LiteralExpr(this.localeId),
@@ -30292,7 +30446,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const def = compileDeclareComponentFromMetadata(meta, analysis.template);
             return this.compileComponent(analysis, def);
         }
-        compileComponent(analysis, { expression: initializer, type }) {
+        compileComponent(analysis, { expression: initializer, statements, type }) {
             const factoryRes = compileNgFactoryDefField(Object.assign(Object.assign({}, analysis.meta), { injectFn: Identifiers.directiveInject, target: R3FactoryTarget.Component }));
             if (analysis.metadataStmt !== null) {
                 factoryRes.statements.push(analysis.metadataStmt);
@@ -30301,7 +30455,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 factoryRes, {
                     name: 'ɵcmp',
                     initializer,
-                    statements: [],
+                    statements,
                     type,
                 }
             ];
@@ -31101,7 +31255,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 factoryRes, {
                     name: 'ɵpipe',
                     initializer: def.expression,
-                    statements: [],
+                    statements: def.statements,
                     type: def.type,
                 }
             ];

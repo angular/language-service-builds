@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+26.sha-cc75e1d
+ * @license Angular v12.0.0-next.4+34.sha-1a9f526
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3085,10 +3085,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         name: 'ɵɵInjectorDef',
         moduleName: CORE$1,
     };
-    Identifiers$1.defineInjector = {
-        name: 'ɵɵdefineInjector',
-        moduleName: CORE$1,
-    };
+    Identifiers$1.defineInjector = { name: 'ɵɵdefineInjector', moduleName: CORE$1 };
+    Identifiers$1.declareInjector = { name: 'ɵɵngDeclareInjector', moduleName: CORE$1 };
     Identifiers$1.NgModuleDefWithMeta = {
         name: 'ɵɵNgModuleDefWithMeta',
         moduleName: CORE$1,
@@ -3098,6 +3096,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         moduleName: CORE$1,
     };
     Identifiers$1.defineNgModule = { name: 'ɵɵdefineNgModule', moduleName: CORE$1 };
+    Identifiers$1.declareNgModule = { name: 'ɵɵngDeclareNgModule', moduleName: CORE$1 };
     Identifiers$1.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE$1 };
     Identifiers$1.PipeDefWithMeta = { name: 'ɵɵPipeDefWithMeta', moduleName: CORE$1 };
     Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
@@ -3847,19 +3846,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Convert an object map with `Expression` values into a `LiteralMapExpr`.
-     */
-    function mapToMapExpression(map) {
-        const result = Object.keys(map).map(key => ({
-            key,
-            // The assertion here is because really TypeScript doesn't allow us to express that if the
-            // key is present, it will have a value, but this is true in reality.
-            value: map[key],
-            quoted: false,
-        }));
-        return literalMap(result);
-    }
     function typeWithParameters(type, numParams) {
         if (numParams === 0) {
             return expressionType(type);
@@ -3893,6 +3879,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const guardUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, guardNotDefined, guardExpr, /* type */ undefined, 
         /* sourceSpan */ undefined, true);
         return new BinaryOperatorExpr(BinaryOperator.And, guardUndefinedOrTrue, expr);
+    }
+    function wrapReference(value) {
+        const wrapped = new WrappedNodeExpr(value);
+        return { value: wrapped, type: wrapped };
+    }
+    function refsToArray(refs, shouldForwardDeclare) {
+        const values = literalArr(refs.map(ref => ref.value));
+        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
     /**
@@ -5178,7 +5172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             body.push(importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt());
         }
         return {
-            factory: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, `${meta.name}_Factory`),
+            expression: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, `${meta.name}_Factory`),
             statements,
             type: expressionType(importExpr(Identifiers$1.FactoryDef, [typeWithParameters(meta.type.type, meta.typeArgumentCount), ctorDepsType]))
         };
@@ -5313,7 +5307,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             else {
                 result = {
                     statements: [],
-                    factory: fn([], [new ReturnStatement(meta.useFactory.callFn([]))])
+                    expression: fn([], [new ReturnStatement(meta.useFactory.callFn([]))])
                 };
             }
         }
@@ -5331,13 +5325,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             result = delegateToFactory(meta.type.value, meta.internalType);
         }
         const token = meta.internalType;
-        const injectableProps = { token, factory: result.factory };
+        const injectableProps = new DefinitionMap();
+        injectableProps.set('token', token);
+        injectableProps.set('factory', result.expression);
         // Only generate providedIn property if it has a non-null value
         if (meta.providedIn.value !== null) {
-            injectableProps.providedIn = meta.providedIn;
+            injectableProps.set('providedIn', meta.providedIn);
         }
         const expression = importExpr(Identifiers.ɵɵdefineInjectable)
-            .callFn([mapToMapExpression(injectableProps)], undefined, true);
+            .callFn([injectableProps.toLiteralMap()], undefined, true);
         const type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type.type, meta.typeArgumentCount)]));
         return {
             expression,
@@ -5351,7 +5347,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // If types are the same, we can generate `factory: type.ɵfac`
             // If types are different, we have to generate a wrapper function to ensure
             // the internal type has been resolved (`factory: function(t) { return type.ɵfac(t); }`)
-            factory: type.node === internalType.node ?
+            expression: type.node === internalType.node ?
                 internalType.prop('ɵfac') :
                 fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(internalType.callMethod('ɵfac', [variable('t')]))])
         };
@@ -6131,6 +6127,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function compileInjector(meta) {
+        const definitionMap = new DefinitionMap();
+        if (meta.providers !== null) {
+            definitionMap.set('providers', meta.providers);
+        }
+        if (meta.imports.length > 0) {
+            definitionMap.set('imports', literalArr(meta.imports));
+        }
+        const expression = importExpr(Identifiers$1.defineInjector).callFn([definitionMap.toLiteralMap()], undefined, true);
+        const type = createInjectorType(meta);
+        return { expression, type, statements: [] };
+    }
+    function createInjectorType(meta) {
+        return new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Implementation of `CompileReflector` which resolves references to @angular/core
      * symbols at runtime, according to a consumer-provided mapping.
@@ -6188,24 +6207,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        const { internalType, type: moduleType, bootstrap, declarations, imports, exports, schemas, containsForwardDecls, emitInline, id } = meta;
-        const additionalStatements = [];
-        const definitionMap = { type: internalType };
-        // Only generate the keys in the metadata if the arrays have values.
-        if (bootstrap.length) {
-            definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
+        const { internalType, bootstrap, declarations, imports, exports, schemas, containsForwardDecls, emitInline, id } = meta;
+        const statements = [];
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('type', internalType);
+        if (bootstrap.length > 0) {
+            definitionMap.set('bootstrap', refsToArray(bootstrap, containsForwardDecls));
         }
-        // If requested to emit scope information inline, pass the declarations, imports and exports to
-        // the `ɵɵdefineNgModule` call. The JIT compilation uses this.
+        // If requested to emit scope information inline, pass the `declarations`, `imports` and `exports`
+        // to the `ɵɵdefineNgModule()` call. The JIT compilation uses this.
         if (emitInline) {
-            if (declarations.length) {
-                definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
+            if (declarations.length > 0) {
+                definitionMap.set('declarations', refsToArray(declarations, containsForwardDecls));
             }
-            if (imports.length) {
-                definitionMap.imports = refsToArray(imports, containsForwardDecls);
+            if (imports.length > 0) {
+                definitionMap.set('imports', refsToArray(imports, containsForwardDecls));
             }
-            if (exports.length) {
-                definitionMap.exports = refsToArray(exports, containsForwardDecls);
+            if (exports.length > 0) {
+                definitionMap.set('exports', refsToArray(exports, containsForwardDecls));
             }
         }
         // If not emitting inline, the scope information is not passed into `ɵɵdefineNgModule` as it would
@@ -6213,21 +6232,51 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         else {
             const setNgModuleScopeCall = generateSetNgModuleScopeCall(meta);
             if (setNgModuleScopeCall !== null) {
-                additionalStatements.push(setNgModuleScopeCall);
+                statements.push(setNgModuleScopeCall);
             }
         }
-        if (schemas && schemas.length) {
-            definitionMap.schemas = literalArr(schemas.map(ref => ref.value));
+        if (schemas !== null && schemas.length > 0) {
+            definitionMap.set('schemas', literalArr(schemas.map(ref => ref.value)));
         }
-        if (id) {
-            definitionMap.id = id;
+        if (id !== null) {
+            definitionMap.set('id', id);
         }
-        const expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)], undefined, true);
-        const type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
+        const expression = importExpr(Identifiers$1.defineNgModule).callFn([definitionMap.toLiteralMap()], undefined, true);
+        const type = createNgModuleType(meta);
+        return { expression, type, statements };
+    }
+    /**
+     * This function is used in JIT mode to generate the call to `ɵɵdefineNgModule()` from a call to
+     * `ɵɵngDeclareNgModule()`.
+     */
+    function compileNgModuleDeclarationExpression(meta) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('type', new WrappedNodeExpr(meta.type));
+        if (meta.bootstrap !== undefined) {
+            definitionMap.set('bootstrap', new WrappedNodeExpr(meta.bootstrap));
+        }
+        if (meta.declarations !== undefined) {
+            definitionMap.set('declarations', new WrappedNodeExpr(meta.declarations));
+        }
+        if (meta.imports !== undefined) {
+            definitionMap.set('imports', new WrappedNodeExpr(meta.imports));
+        }
+        if (meta.exports !== undefined) {
+            definitionMap.set('exports', new WrappedNodeExpr(meta.exports));
+        }
+        if (meta.schemas !== undefined) {
+            definitionMap.set('schemas', new WrappedNodeExpr(meta.schemas));
+        }
+        if (meta.id !== undefined) {
+            definitionMap.set('id', new WrappedNodeExpr(meta.id));
+        }
+        return importExpr(Identifiers$1.defineNgModule).callFn([definitionMap.toLiteralMap()]);
+    }
+    function createNgModuleType({ type: moduleType, declarations, imports, exports }) {
+        return new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
             new ExpressionType(moduleType.type), tupleTypeOf(declarations), tupleTypeOf(imports),
             tupleTypeOf(exports)
         ]));
-        return { expression, type, additionalStatements };
     }
     /**
      * Generates a function call to `ɵɵsetNgModuleScope` with all necessary information so that the
@@ -6237,23 +6286,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function generateSetNgModuleScopeCall(meta) {
         const { adjacentType: moduleType, declarations, imports, exports, containsForwardDecls } = meta;
-        const scopeMap = {};
-        if (declarations.length) {
-            scopeMap.declarations = refsToArray(declarations, containsForwardDecls);
+        const scopeMap = new DefinitionMap();
+        if (declarations.length > 0) {
+            scopeMap.set('declarations', refsToArray(declarations, containsForwardDecls));
         }
-        if (imports.length) {
-            scopeMap.imports = refsToArray(imports, containsForwardDecls);
+        if (imports.length > 0) {
+            scopeMap.set('imports', refsToArray(imports, containsForwardDecls));
         }
-        if (exports.length) {
-            scopeMap.exports = refsToArray(exports, containsForwardDecls);
+        if (exports.length > 0) {
+            scopeMap.set('exports', refsToArray(exports, containsForwardDecls));
         }
-        if (Object.keys(scopeMap).length === 0) {
+        if (Object.keys(scopeMap.values).length === 0) {
             return null;
         }
         // setNgModuleScope(...)
         const fnCall = new InvokeFunctionExpr(
         /* fn */ importExpr(Identifiers$1.setNgModuleScope), 
-        /* args */ [moduleType, mapToMapExpression(scopeMap)]);
+        /* args */ [moduleType, scopeMap.toLiteralMap()]);
         // (ngJitMode guard) && setNgModuleScope(...)
         const guardedCall = jitOnlyGuardedExpression(fnCall);
         // function() { (ngJitMode guard) && setNgModuleScope(...); }
@@ -6266,25 +6315,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /* args */ []);
         return iifeCall.toStmt();
     }
-    function compileInjector(meta) {
-        const definitionMap = {};
-        if (meta.providers !== null) {
-            definitionMap.providers = meta.providers;
-        }
-        if (meta.imports.length > 0) {
-            definitionMap.imports = literalArr(meta.imports);
-        }
-        const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)], undefined, true);
-        const type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
-        return { expression, type };
-    }
     function tupleTypeOf(exp) {
         const types = exp.map(ref => typeofExpr(ref.type));
         return exp.length > 0 ? expressionType(literalArr(types)) : NONE_TYPE;
-    }
-    function refsToArray(refs, shouldForwardDeclare) {
-        const values = literalArr(refs.map(ref => ref.value));
-        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
     /**
@@ -6304,7 +6337,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)], undefined, true);
         const type = createPipeType(metadata);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     function createPipeType(metadata) {
         return new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
@@ -18212,7 +18245,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         addFeatures(definitionMap, meta);
         const expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createDirectiveType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
@@ -18315,7 +18348,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         const expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createComponentType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Creates the type specification from the component meta. This type is inserted into .d.ts files
@@ -18826,6 +18859,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const res = compileInjector(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
+        compileInjectorDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const meta = convertDeclareInjectorFacadeToMetadata(declaration);
+            const res = compileInjector(meta);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+        }
         compileNgModule(angularCoreEnv, sourceMapUrl, facade) {
             const meta = {
                 type: wrapReference(facade.type),
@@ -18842,6 +18880,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             };
             const res = compileNgModule(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+        }
+        compileNgModuleDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const expression = compileNgModuleDeclarationExpression(declaration);
+            return this.jitExpression(expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileDirective(angularCoreEnv, sourceMapUrl, facade) {
             const meta = convertDirectiveFacadeToMetadata(facade);
@@ -18889,7 +18931,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     Identifiers.inject,
                 target: meta.target,
             });
-            return this.jitExpression(factoryRes.factory, angularCoreEnv, sourceMapUrl, factoryRes.statements);
+            return this.jitExpression(factoryRes.expression, angularCoreEnv, sourceMapUrl, factoryRes.statements);
         }
         createParseSourceSpan(kind, typeName, sourceUrl) {
             return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
@@ -18919,10 +18961,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const USE_FACTORY = Object.keys({ useFactory: null })[0];
     const USE_VALUE = Object.keys({ useValue: null })[0];
     const USE_EXISTING = Object.keys({ useExisting: null })[0];
-    const wrapReference = function (value) {
-        const wrapped = new WrappedNodeExpr(value);
-        return { value: wrapped, type: wrapped };
-    };
     function convertToR3QueryMetadata(facade) {
         return Object.assign(Object.assign({}, facade), { predicate: Array.isArray(facade.predicate) ? facade.predicate :
                 new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static, emitDistinctChangesOnly: facade.emitDistinctChangesOnly });
@@ -19140,6 +19178,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             pure: (_a = declaration.pure) !== null && _a !== void 0 ? _a : true,
         };
     }
+    function convertDeclareInjectorFacadeToMetadata(declaration) {
+        return {
+            name: declaration.type.name,
+            type: wrapReference(declaration.type),
+            internalType: new WrappedNodeExpr(declaration.type),
+            providers: declaration.providers !== undefined ? new WrappedNodeExpr(declaration.providers) :
+                null,
+            imports: declaration.imports !== undefined ?
+                declaration.imports.map(i => new WrappedNodeExpr(i)) :
+                [],
+        };
+    }
     function publishFacade(global) {
         const ng = global.ng || (global.ng = {});
         ng.ɵcompilerFacade = new CompilerFacadeImpl();
@@ -19152,7 +19202,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+26.sha-cc75e1d');
+    const VERSION$1 = new Version('12.0.0-next.4+34.sha-1a9f526');
 
     /**
      * @license
@@ -46996,7 +47046,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.4+26.sha-cc75e1d');
+    const VERSION$2 = new Version$1('12.0.0-next.4+34.sha-1a9f526');
 
     /**
      * @license
