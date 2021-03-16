@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+40.sha-6bdad5e
+ * @license Angular v12.0.0-next.4+42.sha-66e9970
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20432,7 +20432,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+40.sha-6bdad5e');
+    const VERSION$1 = new Version('12.0.0-next.4+42.sha-66e9970');
 
     /**
      * @license
@@ -21089,7 +21089,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+40.sha-6bdad5e'));
+        definitionMap.set('version', literal('12.0.0-next.4+42.sha-66e9970'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21303,7 +21303,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+40.sha-6bdad5e'));
+        definitionMap.set('version', literal('12.0.0-next.4+42.sha-66e9970'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21328,7 +21328,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+40.sha-6bdad5e'));
+        definitionMap.set('version', literal('12.0.0-next.4+42.sha-66e9970'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21378,7 +21378,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+40.sha-6bdad5e'));
+        definitionMap.set('version', literal('12.0.0-next.4+42.sha-66e9970'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21410,7 +21410,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.4+40.sha-6bdad5e');
+    const VERSION$2 = new Version('12.0.0-next.4+42.sha-66e9970');
 
     /**
      * @license
@@ -23029,6 +23029,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * Indicates the `__spreadArrays` TypeScript helper function.
          */
         KnownDeclaration[KnownDeclaration["TsHelperSpreadArrays"] = 3] = "TsHelperSpreadArrays";
+        /**
+         * Indicates the `__spreadArray` TypeScript helper function.
+         */
+        KnownDeclaration[KnownDeclaration["TsHelperSpreadArray"] = 4] = "TsHelperSpreadArray";
+        /**
+         * Indicates the `__read` TypeScript helper function.
+         */
+        KnownDeclaration[KnownDeclaration["TsHelperRead"] = 5] = "TsHelperRead";
     })(KnownDeclaration || (KnownDeclaration = {}));
     /**
      * Returns true if the `decl` is a `ConcreteDeclaration` (ie. that its `node` property is a
@@ -24898,6 +24906,45 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return result;
         }
     }
+    // Used for `__spreadArray` TypeScript helper function.
+    class SpreadArrayHelperFn extends KnownFn {
+        evaluate(node, args) {
+            if (args.length !== 2) {
+                return DynamicValue.fromUnknown(node);
+            }
+            const [to, from] = args;
+            if (to instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, to);
+            }
+            else if (from instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, from);
+            }
+            if (!Array.isArray(to)) {
+                return DynamicValue.fromInvalidExpressionType(node, to);
+            }
+            else if (!Array.isArray(from)) {
+                return DynamicValue.fromInvalidExpressionType(node, from);
+            }
+            return to.concat(from);
+        }
+    }
+    // Used for `__read` TypeScript helper function.
+    class ReadHelperFn extends KnownFn {
+        evaluate(node, args) {
+            if (args.length !== 1) {
+                // The `__read` helper accepts a second argument `n` but that case is not supported.
+                return DynamicValue.fromUnknown(node);
+            }
+            const [value] = args;
+            if (value instanceof DynamicValue) {
+                return DynamicValue.fromDynamicInput(node, value);
+            }
+            if (!Array.isArray(value)) {
+                return DynamicValue.fromInvalidExpressionType(node, value);
+            }
+            return value;
+        }
+    }
 
     /**
      * @license
@@ -24912,6 +24959,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     const assignTsHelperFn = new AssignHelperFn();
     /** Resolved value for the `__spread()` and `__spreadArrays()` TypeScript helper declarations. */
     const spreadTsHelperFn = new SpreadHelperFn();
+    /** Resolved value for the `__spreadArray()` TypeScript helper declarations. */
+    const spreadArrayTsHelperFn = new SpreadArrayHelperFn();
+    /** Resolved value for the `__read()` TypeScript helper declarations. */
+    const readTsHelperFn = new ReadHelperFn();
     /**
      * Resolves the specified known declaration to a resolved value. For example,
      * the known JavaScript global `Object` will resolve to a `Map` that provides the
@@ -24926,6 +24977,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             case KnownDeclaration.TsHelperSpread:
             case KnownDeclaration.TsHelperSpreadArrays:
                 return spreadTsHelperFn;
+            case KnownDeclaration.TsHelperSpreadArray:
+                return spreadArrayTsHelperFn;
+            case KnownDeclaration.TsHelperRead:
+                return readTsHelperFn;
             default:
                 throw new Error(`Cannot resolve known declaration. Received: ${KnownDeclaration[decl]}.`);
         }
