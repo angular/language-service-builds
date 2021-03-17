@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+48.sha-eb74a96
+ * @license Angular v12.0.0-next.4+50.sha-fa04894
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4565,7 +4565,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // - "\" would otherwise indicate that the next character is a control character.
             // - "`" and "${" are template string control sequences that would otherwise prematurely
             // indicate the end of the template literal element.
-            this.rawText = (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
+            this.rawText =
+                (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
         }
     }
     class MessagePiece {
@@ -8181,7 +8182,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         /[<>]/,
         /^[{}]$/,
         /&(#|[a-z])/i,
-        /^\/\//,
+        /^\/\//, // comment
     ];
     function assertInterpolationSymbols(identifier, value) {
         if (value != null && !(Array.isArray(value) && value.length == 2)) {
@@ -20432,7 +20433,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+48.sha-eb74a96');
+    const VERSION$1 = new Version('12.0.0-next.4+50.sha-fa04894');
 
     /**
      * @license
@@ -21089,7 +21090,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+48.sha-eb74a96'));
+        definitionMap.set('version', literal('12.0.0-next.4+50.sha-fa04894'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21305,7 +21306,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+48.sha-eb74a96'));
+        definitionMap.set('version', literal('12.0.0-next.4+50.sha-fa04894'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21330,7 +21331,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+48.sha-eb74a96'));
+        definitionMap.set('version', literal('12.0.0-next.4+50.sha-fa04894'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21380,7 +21381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+48.sha-eb74a96'));
+        definitionMap.set('version', literal('12.0.0-next.4+50.sha-fa04894'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21412,7 +21413,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.4+48.sha-eb74a96');
+    const VERSION$2 = new Version('12.0.0-next.4+50.sha-fa04894');
 
     /**
      * @license
@@ -32369,6 +32370,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         selector: dir.selector,
                     };
                 })),
+                // cast b/c pre-TypeScript 3.5 unions aren't well discriminated
             };
             this.elementAndTemplateIdentifierCache.set(node, identifier);
             return identifier;
