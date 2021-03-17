@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+48.sha-eb74a96
+ * @license Angular v12.0.0-next.4+50.sha-fa04894
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1351,7 +1351,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // - "\" would otherwise indicate that the next character is a control character.
             // - "`" and "${" are template string control sequences that would otherwise prematurely
             // indicate the end of the template literal element.
-            this.rawText = (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
+            this.rawText =
+                (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
         }
     }
     class MessagePiece {
@@ -5378,7 +5379,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /[<>]/,
         /^[{}]$/,
         /&(#|[a-z])/i,
-        /^\/\//,
+        /^\/\//, // comment
     ];
     function assertInterpolationSymbols(identifier, value) {
         if (value != null && !(Array.isArray(value) && value.length == 2)) {
@@ -19202,7 +19203,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+48.sha-eb74a96');
+    const VERSION$1 = new Version('12.0.0-next.4+50.sha-fa04894');
 
     /**
      * @license
@@ -28098,7 +28099,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const TViewTypeAsString = [
         'Root',
         'Component',
-        'Embedded',
+        'Embedded', // 2
     ];
 
     /**
@@ -38661,6 +38662,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     const COPY_DIRECTIVE_FIELDS = [
         // The child class should use the providers of its parent.
         'providersResolver',
+        // Not listed here are any fields which are handled by the `ɵɵInheritDefinitionFeature`, such
+        // as inputs, outputs, and host binding functions.
     ];
     /**
      * Fields which exist only on component definitions, and need to be copied from parent to child
@@ -47046,7 +47049,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.4+48.sha-eb74a96');
+    const VERSION$2 = new Version$1('12.0.0-next.4+50.sha-fa04894');
 
     /**
      * @license
@@ -57493,7 +57496,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             );
             const htmlResult = htmlParser.parse(template.source, fileName, {
                 tokenizeExpansionForms: true,
-                preserveLineEndings: true,
+                preserveLineEndings: true, // do not convert CRLF to LF
             });
             const { directives, pipes, schemas } = this.getModuleMetadataForDirective(classSymbol);
             const parseResult = parser.tryParseHtml(htmlResult, data.metadata, directives, pipes, schemas);
