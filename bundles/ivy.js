@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.4+52.sha-02e8901
+ * @license Angular v12.0.0-next.5+3.sha-81d2aab
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20433,7 +20433,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.4+52.sha-02e8901');
+    const VERSION$1 = new Version('12.0.0-next.5+3.sha-81d2aab');
 
     /**
      * @license
@@ -21090,7 +21090,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+52.sha-02e8901'));
+        definitionMap.set('version', literal('12.0.0-next.5+3.sha-81d2aab'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21306,7 +21306,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+52.sha-02e8901'));
+        definitionMap.set('version', literal('12.0.0-next.5+3.sha-81d2aab'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21331,7 +21331,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+52.sha-02e8901'));
+        definitionMap.set('version', literal('12.0.0-next.5+3.sha-81d2aab'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21381,7 +21381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.4+52.sha-02e8901'));
+        definitionMap.set('version', literal('12.0.0-next.5+3.sha-81d2aab'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21413,7 +21413,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.4+52.sha-02e8901');
+    const VERSION$2 = new Version('12.0.0-next.5+3.sha-81d2aab');
 
     /**
      * @license
@@ -36505,15 +36505,10 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     /**
-     * A `TcbOp` which constructs an instance of a directive _without_ setting any of its inputs. Inputs
-     * are later set in the `TcbDirectiveInputsOp`. Type checking was found to be faster when done in
-     * this way as opposed to `TcbDirectiveCtorOp` which is only necessary when the directive is
-     * generic.
-     *
-     * Executing this operation returns a reference to the directive instance variable with its inferred
-     * type.
+     * A `TcbOp` which constructs an instance of a directive. For generic directives, generic
+     * parameters are set to `any` type.
      */
-    class TcbDirectiveTypeOp extends TcbOp {
+    class TcbDirectiveTypeOpBase extends TcbOp {
         constructor(tcb, scope, node, dir) {
             super();
             this.tcb = tcb;
@@ -36528,12 +36523,63 @@ Either add the @Injectable() decorator to '${provider.node.name
             return true;
         }
         execute() {
+            const dirRef = this.dir.ref;
+            const rawType = this.tcb.env.referenceType(this.dir.ref);
+            let type;
+            if (this.dir.isGeneric === false || dirRef.node.typeParameters === undefined) {
+                type = rawType;
+            }
+            else {
+                if (!ts$1.isTypeReferenceNode(rawType)) {
+                    throw new Error(`Expected TypeReferenceNode when referencing the type for ${this.dir.ref.debugName}`);
+                }
+                const typeArguments = dirRef.node.typeParameters.map(() => ts$1.factory.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
+                type = ts$1.factory.createTypeReferenceNode(rawType.typeName, typeArguments);
+            }
             const id = this.tcb.allocateId();
-            const type = this.tcb.env.referenceType(this.dir.ref);
             addExpressionIdentifier(type, ExpressionIdentifier.DIRECTIVE);
             addParseSpanInfo(type, this.node.startSourceSpan || this.node.sourceSpan);
             this.scope.addStatement(tsDeclareVariable(id, type));
             return id;
+        }
+    }
+    /**
+     * A `TcbOp` which constructs an instance of a non-generic directive _without_ setting any of its
+     * inputs. Inputs  are later set in the `TcbDirectiveInputsOp`. Type checking was found to be
+     * faster when done in this way as opposed to `TcbDirectiveCtorOp` which is only necessary when the
+     * directive is generic.
+     *
+     * Executing this operation returns a reference to the directive instance variable with its inferred
+     * type.
+     */
+    class TcbNonGenericDirectiveTypeOp extends TcbDirectiveTypeOpBase {
+        /**
+         * Creates a variable declaration for this op's directive of the argument type. Returns the id of
+         * the newly created variable.
+         */
+        execute() {
+            const dirRef = this.dir.ref;
+            if (this.dir.isGeneric) {
+                throw new Error(`Assertion Error: expected ${dirRef.debugName} not to be generic.`);
+            }
+            return super.execute();
+        }
+    }
+    /**
+     * A `TcbOp` which constructs an instance of a generic directive with its generic parameters set
+     * to `any` type. This op is like `TcbDirectiveTypeOp`, except that generic parameters are set to
+     * `any` type. This is used for situations where we want to avoid inlining.
+     *
+     * Executing this operation returns a reference to the directive instance variable with its generic
+     * type parameters set to `any`.
+     */
+    class TcbGenericDirectiveTypeWithAnyParamsOp extends TcbDirectiveTypeOpBase {
+        execute() {
+            const dirRef = this.dir.ref;
+            if (dirRef.node.typeParameters === undefined) {
+                throw new Error(`Assertion Error: expected typeParameters when creating a declaration for ${dirRef.debugName}`);
+            }
+            return super.execute();
         }
     }
     /**
@@ -37457,8 +37503,26 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const dirMap = new Map();
             for (const dir of directives) {
-                const directiveOp = dir.isGeneric ? new TcbDirectiveCtorOp(this.tcb, this, node, dir) :
-                    new TcbDirectiveTypeOp(this.tcb, this, node, dir);
+                let directiveOp;
+                const host = this.tcb.env.reflector;
+                const dirRef = dir.ref;
+                if (!dir.isGeneric) {
+                    // The most common case is that when a directive is not generic, we use the normal
+                    // `TcbNonDirectiveTypeOp`.
+                    directiveOp = new TcbNonGenericDirectiveTypeOp(this.tcb, this, node, dir);
+                }
+                else if (!requiresInlineTypeCtor(dirRef.node, host) ||
+                    this.tcb.env.config.useInlineTypeConstructors) {
+                    // For generic directives, we use a type constructor to infer types. If a directive requires
+                    // an inline type constructor, then inlining must be available to use the
+                    // `TcbDirectiveCtorOp`. If not we, we fallback to using `any` – see below.
+                    directiveOp = new TcbDirectiveCtorOp(this.tcb, this, node, dir);
+                }
+                else {
+                    // If inlining is not available, then we give up on infering the generic params, and use
+                    // `any` type for the directive's generic parameters.
+                    directiveOp = new TcbGenericDirectiveTypeWithAnyParamsOp(this.tcb, this, node, dir);
+                }
                 const dirIndex = this.opQueue.push(directiveOp) - 1;
                 dirMap.set(dir, dirIndex);
                 this.opQueue.push(new TcbDirectiveInputsOp(this.tcb, this, node, dir));
@@ -37882,12 +37946,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             const fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker, oobRecorder);
             this.tcbStatements.push(fn);
         }
-        render() {
+        render(removeComments) {
             let source = this.importManager.getAllImports(this.contextFile.fileName)
                 .map(i => `import * as ${i.qualifier.text} from '${i.specifier}';`)
                 .join('\n') +
                 '\n\n';
-            const printer = ts$1.createPrinter();
+            const printer = ts$1.createPrinter({ removeComments });
             source += '\n';
             for (const stmt of this.pipeInstStatements) {
                 source += printer.printNode(ts$1.EmitHint.Unspecified, stmt, this.contextFile) + '\n';
@@ -37957,6 +38021,10 @@ Either add the @Injectable() decorator to '${provider.node.name
              * queued.
              */
             this.typeCtorPending = new Set();
+            if (inlining === InliningMode.Error && config.useInlineTypeConstructors) {
+                // We cannot use inlining for type checking since this environment does not support it.
+                throw new Error(`AssertionError: invalid inlining configuration.`);
+            }
         }
         /**
          * Register a template to potentially be type-checked.
@@ -37974,20 +38042,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (parseErrors !== null) {
                 templateDiagnostics.push(...this.getTemplateDiagnostics(parseErrors, templateId, sourceMapping));
             }
-            // Accumulate a list of any directives which could not have type constructors generated due to
-            // unsupported inlining operations.
-            let missingInlines = [];
             const boundTarget = binder.bind({ template });
-            // Get all of the directives used in the template and record type constructors for all of them.
-            for (const dir of boundTarget.getUsedDirectives()) {
-                const dirRef = dir.ref;
-                const dirNode = dirRef.node;
-                if (dir.isGeneric && requiresInlineTypeCtor(dirNode, this.reflector)) {
-                    if (this.inlining === InliningMode.Error) {
-                        missingInlines.push(dirNode);
+            if (this.inlining === InliningMode.InlineOps) {
+                // Get all of the directives used in the template and record inline type constructors when
+                // required.
+                for (const dir of boundTarget.getUsedDirectives()) {
+                    const dirRef = dir.ref;
+                    const dirNode = dirRef.node;
+                    if (!dir.isGeneric || !requiresInlineTypeCtor(dirNode, this.reflector)) {
+                        // inlining not required
                         continue;
                     }
-                    // Add a type constructor operation for the directive.
+                    // Add an inline type constructor operation for the directive.
                     this.addInlineTypeCtor(fileData, dirNode.getSourceFile(), dirRef, {
                         fnName: 'ngTypeCtor',
                         // The constructor should have a body if the directive comes from a .ts file, but not if
@@ -38011,16 +38077,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             const tcbRequiresInline = requiresInlineTypeCheckBlock(ref.node, pipes);
             // If inlining is not supported, but is required for either the TCB or one of its directive
             // dependencies, then exit here with an error.
-            if (this.inlining === InliningMode.Error && (tcbRequiresInline || missingInlines.length > 0)) {
+            if (this.inlining === InliningMode.Error && tcbRequiresInline) {
                 // This template cannot be supported because the underlying strategy does not support inlining
                 // and inlining would be required.
                 // Record diagnostics to indicate the issues with this template.
-                if (tcbRequiresInline) {
-                    shimData.oobRecorder.requiresInlineTcb(templateId, ref.node);
-                }
-                if (missingInlines.length > 0) {
-                    shimData.oobRecorder.requiresInlineTypeConstructors(templateId, ref.node, missingInlines);
-                }
+                shimData.oobRecorder.requiresInlineTcb(templateId, ref.node);
                 // Checking this template would be unsupported, so don't try.
                 return;
             }
@@ -38116,7 +38177,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         path: pendingShimData.file.fileName,
                         templates: pendingShimData.templates,
                     });
-                    updates.set(pendingShimData.file.fileName, pendingShimData.file.render());
+                    updates.set(pendingShimData.file.fileName, pendingShimData.file.render(false /* removeComments */));
                 }
             }
             return updates;
@@ -39832,6 +39893,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Also see `verifyCompatibleTypeCheckOptions` where it is verified that `fullTemplateTypeCheck`
             // is not disabled when `strictTemplates` is enabled.
             const strictTemplates = !!this.options.strictTemplates;
+            const useInlineTypeConstructors = this.typeCheckingProgramStrategy.supportsInlineOperations;
             // First select a type-checking configuration, based on whether full template type-checking is
             // requested.
             let typeCheckingConfig;
@@ -39863,6 +39925,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     useContextGenericType: strictTemplates,
                     strictLiteralTypes: true,
                     enableTemplateTypeChecker: this.enableTemplateTypeChecker,
+                    useInlineTypeConstructors,
                 };
             }
             else {
@@ -39888,6 +39951,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     useContextGenericType: false,
                     strictLiteralTypes: false,
                     enableTemplateTypeChecker: this.enableTemplateTypeChecker,
+                    useInlineTypeConstructors,
                 };
             }
             // Apply explicitly configured strictness flags on top of the default configuration
