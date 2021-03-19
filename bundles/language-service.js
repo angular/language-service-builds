@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.6+5.sha-4690b6d
+ * @license Angular v11.2.6+12.sha-72c9565
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8596,6 +8596,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function combineHostContextSelectors(contextSelectors, otherSelectors) {
         const hostMarker = _polyfillHostNoCombinator;
+        _polyfillHostRe.lastIndex = 0; // reset the regex to ensure we get an accurate test
         const otherSelectorsHasHost = _polyfillHostRe.test(otherSelectors);
         // If there are no context selectors then just output a host marker
         if (contextSelectors.length === 0) {
@@ -12560,9 +12561,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const { property, hasOverrideFlag } = parseProperty(name);
             const entry = { name: property, value, sourceSpan, hasOverrideFlag, suffix: null };
             if (isMapBased) {
-                if (this._classMapInput) {
-                    throw new Error('[class] and [className] bindings cannot be used on the same element simultaneously');
-                }
                 this._classMapInput = entry;
             }
             else {
@@ -19137,7 +19135,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.6+5.sha-4690b6d');
+    const VERSION$1 = new Version('11.2.6+12.sha-72c9565');
 
     /**
      * @license
@@ -35159,7 +35157,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.6+5.sha-4690b6d');
+    const VERSION$2 = new Version$1('11.2.6+12.sha-72c9565');
 
     /**
      * @license
