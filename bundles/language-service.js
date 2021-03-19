@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.5+10.sha-2ccb579
+ * @license Angular v12.0.0-next.5+11.sha-3a55698
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -12585,9 +12585,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const { property, hasOverrideFlag } = parseProperty(name);
             const entry = { name: property, value, sourceSpan, hasOverrideFlag, suffix: null };
             if (isMapBased) {
-                if (this._classMapInput) {
-                    throw new Error('[class] and [className] bindings cannot be used on the same element simultaneously');
-                }
                 this._classMapInput = entry;
             }
             else {
@@ -19203,7 +19200,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.5+10.sha-2ccb579');
+    const VERSION$1 = new Version('12.0.0-next.5+11.sha-3a55698');
 
     /**
      * @license
@@ -47049,7 +47046,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.5+10.sha-2ccb579');
+    const VERSION$2 = new Version$1('12.0.0-next.5+11.sha-3a55698');
 
     /**
      * @license
