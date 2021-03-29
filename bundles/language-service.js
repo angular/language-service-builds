@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.6+28.sha-2d183f6
+ * @license Angular v11.2.7+5.sha-6dcea34
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3914,6 +3914,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This is an R3 `Node`-like wrapper for a raw `html.Comment` node. We do not currently
+     * require the implementation of a visitor for Comments as they are only collected at
+     * the top-level of the R3 AST, and only if `Render3ParseOptions['collectCommentNodes']`
+     * is true.
+     */
+    class Comment {
+        constructor(value, sourceSpan) {
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(_visitor) {
+            throw new Error('visit() not implemented for Comment');
+        }
+    }
     class Text {
         constructor(value, sourceSpan) {
             this.value = value;
@@ -8785,7 +8800,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitElement(this, context);
         }
     }
-    class Comment {
+    class Comment$1 {
         constructor(value, sourceSpan) {
             this.value = value;
             this.sourceSpan = sourceSpan;
@@ -9843,7 +9858,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const text = this._advanceIf(TokenType.RAW_TEXT);
             this._advanceIf(TokenType.COMMENT_END);
             const value = text != null ? text.parts[0].trim() : null;
-            this._addToParent(new Comment(value, token.sourceSpan));
+            this._addToParent(new Comment$1(value, token.sourceSpan));
         }
         _consumeExpansion(token) {
             const switchValue = this._advance();
@@ -15001,26 +15016,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         EVENT: { start: '(', end: ')' },
     };
     const TEMPLATE_ATTR_PREFIX$2 = '*';
-    function htmlAstToRender3Ast(htmlNodes, bindingParser) {
-        const transformer = new HtmlAstToIvyAst(bindingParser);
+    function htmlAstToRender3Ast(htmlNodes, bindingParser, options) {
+        const transformer = new HtmlAstToIvyAst(bindingParser, options);
         const ivyNodes = visitAll$1(transformer, htmlNodes);
         // Errors might originate in either the binding parser or the html to ivy transformer
         const allErrors = bindingParser.errors.concat(transformer.errors);
-        return {
+        const result = {
             nodes: ivyNodes,
             errors: allErrors,
             styleUrls: transformer.styleUrls,
             styles: transformer.styles,
-            ngContentSelectors: transformer.ngContentSelectors,
+            ngContentSelectors: transformer.ngContentSelectors
         };
+        if (options.collectCommentNodes) {
+            result.commentNodes = transformer.commentNodes;
+        }
+        return result;
     }
     class HtmlAstToIvyAst {
-        constructor(bindingParser) {
+        constructor(bindingParser, options) {
             this.bindingParser = bindingParser;
+            this.options = options;
             this.errors = [];
             this.styles = [];
             this.styleUrls = [];
             this.ngContentSelectors = [];
+            // This array will be populated if `Render3ParseOptions['collectCommentNodes']` is true
+            this.commentNodes = [];
             this.inI18nBlock = false;
         }
         // HTML visitor
@@ -15189,6 +15211,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return null;
         }
         visitComment(comment) {
+            if (this.options.collectCommentNodes) {
+                this.commentNodes.push(new Comment(comment.value || '', comment.sourceSpan));
+            }
             return null;
         }
         // convert view engine `ParsedProperty` to a format suitable for IVY
@@ -15380,7 +15405,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return node instanceof Text$2 && node.value.trim().length == 0;
     }
     function isCommentNode(node) {
-        return node instanceof Comment;
+        return node instanceof Comment$1;
     }
     function textContents(node) {
         if (node.children.length !== 1 || !(node.children[0] instanceof Text$2)) {
@@ -17957,7 +17982,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
         if (!options.alwaysAttemptHtmlToR3AstConversion && parseResult.errors &&
             parseResult.errors.length > 0) {
-            return {
+            const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
@@ -17969,6 +17994,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 styles: [],
                 ngContentSelectors: []
             };
+            if (options.collectCommentNodes) {
+                parsedTemplate.commentNodes = [];
+            }
+            return parsedTemplate;
         }
         let rootNodes = parseResult.rootNodes;
         // process i18n meta information (scan attributes, generate ids)
@@ -17979,7 +18008,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const i18nMetaResult = i18nMetaVisitor.visitAllWithErrors(rootNodes);
         if (!options.alwaysAttemptHtmlToR3AstConversion && i18nMetaResult.errors &&
             i18nMetaResult.errors.length > 0) {
-            return {
+            const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
@@ -17991,6 +18020,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 styles: [],
                 ngContentSelectors: []
             };
+            if (options.collectCommentNodes) {
+                parsedTemplate.commentNodes = [];
+            }
+            return parsedTemplate;
         }
         rootNodes = i18nMetaResult.rootNodes;
         if (!preserveWhitespaces) {
@@ -18003,9 +18036,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 rootNodes = visitAll$1(new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ false), rootNodes);
             }
         }
-        const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
+        const { nodes, errors, styleUrls, styles, ngContentSelectors, commentNodes } = htmlAstToRender3Ast(rootNodes, bindingParser, { collectCommentNodes: !!options.collectCommentNodes });
         errors.push(...parseResult.errors, ...i18nMetaResult.errors);
-        return {
+        const parsedTemplate = {
             interpolationConfig,
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
@@ -18017,6 +18050,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             styles,
             ngContentSelectors
         };
+        if (options.collectCommentNodes) {
+            parsedTemplate.commentNodes = commentNodes;
+        }
+        return parsedTemplate;
     }
     const elementRegistry = new DomElementSchemaRegistry();
     /**
@@ -19135,7 +19172,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.6+28.sha-2d183f6');
+    const VERSION$1 = new Version('11.2.7+5.sha-6dcea34');
 
     /**
      * @license
@@ -35157,7 +35194,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.6+28.sha-2d183f6');
+    const VERSION$2 = new Version$1('11.2.7+5.sha-6dcea34');
 
     /**
      * @license

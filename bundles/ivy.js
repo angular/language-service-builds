@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.6+28.sha-2d183f6
+ * @license Angular v11.2.7+5.sha-6dcea34
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6697,6 +6697,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This is an R3 `Node`-like wrapper for a raw `html.Comment` node. We do not currently
+     * require the implementation of a visitor for Comments as they are only collected at
+     * the top-level of the R3 AST, and only if `Render3ParseOptions['collectCommentNodes']`
+     * is true.
+     */
+    class Comment {
+        constructor(value, sourceSpan) {
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(_visitor) {
+            throw new Error('visit() not implemented for Comment');
+        }
+    }
     class Text {
         constructor(value, sourceSpan) {
             this.value = value;
@@ -11518,7 +11533,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return visitor.visitElement(this, context);
         }
     }
-    class Comment {
+    class Comment$1 {
         constructor(value, sourceSpan) {
             this.value = value;
             this.sourceSpan = sourceSpan;
@@ -12548,7 +12563,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const text = this._advanceIf(TokenType.RAW_TEXT);
             this._advanceIf(TokenType.COMMENT_END);
             const value = text != null ? text.parts[0].trim() : null;
-            this._addToParent(new Comment(value, token.sourceSpan));
+            this._addToParent(new Comment$1(value, token.sourceSpan));
         }
         _consumeExpansion(token) {
             const switchValue = this._advance();
@@ -16220,26 +16235,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         EVENT: { start: '(', end: ')' },
     };
     const TEMPLATE_ATTR_PREFIX$1 = '*';
-    function htmlAstToRender3Ast(htmlNodes, bindingParser) {
-        const transformer = new HtmlAstToIvyAst(bindingParser);
+    function htmlAstToRender3Ast(htmlNodes, bindingParser, options) {
+        const transformer = new HtmlAstToIvyAst(bindingParser, options);
         const ivyNodes = visitAll$1(transformer, htmlNodes);
         // Errors might originate in either the binding parser or the html to ivy transformer
         const allErrors = bindingParser.errors.concat(transformer.errors);
-        return {
+        const result = {
             nodes: ivyNodes,
             errors: allErrors,
             styleUrls: transformer.styleUrls,
             styles: transformer.styles,
-            ngContentSelectors: transformer.ngContentSelectors,
+            ngContentSelectors: transformer.ngContentSelectors
         };
+        if (options.collectCommentNodes) {
+            result.commentNodes = transformer.commentNodes;
+        }
+        return result;
     }
     class HtmlAstToIvyAst {
-        constructor(bindingParser) {
+        constructor(bindingParser, options) {
             this.bindingParser = bindingParser;
+            this.options = options;
             this.errors = [];
             this.styles = [];
             this.styleUrls = [];
             this.ngContentSelectors = [];
+            // This array will be populated if `Render3ParseOptions['collectCommentNodes']` is true
+            this.commentNodes = [];
             this.inI18nBlock = false;
         }
         // HTML visitor
@@ -16408,6 +16430,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return null;
         }
         visitComment(comment) {
+            if (this.options.collectCommentNodes) {
+                this.commentNodes.push(new Comment(comment.value || '', comment.sourceSpan));
+            }
             return null;
         }
         // convert view engine `ParsedProperty` to a format suitable for IVY
@@ -16599,7 +16624,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return node instanceof Text$2 && node.value.trim().length == 0;
     }
     function isCommentNode(node) {
-        return node instanceof Comment;
+        return node instanceof Comment$1;
     }
     function textContents(node) {
         if (node.children.length !== 1 || !(node.children[0] instanceof Text$2)) {
@@ -19176,7 +19201,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
         if (!options.alwaysAttemptHtmlToR3AstConversion && parseResult.errors &&
             parseResult.errors.length > 0) {
-            return {
+            const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
@@ -19188,6 +19213,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 styles: [],
                 ngContentSelectors: []
             };
+            if (options.collectCommentNodes) {
+                parsedTemplate.commentNodes = [];
+            }
+            return parsedTemplate;
         }
         let rootNodes = parseResult.rootNodes;
         // process i18n meta information (scan attributes, generate ids)
@@ -19198,7 +19227,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const i18nMetaResult = i18nMetaVisitor.visitAllWithErrors(rootNodes);
         if (!options.alwaysAttemptHtmlToR3AstConversion && i18nMetaResult.errors &&
             i18nMetaResult.errors.length > 0) {
-            return {
+            const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
                 template,
@@ -19210,6 +19239,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 styles: [],
                 ngContentSelectors: []
             };
+            if (options.collectCommentNodes) {
+                parsedTemplate.commentNodes = [];
+            }
+            return parsedTemplate;
         }
         rootNodes = i18nMetaResult.rootNodes;
         if (!preserveWhitespaces) {
@@ -19222,9 +19255,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 rootNodes = visitAll$1(new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ false), rootNodes);
             }
         }
-        const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
+        const { nodes, errors, styleUrls, styles, ngContentSelectors, commentNodes } = htmlAstToRender3Ast(rootNodes, bindingParser, { collectCommentNodes: !!options.collectCommentNodes });
         errors.push(...parseResult.errors, ...i18nMetaResult.errors);
-        return {
+        const parsedTemplate = {
             interpolationConfig,
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
@@ -19236,6 +19269,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             styles,
             ngContentSelectors
         };
+        if (options.collectCommentNodes) {
+            parsedTemplate.commentNodes = commentNodes;
+        }
+        return parsedTemplate;
     }
     const elementRegistry = new DomElementSchemaRegistry();
     /**
@@ -20354,7 +20391,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.6+28.sha-2d183f6');
+    const VERSION$1 = new Version('11.2.7+5.sha-6dcea34');
 
     /**
      * @license
@@ -21011,7 +21048,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.6+28.sha-2d183f6'));
+        definitionMap.set('version', literal('11.2.7+5.sha-6dcea34'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21232,7 +21269,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.6+28.sha-2d183f6'));
+        definitionMap.set('version', literal('11.2.7+5.sha-6dcea34'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21264,7 +21301,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.6+28.sha-2d183f6');
+    const VERSION$2 = new Version('11.2.7+5.sha-6dcea34');
 
     /**
      * @license
@@ -25500,6 +25537,389 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * A phase of compilation for which time is tracked in a distinct bucket.
+     */
+    var PerfPhase;
+    (function (PerfPhase) {
+        /**
+         * The "default" phase which tracks time not spent in any other phase.
+         */
+        PerfPhase[PerfPhase["Unaccounted"] = 0] = "Unaccounted";
+        /**
+         * Time spent setting up the compiler, before a TypeScript program is created.
+         *
+         * This includes operations like configuring the `ts.CompilerHost` and any wrappers.
+         */
+        PerfPhase[PerfPhase["Setup"] = 1] = "Setup";
+        /**
+         * Time spent in `ts.createProgram`, including reading and parsing `ts.SourceFile`s in the
+         * `ts.CompilerHost`.
+         *
+         * This might be an incremental program creation operation.
+         */
+        PerfPhase[PerfPhase["TypeScriptProgramCreate"] = 2] = "TypeScriptProgramCreate";
+        /**
+         * Time spent reconciling the contents of an old `ts.Program` with the new incremental one.
+         *
+         * Only present in incremental compilations.
+         */
+        PerfPhase[PerfPhase["Reconciliation"] = 3] = "Reconciliation";
+        /**
+         * Time spent updating an `NgCompiler` instance with a resource-only change.
+         *
+         * Only present in incremental compilations where the change was resource-only.
+         */
+        PerfPhase[PerfPhase["ResourceUpdate"] = 4] = "ResourceUpdate";
+        /**
+         * Time spent calculating the plain TypeScript diagnostics (structural and semantic).
+         */
+        PerfPhase[PerfPhase["TypeScriptDiagnostics"] = 5] = "TypeScriptDiagnostics";
+        /**
+         * Time spent in Angular analysis of individual classes in the program.
+         */
+        PerfPhase[PerfPhase["Analysis"] = 6] = "Analysis";
+        /**
+         * Time spent in Angular global analysis (synthesis of analysis information into a complete
+         * understanding of the program).
+         */
+        PerfPhase[PerfPhase["Resolve"] = 7] = "Resolve";
+        /**
+         * Time spent building the import graph of the program in order to perform cycle detection.
+         */
+        PerfPhase[PerfPhase["CycleDetection"] = 8] = "CycleDetection";
+        /**
+         * Time spent generating the text of Type Check Blocks in order to perform template type checking.
+         */
+        PerfPhase[PerfPhase["TcbGeneration"] = 9] = "TcbGeneration";
+        /**
+         * Time spent updating the `ts.Program` with new Type Check Block code.
+         */
+        PerfPhase[PerfPhase["TcbUpdateProgram"] = 10] = "TcbUpdateProgram";
+        /**
+         * Time spent by TypeScript performing its emit operations, including downleveling and writing
+         * output files.
+         */
+        PerfPhase[PerfPhase["TypeScriptEmit"] = 11] = "TypeScriptEmit";
+        /**
+         * Time spent by Angular performing code transformations of ASTs as they're about to be emitted.
+         *
+         * This includes the actual code generation step for templates, and occurs during the emit phase
+         * (but is tracked separately from `TypeScriptEmit` time).
+         */
+        PerfPhase[PerfPhase["Compile"] = 12] = "Compile";
+        /**
+         * Time spent performing a `TemplateTypeChecker` autocompletion operation.
+         */
+        PerfPhase[PerfPhase["TtcAutocompletion"] = 13] = "TtcAutocompletion";
+        /**
+         * Time spent computing template type-checking diagnostics.
+         */
+        PerfPhase[PerfPhase["TtcDiagnostics"] = 14] = "TtcDiagnostics";
+        /**
+         * Time spent getting a `Symbol` from the `TemplateTypeChecker`.
+         */
+        PerfPhase[PerfPhase["TtcSymbol"] = 15] = "TtcSymbol";
+        /**
+         * Time spent by the Angular Language Service calculating a "get references" or a renaming
+         * operation.
+         */
+        PerfPhase[PerfPhase["LsReferencesAndRenames"] = 16] = "LsReferencesAndRenames";
+        /**
+         * Tracks the number of `PerfPhase`s, and must appear at the end of the list.
+         */
+        PerfPhase[PerfPhase["LAST"] = 17] = "LAST";
+    })(PerfPhase || (PerfPhase = {}));
+    /**
+     * Represents some occurrence during compilation, and is tracked with a counter.
+     */
+    var PerfEvent;
+    (function (PerfEvent) {
+        /**
+         * Counts the number of `.d.ts` files in the program.
+         */
+        PerfEvent[PerfEvent["InputDtsFile"] = 0] = "InputDtsFile";
+        /**
+         * Counts the number of non-`.d.ts` files in the program.
+         */
+        PerfEvent[PerfEvent["InputTsFile"] = 1] = "InputTsFile";
+        /**
+         * An `@Component` class was analyzed.
+         */
+        PerfEvent[PerfEvent["AnalyzeComponent"] = 2] = "AnalyzeComponent";
+        /**
+         * An `@Directive` class was analyzed.
+         */
+        PerfEvent[PerfEvent["AnalyzeDirective"] = 3] = "AnalyzeDirective";
+        /**
+         * An `@Injectable` class was analyzed.
+         */
+        PerfEvent[PerfEvent["AnalyzeInjectable"] = 4] = "AnalyzeInjectable";
+        /**
+         * An `@NgModule` class was analyzed.
+         */
+        PerfEvent[PerfEvent["AnalyzeNgModule"] = 5] = "AnalyzeNgModule";
+        /**
+         * An `@Pipe` class was analyzed.
+         */
+        PerfEvent[PerfEvent["AnalyzePipe"] = 6] = "AnalyzePipe";
+        /**
+         * A trait was analyzed.
+         *
+         * In theory, this should be the sum of the `Analyze` counters for each decorator type.
+         */
+        PerfEvent[PerfEvent["TraitAnalyze"] = 7] = "TraitAnalyze";
+        /**
+         * A trait had a prior analysis available from an incremental program, and did not need to be
+         * re-analyzed.
+         */
+        PerfEvent[PerfEvent["TraitReuseAnalysis"] = 8] = "TraitReuseAnalysis";
+        /**
+         * A `ts.SourceFile` directly changed between the prior program and a new incremental compilation.
+         */
+        PerfEvent[PerfEvent["SourceFilePhysicalChange"] = 9] = "SourceFilePhysicalChange";
+        /**
+         * A `ts.SourceFile` did not physically changed, but according to the file dependency graph, has
+         * logically changed between the prior program and a new incremental compilation.
+         */
+        PerfEvent[PerfEvent["SourceFileLogicalChange"] = 10] = "SourceFileLogicalChange";
+        /**
+         * A `ts.SourceFile` has not logically changed and all of its analysis results were thus available
+         * for reuse.
+         */
+        PerfEvent[PerfEvent["SourceFileReuseAnalysis"] = 11] = "SourceFileReuseAnalysis";
+        /**
+         * A Type Check Block (TCB) was generated.
+         */
+        PerfEvent[PerfEvent["GenerateTcb"] = 12] = "GenerateTcb";
+        /**
+         * A Type Check Block (TCB) could not be generated because inlining was disabled, and the block
+         * would've required inlining.
+         */
+        PerfEvent[PerfEvent["SkipGenerateTcbNoInline"] = 13] = "SkipGenerateTcbNoInline";
+        /**
+         * A `.ngtypecheck.ts` file could be reused from the previous program and did not need to be
+         * regenerated.
+         */
+        PerfEvent[PerfEvent["ReuseTypeCheckFile"] = 14] = "ReuseTypeCheckFile";
+        /**
+         * The template type-checking program required changes and had to be updated in an incremental
+         * step.
+         */
+        PerfEvent[PerfEvent["UpdateTypeCheckProgram"] = 15] = "UpdateTypeCheckProgram";
+        /**
+         * The compiler was able to prove that a `ts.SourceFile` did not need to be re-emitted.
+         */
+        PerfEvent[PerfEvent["EmitSkipSourceFile"] = 16] = "EmitSkipSourceFile";
+        /**
+         * A `ts.SourceFile` was emitted.
+         */
+        PerfEvent[PerfEvent["EmitSourceFile"] = 17] = "EmitSourceFile";
+        /**
+         * Tracks the number of `PrefEvent`s, and must appear at the end of the list.
+         */
+        PerfEvent[PerfEvent["LAST"] = 18] = "LAST";
+    })(PerfEvent || (PerfEvent = {}));
+    /**
+     * Represents a checkpoint during compilation at which the memory usage of the compiler should be
+     * recorded.
+     */
+    var PerfCheckpoint;
+    (function (PerfCheckpoint) {
+        /**
+         * The point at which the `PerfRecorder` was created, and ideally tracks memory used before any
+         * compilation structures are created.
+         */
+        PerfCheckpoint[PerfCheckpoint["Initial"] = 0] = "Initial";
+        /**
+         * The point just after the `ts.Program` has been created.
+         */
+        PerfCheckpoint[PerfCheckpoint["TypeScriptProgramCreate"] = 1] = "TypeScriptProgramCreate";
+        /**
+         * The point just before Angular analysis starts.
+         *
+         * In the main usage pattern for the compiler, TypeScript diagnostics have been calculated at this
+         * point, so the `ts.TypeChecker` has fully ingested the current program, all `ts.Type` structures
+         * and `ts.Symbol`s have been created.
+         */
+        PerfCheckpoint[PerfCheckpoint["PreAnalysis"] = 2] = "PreAnalysis";
+        /**
+         * The point just after Angular analysis completes.
+         */
+        PerfCheckpoint[PerfCheckpoint["Analysis"] = 3] = "Analysis";
+        /**
+         * The point just after Angular resolution is complete.
+         */
+        PerfCheckpoint[PerfCheckpoint["Resolve"] = 4] = "Resolve";
+        /**
+         * The point just after Type Check Blocks (TCBs) have been generated.
+         */
+        PerfCheckpoint[PerfCheckpoint["TtcGeneration"] = 5] = "TtcGeneration";
+        /**
+         * The point just after the template type-checking program has been updated with any new TCBs.
+         */
+        PerfCheckpoint[PerfCheckpoint["TtcUpdateProgram"] = 6] = "TtcUpdateProgram";
+        /**
+         * The point just before emit begins.
+         *
+         * In the main usage pattern for the compiler, all template type-checking diagnostics have been
+         * requested at this point.
+         */
+        PerfCheckpoint[PerfCheckpoint["PreEmit"] = 7] = "PreEmit";
+        /**
+         * The point just after the program has been fully emitted.
+         */
+        PerfCheckpoint[PerfCheckpoint["Emit"] = 8] = "Emit";
+        /**
+         * Tracks the number of `PerfCheckpoint`s, and must appear at the end of the list.
+         */
+        PerfCheckpoint[PerfCheckpoint["LAST"] = 9] = "LAST";
+    })(PerfCheckpoint || (PerfCheckpoint = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function mark() {
+        return process.hrtime();
+    }
+    function timeSinceInMicros(mark) {
+        const delta = process.hrtime(mark);
+        return (delta[0] * 1000000) + Math.floor(delta[1] / 1000);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A `PerfRecorder` that actively tracks performance statistics.
+     */
+    class ActivePerfRecorder {
+        constructor(zeroTime) {
+            this.zeroTime = zeroTime;
+            this.currentPhase = PerfPhase.Unaccounted;
+            this.currentPhaseEntered = this.zeroTime;
+            this.counters = Array(PerfEvent.LAST).fill(0);
+            this.phaseTime = Array(PerfPhase.LAST).fill(0);
+            this.bytes = Array(PerfCheckpoint.LAST).fill(0);
+            // Take an initial memory snapshot before any other compilation work begins.
+            this.memory(PerfCheckpoint.Initial);
+        }
+        /**
+         * Creates an `ActivePerfRecoder` with its zero point set to the current time.
+         */
+        static zeroedToNow() {
+            return new ActivePerfRecorder(mark());
+        }
+        reset() {
+            this.counters = Array(PerfEvent.LAST).fill(0);
+            this.phaseTime = Array(PerfPhase.LAST).fill(0);
+            this.bytes = Array(PerfCheckpoint.LAST).fill(0);
+            this.zeroTime = mark();
+            this.currentPhase = PerfPhase.Unaccounted;
+            this.currentPhaseEntered = this.zeroTime;
+        }
+        memory(after) {
+            this.bytes[after] = process.memoryUsage().heapUsed;
+        }
+        phase(phase) {
+            const previous = this.currentPhase;
+            this.phaseTime[this.currentPhase] += timeSinceInMicros(this.currentPhaseEntered);
+            this.currentPhase = phase;
+            this.currentPhaseEntered = mark();
+            return previous;
+        }
+        inPhase(phase, fn) {
+            const previousPhase = this.phase(phase);
+            try {
+                return fn();
+            }
+            finally {
+                this.phase(previousPhase);
+            }
+        }
+        eventCount(counter, incrementBy = 1) {
+            this.counters[counter] += incrementBy;
+        }
+        /**
+         * Return the current performance metrics as a serializable object.
+         */
+        finalize() {
+            // Track the last segment of time spent in `this.currentPhase` in the time array.
+            this.phase(PerfPhase.Unaccounted);
+            const results = {
+                events: {},
+                phases: {},
+                memory: {},
+            };
+            for (let i = 0; i < this.phaseTime.length; i++) {
+                if (this.phaseTime[i] > 0) {
+                    results.phases[PerfPhase[i]] = this.phaseTime[i];
+                }
+            }
+            for (let i = 0; i < this.phaseTime.length; i++) {
+                if (this.counters[i] > 0) {
+                    results.events[PerfEvent[i]] = this.counters[i];
+                }
+            }
+            for (let i = 0; i < this.bytes.length; i++) {
+                if (this.bytes[i] > 0) {
+                    results.memory[PerfCheckpoint[i]] = this.bytes[i];
+                }
+            }
+            return results;
+        }
+    }
+    /**
+     * A `PerfRecorder` that delegates to a target `PerfRecorder` which can be updated later.
+     *
+     * `DelegatingPerfRecorder` is useful when a compiler class that needs a `PerfRecorder` can outlive
+     * the current compilation. This is true for most compiler classes as resource-only changes reuse
+     * the same `NgCompiler` for a new compilation.
+     */
+    class DelegatingPerfRecorder {
+        constructor(target) {
+            this.target = target;
+        }
+        eventCount(counter, incrementBy) {
+            this.target.eventCount(counter, incrementBy);
+        }
+        phase(phase) {
+            return this.target.phase(phase);
+        }
+        inPhase(phase, fn) {
+            // Note: this doesn't delegate to `this.target.inPhase` but instead is implemented manually here
+            // to avoid adding an additional frame of noise to the stack when debugging.
+            const previousPhase = this.target.phase(phase);
+            try {
+                return fn();
+            }
+            finally {
+                this.target.phase(previousPhase);
+            }
+        }
+        memory(after) {
+            this.target.memory(after);
+        }
+        reset() {
+            this.target.reset();
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Specifies the compilation mode that is used for the compilation.
      */
     var CompilationMode;
@@ -25742,6 +26162,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 for (const priorRecord of priorWork) {
                     this.adopt(priorRecord);
                 }
+                this.perf.eventCount(PerfEvent.SourceFileReuseAnalysis);
+                this.perf.eventCount(PerfEvent.TraitReuseAnalysis, priorWork.length);
                 // Skip the rest of analysis, as this file's prior traits are being reused.
                 return;
             }
@@ -25945,6 +26367,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (trait.state !== TraitState.Pending) {
                 throw new Error(`Attempt to analyze trait of ${clazz.name.text} in state ${TraitState[trait.state]} (expected DETECTED)`);
             }
+            this.perf.eventCount(PerfEvent.TraitAnalyze);
             // Attempt analysis. This could fail with a `FatalDiagnosticError`; catch it if it does.
             let result;
             try {
@@ -26083,7 +26506,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     // Cannot compile a trait that is not resolved, or had any errors in its declaration.
                     continue;
                 }
-                const compileSpan = this.perf.start('compileClass', original);
                 // `trait.resolution` is non-null asserted here because TypeScript does not recognize that
                 // `Readonly<unknown>` is nullable (as `unknown` itself is nullable) due to the way that
                 // `Readonly` works.
@@ -26097,7 +26519,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                         trait.handler.compileFull(clazz, trait.analysis, trait.resolution, constantPool);
                 }
                 const compileMatchRes = compileRes;
-                this.perf.stop(compileSpan);
                 if (Array.isArray(compileMatchRes)) {
                     for (const result of compileMatchRes) {
                         if (!res.some(r => r.name === result.name)) {
@@ -27349,11 +27770,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     const NO_DECORATORS = new Set();
     const CLOSURE_FILE_OVERVIEW_REGEXP = /\s+@fileoverview\s+/i;
-    function ivyTransformFactory(compilation, reflector, importRewriter, defaultImportRecorder, isCore, isClosureCompilerEnabled) {
+    function ivyTransformFactory(compilation, reflector, importRewriter, defaultImportRecorder, perf, isCore, isClosureCompilerEnabled) {
         const recordWrappedNodeExpr = createRecorderFn(defaultImportRecorder);
         return (context) => {
             return (file) => {
-                return transformIvySourceFile(compilation, context, reflector, importRewriter, file, isCore, isClosureCompilerEnabled, recordWrappedNodeExpr);
+                return perf.inPhase(PerfPhase.Compile, () => transformIvySourceFile(compilation, context, reflector, importRewriter, file, isCore, isClosureCompilerEnabled, recordWrappedNodeExpr));
             };
         };
     }
@@ -28600,7 +29021,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         return isSymbolEqual(current, previous);
     }
     class DirectiveDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, semanticDepGraphUpdater, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures) {
+        constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, semanticDepGraphUpdater, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures, perf) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -28612,6 +29033,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.semanticDepGraphUpdater = semanticDepGraphUpdater;
             this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.compileUndecoratedClassesWithAngularFeatures = compileUndecoratedClassesWithAngularFeatures;
+            this.perf = perf;
             this.precedence = HandlerPrecedence.PRIMARY;
             this.name = DirectiveDecoratorHandler.name;
         }
@@ -28638,6 +29060,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (this.compileUndecoratedClassesWithAngularFeatures === false && decorator === null) {
                 return { diagnostics: [getUndecoratedClassWithAngularFeaturesDiagnostic(node)] };
             }
+            this.perf.eventCount(PerfEvent.AnalyzeDirective);
             const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags, this.annotateForClosureCompiler);
             if (directiveResult === undefined) {
                 return {};
@@ -29235,7 +29658,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Compiles @NgModule annotations to ngModuleDef fields.
      */
     class NgModuleDecoratorHandler {
-        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, defaultImportRecorder, annotateForClosureCompiler, injectableRegistry, localeId) {
+        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, defaultImportRecorder, annotateForClosureCompiler, injectableRegistry, perf, localeId) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaReader = metaReader;
@@ -29249,6 +29672,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.defaultImportRecorder = defaultImportRecorder;
             this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.injectableRegistry = injectableRegistry;
+            this.perf = perf;
             this.localeId = localeId;
             this.precedence = HandlerPrecedence.PRIMARY;
             this.name = NgModuleDecoratorHandler.name;
@@ -29270,6 +29694,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         analyze(node, decorator) {
+            this.perf.eventCount(PerfEvent.AnalyzeNgModule);
             const name = node.name.text;
             if (decorator.args === null || decorator.args.length > 1) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), `Incorrect number of arguments to @NgModule decorator`);
@@ -29762,7 +30187,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `DecoratorHandler` which handles the `@Component` annotation.
      */
     class ComponentDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, semanticDepGraphUpdater, annotateForClosureCompiler) {
+        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, semanticDepGraphUpdater, annotateForClosureCompiler, perf) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -29788,6 +30213,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.injectableRegistry = injectableRegistry;
             this.semanticDepGraphUpdater = semanticDepGraphUpdater;
             this.annotateForClosureCompiler = annotateForClosureCompiler;
+            this.perf = perf;
             this.literalCache = new Map();
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
             /**
@@ -29867,6 +30293,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         analyze(node, decorator, flags = HandlerFlags.NONE) {
             var _a;
+            this.perf.eventCount(PerfEvent.AnalyzeComponent);
             const containingFile = node.getSourceFile().fileName;
             this.literalCache.delete(decorator);
             // @Component inherits @Directive, so begin by extracting the @Directive metadata and building
@@ -30661,7 +31088,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Adapts the `compileIvyInjectable` compiler for `@Injectable` decorators to the Ivy compiler.
      */
     class InjectableDecoratorHandler {
-        constructor(reflector, defaultImportRecorder, isCore, strictCtorDeps, injectableRegistry, 
+        constructor(reflector, defaultImportRecorder, isCore, strictCtorDeps, injectableRegistry, perf, 
         /**
          * What to do if the injectable already contains a ɵprov property.
          *
@@ -30674,6 +31101,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.isCore = isCore;
             this.strictCtorDeps = strictCtorDeps;
             this.injectableRegistry = injectableRegistry;
+            this.perf = perf;
             this.errorOnDuplicateProv = errorOnDuplicateProv;
             this.precedence = HandlerPrecedence.SHARED;
             this.name = InjectableDecoratorHandler.name;
@@ -30695,6 +31123,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         analyze(node, decorator) {
+            this.perf.eventCount(PerfEvent.AnalyzeInjectable);
             const meta = extractInjectableMetadata(node, decorator, this.reflector);
             const decorators = this.reflector.getDecoratorsOfDeclaration(node);
             return {
@@ -30950,7 +31379,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     class PipeDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportRecorder, injectableRegistry, isCore) {
+        constructor(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportRecorder, injectableRegistry, isCore, perf) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -30958,6 +31387,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.defaultImportRecorder = defaultImportRecorder;
             this.injectableRegistry = injectableRegistry;
             this.isCore = isCore;
+            this.perf = perf;
             this.precedence = HandlerPrecedence.PRIMARY;
             this.name = PipeDecoratorHandler.name;
         }
@@ -30978,6 +31408,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         analyze(clazz, decorator) {
+            this.perf.eventCount(PerfEvent.AnalyzePipe);
             const name = clazz.name.text;
             const type = wrapTypeReference(this.reflector, clazz);
             const internalType = new WrappedNodeExpr(this.reflector.getInternalNameOfClass(clazz));
@@ -31156,8 +31587,9 @@ Either add the @Injectable() decorator to '${provider.node.name
      * dependencies within the same program are tracked; imports into packages on NPM are not.
      */
     class ImportGraph {
-        constructor(checker) {
+        constructor(checker, perf) {
             this.checker = checker;
+            this.perf = perf;
             this.map = new Map();
         }
         /**
@@ -31233,25 +31665,27 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         scanImports(sf) {
-            const imports = new Set();
-            // Look through the source file for import and export statements.
-            for (const stmt of sf.statements) {
-                if ((!ts$1.isImportDeclaration(stmt) && !ts$1.isExportDeclaration(stmt)) ||
-                    stmt.moduleSpecifier === undefined) {
-                    continue;
+            return this.perf.inPhase(PerfPhase.CycleDetection, () => {
+                const imports = new Set();
+                // Look through the source file for import and export statements.
+                for (const stmt of sf.statements) {
+                    if ((!ts$1.isImportDeclaration(stmt) && !ts$1.isExportDeclaration(stmt)) ||
+                        stmt.moduleSpecifier === undefined) {
+                        continue;
+                    }
+                    const symbol = this.checker.getSymbolAtLocation(stmt.moduleSpecifier);
+                    if (symbol === undefined || symbol.valueDeclaration === undefined) {
+                        // No symbol could be found to skip over this import/export.
+                        continue;
+                    }
+                    const moduleFile = symbol.valueDeclaration;
+                    if (ts$1.isSourceFile(moduleFile) && isLocalFile(moduleFile)) {
+                        // Record this local import.
+                        imports.add(moduleFile);
+                    }
                 }
-                const symbol = this.checker.getSymbolAtLocation(stmt.moduleSpecifier);
-                if (symbol === undefined || symbol.valueDeclaration === undefined) {
-                    // No symbol could be found to skip over this import/export.
-                    continue;
-                }
-                const moduleFile = symbol.valueDeclaration;
-                if (ts$1.isSourceFile(moduleFile) && isLocalFile(moduleFile)) {
-                    // Record this local import.
-                    imports.add(moduleFile);
-                }
-            }
-            return imports;
+                return imports;
+            });
         }
     }
     function isLocalFile(sf) {
@@ -31613,103 +32047,107 @@ Either add the @Injectable() decorator to '${provider.node.name
          * The previous build's `BuildState` is reconciled with the new program's changes, and the results
          * are merged into the new build's `PendingBuildState`.
          */
-        static reconcile(oldProgram, oldDriver, newProgram, modifiedResourceFiles) {
-            // Initialize the state of the current build based on the previous one.
-            let state;
-            if (oldDriver.state.kind === BuildStateKind.Pending) {
-                // The previous build never made it past the pending state. Reuse it as the starting state for
-                // this build.
-                state = oldDriver.state;
-            }
-            else {
-                let priorGraph = null;
-                if (oldDriver.state.lastGood !== null) {
-                    priorGraph = oldDriver.state.lastGood.semanticDepGraph;
-                }
-                // The previous build was successfully analyzed. `pendingEmit` is the only state carried
-                // forward into this build.
-                state = {
-                    kind: BuildStateKind.Pending,
-                    pendingEmit: oldDriver.state.pendingEmit,
-                    pendingTypeCheckEmit: oldDriver.state.pendingTypeCheckEmit,
-                    changedResourcePaths: new Set(),
-                    changedTsPaths: new Set(),
-                    lastGood: oldDriver.state.lastGood,
-                    semanticDepGraphUpdater: new SemanticDepGraphUpdater(priorGraph),
-                };
-            }
-            // Merge the freshly modified resource files with any prior ones.
-            if (modifiedResourceFiles !== null) {
-                for (const resFile of modifiedResourceFiles) {
-                    state.changedResourcePaths.add(absoluteFrom(resFile));
-                }
-            }
-            // Next, process the files in the new program, with a couple of goals:
-            // 1) Determine which TS files have changed, if any, and merge them into `changedTsFiles`.
-            // 2) Produce a list of TS files which no longer exist in the program (they've been deleted
-            //    since the previous compilation). These need to be removed from the state tracking to avoid
-            //    leaking memory.
-            // All files in the old program, for easy detection of changes.
-            const oldFiles = new Set(oldProgram.getSourceFiles());
-            // Assume all the old files were deleted to begin with. Only TS files are tracked.
-            const deletedTsPaths = new Set(tsOnlyFiles(oldProgram).map(sf => sf.fileName));
-            for (const newFile of newProgram.getSourceFiles()) {
-                if (!newFile.isDeclarationFile) {
-                    // This file exists in the new program, so remove it from `deletedTsPaths`.
-                    deletedTsPaths.delete(newFile.fileName);
-                }
-                if (oldFiles.has(newFile)) {
-                    // This file hasn't changed; no need to look at it further.
-                    continue;
-                }
-                // The file has changed since the last successful build. The appropriate reaction depends on
-                // what kind of file it is.
-                if (!newFile.isDeclarationFile) {
-                    // It's a .ts file, so track it as a change.
-                    state.changedTsPaths.add(newFile.fileName);
+        static reconcile(oldProgram, oldDriver, newProgram, modifiedResourceFiles, perf) {
+            return perf.inPhase(PerfPhase.Reconciliation, () => {
+                // Initialize the state of the current build based on the previous one.
+                let state;
+                if (oldDriver.state.kind === BuildStateKind.Pending) {
+                    // The previous build never made it past the pending state. Reuse it as the starting state
+                    // for this build.
+                    state = oldDriver.state;
                 }
                 else {
-                    // It's a .d.ts file. Currently the compiler does not do a great job of tracking
-                    // dependencies on .d.ts files, so bail out of incremental builds here and do a full build.
-                    // This usually only happens if something in node_modules changes.
-                    return IncrementalDriver.fresh(newProgram);
+                    let priorGraph = null;
+                    if (oldDriver.state.lastGood !== null) {
+                        priorGraph = oldDriver.state.lastGood.semanticDepGraph;
+                    }
+                    // The previous build was successfully analyzed. `pendingEmit` is the only state carried
+                    // forward into this build.
+                    state = {
+                        kind: BuildStateKind.Pending,
+                        pendingEmit: oldDriver.state.pendingEmit,
+                        pendingTypeCheckEmit: oldDriver.state.pendingTypeCheckEmit,
+                        changedResourcePaths: new Set(),
+                        changedTsPaths: new Set(),
+                        lastGood: oldDriver.state.lastGood,
+                        semanticDepGraphUpdater: new SemanticDepGraphUpdater(priorGraph),
+                    };
                 }
-            }
-            // The next step is to remove any deleted files from the state.
-            for (const filePath of deletedTsPaths) {
-                state.pendingEmit.delete(filePath);
-                state.pendingTypeCheckEmit.delete(filePath);
-                // Even if the file doesn't exist in the current compilation, it still might have been changed
-                // in a previous one, so delete it from the set of changed TS files, just in case.
-                state.changedTsPaths.delete(filePath);
-            }
-            // Now, changedTsPaths contains physically changed TS paths. Use the previous program's logical
-            // dependency graph to determine logically changed files.
-            const depGraph = new FileDependencyGraph();
-            // If a previous compilation exists, use its dependency graph to determine the set of logically
-            // changed files.
-            let logicalChanges = null;
-            if (state.lastGood !== null) {
-                // Extract the set of logically changed files. At the same time, this operation populates the
-                // current (fresh) dependency graph with information about those files which have not
-                // logically changed.
-                logicalChanges = depGraph.updateWithPhysicalChanges(state.lastGood.depGraph, state.changedTsPaths, deletedTsPaths, state.changedResourcePaths);
-                for (const fileName of state.changedTsPaths) {
-                    logicalChanges.add(fileName);
+                // Merge the freshly modified resource files with any prior ones.
+                if (modifiedResourceFiles !== null) {
+                    for (const resFile of modifiedResourceFiles) {
+                        state.changedResourcePaths.add(absoluteFrom(resFile));
+                    }
                 }
-                // Any logically changed files need to be re-emitted. Most of the time this would happen
-                // regardless because the new dependency graph would _also_ identify the file as stale.
-                // However there are edge cases such as removing a component from an NgModule without adding
-                // it to another one, where the previous graph identifies the file as logically changed, but
-                // the new graph (which does not have that edge) fails to identify that the file should be
-                // re-emitted.
-                for (const change of logicalChanges) {
-                    state.pendingEmit.add(change);
-                    state.pendingTypeCheckEmit.add(change);
+                // Next, process the files in the new program, with a couple of goals:
+                // 1) Determine which TS files have changed, if any, and merge them into `changedTsFiles`.
+                // 2) Produce a list of TS files which no longer exist in the program (they've been deleted
+                //    since the previous compilation). These need to be removed from the state tracking to
+                //    avoid leaking memory.
+                // All files in the old program, for easy detection of changes.
+                const oldFiles = new Set(oldProgram.getSourceFiles());
+                // Assume all the old files were deleted to begin with. Only TS files are tracked.
+                const deletedTsPaths = new Set(tsOnlyFiles(oldProgram).map(sf => sf.fileName));
+                for (const newFile of newProgram.getSourceFiles()) {
+                    if (!newFile.isDeclarationFile) {
+                        // This file exists in the new program, so remove it from `deletedTsPaths`.
+                        deletedTsPaths.delete(newFile.fileName);
+                    }
+                    if (oldFiles.has(newFile)) {
+                        // This file hasn't changed; no need to look at it further.
+                        continue;
+                    }
+                    // The file has changed since the last successful build. The appropriate reaction depends on
+                    // what kind of file it is.
+                    if (!newFile.isDeclarationFile) {
+                        // It's a .ts file, so track it as a change.
+                        state.changedTsPaths.add(newFile.fileName);
+                    }
+                    else {
+                        // It's a .d.ts file. Currently the compiler does not do a great job of tracking
+                        // dependencies on .d.ts files, so bail out of incremental builds here and do a full
+                        // build. This usually only happens if something in node_modules changes.
+                        return IncrementalDriver.fresh(newProgram);
+                    }
                 }
-            }
-            // `state` now reflects the initial pending state of the current compilation.
-            return new IncrementalDriver(state, depGraph, logicalChanges);
+                // The next step is to remove any deleted files from the state.
+                for (const filePath of deletedTsPaths) {
+                    state.pendingEmit.delete(filePath);
+                    state.pendingTypeCheckEmit.delete(filePath);
+                    // Even if the file doesn't exist in the current compilation, it still might have been
+                    // changed in a previous one, so delete it from the set of changed TS files, just in case.
+                    state.changedTsPaths.delete(filePath);
+                }
+                perf.eventCount(PerfEvent.SourceFilePhysicalChange, state.changedTsPaths.size);
+                // Now, changedTsPaths contains physically changed TS paths. Use the previous program's
+                // logical dependency graph to determine logically changed files.
+                const depGraph = new FileDependencyGraph();
+                // If a previous compilation exists, use its dependency graph to determine the set of
+                // logically changed files.
+                let logicalChanges = null;
+                if (state.lastGood !== null) {
+                    // Extract the set of logically changed files. At the same time, this operation populates
+                    // the current (fresh) dependency graph with information about those files which have not
+                    // logically changed.
+                    logicalChanges = depGraph.updateWithPhysicalChanges(state.lastGood.depGraph, state.changedTsPaths, deletedTsPaths, state.changedResourcePaths);
+                    perf.eventCount(PerfEvent.SourceFileLogicalChange, logicalChanges.size);
+                    for (const fileName of state.changedTsPaths) {
+                        logicalChanges.add(fileName);
+                    }
+                    // Any logically changed files need to be re-emitted. Most of the time this would happen
+                    // regardless because the new dependency graph would _also_ identify the file as stale.
+                    // However there are edge cases such as removing a component from an NgModule without adding
+                    // it to another one, where the previous graph identifies the file as logically changed, but
+                    // the new graph (which does not have that edge) fails to identify that the file should be
+                    // re-emitted.
+                    for (const change of logicalChanges) {
+                        state.pendingEmit.add(change);
+                        state.pendingTypeCheckEmit.add(change);
+                    }
+                }
+                // `state` now reflects the initial pending state of the current compilation.
+                return new IncrementalDriver(state, depGraph, logicalChanges);
+            });
         }
         static fresh(program) {
             // Initialize the set of files which need to be emitted to the set of all TS files in the
@@ -32393,29 +32831,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         return node.modifiers !== undefined &&
             node.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.StaticKeyword);
     }
-
-    const NOOP_PERF_RECORDER = {
-        enabled: false,
-        mark: (name, node, category, detail) => { },
-        start: (name, node, category, detail) => {
-            return 0;
-        },
-        stop: (span) => { },
-    };
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var PerfLogEventType;
-    (function (PerfLogEventType) {
-        PerfLogEventType[PerfLogEventType["SPAN_OPEN"] = 0] = "SPAN_OPEN";
-        PerfLogEventType[PerfLogEventType["SPAN_CLOSE"] = 1] = "SPAN_CLOSE";
-        PerfLogEventType[PerfLogEventType["MARK"] = 2] = "MARK";
-    })(PerfLogEventType || (PerfLogEventType = {}));
 
     /**
      * @license
@@ -37780,7 +38195,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * type checked.
      */
     class TypeCheckContextImpl {
-        constructor(config, compilerHost, componentMappingStrategy, refEmitter, reflector, host, inlining) {
+        constructor(config, compilerHost, componentMappingStrategy, refEmitter, reflector, host, inlining, perf) {
             this.config = config;
             this.compilerHost = compilerHost;
             this.componentMappingStrategy = componentMappingStrategy;
@@ -37788,6 +38203,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.reflector = reflector;
             this.host = host;
             this.inlining = inlining;
+            this.perf = perf;
             this.fileMap = new Map();
             /**
              * A `Map` of `ts.SourceFile`s that the context has seen to the operations (additions of methods
@@ -37861,6 +38277,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Record diagnostics to indicate the issues with this template.
                 shimData.oobRecorder.requiresInlineTcb(templateId, ref.node);
                 // Checking this template would be unsupported, so don't try.
+                this.perf.eventCount(PerfEvent.SkipGenerateTcbNoInline);
                 return;
             }
             const meta = {
@@ -37869,6 +38286,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 pipes,
                 schemas,
             };
+            this.perf.eventCount(PerfEvent.GenerateTcb);
             if (tcbRequiresInline) {
                 // This class didn't meet the requirements for external type checking, so generate an inline
                 // TCB for the class.
@@ -38685,7 +39103,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `ProgramTypeCheckAdapter` for generation of template type-checking code.
      */
     class TemplateTypeCheckerImpl {
-        constructor(originalProgram, typeCheckingStrategy, typeCheckAdapter, config, refEmitter, reflector, compilerHost, priorBuild, componentScopeReader, typeCheckScopeRegistry) {
+        constructor(originalProgram, typeCheckingStrategy, typeCheckAdapter, config, refEmitter, reflector, compilerHost, priorBuild, componentScopeReader, typeCheckScopeRegistry, perf) {
             this.originalProgram = originalProgram;
             this.typeCheckingStrategy = typeCheckingStrategy;
             this.typeCheckAdapter = typeCheckAdapter;
@@ -38696,6 +39114,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.priorBuild = priorBuild;
             this.componentScopeReader = componentScopeReader;
             this.typeCheckScopeRegistry = typeCheckScopeRegistry;
+            this.perf = perf;
             this.state = new Map();
             /**
              * Stores the `CompletionEngine` which powers autocompletion for each component class.
@@ -38807,48 +39226,52 @@ Either add the @Injectable() decorator to '${provider.node.name
                     this.ensureAllShimsForOneFile(sf);
                     break;
             }
-            const sfPath = absoluteFromSourceFile(sf);
-            const fileRecord = this.state.get(sfPath);
-            const typeCheckProgram = this.typeCheckingStrategy.getProgram();
-            const diagnostics = [];
-            if (fileRecord.hasInlines) {
-                const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
-                diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(inlineSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
-            }
-            for (const [shimPath, shimRecord] of fileRecord.shimData) {
+            return this.perf.inPhase(PerfPhase.TtcDiagnostics, () => {
+                const sfPath = absoluteFromSourceFile(sf);
+                const fileRecord = this.state.get(sfPath);
+                const typeCheckProgram = this.typeCheckingStrategy.getProgram();
+                const diagnostics = [];
+                if (fileRecord.hasInlines) {
+                    const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
+                    diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(inlineSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+                }
+                for (const [shimPath, shimRecord] of fileRecord.shimData) {
+                    const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
+                    diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(shimSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+                    diagnostics.push(...shimRecord.genesisDiagnostics);
+                    for (const templateData of shimRecord.templates.values()) {
+                        diagnostics.push(...templateData.templateDiagnostics);
+                    }
+                }
+                return diagnostics.filter((diag) => diag !== null);
+            });
+        }
+        getDiagnosticsForComponent(component) {
+            this.ensureShimForComponent(component);
+            return this.perf.inPhase(PerfPhase.TtcDiagnostics, () => {
+                const sf = component.getSourceFile();
+                const sfPath = absoluteFromSourceFile(sf);
+                const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+                const fileRecord = this.getFileData(sfPath);
+                if (!fileRecord.shimData.has(shimPath)) {
+                    return [];
+                }
+                const templateId = fileRecord.sourceManager.getTemplateId(component);
+                const shimRecord = fileRecord.shimData.get(shimPath);
+                const typeCheckProgram = this.typeCheckingStrategy.getProgram();
+                const diagnostics = [];
+                if (shimRecord.hasInlines) {
+                    const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
+                    diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(inlineSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
+                }
                 const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
                 diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(shimSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
                 diagnostics.push(...shimRecord.genesisDiagnostics);
                 for (const templateData of shimRecord.templates.values()) {
                     diagnostics.push(...templateData.templateDiagnostics);
                 }
-            }
-            return diagnostics.filter((diag) => diag !== null);
-        }
-        getDiagnosticsForComponent(component) {
-            this.ensureShimForComponent(component);
-            const sf = component.getSourceFile();
-            const sfPath = absoluteFromSourceFile(sf);
-            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
-            const fileRecord = this.getFileData(sfPath);
-            if (!fileRecord.shimData.has(shimPath)) {
-                return [];
-            }
-            const templateId = fileRecord.sourceManager.getTemplateId(component);
-            const shimRecord = fileRecord.shimData.get(shimPath);
-            const typeCheckProgram = this.typeCheckingStrategy.getProgram();
-            const diagnostics = [];
-            if (shimRecord.hasInlines) {
-                const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
-                diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(inlineSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
-            }
-            const shimSf = getSourceFileOrError(typeCheckProgram, shimPath);
-            diagnostics.push(...typeCheckProgram.getSemanticDiagnostics(shimSf).map(diag => convertDiagnostic(diag, fileRecord.sourceManager)));
-            diagnostics.push(...shimRecord.genesisDiagnostics);
-            for (const templateData of shimRecord.templates.values()) {
-                diagnostics.push(...templateData.templateDiagnostics);
-            }
-            return diagnostics.filter((diag) => diag !== null && diag.templateId === templateId);
+                return diagnostics.filter((diag) => diag !== null && diag.templateId === templateId);
+            });
         }
         getTypeCheckBlock(component) {
             return this.getLatestComponentState(component).tcb;
@@ -38858,14 +39281,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (engine === null) {
                 return null;
             }
-            return engine.getGlobalCompletions(context);
+            return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getGlobalCompletions(context));
         }
         getExpressionCompletionLocation(ast, component) {
             const engine = this.getOrCreateCompletionEngine(component);
             if (engine === null) {
                 return null;
             }
-            return engine.getExpressionCompletionLocation(ast);
+            return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getExpressionCompletionLocation(ast));
         }
         invalidateClass(clazz) {
             this.completionCache.delete(clazz);
@@ -38906,43 +39329,48 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (previousResults === null || !previousResults.isComplete) {
                 return;
             }
+            this.perf.eventCount(PerfEvent.ReuseTypeCheckFile);
             this.state.set(sfPath, previousResults);
         }
         ensureAllShimsForAllFiles() {
             if (this.isComplete) {
                 return;
             }
-            const host = new WholeProgramTypeCheckingHost(this);
-            const ctx = this.newContext(host);
-            for (const sf of this.originalProgram.getSourceFiles()) {
-                if (sf.isDeclarationFile || isShim(sf)) {
-                    continue;
+            this.perf.inPhase(PerfPhase.TcbGeneration, () => {
+                const host = new WholeProgramTypeCheckingHost(this);
+                const ctx = this.newContext(host);
+                for (const sf of this.originalProgram.getSourceFiles()) {
+                    if (sf.isDeclarationFile || isShim(sf)) {
+                        continue;
+                    }
+                    this.maybeAdoptPriorResultsForFile(sf);
+                    const sfPath = absoluteFromSourceFile(sf);
+                    const fileData = this.getFileData(sfPath);
+                    if (fileData.isComplete) {
+                        continue;
+                    }
+                    this.typeCheckAdapter.typeCheck(sf, ctx);
+                    fileData.isComplete = true;
                 }
+                this.updateFromContext(ctx);
+                this.isComplete = true;
+            });
+        }
+        ensureAllShimsForOneFile(sf) {
+            this.perf.inPhase(PerfPhase.TcbGeneration, () => {
                 this.maybeAdoptPriorResultsForFile(sf);
                 const sfPath = absoluteFromSourceFile(sf);
                 const fileData = this.getFileData(sfPath);
                 if (fileData.isComplete) {
-                    continue;
+                    // All data for this file is present and accounted for already.
+                    return;
                 }
+                const host = new SingleFileTypeCheckingHost(sfPath, fileData, this.typeCheckingStrategy, this);
+                const ctx = this.newContext(host);
                 this.typeCheckAdapter.typeCheck(sf, ctx);
                 fileData.isComplete = true;
-            }
-            this.updateFromContext(ctx);
-            this.isComplete = true;
-        }
-        ensureAllShimsForOneFile(sf) {
-            this.maybeAdoptPriorResultsForFile(sf);
-            const sfPath = absoluteFromSourceFile(sf);
-            const fileData = this.getFileData(sfPath);
-            if (fileData.isComplete) {
-                // All data for this file is present and accounted for already.
-                return;
-            }
-            const host = new SingleFileTypeCheckingHost(sfPath, fileData, this.typeCheckingStrategy, this);
-            const ctx = this.newContext(host);
-            this.typeCheckAdapter.typeCheck(sf, ctx);
-            fileData.isComplete = true;
-            this.updateFromContext(ctx);
+                this.updateFromContext(ctx);
+            });
         }
         ensureShimForComponent(component) {
             const sf = component.getSourceFile();
@@ -38962,7 +39390,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         newContext(host) {
             const inlining = this.typeCheckingStrategy.supportsInlineOperations ? InliningMode.InlineOps :
                 InliningMode.Error;
-            return new TypeCheckContextImpl(this.config, this.compilerHost, this.typeCheckingStrategy, this.refEmitter, this.reflector, host, inlining);
+            return new TypeCheckContextImpl(this.config, this.compilerHost, this.typeCheckingStrategy, this.refEmitter, this.reflector, host, inlining, this.perf);
         }
         /**
          * Remove any shim data that depends on inline operations applied to the type-checking program.
@@ -38987,8 +39415,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         updateFromContext(ctx) {
             const updates = ctx.finalize();
-            this.typeCheckingStrategy.updateFiles(updates, UpdateMode.Incremental);
-            this.priorBuild.recordSuccessfulTypeCheck(this.state);
+            return this.perf.inPhase(PerfPhase.TcbUpdateProgram, () => {
+                if (updates.size > 0) {
+                    this.perf.eventCount(PerfEvent.UpdateTypeCheckProgram);
+                }
+                this.typeCheckingStrategy.updateFiles(updates, UpdateMode.Incremental);
+                this.priorBuild.recordSuccessfulTypeCheck(this.state);
+                this.perf.memory(PerfCheckpoint.TtcUpdateProgram);
+            });
         }
         getFileData(path) {
             if (!this.state.has(path)) {
@@ -39006,7 +39440,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (builder === null) {
                 return null;
             }
-            return builder.getSymbol(node);
+            return this.perf.inPhase(PerfPhase.TtcSymbol, () => builder.getSymbol(node));
         }
         getOrCreateSymbolBuilder(component) {
             if (this.symbolBuilderCache.has(component)) {
@@ -39265,7 +39699,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     /**
      * Create a `CompilationTicket` for a brand new compilation, using no prior state.
      */
-    function freshCompilationTicket(tsProgram, options, incrementalBuildStrategy, typeCheckingProgramStrategy, enableTemplateTypeChecker, usePoisonedData) {
+    function freshCompilationTicket(tsProgram, options, incrementalBuildStrategy, typeCheckingProgramStrategy, perfRecorder, enableTemplateTypeChecker, usePoisonedData) {
         return {
             kind: CompilationTicketKind.Fresh,
             tsProgram,
@@ -39274,21 +39708,25 @@ Either add the @Injectable() decorator to '${provider.node.name
             typeCheckingProgramStrategy,
             enableTemplateTypeChecker,
             usePoisonedData,
+            perfRecorder: perfRecorder !== null && perfRecorder !== void 0 ? perfRecorder : ActivePerfRecorder.zeroedToNow(),
         };
     }
     /**
      * Create a `CompilationTicket` as efficiently as possible, based on a previous `NgCompiler`
      * instance and a new `ts.Program`.
      */
-    function incrementalFromCompilerTicket(oldCompiler, newProgram, incrementalBuildStrategy, typeCheckingProgramStrategy, modifiedResourceFiles) {
+    function incrementalFromCompilerTicket(oldCompiler, newProgram, incrementalBuildStrategy, typeCheckingProgramStrategy, modifiedResourceFiles, perfRecorder) {
         const oldProgram = oldCompiler.getNextProgram();
         const oldDriver = oldCompiler.incrementalStrategy.getIncrementalDriver(oldProgram);
         if (oldDriver === null) {
             // No incremental step is possible here, since no IncrementalDriver was found for the old
             // program.
-            return freshCompilationTicket(newProgram, oldCompiler.options, incrementalBuildStrategy, typeCheckingProgramStrategy, oldCompiler.enableTemplateTypeChecker, oldCompiler.usePoisonedData);
+            return freshCompilationTicket(newProgram, oldCompiler.options, incrementalBuildStrategy, typeCheckingProgramStrategy, perfRecorder, oldCompiler.enableTemplateTypeChecker, oldCompiler.usePoisonedData);
         }
-        const newDriver = IncrementalDriver.reconcile(oldProgram, oldDriver, newProgram, modifiedResourceFiles);
+        if (perfRecorder === null) {
+            perfRecorder = ActivePerfRecorder.zeroedToNow();
+        }
+        const newDriver = IncrementalDriver.reconcile(oldProgram, oldDriver, newProgram, modifiedResourceFiles, perfRecorder);
         return {
             kind: CompilationTicketKind.IncrementalTypeScript,
             enableTemplateTypeChecker: oldCompiler.enableTemplateTypeChecker,
@@ -39299,6 +39737,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             newDriver,
             oldProgram,
             newProgram,
+            perfRecorder,
         };
     }
     function resourceChangeTicket(compiler, modifiedResourceFiles) {
@@ -39306,6 +39745,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             kind: CompilationTicketKind.IncrementalResource,
             compiler,
             modifiedResourceFiles,
+            perfRecorder: ActivePerfRecorder.zeroedToNow(),
         };
     }
     /**
@@ -39321,7 +39761,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * See the README.md for more information.
      */
     class NgCompiler {
-        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, incrementalDriver, enableTemplateTypeChecker, usePoisonedData, perfRecorder = NOOP_PERF_RECORDER) {
+        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, incrementalDriver, enableTemplateTypeChecker, usePoisonedData, livePerfRecorder) {
             this.adapter = adapter;
             this.options = options;
             this.tsProgram = tsProgram;
@@ -39330,7 +39770,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.incrementalDriver = incrementalDriver;
             this.enableTemplateTypeChecker = enableTemplateTypeChecker;
             this.usePoisonedData = usePoisonedData;
-            this.perfRecorder = perfRecorder;
+            this.livePerfRecorder = livePerfRecorder;
             /**
              * Lazily evaluated state of the compilation.
              *
@@ -39350,6 +39790,13 @@ Either add the @Injectable() decorator to '${provider.node.name
              * This is set by (and memoizes) `getNonTemplateDiagnostics`.
              */
             this.nonTemplateDiagnostics = null;
+            /**
+             * `NgCompiler` can be reused for multiple compilations (for resource-only changes), and each
+             * new compilation uses a fresh `PerfRecorder`. Thus, classes created with a lifespan of the
+             * `NgCompiler` use a `DelegatingPerfRecorder` so the `PerfRecorder` they write to can be updated
+             * with each fresh compilation.
+             */
+            this.delegatingPerfRecorder = new DelegatingPerfRecorder(this.perfRecorder);
             this.constructionDiagnostics.push(...this.adapter.constructionDiagnostics);
             const incompatibleTypeCheckOptionsDiagnostic = verifyCompatibleTypeCheckOptions(this.options);
             if (incompatibleTypeCheckOptionsDiagnostic !== null) {
@@ -39360,9 +39807,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.entryPoint =
                 adapter.entryPoint !== null ? getSourceFileOrNull(tsProgram, adapter.entryPoint) : null;
             const moduleResolutionCache = ts$1.createModuleResolutionCache(this.adapter.getCurrentDirectory(), 
-            // Note: this used to be an arrow-function closure. However, JS engines like v8 have some
-            // strange behaviors with retaining the lexical scope of the closure. Even if this function
-            // doesn't retain a reference to `this`, if other closures in the constructor here reference
+            // doen't retain a reference to `this`, if other closures in the constructor here reference
             // `this` internally then a closure created here would retain them. This can cause major
             // memory leak issues since the `moduleResolutionCache` is a long-lived object and finds its
             // way into all kinds of places inside TS internal objects.
@@ -39370,55 +39815,75 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.moduleResolver =
                 new ModuleResolver(tsProgram, this.options, this.adapter, moduleResolutionCache);
             this.resourceManager = new AdapterResourceLoader(adapter, this.options);
-            this.cycleAnalyzer = new CycleAnalyzer(new ImportGraph(tsProgram.getTypeChecker()));
+            this.cycleAnalyzer =
+                new CycleAnalyzer(new ImportGraph(tsProgram.getTypeChecker(), this.delegatingPerfRecorder));
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, tsProgram);
             this.ignoreForDiagnostics =
                 new Set(tsProgram.getSourceFiles().filter(sf => this.adapter.isShim(sf)));
             this.ignoreForEmit = this.adapter.ignoreForEmit;
+            let dtsFileCount = 0;
+            let nonDtsFileCount = 0;
+            for (const sf of tsProgram.getSourceFiles()) {
+                if (sf.isDeclarationFile) {
+                    dtsFileCount++;
+                }
+                else {
+                    nonDtsFileCount++;
+                }
+            }
+            livePerfRecorder.eventCount(PerfEvent.InputDtsFile, dtsFileCount);
+            livePerfRecorder.eventCount(PerfEvent.InputTsFile, nonDtsFileCount);
         }
         /**
          * Convert a `CompilationTicket` into an `NgCompiler` instance for the requested compilation.
          *
          * Depending on the nature of the compilation request, the `NgCompiler` instance may be reused
          * from a previous compilation and updated with any changes, it may be a new instance which
-         * incrementally reuses state from a previous compilation, or it may represent a fresh compilation
-         * entirely.
+         * incrementally reuses state from a previous compilation, or it may represent a fresh
+         * compilation entirely.
          */
-        static fromTicket(ticket, adapter, perfRecorder) {
+        static fromTicket(ticket, adapter) {
             switch (ticket.kind) {
                 case CompilationTicketKind.Fresh:
-                    return new NgCompiler(adapter, ticket.options, ticket.tsProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, IncrementalDriver.fresh(ticket.tsProgram), ticket.enableTemplateTypeChecker, ticket.usePoisonedData, perfRecorder);
+                    return new NgCompiler(adapter, ticket.options, ticket.tsProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, IncrementalDriver.fresh(ticket.tsProgram), ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
                 case CompilationTicketKind.IncrementalTypeScript:
-                    return new NgCompiler(adapter, ticket.options, ticket.newProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, ticket.newDriver, ticket.enableTemplateTypeChecker, ticket.usePoisonedData, perfRecorder);
+                    return new NgCompiler(adapter, ticket.options, ticket.newProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, ticket.newDriver, ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
                 case CompilationTicketKind.IncrementalResource:
                     const compiler = ticket.compiler;
-                    compiler.updateWithChangedResources(ticket.modifiedResourceFiles);
+                    compiler.updateWithChangedResources(ticket.modifiedResourceFiles, ticket.perfRecorder);
                     return compiler;
             }
         }
-        updateWithChangedResources(changedResources) {
-            if (this.compilation === null) {
-                // Analysis hasn't happened yet, so no update is necessary - any changes to resources will be
-                // captured by the inital analysis pass itself.
-                return;
-            }
-            this.resourceManager.invalidate();
-            const classesToUpdate = new Set();
-            for (const resourceFile of changedResources) {
-                for (const templateClass of this.getComponentsWithTemplateFile(resourceFile)) {
-                    classesToUpdate.add(templateClass);
+        get perfRecorder() {
+            return this.livePerfRecorder;
+        }
+        updateWithChangedResources(changedResources, perfRecorder) {
+            this.livePerfRecorder = perfRecorder;
+            this.delegatingPerfRecorder.target = perfRecorder;
+            perfRecorder.inPhase(PerfPhase.ResourceUpdate, () => {
+                if (this.compilation === null) {
+                    // Analysis hasn't happened yet, so no update is necessary - any changes to resources will
+                    // be captured by the inital analysis pass itself.
+                    return;
                 }
-                for (const styleClass of this.getComponentsWithStyleFile(resourceFile)) {
-                    classesToUpdate.add(styleClass);
+                this.resourceManager.invalidate();
+                const classesToUpdate = new Set();
+                for (const resourceFile of changedResources) {
+                    for (const templateClass of this.getComponentsWithTemplateFile(resourceFile)) {
+                        classesToUpdate.add(templateClass);
+                    }
+                    for (const styleClass of this.getComponentsWithStyleFile(resourceFile)) {
+                        classesToUpdate.add(styleClass);
+                    }
                 }
-            }
-            for (const clazz of classesToUpdate) {
-                this.compilation.traitCompiler.updateResources(clazz);
-                if (!ts$1.isClassDeclaration(clazz)) {
-                    continue;
+                for (const clazz of classesToUpdate) {
+                    this.compilation.traitCompiler.updateResources(clazz);
+                    if (!ts$1.isClassDeclaration(clazz)) {
+                        continue;
+                    }
+                    this.compilation.templateTypeChecker.invalidateClass(clazz);
                 }
-                this.compilation.templateTypeChecker.invalidateClass(clazz);
-            }
+            });
         }
         /**
          * Get the resource dependencies of a file.
@@ -39525,29 +39990,23 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (this.compilation !== null) {
                     return;
                 }
-                this.compilation = this.makeCompilation();
-                const analyzeSpan = this.perfRecorder.start('analyze');
-                const promises = [];
-                for (const sf of this.tsProgram.getSourceFiles()) {
-                    if (sf.isDeclarationFile) {
-                        continue;
+                yield this.perfRecorder.inPhase(PerfPhase.Analysis, () => __awaiter(this, void 0, void 0, function* () {
+                    this.compilation = this.makeCompilation();
+                    const promises = [];
+                    for (const sf of this.tsProgram.getSourceFiles()) {
+                        if (sf.isDeclarationFile) {
+                            continue;
+                        }
+                        let analysisPromise = this.compilation.traitCompiler.analyzeAsync(sf);
+                        this.scanForMwp(sf);
+                        if (analysisPromise !== undefined) {
+                            promises.push(analysisPromise);
+                        }
                     }
-                    const analyzeFileSpan = this.perfRecorder.start('analyzeFile', sf);
-                    let analysisPromise = this.compilation.traitCompiler.analyzeAsync(sf);
-                    this.scanForMwp(sf);
-                    if (analysisPromise === undefined) {
-                        this.perfRecorder.stop(analyzeFileSpan);
-                    }
-                    else if (this.perfRecorder.enabled) {
-                        analysisPromise = analysisPromise.then(() => this.perfRecorder.stop(analyzeFileSpan));
-                    }
-                    if (analysisPromise !== undefined) {
-                        promises.push(analysisPromise);
-                    }
-                }
-                yield Promise.all(promises);
-                this.perfRecorder.stop(analyzeSpan);
-                this.resolveCompilation(this.compilation.traitCompiler);
+                    yield Promise.all(promises);
+                    this.perfRecorder.memory(PerfCheckpoint.Analysis);
+                    this.resolveCompilation(this.compilation.traitCompiler);
+                }));
             });
         }
         /**
@@ -39557,9 +40016,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         listLazyRoutes(entryRoute) {
             if (entryRoute) {
-                // Note:
-                // This resolution step is here to match the implementation of the old `AotCompilerHost` (see
-                // https://github.com/angular/angular/blob/50732e156/packages/compiler-cli/src/transformers/compiler_host.ts#L175-L188).
+                // htts://github.com/angular/angular/blob/50732e156/packages/compiler-cli/src/transformers/compiler_host.ts#L175-L188).
                 //
                 // `@angular/cli` will always call this API with an absolute path, so the resolution step is
                 // not necessary, but keeping it backwards compatible in case someone else is using the API.
@@ -39601,7 +40058,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 importRewriter = new NoopImportRewriter();
             }
             const before = [
-                ivyTransformFactory(compilation.traitCompiler, compilation.reflector, importRewriter, compilation.defaultImportTracker, compilation.isCore, this.closureCompilerEnabled),
+                ivyTransformFactory(compilation.traitCompiler, compilation.reflector, importRewriter, compilation.defaultImportTracker, this.delegatingPerfRecorder, compilation.isCore, this.closureCompilerEnabled),
                 aliasTransformFactory(compilation.traitCompiler.exportStatements),
                 compilation.defaultImportTracker.importPreservingTransformer(),
             ];
@@ -39637,25 +40094,27 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.compilation;
         }
         analyzeSync() {
-            const analyzeSpan = this.perfRecorder.start('analyze');
-            this.compilation = this.makeCompilation();
-            for (const sf of this.tsProgram.getSourceFiles()) {
-                if (sf.isDeclarationFile) {
-                    continue;
+            this.perfRecorder.inPhase(PerfPhase.Analysis, () => {
+                this.compilation = this.makeCompilation();
+                for (const sf of this.tsProgram.getSourceFiles()) {
+                    if (sf.isDeclarationFile) {
+                        continue;
+                    }
+                    this.compilation.traitCompiler.analyzeSync(sf);
+                    this.scanForMwp(sf);
                 }
-                const analyzeFileSpan = this.perfRecorder.start('analyzeFile', sf);
-                this.compilation.traitCompiler.analyzeSync(sf);
-                this.scanForMwp(sf);
-                this.perfRecorder.stop(analyzeFileSpan);
-            }
-            this.perfRecorder.stop(analyzeSpan);
-            this.resolveCompilation(this.compilation.traitCompiler);
+                this.perfRecorder.memory(PerfCheckpoint.Analysis);
+                this.resolveCompilation(this.compilation.traitCompiler);
+            });
         }
         resolveCompilation(traitCompiler) {
-            traitCompiler.resolve();
-            // At this point, analysis is complete and the compiler can now calculate which files need to
-            // be emitted, so do that.
-            this.incrementalDriver.recordSuccessfulAnalysis(traitCompiler);
+            this.perfRecorder.inPhase(PerfPhase.Resolve, () => {
+                traitCompiler.resolve();
+                // At this point, analysis is complete and the compiler can now calculate which files need to
+                // be emitted, so do that.
+                this.incrementalDriver.recordSuccessfulAnalysis(traitCompiler);
+                this.perfRecorder.memory(PerfCheckpoint.Resolve);
+            });
         }
         get fullTemplateTypeCheck() {
             // Determine the strictness level of type checking based on compiler options. As
@@ -39779,7 +40238,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         getTemplateDiagnostics() {
             const compilation = this.ensureAnalyzed();
             // Get the diagnostics.
-            const typeCheckSpan = this.perfRecorder.start('typeCheckDiagnostics');
             const diagnostics = [];
             for (const sf of this.tsProgram.getSourceFiles()) {
                 if (sf.isDeclarationFile || this.adapter.isShim(sf)) {
@@ -39788,7 +40246,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, OptimizeFor.WholeProgram));
             }
             const program = this.typeCheckingProgramStrategy.getProgram();
-            this.perfRecorder.stop(typeCheckSpan);
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
             this.nextProgram = program;
             return diagnostics;
@@ -39796,13 +40253,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         getTemplateDiagnosticsForFile(sf, optimizeFor) {
             const compilation = this.ensureAnalyzed();
             // Get the diagnostics.
-            const typeCheckSpan = this.perfRecorder.start('typeCheckDiagnostics');
             const diagnostics = [];
             if (!sf.isDeclarationFile && !this.adapter.isShim(sf)) {
                 diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, optimizeFor));
             }
             const program = this.typeCheckingProgramStrategy.getProgram();
-            this.perfRecorder.stop(typeCheckSpan);
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
             this.nextProgram = program;
             return diagnostics;
@@ -39921,20 +40376,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                 1 /* Error */;
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, semanticDepGraphUpdater, this.closureCompilerEnabled),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, semanticDepGraphUpdater, this.closureCompilerEnabled, this.delegatingPerfRecorder),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
-                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, semanticDepGraphUpdater, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures),
+                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, semanticDepGraphUpdater, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures, this.delegatingPerfRecorder),
                 // clang-format on
                 // Pipe handler must be before injectable handler in list so pipe factories are printed
                 // before injectable factories (so injectable factories can delegate to them)
-                new PipeDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportTracker, injectableRegistry, isCore),
-                new InjectableDecoratorHandler(reflector, defaultImportTracker, isCore, this.options.strictInjectionParameters || false, injectableRegistry),
-                new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.options.i18nInLocale),
+                new PipeDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportTracker, injectableRegistry, isCore, this.delegatingPerfRecorder),
+                new InjectableDecoratorHandler(reflector, defaultImportTracker, isCore, this.options.strictInjectionParameters || false, injectableRegistry, this.delegatingPerfRecorder),
+                new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.delegatingPerfRecorder, this.options.i18nInLocale),
             ];
-            const traitCompiler = new TraitCompiler(handlers, reflector, this.perfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
-            const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry);
+            const traitCompiler = new TraitCompiler(handlers, reflector, this.delegatingPerfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
+            const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry, this.delegatingPerfRecorder);
             return {
                 isCore,
                 traitCompiler,
@@ -40853,14 +41308,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     const ticket = resourceChangeTicket(this.compiler, modifiedResourceFiles);
                     this.compiler = NgCompiler.fromTicket(ticket, this.adapter);
                 }
+                else {
+                    // The previous NgCompiler is being reused, but we still want to reset its performance
+                    // tracker to capture only the operations that are needed to service the current request.
+                    this.compiler.perfRecorder.reset();
+                }
                 return this.compiler;
             }
             let ticket;
             if (this.compiler === null || this.lastKnownProgram === null) {
-                ticket = freshCompilationTicket(program, this.options, this.incrementalStrategy, this.programStrategy, true, true);
+                ticket = freshCompilationTicket(program, this.options, this.incrementalStrategy, this.programStrategy, 
+                /* perfRecorder */ null, true, true);
             }
             else {
-                ticket = incrementalFromCompilerTicket(this.compiler, program, this.incrementalStrategy, this.programStrategy, modifiedResourceFiles);
+                ticket = incrementalFromCompilerTicket(this.compiler, program, this.incrementalStrategy, this.programStrategy, modifiedResourceFiles, /* perfRecorder */ null);
             }
             this.compiler = NgCompiler.fromTicket(ticket, this.adapter);
             this.lastKnownProgram = program;
@@ -42664,43 +43125,50 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.ttc = this.compiler.getTemplateTypeChecker();
         }
         getRenameInfo(filePath, position) {
-            const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
-            // We could not get a template at position so we assume the request came from outside the
-            // template.
-            if (templateInfo === undefined) {
-                return this.tsLS.getRenameInfo(filePath, position);
-            }
-            const allTargetDetails = this.getTargetDetailsAtTemplatePosition(templateInfo, position);
-            if (allTargetDetails === null) {
-                return { canRename: false, localizedErrorMessage: 'Could not find template node at position.' };
-            }
-            const { templateTarget } = allTargetDetails[0];
-            const templateTextAndSpan = getRenameTextAndSpanAtPosition(templateTarget, position);
-            if (templateTextAndSpan === null) {
-                return { canRename: false, localizedErrorMessage: 'Could not determine template node text.' };
-            }
-            const { text, span } = templateTextAndSpan;
-            return {
-                canRename: true,
-                displayName: text,
-                fullDisplayName: text,
-                triggerSpan: span,
-            };
+            return this.compiler.perfRecorder.inPhase(PerfPhase.LsReferencesAndRenames, () => {
+                const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
+                // We could not get a template at position so we assume the request came from outside the
+                // template.
+                if (templateInfo === undefined) {
+                    return this.tsLS.getRenameInfo(filePath, position);
+                }
+                const allTargetDetails = this.getTargetDetailsAtTemplatePosition(templateInfo, position);
+                if (allTargetDetails === null) {
+                    return {
+                        canRename: false,
+                        localizedErrorMessage: 'Could not find template node at position.',
+                    };
+                }
+                const { templateTarget } = allTargetDetails[0];
+                const templateTextAndSpan = getRenameTextAndSpanAtPosition(templateTarget, position);
+                if (templateTextAndSpan === null) {
+                    return { canRename: false, localizedErrorMessage: 'Could not determine template node text.' };
+                }
+                const { text, span } = templateTextAndSpan;
+                return {
+                    canRename: true,
+                    displayName: text,
+                    fullDisplayName: text,
+                    triggerSpan: span,
+                };
+            });
         }
         findRenameLocations(filePath, position) {
             this.ttc.generateAllTypeCheckBlocks();
-            const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
-            // We could not get a template at position so we assume the request came from outside the
-            // template.
-            if (templateInfo === undefined) {
-                const requestNode = this.getTsNodeAtPosition(filePath, position);
-                if (requestNode === null) {
-                    return undefined;
+            return this.compiler.perfRecorder.inPhase(PerfPhase.LsReferencesAndRenames, () => {
+                const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
+                // We could not get a template at position so we assume the request came from outside the
+                // template.
+                if (templateInfo === undefined) {
+                    const requestNode = this.getTsNodeAtPosition(filePath, position);
+                    if (requestNode === null) {
+                        return undefined;
+                    }
+                    const requestOrigin = { kind: RequestKind.TypeScript, requestNode };
+                    return this.findRenameLocationsAtTypescriptPosition(filePath, position, requestOrigin);
                 }
-                const requestOrigin = { kind: RequestKind.TypeScript, requestNode };
-                return this.findRenameLocationsAtTypescriptPosition(filePath, position, requestOrigin);
-            }
-            return this.findRenameLocationsAtTemplatePosition(templateInfo, position);
+                return this.findRenameLocationsAtTemplatePosition(templateInfo, position);
+            });
         }
         findRenameLocationsAtTemplatePosition(templateInfo, position) {
             const allTargetDetails = this.getTargetDetailsAtTemplatePosition(templateInfo, position);
@@ -42735,52 +43203,56 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return (_a = findTightestNode(sf, position)) !== null && _a !== void 0 ? _a : null;
         }
         findRenameLocationsAtTypescriptPosition(filePath, position, requestOrigin) {
-            let originalNodeText;
-            if (requestOrigin.kind === RequestKind.TypeScript) {
-                originalNodeText = requestOrigin.requestNode.getText();
-            }
-            else {
-                const templateNodeText = getRenameTextAndSpanAtPosition(requestOrigin.requestNode, requestOrigin.position);
-                if (templateNodeText === null) {
-                    return undefined;
-                }
-                originalNodeText = templateNodeText.text;
-            }
-            const locations = this.tsLS.findRenameLocations(filePath, position, /*findInStrings*/ false, /*findInComments*/ false);
-            if (locations === undefined) {
-                return undefined;
-            }
-            const entries = new Map();
-            for (const location of locations) {
-                // TODO(atscott): Determine if a file is a shim file in a more robust way and make the API
-                // available in an appropriate location.
-                if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(location.fileName))) {
-                    const entry = this.convertToTemplateDocumentSpan(location, this.ttc, originalNodeText);
-                    // There is no template node whose text matches the original rename request. Bail on
-                    // renaming completely rather than providing incomplete results.
-                    if (entry === null) {
-                        return undefined;
-                    }
-                    entries.set(createLocationKey(entry), entry);
+            return this.compiler.perfRecorder.inPhase(PerfPhase.LsReferencesAndRenames, () => {
+                let originalNodeText;
+                if (requestOrigin.kind === RequestKind.TypeScript) {
+                    originalNodeText = requestOrigin.requestNode.getText();
                 }
                 else {
-                    // Ensure we only allow renaming a TS result with matching text
-                    const refNode = this.getTsNodeAtPosition(location.fileName, location.textSpan.start);
-                    if (refNode === null || refNode.getText() !== originalNodeText) {
+                    const templateNodeText = getRenameTextAndSpanAtPosition(requestOrigin.requestNode, requestOrigin.position);
+                    if (templateNodeText === null) {
                         return undefined;
                     }
-                    entries.set(createLocationKey(location), location);
+                    originalNodeText = templateNodeText.text;
                 }
-            }
-            return Array.from(entries.values());
+                const locations = this.tsLS.findRenameLocations(filePath, position, /*findInStrings*/ false, /*findInComments*/ false);
+                if (locations === undefined) {
+                    return undefined;
+                }
+                const entries = new Map();
+                for (const location of locations) {
+                    // TODO(atscott): Determine if a file is a shim file in a more robust way and make the API
+                    // available in an appropriate location.
+                    if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(location.fileName))) {
+                        const entry = this.convertToTemplateDocumentSpan(location, this.ttc, originalNodeText);
+                        // There is no template node whose text matches the original rename request. Bail on
+                        // renaming completely rather than providing incomplete results.
+                        if (entry === null) {
+                            return undefined;
+                        }
+                        entries.set(createLocationKey(entry), entry);
+                    }
+                    else {
+                        // Ensure we only allow renaming a TS result with matching text
+                        const refNode = this.getTsNodeAtPosition(location.fileName, location.textSpan.start);
+                        if (refNode === null || refNode.getText() !== originalNodeText) {
+                            return undefined;
+                        }
+                        entries.set(createLocationKey(location), location);
+                    }
+                }
+                return Array.from(entries.values());
+            });
         }
         getReferencesAtPosition(filePath, position) {
             this.ttc.generateAllTypeCheckBlocks();
-            const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
-            if (templateInfo === undefined) {
-                return this.getReferencesAtTypescriptPosition(filePath, position);
-            }
-            return this.getReferencesAtTemplatePosition(templateInfo, position);
+            return this.compiler.perfRecorder.inPhase(PerfPhase.LsReferencesAndRenames, () => {
+                const templateInfo = getTemplateInfoAtPosition(filePath, position, this.compiler);
+                if (templateInfo === undefined) {
+                    return this.getReferencesAtTypescriptPosition(filePath, position);
+                }
+                return this.getReferencesAtTemplatePosition(templateInfo, position);
+            });
         }
         getReferencesAtTemplatePosition(templateInfo, position) {
             const allTargetDetails = this.getTargetDetailsAtTemplatePosition(templateInfo, position);
