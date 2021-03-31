@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.7+9.sha-06e5132
+ * @license Angular v11.2.7+13.sha-723bfc7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -12552,7 +12552,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (isEmptyExpression(value)) {
                 return null;
             }
-            name = normalizePropName(name);
+            // CSS custom properties are case-sensitive so we shouldn't normalize them.
+            // See: https://www.w3.org/TR/css-variables-1/#defining-variables
+            if (!isCssCustomProperty(name)) {
+                name = hyphenate(name);
+            }
             const { property, hasOverrideFlag, suffix: bindingSuffix } = parseProperty(name);
             suffix = typeof suffix === 'string' && suffix.length !== 0 ? suffix : bindingSuffix;
             const entry = { name: property, suffix: suffix, value, sourceSpan, hasOverrideFlag };
@@ -12897,8 +12901,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return Identifiers$1.stylePropInterpolateV;
         }
     }
-    function normalizePropName(prop) {
-        return hyphenate(prop);
+    /**
+     * Checks whether property name is a custom CSS property.
+     * See: https://www.w3.org/TR/css-variables-1
+     */
+    function isCssCustomProperty(name) {
+        return name.startsWith('--');
     }
 
     /**
@@ -19172,7 +19180,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.7+9.sha-06e5132');
+    const VERSION$1 = new Version('11.2.7+13.sha-723bfc7');
 
     /**
      * @license
@@ -35194,7 +35202,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.7+9.sha-06e5132');
+    const VERSION$2 = new Version$1('11.2.7+13.sha-723bfc7');
 
     /**
      * @license
