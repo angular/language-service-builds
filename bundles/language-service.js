@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.6+41.sha-0226a11
+ * @license Angular v12.0.0-next.6+42.sha-ff9470b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19084,12 +19084,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return result;
     }
     function convertDeclareComponentFacadeToMetadata(declaration, typeSourceSpan, sourceMapUrl) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const { template, interpolation } = parseJitTemplate(declaration.template, declaration.type.name, sourceMapUrl, (_a = declaration.preserveWhitespaces) !== null && _a !== void 0 ? _a : false, declaration.interpolation);
-        return Object.assign(Object.assign({}, convertDeclareDirectiveFacadeToMetadata(declaration, typeSourceSpan)), { template, styles: (_b = declaration.styles) !== null && _b !== void 0 ? _b : [], directives: ((_c = declaration.directives) !== null && _c !== void 0 ? _c : []).map(convertUsedDirectiveDeclarationToMetadata), pipes: convertUsedPipesToMetadata(declaration.pipes), viewProviders: declaration.viewProviders !== undefined ?
+        return Object.assign(Object.assign({}, convertDeclareDirectiveFacadeToMetadata(declaration, typeSourceSpan)), { template, styles: (_b = declaration.styles) !== null && _b !== void 0 ? _b : [], directives: ((_c = declaration.components) !== null && _c !== void 0 ? _c : [])
+                .concat((_d = declaration.directives) !== null && _d !== void 0 ? _d : [])
+                .map(convertUsedDirectiveDeclarationToMetadata), pipes: convertUsedPipesToMetadata(declaration.pipes), viewProviders: declaration.viewProviders !== undefined ?
                 new WrappedNodeExpr(declaration.viewProviders) :
                 null, animations: declaration.animations !== undefined ? new WrappedNodeExpr(declaration.animations) :
-                null, changeDetection: (_d = declaration.changeDetection) !== null && _d !== void 0 ? _d : ChangeDetectionStrategy.Default, encapsulation: (_e = declaration.encapsulation) !== null && _e !== void 0 ? _e : ViewEncapsulation.Emulated, interpolation, declarationListEmitMode: 2 /* ClosureResolved */, relativeContextFilePath: '', i18nUseExternalIds: true });
+                null, changeDetection: (_e = declaration.changeDetection) !== null && _e !== void 0 ? _e : ChangeDetectionStrategy.Default, encapsulation: (_f = declaration.encapsulation) !== null && _f !== void 0 ? _f : ViewEncapsulation.Emulated, interpolation, declarationListEmitMode: 2 /* ClosureResolved */, relativeContextFilePath: '', i18nUseExternalIds: true });
     }
     function convertUsedDirectiveDeclarationToMetadata(declaration) {
         var _a, _b, _c;
@@ -19244,7 +19246,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.6+41.sha-0226a11');
+    const VERSION$1 = new Version('12.0.0-next.6+42.sha-ff9470b');
 
     /**
      * @license
@@ -35260,7 +35262,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.6+41.sha-0226a11');
+    const VERSION$2 = new Version$1('12.0.0-next.6+42.sha-ff9470b');
 
     /**
      * @license
