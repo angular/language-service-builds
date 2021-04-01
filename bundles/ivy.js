@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.6+40.sha-3470ea1
+ * @license Angular v12.0.0-next.6+41.sha-0226a11
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20474,7 +20474,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.6+40.sha-3470ea1');
+    const VERSION$1 = new Version('12.0.0-next.6+41.sha-0226a11');
 
     /**
      * @license
@@ -21140,7 +21140,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.6+40.sha-3470ea1'));
+        definitionMap.set('version', literal('12.0.0-next.6+41.sha-0226a11'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21350,7 +21350,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.6+40.sha-3470ea1'));
+        definitionMap.set('version', literal('12.0.0-next.6+41.sha-0226a11'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21408,7 +21408,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.6+40.sha-3470ea1'));
+        definitionMap.set('version', literal('12.0.0-next.6+41.sha-0226a11'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21433,7 +21433,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.6+40.sha-3470ea1'));
+        definitionMap.set('version', literal('12.0.0-next.6+41.sha-0226a11'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21483,7 +21483,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.6+40.sha-3470ea1'));
+        definitionMap.set('version', literal('12.0.0-next.6+41.sha-0226a11'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21515,7 +21515,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.6+40.sha-3470ea1');
+    const VERSION$2 = new Version('12.0.0-next.6+41.sha-0226a11');
 
     /**
      * @license
@@ -41733,7 +41733,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * input shares the same name as a DOM attribute, the `Map` will reflect the directive input
      * completion, not the DOM completion for that name.
      */
-    function buildAttributeCompletionTable(component, element, checker, includeDomSchemaAttributes) {
+    function buildAttributeCompletionTable(component, element, checker) {
         const table = new Map();
         // Use the `ElementSymbol` or `TemplateSymbol` to iterate over directives present on the node, and
         // their inputs/outputs. These have the highest priority of completion results.
@@ -41869,20 +41869,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
         }
         // Finally, add any DOM attributes not already covered by inputs.
-        if (element instanceof Element && includeDomSchemaAttributes) {
+        if (element instanceof Element) {
             for (const { attribute, property } of checker.getPotentialDomBindings(element.name)) {
                 const isAlsoProperty = attribute === property;
-                if (!table.has(attribute)) {
+                if (!table.has(attribute) && isAlsoProperty) {
                     table.set(attribute, {
                         kind: AttributeCompletionKind.DomAttribute,
                         attribute,
                         isAlsoProperty,
-                    });
-                }
-                if (!isAlsoProperty && !table.has(property)) {
-                    table.set(property, {
-                        kind: AttributeCompletionKind.DomProperty,
-                        property,
                     });
                 }
             }
@@ -41983,31 +41977,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 break;
             }
             case AttributeCompletionKind.DomAttribute: {
-                if (isAttributeContext) {
-                    // Offer a completion of an attribute binding.
-                    entries.push({
-                        kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.ATTRIBUTE),
-                        name: completion.attribute,
-                        sortText: completion.attribute,
-                        replacementSpan,
-                    });
-                    if (completion.isAlsoProperty) {
-                        // Offer a completion of a property binding to the DOM property.
-                        entries.push({
-                            kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PROPERTY),
-                            name: `[${completion.attribute}]`,
-                            // In the case of DOM attributes, the property binding should sort after the attribute
-                            // binding.
-                            sortText: completion.attribute + '_1',
-                            replacementSpan,
-                        });
-                    }
-                }
-                else if (completion.isAlsoProperty) {
+                if (isAttributeContext && completion.isAlsoProperty) {
+                    // Offer a completion of a property binding to the DOM property.
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PROPERTY),
-                        name: completion.attribute,
-                        sortText: completion.attribute,
+                        name: `[${completion.attribute}]`,
+                        // In the case of DOM attributes, the property binding should sort after the attribute
+                        // binding.
+                        sortText: completion.attribute + '_1',
                         replacementSpan,
                     });
                 }
@@ -42418,13 +42395,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * @param N type of the template node in question, narrowed accordingly.
      */
     class CompletionBuilder {
-        constructor(tsLS, compiler, component, node, targetDetails, inlineTemplate) {
+        constructor(tsLS, compiler, component, node, targetDetails) {
             this.tsLS = tsLS;
             this.compiler = compiler;
             this.component = component;
             this.node = node;
             this.targetDetails = targetDetails;
-            this.inlineTemplate = inlineTemplate;
             this.typeChecker = this.compiler.getNextProgram().getTypeChecker();
             this.templateTypeChecker = this.compiler.getTemplateTypeChecker();
             this.nodeParent = this.targetDetails.parent;
@@ -42692,11 +42668,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
             const replacementSpan = { start, length };
             let potentialTags = Array.from(templateTypeChecker.getPotentialElementTags(this.component));
-            if (!this.inlineTemplate) {
-                // If we are in an external template, don't provide non-Angular tags (directive === null)
-                // because we expect other extensions (i.e. Emmet) to provide those for HTML files.
-                potentialTags = potentialTags.filter(([_, directive]) => directive !== null);
-            }
+            // Don't provide non-Angular tags (directive === null) because we expect other extensions (i.e.
+            // Emmet) to provide those for HTML files.
+            potentialTags = potentialTags.filter(([_, directive]) => directive !== null);
             const entries = potentialTags.map(([tag, directive]) => ({
                 kind: tagCompletionKind(directive),
                 name: tag,
@@ -42768,7 +42742,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 this.node.keySpan !== undefined) {
                 replacementSpan = makeReplacementSpanFromParseSourceSpan(this.node.keySpan);
             }
-            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker(), this.inlineTemplate);
+            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
             let entries = [];
             for (const completion of attrTable.values()) {
                 // First, filter out completions that don't make sense for the current node. For example, if
@@ -42830,7 +42804,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 // Nothing to do without an element to process.
                 return undefined;
             }
-            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker(), this.inlineTemplate);
+            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
             if (!attrTable.has(name)) {
                 return undefined;
             }
@@ -42887,7 +42861,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 // Nothing to do without an element to process.
                 return undefined;
             }
-            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker(), this.inlineTemplate);
+            const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
             if (!attrTable.has(name)) {
                 return undefined;
             }
@@ -43962,7 +43936,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
                 positionDetails.context.nodes[0] :
                 positionDetails.context.node;
-            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, positionDetails, isTypeScriptFile(fileName));
+            return new CompletionBuilder(this.tsLS, compiler, templateInfo.component, node, positionDetails);
         }
         getCompletionsAtPosition(fileName, position, options) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsCompletions, (compiler) => {
