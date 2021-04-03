@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.7+8.sha-dc65526
+ * @license Angular v12.0.0-next.7+9.sha-1de04b1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20476,7 +20476,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.7+8.sha-dc65526');
+    const VERSION$1 = new Version('12.0.0-next.7+9.sha-1de04b1');
 
     /**
      * @license
@@ -21142,7 +21142,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.7+8.sha-dc65526'));
+        definitionMap.set('version', literal('12.0.0-next.7+9.sha-1de04b1'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21352,7 +21352,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.7+8.sha-dc65526'));
+        definitionMap.set('version', literal('12.0.0-next.7+9.sha-1de04b1'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21410,7 +21410,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.7+8.sha-dc65526'));
+        definitionMap.set('version', literal('12.0.0-next.7+9.sha-1de04b1'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21435,7 +21435,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.7+8.sha-dc65526'));
+        definitionMap.set('version', literal('12.0.0-next.7+9.sha-1de04b1'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21485,7 +21485,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.7+8.sha-dc65526'));
+        definitionMap.set('version', literal('12.0.0-next.7+9.sha-1de04b1'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21517,7 +21517,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.7+8.sha-dc65526');
+    const VERSION$2 = new Version('12.0.0-next.7+9.sha-1de04b1');
 
     /**
      * @license
@@ -30576,6 +30576,7 @@ Either add the @Injectable() decorator to '${provider.node.name
              * thrown away, and the parsed template is reused during the analyze phase.
              */
             this.preanalyzeTemplateCache = new Map();
+            this.preanalyzeStylesCache = new Map();
             this.precedence = HandlerPrecedence.PRIMARY;
             this.name = ComponentDecoratorHandler.name;
         }
@@ -30615,7 +30616,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const containingFile = node.getSourceFile().fileName;
             const resolveStyleUrl = (styleUrl, nodeForError, resourceType) => {
                 const resourceUrl = this._resolveResourceOrThrow(styleUrl, containingFile, nodeForError, resourceType);
-                return this.resourceLoader.preload(resourceUrl);
+                return this.resourceLoader.preload(resourceUrl, { type: 'style', containingFile });
             };
             // A Promise that waits for the template and all <link>ed styles within it to be preloaded.
             const templateAndTemplateStyleResources = this._preloadAndParseTemplate(node, decorator, component, containingFile)
@@ -30630,20 +30631,28 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
             // Extract all the styleUrls in the decorator.
             const componentStyleUrls = this._extractComponentStyleUrls(component);
-            if (componentStyleUrls === null) {
-                // A fast path exists if there are no styleUrls, to just wait for
-                // templateAndTemplateStyleResources.
-                return templateAndTemplateStyleResources;
+            // Extract inline styles, process, and cache for use in synchronous analyze phase
+            let inlineStyles;
+            if (component.has('styles')) {
+                const litStyles = parseFieldArrayValue(component, 'styles', this.evaluator);
+                if (litStyles === null) {
+                    this.preanalyzeStylesCache.set(node, null);
+                }
+                else {
+                    inlineStyles = Promise
+                        .all(litStyles.map(style => this.resourceLoader.preprocessInline(style, { type: 'style', containingFile })))
+                        .then(styles => {
+                        this.preanalyzeStylesCache.set(node, styles);
+                    });
+                }
             }
-            else {
-                // Wait for both the template and all styleUrl resources to resolve.
-                return Promise
-                    .all([
-                    templateAndTemplateStyleResources,
-                    ...componentStyleUrls.map(styleUrl => resolveStyleUrl(styleUrl.url, styleUrl.nodeForError, 2 /* StylesheetFromDecorator */))
-                ])
-                    .then(() => undefined);
-            }
+            // Wait for both the template and all styleUrl resources to resolve.
+            return Promise
+                .all([
+                templateAndTemplateStyleResources, inlineStyles,
+                ...componentStyleUrls.map(styleUrl => resolveStyleUrl(styleUrl.url, styleUrl.nodeForError, 2 /* StylesheetFromDecorator */))
+            ])
+                .then(() => undefined);
         }
         analyze(node, decorator, flags = HandlerFlags.NONE) {
             var _a;
@@ -30727,12 +30736,29 @@ Either add the @Injectable() decorator to '${provider.node.name
                     this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(resourceUrl));
                 }
             }
+            // If inline styles were preprocessed use those
             let inlineStyles = null;
-            if (component.has('styles')) {
-                const litStyles = parseFieldArrayValue(component, 'styles', this.evaluator);
-                if (litStyles !== null) {
-                    inlineStyles = [...litStyles];
-                    styles.push(...litStyles);
+            if (this.preanalyzeStylesCache.has(node)) {
+                inlineStyles = this.preanalyzeStylesCache.get(node);
+                this.preanalyzeStylesCache.delete(node);
+                if (inlineStyles !== null) {
+                    styles.push(...inlineStyles);
+                }
+            }
+            else {
+                // Preprocessing is only supported asynchronously
+                // If no style cache entry is present asynchronous preanalyze was not executed.
+                // This protects against accidental differences in resource contents when preanalysis
+                // is not used with a provided transformResource hook on the ResourceHost.
+                if (this.resourceLoader.canPreprocess) {
+                    throw new Error('Inline resource processing requires asynchronous preanalyze.');
+                }
+                if (component.has('styles')) {
+                    const litStyles = parseFieldArrayValue(component, 'styles', this.evaluator);
+                    if (litStyles !== null) {
+                        inlineStyles = [...litStyles];
+                        styles.push(...litStyles);
+                    }
                 }
             }
             if (template.styles.length > 0) {
@@ -31133,7 +31159,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     throw createValueHasWrongTypeError(templateUrlExpr, templateUrl, 'templateUrl must be a string');
                 }
                 const resourceUrl = this._resolveResourceOrThrow(templateUrl, containingFile, templateUrlExpr, 0 /* Template */);
-                const templatePromise = this.resourceLoader.preload(resourceUrl);
+                const templatePromise = this.resourceLoader.preload(resourceUrl, { type: 'template', containingFile });
                 // If the preload worked, then actually load and parse the template, and wait for any style
                 // URLs to resolve.
                 if (templatePromise !== undefined) {
@@ -33197,6 +33223,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.fetching = new Map();
             this.lookupResolutionHost = createLookupResolutionHost(this.adapter);
             this.canPreload = !!this.adapter.readResource;
+            this.canPreprocess = !!this.adapter.transformResource;
         }
         /**
          * Resolve the url of a resource relative to the file that contains the reference to it.
@@ -33230,11 +33257,12 @@ Either add the @Injectable() decorator to '${provider.node.name
          * `load()` method.
          *
          * @param resolvedUrl The url (resolved by a call to `resolve()`) of the resource to preload.
+         * @param context Information about the resource such as the type and containing file.
          * @returns A Promise that is resolved once the resource has been loaded or `undefined` if the
          * file has already been loaded.
          * @throws An Error if pre-loading is not available.
          */
-        preload(resolvedUrl) {
+        preload(resolvedUrl, context) {
             if (!this.adapter.readResource) {
                 throw new Error('HostResourceLoader: the CompilerHost provided does not support pre-loading resources.');
             }
@@ -33244,7 +33272,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             else if (this.fetching.has(resolvedUrl)) {
                 return this.fetching.get(resolvedUrl);
             }
-            const result = this.adapter.readResource(resolvedUrl);
+            let result = this.adapter.readResource(resolvedUrl);
+            if (this.adapter.transformResource && context.type === 'style') {
+                const resourceContext = {
+                    type: 'style',
+                    containingFile: context.containingFile,
+                    resourceFile: resolvedUrl,
+                };
+                result = Promise.resolve(result).then((str) => __awaiter(this, void 0, void 0, function* () {
+                    const transformResult = yield this.adapter.transformResource(str, resourceContext);
+                    return transformResult === null ? str : transformResult.content;
+                }));
+            }
             if (typeof result === 'string') {
                 this.cache.set(resolvedUrl, result);
                 return undefined;
@@ -33257,6 +33296,26 @@ Either add the @Injectable() decorator to '${provider.node.name
                 this.fetching.set(resolvedUrl, fetchCompletion);
                 return fetchCompletion;
             }
+        }
+        /**
+         * Preprocess the content data of an inline resource, asynchronously.
+         *
+         * @param data The existing content data from the inline resource.
+         * @param context Information regarding the resource such as the type and containing file.
+         * @returns A Promise that resolves to the processed data. If no processing occurs, the
+         * same data string that was passed to the function will be resolved.
+         */
+        preprocessInline(data, context) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (!this.adapter.transformResource || context.type !== 'style') {
+                    return data;
+                }
+                const transformResult = yield this.adapter.transformResource(data, { type: 'style', containingFile: context.containingFile, resourceFile: null });
+                if (transformResult === null) {
+                    return data;
+                }
+                return transformResult.content;
+            });
         }
         /**
          * Load the resource at the given url, synchronously.
