@@ -32,15 +32,34 @@ export declare class LanguageService {
     getDefinitionAndBoundSpan(fileName: string, position: number): ts.DefinitionInfoAndBoundSpan | undefined;
     getTypeDefinitionAtPosition(fileName: string, position: number): readonly ts.DefinitionInfo[] | undefined;
     getQuickInfoAtPosition(fileName: string, position: number): ts.QuickInfo | undefined;
+    private getQuickInfoAtPositionImpl;
     getReferencesAtPosition(fileName: string, position: number): ts.ReferenceEntry[] | undefined;
     getRenameInfo(fileName: string, position: number): ts.RenameInfo;
     findRenameLocations(fileName: string, position: number): readonly ts.RenameLocation[] | undefined;
     private getCompletionBuilder;
     getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ts.WithMetadata<ts.CompletionInfo> | undefined;
+    private getCompletionsAtPositionImpl;
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined): ts.CompletionEntryDetails | undefined;
     getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
     getTcb(fileName: string, position: number): GetTcbResponse | undefined;
-    private withCompiler;
+    /**
+     * Provides an instance of the `NgCompiler` and traces perf results. Perf results are logged only
+     * if the log level is verbose or higher. This method is intended to be called once per public
+     * method call.
+     *
+     * Here is an example of the log output.
+     *
+     * Perf 245  [16:16:39.353] LanguageService#getQuickInfoAtPosition(): {"events":{},"phases":{
+     * "Unaccounted":379,"TtcSymbol":4},"memory":{}}
+     *
+     * Passing name of caller instead of using `arguments.caller` because 'caller', 'callee', and
+     * 'arguments' properties may not be accessed in strict mode.
+     *
+     * @param phase the `PerfPhase` to execute the `p` callback in
+     * @param p callback to be run synchronously with an instance of the `NgCompiler` as argument
+     * @return the result of running the `p` callback
+     */
+    private withCompilerAndPerfTracing;
     getCompilerOptionsDiagnostics(): ts.Diagnostic[];
     private watchConfigFile;
 }

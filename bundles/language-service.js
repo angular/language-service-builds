@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.8+3.sha-d4f739f
+ * @license Angular v11.2.8+6.sha-103f05a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19180,7 +19180,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.8+3.sha-d4f739f');
+    const VERSION$1 = new Version('11.2.8+6.sha-103f05a');
 
     /**
      * @license
@@ -28009,6 +28009,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Profiler function which wraps user code executed by the runtime.
+     *
+     * @param event ProfilerEvent corresponding to the execution context
+     * @param instance component instance
+     * @param hookOrListener lifecycle hook function or output listener. The value depends on the
+     *  execution context
+     * @returns
+     */
+    const profiler = function (event, instance, hookOrListener) {
+    };
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
     const MATH_ML_NAMESPACE = 'http://www.w3.org/1998/MathML/';
 
@@ -28705,11 +28724,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 (currentView[PREORDER_HOOK_FLAGS] >> 16 /* NumberOfInitHooksCalledShift */) &&
                 (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
                 currentView[FLAGS] += 2048 /* IndexWithinInitPhaseIncrementer */;
-                hook.call(directive);
+                try {
+                    hook.call(directive);
+                }
+                finally {
+                }
             }
         }
         else {
-            hook.call(directive);
+            try {
+                hook.call(directive);
+            }
+            finally {
+            }
         }
     }
 
@@ -32636,13 +32663,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function executeTemplate(tView, lView, templateFn, rf, context) {
         const prevSelectedIndex = getSelectedIndex();
+        const isUpdatePhase = rf & 2 /* Update */;
         try {
             setSelectedIndex(-1);
-            if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
+            if (isUpdatePhase && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
                 selectIndexInternal(tView, lView, HEADER_OFFSET, isInCheckNoChangesMode());
             }
+            const preHookType = isUpdatePhase ? 2 /* TemplateUpdateStart */ : 0 /* TemplateCreateStart */;
+            profiler(preHookType, context);
             templateFn(rf, context);
         }
         finally {
@@ -35202,7 +35232,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.8+3.sha-d4f739f');
+    const VERSION$2 = new Version$1('11.2.8+6.sha-103f05a');
 
     /**
      * @license
