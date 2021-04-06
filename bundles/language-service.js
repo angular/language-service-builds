@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.7+21.sha-acebe92
+ * @license Angular v12.0.0-next.7+25.sha-575f537
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19246,7 +19246,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.7+21.sha-acebe92');
+    const VERSION$1 = new Version('12.0.0-next.7+25.sha-575f537');
 
     /**
      * @license
@@ -33572,7 +33572,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // This means we have never seen this record, see if it is tree shakable provider.
                 const injectableDef = getInjectableDef(token);
                 if (injectableDef) {
-                    const providedIn = injectableDef && injectableDef.providedIn;
+                    const providedIn = injectableDef && resolveForwardRef$1(injectableDef.providedIn);
                     if (providedIn === 'any' || providedIn != null && providedIn === this.scope) {
                         records.set(token, record = resolveProvider({ provide: token, useFactory: injectableDef.factory, deps: EMPTY }));
                     }
@@ -35292,7 +35292,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.7+21.sha-acebe92');
+    const VERSION$2 = new Version$1('12.0.0-next.7+25.sha-575f537');
 
     /**
      * @license
