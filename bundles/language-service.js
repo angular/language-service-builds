@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.7+21.sha-acebe92
+ * @license Angular v12.0.0-next.7+25.sha-575f537
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19246,7 +19246,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.7+21.sha-acebe92');
+    const VERSION$1 = new Version('12.0.0-next.7+25.sha-575f537');
 
     /**
      * @license
@@ -37963,11 +37963,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             if (!def.providedIn) {
                 return false;
             }
-            else if (typeof def.providedIn === 'string') {
-                return def.providedIn === 'any' || (def.providedIn === this.scope);
+            const providedIn = resolveForwardRef$1(def.providedIn);
+            if (typeof providedIn === 'string') {
+                return providedIn === 'any' || (providedIn === this.scope);
             }
             else {
-                return this.injectorDefTypes.has(def.providedIn);
+                return this.injectorDefTypes.has(providedIn);
             }
         }
     }
@@ -47153,7 +47154,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.7+21.sha-acebe92');
+    const VERSION$2 = new Version$1('12.0.0-next.7+25.sha-575f537');
 
     /**
      * @license
