@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.8+30.sha-f8986e1
+ * @license Angular v11.2.8+32.sha-9408af6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20399,7 +20399,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.8+30.sha-f8986e1');
+    const VERSION$1 = new Version('11.2.8+32.sha-9408af6');
 
     /**
      * @license
@@ -21056,7 +21056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.8+30.sha-f8986e1'));
+        definitionMap.set('version', literal('11.2.8+32.sha-9408af6'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21277,7 +21277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.8+30.sha-f8986e1'));
+        definitionMap.set('version', literal('11.2.8+32.sha-9408af6'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21309,7 +21309,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.8+30.sha-f8986e1');
+    const VERSION$2 = new Version('11.2.8+32.sha-9408af6');
 
     /**
      * @license
@@ -30295,9 +30295,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             const meta = this._resolveLiteral(decorator);
             const component = reflectObjectLiteral(meta);
             const containingFile = node.getSourceFile().fileName;
-            const resolveStyleUrl = (styleUrl, nodeForError, resourceType) => {
-                const resourceUrl = this._resolveResourceOrThrow(styleUrl, containingFile, nodeForError, resourceType);
-                return this.resourceLoader.preload(resourceUrl);
+            const resolveStyleUrl = (styleUrl) => {
+                try {
+                    const resourceUrl = this.resourceLoader.resolve(styleUrl, containingFile);
+                    return this.resourceLoader.preload(resourceUrl);
+                }
+                catch (_a) {
+                    // Don't worry about failures to preload. We can handle this problem during analysis by
+                    // producing a diagnostic.
+                    return undefined;
+                }
             };
             // A Promise that waits for the template and all <link>ed styles within it to be preloaded.
             const templateAndTemplateStyleResources = this._preloadAndParseTemplate(node, decorator, component, containingFile)
@@ -30305,9 +30312,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (template === null) {
                     return undefined;
                 }
-                const nodeForError = getTemplateDeclarationNodeForError(template.declaration);
-                return Promise
-                    .all(template.styleUrls.map(styleUrl => resolveStyleUrl(styleUrl, nodeForError, 1 /* StylesheetFromTemplate */)))
+                return Promise.all(template.styleUrls.map(styleUrl => resolveStyleUrl(styleUrl)))
                     .then(() => undefined);
             });
             // Extract all the styleUrls in the decorator.
@@ -30322,7 +30327,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return Promise
                     .all([
                     templateAndTemplateStyleResources,
-                    ...componentStyleUrls.map(styleUrl => resolveStyleUrl(styleUrl.url, styleUrl.nodeForError, 2 /* StylesheetFromDecorator */))
+                    ...componentStyleUrls.map(styleUrl => resolveStyleUrl(styleUrl.url))
                 ])
                     .then(() => undefined);
             }
@@ -30332,6 +30337,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.perf.eventCount(PerfEvent.AnalyzeComponent);
             const containingFile = node.getSourceFile().fileName;
             this.literalCache.delete(decorator);
+            let diagnostics;
+            let isPoisoned = false;
             // @Component inherits @Directive, so begin by extracting the @Directive metadata and building
             // on it.
             const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags, this.annotateForClosureCompiler, this.elementSchemaRegistry.getDefaultComponentElementName());
@@ -30399,14 +30406,23 @@ Either add the @Injectable() decorator to '${provider.node.name
                 ...this._extractComponentStyleUrls(component), ...this._extractTemplateStyleUrls(template)
             ];
             for (const styleUrl of styleUrls) {
-                const resourceType = styleUrl.source === 2 /* StylesheetFromDecorator */ ?
-                    2 /* StylesheetFromDecorator */ :
-                    1 /* StylesheetFromTemplate */;
-                const resourceUrl = this._resolveResourceOrThrow(styleUrl.url, containingFile, styleUrl.nodeForError, resourceType);
-                const resourceStr = this.resourceLoader.load(resourceUrl);
-                styles.push(resourceStr);
-                if (this.depTracker !== null) {
-                    this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(resourceUrl));
+                try {
+                    const resourceUrl = this.resourceLoader.resolve(styleUrl.url, containingFile);
+                    const resourceStr = this.resourceLoader.load(resourceUrl);
+                    styles.push(resourceStr);
+                    if (this.depTracker !== null) {
+                        this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(resourceUrl));
+                    }
+                }
+                catch (_b) {
+                    if (diagnostics === undefined) {
+                        diagnostics = [];
+                    }
+                    const resourceType = styleUrl.source === 2 /* StylesheetFromDecorator */ ?
+                        2 /* StylesheetFromDecorator */ :
+                        1 /* StylesheetFromTemplate */;
+                    diagnostics.push(this.makeResourceNotFoundError(styleUrl.url, styleUrl.nodeForError, resourceType)
+                        .toDiagnostic());
                 }
             }
             let inlineStyles = null;
@@ -30449,8 +30465,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                         styles: styleResources,
                         template: templateResource,
                     },
-                    isPoisoned: false,
+                    isPoisoned,
                 },
+                diagnostics,
             };
             if (changeDetection !== null) {
                 output.analysis.meta.changeDetection = changeDetection;
@@ -30679,12 +30696,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             let styles = [];
             if (analysis.styleUrls !== null) {
                 for (const styleUrl of analysis.styleUrls) {
-                    const resourceType = styleUrl.source === 2 /* StylesheetFromDecorator */ ?
-                        2 /* StylesheetFromDecorator */ :
-                        1 /* StylesheetFromTemplate */;
-                    const resolvedStyleUrl = this._resolveResourceOrThrow(styleUrl.url, containingFile, styleUrl.nodeForError, resourceType);
-                    const styleText = this.resourceLoader.load(resolvedStyleUrl);
-                    styles.push(styleText);
+                    try {
+                        const resolvedStyleUrl = this.resourceLoader.resolve(styleUrl.url, containingFile);
+                        const styleText = this.resourceLoader.load(resolvedStyleUrl);
+                        styles.push(styleText);
+                    }
+                    catch (e) {
+                        // Resource resolve failures should already be in the diagnostics list from the analyze
+                        // stage. We do not need to do anything with them when updating resources.
+                    }
                 }
             }
             if (analysis.inlineStyles !== null) {
@@ -30806,8 +30826,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             const styleUrlsExpr = component.get('styleUrls');
             if (styleUrlsExpr !== undefined && ts$1.isArrayLiteralExpression(styleUrlsExpr)) {
                 for (const expression of stringLiteralElements(styleUrlsExpr)) {
-                    const resourceUrl = this._resolveResourceOrThrow(expression.text, containingFile, expression, 2 /* StylesheetFromDecorator */);
-                    styles.add({ path: absoluteFrom(resourceUrl), expression });
+                    try {
+                        const resourceUrl = this.resourceLoader.resolve(expression.text, containingFile);
+                        styles.add({ path: absoluteFrom(resourceUrl), expression });
+                    }
+                    catch (_a) {
+                        // Errors in style resource extraction do not need to be handled here. We will produce
+                        // diagnostics for each one that fails in the analysis, after we evaluate the `styleUrls`
+                        // expression to determine _all_ style resources, not just the string literals.
+                    }
                 }
             }
             const stylesExpr = component.get('styles');
@@ -30826,20 +30853,25 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (typeof templateUrl !== 'string') {
                     throw createValueHasWrongTypeError(templateUrlExpr, templateUrl, 'templateUrl must be a string');
                 }
-                const resourceUrl = this._resolveResourceOrThrow(templateUrl, containingFile, templateUrlExpr, 0 /* Template */);
-                const templatePromise = this.resourceLoader.preload(resourceUrl);
-                // If the preload worked, then actually load and parse the template, and wait for any style
-                // URLs to resolve.
-                if (templatePromise !== undefined) {
-                    return templatePromise.then(() => {
-                        const templateDecl = this.parseTemplateDeclaration(decorator, component, containingFile);
-                        const template = this.extractTemplate(node, templateDecl);
-                        this.preanalyzeTemplateCache.set(node, template);
-                        return template;
-                    });
+                try {
+                    const resourceUrl = this.resourceLoader.resolve(templateUrl, containingFile);
+                    const templatePromise = this.resourceLoader.preload(resourceUrl);
+                    // If the preload worked, then actually load and parse the template, and wait for any style
+                    // URLs to resolve.
+                    if (templatePromise !== undefined) {
+                        return templatePromise.then(() => {
+                            const templateDecl = this.parseTemplateDeclaration(decorator, component, containingFile);
+                            const template = this.extractTemplate(node, templateDecl);
+                            this.preanalyzeTemplateCache.set(node, template);
+                            return template;
+                        });
+                    }
+                    else {
+                        return Promise.resolve(null);
+                    }
                 }
-                else {
-                    return Promise.resolve(null);
+                catch (e) {
+                    throw this.makeResourceNotFoundError(templateUrl, templateUrlExpr, 0 /* Template */);
                 }
             }
             else {
@@ -30971,16 +31003,21 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (typeof templateUrl !== 'string') {
                     throw createValueHasWrongTypeError(templateUrlExpr, templateUrl, 'templateUrl must be a string');
                 }
-                const resourceUrl = this._resolveResourceOrThrow(templateUrl, containingFile, templateUrlExpr, 0 /* Template */);
-                return {
-                    isInline: false,
-                    interpolationConfig,
-                    preserveWhitespaces,
-                    templateUrl,
-                    templateUrlExpression: templateUrlExpr,
-                    resolvedTemplateUrl: resourceUrl,
-                    sourceMapUrl: sourceMapUrl(resourceUrl),
-                };
+                try {
+                    const resourceUrl = this.resourceLoader.resolve(templateUrl, containingFile);
+                    return {
+                        isInline: false,
+                        interpolationConfig,
+                        preserveWhitespaces,
+                        templateUrl,
+                        templateUrlExpression: templateUrlExpr,
+                        resolvedTemplateUrl: resourceUrl,
+                        sourceMapUrl: sourceMapUrl(resourceUrl),
+                    };
+                }
+                catch (e) {
+                    throw this.makeResourceNotFoundError(templateUrl, templateUrlExpr, 0 /* Template */);
+                }
             }
             else if (component.has('template')) {
                 return {
@@ -31033,30 +31070,20 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             this.cycleAnalyzer.recordSyntheticImport(origin, imported);
         }
-        /**
-         * Resolve the url of a resource relative to the file that contains the reference to it.
-         *
-         * Throws a FatalDiagnosticError when unable to resolve the file.
-         */
-        _resolveResourceOrThrow(file, basePath, nodeForError, resourceType) {
-            try {
-                return this.resourceLoader.resolve(file, basePath);
+        makeResourceNotFoundError(file, nodeForError, resourceType) {
+            let errorText;
+            switch (resourceType) {
+                case 0 /* Template */:
+                    errorText = `Could not find template file '${file}'.`;
+                    break;
+                case 1 /* StylesheetFromTemplate */:
+                    errorText = `Could not find stylesheet file '${file}' linked from the template.`;
+                    break;
+                case 2 /* StylesheetFromDecorator */:
+                    errorText = `Could not find stylesheet file '${file}'.`;
+                    break;
             }
-            catch (e) {
-                let errorText;
-                switch (resourceType) {
-                    case 0 /* Template */:
-                        errorText = `Could not find template file '${file}'.`;
-                        break;
-                    case 1 /* StylesheetFromTemplate */:
-                        errorText = `Could not find stylesheet file '${file}' linked from the template.`;
-                        break;
-                    case 2 /* StylesheetFromDecorator */:
-                        errorText = `Could not find stylesheet file '${file}'.`;
-                        break;
-                }
-                throw new FatalDiagnosticError(ErrorCode.COMPONENT_RESOURCE_NOT_FOUND, nodeForError, errorText);
-            }
+            return new FatalDiagnosticError(ErrorCode.COMPONENT_RESOURCE_NOT_FOUND, nodeForError, errorText);
         }
         _extractTemplateStyleUrls(template) {
             if (template.styleUrls === null) {
