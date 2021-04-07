@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+6.sha-7a49aa5
+ * @license Angular v12.0.0-next.8+7.sha-d641542
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19246,7 +19246,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+6.sha-7a49aa5');
+    const VERSION$1 = new Version('12.0.0-next.8+7.sha-d641542');
 
     /**
      * @license
@@ -35292,7 +35292,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+6.sha-7a49aa5');
+    const VERSION$2 = new Version$1('12.0.0-next.8+7.sha-d641542');
 
     /**
      * @license
@@ -38556,57 +38556,36 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             super.next(value);
         }
         subscribe(observerOrNext, error, complete) {
-            let schedulerFn;
-            let errorFn = (err) => null;
-            let completeFn = () => null;
+            var _a, _b, _c;
+            let nextFn = observerOrNext;
+            let errorFn = error || (() => null);
+            let completeFn = complete;
             if (observerOrNext && typeof observerOrNext === 'object') {
-                schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => observerOrNext.next(value));
-                } : (value) => {
-                    observerOrNext.next(value);
-                };
-                if (observerOrNext.error) {
-                    errorFn = this.__isAsync ? (err) => {
-                        setTimeout(() => observerOrNext.error(err));
-                    } : (err) => {
-                        observerOrNext.error(err);
-                    };
+                const observer = observerOrNext;
+                nextFn = (_a = observer.next) === null || _a === void 0 ? void 0 : _a.bind(observer);
+                errorFn = (_b = observer.error) === null || _b === void 0 ? void 0 : _b.bind(observer);
+                completeFn = (_c = observer.complete) === null || _c === void 0 ? void 0 : _c.bind(observer);
+            }
+            if (this.__isAsync) {
+                errorFn = _wrapInTimeout(errorFn);
+                if (nextFn) {
+                    nextFn = _wrapInTimeout(nextFn);
                 }
-                if (observerOrNext.complete) {
-                    completeFn = this.__isAsync ? () => {
-                        setTimeout(() => observerOrNext.complete());
-                    } : () => {
-                        observerOrNext.complete();
-                    };
+                if (completeFn) {
+                    completeFn = _wrapInTimeout(completeFn);
                 }
             }
-            else {
-                schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => observerOrNext(value));
-                } : (value) => {
-                    observerOrNext(value);
-                };
-                if (error) {
-                    errorFn = this.__isAsync ? (err) => {
-                        setTimeout(() => error(err));
-                    } : (err) => {
-                        error(err);
-                    };
-                }
-                if (complete) {
-                    completeFn = this.__isAsync ? () => {
-                        setTimeout(() => complete());
-                    } : () => {
-                        complete();
-                    };
-                }
-            }
-            const sink = super.subscribe(schedulerFn, errorFn, completeFn);
+            const sink = super.subscribe({ next: nextFn, error: errorFn, complete: completeFn });
             if (observerOrNext instanceof Subscription) {
                 observerOrNext.add(sink);
             }
             return sink;
         }
+    }
+    function _wrapInTimeout(fn) {
+        return (value) => {
+            setTimeout(fn, undefined, value);
+        };
     }
     /**
      * @publicApi
