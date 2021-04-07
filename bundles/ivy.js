@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+7.sha-d641542
+ * @license Angular v12.0.0-next.8+9.sha-c385e74
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1374,6 +1374,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         BinaryOperator[BinaryOperator["LowerEquals"] = 13] = "LowerEquals";
         BinaryOperator[BinaryOperator["Bigger"] = 14] = "Bigger";
         BinaryOperator[BinaryOperator["BiggerEquals"] = 15] = "BiggerEquals";
+        BinaryOperator[BinaryOperator["NullishCoalesce"] = 16] = "NullishCoalesce";
     })(BinaryOperator || (BinaryOperator = {}));
     function nullSafeIsEquivalent(base, other) {
         if (base == null || other == null) {
@@ -1474,6 +1475,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         cast(type, sourceSpan) {
             return new CastExpr(this, type, sourceSpan);
+        }
+        nullishCoalesce(rhs, sourceSpan) {
+            return new BinaryOperatorExpr(BinaryOperator.NullishCoalesce, this, rhs, null, sourceSpan);
         }
         toStmt() {
             return new ExpressionStatement(this, null);
@@ -3603,6 +3607,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     break;
                 case BinaryOperator.BiggerEquals:
                     opStr = '>=';
+                    break;
+                case BinaryOperator.NullishCoalesce:
+                    opStr = '??';
                     break;
                 default:
                     throw new Error(`Unknown operator ${ast.operator}`);
@@ -7407,6 +7414,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case '>=':
                     op = BinaryOperator.BiggerEquals;
                     break;
+                case '??':
+                    return this.convertNullishCoalesce(ast, mode);
                 default:
                     throw new Error(`Unsupported operation ${ast.operation}`);
             }
@@ -7649,7 +7658,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // which comes in as leftMostSafe to this routine.
             let guardedExpression = this._visit(leftMostSafe.receiver, _Mode.Expression);
             let temporary = undefined;
-            if (this.needsTemporary(leftMostSafe.receiver)) {
+            if (this.needsTemporaryInSafeAccess(leftMostSafe.receiver)) {
                 // If the expression has method calls or pipes then we need to save the result into a
                 // temporary variable to avoid calling stateful or impure code more than once.
                 temporary = this.allocateTemporary();
@@ -7678,6 +7687,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             // Produce the conditional
             return convertToStatementIfNeeded(mode, condition.conditional(literal(null), access));
+        }
+        convertNullishCoalesce(ast, mode) {
+            // Allocate the temporary variable before visiting the LHS and RHS, because they
+            // may allocate temporary variables too and we don't want them to be reused.
+            const temporary = this.allocateTemporary();
+            const left = this._visit(ast.left, _Mode.Expression);
+            const right = this._visit(ast.right, _Mode.Expression);
+            this.releaseTemporary(temporary);
+            // Generate the following expression. It is identical to how TS
+            // transpiles binary expressions with a nullish coalescing operator.
+            // let temp;
+            // (temp = a) !== null && temp !== undefined ? temp : b;
+            return convertToStatementIfNeeded(mode, temporary.set(left)
+                .notIdentical(NULL_EXPR)
+                .and(temporary.notIdentical(literal(undefined)))
+                .conditional(temporary, right));
         }
         // Given an expression of the form a?.b.c?.d.e then the left most safe node is
         // the (a?.b). The . and ?. are left associative thus can be rewritten as:
@@ -7762,7 +7787,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // Returns true of the AST includes a method or a pipe indicating that, if the
         // expression is used as the target of a safe property or method access then
         // the expression should be stored into a temporary variable.
-        needsTemporary(ast) {
+        needsTemporaryInSafeAccess(ast) {
             const visit = (visitor, ast) => {
                 return ast && (this._nodeMap.get(ast) || ast).visit(visitor);
             };
@@ -11490,7 +11515,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case $CARET:
                     return this.scanOperator(start, String.fromCharCode(peek));
                 case $QUESTION:
-                    return this.scanComplexOperator(start, '?', $PERIOD, '.');
+                    return this.scanQuestion(start);
                 case $LT:
                 case $GT:
                     return this.scanComplexOperator(start, String.fromCharCode(peek), $EQ, '=');
@@ -11618,6 +11643,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const last = input.substring(marker, this.index);
             this.advance(); // Skip terminating quote.
             return newStringToken(start, this.index, buffer + last);
+        }
+        scanQuestion(start) {
+            this.advance();
+            let str = '?';
+            // Either `a ?? b` or 'a?.b'.
+            if (this.peek === $QUESTION || this.peek === $PERIOD) {
+                str += this.peek === $PERIOD ? '.' : '?';
+                this.advance();
+            }
+            return newOperatorToken(start, this.index, str);
         }
         error(message, offset) {
             const position = this.index + offset;
@@ -12256,10 +12291,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         parseLogicalAnd() {
             // '&&'
             const start = this.inputIndex;
-            let result = this.parseEquality();
+            let result = this.parseNullishCoalescing();
             while (this.consumeOptionalOperator('&&')) {
-                const right = this.parseEquality();
+                const right = this.parseNullishCoalescing();
                 result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
+            }
+            return result;
+        }
+        parseNullishCoalescing() {
+            // '??'
+            const start = this.inputIndex;
+            let result = this.parseEquality();
+            while (this.consumeOptionalOperator('??')) {
+                const right = this.parseEquality();
+                result = new Binary(this.span(start), this.sourceSpan(start), '??', result, right);
             }
             return result;
         }
@@ -17629,7 +17674,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+7.sha-d641542');
+    const VERSION$1 = new Version('12.0.0-next.8+9.sha-c385e74');
 
     /**
      * @license
@@ -18295,7 +18340,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+7.sha-d641542'));
+        definitionMap.set('version', literal('12.0.0-next.8+9.sha-c385e74'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18505,7 +18550,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+7.sha-d641542'));
+        definitionMap.set('version', literal('12.0.0-next.8+9.sha-c385e74'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18563,7 +18608,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+7.sha-d641542'));
+        definitionMap.set('version', literal('12.0.0-next.8+9.sha-c385e74'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18588,7 +18633,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+7.sha-d641542'));
+        definitionMap.set('version', literal('12.0.0-next.8+9.sha-c385e74'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18638,7 +18683,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+7.sha-d641542'));
+        definitionMap.set('version', literal('12.0.0-next.8+9.sha-c385e74'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18670,7 +18715,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+7.sha-d641542');
+    const VERSION$2 = new Version('12.0.0-next.8+9.sha-c385e74');
 
     /**
      * @license
@@ -24128,6 +24173,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         [BinaryOperator.NotIdentical, '!=='],
         [BinaryOperator.Or, '||'],
         [BinaryOperator.Plus, '+'],
+        [BinaryOperator.NullishCoalesce, '??'],
     ]);
     class ExpressionTranslatorVisitor {
         constructor(factory, imports, options) {
@@ -24659,6 +24705,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         '!==': ts$1.SyntaxKind.ExclamationEqualsEqualsToken,
         '||': ts$1.SyntaxKind.BarBarToken,
         '+': ts$1.SyntaxKind.PlusToken,
+        '??': ts$1.SyntaxKind.QuestionQuestionToken,
     };
     const VAR_TYPES = {
         'const': ts$1.NodeFlags.Const,
@@ -33589,6 +33636,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         ['&&', ts$1.SyntaxKind.AmpersandAmpersandToken],
         ['&', ts$1.SyntaxKind.AmpersandToken],
         ['|', ts$1.SyntaxKind.BarToken],
+        ['??', ts$1.SyntaxKind.QuestionQuestionToken],
     ]);
     /**
      * Convert an `AST` to TypeScript code directly, without going through an intermediate `Expression`
