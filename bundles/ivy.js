@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.8+26.sha-3f12a0d
+ * @license Angular v11.2.8+30.sha-f8986e1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20399,7 +20399,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.8+26.sha-3f12a0d');
+    const VERSION$1 = new Version('11.2.8+30.sha-f8986e1');
 
     /**
      * @license
@@ -21056,7 +21056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.8+26.sha-3f12a0d'));
+        definitionMap.set('version', literal('11.2.8+30.sha-f8986e1'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21277,7 +21277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.8+26.sha-3f12a0d'));
+        definitionMap.set('version', literal('11.2.8+30.sha-f8986e1'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21309,7 +21309,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.8+26.sha-3f12a0d');
+    const VERSION$2 = new Version('11.2.8+30.sha-f8986e1');
 
     /**
      * @license
@@ -40618,23 +40618,29 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         };
     }
     function getExtendedConfigPath(configFile, extendsValue, host, fs) {
-        let extendedConfigPath = null;
+        const result = getExtendedConfigPathWorker(configFile, extendsValue, host, fs);
+        if (result !== null) {
+            return result;
+        }
+        // Try to resolve the paths with a json extension append a json extension to the file in case if
+        // it is missing and the resolution failed. This is to replicate TypeScript behaviour, see:
+        // https://github.com/microsoft/TypeScript/blob/294a5a7d784a5a95a8048ee990400979a6bc3a1c/src/compiler/commandLineParser.ts#L2806
+        return getExtendedConfigPathWorker(configFile, `${extendsValue}.json`, host, fs);
+    }
+    function getExtendedConfigPathWorker(configFile, extendsValue, host, fs) {
         if (extendsValue.startsWith('.') || fs.isRooted(extendsValue)) {
-            extendedConfigPath = host.resolve(host.dirname(configFile), extendsValue);
-            extendedConfigPath = host.extname(extendedConfigPath) ?
-                extendedConfigPath :
-                absoluteFrom(`${extendedConfigPath}.json`);
+            const extendedConfigPath = host.resolve(host.dirname(configFile), extendsValue);
+            if (host.exists(extendedConfigPath)) {
+                return extendedConfigPath;
+            }
         }
         else {
             const parseConfigHost = createParseConfigHost(host, fs);
             // Path isn't a rooted or relative path, resolve like a module.
             const { resolvedModule, } = ts$1.nodeModuleNameResolver(extendsValue, configFile, { moduleResolution: ts$1.ModuleResolutionKind.NodeJs, resolveJsonModule: true }, parseConfigHost);
             if (resolvedModule) {
-                extendedConfigPath = absoluteFrom(resolvedModule.resolvedFileName);
+                return absoluteFrom(resolvedModule.resolvedFileName);
             }
-        }
-        if (extendedConfigPath !== null && host.exists(extendedConfigPath)) {
-            return extendedConfigPath;
         }
         return null;
     }
