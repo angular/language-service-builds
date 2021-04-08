@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+16.sha-10a7c87
+ * @license Angular v12.0.0-next.8+18.sha-44a7fae
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+16.sha-10a7c87');
+    const VERSION$1 = new Version('12.0.0-next.8+18.sha-44a7fae');
 
     /**
      * @license
@@ -18451,7 +18451,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+16.sha-10a7c87'));
+        definitionMap.set('version', literal('12.0.0-next.8+18.sha-44a7fae'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18658,7 +18658,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+16.sha-10a7c87'));
+        definitionMap.set('version', literal('12.0.0-next.8+18.sha-44a7fae'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18691,7 +18691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+16.sha-10a7c87'));
+        definitionMap.set('version', literal('12.0.0-next.8+18.sha-44a7fae'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18761,7 +18761,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+16.sha-10a7c87'));
+        definitionMap.set('version', literal('12.0.0-next.8+18.sha-44a7fae'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18789,7 +18789,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+16.sha-10a7c87'));
+        definitionMap.set('version', literal('12.0.0-next.8+18.sha-44a7fae'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18838,7 +18838,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+16.sha-10a7c87'));
+        definitionMap.set('version', literal('12.0.0-next.8+18.sha-44a7fae'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18870,7 +18870,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+16.sha-10a7c87');
+    const VERSION$2 = new Version('12.0.0-next.8+18.sha-44a7fae');
 
     /**
      * @license
@@ -32200,41 +32200,6 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * A `ShimGenerator` which adds type-checking files to the `ts.Program`.
-     *
-     * This is a requirement for performant template type-checking, as TypeScript will only reuse
-     * information in the main program when creating the type-checking program if the set of files in
-     * each are exactly the same. Thus, the main program also needs the synthetic type-checking files.
-     */
-    class TypeCheckShimGenerator {
-        constructor() {
-            this.extensionPrefix = 'ngtypecheck';
-            this.shouldEmit = false;
-        }
-        generateShimForFile(sf, genFilePath, priorShimSf) {
-            if (priorShimSf !== null) {
-                // If this shim existed in the previous program, reuse it now. It might not be correct, but
-                // reusing it in the main program allows the shape of its imports to potentially remain the
-                // same and TS can then use the fastest path for incremental program creation. Later during
-                // the type-checking phase it's going to either be reused, or replaced anyways. Thus there's
-                // no harm in reuse here even if it's out of date.
-                return priorShimSf;
-            }
-            return ts$1.createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts$1.ScriptTarget.Latest, true, ts$1.ScriptKind.TS);
-        }
-        static shimFor(fileName) {
-            return absoluteFrom(fileName.replace(/\.tsx?$/, '.ngtypecheck.ts'));
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const parseSpanComment = /^(\d+),(\d+)$/;
     /**
      * Reads the trailing comments and finds the first match which is a span comment (i.e. 4,10) on a
@@ -33526,6 +33491,41 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function makeInlineDiagnostic(templateId, code, node, messageText, relatedInformation) {
         return Object.assign(Object.assign({}, makeDiagnostic(code, node, messageText, relatedInformation)), { componentFile: node.getSourceFile(), templateId });
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A `ShimGenerator` which adds type-checking files to the `ts.Program`.
+     *
+     * This is a requirement for performant template type-checking, as TypeScript will only reuse
+     * information in the main program when creating the type-checking program if the set of files in
+     * each are exactly the same. Thus, the main program also needs the synthetic type-checking files.
+     */
+    class TypeCheckShimGenerator {
+        constructor() {
+            this.extensionPrefix = 'ngtypecheck';
+            this.shouldEmit = false;
+        }
+        generateShimForFile(sf, genFilePath, priorShimSf) {
+            if (priorShimSf !== null) {
+                // If this shim existed in the previous program, reuse it now. It might not be correct, but
+                // reusing it in the main program allows the shape of its imports to potentially remain the
+                // same and TS can then use the fastest path for incremental program creation. Later during
+                // the type-checking phase it's going to either be reused, or replaced anyways. Thus there's
+                // no harm in reuse here even if it's out of date.
+                return priorShimSf;
+            }
+            return ts$1.createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts$1.ScriptTarget.Latest, true, ts$1.ScriptKind.TS);
+        }
+        static shimFor(fileName) {
+            return absoluteFrom(fileName.replace(/\.tsx?$/, '.ngtypecheck.ts'));
+        }
     }
 
     /**
@@ -35943,10 +35943,9 @@ Either add the @Injectable() decorator to '${provider.node.name
      * type checked.
      */
     class TypeCheckContextImpl {
-        constructor(config, compilerHost, componentMappingStrategy, refEmitter, reflector, host, inlining, perf) {
+        constructor(config, compilerHost, refEmitter, reflector, host, inlining, perf) {
             this.config = config;
             this.compilerHost = compilerHost;
-            this.componentMappingStrategy = componentMappingStrategy;
             this.refEmitter = refEmitter;
             this.reflector = reflector;
             this.host = host;
@@ -36137,7 +36136,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         pendingShimForComponent(node) {
             const fileData = this.dataForFile(node.getSourceFile());
-            const shimPath = this.componentMappingStrategy.shimPathForComponent(node);
+            const shimPath = TypeCheckShimGenerator.shimFor(absoluteFromSourceFile(node.getSourceFile()));
             if (!fileData.shimData.has(shimPath)) {
                 fileData.shimData.set(shimPath, {
                     domSchemaChecker: new RegistryDomSchemaChecker(fileData.sourceManager),
@@ -36851,9 +36850,9 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `ProgramTypeCheckAdapter` for generation of template type-checking code.
      */
     class TemplateTypeCheckerImpl {
-        constructor(originalProgram, typeCheckingStrategy, typeCheckAdapter, config, refEmitter, reflector, compilerHost, priorBuild, componentScopeReader, typeCheckScopeRegistry, perf) {
+        constructor(originalProgram, programDriver, typeCheckAdapter, config, refEmitter, reflector, compilerHost, priorBuild, componentScopeReader, typeCheckScopeRegistry, perf) {
             this.originalProgram = originalProgram;
-            this.typeCheckingStrategy = typeCheckingStrategy;
+            this.programDriver = programDriver;
             this.typeCheckAdapter = typeCheckAdapter;
             this.config = config;
             this.refEmitter = refEmitter;
@@ -36910,7 +36909,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.ensureShimForComponent(component);
             const sf = component.getSourceFile();
             const sfPath = absoluteFromSourceFile(sf);
-            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+            const shimPath = TypeCheckShimGenerator.shimFor(sfPath);
             const fileRecord = this.getFileData(sfPath);
             if (!fileRecord.shimData.has(shimPath)) {
                 return { data: null, tcb: null, shimPath };
@@ -36918,7 +36917,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const templateId = fileRecord.sourceManager.getTemplateId(component);
             const shimRecord = fileRecord.shimData.get(shimPath);
             const id = fileRecord.sourceManager.getTemplateId(component);
-            const program = this.typeCheckingStrategy.getProgram();
+            const program = this.programDriver.getProgram();
             const shimSf = getSourceFileOrNull(program, shimPath);
             if (shimSf === null || !fileRecord.shimData.has(shimPath)) {
                 throw new Error(`Error: no shim file in program: ${shimPath}`);
@@ -36952,7 +36951,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             const { fileRecord } = records;
-            const shimSf = this.typeCheckingStrategy.getProgram().getSourceFile(absoluteFrom(shimPath));
+            const shimSf = this.programDriver.getProgram().getSourceFile(absoluteFrom(shimPath));
             if (shimSf === undefined) {
                 return null;
             }
@@ -36977,7 +36976,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.perf.inPhase(PerfPhase.TtcDiagnostics, () => {
                 const sfPath = absoluteFromSourceFile(sf);
                 const fileRecord = this.state.get(sfPath);
-                const typeCheckProgram = this.typeCheckingStrategy.getProgram();
+                const typeCheckProgram = this.programDriver.getProgram();
                 const diagnostics = [];
                 if (fileRecord.hasInlines) {
                     const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
@@ -36999,14 +36998,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.perf.inPhase(PerfPhase.TtcDiagnostics, () => {
                 const sf = component.getSourceFile();
                 const sfPath = absoluteFromSourceFile(sf);
-                const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
+                const shimPath = TypeCheckShimGenerator.shimFor(sfPath);
                 const fileRecord = this.getFileData(sfPath);
                 if (!fileRecord.shimData.has(shimPath)) {
                     return [];
                 }
                 const templateId = fileRecord.sourceManager.getTemplateId(component);
                 const shimRecord = fileRecord.shimData.get(shimPath);
-                const typeCheckProgram = this.typeCheckingStrategy.getProgram();
+                const typeCheckProgram = this.programDriver.getProgram();
                 const diagnostics = [];
                 if (shimRecord.hasInlines) {
                     const inlineSf = getSourceFileOrError(typeCheckProgram, sfPath);
@@ -37045,7 +37044,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.elementTagCache.delete(clazz);
             const sf = clazz.getSourceFile();
             const sfPath = absoluteFromSourceFile(sf);
-            const shimPath = this.typeCheckingStrategy.shimPathForComponent(clazz);
+            const shimPath = TypeCheckShimGenerator.shimFor(sfPath);
             const fileData = this.getFileData(sfPath);
             const templateId = fileData.sourceManager.getTemplateId(clazz);
             fileData.shimData.delete(shimPath);
@@ -37113,7 +37112,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // All data for this file is present and accounted for already.
                     return;
                 }
-                const host = new SingleFileTypeCheckingHost(sfPath, fileData, this.typeCheckingStrategy, this);
+                const host = new SingleFileTypeCheckingHost(sfPath, fileData, this);
                 const ctx = this.newContext(host);
                 this.typeCheckAdapter.typeCheck(sf, ctx);
                 fileData.isComplete = true;
@@ -37123,22 +37122,21 @@ Either add the @Injectable() decorator to '${provider.node.name
         ensureShimForComponent(component) {
             const sf = component.getSourceFile();
             const sfPath = absoluteFromSourceFile(sf);
+            const shimPath = TypeCheckShimGenerator.shimFor(sfPath);
             this.maybeAdoptPriorResultsForFile(sf);
             const fileData = this.getFileData(sfPath);
-            const shimPath = this.typeCheckingStrategy.shimPathForComponent(component);
             if (fileData.shimData.has(shimPath)) {
                 // All data for this component is available.
                 return;
             }
-            const host = new SingleShimTypeCheckingHost(sfPath, fileData, this.typeCheckingStrategy, this, shimPath);
+            const host = new SingleShimTypeCheckingHost(sfPath, fileData, this, shimPath);
             const ctx = this.newContext(host);
             this.typeCheckAdapter.typeCheck(sf, ctx);
             this.updateFromContext(ctx);
         }
         newContext(host) {
-            const inlining = this.typeCheckingStrategy.supportsInlineOperations ? InliningMode.InlineOps :
-                InliningMode.Error;
-            return new TypeCheckContextImpl(this.config, this.compilerHost, this.typeCheckingStrategy, this.refEmitter, this.reflector, host, inlining, this.perf);
+            const inlining = this.programDriver.supportsInlineOperations ? InliningMode.InlineOps : InliningMode.Error;
+            return new TypeCheckContextImpl(this.config, this.compilerHost, this.refEmitter, this.reflector, host, inlining, this.perf);
         }
         /**
          * Remove any shim data that depends on inline operations applied to the type-checking program.
@@ -37167,7 +37165,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (updates.size > 0) {
                     this.perf.eventCount(PerfEvent.UpdateTypeCheckProgram);
                 }
-                this.typeCheckingStrategy.updateFiles(updates, UpdateMode.Incremental);
+                this.programDriver.updateFiles(updates, UpdateMode.Incremental);
                 this.priorBuild.recordSuccessfulTypeCheck(this.state);
                 this.perf.memory(PerfCheckpoint.TtcUpdateProgram);
             });
@@ -37198,7 +37196,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (tcb === null || data === null) {
                 return null;
             }
-            const builder = new SymbolBuilder(shimPath, tcb, data, this.componentScopeReader, () => this.typeCheckingStrategy.getProgram().getTypeChecker());
+            const builder = new SymbolBuilder(shimPath, tcb, data, this.componentScopeReader, () => this.programDriver.getProgram().getTypeChecker());
             this.symbolBuilderCache.set(component, builder);
             return builder;
         }
@@ -37269,7 +37267,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 pipes: [],
                 isPoisoned: scope.compilation.isPoisoned,
             };
-            const typeChecker = this.typeCheckingStrategy.getProgram().getTypeChecker();
+            const typeChecker = this.programDriver.getProgram().getTypeChecker();
             for (const dir of scope.compilation.directives) {
                 if (dir.selector === null) {
                     // Skip this directive, it can't be added to a template anyway.
@@ -37323,8 +37321,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.impl.getFileData(sfPath).sourceManager;
         }
         shouldCheckComponent(node) {
-            const fileData = this.impl.getFileData(absoluteFromSourceFile(node.getSourceFile()));
-            const shimPath = this.impl.typeCheckingStrategy.shimPathForComponent(node);
+            const sfPath = absoluteFromSourceFile(node.getSourceFile());
+            const shimPath = TypeCheckShimGenerator.shimFor(sfPath);
+            const fileData = this.impl.getFileData(sfPath);
             // The component needs to be checked unless the shim which would contain it already exists.
             return !fileData.shimData.has(shimPath);
         }
@@ -37343,10 +37342,9 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Drives a `TypeCheckContext` to generate type-checking code efficiently for a single input file.
      */
     class SingleFileTypeCheckingHost {
-        constructor(sfPath, fileData, strategy, impl) {
+        constructor(sfPath, fileData, impl) {
             this.sfPath = sfPath;
             this.fileData = fileData;
-            this.strategy = strategy;
             this.impl = impl;
             this.seenInlines = false;
         }
@@ -37363,7 +37361,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (this.sfPath !== absoluteFromSourceFile(node.getSourceFile())) {
                 return false;
             }
-            const shimPath = this.strategy.shimPathForComponent(node);
+            const shimPath = TypeCheckShimGenerator.shimFor(this.sfPath);
             // Only need to generate a TCB for the class if no shim exists for it currently.
             return !this.fileData.shimData.has(shimPath);
         }
@@ -37395,8 +37393,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * which map to a single shim of a single input file.
      */
     class SingleShimTypeCheckingHost extends SingleFileTypeCheckingHost {
-        constructor(sfPath, fileData, strategy, impl, shimPath) {
-            super(sfPath, fileData, strategy, impl);
+        constructor(sfPath, fileData, impl, shimPath) {
+            super(sfPath, fileData, impl);
             this.shimPath = shimPath;
         }
         shouldCheckNode(node) {
@@ -37404,7 +37402,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return false;
             }
             // Only generate a TCB for the component if it maps to the requested shim file.
-            const shimPath = this.strategy.shimPathForComponent(node);
+            const shimPath = TypeCheckShimGenerator.shimFor(this.sfPath);
             if (shimPath !== this.shimPath) {
                 return false;
             }
@@ -37447,13 +37445,13 @@ Either add the @Injectable() decorator to '${provider.node.name
     /**
      * Create a `CompilationTicket` for a brand new compilation, using no prior state.
      */
-    function freshCompilationTicket(tsProgram, options, incrementalBuildStrategy, typeCheckingProgramStrategy, perfRecorder, enableTemplateTypeChecker, usePoisonedData) {
+    function freshCompilationTicket(tsProgram, options, incrementalBuildStrategy, programDriver, perfRecorder, enableTemplateTypeChecker, usePoisonedData) {
         return {
             kind: CompilationTicketKind.Fresh,
             tsProgram,
             options,
             incrementalBuildStrategy,
-            typeCheckingProgramStrategy,
+            programDriver,
             enableTemplateTypeChecker,
             usePoisonedData,
             perfRecorder: perfRecorder !== null && perfRecorder !== void 0 ? perfRecorder : ActivePerfRecorder.zeroedToNow(),
@@ -37463,13 +37461,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Create a `CompilationTicket` as efficiently as possible, based on a previous `NgCompiler`
      * instance and a new `ts.Program`.
      */
-    function incrementalFromCompilerTicket(oldCompiler, newProgram, incrementalBuildStrategy, typeCheckingProgramStrategy, modifiedResourceFiles, perfRecorder) {
-        const oldProgram = oldCompiler.getNextProgram();
+    function incrementalFromCompilerTicket(oldCompiler, newProgram, incrementalBuildStrategy, programDriver, modifiedResourceFiles, perfRecorder) {
+        const oldProgram = oldCompiler.getCurrentProgram();
         const oldDriver = oldCompiler.incrementalStrategy.getIncrementalDriver(oldProgram);
         if (oldDriver === null) {
             // No incremental step is possible here, since no IncrementalDriver was found for the old
             // program.
-            return freshCompilationTicket(newProgram, oldCompiler.options, incrementalBuildStrategy, typeCheckingProgramStrategy, perfRecorder, oldCompiler.enableTemplateTypeChecker, oldCompiler.usePoisonedData);
+            return freshCompilationTicket(newProgram, oldCompiler.options, incrementalBuildStrategy, programDriver, perfRecorder, oldCompiler.enableTemplateTypeChecker, oldCompiler.usePoisonedData);
         }
         if (perfRecorder === null) {
             perfRecorder = ActivePerfRecorder.zeroedToNow();
@@ -37481,7 +37479,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             usePoisonedData: oldCompiler.usePoisonedData,
             options: oldCompiler.options,
             incrementalBuildStrategy,
-            typeCheckingProgramStrategy,
+            programDriver,
             newDriver,
             oldProgram,
             newProgram,
@@ -37509,11 +37507,11 @@ Either add the @Injectable() decorator to '${provider.node.name
      * See the README.md for more information.
      */
     class NgCompiler {
-        constructor(adapter, options, tsProgram, typeCheckingProgramStrategy, incrementalStrategy, incrementalDriver, enableTemplateTypeChecker, usePoisonedData, livePerfRecorder) {
+        constructor(adapter, options, inputProgram, programDriver, incrementalStrategy, incrementalDriver, enableTemplateTypeChecker, usePoisonedData, livePerfRecorder) {
             this.adapter = adapter;
             this.options = options;
-            this.tsProgram = tsProgram;
-            this.typeCheckingProgramStrategy = typeCheckingProgramStrategy;
+            this.inputProgram = inputProgram;
+            this.programDriver = programDriver;
             this.incrementalStrategy = incrementalStrategy;
             this.incrementalDriver = incrementalDriver;
             this.enableTemplateTypeChecker = enableTemplateTypeChecker;
@@ -37550,10 +37548,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (incompatibleTypeCheckOptionsDiagnostic !== null) {
                 this.constructionDiagnostics.push(incompatibleTypeCheckOptionsDiagnostic);
             }
-            this.nextProgram = tsProgram;
+            this.currentProgram = inputProgram;
             this.closureCompilerEnabled = !!this.options.annotateForClosureCompiler;
             this.entryPoint =
-                adapter.entryPoint !== null ? getSourceFileOrNull(tsProgram, adapter.entryPoint) : null;
+                adapter.entryPoint !== null ? getSourceFileOrNull(inputProgram, adapter.entryPoint) : null;
             const moduleResolutionCache = ts$1.createModuleResolutionCache(this.adapter.getCurrentDirectory(), 
             // doen't retain a reference to `this`, if other closures in the constructor here reference
             // `this` internally then a closure created here would retain them. This can cause major
@@ -37561,17 +37559,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             // way into all kinds of places inside TS internal objects.
             this.adapter.getCanonicalFileName.bind(this.adapter));
             this.moduleResolver =
-                new ModuleResolver(tsProgram, this.options, this.adapter, moduleResolutionCache);
+                new ModuleResolver(inputProgram, this.options, this.adapter, moduleResolutionCache);
             this.resourceManager = new AdapterResourceLoader(adapter, this.options);
-            this.cycleAnalyzer =
-                new CycleAnalyzer(new ImportGraph(tsProgram.getTypeChecker(), this.delegatingPerfRecorder));
-            this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, tsProgram);
+            this.cycleAnalyzer = new CycleAnalyzer(new ImportGraph(inputProgram.getTypeChecker(), this.delegatingPerfRecorder));
+            this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, inputProgram);
             this.ignoreForDiagnostics =
-                new Set(tsProgram.getSourceFiles().filter(sf => this.adapter.isShim(sf)));
+                new Set(inputProgram.getSourceFiles().filter(sf => this.adapter.isShim(sf)));
             this.ignoreForEmit = this.adapter.ignoreForEmit;
             let dtsFileCount = 0;
             let nonDtsFileCount = 0;
-            for (const sf of tsProgram.getSourceFiles()) {
+            for (const sf of inputProgram.getSourceFiles()) {
                 if (sf.isDeclarationFile) {
                     dtsFileCount++;
                 }
@@ -37593,9 +37590,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         static fromTicket(ticket, adapter) {
             switch (ticket.kind) {
                 case CompilationTicketKind.Fresh:
-                    return new NgCompiler(adapter, ticket.options, ticket.tsProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, IncrementalDriver.fresh(ticket.tsProgram), ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
+                    return new NgCompiler(adapter, ticket.options, ticket.tsProgram, ticket.programDriver, ticket.incrementalBuildStrategy, IncrementalDriver.fresh(ticket.tsProgram), ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
                 case CompilationTicketKind.IncrementalTypeScript:
-                    return new NgCompiler(adapter, ticket.options, ticket.newProgram, ticket.typeCheckingProgramStrategy, ticket.incrementalBuildStrategy, ticket.newDriver, ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
+                    return new NgCompiler(adapter, ticket.options, ticket.newProgram, ticket.programDriver, ticket.incrementalBuildStrategy, ticket.newDriver, ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
                 case CompilationTicketKind.IncrementalResource:
                     const compiler = ticket.compiler;
                     compiler.updateWithChangedResources(ticket.modifiedResourceFiles, ticket.perfRecorder);
@@ -37678,16 +37675,22 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.constructionDiagnostics;
         }
         /**
-         * Get the `ts.Program` to use as a starting point when spawning a subsequent incremental
-         * compilation.
+         * Get the current `ts.Program` known to this `NgCompiler`.
          *
-         * The `NgCompiler` spawns an internal incremental TypeScript compilation (inheriting the
-         * consumer's `ts.Program` into a new one for the purposes of template type-checking). After this
-         * operation, the consumer's `ts.Program` is no longer usable for starting a new incremental
-         * compilation. `getNextProgram` retrieves the `ts.Program` which can be used instead.
+         * Compilation begins with an input `ts.Program`, and during template type-checking operations new
+         * `ts.Program`s may be produced using the `ProgramDriver`. The most recent such `ts.Program` to
+         * be produced is available here.
+         *
+         * This `ts.Program` serves two key purposes:
+         *
+         * * As an incremental starting point for creating the next `ts.Program` based on files that the
+         *   user has changed (for clients using the TS compiler program APIs).
+         *
+         * * As the "before" point for an incremental compilation invocation, to determine what's changed
+         *   between the old and new programs (for all compilations).
          */
-        getNextProgram() {
-            return this.nextProgram;
+        getCurrentProgram() {
+            return this.currentProgram;
         }
         getTemplateTypeChecker() {
             if (!this.enableTemplateTypeChecker) {
@@ -37741,7 +37744,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 yield this.perfRecorder.inPhase(PerfPhase.Analysis, () => __awaiter(this, void 0, void 0, function* () {
                     this.compilation = this.makeCompilation();
                     const promises = [];
-                    for (const sf of this.tsProgram.getSourceFiles()) {
+                    for (const sf of this.inputProgram.getSourceFiles()) {
                         if (sf.isDeclarationFile) {
                             continue;
                         }
@@ -37781,7 +37784,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 //
                 // In all cases above, the `containingFile` argument is ignored, so we can just take the first
                 // of the root files.
-                const containingFile = this.tsProgram.getRootFileNames()[0];
+                const containingFile = this.inputProgram.getRootFileNames()[0];
                 const [entryPath, moduleName] = entryRoute.split('#');
                 const resolvedModule = resolveModuleName(entryPath, containingFile, this.options, this.adapter, null);
                 if (resolvedModule) {
@@ -37797,7 +37800,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         prepareEmit() {
             const compilation = this.ensureAnalyzed();
-            const coreImportsFrom = compilation.isCore ? getR3SymbolsFile(this.tsProgram) : null;
+            const coreImportsFrom = compilation.isCore ? getR3SymbolsFile(this.inputProgram) : null;
             let importRewriter;
             if (coreImportsFrom !== null) {
                 importRewriter = new R3SymbolsImportRewriter(coreImportsFrom.fileName);
@@ -37844,7 +37847,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         analyzeSync() {
             this.perfRecorder.inPhase(PerfPhase.Analysis, () => {
                 this.compilation = this.makeCompilation();
-                for (const sf of this.tsProgram.getSourceFiles()) {
+                for (const sf of this.inputProgram.getSourceFiles()) {
                     if (sf.isDeclarationFile) {
                         continue;
                     }
@@ -37878,7 +37881,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Also see `verifyCompatibleTypeCheckOptions` where it is verified that `fullTemplateTypeCheck`
             // is not disabled when `strictTemplates` is enabled.
             const strictTemplates = !!this.options.strictTemplates;
-            const useInlineTypeConstructors = this.typeCheckingProgramStrategy.supportsInlineOperations;
+            const useInlineTypeConstructors = this.programDriver.supportsInlineOperations;
             // First select a type-checking configuration, based on whether full template type-checking is
             // requested.
             let typeCheckingConfig;
@@ -37987,15 +37990,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             const compilation = this.ensureAnalyzed();
             // Get the diagnostics.
             const diagnostics = [];
-            for (const sf of this.tsProgram.getSourceFiles()) {
+            for (const sf of this.inputProgram.getSourceFiles()) {
                 if (sf.isDeclarationFile || this.adapter.isShim(sf)) {
                     continue;
                 }
                 diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, OptimizeFor.WholeProgram));
             }
-            const program = this.typeCheckingProgramStrategy.getProgram();
+            const program = this.programDriver.getProgram();
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
-            this.nextProgram = program;
+            this.currentProgram = program;
             return diagnostics;
         }
         getTemplateDiagnosticsForFile(sf, optimizeFor) {
@@ -38005,9 +38008,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (!sf.isDeclarationFile && !this.adapter.isShim(sf)) {
                 diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, optimizeFor));
             }
-            const program = this.typeCheckingProgramStrategy.getProgram();
+            const program = this.programDriver.getProgram();
             this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
-            this.nextProgram = program;
+            this.currentProgram = program;
             return diagnostics;
         }
         getNonTemplateDiagnostics() {
@@ -38015,7 +38018,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const compilation = this.ensureAnalyzed();
                 this.nonTemplateDiagnostics = [...compilation.traitCompiler.diagnostics];
                 if (this.entryPoint !== null && compilation.exportReferenceGraph !== null) {
-                    this.nonTemplateDiagnostics.push(...checkForPrivateExports(this.entryPoint, this.tsProgram.getTypeChecker(), compilation.exportReferenceGraph));
+                    this.nonTemplateDiagnostics.push(...checkForPrivateExports(this.entryPoint, this.inputProgram.getTypeChecker(), compilation.exportReferenceGraph));
                 }
             }
             return this.nonTemplateDiagnostics;
@@ -38030,7 +38033,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         makeCompilation() {
-            const checker = this.tsProgram.getTypeChecker();
+            const checker = this.inputProgram.getTypeChecker();
             const reflector = new TypeScriptReflectionHost(checker);
             // Construct the ReferenceEmitter.
             let refEmitter;
@@ -38058,7 +38061,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // First, try to use local identifiers if available.
                     new LocalIdentifierStrategy(),
                     // Next, attempt to use an absolute import.
-                    new AbsoluteModuleStrategy(this.tsProgram, checker, this.moduleResolver, reflector),
+                    new AbsoluteModuleStrategy(this.inputProgram, checker, this.moduleResolver, reflector),
                     // Finally, check if the reference is being written into a file within the project's .ts
                     // sources, and use a relative import if so. If this fails, ReferenceEmitter will throw
                     // an error.
@@ -38112,7 +38115,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const routeAnalyzer = new NgModuleRouteAnalyzer(this.moduleResolver, evaluator);
             const dtsTransforms = new DtsTransformRegistry();
             const mwpScanner = new ModuleWithProvidersScanner(reflector, evaluator, refEmitter);
-            const isCore = isAngularCorePackage(this.tsProgram);
+            const isCore = isAngularCorePackage(this.inputProgram);
             const defaultImportTracker = new DefaultImportTracker();
             const resourceRegistry = new ResourceRegistry();
             const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
@@ -38137,7 +38140,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                 new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.delegatingPerfRecorder, this.options.i18nInLocale),
             ];
             const traitCompiler = new TraitCompiler(handlers, reflector, this.delegatingPerfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
-            const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry, this.delegatingPerfRecorder);
+            // Template type-checking may use the `ProgramDriver` to produce new `ts.Program`(s). If this
+            // happens, they need to be tracked by the `NgCompiler`.
+            const notifyingDriver = new NotifyingProgramDriverWrapper(this.programDriver, (program) => {
+                this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
+                this.currentProgram = program;
+            });
+            const templateTypeChecker = new TemplateTypeCheckerImpl(this.inputProgram, notifyingDriver, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry, this.delegatingPerfRecorder);
             return {
                 isCore,
                 traitCompiler,
@@ -38241,6 +38250,22 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     this.graph.add(source, node);
                 }
             }
+        }
+    }
+    class NotifyingProgramDriverWrapper {
+        constructor(delegate, notifyNewProgram) {
+            this.delegate = delegate;
+            this.notifyNewProgram = notifyNewProgram;
+        }
+        get supportsInlineOperations() {
+            return this.delegate.supportsInlineOperations;
+        }
+        getProgram() {
+            return this.delegate.getProgram();
+        }
+        updateFiles(contents, updateMode) {
+            this.delegate.updateFiles(contents, updateMode);
+            this.notifyNewProgram(this.delegate.getProgram());
         }
     }
 
@@ -38676,7 +38701,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      */
     function getTemplateInfoAtPosition(fileName, position, compiler) {
         if (isTypeScriptFile(fileName)) {
-            const sf = compiler.getNextProgram().getSourceFile(fileName);
+            const sf = compiler.getCurrentProgram().getSourceFile(fileName);
             if (sf === undefined) {
                 return undefined;
             }
@@ -39813,7 +39838,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.component = component;
             this.node = node;
             this.targetDetails = targetDetails;
-            this.typeChecker = this.compiler.getNextProgram().getTypeChecker();
+            this.typeChecker = this.compiler.getCurrentProgram().getTypeChecker();
             this.templateTypeChecker = this.compiler.getTemplateTypeChecker();
             this.nodeParent = this.targetDetails.parent;
             this.nodeContext = nodeContextFromTarget(this.targetDetails.context);
@@ -40605,7 +40630,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Gets an Angular-specific definition in a TypeScript source file.
      */
     function getDefinitionForExpressionAtPosition(fileName, position, compiler) {
-        const sf = compiler.getNextProgram().getSourceFile(fileName);
+        const sf = compiler.getCurrentProgram().getSourceFile(fileName);
         if (sf === undefined) {
             return;
         }
@@ -40661,7 +40686,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.compiler = compiler;
             this.component = component;
             this.node = node;
-            this.typeChecker = this.compiler.getNextProgram().getTypeChecker();
+            this.typeChecker = this.compiler.getCurrentProgram().getTypeChecker();
         }
         get() {
             const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(this.node, this.component);
@@ -40846,8 +40871,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         RequestKind[RequestKind["TypeScript"] = 1] = "TypeScript";
     })(RequestKind || (RequestKind = {}));
     class ReferencesAndRenameBuilder {
-        constructor(strategy, tsLS, compiler) {
-            this.strategy = strategy;
+        constructor(driver, tsLS, compiler) {
+            this.driver = driver;
             this.tsLS = tsLS;
             this.compiler = compiler;
             this.ttc = this.compiler.getTemplateTypeChecker();
@@ -40924,7 +40949,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getTsNodeAtPosition(filePath, position) {
             var _a;
-            const sf = this.strategy.getProgram().getSourceFile(filePath);
+            const sf = this.driver.getProgram().getSourceFile(filePath);
             if (!sf) {
                 return null;
             }
@@ -41123,7 +41148,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return Array.from(entries.values());
         }
         convertToTemplateDocumentSpan(shimDocumentSpan, templateTypeChecker, requiredNodeText) {
-            const sf = this.strategy.getProgram().getSourceFile(shimDocumentSpan.fileName);
+            const sf = this.driver.getProgram().getSourceFile(shimDocumentSpan.fileName);
             if (sf === undefined) {
                 return null;
             }
@@ -41212,9 +41237,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.parseConfigHost = new LSParseConfigHost(project.projectService.host);
             this.options = parseNgCompilerOptions(project, this.parseConfigHost, config);
             logCompilerOptions(project, this.options);
-            this.strategy = createTypeCheckingProgramStrategy(project);
+            this.programDriver = createProgramDriver(project);
             this.adapter = new LanguageServiceAdapter(project);
-            this.compilerFactory = new CompilerFactory(this.adapter, this.strategy, this.options);
+            this.compilerFactory = new CompilerFactory(this.adapter, this.programDriver, this.options);
             this.watchConfigFile(project);
         }
         getCompilerOptions() {
@@ -41225,7 +41250,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 const ttc = compiler.getTemplateTypeChecker();
                 const diagnostics = [];
                 if (isTypeScriptFile(fileName)) {
-                    const program = compiler.getNextProgram();
+                    const program = compiler.getCurrentProgram();
                     const sourceFile = program.getSourceFile(fileName);
                     if (sourceFile) {
                         const ngDiagnostics = compiler.getDiagnosticsForFile(sourceFile, OptimizeFor.SingleFile);
@@ -41267,7 +41292,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getDefinitionAndBoundSpan(fileName, position) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsDefinition, (compiler) => {
-                if (!isInAngularContext(compiler.getNextProgram(), fileName, position)) {
+                if (!isInAngularContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
                 return new DefinitionBuilder(this.tsLS, compiler)
@@ -41276,7 +41301,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getTypeDefinitionAtPosition(fileName, position) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsDefinition, (compiler) => {
-                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
                 return new DefinitionBuilder(this.tsLS, compiler)
@@ -41289,7 +41314,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             });
         }
         getQuickInfoAtPositionImpl(fileName, position, compiler) {
-            if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+            if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                 return undefined;
             }
             const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
@@ -41310,14 +41335,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getReferencesAtPosition(fileName, position) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsReferencesAndRenames, (compiler) => {
-                return new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
+                return new ReferencesAndRenameBuilder(this.programDriver, this.tsLS, compiler)
                     .getReferencesAtPosition(fileName, position);
             });
         }
         getRenameInfo(fileName, position) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsReferencesAndRenames, (compiler) => {
                 var _a, _b, _c;
-                const renameInfo = new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
+                const renameInfo = new ReferencesAndRenameBuilder(this.programDriver, this.tsLS, compiler)
                     .getRenameInfo(absoluteFrom(fileName), position);
                 if (!renameInfo.canRename) {
                     return renameInfo;
@@ -41330,7 +41355,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         findRenameLocations(fileName, position) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsReferencesAndRenames, (compiler) => {
-                return new ReferencesAndRenameBuilder(this.strategy, this.tsLS, compiler)
+                return new ReferencesAndRenameBuilder(this.programDriver, this.tsLS, compiler)
                     .findRenameLocations(fileName, position);
             });
         }
@@ -41356,7 +41381,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             });
         }
         getCompletionsAtPositionImpl(fileName, position, options, compiler) {
-            if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+            if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                 return undefined;
             }
             const builder = this.getCompletionBuilder(fileName, position, compiler);
@@ -41367,7 +41392,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsCompletions, (compiler) => {
-                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
                 const builder = this.getCompletionBuilder(fileName, position, compiler);
@@ -41379,7 +41404,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getCompletionEntrySymbol(fileName, position, entryName) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsCompletions, (compiler) => {
-                if (!isTemplateContext(compiler.getNextProgram(), fileName, position)) {
+                if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
                 const builder = this.getCompletionBuilder(fileName, position, compiler);
@@ -41552,12 +41577,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         return options;
     }
-    function createTypeCheckingProgramStrategy(project) {
+    function createProgramDriver(project) {
         return {
             supportsInlineOperations: false,
-            shimPathForComponent(component) {
-                return TypeCheckShimGenerator.shimFor(absoluteFromSourceFile(component.getSourceFile()));
-            },
             getProgram() {
                 const program = project.getLanguageService().getProgram();
                 if (!program) {
