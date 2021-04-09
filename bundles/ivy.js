@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+20.sha-7a40d8c
+ * @license Angular v12.0.0-next.8+23.sha-8b9d025
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+20.sha-7a40d8c');
+    const VERSION$1 = new Version('12.0.0-next.8+23.sha-8b9d025');
 
     /**
      * @license
@@ -18451,7 +18451,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+20.sha-7a40d8c'));
+        definitionMap.set('version', literal('12.0.0-next.8+23.sha-8b9d025'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18658,7 +18658,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+20.sha-7a40d8c'));
+        definitionMap.set('version', literal('12.0.0-next.8+23.sha-8b9d025'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18691,7 +18691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+20.sha-7a40d8c'));
+        definitionMap.set('version', literal('12.0.0-next.8+23.sha-8b9d025'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18761,7 +18761,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+20.sha-7a40d8c'));
+        definitionMap.set('version', literal('12.0.0-next.8+23.sha-8b9d025'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18789,7 +18789,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+20.sha-7a40d8c'));
+        definitionMap.set('version', literal('12.0.0-next.8+23.sha-8b9d025'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18838,7 +18838,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+20.sha-7a40d8c'));
+        definitionMap.set('version', literal('12.0.0-next.8+23.sha-8b9d025'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18870,7 +18870,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+20.sha-7a40d8c');
+    const VERSION$2 = new Version('12.0.0-next.8+23.sha-8b9d025');
 
     /**
      * @license
@@ -39075,13 +39075,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.options = options;
             this.incrementalStrategy = new TrackedIncrementalBuildStrategy();
             this.compiler = null;
-            this.lastKnownProgram = null;
         }
         getOrCreate() {
             var _a;
             const program = this.programStrategy.getProgram();
             const modifiedResourceFiles = (_a = this.adapter.getModifiedResourceFiles()) !== null && _a !== void 0 ? _a : new Set();
-            if (this.compiler !== null && program === this.lastKnownProgram) {
+            if (this.compiler !== null && program === this.compiler.getCurrentProgram()) {
                 if (modifiedResourceFiles.size > 0) {
                     // Only resource files have changed since the last NgCompiler was created.
                     const ticket = resourceChangeTicket(this.compiler, modifiedResourceFiles);
@@ -39095,7 +39094,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return this.compiler;
             }
             let ticket;
-            if (this.compiler === null || this.lastKnownProgram === null) {
+            if (this.compiler === null) {
                 ticket = freshCompilationTicket(program, this.options, this.incrementalStrategy, this.programStrategy, 
                 /* perfRecorder */ null, true, true);
             }
@@ -39103,11 +39102,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 ticket = incrementalFromCompilerTicket(this.compiler, program, this.incrementalStrategy, this.programStrategy, modifiedResourceFiles, /* perfRecorder */ null);
             }
             this.compiler = NgCompiler.fromTicket(ticket, this.adapter);
-            this.lastKnownProgram = program;
             return this.compiler;
-        }
-        registerLastKnownProgram() {
-            this.lastKnownProgram = this.programStrategy.getProgram();
         }
     }
 
@@ -41412,7 +41407,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return undefined;
                 }
                 const result = builder.getCompletionEntrySymbol(entryName);
-                this.compilerFactory.registerLastKnownProgram();
                 return result;
             });
         }
@@ -41499,7 +41493,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         withCompilerAndPerfTracing(phase, p) {
             const compiler = this.compilerFactory.getOrCreate();
             const result = compiler.perfRecorder.inPhase(phase, () => p(compiler));
-            this.compilerFactory.registerLastKnownProgram();
             const logger = this.project.projectService.logger;
             if (logger.hasLevel(ts.server.LogLevel.verbose)) {
                 logger.perftrc(`LanguageService#${PerfPhase[phase]}: ${JSON.stringify(compiler.perfRecorder.finalize())}`);
