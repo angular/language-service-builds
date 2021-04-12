@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+33.sha-6ba67c6
+ * @license Angular v12.0.0-next.8+36.sha-c20db69
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2374,6 +2374,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers.PipeDeclaration = { name: 'ɵɵPipeDeclaration', moduleName: CORE };
     Identifiers.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE };
     Identifiers.declarePipe = { name: 'ɵɵngDeclarePipe', moduleName: CORE };
+    Identifiers.declareClassMetadata = { name: 'ɵɵngDeclareClassMetadata', moduleName: CORE };
+    Identifiers.setClassMetadata = { name: 'ɵsetClassMetadata', moduleName: CORE };
     Identifiers.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE };
     Identifiers.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE };
     Identifiers.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE };
@@ -7175,7 +7177,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         moduleName: CORE$1,
     };
     Identifiers$1.createComponentFactory = { name: 'ɵccf', moduleName: CORE$1 };
-    Identifiers$1.setClassMetadata = { name: 'ɵsetClassMetadata', moduleName: CORE$1 };
     function createTokenForReference(reference) {
         return { identifier: { reference: reference } };
     }
@@ -19377,7 +19378,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+33.sha-6ba67c6');
+    const VERSION$1 = new Version('12.0.0-next.8+36.sha-c20db69');
 
     /**
      * @license
@@ -35425,7 +35426,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+33.sha-6ba67c6');
+    const VERSION$2 = new Version$1('12.0.0-next.8+36.sha-c20db69');
 
     /**
      * @license

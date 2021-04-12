@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+33.sha-6ba67c6
+ * @license Angular v12.0.0-next.8+36.sha-c20db69
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2748,6 +2748,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     Identifiers.PipeDeclaration = { name: 'ɵɵPipeDeclaration', moduleName: CORE };
     Identifiers.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE };
     Identifiers.declarePipe = { name: 'ɵɵngDeclarePipe', moduleName: CORE };
+    Identifiers.declareClassMetadata = { name: 'ɵɵngDeclareClassMetadata', moduleName: CORE };
+    Identifiers.setClassMetadata = { name: 'ɵsetClassMetadata', moduleName: CORE };
     Identifiers.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE };
     Identifiers.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE };
     Identifiers.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE };
@@ -7206,7 +7208,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         moduleName: CORE$1,
     };
     Identifiers$1.createComponentFactory = { name: 'ɵccf', moduleName: CORE$1 };
-    Identifiers$1.setClassMetadata = { name: 'ɵsetClassMetadata', moduleName: CORE$1 };
 
     /**
      * @license
@@ -17829,7 +17830,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+33.sha-6ba67c6');
+    const VERSION$1 = new Version('12.0.0-next.8+36.sha-c20db69');
 
     /**
      * @license
@@ -18436,6 +18437,45 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function compileClassMetadata(metadata) {
+        var _a, _b;
+        // Generate an ngDevMode guarded call to setClassMetadata with the class identifier and its
+        // metadata.
+        const fnCall = importExpr(Identifiers.setClassMetadata).callFn([
+            metadata.type,
+            metadata.decorators,
+            (_a = metadata.ctorParameters) !== null && _a !== void 0 ? _a : literal(null),
+            (_b = metadata.propDecorators) !== null && _b !== void 0 ? _b : literal(null),
+        ]);
+        const iife = fn([], [devOnlyGuardedExpression(fnCall).toStmt()]);
+        return iife.callFn([]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function compileDeclareClassMetadata(metadata) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('version', literal('12.0.0-next.8+36.sha-c20db69'));
+        definitionMap.set('ngImport', importExpr(Identifiers.core));
+        definitionMap.set('type', metadata.type);
+        definitionMap.set('decorators', metadata.decorators);
+        definitionMap.set('ctorParameters', metadata.ctorParameters);
+        definitionMap.set('propDecorators', metadata.propDecorators);
+        return importExpr(Identifiers.declareClassMetadata).callFn([definitionMap.toLiteralMap()]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Compile a directive declaration defined by the `R3DirectiveMetadata`.
      */
@@ -18451,7 +18491,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
+        definitionMap.set('version', literal('12.0.0-next.8+36.sha-c20db69'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18658,7 +18698,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
+        definitionMap.set('version', literal('12.0.0-next.8+36.sha-c20db69'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18691,7 +18731,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
+        definitionMap.set('version', literal('12.0.0-next.8+36.sha-c20db69'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18761,7 +18801,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
+        definitionMap.set('version', literal('12.0.0-next.8+36.sha-c20db69'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18789,7 +18829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
+        definitionMap.set('version', literal('12.0.0-next.8+36.sha-c20db69'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18838,7 +18878,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
+        definitionMap.set('version', literal('12.0.0-next.8+36.sha-c20db69'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18870,7 +18910,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+33.sha-6ba67c6');
+    const VERSION$2 = new Version('12.0.0-next.8+36.sha-c20db69');
 
     /**
      * @license
@@ -19224,6 +19264,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function getRootDirs(host, options) {
         const rootDirs = [];
+        const cwd = host.getCurrentDirectory();
+        const fs = getFileSystem();
         if (options.rootDirs !== undefined) {
             rootDirs.push(...options.rootDirs);
         }
@@ -19231,13 +19273,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             rootDirs.push(options.rootDir);
         }
         else {
-            rootDirs.push(host.getCurrentDirectory());
+            rootDirs.push(cwd);
         }
         // In Windows the above might not always return posix separated paths
         // See:
         // https://github.com/Microsoft/TypeScript/blob/3f7357d37f66c842d70d835bc925ec2a873ecfec/src/compiler/sys.ts#L650
         // Also compiler options might be set via an API which doesn't normalize paths
-        return rootDirs.map(rootDir => absoluteFrom(host.getCanonicalFileName(rootDir)));
+        return rootDirs.map(rootDir => fs.resolve(cwd, host.getCanonicalFileName(rootDir)));
     }
     function nodeDebugInfo(node) {
         const sf = getSourceFile(node);
@@ -26465,7 +26507,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * If no such metadata is present, this function returns `null`. Otherwise, the call is returned
      * as a `Statement` for inclusion along with the class.
      */
-    function generateSetClassMetadataCall(clazz, reflection, defaultImportRecorder, isCore, annotateForClosureCompiler) {
+    function extractClassMetadata(clazz, reflection, defaultImportRecorder, isCore, annotateForClosureCompiler) {
         if (!reflection.isClass(clazz)) {
             return null;
         }
@@ -26487,9 +26529,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (ngClassDecorators.length === 0) {
             return null;
         }
-        const metaDecorators = ts$1.createArrayLiteral(ngClassDecorators);
+        const metaDecorators = new WrappedNodeExpr(ts$1.createArrayLiteral(ngClassDecorators));
         // Convert the constructor parameters to metadata, passing null if none are present.
-        let metaCtorParameters = new LiteralExpr(null);
+        let metaCtorParameters = null;
         const classCtorParameters = reflection.getConstructorParameters(clazz);
         if (classCtorParameters !== null) {
             const ctorParameters = classCtorParameters.map(param => ctorParameterToMetadata(param, defaultImportRecorder, isCore));
@@ -26498,7 +26540,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             ]);
         }
         // Do the same for property decorators.
-        let metaPropDecorators = ts$1.createNull();
+        let metaPropDecorators = null;
         const classMembers = reflection.getMembersOfClass(clazz).filter(member => !member.isStatic && member.decorators !== null && member.decorators.length > 0);
         const duplicateDecoratedMemberNames = classMembers.map(member => member.name).filter((name, i, arr) => arr.indexOf(name) < i);
         if (duplicateDecoratedMemberNames.length > 0) {
@@ -26510,21 +26552,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         const decoratedMembers = classMembers.map(member => { var _a; return classMemberToMetadata((_a = member.nameNode) !== null && _a !== void 0 ? _a : member.name, member.decorators, isCore); });
         if (decoratedMembers.length > 0) {
-            metaPropDecorators = ts$1.createObjectLiteral(decoratedMembers);
+            metaPropDecorators = new WrappedNodeExpr(ts$1.createObjectLiteral(decoratedMembers));
         }
-        // Generate a pure call to setClassMetadata with the class identifier and its metadata.
-        const setClassMetadata = new ExternalExpr(Identifiers$1.setClassMetadata);
-        const fnCall = new InvokeFunctionExpr(
-        /* fn */ setClassMetadata, 
-        /* args */
-        [
-            new WrappedNodeExpr(id),
-            new WrappedNodeExpr(metaDecorators),
-            metaCtorParameters,
-            new WrappedNodeExpr(metaPropDecorators),
-        ]);
-        const iife = new FunctionExpr([], [devOnlyGuardedExpression(fnCall).toStmt()]);
-        return iife.callFn([]).toStmt();
+        return {
+            type: new WrappedNodeExpr(id),
+            decorators: metaDecorators,
+            ctorParameters: metaCtorParameters,
+            propDecorators: metaPropDecorators,
+        };
     }
     /**
      * Convert a reflected constructor parameter to metadata.
@@ -26774,7 +26809,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     inputs: directiveResult.inputs,
                     outputs: directiveResult.outputs,
                     meta: analysis,
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
+                    classMetadata: extractClassMetadata(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
                     typeCheckMeta: extractDirectiveTypeCheckMeta(node, directiveResult.inputs, this.reflector),
                     providersRequiringFactory,
@@ -26813,12 +26848,18 @@ Either add the @Injectable() decorator to '${provider.node.name
         compileFull(node, analysis, resolution, pool) {
             const fac = compileNgFactoryDefField(toFactoryMetadata(analysis.meta, FactoryTarget.Directive));
             const def = compileDirectiveFromMetadata(analysis.meta, pool, makeBindingParser());
-            return compileResults(fac, def, analysis.metadataStmt, 'ɵdir');
+            const classMetadata = analysis.classMetadata !== null ?
+                compileClassMetadata(analysis.classMetadata).toStmt() :
+                null;
+            return compileResults(fac, def, classMetadata, 'ɵdir');
         }
         compilePartial(node, analysis, resolution) {
             const fac = compileDeclareFactory(toFactoryMetadata(analysis.meta, FactoryTarget.Directive));
             const def = compileDeclareDirectiveFromMetadata(analysis.meta);
-            return compileResults(fac, def, analysis.metadataStmt, 'ɵdir');
+            const classMetadata = analysis.classMetadata !== null ?
+                compileDeclareClassMetadata(analysis.classMetadata).toStmt() :
+                null;
+            return compileResults(fac, def, classMetadata, 'ɵdir');
         }
         /**
          * Checks if a given class uses Angular features and returns the TypeScript node
@@ -27543,7 +27584,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     providersRequiringFactory: rawProviders ?
                         resolveProvidersRequiringFactory(rawProviders, this.reflector, this.evaluator) :
                         null,
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
+                    classMetadata: extractClassMetadata(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     factorySymbolName: node.name.text,
                 },
             };
@@ -27615,20 +27656,22 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
         }
-        compileFull(node, { inj, mod, fac, metadataStmt, declarations }, { injectorImports }) {
+        compileFull(node, { inj, mod, fac, classMetadata, declarations }, { injectorImports }) {
             const factoryFn = compileNgFactoryDefField(fac);
             const ngInjectorDef = compileInjector(this.mergeInjectorImports(inj, injectorImports));
             const ngModuleDef = compileNgModule(mod);
             const statements = ngModuleDef.statements;
-            this.insertMetadataStatement(statements, metadataStmt);
+            const metadata = classMetadata !== null ? compileClassMetadata(classMetadata) : null;
+            this.insertMetadataStatement(statements, metadata);
             this.appendRemoteScopingStatements(statements, node, declarations);
             return this.compileNgModule(factoryFn, ngInjectorDef, ngModuleDef);
         }
-        compilePartial(node, { inj, fac, mod, metadataStmt }, { injectorImports }) {
+        compilePartial(node, { inj, fac, mod, classMetadata }, { injectorImports }) {
             const factoryFn = compileDeclareFactory(fac);
             const injectorDef = compileDeclareInjectorFromMetadata(this.mergeInjectorImports(inj, injectorImports));
             const ngModuleDef = compileDeclareNgModuleFromMetadata(mod);
-            this.insertMetadataStatement(ngModuleDef.statements, metadataStmt);
+            const metadata = classMetadata !== null ? compileDeclareClassMetadata(classMetadata) : null;
+            this.insertMetadataStatement(ngModuleDef.statements, metadata);
             // NOTE: no remote scoping required as this is banned in partial compilation.
             return this.compileNgModule(factoryFn, injectorDef, ngModuleDef);
         }
@@ -27642,9 +27685,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         /**
          * Add class metadata statements, if provided, to the `ngModuleStatements`.
          */
-        insertMetadataStatement(ngModuleStatements, metadataStmt) {
-            if (metadataStmt !== null) {
-                ngModuleStatements.unshift(metadataStmt);
+        insertMetadataStatement(ngModuleStatements, metadata) {
+            if (metadata !== null) {
+                ngModuleStatements.unshift(metadata.toStmt());
             }
         }
         /**
@@ -28154,7 +28197,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // analyzed and the full compilation scope for the component can be realized.
                         animations, viewProviders: wrappedViewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath }),
                     typeCheckMeta: extractDirectiveTypeCheckMeta(node, inputs, this.reflector),
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
+                    classMetadata: extractClassMetadata(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
                     template,
                     providersRequiringFactory,
                     viewProvidersRequiringFactory,
@@ -28423,7 +28466,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
             const fac = compileNgFactoryDefField(toFactoryMetadata(meta, FactoryTarget.Component));
             const def = compileComponentFromMetadata(meta, pool, makeBindingParser());
-            return compileResults(fac, def, analysis.metadataStmt, 'ɵcmp');
+            const classMetadata = analysis.classMetadata !== null ?
+                compileClassMetadata(analysis.classMetadata).toStmt() :
+                null;
+            return compileResults(fac, def, classMetadata, 'ɵcmp');
         }
         compilePartial(node, analysis, resolution) {
             if (analysis.template.errors !== null && analysis.template.errors.length > 0) {
@@ -28432,7 +28478,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
             const fac = compileDeclareFactory(toFactoryMetadata(meta, FactoryTarget.Component));
             const def = compileDeclareComponentFromMetadata(meta, analysis.template);
-            return compileResults(fac, def, analysis.metadataStmt, 'ɵcmp');
+            const classMetadata = analysis.classMetadata !== null ?
+                compileDeclareClassMetadata(analysis.classMetadata).toStmt() :
+                null;
+            return compileResults(fac, def, classMetadata, 'ɵcmp');
         }
         _resolveLiteral(decorator) {
             if (this.literalCache.has(decorator)) {
@@ -28880,7 +28929,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 analysis: {
                     meta,
                     ctorDeps: extractInjectableCtorDeps(node, meta, decorator, this.reflector, this.defaultImportRecorder, this.isCore, this.strictCtorDeps),
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore),
+                    classMetadata: extractClassMetadata(node, this.reflector, this.defaultImportRecorder, this.isCore),
                     // Avoid generating multiple factories if a class has
                     // more Angular decorators, apart from Injectable.
                     needsFactory: !decorators ||
@@ -28895,18 +28944,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.injectableRegistry.registerInjectable(node);
         }
         compileFull(node, analysis) {
-            return this.compile(compileNgFactoryDefField, meta => compileInjectable(meta, false), node, analysis);
+            return this.compile(compileNgFactoryDefField, meta => compileInjectable(meta, false), compileClassMetadata, node, analysis);
         }
         compilePartial(node, analysis) {
-            return this.compile(compileDeclareFactory, compileDeclareInjectableFromMetadata, node, analysis);
+            return this.compile(compileDeclareFactory, compileDeclareInjectableFromMetadata, compileDeclareClassMetadata, node, analysis);
         }
-        compile(compileFactoryFn, compileInjectableFn, node, analysis) {
+        compile(compileFactoryFn, compileInjectableFn, compileClassMetadataFn, node, analysis) {
             const results = [];
             if (analysis.needsFactory) {
                 const meta = analysis.meta;
                 const factoryRes = compileFactoryFn(toFactoryMetadata(Object.assign(Object.assign({}, meta), { deps: analysis.ctorDeps }), FactoryTarget.Injectable));
-                if (analysis.metadataStmt !== null) {
-                    factoryRes.statements.push(analysis.metadataStmt);
+                if (analysis.classMetadata !== null) {
+                    factoryRes.statements.push(compileClassMetadataFn(analysis.classMetadata).toStmt());
                 }
                 results.push(factoryRes);
             }
@@ -29176,7 +29225,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         deps: getValidConstructorDependencies(clazz, this.reflector, this.defaultImportRecorder, this.isCore),
                         pure,
                     },
-                    metadataStmt: generateSetClassMetadataCall(clazz, this.reflector, this.defaultImportRecorder, this.isCore),
+                    classMetadata: extractClassMetadata(clazz, this.reflector, this.defaultImportRecorder, this.isCore),
                 },
             };
         }
@@ -29201,12 +29250,18 @@ Either add the @Injectable() decorator to '${provider.node.name
         compileFull(node, analysis) {
             const fac = compileNgFactoryDefField(toFactoryMetadata(analysis.meta, FactoryTarget.Pipe));
             const def = compilePipeFromMetadata(analysis.meta);
-            return compileResults(fac, def, analysis.metadataStmt, 'ɵpipe');
+            const classMetadata = analysis.classMetadata !== null ?
+                compileClassMetadata(analysis.classMetadata).toStmt() :
+                null;
+            return compileResults(fac, def, classMetadata, 'ɵpipe');
         }
         compilePartial(node, analysis) {
             const fac = compileDeclareFactory(toFactoryMetadata(analysis.meta, FactoryTarget.Pipe));
             const def = compileDeclarePipeFromMetadata(analysis.meta);
-            return compileResults(fac, def, analysis.metadataStmt, 'ɵpipe');
+            const classMetadata = analysis.classMetadata !== null ?
+                compileDeclareClassMetadata(analysis.classMetadata).toStmt() :
+                null;
+            return compileResults(fac, def, classMetadata, 'ɵpipe');
         }
     }
 
