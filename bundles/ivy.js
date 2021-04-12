@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+35.sha-42e3a52
+ * @license Angular v12.0.0-next.8+33.sha-6ba67c6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17829,7 +17829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+35.sha-42e3a52');
+    const VERSION$1 = new Version('12.0.0-next.8+33.sha-6ba67c6');
 
     /**
      * @license
@@ -18451,7 +18451,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+35.sha-42e3a52'));
+        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18658,7 +18658,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+35.sha-42e3a52'));
+        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18691,7 +18691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+35.sha-42e3a52'));
+        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18761,7 +18761,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+35.sha-42e3a52'));
+        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18789,7 +18789,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+35.sha-42e3a52'));
+        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18838,7 +18838,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+35.sha-42e3a52'));
+        definitionMap.set('version', literal('12.0.0-next.8+33.sha-6ba67c6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18870,7 +18870,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+35.sha-42e3a52');
+    const VERSION$2 = new Version('12.0.0-next.8+33.sha-6ba67c6');
 
     /**
      * @license
@@ -19224,8 +19224,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function getRootDirs(host, options) {
         const rootDirs = [];
-        const cwd = host.getCurrentDirectory();
-        const fs = getFileSystem();
         if (options.rootDirs !== undefined) {
             rootDirs.push(...options.rootDirs);
         }
@@ -19233,13 +19231,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             rootDirs.push(options.rootDir);
         }
         else {
-            rootDirs.push(cwd);
+            rootDirs.push(host.getCurrentDirectory());
         }
         // In Windows the above might not always return posix separated paths
         // See:
         // https://github.com/Microsoft/TypeScript/blob/3f7357d37f66c842d70d835bc925ec2a873ecfec/src/compiler/sys.ts#L650
         // Also compiler options might be set via an API which doesn't normalize paths
-        return rootDirs.map(rootDir => fs.resolve(cwd, host.getCanonicalFileName(rootDir)));
+        return rootDirs.map(rootDir => absoluteFrom(host.getCanonicalFileName(rootDir)));
     }
     function nodeDebugInfo(node) {
         const sf = getSourceFile(node);
