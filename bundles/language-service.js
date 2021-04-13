@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+37.sha-9bf8e51
+ * @license Angular v12.0.0-next.8+45.sha-528e7d7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19378,7 +19378,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+37.sha-9bf8e51');
+    const VERSION$1 = new Version('12.0.0-next.8+45.sha-528e7d7');
 
     /**
      * @license
@@ -35426,7 +35426,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+37.sha-9bf8e51');
+    const VERSION$2 = new Version$1('12.0.0-next.8+45.sha-528e7d7');
 
     /**
      * @license
@@ -37240,18 +37240,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
 
     /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation. All rights reserved.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of the
-    License at http://www.apache.org/licenses/LICENSE-2.0
+    Copyright (c) Microsoft Corporation.
 
-    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-    MERCHANTABLITY OR NON-INFRINGEMENT.
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
 
-    See the Apache Version 2.0 License for specific language governing permissions
-    and limitations under the License.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
     /* global Reflect, Promise */
 
@@ -37339,6 +37339,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._parentOrParents = null;
             this._subscriptions = null;
             if (unsubscribe) {
+                this._ctorUnsubscribe = true;
                 this._unsubscribe = unsubscribe;
             }
         }
@@ -37347,7 +37348,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this.closed) {
                 return;
             }
-            var _a = this, _parentOrParents = _a._parentOrParents, _unsubscribe = _a._unsubscribe, _subscriptions = _a._subscriptions;
+            var _a = this, _parentOrParents = _a._parentOrParents, _ctorUnsubscribe = _a._ctorUnsubscribe, _unsubscribe = _a._unsubscribe, _subscriptions = _a._subscriptions;
             this.closed = true;
             this._parentOrParents = null;
             this._subscriptions = null;
@@ -37361,6 +37362,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
             if (isFunction(_unsubscribe)) {
+                if (_ctorUnsubscribe) {
+                    this._unsubscribe = undefined;
+                }
                 try {
                     _unsubscribe.call(this);
                 }
@@ -37731,12 +37735,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
 
     /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-    function noop$1() { }
+    function identity(x) {
+        return x;
+    }
 
-    /** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
+    /** PURE_IMPORTS_START _identity PURE_IMPORTS_END */
     function pipeFromArray(fns) {
-        if (!fns) {
-            return noop$1;
+        if (fns.length === 0) {
+            return identity;
         }
         if (fns.length === 1) {
             return fns[0];
@@ -38232,11 +38238,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
 
-    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-    function identity(x) {
-        return x;
-    }
-
     /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
     function map(project, thisArg) {
         return function mapOperation(source) {
@@ -38279,49 +38280,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return MapSubscriber;
     }(Subscriber));
 
-    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
-    var OuterSubscriber = /*@__PURE__*/ (function (_super) {
-        __extends(OuterSubscriber, _super);
-        function OuterSubscriber() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        OuterSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
-            this.destination.next(innerValue);
-        };
-        OuterSubscriber.prototype.notifyError = function (error, innerSub) {
-            this.destination.error(error);
-        };
-        OuterSubscriber.prototype.notifyComplete = function (innerSub) {
-            this.destination.complete();
-        };
-        return OuterSubscriber;
-    }(Subscriber));
-
-    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
-    var InnerSubscriber = /*@__PURE__*/ (function (_super) {
-        __extends(InnerSubscriber, _super);
-        function InnerSubscriber(parent, outerValue, outerIndex) {
-            var _this = _super.call(this) || this;
-            _this.parent = parent;
-            _this.outerValue = outerValue;
-            _this.outerIndex = outerIndex;
-            _this.index = 0;
-            return _this;
-        }
-        InnerSubscriber.prototype._next = function (value) {
-            this.parent.notifyNext(this.outerValue, value, this.outerIndex, this.index++, this);
-        };
-        InnerSubscriber.prototype._error = function (error) {
-            this.parent.notifyError(error, this);
-            this.unsubscribe();
-        };
-        InnerSubscriber.prototype._complete = function () {
-            this.parent.notifyComplete(this);
-            this.unsubscribe();
-        };
-        return InnerSubscriber;
-    }(Subscriber));
-
     /** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */
     var subscribeToPromise = function (promise) {
         return function (subscriber) {
@@ -38350,7 +38308,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return function (subscriber) {
             var iterator$1 = iterable[iterator]();
             do {
-                var item = iterator$1.next();
+                var item = void 0;
+                try {
+                    item = iterator$1.next();
+                }
+                catch (err) {
+                    subscriber.error(err);
+                    return subscriber;
+                }
                 if (item.done) {
                     subscriber.complete();
                     break;
@@ -38413,20 +38378,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throw new TypeError(msg);
         }
     };
-
-    /** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
-    function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, innerSubscriber) {
-        if (innerSubscriber === void 0) {
-            innerSubscriber = new InnerSubscriber(outerSubscriber, outerValue, outerIndex);
-        }
-        if (innerSubscriber.closed) {
-            return undefined;
-        }
-        if (result instanceof Observable) {
-            return result.subscribe(innerSubscriber);
-        }
-        return subscribeTo(result)(innerSubscriber);
-    }
 
     /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
     function scheduleObservable(input, scheduler) {
@@ -38547,7 +38498,61 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
 
-    /** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
+    /** PURE_IMPORTS_START tslib,_Subscriber,_Observable,_util_subscribeTo PURE_IMPORTS_END */
+    var SimpleInnerSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(SimpleInnerSubscriber, _super);
+        function SimpleInnerSubscriber(parent) {
+            var _this = _super.call(this) || this;
+            _this.parent = parent;
+            return _this;
+        }
+        SimpleInnerSubscriber.prototype._next = function (value) {
+            this.parent.notifyNext(value);
+        };
+        SimpleInnerSubscriber.prototype._error = function (error) {
+            this.parent.notifyError(error);
+            this.unsubscribe();
+        };
+        SimpleInnerSubscriber.prototype._complete = function () {
+            this.parent.notifyComplete();
+            this.unsubscribe();
+        };
+        return SimpleInnerSubscriber;
+    }(Subscriber));
+    var SimpleOuterSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(SimpleOuterSubscriber, _super);
+        function SimpleOuterSubscriber() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SimpleOuterSubscriber.prototype.notifyNext = function (innerValue) {
+            this.destination.next(innerValue);
+        };
+        SimpleOuterSubscriber.prototype.notifyError = function (err) {
+            this.destination.error(err);
+        };
+        SimpleOuterSubscriber.prototype.notifyComplete = function () {
+            this.destination.complete();
+        };
+        return SimpleOuterSubscriber;
+    }(Subscriber));
+    function innerSubscribe(result, innerSubscriber) {
+        if (innerSubscriber.closed) {
+            return undefined;
+        }
+        if (result instanceof Observable) {
+            return result.subscribe(innerSubscriber);
+        }
+        var subscription;
+        try {
+            subscription = subscribeTo(result)(innerSubscriber);
+        }
+        catch (error) {
+            innerSubscriber.error(error);
+        }
+        return subscription;
+    }
+
+    /** PURE_IMPORTS_START tslib,_map,_observable_from,_innerSubscribe PURE_IMPORTS_END */
     function mergeMap(project, resultSelector, concurrent) {
         if (concurrent === void 0) {
             concurrent = Number.POSITIVE_INFINITY;
@@ -38607,13 +38612,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return;
             }
             this.active++;
-            this._innerSub(result, value, index);
+            this._innerSub(result);
         };
-        MergeMapSubscriber.prototype._innerSub = function (ish, value, index) {
-            var innerSubscriber = new InnerSubscriber(this, value, index);
+        MergeMapSubscriber.prototype._innerSub = function (ish) {
+            var innerSubscriber = new SimpleInnerSubscriber(this);
             var destination = this.destination;
             destination.add(innerSubscriber);
-            var innerSubscription = subscribeToResult(this, ish, undefined, undefined, innerSubscriber);
+            var innerSubscription = innerSubscribe(ish, innerSubscriber);
             if (innerSubscription !== innerSubscriber) {
                 destination.add(innerSubscription);
             }
@@ -38625,12 +38630,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             this.unsubscribe();
         };
-        MergeMapSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
+        MergeMapSubscriber.prototype.notifyNext = function (innerValue) {
             this.destination.next(innerValue);
         };
-        MergeMapSubscriber.prototype.notifyComplete = function (innerSub) {
+        MergeMapSubscriber.prototype.notifyComplete = function () {
             var buffer = this.buffer;
-            this.remove(innerSub);
             this.active--;
             if (buffer.length > 0) {
                 this._next(buffer.shift());
@@ -38640,7 +38644,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         };
         return MergeMapSubscriber;
-    }(OuterSubscriber));
+    }(SimpleOuterSubscriber));
 
     /** PURE_IMPORTS_START _mergeMap,_util_identity PURE_IMPORTS_END */
     function mergeAll(concurrent) {
