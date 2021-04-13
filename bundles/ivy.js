@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.9+23.sha-99c9f7c
+ * @license Angular v11.2.9+30.sha-9cda866
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20399,7 +20399,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.9+23.sha-99c9f7c');
+    const VERSION$1 = new Version('11.2.9+30.sha-9cda866');
 
     /**
      * @license
@@ -21056,7 +21056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.9+23.sha-99c9f7c'));
+        definitionMap.set('version', literal('11.2.9+30.sha-9cda866'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21277,7 +21277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.9+23.sha-99c9f7c'));
+        definitionMap.set('version', literal('11.2.9+30.sha-9cda866'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21309,7 +21309,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.9+23.sha-99c9f7c');
+    const VERSION$2 = new Version('11.2.9+30.sha-9cda866');
 
     /**
      * @license
@@ -35143,12 +35143,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         return false;
     }
-    function checkIfGenericTypesAreUnbound(node) {
-        if (node.typeParameters === undefined) {
-            return true;
-        }
-        return node.typeParameters.every(param => param.constraint === undefined);
-    }
     function isAccessExpression(node) {
         return ts$1.isPropertyAccessExpression(node) || ts$1.isElementAccessExpression(node);
     }
@@ -35375,6 +35369,136 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Indicates whether a particular component requires an inline type check block.
+     *
+     * This is not a boolean state as inlining might only be required to get the best possible
+     * type-checking, but the component could theoretically still be checked without it.
+     */
+    var TcbInliningRequirement;
+    (function (TcbInliningRequirement) {
+        /**
+         * There is no way to type check this component without inlining.
+         */
+        TcbInliningRequirement[TcbInliningRequirement["MustInline"] = 0] = "MustInline";
+        /**
+         * Inlining should be used due to the component's generic bounds, but a non-inlining fallback
+         * method can be used if that's not possible.
+         */
+        TcbInliningRequirement[TcbInliningRequirement["ShouldInlineForGenericBounds"] = 1] = "ShouldInlineForGenericBounds";
+        /**
+         * There is no requirement for this component's TCB to be inlined.
+         */
+        TcbInliningRequirement[TcbInliningRequirement["None"] = 2] = "None";
+    })(TcbInliningRequirement || (TcbInliningRequirement = {}));
+    function requiresInlineTypeCheckBlock(node, usedPipes, reflector) {
+        // In order to qualify for a declared TCB (not inline) two conditions must be met:
+        // 1) the class must be exported
+        // 2) it must not have contextual generic type bounds
+        if (!checkIfClassIsExported(node)) {
+            // Condition 1 is false, the class is not exported.
+            return TcbInliningRequirement.MustInline;
+        }
+        else if (!checkIfGenericTypeBoundsAreContextFree(node, reflector)) {
+            // Condition 2 is false, the class has constrained generic types. It should be checked with an
+            // inline TCB if possible, but can potentially use fallbacks to avoid inlining if not.
+            return TcbInliningRequirement.ShouldInlineForGenericBounds;
+        }
+        else if (Array.from(usedPipes.values())
+            .some(pipeRef => !checkIfClassIsExported(pipeRef.node))) {
+            // If one of the pipes used by the component is not exported, a non-inline TCB will not be able
+            // to import it, so this requires an inline TCB.
+            return TcbInliningRequirement.MustInline;
+        }
+        else {
+            return TcbInliningRequirement.None;
+        }
+    }
+    /** Maps a shim position back to a template location. */
+    function getTemplateMapping(shimSf, position, resolver, isDiagnosticRequest) {
+        const node = getTokenAtPosition(shimSf, position);
+        const sourceLocation = findSourceLocation(node, shimSf, isDiagnosticRequest);
+        if (sourceLocation === null) {
+            return null;
+        }
+        const mapping = resolver.getSourceMapping(sourceLocation.id);
+        const span = resolver.toParseSourceSpan(sourceLocation.id, sourceLocation.span);
+        if (span === null) {
+            return null;
+        }
+        // TODO(atscott): Consider adding a context span by walking up from `node` until we get a
+        // different span.
+        return { sourceLocation, templateSourceMapping: mapping, span };
+    }
+    function findTypeCheckBlock(file, id, isDiagnosticRequest) {
+        for (const stmt of file.statements) {
+            if (ts$1.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file, isDiagnosticRequest) === id) {
+                return stmt;
+            }
+        }
+        return null;
+    }
+    /**
+     * Traverses up the AST starting from the given node to extract the source location from comments
+     * that have been emitted into the TCB. If the node does not exist within a TCB, or if an ignore
+     * marker comment is found up the tree (and this is part of a diagnostic request), this function
+     * returns null.
+     */
+    function findSourceLocation(node, sourceFile, isDiagnosticsRequest) {
+        // Search for comments until the TCB's function declaration is encountered.
+        while (node !== undefined && !ts$1.isFunctionDeclaration(node)) {
+            if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticsRequest) {
+                // There's an ignore marker on this node, so the diagnostic should not be reported.
+                return null;
+            }
+            const span = readSpanComment(node, sourceFile);
+            if (span !== null) {
+                // Once the positional information has been extracted, search further up the TCB to extract
+                // the unique id that is attached with the TCB's function declaration.
+                const id = getTemplateId$1(node, sourceFile, isDiagnosticsRequest);
+                if (id === null) {
+                    return null;
+                }
+                return { id, span };
+            }
+            node = node.parent;
+        }
+        return null;
+    }
+    function getTemplateId$1(node, sourceFile, isDiagnosticRequest) {
+        // Walk up to the function declaration of the TCB, the file information is attached there.
+        while (!ts$1.isFunctionDeclaration(node)) {
+            if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticRequest) {
+                // There's an ignore marker on this node, so the diagnostic should not be reported.
+                return null;
+            }
+            node = node.parent;
+            // Bail once we have reached the root.
+            if (node === undefined) {
+                return null;
+            }
+        }
+        const start = node.getFullStart();
+        return ts$1.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
+            if (kind !== ts$1.SyntaxKind.MultiLineCommentTrivia) {
+                return null;
+            }
+            const commentText = sourceFile.text.substring(pos + 2, end - 2);
+            return commentText;
+        }) || null;
+    }
+    function checkIfGenericTypeBoundsAreContextFree(node, reflector) {
+        // Generic type parameters are considered context free if they can be emitted into any context.
+        return new TypeParameterEmitter(node.typeParameters, reflector).canEmit();
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function generateTypeCtorDeclarationFn(node, meta, nodeTypeRef, typeParams, reflector) {
         if (requiresInlineTypeCtor(node, reflector)) {
             throw new Error(`${node.name.text} requires an inline type constructor`);
@@ -35531,10 +35655,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         // The class requires an inline type constructor if it has generic type bounds that can not be
         // emitted into a different context.
         return !checkIfGenericTypeBoundsAreContextFree(node, host);
-    }
-    function checkIfGenericTypeBoundsAreContextFree(node, reflector) {
-        // Generic type parameters are considered context free if they can be emitted into any context.
-        return new TypeParameterEmitter(node.typeParameters, reflector).canEmit();
     }
     /**
      * Add a default `= any` to type parameters that don't have a default value already.
@@ -35842,109 +35962,6 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function makeInlineDiagnostic(templateId, code, node, messageText, relatedInformation) {
         return Object.assign(Object.assign({}, makeDiagnostic(code, node, messageText, relatedInformation)), { componentFile: node.getSourceFile(), templateId });
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function requiresInlineTypeCheckBlock(node, usedPipes) {
-        // In order to qualify for a declared TCB (not inline) two conditions must be met:
-        // 1) the class must be exported
-        // 2) it must not have constrained generic types
-        if (!checkIfClassIsExported(node)) {
-            // Condition 1 is false, the class is not exported.
-            return true;
-        }
-        else if (!checkIfGenericTypesAreUnbound(node)) {
-            // Condition 2 is false, the class has constrained generic types
-            return true;
-        }
-        else if (Array.from(usedPipes.values())
-            .some(pipeRef => !checkIfClassIsExported(pipeRef.node))) {
-            // If one of the pipes used by the component is not exported, a non-inline TCB will not be able
-            // to import it, so this requires an inline TCB.
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    /** Maps a shim position back to a template location. */
-    function getTemplateMapping(shimSf, position, resolver, isDiagnosticRequest) {
-        const node = getTokenAtPosition(shimSf, position);
-        const sourceLocation = findSourceLocation(node, shimSf, isDiagnosticRequest);
-        if (sourceLocation === null) {
-            return null;
-        }
-        const mapping = resolver.getSourceMapping(sourceLocation.id);
-        const span = resolver.toParseSourceSpan(sourceLocation.id, sourceLocation.span);
-        if (span === null) {
-            return null;
-        }
-        // TODO(atscott): Consider adding a context span by walking up from `node` until we get a
-        // different span.
-        return { sourceLocation, templateSourceMapping: mapping, span };
-    }
-    function findTypeCheckBlock(file, id, isDiagnosticRequest) {
-        for (const stmt of file.statements) {
-            if (ts$1.isFunctionDeclaration(stmt) && getTemplateId$1(stmt, file, isDiagnosticRequest) === id) {
-                return stmt;
-            }
-        }
-        return null;
-    }
-    /**
-     * Traverses up the AST starting from the given node to extract the source location from comments
-     * that have been emitted into the TCB. If the node does not exist within a TCB, or if an ignore
-     * marker comment is found up the tree (and this is part of a diagnostic request), this function
-     * returns null.
-     */
-    function findSourceLocation(node, sourceFile, isDiagnosticsRequest) {
-        // Search for comments until the TCB's function declaration is encountered.
-        while (node !== undefined && !ts$1.isFunctionDeclaration(node)) {
-            if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticsRequest) {
-                // There's an ignore marker on this node, so the diagnostic should not be reported.
-                return null;
-            }
-            const span = readSpanComment(node, sourceFile);
-            if (span !== null) {
-                // Once the positional information has been extracted, search further up the TCB to extract
-                // the unique id that is attached with the TCB's function declaration.
-                const id = getTemplateId$1(node, sourceFile, isDiagnosticsRequest);
-                if (id === null) {
-                    return null;
-                }
-                return { id, span };
-            }
-            node = node.parent;
-        }
-        return null;
-    }
-    function getTemplateId$1(node, sourceFile, isDiagnosticRequest) {
-        // Walk up to the function declaration of the TCB, the file information is attached there.
-        while (!ts$1.isFunctionDeclaration(node)) {
-            if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticRequest) {
-                // There's an ignore marker on this node, so the diagnostic should not be reported.
-                return null;
-            }
-            node = node.parent;
-            // Bail once we have reached the root.
-            if (node === undefined) {
-                return null;
-            }
-        }
-        const start = node.getFullStart();
-        return ts$1.forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
-            if (kind !== ts$1.SyntaxKind.MultiLineCommentTrivia) {
-                return null;
-            }
-            const commentText = sourceFile.text.substring(pos + 2, end - 2);
-            return commentText;
-        }) || null;
     }
 
     /**
@@ -36456,6 +36473,32 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Controls how generics for the component context class will be handled during TCB generation.
+     */
+    var TcbGenericContextBehavior;
+    (function (TcbGenericContextBehavior) {
+        /**
+         * References to generic parameter bounds will be emitted via the `TypeParameterEmitter`.
+         *
+         * The caller must verify that all parameter bounds are emittable in order to use this mode.
+         */
+        TcbGenericContextBehavior[TcbGenericContextBehavior["UseEmitter"] = 0] = "UseEmitter";
+        /**
+         * Generic parameter declarations will be copied directly from the `ts.ClassDeclaration` of the
+         * component class.
+         *
+         * The caller must only use the generated TCB code in a context where such copies will still be
+         * valid, such as an inline type check block.
+         */
+        TcbGenericContextBehavior[TcbGenericContextBehavior["CopyClassNodes"] = 1] = "CopyClassNodes";
+        /**
+         * Any generic parameters for the component context class will be set to `any`.
+         *
+         * Produces a less useful type, but is always safe to use.
+         */
+        TcbGenericContextBehavior[TcbGenericContextBehavior["FallbackToAny"] = 2] = "FallbackToAny";
+    })(TcbGenericContextBehavior || (TcbGenericContextBehavior = {}));
+    /**
      * Given a `ts.ClassDeclaration` for a component, and metadata regarding that component, compose a
      * "type check block" function.
      *
@@ -36476,15 +36519,39 @@ Either add the @Injectable() decorator to '${provider.node.name
      * and bindings.
      * @param oobRecorder used to record errors regarding template elements which could not be correctly
      * translated into types during TCB generation.
+     * @param genericContextBehavior controls how generic parameters (especially parameters with generic
+     * bounds) will be referenced from the generated TCB code.
      */
-    function generateTypeCheckBlock(env, ref, name, meta, domSchemaChecker, oobRecorder) {
+    function generateTypeCheckBlock(env, ref, name, meta, domSchemaChecker, oobRecorder, genericContextBehavior) {
         const tcb = new Context$1(env, domSchemaChecker, oobRecorder, meta.id, meta.boundTarget, meta.pipes, meta.schemas);
         const scope = Scope$1.forNodes(tcb, null, tcb.boundTarget.target.template, /* guard */ null);
         const ctxRawType = env.referenceType(ref);
         if (!ts$1.isTypeReferenceNode(ctxRawType)) {
             throw new Error(`Expected TypeReferenceNode when referencing the ctx param for ${ref.debugName}`);
         }
-        const paramList = [tcbCtxParam(ref.node, ctxRawType.typeName, env.config.useContextGenericType)];
+        let typeParameters = undefined;
+        let typeArguments = undefined;
+        if (ref.node.typeParameters !== undefined) {
+            if (!env.config.useContextGenericType) {
+                genericContextBehavior = TcbGenericContextBehavior.FallbackToAny;
+            }
+            switch (genericContextBehavior) {
+                case TcbGenericContextBehavior.UseEmitter:
+                    // Guaranteed to emit type parameters since we checked that the class has them above.
+                    typeParameters = new TypeParameterEmitter(ref.node.typeParameters, env.reflector)
+                        .emit(typeRef => env.referenceType(typeRef));
+                    typeArguments = typeParameters.map(param => ts$1.factory.createTypeReferenceNode(param.name));
+                    break;
+                case TcbGenericContextBehavior.CopyClassNodes:
+                    typeParameters = [...ref.node.typeParameters];
+                    typeArguments = typeParameters.map(param => ts$1.factory.createTypeReferenceNode(param.name));
+                    break;
+                case TcbGenericContextBehavior.FallbackToAny:
+                    typeArguments = ref.node.typeParameters.map(() => ts$1.factory.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
+                    break;
+            }
+        }
+        const paramList = [tcbCtxParam(ref.node, ctxRawType.typeName, typeArguments)];
         const scopeStatements = scope.render();
         const innerBody = ts$1.createBlock([
             ...env.getPreludeStatements(),
@@ -36498,7 +36565,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         /* modifiers */ undefined, 
         /* asteriskToken */ undefined, 
         /* name */ name, 
-        /* typeParameters */ env.config.useContextGenericType ? ref.node.typeParameters : undefined, 
+        /* typeParameters */ env.config.useContextGenericType ? typeParameters : undefined, 
         /* parameters */ paramList, 
         /* type */ undefined, 
         /* body */ body);
@@ -37867,26 +37934,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     /**
-     * Create the `ctx` parameter to the top-level TCB function.
-     *
-     * This is a parameter with a type equivalent to the component type, with all generic type
-     * parameters listed (without their generic bounds).
+     * Create the `ctx` parameter to the top-level TCB function, with the given generic type arguments.
      */
-    function tcbCtxParam(node, name, useGenericType) {
-        let typeArguments = undefined;
-        // Check if the component is generic, and pass generic type parameters if so.
-        if (node.typeParameters !== undefined) {
-            if (useGenericType) {
-                typeArguments =
-                    node.typeParameters.map(param => ts$1.createTypeReferenceNode(param.name, undefined));
-            }
-            else {
-                typeArguments =
-                    node.typeParameters.map(() => ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
-            }
-        }
-        const type = ts$1.createTypeReferenceNode(name, typeArguments);
-        return ts$1.createParameter(
+    function tcbCtxParam(node, name, typeArguments) {
+        const type = ts$1.factory.createTypeReferenceNode(name, typeArguments);
+        return ts$1.factory.createParameterDeclaration(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, 
@@ -38197,9 +38249,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.nextTcbId = 1;
             this.tcbStatements = [];
         }
-        addTypeCheckBlock(ref, meta, domSchemaChecker, oobRecorder) {
+        addTypeCheckBlock(ref, meta, domSchemaChecker, oobRecorder, genericContextBehavior) {
             const fnId = ts$1.createIdentifier(`_tcb${this.nextTcbId++}`);
-            const fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker, oobRecorder);
+            const fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker, oobRecorder, genericContextBehavior);
             this.tcbStatements.push(fn);
         }
         render(removeComments) {
@@ -38331,10 +38383,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 boundTarget,
                 templateDiagnostics,
             });
-            const tcbRequiresInline = requiresInlineTypeCheckBlock(ref.node, pipes);
+            const inliningRequirement = requiresInlineTypeCheckBlock(ref.node, pipes, this.reflector);
             // If inlining is not supported, but is required for either the TCB or one of its directive
             // dependencies, then exit here with an error.
-            if (this.inlining === InliningMode.Error && tcbRequiresInline) {
+            if (this.inlining === InliningMode.Error &&
+                inliningRequirement === TcbInliningRequirement.MustInline) {
                 // This template cannot be supported because the underlying strategy does not support inlining
                 // and inlining would be required.
                 // Record diagnostics to indicate the issues with this template.
@@ -38350,14 +38403,23 @@ Either add the @Injectable() decorator to '${provider.node.name
                 schemas,
             };
             this.perf.eventCount(PerfEvent.GenerateTcb);
-            if (tcbRequiresInline) {
+            if (inliningRequirement !== TcbInliningRequirement.None &&
+                this.inlining === InliningMode.InlineOps) {
                 // This class didn't meet the requirements for external type checking, so generate an inline
                 // TCB for the class.
                 this.addInlineTypeCheckBlock(fileData, shimData, ref, meta);
             }
+            else if (inliningRequirement === TcbInliningRequirement.ShouldInlineForGenericBounds &&
+                this.inlining === InliningMode.Error) {
+                // It's suggested that this TCB should be generated inline due to the component's generic
+                // bounds, but inlining is not supported by the current environment. Use a non-inline type
+                // check block, but fall back to `any` generic parameters since the generic bounds can't be
+                // referenced in that context. This will infer a less useful type for the component, but allow
+                // for type-checking it in an environment where that would not be possible otherwise.
+                shimData.file.addTypeCheckBlock(ref, meta, shimData.domSchemaChecker, shimData.oobRecorder, TcbGenericContextBehavior.FallbackToAny);
+            }
             else {
-                // The class can be type-checked externally as normal.
-                shimData.file.addTypeCheckBlock(ref, meta, shimData.domSchemaChecker, shimData.oobRecorder);
+                shimData.file.addTypeCheckBlock(ref, meta, shimData.domSchemaChecker, shimData.oobRecorder, TcbGenericContextBehavior.UseEmitter);
             }
         }
         /**
@@ -38447,7 +38509,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 this.opMap.set(sf, []);
             }
             const ops = this.opMap.get(sf);
-            ops.push(new TcbOp$1(ref, tcbMeta, this.config, this.reflector, shimData.domSchemaChecker, shimData.oobRecorder));
+            ops.push(new InlineTcbOp(ref, tcbMeta, this.config, this.reflector, shimData.domSchemaChecker, shimData.oobRecorder));
             fileData.hasInlines = true;
         }
         pendingShimForComponent(node) {
@@ -38490,9 +38552,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     /**
-     * A type check block operation which produces type check code for a particular component.
+     * A type check block operation which produces inline type check code for a particular component.
      */
-    class TcbOp$1 {
+    class InlineTcbOp {
         constructor(ref, meta, config, reflector, domSchemaChecker, oobRecorder) {
             this.ref = ref;
             this.meta = meta;
@@ -38510,7 +38572,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         execute(im, sf, refEmitter, printer) {
             const env = new Environment(this.config, im, refEmitter, this.reflector, sf);
             const fnName = ts$1.createIdentifier(`_tcb_${this.ref.node.pos}`);
-            const fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta, this.domSchemaChecker, this.oobRecorder);
+            // Inline TCBs should copy any generic type parameter nodes directly, as the TCB code is inlined
+            // into the class in a context where that will always be legal.
+            const fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta, this.domSchemaChecker, this.oobRecorder, TcbGenericContextBehavior.CopyClassNodes);
             return printer.printNode(ts$1.EmitHint.Unspecified, fn, sf);
         }
     }
