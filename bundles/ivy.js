@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+60.sha-60d0234
+ * @license Angular v12.0.0-next.8+64.sha-c7f9516
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6615,22 +6615,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     class MethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args) {
+        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
             super(span, sourceSpan, nameSpan);
             this.receiver = receiver;
             this.name = name;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
             return visitor.visitMethodCall(this, context);
         }
     }
     class SafeMethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args) {
+        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
             super(span, sourceSpan, nameSpan);
             this.receiver = receiver;
             this.name = name;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
             return visitor.visitSafeMethodCall(this, context);
@@ -6811,10 +6813,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name);
         }
         visitMethodCall(ast, context) {
-            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
         }
         visitSafeMethodCall(ast, context) {
-            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
         }
         visitFunctionCall(ast, context) {
             return new FunctionCall(ast.span, ast.sourceSpan, ast.target.visit(this), this.visitAll(ast.args));
@@ -6914,7 +6916,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const receiver = ast.receiver.visit(this);
             const args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
+                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -6922,7 +6924,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const receiver = ast.receiver.visit(this);
             const args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
+                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -7793,7 +7795,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // Convert the ast to an unguarded access to the receiver's member. The map will substitute
             // leftMostNode with its unguarded version in the call to `this.visit()`.
             if (leftMostSafe instanceof SafeMethodCall) {
-                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args));
+                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args, leftMostSafe.argumentSpan));
             }
             else {
                 this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name));
@@ -12225,6 +12227,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (artificialEndIndex !== undefined && artificialEndIndex > this.currentEndIndex) {
                 endIndex = artificialEndIndex;
             }
+            // In some unusual parsing scenarios (like when certain tokens are missing and an `EmptyExpr` is
+            // being created), the current token may already be advanced beyond the `currentEndIndex`. This
+            // appears to be a deep-seated parser bug.
+            //
+            // As a workaround for now, swap the start and end indices to ensure a valid `ParseSpan`.
+            // TODO(alxhub): fix the bug upstream in the parser state, and remove this workaround.
+            if (start > endIndex) {
+                const tmp = endIndex;
+                endIndex = start;
+                start = tmp;
+            }
             return new ParseSpan(start, endIndex);
         }
         sourceSpan(start, artificialEndIndex) {
@@ -12676,14 +12689,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             });
             const nameSpan = this.sourceSpan(nameStart);
             if (this.consumeOptionalCharacter($LPAREN)) {
+                const argumentStart = this.inputIndex;
                 this.rparensExpected++;
                 const args = this.parseCallArguments();
+                const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
                 this.expectCharacter($RPAREN);
                 this.rparensExpected--;
                 const span = this.span(start);
                 const sourceSpan = this.sourceSpan(start);
-                return isSafe ? new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args) :
-                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args);
+                return isSafe ?
+                    new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan) :
+                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan);
             }
             else {
                 if (isSafe) {
@@ -17830,7 +17846,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+60.sha-60d0234');
+    const VERSION$1 = new Version('12.0.0-next.8+64.sha-c7f9516');
 
     /**
      * @license
@@ -18460,7 +18476,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+60.sha-60d0234'));
+        definitionMap.set('version', literal('12.0.0-next.8+64.sha-c7f9516'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18491,7 +18507,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+60.sha-60d0234'));
+        definitionMap.set('version', literal('12.0.0-next.8+64.sha-c7f9516'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18698,7 +18714,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+60.sha-60d0234'));
+        definitionMap.set('version', literal('12.0.0-next.8+64.sha-c7f9516'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18731,7 +18747,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+60.sha-60d0234'));
+        definitionMap.set('version', literal('12.0.0-next.8+64.sha-c7f9516'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18801,7 +18817,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+60.sha-60d0234'));
+        definitionMap.set('version', literal('12.0.0-next.8+64.sha-c7f9516'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18829,7 +18845,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+60.sha-60d0234'));
+        definitionMap.set('version', literal('12.0.0-next.8+64.sha-c7f9516'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18878,7 +18894,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+60.sha-60d0234'));
+        definitionMap.set('version', literal('12.0.0-next.8+64.sha-c7f9516'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18910,7 +18926,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+60.sha-60d0234');
+    const VERSION$2 = new Version('12.0.0-next.8+64.sha-c7f9516');
 
     /**
      * @license
@@ -23327,9 +23343,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          */
         PerfPhase[PerfPhase["LsComponentLocations"] = 22] = "LsComponentLocations";
         /**
+         * Time spent by the Angular Language Service calculating signature help.
+         */
+        PerfPhase[PerfPhase["LsSignatureHelp"] = 23] = "LsSignatureHelp";
+        /**
          * Tracks the number of `PerfPhase`s, and must appear at the end of the list.
          */
-        PerfPhase[PerfPhase["LAST"] = 23] = "LAST";
+        PerfPhase[PerfPhase["LAST"] = 24] = "LAST";
     })(PerfPhase || (PerfPhase = {}));
     /**
      * Represents some occurrence during compilation, and is tracked with a counter.
@@ -33854,7 +33874,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // The `EmptyExpr` doesn't have a dedicated method on `AstVisitor`, so it's special cased here.
             if (ast instanceof EmptyExpr) {
-                return UNDEFINED;
+                const res = ts$1.factory.createIdentifier('undefined');
+                addParseSpanInfo(res, ast.sourceSpan);
+                return res;
             }
             // First attempt to let any custom resolution logic provide a translation for the given node.
             const resolved = this.maybeResolve(ast);
@@ -39647,12 +39669,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     var TargetNodeKind;
     (function (TargetNodeKind) {
         TargetNodeKind[TargetNodeKind["RawExpression"] = 0] = "RawExpression";
-        TargetNodeKind[TargetNodeKind["RawTemplateNode"] = 1] = "RawTemplateNode";
-        TargetNodeKind[TargetNodeKind["ElementInTagContext"] = 2] = "ElementInTagContext";
-        TargetNodeKind[TargetNodeKind["ElementInBodyContext"] = 3] = "ElementInBodyContext";
-        TargetNodeKind[TargetNodeKind["AttributeInKeyContext"] = 4] = "AttributeInKeyContext";
-        TargetNodeKind[TargetNodeKind["AttributeInValueContext"] = 5] = "AttributeInValueContext";
-        TargetNodeKind[TargetNodeKind["TwoWayBindingContext"] = 6] = "TwoWayBindingContext";
+        TargetNodeKind[TargetNodeKind["MethodCallExpressionInArgContext"] = 1] = "MethodCallExpressionInArgContext";
+        TargetNodeKind[TargetNodeKind["RawTemplateNode"] = 2] = "RawTemplateNode";
+        TargetNodeKind[TargetNodeKind["ElementInTagContext"] = 3] = "ElementInTagContext";
+        TargetNodeKind[TargetNodeKind["ElementInBodyContext"] = 4] = "ElementInBodyContext";
+        TargetNodeKind[TargetNodeKind["AttributeInKeyContext"] = 5] = "AttributeInKeyContext";
+        TargetNodeKind[TargetNodeKind["AttributeInValueContext"] = 6] = "AttributeInValueContext";
+        TargetNodeKind[TargetNodeKind["TwoWayBindingContext"] = 7] = "TwoWayBindingContext";
     })(TargetNodeKind || (TargetNodeKind = {}));
     /**
      * This special marker is added to the path when the cursor is within the sourceSpan but not the key
@@ -39683,10 +39706,21 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         // Given the candidate node, determine the full targeted context.
         let nodeInContext;
-        if (candidate instanceof AST) {
+        if ((candidate instanceof MethodCall || candidate instanceof SafeMethodCall) &&
+            isWithin(position, candidate.argumentSpan)) {
+            nodeInContext = {
+                kind: TargetNodeKind.MethodCallExpressionInArgContext,
+                node: candidate,
+            };
+        }
+        else if (candidate instanceof AST) {
+            const parents = path.filter((value) => value instanceof AST);
+            // Remove the current node from the parents list.
+            parents.pop();
             nodeInContext = {
                 kind: TargetNodeKind.RawExpression,
                 node: candidate,
+                parents,
             };
         }
         else if (candidate instanceof Element) {
@@ -41348,6 +41382,111 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Queries the TypeScript Language Service to get signature help for a template position.
+     */
+    function getSignatureHelp(compiler, tsLS, fileName, position, options) {
+        var _a, _b;
+        const templateInfo = getTemplateInfoAtPosition(fileName, position, compiler);
+        if (templateInfo === undefined) {
+            return undefined;
+        }
+        const targetInfo = getTargetAtPosition(templateInfo.template, position);
+        if (targetInfo === null) {
+            return undefined;
+        }
+        if (targetInfo.context.kind !== TargetNodeKind.RawExpression &&
+            targetInfo.context.kind !== TargetNodeKind.MethodCallExpressionInArgContext) {
+            // Signature completions are only available in expressions.
+            return undefined;
+        }
+        const symbol = compiler.getTemplateTypeChecker().getSymbolOfNode(targetInfo.context.node, templateInfo.component);
+        if (symbol === null || symbol.kind !== SymbolKind.Expression) {
+            return undefined;
+        }
+        // Determine a shim position to use in the request to the TypeScript Language Service.
+        // Additionally, extract the `MethodCall` or `SafeMethodCall` node for which signature help is
+        // being queried, as this is needed to construct the correct span for the results later.
+        let shimPosition;
+        let expr;
+        switch (targetInfo.context.kind) {
+            case TargetNodeKind.RawExpression:
+                // For normal expressions, just use the primary TCB position of the expression.
+                shimPosition = symbol.shimLocation.positionInShimFile;
+                // Walk up the parents of this expression and try to find a `MethodCall` or `SafeMethodCall`
+                // for which signature information is being fetched.
+                let callExpr = null;
+                const parents = targetInfo.context.parents;
+                for (let i = parents.length - 1; i >= 0; i--) {
+                    const parent = parents[i];
+                    if (parent instanceof MethodCall || parent instanceof SafeMethodCall) {
+                        callExpr = parent;
+                        break;
+                    }
+                }
+                // If no MethodCall or SafeMethodCall node could be found, then this query cannot be safely
+                // answered as a correct span for the results will not be obtainable.
+                if (callExpr === null) {
+                    return undefined;
+                }
+                expr = callExpr;
+                break;
+            case TargetNodeKind.MethodCallExpressionInArgContext:
+                // The `Symbol` points to a `MethodCall` or `SafeMethodCall` expression in the TCB (where it
+                // will be represented as a `ts.CallExpression`) *and* the template position was within the
+                // argument list of the method call. This happens when there was no narrower expression inside
+                // the argument list that matched the template position, such as when the call has no
+                // arguments: `foo(|)`.
+                //
+                // The `Symbol`'s shim position is to the start of the call expression (`|foo()`) and
+                // therefore wouldn't return accurate signature help from the TS language service. For that, a
+                // position within the argument list for the `ts.CallExpression` in the TCB will need to be
+                // determined. This is done by finding that call expression and extracting a viable position
+                // from it directly.
+                //
+                // First, use `findTightestNode` to locate the `ts.Node` at `symbol`'s location.
+                const shimSf = getSourceFileOrError(compiler.getCurrentProgram(), symbol.shimLocation.shimPath);
+                let shimNode = (_a = findTightestNode(shimSf, symbol.shimLocation.positionInShimFile)) !== null && _a !== void 0 ? _a : null;
+                // This node should be somewhere inside a `ts.CallExpression`. Walk up the AST to find it.
+                while (shimNode !== null) {
+                    if (ts.isCallExpression(shimNode)) {
+                        break;
+                    }
+                    shimNode = (_b = shimNode.parent) !== null && _b !== void 0 ? _b : null;
+                }
+                // If one couldn't be found, something is wrong, so bail rather than report incorrect results.
+                if (shimNode === null || !ts.isCallExpression(shimNode)) {
+                    return undefined;
+                }
+                // Position the cursor in the TCB at the start of the argument list for the
+                // `ts.CallExpression`. This will allow us to get the correct signature help, even though the
+                // template itself doesn't have an expression inside the argument list.
+                shimPosition = shimNode.arguments.pos;
+                // In this case, getting the right call AST node is easy.
+                expr = targetInfo.context.node;
+                break;
+        }
+        const res = tsLS.getSignatureHelpItems(symbol.shimLocation.shimPath, shimPosition, options);
+        if (res === undefined) {
+            return undefined;
+        }
+        // The TS language service results are almost returnable as-is. However, they contain an
+        // `applicableSpan` which marks the entire argument list, and that span is in the context of the
+        // TCB's `ts.CallExpression`. It needs to be replaced with the span for the `MethodCall` (or
+        // `SafeMethodCall`) argument list.
+        return Object.assign(Object.assign({}, res), { applicableSpan: {
+                start: expr.argumentSpan.start,
+                length: expr.argumentSpan.end - expr.argumentSpan.start,
+            } });
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     class LanguageService {
         constructor(project, tsLS, config) {
             this.project = project;
@@ -41519,6 +41658,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return undefined;
                 }
                 return builder.getCompletionEntryDetails(entryName, formatOptions, preferences);
+            });
+        }
+        getSignatureHelpItems(fileName, position, options) {
+            return this.withCompilerAndPerfTracing(PerfPhase.LsSignatureHelp, compiler => {
+                if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
+                    return undefined;
+                }
+                return getSignatureHelp(compiler, this.tsLS, fileName, position, options);
             });
         }
         getCompletionEntrySymbol(fileName, position, entryName) {
@@ -41878,6 +42025,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             diagnostics.push(...ngLS.getCompilerOptionsDiagnostics());
             return diagnostics;
         }
+        function getSignatureHelpItems(fileName, position, options) {
+            var _a;
+            if (angularOnly) {
+                return ngLS.getSignatureHelpItems(fileName, position, options);
+            }
+            else {
+                return (_a = tsLS.getSignatureHelpItems(fileName, position, options)) !== null && _a !== void 0 ? _a : ngLS.getSignatureHelpItems(fileName, position, options);
+            }
+        }
         function getTcb(fileName, position) {
             return ngLS.getTcb(fileName, position);
         }
@@ -41899,7 +42055,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             getCompletionEntrySymbol,
             getTcb,
             getCompilerOptionsDiagnostics,
-            getComponentLocationsForTemplate });
+            getComponentLocationsForTemplate,
+            getSignatureHelpItems });
     }
     function getExternalFiles(project) {
         if (!project.hasRoots()) {

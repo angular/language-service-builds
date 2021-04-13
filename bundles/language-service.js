@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+60.sha-60d0234
+ * @license Angular v12.0.0-next.8+64.sha-c7f9516
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6584,22 +6584,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class MethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args) {
+        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
             super(span, sourceSpan, nameSpan);
             this.receiver = receiver;
             this.name = name;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
             return visitor.visitMethodCall(this, context);
         }
     }
     class SafeMethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args) {
+        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
             super(span, sourceSpan, nameSpan);
             this.receiver = receiver;
             this.name = name;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
             return visitor.visitSafeMethodCall(this, context);
@@ -6780,10 +6782,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name);
         }
         visitMethodCall(ast, context) {
-            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
         }
         visitSafeMethodCall(ast, context) {
-            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
         }
         visitFunctionCall(ast, context) {
             return new FunctionCall(ast.span, ast.sourceSpan, ast.target.visit(this), this.visitAll(ast.args));
@@ -6883,7 +6885,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const receiver = ast.receiver.visit(this);
             const args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
+                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -6891,7 +6893,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const receiver = ast.receiver.visit(this);
             const args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
+                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -7768,7 +7770,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Convert the ast to an unguarded access to the receiver's member. The map will substitute
             // leftMostNode with its unguarded version in the call to `this.visit()`.
             if (leftMostSafe instanceof SafeMethodCall) {
-                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args));
+                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args, leftMostSafe.argumentSpan));
             }
             else {
                 this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name));
@@ -13773,6 +13775,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (artificialEndIndex !== undefined && artificialEndIndex > this.currentEndIndex) {
                 endIndex = artificialEndIndex;
             }
+            // In some unusual parsing scenarios (like when certain tokens are missing and an `EmptyExpr` is
+            // being created), the current token may already be advanced beyond the `currentEndIndex`. This
+            // appears to be a deep-seated parser bug.
+            //
+            // As a workaround for now, swap the start and end indices to ensure a valid `ParseSpan`.
+            // TODO(alxhub): fix the bug upstream in the parser state, and remove this workaround.
+            if (start > endIndex) {
+                const tmp = endIndex;
+                endIndex = start;
+                start = tmp;
+            }
             return new ParseSpan(start, endIndex);
         }
         sourceSpan(start, artificialEndIndex) {
@@ -14224,14 +14237,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             const nameSpan = this.sourceSpan(nameStart);
             if (this.consumeOptionalCharacter($LPAREN)) {
+                const argumentStart = this.inputIndex;
                 this.rparensExpected++;
                 const args = this.parseCallArguments();
+                const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
                 this.expectCharacter($RPAREN);
                 this.rparensExpected--;
                 const span = this.span(start);
                 const sourceSpan = this.sourceSpan(start);
-                return isSafe ? new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args) :
-                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args);
+                return isSafe ?
+                    new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan) :
+                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan);
             }
             else {
                 if (isSafe) {
@@ -19378,7 +19394,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+60.sha-60d0234');
+    const VERSION$1 = new Version('12.0.0-next.8+64.sha-c7f9516');
 
     /**
      * @license
@@ -35436,7 +35452,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+60.sha-60d0234');
+    const VERSION$2 = new Version$1('12.0.0-next.8+64.sha-c7f9516');
 
     /**
      * @license
@@ -43299,6 +43315,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // not implemented in VE Language Service
             return undefined;
         }
+        function getSignatureHelpItems(fileName, position, options) {
+            // not implemented in VE Language Service
+            return undefined;
+        }
         function getTcb(fileName, position) {
             // Not implemented in VE Language Service
             return undefined;
@@ -43316,6 +43336,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             getDefinitionAndBoundSpan,
             getTypeDefinitionAtPosition,
             getReferencesAtPosition,
+            getSignatureHelpItems,
             findRenameLocations,
             getTcb,
             getComponentLocationsForTemplate });
