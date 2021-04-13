@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+50.sha-0f54d6c
+ * @license Angular v12.0.0-next.8+53.sha-d27c8b4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17830,7 +17830,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+50.sha-0f54d6c');
+    const VERSION$1 = new Version('12.0.0-next.8+53.sha-d27c8b4');
 
     /**
      * @license
@@ -18460,7 +18460,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+50.sha-0f54d6c'));
+        definitionMap.set('version', literal('12.0.0-next.8+53.sha-d27c8b4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18491,7 +18491,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+50.sha-0f54d6c'));
+        definitionMap.set('version', literal('12.0.0-next.8+53.sha-d27c8b4'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18698,7 +18698,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+50.sha-0f54d6c'));
+        definitionMap.set('version', literal('12.0.0-next.8+53.sha-d27c8b4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18731,7 +18731,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+50.sha-0f54d6c'));
+        definitionMap.set('version', literal('12.0.0-next.8+53.sha-d27c8b4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18801,7 +18801,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+50.sha-0f54d6c'));
+        definitionMap.set('version', literal('12.0.0-next.8+53.sha-d27c8b4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18829,7 +18829,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+50.sha-0f54d6c'));
+        definitionMap.set('version', literal('12.0.0-next.8+53.sha-d27c8b4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18878,7 +18878,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+50.sha-0f54d6c'));
+        definitionMap.set('version', literal('12.0.0-next.8+53.sha-d27c8b4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18910,7 +18910,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+50.sha-0f54d6c');
+    const VERSION$2 = new Version('12.0.0-next.8+53.sha-d27c8b4');
 
     /**
      * @license
@@ -19306,6 +19306,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /** Returns true if the node is an assignment expression. */
     function isAssignment(node) {
         return ts$1.isBinaryExpression(node) && node.operatorToken.kind === ts$1.SyntaxKind.EqualsToken;
+    }
+    /**
+     * Obtains the non-redirected source file for `sf`.
+     */
+    function toUnredirectedSourceFile(sf) {
+        const redirectInfo = sf.redirectInfo;
+        if (redirectInfo === undefined) {
+            return sf;
+        }
+        return redirectInfo.unredirected;
     }
 
     /**
@@ -29843,10 +29853,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 //    since the previous compilation). These need to be removed from the state tracking to
                 //    avoid leaking memory.
                 // All files in the old program, for easy detection of changes.
-                const oldFiles = new Set(oldProgram.getSourceFiles());
+                const oldFiles = new Set(oldProgram.getSourceFiles().map(toUnredirectedSourceFile));
                 // Assume all the old files were deleted to begin with. Only TS files are tracked.
                 const deletedTsPaths = new Set(tsOnlyFiles(oldProgram).map(sf => sf.fileName));
-                for (const newFile of newProgram.getSourceFiles()) {
+                for (const possiblyRedirectedNewFile of newProgram.getSourceFiles()) {
+                    const newFile = toUnredirectedSourceFile(possiblyRedirectedNewFile);
                     if (!newFile.isDeclarationFile) {
                         // This file exists in the new program, so remove it from `deletedTsPaths`.
                         deletedTsPaths.delete(newFile.fileName);
