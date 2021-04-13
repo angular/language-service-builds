@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+65.sha-71b8c9a
+ * @license Angular v12.0.0-next.8+69.sha-78236bf
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -155,11 +155,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return fs.resolve(path);
     }
+    const ABSOLUTE_PATH = Symbol('AbsolutePath');
     /**
-     * Extract an `AbsoluteFsPath` from a `ts.SourceFile`.
+     * Extract an `AbsoluteFsPath` from a `ts.SourceFile`-like object.
      */
     function absoluteFromSourceFile(sf) {
-        return fs.resolve(sf.fileName);
+        const sfWithPatch = sf;
+        if (sfWithPatch[ABSOLUTE_PATH] === undefined) {
+            sfWithPatch[ABSOLUTE_PATH] = fs.resolve(sfWithPatch.fileName);
+        }
+        // Non-null assertion needed since TS doesn't narrow the type of fields that use a symbol as a key
+        // apparently.
+        return sfWithPatch[ABSOLUTE_PATH];
     }
     /**
      * Static access to `dirname`.
@@ -17846,7 +17853,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+65.sha-71b8c9a');
+    const VERSION$1 = new Version('12.0.0-next.8+69.sha-78236bf');
 
     /**
      * @license
@@ -18476,7 +18483,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+65.sha-71b8c9a'));
+        definitionMap.set('version', literal('12.0.0-next.8+69.sha-78236bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18507,7 +18514,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+65.sha-71b8c9a'));
+        definitionMap.set('version', literal('12.0.0-next.8+69.sha-78236bf'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18714,7 +18721,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+65.sha-71b8c9a'));
+        definitionMap.set('version', literal('12.0.0-next.8+69.sha-78236bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18747,7 +18754,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+65.sha-71b8c9a'));
+        definitionMap.set('version', literal('12.0.0-next.8+69.sha-78236bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18817,7 +18824,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+65.sha-71b8c9a'));
+        definitionMap.set('version', literal('12.0.0-next.8+69.sha-78236bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18845,7 +18852,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+65.sha-71b8c9a'));
+        definitionMap.set('version', literal('12.0.0-next.8+69.sha-78236bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18894,7 +18901,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+65.sha-71b8c9a'));
+        definitionMap.set('version', literal('12.0.0-next.8+69.sha-78236bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18926,7 +18933,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+65.sha-71b8c9a');
+    const VERSION$2 = new Version('12.0.0-next.8+69.sha-78236bf');
 
     /**
      * @license
@@ -23879,7 +23886,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // analyze() really wants to return `Promise<void>|void`, but TypeScript cannot narrow a return
             // type of 'void', so `undefined` is used instead.
             const promises = [];
-            const priorWork = this.incrementalBuild.priorWorkFor(sf);
+            const priorWork = this.incrementalBuild.priorAnalysisFor(sf);
             if (priorWork !== null) {
                 for (const priorRecord of priorWork) {
                     this.adopt(priorRecord);
@@ -29727,7 +29734,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.nodes = new Map();
         }
         addDependency(from, on) {
-            this.nodeFor(from).dependsOn.add(on.fileName);
+            this.nodeFor(from).dependsOn.add(absoluteFromSourceFile(on));
         }
         addResourceDependency(from, resource) {
             this.nodeFor(from).usesResources.add(resource);
@@ -29763,11 +29770,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         updateWithPhysicalChanges(previous, changedTsPaths, deletedTsPaths, changedResources) {
             const logicallyChanged = new Set();
             for (const sf of previous.nodes.keys()) {
+                const sfPath = absoluteFromSourceFile(sf);
                 const node = previous.nodeFor(sf);
                 if (isLogicallyChanged(sf, node, changedTsPaths, deletedTsPaths, changedResources)) {
-                    logicallyChanged.add(sf.fileName);
+                    logicallyChanged.add(sfPath);
                 }
-                else if (!deletedTsPaths.has(sf.fileName)) {
+                else if (!deletedTsPaths.has(sfPath)) {
                     this.nodes.set(sf, {
                         dependsOn: new Set(node.dependsOn),
                         usesResources: new Set(node.usesResources),
@@ -29798,8 +29806,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (node.failedAnalysis) {
             return true;
         }
+        const sfPath = absoluteFromSourceFile(sf);
         // A file is logically changed if it has physically changed itself (including being deleted).
-        if (changedTsPaths.has(sf.fileName) || deletedTsPaths.has(sf.fileName)) {
+        if (changedTsPaths.has(sfPath) || deletedTsPaths.has(sfPath)) {
             return true;
         }
         // A file is logically changed if one of its dependencies has physically changed.
@@ -29825,232 +29834,274 @@ Either add the @Injectable() decorator to '${provider.node.name
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Drives an incremental build, by tracking changes and determining which files need to be emitted.
+     * Discriminant of the `IncrementalState` union.
      */
-    class IncrementalDriver {
-        constructor(state, depGraph, logicalChanges) {
+    var IncrementalStateKind;
+    (function (IncrementalStateKind) {
+        IncrementalStateKind[IncrementalStateKind["Fresh"] = 0] = "Fresh";
+        IncrementalStateKind[IncrementalStateKind["Delta"] = 1] = "Delta";
+        IncrementalStateKind[IncrementalStateKind["Analyzed"] = 2] = "Analyzed";
+    })(IncrementalStateKind || (IncrementalStateKind = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Discriminant of the `Phase` type union.
+     */
+    var PhaseKind;
+    (function (PhaseKind) {
+        PhaseKind[PhaseKind["Analysis"] = 0] = "Analysis";
+        PhaseKind[PhaseKind["TypeCheckAndEmit"] = 1] = "TypeCheckAndEmit";
+    })(PhaseKind || (PhaseKind = {}));
+    /**
+     * Manages the incremental portion of an Angular compilation, allowing for reuse of a prior
+     * compilation if available, and producing an output state for reuse of the current compilation in a
+     * future one.
+     */
+    class IncrementalCompilation {
+        constructor(state, depGraph, versions, step) {
             this.depGraph = depGraph;
-            this.logicalChanges = logicalChanges;
-            this.state = state;
+            this.versions = versions;
+            this.step = step;
+            this._state = state;
+            // The compilation begins in analysis phase.
+            this.phase = {
+                kind: PhaseKind.Analysis,
+                semanticDepGraphUpdater: new SemanticDepGraphUpdater(step !== null ? step.priorState.semanticDepGraph : null),
+            };
         }
         /**
-         * Construct an `IncrementalDriver` with a starting state that incorporates the results of a
-         * previous build.
-         *
-         * The previous build's `BuildState` is reconciled with the new program's changes, and the results
-         * are merged into the new build's `PendingBuildState`.
+         * Begin a fresh `IncrementalCompilation`.
          */
-        static reconcile(oldProgram, oldDriver, newProgram, modifiedResourceFiles, perf) {
+        static fresh(program, versions) {
+            const state = {
+                kind: IncrementalStateKind.Fresh,
+            };
+            return new IncrementalCompilation(state, new FileDependencyGraph(), versions, /* reuse */ null);
+        }
+        static incremental(program, newVersions, oldProgram, oldState, modifiedResourceFiles, perf) {
             return perf.inPhase(PerfPhase.Reconciliation, () => {
-                // Initialize the state of the current build based on the previous one.
-                let state;
-                if (oldDriver.state.kind === BuildStateKind.Pending) {
-                    // The previous build never made it past the pending state. Reuse it as the starting state
-                    // for this build.
-                    state = oldDriver.state;
+                const physicallyChangedTsFiles = new Set();
+                const changedResourceFiles = new Set(modifiedResourceFiles !== null && modifiedResourceFiles !== void 0 ? modifiedResourceFiles : []);
+                let priorAnalysis;
+                switch (oldState.kind) {
+                    case IncrementalStateKind.Fresh:
+                        // Since this line of program has never been successfully analyzed to begin with, treat
+                        // this as a fresh compilation.
+                        return IncrementalCompilation.fresh(program, newVersions);
+                    case IncrementalStateKind.Analyzed:
+                        // The most recent program was analyzed successfully, so we can use that as our prior
+                        // state and don't need to consider any other deltas except changes in the most recent
+                        // program.
+                        priorAnalysis = oldState;
+                        break;
+                    case IncrementalStateKind.Delta:
+                        // There is an ancestor program which was analyzed successfully and can be used as a
+                        // starting point, but we need to determine what's changed since that program.
+                        priorAnalysis = oldState.lastAnalyzedState;
+                        for (const sfPath of oldState.physicallyChangedTsFiles) {
+                            physicallyChangedTsFiles.add(sfPath);
+                        }
+                        for (const resourcePath of oldState.changedResourceFiles) {
+                            changedResourceFiles.add(resourcePath);
+                        }
+                        break;
                 }
-                else {
-                    let priorGraph = null;
-                    if (oldDriver.state.lastGood !== null) {
-                        priorGraph = oldDriver.state.lastGood.semanticDepGraph;
+                const oldVersions = priorAnalysis.versions;
+                const oldFilesArray = oldProgram.getSourceFiles().map(sf => toUnredirectedSourceFile(sf));
+                const oldFiles = new Set(oldFilesArray);
+                const deletedTsFiles = new Set(oldFilesArray.map(sf => absoluteFromSourceFile(sf)));
+                for (const possiblyRedirectedNewFile of program.getSourceFiles()) {
+                    const sf = toUnredirectedSourceFile(possiblyRedirectedNewFile);
+                    const sfPath = absoluteFromSourceFile(sf);
+                    // Since we're seeing a file in the incoming program with this name, it can't have been
+                    // deleted.
+                    deletedTsFiles.delete(sfPath);
+                    if (oldFiles.has(sf)) {
+                        // This source file has the same object identity as in the previous program. We need to
+                        // determine if it's really the same file, or if it might have changed versions since the
+                        // last program without changing its identity.
+                        // If there's no version information available, then this is the same file, and we can
+                        // skip it.
+                        if (oldVersions === null || newVersions === null) {
+                            continue;
+                        }
+                        // If a version is available for the file from both the prior and the current program, and
+                        // that version is the same, then this is the same file, and we can skip it.
+                        if (oldVersions.has(sfPath) && newVersions.has(sfPath) &&
+                            oldVersions.get(sfPath) === newVersions.get(sfPath)) {
+                            continue;
+                        }
+                        // Otherwise, assume that the file has changed. Either its versions didn't match, or we
+                        // were missing version information about it on one side for some reason.
                     }
-                    // The previous build was successfully analyzed. `pendingEmit` is the only state carried
-                    // forward into this build.
-                    state = {
-                        kind: BuildStateKind.Pending,
-                        pendingEmit: oldDriver.state.pendingEmit,
-                        pendingTypeCheckEmit: oldDriver.state.pendingTypeCheckEmit,
-                        changedResourcePaths: new Set(),
-                        changedTsPaths: new Set(),
-                        lastGood: oldDriver.state.lastGood,
-                        semanticDepGraphUpdater: new SemanticDepGraphUpdater(priorGraph),
-                    };
+                    // Bail out if a .d.ts file changes - the semantic dep graph is not able to process such
+                    // changes correctly yet.
+                    if (sf.isDeclarationFile) {
+                        return IncrementalCompilation.fresh(program, newVersions);
+                    }
+                    // The file has changed physically, so record it.
+                    physicallyChangedTsFiles.add(sfPath);
                 }
-                // Merge the freshly modified resource files with any prior ones.
-                if (modifiedResourceFiles !== null) {
-                    for (const resFile of modifiedResourceFiles) {
-                        state.changedResourcePaths.add(absoluteFrom(resFile));
-                    }
+                // Remove any files that have been deleted from the list of physical changes.
+                for (const deletedFileName of deletedTsFiles) {
+                    physicallyChangedTsFiles.delete(resolve(deletedFileName));
                 }
-                // Next, process the files in the new program, with a couple of goals:
-                // 1) Determine which TS files have changed, if any, and merge them into `changedTsFiles`.
-                // 2) Produce a list of TS files which no longer exist in the program (they've been deleted
-                //    since the previous compilation). These need to be removed from the state tracking to
-                //    avoid leaking memory.
-                // All files in the old program, for easy detection of changes.
-                const oldFiles = new Set(oldProgram.getSourceFiles().map(toUnredirectedSourceFile));
-                // Assume all the old files were deleted to begin with. Only TS files are tracked.
-                const deletedTsPaths = new Set(tsOnlyFiles(oldProgram).map(sf => sf.fileName));
-                for (const possiblyRedirectedNewFile of newProgram.getSourceFiles()) {
-                    const newFile = toUnredirectedSourceFile(possiblyRedirectedNewFile);
-                    if (!newFile.isDeclarationFile) {
-                        // This file exists in the new program, so remove it from `deletedTsPaths`.
-                        deletedTsPaths.delete(newFile.fileName);
-                    }
-                    if (oldFiles.has(newFile)) {
-                        // This file hasn't changed; no need to look at it further.
-                        continue;
-                    }
-                    // The file has changed since the last successful build. The appropriate reaction depends on
-                    // what kind of file it is.
-                    if (!newFile.isDeclarationFile) {
-                        // It's a .ts file, so track it as a change.
-                        state.changedTsPaths.add(newFile.fileName);
-                    }
-                    else {
-                        // It's a .d.ts file. Currently the compiler does not do a great job of tracking
-                        // dependencies on .d.ts files, so bail out of incremental builds here and do a full
-                        // build. This usually only happens if something in node_modules changes.
-                        return IncrementalDriver.fresh(newProgram);
-                    }
-                }
-                // The next step is to remove any deleted files from the state.
-                for (const filePath of deletedTsPaths) {
-                    state.pendingEmit.delete(filePath);
-                    state.pendingTypeCheckEmit.delete(filePath);
-                    // Even if the file doesn't exist in the current compilation, it still might have been
-                    // changed in a previous one, so delete it from the set of changed TS files, just in case.
-                    state.changedTsPaths.delete(filePath);
-                }
-                perf.eventCount(PerfEvent.SourceFilePhysicalChange, state.changedTsPaths.size);
-                // Now, changedTsPaths contains physically changed TS paths. Use the previous program's
-                // logical dependency graph to determine logically changed files.
+                // Use the prior dependency graph to project physical changes into a set of logically changed
+                // files.
                 const depGraph = new FileDependencyGraph();
-                // If a previous compilation exists, use its dependency graph to determine the set of
-                // logically changed files.
-                let logicalChanges = null;
-                if (state.lastGood !== null) {
-                    // Extract the set of logically changed files. At the same time, this operation populates
-                    // the current (fresh) dependency graph with information about those files which have not
-                    // logically changed.
-                    logicalChanges = depGraph.updateWithPhysicalChanges(state.lastGood.depGraph, state.changedTsPaths, deletedTsPaths, state.changedResourcePaths);
-                    perf.eventCount(PerfEvent.SourceFileLogicalChange, logicalChanges.size);
-                    for (const fileName of state.changedTsPaths) {
-                        logicalChanges.add(fileName);
-                    }
-                    // Any logically changed files need to be re-emitted. Most of the time this would happen
-                    // regardless because the new dependency graph would _also_ identify the file as stale.
-                    // However there are edge cases such as removing a component from an NgModule without adding
-                    // it to another one, where the previous graph identifies the file as logically changed, but
-                    // the new graph (which does not have that edge) fails to identify that the file should be
-                    // re-emitted.
-                    for (const change of logicalChanges) {
-                        state.pendingEmit.add(change);
-                        state.pendingTypeCheckEmit.add(change);
-                    }
+                const logicallyChangedTsFiles = depGraph.updateWithPhysicalChanges(priorAnalysis.depGraph, physicallyChangedTsFiles, deletedTsFiles, changedResourceFiles);
+                // Physically changed files aren't necessarily counted as logically changed by the dependency
+                // graph (files do not have edges to themselves), so add them to the logical changes
+                // explicitly.
+                for (const sfPath of physicallyChangedTsFiles) {
+                    logicallyChangedTsFiles.add(sfPath);
                 }
-                // `state` now reflects the initial pending state of the current compilation.
-                return new IncrementalDriver(state, depGraph, logicalChanges);
+                // Start off in a `DeltaIncrementalState` as a delta against the previous successful analysis,
+                // until this compilation completes its own analysis.
+                const state = {
+                    kind: IncrementalStateKind.Delta,
+                    physicallyChangedTsFiles,
+                    changedResourceFiles,
+                    lastAnalyzedState: priorAnalysis,
+                };
+                return new IncrementalCompilation(state, depGraph, newVersions, {
+                    priorState: priorAnalysis,
+                    logicallyChangedTsFiles,
+                });
             });
         }
-        static fresh(program) {
-            // Initialize the set of files which need to be emitted to the set of all TS files in the
-            // program.
-            const tsFiles = tsOnlyFiles(program);
-            const state = {
-                kind: BuildStateKind.Pending,
-                pendingEmit: new Set(tsFiles.map(sf => sf.fileName)),
-                pendingTypeCheckEmit: new Set(tsFiles.map(sf => sf.fileName)),
-                changedResourcePaths: new Set(),
-                changedTsPaths: new Set(),
-                lastGood: null,
-                semanticDepGraphUpdater: new SemanticDepGraphUpdater(/* priorGraph */ null),
-            };
-            return new IncrementalDriver(state, new FileDependencyGraph(), /* logicalChanges */ null);
+        get state() {
+            return this._state;
         }
-        getSemanticDepGraphUpdater() {
-            if (this.state.kind !== BuildStateKind.Pending) {
-                throw new Error('Semantic dependency updater is only available when pending analysis');
+        get semanticDepGraphUpdater() {
+            if (this.phase.kind !== PhaseKind.Analysis) {
+                throw new Error(`AssertionError: Cannot update the SemanticDepGraph after analysis completes`);
             }
-            return this.state.semanticDepGraphUpdater;
+            return this.phase.semanticDepGraphUpdater;
         }
         recordSuccessfulAnalysis(traitCompiler) {
-            if (this.state.kind !== BuildStateKind.Pending) {
-                // Changes have already been incorporated.
-                return;
+            if (this.phase.kind !== PhaseKind.Analysis) {
+                throw new Error(`AssertionError: Incremental compilation in phase ${PhaseKind[this.phase.kind]}, expected Analysis`);
             }
-            const { needsEmit, needsTypeCheckEmit, newGraph } = this.state.semanticDepGraphUpdater.finalize();
-            const pendingEmit = this.state.pendingEmit;
-            for (const path of needsEmit) {
-                pendingEmit.add(path);
+            const { needsEmit, needsTypeCheckEmit, newGraph } = this.phase.semanticDepGraphUpdater.finalize();
+            // Determine the set of files which have already been emitted.
+            let emitted;
+            if (this.step === null) {
+                // Since there is no prior compilation, no files have yet been emitted.
+                emitted = new Set();
             }
-            const pendingTypeCheckEmit = this.state.pendingTypeCheckEmit;
-            for (const path of needsTypeCheckEmit) {
-                pendingTypeCheckEmit.add(path);
+            else {
+                // Begin with the files emitted by the prior successful compilation, but remove those which we
+                // know need to bee re-emitted.
+                emitted = new Set(this.step.priorState.emitted);
+                // Files need re-emitted if they've logically changed.
+                for (const sfPath of this.step.logicallyChangedTsFiles) {
+                    emitted.delete(sfPath);
+                }
+                // Files need re-emitted if they've semantically changed.
+                for (const sfPath of needsEmit) {
+                    emitted.delete(sfPath);
+                }
             }
-            // Update the state to an `AnalyzedBuildState`.
-            this.state = {
-                kind: BuildStateKind.Analyzed,
-                pendingEmit,
-                pendingTypeCheckEmit,
-                // Since this compilation was successfully analyzed, update the "last good" artifacts to the
-                // ones from the current compilation.
-                lastGood: {
-                    depGraph: this.depGraph,
-                    semanticDepGraph: newGraph,
-                    traitCompiler: traitCompiler,
-                    typeCheckingResults: null,
-                },
-                priorTypeCheckingResults: this.state.lastGood !== null ? this.state.lastGood.typeCheckingResults : null,
+            // Transition to a successfully analyzed compilation. At this point, a subsequent compilation
+            // could use this state as a starting point.
+            this._state = {
+                kind: IncrementalStateKind.Analyzed,
+                versions: this.versions,
+                depGraph: this.depGraph,
+                semanticDepGraph: newGraph,
+                traitCompiler,
+                typeCheckResults: null,
+                emitted,
+            };
+            // We now enter the type-check and emit phase of compilation.
+            this.phase = {
+                kind: PhaseKind.TypeCheckAndEmit,
+                needsEmit,
+                needsTypeCheckEmit,
             };
         }
         recordSuccessfulTypeCheck(results) {
-            if (this.state.lastGood === null || this.state.kind !== BuildStateKind.Analyzed) {
-                return;
+            if (this._state.kind !== IncrementalStateKind.Analyzed) {
+                throw new Error(`AssertionError: Expected successfully analyzed compilation.`);
             }
-            this.state.lastGood.typeCheckingResults = results;
-            // Delete the files for which type-check code was generated from the set of pending type-check
-            // files.
-            for (const fileName of results.keys()) {
-                this.state.pendingTypeCheckEmit.delete(fileName);
+            else if (this.phase.kind !== PhaseKind.TypeCheckAndEmit) {
+                throw new Error(`AssertionError: Incremental compilation in phase ${PhaseKind[this.phase.kind]}, expected TypeCheck`);
             }
+            this._state.typeCheckResults = results;
         }
         recordSuccessfulEmit(sf) {
-            this.state.pendingEmit.delete(sf.fileName);
+            if (this._state.kind !== IncrementalStateKind.Analyzed) {
+                throw new Error(`AssertionError: Expected successfully analyzed compilation.`);
+            }
+            this._state.emitted.add(absoluteFromSourceFile(sf));
         }
-        safeToSkipEmit(sf) {
-            return !this.state.pendingEmit.has(sf.fileName);
-        }
-        priorWorkFor(sf) {
-            if (this.state.lastGood === null || this.logicalChanges === null) {
-                // There is no previous good build, so no prior work exists.
+        priorAnalysisFor(sf) {
+            if (this.step === null) {
                 return null;
             }
-            else if (this.logicalChanges.has(sf.fileName)) {
-                // Prior work might exist, but would be stale as the file in question has logically changed.
+            const sfPath = absoluteFromSourceFile(sf);
+            // If the file has logically changed, its previous analysis cannot be reused.
+            if (this.step.logicallyChangedTsFiles.has(sfPath)) {
                 return null;
             }
-            else {
-                // Prior work might exist, and if it does then it's usable!
-                return this.state.lastGood.traitCompiler.recordsFor(sf);
-            }
+            return this.step.priorState.traitCompiler.recordsFor(sf);
         }
         priorTypeCheckingResultsFor(sf) {
-            if (this.state.kind !== BuildStateKind.Analyzed ||
-                this.state.priorTypeCheckingResults === null || this.logicalChanges === null) {
+            if (this.phase.kind !== PhaseKind.TypeCheckAndEmit) {
+                throw new Error(`AssertionError: Expected successfully analyzed compilation.`);
+            }
+            if (this.step === null) {
                 return null;
             }
-            if (this.logicalChanges.has(sf.fileName) || this.state.pendingTypeCheckEmit.has(sf.fileName)) {
+            const sfPath = absoluteFromSourceFile(sf);
+            // If the file has logically changed, or its template type-checking results have semantically
+            // changed, then past type-checking results cannot be reused.
+            if (this.step.logicallyChangedTsFiles.has(sfPath) ||
+                this.phase.needsTypeCheckEmit.has(sfPath)) {
                 return null;
             }
-            const fileName = absoluteFromSourceFile(sf);
-            if (!this.state.priorTypeCheckingResults.has(fileName)) {
+            // Past results also cannot be reused if they're not available.
+            if (this.step.priorState.typeCheckResults === null ||
+                !this.step.priorState.typeCheckResults.has(sfPath)) {
                 return null;
             }
-            const data = this.state.priorTypeCheckingResults.get(fileName);
-            if (data.hasInlines) {
+            const priorResults = this.step.priorState.typeCheckResults.get(sfPath);
+            // If the past results relied on inlining, they're not safe for reuse.
+            if (priorResults.hasInlines) {
                 return null;
             }
-            return data;
+            return priorResults;
         }
-    }
-    var BuildStateKind;
-    (function (BuildStateKind) {
-        BuildStateKind[BuildStateKind["Pending"] = 0] = "Pending";
-        BuildStateKind[BuildStateKind["Analyzed"] = 1] = "Analyzed";
-    })(BuildStateKind || (BuildStateKind = {}));
-    function tsOnlyFiles(program) {
-        return program.getSourceFiles().filter(sf => !sf.isDeclarationFile);
+        safeToSkipEmit(sf) {
+            // If this is a fresh compilation, it's never safe to skip an emit.
+            if (this.step === null) {
+                return false;
+            }
+            const sfPath = absoluteFromSourceFile(sf);
+            // If the file has itself logically changed, it must be emitted.
+            if (this.step.logicallyChangedTsFiles.has(sfPath)) {
+                return false;
+            }
+            if (this.phase.kind !== PhaseKind.TypeCheckAndEmit) {
+                throw new Error(`AssertionError: Expected successful analysis before attempting to emit files`);
+            }
+            // If during analysis it was determined that this file has semantically changed, it must be
+            // emitted.
+            if (this.phase.needsEmit.has(sfPath)) {
+                return false;
+            }
+            // Generally it should be safe to assume here that the file was previously emitted by the last
+            // successful compilation. However, as a defense-in-depth against incorrectness, we explicitly
+            // check that the last emit included this file, and re-emit it otherwise.
+            return this.step.priorState.emitted.has(sfPath);
+        }
     }
 
     /**
@@ -30065,20 +30116,20 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     class TrackedIncrementalBuildStrategy {
         constructor() {
-            this.driver = null;
+            this.state = null;
             this.isSet = false;
         }
-        getIncrementalDriver() {
-            return this.driver;
+        getIncrementalState() {
+            return this.state;
         }
-        setIncrementalDriver(driver) {
-            this.driver = driver;
+        setIncrementalState(state) {
+            this.state = state;
             this.isSet = true;
         }
         toNextBuildStrategy() {
             const strategy = new TrackedIncrementalBuildStrategy();
-            // Only reuse a driver that was explicitly set via `setIncrementalDriver`.
-            strategy.driver = this.isSet ? this.driver : null;
+            // Only reuse state that was explicitly set via `setIncrementalState`.
+            strategy.state = this.isSet ? this.state : null;
             return strategy;
         }
     }
@@ -37610,8 +37661,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function incrementalFromCompilerTicket(oldCompiler, newProgram, incrementalBuildStrategy, programDriver, modifiedResourceFiles, perfRecorder) {
         const oldProgram = oldCompiler.getCurrentProgram();
-        const oldDriver = oldCompiler.incrementalStrategy.getIncrementalDriver(oldProgram);
-        if (oldDriver === null) {
+        const oldState = oldCompiler.incrementalStrategy.getIncrementalState(oldProgram);
+        if (oldState === null) {
             // No incremental step is possible here, since no IncrementalDriver was found for the old
             // program.
             return freshCompilationTicket(newProgram, oldCompiler.options, incrementalBuildStrategy, programDriver, perfRecorder, oldCompiler.enableTemplateTypeChecker, oldCompiler.usePoisonedData);
@@ -37619,16 +37670,15 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (perfRecorder === null) {
             perfRecorder = ActivePerfRecorder.zeroedToNow();
         }
-        const newDriver = IncrementalDriver.reconcile(oldProgram, oldDriver, newProgram, modifiedResourceFiles, perfRecorder);
+        const incrementalCompilation = IncrementalCompilation.incremental(newProgram, versionMapFromProgram(newProgram, programDriver), oldProgram, oldState, modifiedResourceFiles, perfRecorder);
         return {
             kind: CompilationTicketKind.IncrementalTypeScript,
             enableTemplateTypeChecker: oldCompiler.enableTemplateTypeChecker,
             usePoisonedData: oldCompiler.usePoisonedData,
             options: oldCompiler.options,
             incrementalBuildStrategy,
+            incrementalCompilation,
             programDriver,
-            newDriver,
-            oldProgram,
             newProgram,
             perfRecorder,
         };
@@ -37654,13 +37704,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      * See the README.md for more information.
      */
     class NgCompiler {
-        constructor(adapter, options, inputProgram, programDriver, incrementalStrategy, incrementalDriver, enableTemplateTypeChecker, usePoisonedData, livePerfRecorder) {
+        constructor(adapter, options, inputProgram, programDriver, incrementalStrategy, incrementalCompilation, enableTemplateTypeChecker, usePoisonedData, livePerfRecorder) {
             this.adapter = adapter;
             this.options = options;
             this.inputProgram = inputProgram;
             this.programDriver = programDriver;
             this.incrementalStrategy = incrementalStrategy;
-            this.incrementalDriver = incrementalDriver;
+            this.incrementalCompilation = incrementalCompilation;
             this.enableTemplateTypeChecker = enableTemplateTypeChecker;
             this.usePoisonedData = usePoisonedData;
             this.livePerfRecorder = livePerfRecorder;
@@ -37709,7 +37759,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 new ModuleResolver(inputProgram, this.options, this.adapter, moduleResolutionCache);
             this.resourceManager = new AdapterResourceLoader(adapter, this.options);
             this.cycleAnalyzer = new CycleAnalyzer(new ImportGraph(inputProgram.getTypeChecker(), this.delegatingPerfRecorder));
-            this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, inputProgram);
+            this.incrementalStrategy.setIncrementalState(this.incrementalCompilation.state, inputProgram);
             this.ignoreForDiagnostics =
                 new Set(inputProgram.getSourceFiles().filter(sf => this.adapter.isShim(sf)));
             this.ignoreForEmit = this.adapter.ignoreForEmit;
@@ -37737,9 +37787,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         static fromTicket(ticket, adapter) {
             switch (ticket.kind) {
                 case CompilationTicketKind.Fresh:
-                    return new NgCompiler(adapter, ticket.options, ticket.tsProgram, ticket.programDriver, ticket.incrementalBuildStrategy, IncrementalDriver.fresh(ticket.tsProgram), ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
+                    return new NgCompiler(adapter, ticket.options, ticket.tsProgram, ticket.programDriver, ticket.incrementalBuildStrategy, IncrementalCompilation.fresh(ticket.tsProgram, versionMapFromProgram(ticket.tsProgram, ticket.programDriver)), ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
                 case CompilationTicketKind.IncrementalTypeScript:
-                    return new NgCompiler(adapter, ticket.options, ticket.newProgram, ticket.programDriver, ticket.incrementalBuildStrategy, ticket.newDriver, ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
+                    return new NgCompiler(adapter, ticket.options, ticket.newProgram, ticket.programDriver, ticket.incrementalBuildStrategy, ticket.incrementalCompilation, ticket.enableTemplateTypeChecker, ticket.usePoisonedData, ticket.perfRecorder);
                 case CompilationTicketKind.IncrementalResource:
                     const compiler = ticket.compiler;
                     compiler.updateWithChangedResources(ticket.modifiedResourceFiles, ticket.perfRecorder);
@@ -37748,6 +37798,15 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         get perfRecorder() {
             return this.livePerfRecorder;
+        }
+        /**
+         * Exposes the `IncrementalCompilation` under an old property name that the CLI uses, avoiding a
+         * chicken-and-egg problem with the rename to `incrementalCompilation`.
+         *
+         * TODO(alxhub): remove when the CLI uses the new name.
+         */
+        get incrementalDriver() {
+            return this.incrementalCompilation;
         }
         updateWithChangedResources(changedResources, perfRecorder) {
             this.livePerfRecorder = perfRecorder;
@@ -37784,7 +37843,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         getResourceDependencies(file) {
             this.ensureAnalyzed();
-            return this.incrementalDriver.depGraph.getResourceDependencies(file);
+            return this.incrementalCompilation.depGraph.getResourceDependencies(file);
         }
         /**
          * Get all Angular-related diagnostics for this compilation.
@@ -38011,7 +38070,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 traitCompiler.resolve();
                 // At this point, analysis is complete and the compiler can now calculate which files need to
                 // be emitted, so do that.
-                this.incrementalDriver.recordSuccessfulAnalysis(traitCompiler);
+                this.incrementalCompilation.recordSuccessfulAnalysis(traitCompiler);
                 this.perfRecorder.memory(PerfCheckpoint.Resolve);
             });
         }
@@ -38145,7 +38204,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, OptimizeFor.WholeProgram));
             }
             const program = this.programDriver.getProgram();
-            this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
+            this.incrementalStrategy.setIncrementalState(this.incrementalCompilation.state, program);
             this.currentProgram = program;
             return diagnostics;
         }
@@ -38157,7 +38216,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 diagnostics.push(...compilation.templateTypeChecker.getDiagnosticsForFile(sf, optimizeFor));
             }
             const program = this.programDriver.getProgram();
-            this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
+            this.incrementalStrategy.setIncrementalState(this.incrementalCompilation.state, program);
             this.currentProgram = program;
             return diagnostics;
         }
@@ -38236,14 +38295,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 ]);
                 aliasingHost = new UnifiedModulesAliasingHost(this.adapter.unifiedModulesHost);
             }
-            const evaluator = new PartialEvaluator(reflector, checker, this.incrementalDriver.depGraph);
+            const evaluator = new PartialEvaluator(reflector, checker, this.incrementalCompilation.depGraph);
             const dtsReader = new DtsMetadataReader(checker, reflector);
             const localMetaRegistry = new LocalMetadataRegistry();
             const localMetaReader = localMetaRegistry;
             const depScopeReader = new MetadataDtsModuleScopeResolver(dtsReader, aliasingHost);
             const scopeRegistry = new LocalModuleScopeRegistry(localMetaReader, depScopeReader, refEmitter, aliasingHost);
             const scopeReader = scopeRegistry;
-            const semanticDepGraphUpdater = this.incrementalDriver.getSemanticDepGraphUpdater();
+            const semanticDepGraphUpdater = this.incrementalCompilation.semanticDepGraphUpdater;
             const metaRegistry = new CompoundMetadataRegistry([localMetaRegistry, scopeRegistry]);
             const injectableRegistry = new InjectableClassRegistry(reflector);
             const metaReader = new CompoundMetadataReader([localMetaReader, dtsReader]);
@@ -38274,7 +38333,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 1 /* Error */;
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, this.incrementalDriver.depGraph, injectableRegistry, semanticDepGraphUpdater, this.closureCompilerEnabled, this.delegatingPerfRecorder),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, this.incrementalCompilation.depGraph, injectableRegistry, semanticDepGraphUpdater, this.closureCompilerEnabled, this.delegatingPerfRecorder),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
@@ -38286,14 +38345,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 new InjectableDecoratorHandler(reflector, isCore, this.options.strictInjectionParameters || false, injectableRegistry, this.delegatingPerfRecorder),
                 new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, this.closureCompilerEnabled, injectableRegistry, this.delegatingPerfRecorder, this.options.i18nInLocale),
             ];
-            const traitCompiler = new TraitCompiler(handlers, reflector, this.delegatingPerfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
+            const traitCompiler = new TraitCompiler(handlers, reflector, this.delegatingPerfRecorder, this.incrementalCompilation, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
             // Template type-checking may use the `ProgramDriver` to produce new `ts.Program`(s). If this
             // happens, they need to be tracked by the `NgCompiler`.
             const notifyingDriver = new NotifyingProgramDriverWrapper(this.programDriver, (program) => {
-                this.incrementalStrategy.setIncrementalDriver(this.incrementalDriver, program);
+                this.incrementalStrategy.setIncrementalState(this.incrementalCompilation.state, program);
                 this.currentProgram = program;
             });
-            const templateTypeChecker = new TemplateTypeCheckerImpl(this.inputProgram, notifyingDriver, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry, this.delegatingPerfRecorder);
+            const templateTypeChecker = new TemplateTypeCheckerImpl(this.inputProgram, notifyingDriver, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalCompilation, scopeRegistry, typeCheckScopeRegistry, this.delegatingPerfRecorder);
             return {
                 isCore,
                 traitCompiler,
@@ -38400,8 +38459,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     class NotifyingProgramDriverWrapper {
         constructor(delegate, notifyNewProgram) {
+            var _a;
             this.delegate = delegate;
             this.notifyNewProgram = notifyNewProgram;
+            this.getSourceFileVersion = (_a = this.delegate.getSourceFileVersion) === null || _a === void 0 ? void 0 : _a.bind(this);
         }
         get supportsInlineOperations() {
             return this.delegate.supportsInlineOperations;
@@ -38413,6 +38474,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             this.delegate.updateFiles(contents, updateMode);
             this.notifyNewProgram(this.delegate.getProgram());
         }
+    }
+    function versionMapFromProgram(program, driver) {
+        if (driver.getSourceFileVersion === undefined) {
+            return null;
+        }
+        const versions = new Map();
+        for (const possiblyRedirectedSourceFile of program.getSourceFiles()) {
+            const sf = toUnredirectedSourceFile(possiblyRedirectedSourceFile);
+            versions.set(absoluteFromSourceFile(sf), driver.getSourceFileVersion(sf));
+        }
+        return versions;
     }
 
     /**
@@ -39225,7 +39297,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         getOrCreate() {
             var _a;
             const program = this.programStrategy.getProgram();
-            const modifiedResourceFiles = (_a = this.adapter.getModifiedResourceFiles()) !== null && _a !== void 0 ? _a : new Set();
+            const modifiedResourceFiles = new Set();
+            for (const fileName of (_a = this.adapter.getModifiedResourceFiles()) !== null && _a !== void 0 ? _a : []) {
+                modifiedResourceFiles.add(resolve(fileName));
+            }
             if (this.compiler !== null && program === this.compiler.getCurrentProgram()) {
                 if (modifiedResourceFiles.size > 0) {
                     // Only resource files have changed since the last NgCompiler was created.
@@ -41859,6 +41934,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     scriptInfo.editContent(0, length, newText);
                 }
             },
+            getSourceFileVersion(sf) {
+                return project.getScriptVersion(sf.fileName);
+            }
         };
     }
     function getOrCreateTypeCheckScriptInfo(project, tcf) {
