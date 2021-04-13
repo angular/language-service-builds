@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+72.sha-1d12c50
+ * @license Angular v12.0.0-next.8+74.sha-f7e391a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2626,7 +2626,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throw new Error('visit() not implemented for Comment');
         }
     }
-    class Text {
+    class Text$1 {
         constructor(value, sourceSpan) {
             this.value = value;
             this.sourceSpan = sourceSpan;
@@ -2850,7 +2850,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
     }
-    class Text$1 {
+    class Text$2 {
         constructor(value, sourceSpan) {
             this.value = value;
             this.sourceSpan = sourceSpan;
@@ -8837,7 +8837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.i18n = i18n;
         }
     }
-    class Text$2 extends NodeWithI18n {
+    class Text$3 extends NodeWithI18n {
         constructor(value, sourceSpan, i18n) {
             super(sourceSpan, i18n);
             this.value = value;
@@ -10045,7 +10045,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
             if (text.length > 0) {
-                this._addToParent(new Text$2(text, token.sourceSpan));
+                this._addToParent(new Text$3(text, token.sourceSpan));
             }
         }
         _closeVoidElement() {
@@ -10261,7 +10261,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const hasExpansionSibling = context &&
                 (context.prev instanceof Expansion || context.next instanceof Expansion);
             if (isNotBlank || hasExpansionSibling) {
-                return new Text$2(replaceNgsp(text.value).replace(WS_REPLACE_REGEXP, ' '), text.sourceSpan, text.i18n);
+                return new Text$3(replaceNgsp(text.value).replace(WS_REPLACE_REGEXP, ' '), text.sourceSpan, text.i18n);
             }
             return null;
         }
@@ -12360,7 +12360,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const EMPTY_ELEMENT_CONTEXT = new ElementContext(true, new SelectorMatcher(), null, null);
     const NON_BINDABLE_VISITOR = new NonBindableVisitor();
     function _isEmptyTextNode(node) {
-        return node instanceof Text$2 && node.value.trim().length == 0;
+        return node instanceof Text$3 && node.value.trim().length == 0;
     }
     function removeSummaryDuplicates(items) {
         const map = new Map();
@@ -15468,7 +15468,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _visitTextWithInterpolation(value, sourceSpan, i18n) {
             const valueNoNgsp = replaceNgsp(value);
             const expr = this.bindingParser.parseInterpolation(valueNoNgsp, sourceSpan);
-            return expr ? new BoundText(expr, sourceSpan, i18n) : new Text(valueNoNgsp, sourceSpan);
+            return expr ? new BoundText(expr, sourceSpan, i18n) : new Text$1(valueNoNgsp, sourceSpan);
         }
         parseVariable(identifier, value, sourceSpan, keySpan, valueSpan, variables) {
             if (identifier.indexOf('-') > -1) {
@@ -15522,7 +15522,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new TextAttribute(attribute.name, attribute.value, attribute.sourceSpan, attribute.keySpan, attribute.valueSpan, attribute.i18n);
         }
         visitText(text) {
-            return new Text(text.value, text.sourceSpan);
+            return new Text$1(text.value, text.sourceSpan);
         }
         visitExpansion(expansion) {
             return null;
@@ -15539,13 +15539,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         boundEvents.push(...events.map(e => BoundEvent.fromParsedEvent(e)));
     }
     function isEmptyTextNode(node) {
-        return node instanceof Text$2 && node.value.trim().length == 0;
+        return node instanceof Text$3 && node.value.trim().length == 0;
     }
     function isCommentNode(node) {
         return node instanceof Comment$1;
     }
     function textContents(node) {
-        if (node.children.length !== 1 || !(node.children[0] instanceof Text$2)) {
+        if (node.children.length !== 1 || !(node.children[0] instanceof Text$3)) {
             return null;
         }
         else {
@@ -16014,7 +16014,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const { strings, expressions } = this._expressionParser.splitInterpolation(text, sourceSpan.start.toString(), this._interpolationConfig);
             // No expressions, return a single text.
             if (expressions.length === 0) {
-                return new Text$1(text, sourceSpan);
+                return new Text$2(text, sourceSpan);
             }
             // Return a sequence of `Text` and `Placeholder` nodes grouped in a `Container`.
             const nodes = [];
@@ -16039,7 +16039,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (textPiece.text.length > 0) {
                 // No need to add empty strings
                 const stringSpan = getOffsetSourceSpan(interpolationSpan, textPiece);
-                nodes.push(new Text$1(textPiece.text, stringSpan));
+                nodes.push(new Text$2(textPiece.text, stringSpan));
             }
         }
         /**
@@ -16790,7 +16790,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const bound = {};
             Object.keys(props).forEach(key => {
                 const prop = props[key];
-                if (prop instanceof Text) {
+                if (prop instanceof Text$1) {
                     bound[key] = literal(prop.value);
                 }
                 else {
@@ -18263,7 +18263,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return children.length === 1 && children[0] instanceof Element$1;
     }
     function isTextNode(node) {
-        return node instanceof Text || node instanceof BoundText || node instanceof Icu;
+        return node instanceof Text$1 || node instanceof BoundText || node instanceof Icu;
     }
     function hasTextChildrenOnly(children) {
         return children.every(isTextNode);
@@ -19394,7 +19394,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+72.sha-1d12c50');
+    const VERSION$1 = new Version('12.0.0-next.8+74.sha-f7e391a');
 
     /**
      * @license
@@ -19607,7 +19607,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case PreparsedElementType.STYLE:
                     let textContent = '';
                     ast.children.forEach(child => {
-                        if (child instanceof Text$2) {
+                        if (child instanceof Text$3) {
                             textContent += child.value;
                         }
                     });
@@ -26014,7 +26014,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     // if it is not.
     function voidElementAttributeCompletions(info, path) {
         const tail = path.tail;
-        if (tail instanceof Text$2) {
+        if (tail instanceof Text$3) {
             const match = tail.value.match(/<(\w(\w|\d|-)*:)?(\w(\w|\d|-)*)\s/);
             // The position must be after the match, otherwise we are still in a place where elements
             // are expected (such as `<|a` or `<a|`; we only want attributes for `<a |` or after).
@@ -38421,7 +38421,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         return new NodeInjector(tNode, context.lView);
     }
     /**
-     * Retrieves directive instances associated with a given DOM element. Does not include
+     * Retrieves directive instances associated with a given DOM node. Does not include
      * component instances.
      *
      * @usageNotes
@@ -38433,24 +38433,71 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * </my-app>
      * ```
      * Calling `getDirectives` on `<button>` will return an array with an instance of the `MyButton`
-     * directive that is associated with the DOM element.
+     * directive that is associated with the DOM node.
      *
      * Calling `getDirectives` on `<my-comp>` will return an empty array.
      *
-     * @param element DOM element for which to get the directives.
-     * @returns Array of directives associated with the element.
+     * @param node DOM node for which to get the directives.
+     * @returns Array of directives associated with the node.
      *
      * @publicApi
      * @globalApi ng
      */
-    function getDirectives(element) {
-        const context = loadLContext(element);
+    function getDirectives(node) {
+        // Skip text nodes because we can't have directives associated with them.
+        if (node instanceof Text) {
+            return [];
+        }
+        const context = loadLContext(node, false);
+        if (context === null) {
+            return [];
+        }
+        const lView = context.lView;
+        const tView = lView[TVIEW];
+        const nodeIndex = context.nodeIndex;
+        if (!(tView === null || tView === void 0 ? void 0 : tView.data[nodeIndex])) {
+            return [];
+        }
         if (context.directives === undefined) {
-            context.directives = getDirectivesAtNodeIndex(context.nodeIndex, context.lView, false);
+            context.directives = getDirectivesAtNodeIndex(nodeIndex, lView, false);
         }
         // The `directives` in this case are a named array called `LComponentView`. Clone the
         // result so we don't expose an internal data structure in the user's console.
         return context.directives === null ? [] : [...context.directives];
+    }
+    /**
+     * Returns the debug (partial) metadata for a particular directive or component instance.
+     * The function accepts an instance of a directive or component and returns the corresponding
+     * metadata.
+     *
+     * @param directiveOrComponentInstance Instance of a directive or component
+     * @returns metadata of the passed directive or component
+     *
+     * @publicApi
+     * @globalApi ng
+     */
+    function getDirectiveMetadata(directiveOrComponentInstance) {
+        const { constructor } = directiveOrComponentInstance;
+        if (!constructor) {
+            throw new Error('Unable to find the instance constructor');
+        }
+        // In case a component inherits from a directive, we may have component and directive metadata
+        // To ensure we don't get the metadata of the directive, we want to call `getComponentDef` first.
+        const componentDef = getComponentDef(constructor);
+        if (componentDef) {
+            return {
+                inputs: componentDef.inputs,
+                outputs: componentDef.outputs,
+                encapsulation: componentDef.encapsulation,
+                changeDetection: componentDef.onPush ? ChangeDetectionStrategy$1.OnPush :
+                    ChangeDetectionStrategy$1.Default
+            };
+        }
+        const directiveDef = getDirectiveDef(constructor);
+        if (directiveDef) {
+            return { inputs: directiveDef.inputs, outputs: directiveDef.outputs };
+        }
+        return null;
     }
     function loadLContext(target, throwOnNotFound = true) {
         const context = getLContext(target);
@@ -38608,6 +38655,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
              * removed completely.
              */
             publishGlobalUtil('ɵsetProfiler', setProfiler);
+            publishGlobalUtil('getDirectiveMetadata', getDirectiveMetadata);
             publishGlobalUtil('getComponent', getComponent);
             publishGlobalUtil('getContext', getContext);
             publishGlobalUtil('getListeners', getListeners);
@@ -47310,7 +47358,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+72.sha-1d12c50');
+    const VERSION$2 = new Version$1('12.0.0-next.8+74.sha-f7e391a');
 
     /**
      * @license
@@ -53019,7 +53067,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     // `directive` can be null in the case of abstract directives as a base class
                     // that use `@Directive()` with no selector. In that case, pass empty object to the
                     // `directiveMetadata` function instead of null.
-                    const meta = getDirectiveMetadata(type, directive || {});
+                    const meta = getDirectiveMetadata$1(type, directive || {});
                     ngDirectiveDef =
                         getCompilerFacade().compileDirective(angularCoreEnv, meta.sourceMapUrl, meta.metadata);
                 }
@@ -53029,7 +53077,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             configurable: !!ngDevMode,
         });
     }
-    function getDirectiveMetadata(type, metadata) {
+    function getDirectiveMetadata$1(type, metadata) {
         const name = type && type.name;
         const sourceMapUrl = `ng:///${name}/ɵdir.js`;
         const compiler = getCompilerFacade();
@@ -53045,7 +53093,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         Object.defineProperty(type, NG_FACTORY_DEF, {
             get: () => {
                 if (ngFactoryDef === null) {
-                    const meta = getDirectiveMetadata(type, metadata);
+                    const meta = getDirectiveMetadata$1(type, metadata);
                     const compiler = getCompilerFacade();
                     ngFactoryDef = compiler.compileFactory(angularCoreEnv, `ng:///${type.name}/ɵfac.js`, {
                         name: meta.metadata.name,
