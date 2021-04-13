@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.9+30.sha-9cda866
+ * @license Angular v11.2.9+35.sha-cfd67c1
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20399,7 +20399,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.9+30.sha-9cda866');
+    const VERSION$1 = new Version('11.2.9+35.sha-cfd67c1');
 
     /**
      * @license
@@ -21056,7 +21056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.9+30.sha-9cda866'));
+        definitionMap.set('version', literal('11.2.9+35.sha-cfd67c1'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21277,7 +21277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.9+30.sha-9cda866'));
+        definitionMap.set('version', literal('11.2.9+35.sha-cfd67c1'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21309,7 +21309,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.9+30.sha-9cda866');
+    const VERSION$2 = new Version('11.2.9+35.sha-cfd67c1');
 
     /**
      * @license
@@ -21459,6 +21459,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * Raised when a directive/pipe is part of the declarations of two or more NgModules.
          */
         ErrorCode[ErrorCode["NGMODULE_DECLARATION_NOT_UNIQUE"] = 6007] = "NGMODULE_DECLARATION_NOT_UNIQUE";
+        /**
+         * Not actually raised by the compiler, but reserved for documentation of a View Engine error when
+         * a View Engine build depends on an Ivy-compiled NgModule.
+         */
+        ErrorCode[ErrorCode["NGMODULE_VE_DEPENDENCY_ON_IVY_LIB"] = 6999] = "NGMODULE_VE_DEPENDENCY_ON_IVY_LIB";
         /**
          * An element name failed validation against the DOM schema.
          */
@@ -21703,6 +21708,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /** Returns true if the node is an assignment expression. */
     function isAssignment(node) {
         return ts$1.isBinaryExpression(node) && node.operatorToken.kind === ts$1.SyntaxKind.EqualsToken;
+    }
+    /**
+     * Obtains the non-redirected source file for `sf`.
+     */
+    function toUnredirectedSourceFile(sf) {
+        const redirectInfo = sf.redirectInfo;
+        if (redirectInfo === undefined) {
+            return sf;
+        }
+        return redirectInfo.unredirected;
     }
 
     /**
@@ -22212,6 +22227,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const DefaultImportDeclaration = Symbol('DefaultImportDeclaration');
+    /**
+     * Attaches a default import declaration to `expr` to indicate the dependency of `expr` on the
+     * default import.
+     */
+    function attachDefaultImportDeclaration(expr, importDecl) {
+        expr[DefaultImportDeclaration] = importDecl;
+    }
+    /**
+     * Obtains the default import declaration that `expr` depends on, or `null` if there is no such
+     * dependency.
+     */
+    function getDefaultImportDeclaration(expr) {
+        var _a;
+        return (_a = expr[DefaultImportDeclaration]) !== null && _a !== void 0 ? _a : null;
+    }
     /**
      * TypeScript has trouble with generating default imports inside of transformers for some module
      * formats. The issue is that for the statement:
@@ -22245,46 +22276,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     class DefaultImportTracker {
         constructor() {
             /**
-             * A `Map` which tracks the `Map` of default import `ts.Identifier`s to their
-             * `ts.ImportDeclaration`s. These declarations are not guaranteed to be used.
-             */
-            this.sourceFileToImportMap = new Map();
-            /**
              * A `Map` which tracks the `Set` of `ts.ImportDeclaration`s for default imports that were used in
              * a given `ts.SourceFile` and need to be preserved.
              */
             this.sourceFileToUsedImports = new Map();
         }
-        recordImportedIdentifier(id, decl) {
-            const sf = getSourceFile(id);
-            if (!this.sourceFileToImportMap.has(sf)) {
-                this.sourceFileToImportMap.set(sf, new Map());
-            }
-            this.sourceFileToImportMap.get(sf).set(id, decl);
-        }
-        recordUsedIdentifier(id) {
-            const sf = getSourceFile(id);
-            if (!this.sourceFileToImportMap.has(sf)) {
-                // The identifier's source file has no registered default imports at all.
-                return;
-            }
-            const identiferToDeclaration = this.sourceFileToImportMap.get(sf);
-            if (!identiferToDeclaration.has(id)) {
-                // The identifier isn't from a registered default import.
-                return;
-            }
-            const decl = identiferToDeclaration.get(id);
+        recordUsedImport(importDecl) {
+            const sf = getSourceFile(importDecl);
             // Add the default import declaration to the set of used import declarations for the file.
             if (!this.sourceFileToUsedImports.has(sf)) {
                 this.sourceFileToUsedImports.set(sf, new Set());
             }
-            this.sourceFileToUsedImports.get(sf).add(decl);
+            this.sourceFileToUsedImports.get(sf).add(importDecl);
         }
         /**
          * Get a `ts.TransformerFactory` which will preserve default imports that were previously marked
          * as used.
          *
-         * This transformer must run after any other transformers which call `recordUsedIdentifier`.
+         * This transformer must run after any other transformers which call `recordUsedImport`.
          */
         importPreservingTransformer() {
             return (context) => {
@@ -22339,7 +22348,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             });
             // Save memory - there's no need to keep these around once the transform has run for the given
             // file.
-            this.sourceFileToImportMap.delete(originalSf);
             this.sourceFileToUsedImports.delete(originalSf);
             return ts$1.updateSourceFileNode(sf, statements);
         }
@@ -26719,7 +26727,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.imports = imports;
             this.downlevelTaggedTemplates = options.downlevelTaggedTemplates === true;
             this.downlevelVariableDeclarations = options.downlevelVariableDeclarations === true;
-            this.recordWrappedNodeExpr = options.recordWrappedNodeExpr || (() => { });
+            this.recordWrappedNode = options.recordWrappedNode || (() => { });
         }
         visitDeclareVarStmt(stmt, context) {
             var _a;
@@ -26947,7 +26955,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             throw new Error('Method not implemented.');
         }
         visitWrappedNodeExpr(ast, _context) {
-            this.recordWrappedNodeExpr(ast.node);
+            this.recordWrappedNode(ast);
             return ast.node;
         }
         visitTypeofExpr(ast, context) {
@@ -27806,11 +27814,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     const NO_DECORATORS = new Set();
     const CLOSURE_FILE_OVERVIEW_REGEXP = /\s+@fileoverview\s+/i;
-    function ivyTransformFactory(compilation, reflector, importRewriter, defaultImportRecorder, perf, isCore, isClosureCompilerEnabled) {
-        const recordWrappedNodeExpr = createRecorderFn(defaultImportRecorder);
+    function ivyTransformFactory(compilation, reflector, importRewriter, defaultImportTracker, perf, isCore, isClosureCompilerEnabled) {
+        const recordWrappedNode = createRecorderFn(defaultImportTracker);
         return (context) => {
             return (file) => {
-                return perf.inPhase(PerfPhase.Compile, () => transformIvySourceFile(compilation, context, reflector, importRewriter, file, isCore, isClosureCompilerEnabled, recordWrappedNodeExpr));
+                return perf.inPhase(PerfPhase.Compile, () => transformIvySourceFile(compilation, context, reflector, importRewriter, file, isCore, isClosureCompilerEnabled, recordWrappedNode));
             };
         };
     }
@@ -27841,13 +27849,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * compilation results (provided as an argument).
      */
     class IvyTransformationVisitor extends Visitor {
-        constructor(compilation, classCompilationMap, reflector, importManager, recordWrappedNodeExpr, isClosureCompilerEnabled, isCore) {
+        constructor(compilation, classCompilationMap, reflector, importManager, recordWrappedNode, isClosureCompilerEnabled, isCore) {
             super();
             this.compilation = compilation;
             this.classCompilationMap = classCompilationMap;
             this.reflector = reflector;
             this.importManager = importManager;
-            this.recordWrappedNodeExpr = recordWrappedNodeExpr;
+            this.recordWrappedNode = recordWrappedNode;
             this.isClosureCompilerEnabled = isClosureCompilerEnabled;
             this.isCore = isCore;
         }
@@ -27862,7 +27870,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const members = [...node.members];
             for (const field of this.classCompilationMap.get(node)) {
                 // Translate the initializer for the field into TS nodes.
-                const exprNode = translateExpression(field.initializer, this.importManager, { recordWrappedNodeExpr: this.recordWrappedNodeExpr });
+                const exprNode = translateExpression(field.initializer, this.importManager, { recordWrappedNode: this.recordWrappedNode });
                 // Create a static property declaration for the new field.
                 const property = ts$1.createProperty(undefined, [ts$1.createToken(ts$1.SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
                 if (this.isClosureCompilerEnabled) {
@@ -27874,7 +27882,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     /* hasTrailingNewLine */ false);
                 }
                 field.statements
-                    .map(stmt => translateStatement(stmt, this.importManager, { recordWrappedNodeExpr: this.recordWrappedNodeExpr }))
+                    .map(stmt => translateStatement(stmt, this.importManager, { recordWrappedNode: this.recordWrappedNode }))
                     .forEach(stmt => statements.push(stmt));
                 members.push(property);
             }
@@ -27978,7 +27986,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /**
      * A transformer which operates on ts.SourceFiles and applies changes from an `IvyCompilation`.
      */
-    function transformIvySourceFile(compilation, context, reflector, importRewriter, file, isCore, isClosureCompilerEnabled, recordWrappedNodeExpr) {
+    function transformIvySourceFile(compilation, context, reflector, importRewriter, file, isCore, isClosureCompilerEnabled, recordWrappedNode) {
         const constantPool = new ConstantPool(isClosureCompilerEnabled);
         const importManager = new ImportManager(importRewriter);
         // The transformation process consists of 2 steps:
@@ -27995,13 +28003,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visit(file, compilationVisitor, context);
         // Step 2. Scan through the AST again and perform transformations based on Ivy compilation
         // results obtained at Step 1.
-        const transformationVisitor = new IvyTransformationVisitor(compilation, compilationVisitor.classCompilationMap, reflector, importManager, recordWrappedNodeExpr, isClosureCompilerEnabled, isCore);
+        const transformationVisitor = new IvyTransformationVisitor(compilation, compilationVisitor.classCompilationMap, reflector, importManager, recordWrappedNode, isClosureCompilerEnabled, isCore);
         let sf = visit(file, transformationVisitor, context);
         // Generate the constant statements first, as they may involve adding additional imports
         // to the ImportManager.
         const downlevelTranslatedCode = getLocalizeCompileTarget(context) < ts$1.ScriptTarget.ES2015;
         const constants = constantPool.statements.map(stmt => translateStatement(stmt, importManager, {
-            recordWrappedNodeExpr,
+            recordWrappedNode,
             downlevelTaggedTemplates: downlevelTranslatedCode,
             downlevelVariableDeclarations: downlevelTranslatedCode,
         }));
@@ -28075,10 +28083,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function isFromAngularCore(decorator) {
         return decorator.import !== null && decorator.import.from === '@angular/core';
     }
-    function createRecorderFn(defaultImportRecorder) {
-        return expr => {
-            if (ts$1.isIdentifier(expr)) {
-                defaultImportRecorder.recordUsedIdentifier(expr);
+    function createRecorderFn(defaultImportTracker) {
+        return node => {
+            const importDecl = getDefaultImportDeclaration(node);
+            if (importDecl !== null) {
+                defaultImportTracker.recordUsedImport(importDecl);
             }
         };
     }
@@ -28173,7 +28182,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore) {
+    function getConstructorDependencies(clazz, reflector, isCore) {
         const deps = [];
         const errors = [];
         let ctorParams = reflector.getConstructorParameters(clazz);
@@ -28186,7 +28195,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         }
         ctorParams.forEach((param, idx) => {
-            let token = valueReferenceToExpression(param.typeValueReference, defaultImportRecorder);
+            let token = valueReferenceToExpression(param.typeValueReference);
             let attribute = null;
             let optional = false, self = false, skipSelf = false, host = false;
             let resolved = R3ResolvedDependencyType.Token;
@@ -28253,16 +28262,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return { deps: null, errors };
         }
     }
-    function valueReferenceToExpression(valueRef, defaultImportRecorder) {
+    function valueReferenceToExpression(valueRef) {
         if (valueRef.kind === 2 /* UNAVAILABLE */) {
             return null;
         }
         else if (valueRef.kind === 0 /* LOCAL */) {
-            if (defaultImportRecorder !== null && valueRef.defaultImportStatement !== null &&
-                ts$1.isIdentifier(valueRef.expression)) {
-                defaultImportRecorder.recordImportedIdentifier(valueRef.expression, valueRef.defaultImportStatement);
+            const expr = new WrappedNodeExpr(valueRef.expression);
+            if (valueRef.defaultImportStatement !== null) {
+                attachDefaultImportDeclaration(expr, valueRef.defaultImportStatement);
             }
-            return new WrappedNodeExpr(valueRef.expression);
+            return expr;
         }
         else {
             let importExpr = new ExternalExpr({ moduleName: valueRef.moduleName, name: valueRef.importedName });
@@ -28293,8 +28302,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return 'invalid';
         }
     }
-    function getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore) {
-        return validateConstructorDependencies(clazz, getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore));
+    function getValidConstructorDependencies(clazz, reflector, isCore) {
+        return validateConstructorDependencies(clazz, getConstructorDependencies(clazz, reflector, isCore));
     }
     /**
      * Validate that `ConstructorDeps` does not have any invalid dependencies and convert them into the
@@ -28802,7 +28811,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * If no such metadata is present, this function returns `null`. Otherwise, the call is returned
      * as a `Statement` for inclusion along with the class.
      */
-    function generateSetClassMetadataCall(clazz, reflection, defaultImportRecorder, isCore, annotateForClosureCompiler) {
+    function generateSetClassMetadataCall(clazz, reflection, isCore, annotateForClosureCompiler) {
         if (!reflection.isClass(clazz)) {
             return null;
         }
@@ -28829,7 +28838,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         let metaCtorParameters = new LiteralExpr(null);
         const classCtorParameters = reflection.getConstructorParameters(clazz);
         if (classCtorParameters !== null) {
-            const ctorParameters = classCtorParameters.map(param => ctorParameterToMetadata(param, defaultImportRecorder, isCore));
+            const ctorParameters = classCtorParameters.map(param => ctorParameterToMetadata(param, isCore));
             metaCtorParameters = new FunctionExpr([], [
                 new ReturnStatement(new LiteralArrayExpr(ctorParameters)),
             ]);
@@ -28866,11 +28875,11 @@ Either add the @Injectable() decorator to '${provider.node.name
     /**
      * Convert a reflected constructor parameter to metadata.
      */
-    function ctorParameterToMetadata(param, defaultImportRecorder, isCore) {
+    function ctorParameterToMetadata(param, isCore) {
         // Parameters sometimes have a type that can be referenced. If so, then use it, otherwise
         // its type is undefined.
         const type = param.typeValueReference.kind !== 2 /* UNAVAILABLE */ ?
-            valueReferenceToExpression(param.typeValueReference, defaultImportRecorder) :
+            valueReferenceToExpression(param.typeValueReference) :
             new LiteralExpr(undefined);
         const mapEntries = [
             { key: 'type', value: type, quoted: false },
@@ -29057,13 +29066,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         return isSymbolEqual(current, previous);
     }
     class DirectiveDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportRecorder, injectableRegistry, isCore, semanticDepGraphUpdater, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures, perf) {
+        constructor(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, injectableRegistry, isCore, semanticDepGraphUpdater, annotateForClosureCompiler, compileUndecoratedClassesWithAngularFeatures, perf) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
             this.scopeRegistry = scopeRegistry;
             this.metaReader = metaReader;
-            this.defaultImportRecorder = defaultImportRecorder;
             this.injectableRegistry = injectableRegistry;
             this.isCore = isCore;
             this.semanticDepGraphUpdater = semanticDepGraphUpdater;
@@ -29097,7 +29105,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return { diagnostics: [getUndecoratedClassWithAngularFeaturesDiagnostic(node)] };
             }
             this.perf.eventCount(PerfEvent.AnalyzeDirective);
-            const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags, this.annotateForClosureCompiler);
+            const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.isCore, flags, this.annotateForClosureCompiler);
             if (directiveResult === undefined) {
                 return {};
             }
@@ -29111,7 +29119,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     inputs: directiveResult.inputs,
                     outputs: directiveResult.outputs,
                     meta: analysis,
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
+                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.isCore, this.annotateForClosureCompiler),
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
                     typeCheckMeta: extractDirectiveTypeCheckMeta(node, directiveResult.inputs, this.reflector),
                     providersRequiringFactory,
@@ -29194,7 +29202,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * appear in the declarations of an `NgModule` and additional verification is done when processing
      * the module.
      */
-    function extractDirectiveMetadata(clazz, decorator, reflector, evaluator, defaultImportRecorder, isCore, flags, annotateForClosureCompiler, defaultSelector = null) {
+    function extractDirectiveMetadata(clazz, decorator, reflector, evaluator, isCore, flags, annotateForClosureCompiler, defaultSelector = null) {
         let directive;
         if (decorator === null || decorator.args === null || decorator.args.length === 0) {
             directive = new Map();
@@ -29272,7 +29280,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             exportAs = resolved.split(',').map(part => part.trim());
         }
-        const rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+        const rawCtorDeps = getConstructorDependencies(clazz, reflector, isCore);
         let ctorDeps;
         // Non-abstract directives (those with a selector) require valid constructor dependencies, whereas
         // abstract directives are allowed to have invalid dependencies, given that a subclass may call
@@ -29694,7 +29702,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Compiles @NgModule annotations to ngModuleDef fields.
      */
     class NgModuleDecoratorHandler {
-        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, defaultImportRecorder, annotateForClosureCompiler, injectableRegistry, perf, localeId) {
+        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, annotateForClosureCompiler, injectableRegistry, perf, localeId) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaReader = metaReader;
@@ -29705,7 +29713,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.routeAnalyzer = routeAnalyzer;
             this.refEmitter = refEmitter;
             this.factoryTracker = factoryTracker;
-            this.defaultImportRecorder = defaultImportRecorder;
             this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.injectableRegistry = injectableRegistry;
             this.perf = perf;
@@ -29883,7 +29890,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     schemas: schemas,
                     mod: ngModuleDef,
                     inj: ngInjectorDef,
-                    deps: getValidConstructorDependencies(node, this.reflector, this.defaultImportRecorder, this.isCore),
+                    deps: getValidConstructorDependencies(node, this.reflector, this.isCore),
                     declarations: declarationRefs,
                     rawDeclarations,
                     imports: importRefs,
@@ -29892,7 +29899,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     providersRequiringFactory: rawProviders ?
                         resolveProvidersRequiringFactory(rawProviders, this.reflector, this.evaluator) :
                         null,
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
+                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.isCore, this.annotateForClosureCompiler),
                     factorySymbolName: node.name.text,
                 },
             };
@@ -30223,7 +30230,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * `DecoratorHandler` which handles the `@Component` annotation.
      */
     class ComponentDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportRecorder, depTracker, injectableRegistry, semanticDepGraphUpdater, annotateForClosureCompiler, perf) {
+        constructor(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, resourceLoader, rootDirs, defaultPreserveWhitespaces, i18nUseExternalIds, enableI18nLegacyMessageIdFormat, usePoisonedData, i18nNormalizeLineEndingsInICUs, moduleResolver, cycleAnalyzer, cycleHandlingStrategy, refEmitter, depTracker, injectableRegistry, semanticDepGraphUpdater, annotateForClosureCompiler, perf) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
@@ -30244,7 +30251,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.cycleAnalyzer = cycleAnalyzer;
             this.cycleHandlingStrategy = cycleHandlingStrategy;
             this.refEmitter = refEmitter;
-            this.defaultImportRecorder = defaultImportRecorder;
             this.depTracker = depTracker;
             this.injectableRegistry = injectableRegistry;
             this.semanticDepGraphUpdater = semanticDepGraphUpdater;
@@ -30341,7 +30347,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             let isPoisoned = false;
             // @Component inherits @Directive, so begin by extracting the @Directive metadata and building
             // on it.
-            const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.defaultImportRecorder, this.isCore, flags, this.annotateForClosureCompiler, this.elementSchemaRegistry.getDefaultComponentElementName());
+            const directiveResult = extractDirectiveMetadata(node, decorator, this.reflector, this.evaluator, this.isCore, flags, this.annotateForClosureCompiler, this.elementSchemaRegistry.getDefaultComponentElementName());
             if (directiveResult === undefined) {
                 // `extractDirectiveMetadata` returns undefined when the @Directive has `jit: true`. In this
                 // case, compilation of the decorator is skipped. Returning an empty object signifies
@@ -30455,7 +30461,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // analyzed and the full compilation scope for the component can be realized.
                         animations, viewProviders: wrappedViewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath }),
                     typeCheckMeta: extractDirectiveTypeCheckMeta(node, inputs, this.reflector),
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore, this.annotateForClosureCompiler),
+                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.isCore, this.annotateForClosureCompiler),
                     template,
                     providersRequiringFactory,
                     viewProvidersRequiringFactory,
@@ -31151,7 +31157,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Adapts the `compileIvyInjectable` compiler for `@Injectable` decorators to the Ivy compiler.
      */
     class InjectableDecoratorHandler {
-        constructor(reflector, defaultImportRecorder, isCore, strictCtorDeps, injectableRegistry, perf, 
+        constructor(reflector, isCore, strictCtorDeps, injectableRegistry, perf, 
         /**
          * What to do if the injectable already contains a ɵprov property.
          *
@@ -31160,7 +31166,6 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         errorOnDuplicateProv = true) {
             this.reflector = reflector;
-            this.defaultImportRecorder = defaultImportRecorder;
             this.isCore = isCore;
             this.strictCtorDeps = strictCtorDeps;
             this.injectableRegistry = injectableRegistry;
@@ -31192,8 +31197,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             return {
                 analysis: {
                     meta,
-                    ctorDeps: extractInjectableCtorDeps(node, meta, decorator, this.reflector, this.defaultImportRecorder, this.isCore, this.strictCtorDeps),
-                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.defaultImportRecorder, this.isCore),
+                    ctorDeps: extractInjectableCtorDeps(node, meta, decorator, this.reflector, this.isCore, this.strictCtorDeps),
+                    metadataStmt: generateSetClassMetadataCall(node, this.reflector, this.isCore),
                     // Avoid generating multiple factories if a class has
                     // more Angular decorators, apart from Injectable.
                     needsFactory: !decorators ||
@@ -31335,7 +31340,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, decorator.args[2], 'Too many arguments to @Injectable');
         }
     }
-    function extractInjectableCtorDeps(clazz, meta, decorator, reflector, defaultImportRecorder, isCore, strictCtorDeps) {
+    function extractInjectableCtorDeps(clazz, meta, decorator, reflector, isCore, strictCtorDeps) {
         if (decorator.args === null) {
             throw new FatalDiagnosticError(ErrorCode.DECORATOR_NOT_CALLED, Decorator.nodeForError(decorator), '@Injectable must be called');
         }
@@ -31350,15 +31355,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             // constructor signature does not work for DI then a factory definition (ɵfac) that throws is
             // generated.
             if (strictCtorDeps) {
-                ctorDeps = getValidConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+                ctorDeps = getValidConstructorDependencies(clazz, reflector, isCore);
             }
             else {
-                ctorDeps = unwrapConstructorDependencies(getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore));
+                ctorDeps =
+                    unwrapConstructorDependencies(getConstructorDependencies(clazz, reflector, isCore));
             }
             return ctorDeps;
         }
         else if (decorator.args.length === 1) {
-            const rawCtorDeps = getConstructorDependencies(clazz, reflector, defaultImportRecorder, isCore);
+            const rawCtorDeps = getConstructorDependencies(clazz, reflector, isCore);
             if (strictCtorDeps && meta.useValue === undefined && meta.useExisting === undefined &&
                 meta.useClass === undefined && meta.useFactory === undefined) {
                 // Since use* was not provided, validate the deps according to strictCtorDeps.
@@ -31442,12 +31448,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
     }
     class PipeDecoratorHandler {
-        constructor(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportRecorder, injectableRegistry, isCore, perf) {
+        constructor(reflector, evaluator, metaRegistry, scopeRegistry, injectableRegistry, isCore, perf) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaRegistry = metaRegistry;
             this.scopeRegistry = scopeRegistry;
-            this.defaultImportRecorder = defaultImportRecorder;
             this.injectableRegistry = injectableRegistry;
             this.isCore = isCore;
             this.perf = perf;
@@ -31511,10 +31516,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                         internalType,
                         typeArgumentCount: this.reflector.getGenericArityOfClass(clazz) || 0,
                         pipeName,
-                        deps: getValidConstructorDependencies(clazz, this.reflector, this.defaultImportRecorder, this.isCore),
+                        deps: getValidConstructorDependencies(clazz, this.reflector, this.isCore),
                         pure,
                     },
-                    metadataStmt: generateSetClassMetadataCall(clazz, this.reflector, this.defaultImportRecorder, this.isCore),
+                    metadataStmt: generateSetClassMetadataCall(clazz, this.reflector, this.isCore),
                 },
             };
         }
@@ -32148,10 +32153,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 //    since the previous compilation). These need to be removed from the state tracking to
                 //    avoid leaking memory.
                 // All files in the old program, for easy detection of changes.
-                const oldFiles = new Set(oldProgram.getSourceFiles());
+                const oldFiles = new Set(oldProgram.getSourceFiles().map(toUnredirectedSourceFile));
                 // Assume all the old files were deleted to begin with. Only TS files are tracked.
                 const deletedTsPaths = new Set(tsOnlyFiles(oldProgram).map(sf => sf.fileName));
-                for (const newFile of newProgram.getSourceFiles()) {
+                for (const possiblyRedirectedNewFile of newProgram.getSourceFiles()) {
+                    const newFile = toUnredirectedSourceFile(possiblyRedirectedNewFile);
                     if (!newFile.isDeclarationFile) {
                         // This file exists in the new program, so remove it from `deletedTsPaths`.
                         deletedTsPaths.delete(newFile.fileName);
@@ -40184,10 +40190,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             else {
                 importRewriter = new NoopImportRewriter();
             }
+            const defaultImportTracker = new DefaultImportTracker();
             const before = [
-                ivyTransformFactory(compilation.traitCompiler, compilation.reflector, importRewriter, compilation.defaultImportTracker, this.delegatingPerfRecorder, compilation.isCore, this.closureCompilerEnabled),
+                ivyTransformFactory(compilation.traitCompiler, compilation.reflector, importRewriter, defaultImportTracker, this.delegatingPerfRecorder, compilation.isCore, this.closureCompilerEnabled),
                 aliasTransformFactory(compilation.traitCompiler.exportStatements),
-                compilation.defaultImportTracker.importPreservingTransformer(),
+                defaultImportTracker.importPreservingTransformer(),
             ];
             const afterDeclarations = [];
             if (compilation.dtsTransforms !== null) {
@@ -40492,7 +40499,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const dtsTransforms = new DtsTransformRegistry();
             const mwpScanner = new ModuleWithProvidersScanner(reflector, evaluator, refEmitter);
             const isCore = isAngularCorePackage(this.tsProgram);
-            const defaultImportTracker = new DefaultImportTracker();
             const resourceRegistry = new ResourceRegistry();
             const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
             // Cycles are handled in full compilation mode by "remote scoping".
@@ -40503,17 +40509,17 @@ Either add the @Injectable() decorator to '${provider.node.name
                 1 /* Error */;
             // Set up the IvyCompilation, which manages state for the Ivy transformer.
             const handlers = [
-                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, defaultImportTracker, this.incrementalDriver.depGraph, injectableRegistry, semanticDepGraphUpdater, this.closureCompilerEnabled, this.delegatingPerfRecorder),
+                new ComponentDecoratorHandler(reflector, evaluator, metaRegistry, metaReader, scopeReader, scopeRegistry, typeCheckScopeRegistry, resourceRegistry, isCore, this.resourceManager, this.adapter.rootDirs, this.options.preserveWhitespaces || false, this.options.i18nUseExternalIds !== false, this.options.enableI18nLegacyMessageIdFormat !== false, this.usePoisonedData, this.options.i18nNormalizeLineEndingsInICUs, this.moduleResolver, this.cycleAnalyzer, cycleHandlingStrategy, refEmitter, this.incrementalDriver.depGraph, injectableRegistry, semanticDepGraphUpdater, this.closureCompilerEnabled, this.delegatingPerfRecorder),
                 // TODO(alxhub): understand why the cast here is necessary (something to do with `null`
                 // not being assignable to `unknown` when wrapped in `Readonly`).
                 // clang-format off
-                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, defaultImportTracker, injectableRegistry, isCore, semanticDepGraphUpdater, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures, this.delegatingPerfRecorder),
+                new DirectiveDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, metaReader, injectableRegistry, isCore, semanticDepGraphUpdater, this.closureCompilerEnabled, compileUndecoratedClassesWithAngularFeatures, this.delegatingPerfRecorder),
                 // clang-format on
                 // Pipe handler must be before injectable handler in list so pipe factories are printed
                 // before injectable factories (so injectable factories can delegate to them)
-                new PipeDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, defaultImportTracker, injectableRegistry, isCore, this.delegatingPerfRecorder),
-                new InjectableDecoratorHandler(reflector, defaultImportTracker, isCore, this.options.strictInjectionParameters || false, injectableRegistry, this.delegatingPerfRecorder),
-                new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, defaultImportTracker, this.closureCompilerEnabled, injectableRegistry, this.delegatingPerfRecorder, this.options.i18nInLocale),
+                new PipeDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, injectableRegistry, isCore, this.delegatingPerfRecorder),
+                new InjectableDecoratorHandler(reflector, isCore, this.options.strictInjectionParameters || false, injectableRegistry, this.delegatingPerfRecorder),
+                new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, this.closureCompilerEnabled, injectableRegistry, this.delegatingPerfRecorder, this.options.i18nInLocale),
             ];
             const traitCompiler = new TraitCompiler(handlers, reflector, this.delegatingPerfRecorder, this.incrementalDriver, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
             const templateTypeChecker = new TemplateTypeCheckerImpl(this.tsProgram, this.typeCheckingProgramStrategy, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalDriver, scopeRegistry, typeCheckScopeRegistry, this.delegatingPerfRecorder);
@@ -40528,7 +40534,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 mwpScanner,
                 metaReader,
                 typeCheckScopeRegistry,
-                defaultImportTracker,
                 aliasingHost,
                 refEmitter,
                 templateTypeChecker,
