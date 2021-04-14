@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+77.sha-de93a7a
+ * @license Angular v12.0.0-next.8+78.sha-0bc539a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17853,7 +17853,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+77.sha-de93a7a');
+    const VERSION$1 = new Version('12.0.0-next.8+78.sha-0bc539a');
 
     /**
      * @license
@@ -18483,7 +18483,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
+        definitionMap.set('version', literal('12.0.0-next.8+78.sha-0bc539a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18514,7 +18514,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
+        definitionMap.set('version', literal('12.0.0-next.8+78.sha-0bc539a'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18721,7 +18721,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
+        definitionMap.set('version', literal('12.0.0-next.8+78.sha-0bc539a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18754,7 +18754,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
+        definitionMap.set('version', literal('12.0.0-next.8+78.sha-0bc539a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18824,7 +18824,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
+        definitionMap.set('version', literal('12.0.0-next.8+78.sha-0bc539a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18852,7 +18852,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
+        definitionMap.set('version', literal('12.0.0-next.8+78.sha-0bc539a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18901,7 +18901,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
+        definitionMap.set('version', literal('12.0.0-next.8+78.sha-0bc539a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18933,7 +18933,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+77.sha-de93a7a');
+    const VERSION$2 = new Version('12.0.0-next.8+78.sha-0bc539a');
 
     /**
      * @license
@@ -32501,63 +32501,56 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.data = data;
             this.shimPath = shimPath;
             /**
-             * Cache of completions for various levels of the template, including the root template (`null`).
-             * Memoizes `getTemplateContextCompletions`.
+             * Cache of `GlobalCompletion`s for various levels of the template, including the root template
+             * (`null`).
              */
-            this.templateContextCache = new Map();
+            this.globalCompletionCache = new Map();
             this.expressionCompletionCache = new Map();
+        }
+        /**
+         * Get global completions within the given template context - either a `TmplAstTemplate` embedded
+         * view, or `null` for the root template context.
+         */
+        getGlobalCompletions(context) {
+            if (this.globalCompletionCache.has(context)) {
+                return this.globalCompletionCache.get(context);
+            }
             // Find the component completion expression within the TCB. This looks like: `ctx. /* ... */;`
             const globalRead = findFirstMatchingNode(this.tcb, {
                 filter: ts$1.isPropertyAccessExpression,
                 withExpressionIdentifier: ExpressionIdentifier.COMPONENT_COMPLETION
             });
-            if (globalRead !== null) {
-                this.componentContext = {
+            if (globalRead === null) {
+                return null;
+            }
+            const completion = {
+                componentContext: {
                     shimPath: this.shimPath,
                     // `globalRead.name` is an empty `ts.Identifier`, so its start position immediately follows
                     // the `.` in `ctx.`. TS autocompletion APIs can then be used to access completion results
                     // for the component context.
                     positionInShimFile: globalRead.name.getStart(),
-                };
-            }
-            else {
-                this.componentContext = null;
-            }
-        }
-        /**
-         * Get global completions within the given template context and AST node.
-         *
-         * @param context the given template context - either a `TmplAstTemplate` embedded view, or `null`
-         *     for the root
-         * template context.
-         * @param node the given AST node
-         */
-        getGlobalCompletions(context, node) {
-            if (this.componentContext === null) {
-                return null;
-            }
-            const templateContext = this.getTemplateContextCompletions(context);
-            if (templateContext === null) {
-                return null;
-            }
-            let nodeContext = null;
-            if (node instanceof EmptyExpr) {
-                const nodeLocation = findFirstMatchingNode(this.tcb, {
-                    filter: ts$1.isIdentifier,
-                    withSpan: node.sourceSpan,
-                });
-                if (nodeLocation !== null) {
-                    nodeContext = {
-                        shimPath: this.shimPath,
-                        positionInShimFile: nodeLocation.getStart(),
-                    };
+                },
+                templateContext: new Map(),
+            };
+            // The bound template already has details about the references and variables in scope in the
+            // `context` template - they just need to be converted to `Completion`s.
+            for (const node of this.data.boundTarget.getEntitiesInTemplateScope(context)) {
+                if (node instanceof Reference) {
+                    completion.templateContext.set(node.name, {
+                        kind: CompletionKind.Reference,
+                        node,
+                    });
+                }
+                else {
+                    completion.templateContext.set(node.name, {
+                        kind: CompletionKind.Variable,
+                        node,
+                    });
                 }
             }
-            return {
-                componentContext: this.componentContext,
-                templateContext,
-                nodeContext,
-            };
+            this.globalCompletionCache.set(context, completion);
+            return completion;
         }
         getExpressionCompletionLocation(expr) {
             if (this.expressionCompletionCache.has(expr)) {
@@ -32601,34 +32594,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             };
             this.expressionCompletionCache.set(expr, res);
             return res;
-        }
-        /**
-         * Get global completions within the given template context - either a `TmplAstTemplate` embedded
-         * view, or `null` for the root context.
-         */
-        getTemplateContextCompletions(context) {
-            if (this.templateContextCache.has(context)) {
-                return this.templateContextCache.get(context);
-            }
-            const templateContext = new Map();
-            // The bound template already has details about the references and variables in scope in the
-            // `context` template - they just need to be converted to `Completion`s.
-            for (const node of this.data.boundTarget.getEntitiesInTemplateScope(context)) {
-                if (node instanceof Reference) {
-                    templateContext.set(node.name, {
-                        kind: CompletionKind.Reference,
-                        node,
-                    });
-                }
-                else {
-                    templateContext.set(node.name, {
-                        kind: CompletionKind.Variable,
-                        node,
-                    });
-                }
-            }
-            this.templateContextCache.set(context, templateContext);
-            return templateContext;
         }
     }
 
@@ -37256,12 +37221,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         getTypeCheckBlock(component) {
             return this.getLatestComponentState(component).tcb;
         }
-        getGlobalCompletions(context, component, node) {
+        getGlobalCompletions(context, component) {
             const engine = this.getOrCreateCompletionEngine(component);
             if (engine === null) {
                 return null;
             }
-            return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getGlobalCompletions(context, node));
+            return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getGlobalCompletions(context));
         }
         getExpressionCompletionLocation(ast, component) {
             const engine = this.getOrCreateCompletionEngine(component);
@@ -40258,17 +40223,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * Get completions for a property expression in a global context (e.g. `{{y|}}`).
          */
         getGlobalPropertyExpressionCompletion(options) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component, this.node);
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
             if (completions === null) {
                 return undefined;
             }
-            const { componentContext, templateContext, nodeContext: astContext } = completions;
+            const { componentContext, templateContext } = completions;
             const replacementSpan = makeReplacementSpanFromAst(this.node);
             // Merge TS completion results with results from the template scope.
             let entries = [];
-            const componentCompletions = this.tsLS.getCompletionsAtPosition(componentContext.shimPath, componentContext.positionInShimFile, options);
-            if (componentCompletions !== undefined) {
-                for (const tsCompletion of componentCompletions.entries) {
+            const tsLsCompletions = this.tsLS.getCompletionsAtPosition(componentContext.shimPath, componentContext.positionInShimFile, options);
+            if (tsLsCompletions !== undefined) {
+                for (const tsCompletion of tsLsCompletions.entries) {
                     // Skip completions that are shadowed by a template entity definition.
                     if (templateContext.has(tsCompletion.name)) {
                         continue;
@@ -40277,20 +40242,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         // Substitute the TS completion's `replacementSpan` (which uses offsets within the TCB)
                         // with the `replacementSpan` within the template source.
                         replacementSpan }));
-                }
-            }
-            // Merge TS completion results with results from the ast context.
-            if (astContext !== null) {
-                const nodeCompletions = this.tsLS.getCompletionsAtPosition(astContext.shimPath, astContext.positionInShimFile, options);
-                if (nodeCompletions !== undefined) {
-                    for (const tsCompletion of nodeCompletions.entries) {
-                        if (this.isValidNodeContextCompletion(tsCompletion)) {
-                            entries.push(Object.assign(Object.assign({}, tsCompletion), { 
-                                // Substitute the TS completion's `replacementSpan` (which uses offsets within the
-                                // TCB) with the `replacementSpan` within the template source.
-                                replacementSpan }));
-                        }
-                    }
                 }
             }
             for (const [name, entity] of templateContext) {
@@ -40318,7 +40269,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * `{{y|}}`).
          */
         getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component, this.node);
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
             if (completions === null) {
                 return undefined;
             }
@@ -40351,7 +40302,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * `{{y|}}`).
          */
         getGlobalPropertyExpressionCompletionSymbol(entryName) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component, this.node);
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
             if (completions === null) {
                 return undefined;
             }
@@ -40620,24 +40571,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 isMemberCompletion: false,
                 isNewIdentifierLocation: false,
             };
-        }
-        /**
-         * From the AST node of the cursor position, include completion of string literals, number
-         * literals, `true`, `false`, `null`, and `undefined`.
-         */
-        isValidNodeContextCompletion(completion) {
-            if (completion.kind === ts$1.ScriptElementKind.string) {
-                // 'string' kind includes both string literals and number literals
-                return true;
-            }
-            if (completion.kind === ts$1.ScriptElementKind.keyword) {
-                return completion.name === 'true' || completion.name === 'false' ||
-                    completion.name === 'null';
-            }
-            if (completion.kind === ts$1.ScriptElementKind.variableElement) {
-                return completion.name === 'undefined';
-            }
-            return false;
         }
     }
     function makeReplacementSpanFromParseSourceSpan(span) {
