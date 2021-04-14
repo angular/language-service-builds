@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.2.4+1.sha-ba8da74
+ * @license Angular v10.2.4+2.sha-f630f33
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17995,7 +17995,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.2.4+1.sha-ba8da74');
+    const VERSION$1 = new Version('10.2.4+2.sha-f630f33');
 
     /**
      * @license
@@ -18568,6 +18568,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     const ERROR_COMPONENT_TYPE = 'ngComponentType';
+    const MISSING_NG_MODULE_METADATA_ERROR_DATA = 'ngMissingNgModuleMetadataErrorData';
     // Design notes:
     // - don't lazily create metadata:
     //   For some metadata, we need to do async work sometimes,
@@ -19035,7 +19036,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         const importedModuleSummary = this.getNgModuleSummary(importedModuleType, alreadyCollecting);
                         alreadyCollecting.delete(importedModuleType);
                         if (!importedModuleSummary) {
-                            this._reportError(syntaxError(`Unexpected ${this._getTypeDescriptor(importedType)} '${stringifyType(importedType)}' imported by the module '${stringifyType(moduleType)}'. Please add a @NgModule annotation.`), moduleType);
+                            const err = syntaxError(`Unexpected ${this._getTypeDescriptor(importedType)} '${stringifyType(importedType)}' imported by the module '${stringifyType(moduleType)}'. Please add a @NgModule annotation.`);
+                            // If possible, record additional context for this error to enable more useful
+                            // diagnostics on the compiler side.
+                            if (importedType instanceof StaticSymbol) {
+                                err[MISSING_NG_MODULE_METADATA_ERROR_DATA] = {
+                                    fileName: importedType.filePath,
+                                    className: importedType.name,
+                                };
+                            }
+                            this._reportError(err, moduleType);
                             return;
                         }
                         importedModules.push(importedModuleSummary);
@@ -34147,7 +34157,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('10.2.4+1.sha-ba8da74');
+    const VERSION$2 = new Version$1('10.2.4+2.sha-f630f33');
 
     /**
      * @license

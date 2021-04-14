@@ -1,5 +1,5 @@
 /**
- * @license Angular v10.2.4+1.sha-ba8da74
+ * @license Angular v10.2.4+2.sha-f630f33
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19198,7 +19198,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('10.2.4+1.sha-ba8da74');
+    const VERSION$1 = new Version('10.2.4+2.sha-f630f33');
 
     /**
      * @license
@@ -19791,7 +19791,7 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('10.2.4+1.sha-ba8da74');
+    const VERSION$2 = new Version('10.2.4+2.sha-f630f33');
 
     /**
      * @license
@@ -19930,6 +19930,11 @@ define(['exports', 'os', 'typescript', 'fs', 'constants', 'stream', 'util', 'ass
          * Raised when a directive/pipe is part of the declarations of two or more NgModules.
          */
         ErrorCode[ErrorCode["NGMODULE_DECLARATION_NOT_UNIQUE"] = 6007] = "NGMODULE_DECLARATION_NOT_UNIQUE";
+        /**
+         * Not actually raised by the compiler, but reserved for documentation of a View Engine error when
+         * a View Engine build depends on an Ivy-compiled NgModule.
+         */
+        ErrorCode[ErrorCode["NGMODULE_VE_DEPENDENCY_ON_IVY_LIB"] = 6999] = "NGMODULE_VE_DEPENDENCY_ON_IVY_LIB";
         /**
          * An element name failed validation against the DOM schema.
          */
