@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.9+37.sha-04235fa
+ * @license Angular v11.2.9+41.sha-b8c4da9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20399,7 +20399,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.9+37.sha-04235fa');
+    const VERSION$1 = new Version('11.2.9+41.sha-b8c4da9');
 
     /**
      * @license
@@ -21056,7 +21056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.9+37.sha-04235fa'));
+        definitionMap.set('version', literal('11.2.9+41.sha-b8c4da9'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21277,7 +21277,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('11.2.9+37.sha-04235fa'));
+        definitionMap.set('version', literal('11.2.9+41.sha-b8c4da9'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21309,7 +21309,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('11.2.9+37.sha-04235fa');
+    const VERSION$2 = new Version('11.2.9+41.sha-b8c4da9');
 
     /**
      * @license
@@ -32938,7 +32938,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         resolve(url, fromFile) {
             let resolvedUrl = null;
             if (this.adapter.resourceNameToFileName) {
-                resolvedUrl = this.adapter.resourceNameToFileName(url, fromFile);
+                resolvedUrl = this.adapter.resourceNameToFileName(url, fromFile, (url, fromFile) => this.fallbackResolve(url, fromFile));
             }
             else {
                 resolvedUrl = this.fallbackResolve(url, fromFile);
@@ -41108,7 +41108,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      */
     function toAttributeString(attribute) {
         var _a, _b;
-        if (attribute instanceof BoundEvent) {
+        if (attribute instanceof BoundEvent || attribute instanceof BoundAttribute) {
             return `[${attribute.name}]`;
         }
         else {
@@ -41286,6 +41286,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const PRE_COMPILED_STYLE_EXTENSIONS = ['.scss', '.sass', '.less', '.styl'];
     class LanguageServiceAdapter {
         constructor(project) {
             this.project = project;
@@ -41301,6 +41302,22 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
              */
             this.lastReadResourceVersion = new Map();
             this.rootDirs = getRootDirs(this, project.getCompilationSettings());
+        }
+        resourceNameToFileName(url, fromFile, fallbackResolve) {
+            var _a;
+            // If we are trying to resolve a `.css` file, see if we can find a pre-compiled file with the
+            // same name instead. That way, we can provide go-to-definition for the pre-compiled files which
+            // would generally be the desired behavior.
+            if (url.endsWith('.css')) {
+                const styleUrl = path.resolve(fromFile, '..', url);
+                for (const ext of PRE_COMPILED_STYLE_EXTENSIONS) {
+                    const precompiledFileUrl = styleUrl.replace(/\.css$/, ext);
+                    if (this.fileExists(precompiledFileUrl)) {
+                        return precompiledFileUrl;
+                    }
+                }
+            }
+            return (_a = fallbackResolve === null || fallbackResolve === void 0 ? void 0 : fallbackResolve(url, fromFile)) !== null && _a !== void 0 ? _a : null;
         }
         isShim(sf) {
             return isShim(sf);

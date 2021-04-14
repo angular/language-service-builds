@@ -26,6 +26,7 @@ export declare class LanguageServiceAdapter implements NgCompilerAdapter {
      */
     private readonly lastReadResourceVersion;
     constructor(project: ts.server.Project);
+    resourceNameToFileName(url: string, fromFile: string, fallbackResolve?: (url: string, fromFile: string) => string | null): string | null;
     isShim(sf: ts.SourceFile): boolean;
     fileExists(fileName: string): boolean;
     readFile(fileName: string): string | undefined;
