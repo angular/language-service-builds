@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+76.sha-bd34bc9
+ * @license Angular v12.0.0-next.8+77.sha-de93a7a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17853,7 +17853,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+76.sha-bd34bc9');
+    const VERSION$1 = new Version('12.0.0-next.8+77.sha-de93a7a');
 
     /**
      * @license
@@ -18483,7 +18483,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+76.sha-bd34bc9'));
+        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18514,7 +18514,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+76.sha-bd34bc9'));
+        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18721,7 +18721,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+76.sha-bd34bc9'));
+        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18754,7 +18754,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+76.sha-bd34bc9'));
+        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18824,7 +18824,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+76.sha-bd34bc9'));
+        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18852,7 +18852,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+76.sha-bd34bc9'));
+        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18901,7 +18901,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
-        definitionMap.set('version', literal('12.0.0-next.8+76.sha-bd34bc9'));
+        definitionMap.set('version', literal('12.0.0-next.8+77.sha-de93a7a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18933,7 +18933,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+76.sha-bd34bc9');
+    const VERSION$2 = new Version('12.0.0-next.8+77.sha-de93a7a');
 
     /**
      * @license
@@ -30716,7 +30716,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         resolve(url, fromFile) {
             let resolvedUrl = null;
             if (this.adapter.resourceNameToFileName) {
-                resolvedUrl = this.adapter.resourceNameToFileName(url, fromFile);
+                resolvedUrl = this.adapter.resourceNameToFileName(url, fromFile, (url, fromFile) => this.fallbackResolve(url, fromFile));
             }
             else {
                 resolvedUrl = this.fallbackResolve(url, fromFile);
@@ -39180,6 +39180,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const PRE_COMPILED_STYLE_EXTENSIONS = ['.scss', '.sass', '.less', '.styl'];
     class LanguageServiceAdapter {
         constructor(project) {
             this.project = project;
@@ -39195,6 +39196,22 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
              */
             this.lastReadResourceVersion = new Map();
             this.rootDirs = getRootDirs(this, project.getCompilationSettings());
+        }
+        resourceNameToFileName(url, fromFile, fallbackResolve) {
+            var _a;
+            // If we are trying to resolve a `.css` file, see if we can find a pre-compiled file with the
+            // same name instead. That way, we can provide go-to-definition for the pre-compiled files which
+            // would generally be the desired behavior.
+            if (url.endsWith('.css')) {
+                const styleUrl = path.resolve(fromFile, '..', url);
+                for (const ext of PRE_COMPILED_STYLE_EXTENSIONS) {
+                    const precompiledFileUrl = styleUrl.replace(/\.css$/, ext);
+                    if (this.fileExists(precompiledFileUrl)) {
+                        return precompiledFileUrl;
+                    }
+                }
+            }
+            return (_a = fallbackResolve === null || fallbackResolve === void 0 ? void 0 : fallbackResolve(url, fromFile)) !== null && _a !== void 0 ? _a : null;
         }
         isShim(sf) {
             return isShim(sf);
