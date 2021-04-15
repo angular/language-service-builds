@@ -1,15 +1,18 @@
 {
   "name": "@angular/language-service",
-  "version": "9.0.0-next.12+69.sha-1f498ab.with-local-changes",
+  "version": "12.0.0-next.8+121.sha-72c4288",
   "description": "Angular - language services",
-  "main": "./bundles/language-service.umd.js",
-  "module": "./fesm5/language-service.js",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "angular",
   "license": "MIT",
+  "engines": {
+    "node": ">=12.14.1 <16.0.0"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/angular/angular.git"
+    "url": "https://github.com/angular/angular.git",
+    "directory": "packages/language-service"
   },
   "ng-update": {
     "packageGroup": [
@@ -24,12 +27,14 @@
       "@angular/platform-browser-dynamic",
       "@angular/forms",
       "@angular/platform-server",
-      "@angular/platform-webworker",
-      "@angular/platform-webworker-dynamic",
       "@angular/upgrade",
       "@angular/router",
       "@angular/language-service",
+      "@angular/localize",
       "@angular/service-worker"
     ]
+  },
+  "publishConfig":{
+    "registry":"https://wombat-dressing-room.appspot.com"
   }
 }
