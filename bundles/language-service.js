@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.1.0-next.4+175.sha-02ff4ed
+ * @license Angular v12.0.0-next.8+133.sha-d5b13ce
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -823,9 +823,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const createInjectionToken = makeMetadataFactory('InjectionToken', (desc) => ({ _desc: desc, ɵprov: undefined }));
     const createAttribute = makeMetadataFactory('Attribute', (attributeName) => ({ attributeName }));
     // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
-    // explicitly set. This value will be changed to `true` in v12.
-    // TODO(misko): switch the default in v12 to `true`. See: packages/core/src/metadata/di.ts
-    const emitDistinctChangesOnlyDefaultValue = false;
+    // explicitly set.
+    const emitDistinctChangesOnlyDefaultValue = true;
     const createContentChildren = makeMetadataFactory('ContentChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: false, descendants: false, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
     const createContentChild = makeMetadataFactory('ContentChild', (selector, data = {}) => (Object.assign({ selector, first: true, isViewQuery: false, descendants: true }, data)));
     const createViewChildren = makeMetadataFactory('ViewChildren', (selector, data = {}) => (Object.assign({ selector, first: false, isViewQuery: true, descendants: true, emitDistinctChangesOnly: emitDistinctChangesOnlyDefaultValue }, data)));
@@ -1008,6 +1007,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         BinaryOperator[BinaryOperator["LowerEquals"] = 13] = "LowerEquals";
         BinaryOperator[BinaryOperator["Bigger"] = 14] = "Bigger";
         BinaryOperator[BinaryOperator["BiggerEquals"] = 15] = "BiggerEquals";
+        BinaryOperator[BinaryOperator["NullishCoalesce"] = 16] = "NullishCoalesce";
     })(BinaryOperator || (BinaryOperator = {}));
     function nullSafeIsEquivalent(base, other) {
         if (base == null || other == null) {
@@ -1108,6 +1108,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         cast(type, sourceSpan) {
             return new CastExpr(this, type, sourceSpan);
+        }
+        nullishCoalesce(rhs, sourceSpan) {
+            return new BinaryOperatorExpr(BinaryOperator.NullishCoalesce, this, rhs, null, sourceSpan);
         }
         toStmt() {
             return new ExpressionStatement(this, null);
@@ -1352,7 +1355,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // - "\" would otherwise indicate that the next character is a control character.
             // - "`" and "${" are template string control sequences that would otherwise prematurely
             // indicate the end of the template literal element.
-            this.rawText = (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
+            this.rawText =
+                (_a = rawText !== null && rawText !== void 0 ? rawText : sourceSpan === null || sourceSpan === void 0 ? void 0 : sourceSpan.toString()) !== null && _a !== void 0 ? _a : escapeForTemplateLiteral(escapeSlashes(text));
         }
     }
     class MessagePiece {
@@ -1901,6 +1905,507 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const CONSTANT_PREFIX = '_c';
+    /**
+     * `ConstantPool` tries to reuse literal factories when two or more literals are identical.
+     * We determine whether literals are identical by creating a key out of their AST using the
+     * `KeyVisitor`. This constant is used to replace dynamic expressions which can't be safely
+     * converted into a key. E.g. given an expression `{foo: bar()}`, since we don't know what
+     * the result of `bar` will be, we create a key that looks like `{foo: <unknown>}`. Note
+     * that we use a variable, rather than something like `null` in order to avoid collisions.
+     */
+    const UNKNOWN_VALUE_KEY = variable('<unknown>');
+    /**
+     * Context to use when producing a key.
+     *
+     * This ensures we see the constant not the reference variable when producing
+     * a key.
+     */
+    const KEY_CONTEXT = {};
+    /**
+     * Generally all primitive values are excluded from the `ConstantPool`, but there is an exclusion
+     * for strings that reach a certain length threshold. This constant defines the length threshold for
+     * strings.
+     */
+    const POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS = 50;
+    /**
+     * A node that is a place-holder that allows the node to be replaced when the actual
+     * node is known.
+     *
+     * This allows the constant pool to change an expression from a direct reference to
+     * a constant to a shared constant. It returns a fix-up node that is later allowed to
+     * change the referenced expression.
+     */
+    class FixupExpression extends Expression {
+        constructor(resolved) {
+            super(resolved.type);
+            this.resolved = resolved;
+            this.original = resolved;
+        }
+        visitExpression(visitor, context) {
+            if (context === KEY_CONTEXT) {
+                // When producing a key we want to traverse the constant not the
+                // variable used to refer to it.
+                return this.original.visitExpression(visitor, context);
+            }
+            else {
+                return this.resolved.visitExpression(visitor, context);
+            }
+        }
+        isEquivalent(e) {
+            return e instanceof FixupExpression && this.resolved.isEquivalent(e.resolved);
+        }
+        isConstant() {
+            return true;
+        }
+        fixup(expression) {
+            this.resolved = expression;
+            this.shared = true;
+        }
+    }
+    /**
+     * A constant pool allows a code emitter to share constant in an output context.
+     *
+     * The constant pool also supports sharing access to ivy definitions references.
+     */
+    class ConstantPool {
+        constructor(isClosureCompilerEnabled = false) {
+            this.isClosureCompilerEnabled = isClosureCompilerEnabled;
+            this.statements = [];
+            this.literals = new Map();
+            this.literalFactories = new Map();
+            this.injectorDefinitions = new Map();
+            this.directiveDefinitions = new Map();
+            this.componentDefinitions = new Map();
+            this.pipeDefinitions = new Map();
+            this.nextNameIndex = 0;
+        }
+        getConstLiteral(literal, forceShared) {
+            if ((literal instanceof LiteralExpr && !isLongStringLiteral(literal)) ||
+                literal instanceof FixupExpression) {
+                // Do no put simple literals into the constant pool or try to produce a constant for a
+                // reference to a constant.
+                return literal;
+            }
+            const key = this.keyOf(literal);
+            let fixup = this.literals.get(key);
+            let newValue = false;
+            if (!fixup) {
+                fixup = new FixupExpression(literal);
+                this.literals.set(key, fixup);
+                newValue = true;
+            }
+            if ((!newValue && !fixup.shared) || (newValue && forceShared)) {
+                // Replace the expression with a variable
+                const name = this.freshName();
+                let definition;
+                let usage;
+                if (this.isClosureCompilerEnabled && isLongStringLiteral(literal)) {
+                    // For string literals, Closure will **always** inline the string at
+                    // **all** usages, duplicating it each time. For large strings, this
+                    // unnecessarily bloats bundle size. To work around this restriction, we
+                    // wrap the string in a function, and call that function for each usage.
+                    // This tricks Closure into using inline logic for functions instead of
+                    // string literals. Function calls are only inlined if the body is small
+                    // enough to be worth it. By doing this, very large strings will be
+                    // shared across multiple usages, rather than duplicating the string at
+                    // each usage site.
+                    //
+                    // const myStr = function() { return "very very very long string"; };
+                    // const usage1 = myStr();
+                    // const usage2 = myStr();
+                    definition = variable(name).set(new FunctionExpr([], // Params.
+                    [
+                        // Statements.
+                        new ReturnStatement(literal),
+                    ]));
+                    usage = variable(name).callFn([]);
+                }
+                else {
+                    // Just declare and use the variable directly, without a function call
+                    // indirection. This saves a few bytes and avoids an unncessary call.
+                    definition = variable(name).set(literal);
+                    usage = variable(name);
+                }
+                this.statements.push(definition.toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
+                fixup.fixup(usage);
+            }
+            return fixup;
+        }
+        getDefinition(type, kind, ctx, forceShared = false) {
+            const definitions = this.definitionsOf(kind);
+            let fixup = definitions.get(type);
+            let newValue = false;
+            if (!fixup) {
+                const property = this.propertyNameOf(kind);
+                fixup = new FixupExpression(ctx.importExpr(type).prop(property));
+                definitions.set(type, fixup);
+                newValue = true;
+            }
+            if ((!newValue && !fixup.shared) || (newValue && forceShared)) {
+                const name = this.freshName();
+                this.statements.push(variable(name).set(fixup.resolved).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
+                fixup.fixup(variable(name));
+            }
+            return fixup;
+        }
+        getLiteralFactory(literal) {
+            // Create a pure function that builds an array of a mix of constant and variable expressions
+            if (literal instanceof LiteralArrayExpr) {
+                const argumentsForKey = literal.entries.map(e => e.isConstant() ? e : UNKNOWN_VALUE_KEY);
+                const key = this.keyOf(literalArr(argumentsForKey));
+                return this._getLiteralFactory(key, literal.entries, entries => literalArr(entries));
+            }
+            else {
+                const expressionForKey = literalMap(literal.entries.map(e => ({
+                    key: e.key,
+                    value: e.value.isConstant() ? e.value : UNKNOWN_VALUE_KEY,
+                    quoted: e.quoted
+                })));
+                const key = this.keyOf(expressionForKey);
+                return this._getLiteralFactory(key, literal.entries.map(e => e.value), entries => literalMap(entries.map((value, index) => ({
+                    key: literal.entries[index].key,
+                    value,
+                    quoted: literal.entries[index].quoted
+                }))));
+            }
+        }
+        _getLiteralFactory(key, values, resultMap) {
+            let literalFactory = this.literalFactories.get(key);
+            const literalFactoryArguments = values.filter((e => !e.isConstant()));
+            if (!literalFactory) {
+                const resultExpressions = values.map((e, index) => e.isConstant() ? this.getConstLiteral(e, true) : variable(`a${index}`));
+                const parameters = resultExpressions.filter(isVariable).map(e => new FnParam(e.name, DYNAMIC_TYPE));
+                const pureFunctionDeclaration = fn(parameters, [new ReturnStatement(resultMap(resultExpressions))], INFERRED_TYPE);
+                const name = this.freshName();
+                this.statements.push(variable(name).set(pureFunctionDeclaration).toDeclStmt(INFERRED_TYPE, [
+                    StmtModifier.Final
+                ]));
+                literalFactory = variable(name);
+                this.literalFactories.set(key, literalFactory);
+            }
+            return { literalFactory, literalFactoryArguments };
+        }
+        /**
+         * Produce a unique name.
+         *
+         * The name might be unique among different prefixes if any of the prefixes end in
+         * a digit so the prefix should be a constant string (not based on user input) and
+         * must not end in a digit.
+         */
+        uniqueName(prefix) {
+            return `${prefix}${this.nextNameIndex++}`;
+        }
+        definitionsOf(kind) {
+            switch (kind) {
+                case 2 /* Component */:
+                    return this.componentDefinitions;
+                case 1 /* Directive */:
+                    return this.directiveDefinitions;
+                case 0 /* Injector */:
+                    return this.injectorDefinitions;
+                case 3 /* Pipe */:
+                    return this.pipeDefinitions;
+            }
+        }
+        propertyNameOf(kind) {
+            switch (kind) {
+                case 2 /* Component */:
+                    return 'ɵcmp';
+                case 1 /* Directive */:
+                    return 'ɵdir';
+                case 0 /* Injector */:
+                    return 'ɵinj';
+                case 3 /* Pipe */:
+                    return 'ɵpipe';
+            }
+        }
+        freshName() {
+            return this.uniqueName(CONSTANT_PREFIX);
+        }
+        keyOf(expression) {
+            return expression.visitExpression(new KeyVisitor(), KEY_CONTEXT);
+        }
+    }
+    /**
+     * Visitor used to determine if 2 expressions are equivalent and can be shared in the
+     * `ConstantPool`.
+     *
+     * When the id (string) generated by the visitor is equal, expressions are considered equivalent.
+     */
+    class KeyVisitor {
+        constructor() {
+            this.visitWrappedNodeExpr = invalid;
+            this.visitWriteVarExpr = invalid;
+            this.visitWriteKeyExpr = invalid;
+            this.visitWritePropExpr = invalid;
+            this.visitInvokeMethodExpr = invalid;
+            this.visitInvokeFunctionExpr = invalid;
+            this.visitTaggedTemplateExpr = invalid;
+            this.visitInstantiateExpr = invalid;
+            this.visitConditionalExpr = invalid;
+            this.visitNotExpr = invalid;
+            this.visitAssertNotNullExpr = invalid;
+            this.visitCastExpr = invalid;
+            this.visitFunctionExpr = invalid;
+            this.visitUnaryOperatorExpr = invalid;
+            this.visitBinaryOperatorExpr = invalid;
+            this.visitReadPropExpr = invalid;
+            this.visitReadKeyExpr = invalid;
+            this.visitCommaExpr = invalid;
+            this.visitLocalizedString = invalid;
+        }
+        visitLiteralExpr(ast) {
+            return `${typeof ast.value === 'string' ? '"' + ast.value + '"' : ast.value}`;
+        }
+        visitLiteralArrayExpr(ast, context) {
+            return `[${ast.entries.map(entry => entry.visitExpression(this, context)).join(',')}]`;
+        }
+        visitLiteralMapExpr(ast, context) {
+            const mapKey = (entry) => {
+                const quote = entry.quoted ? '"' : '';
+                return `${quote}${entry.key}${quote}`;
+            };
+            const mapEntry = (entry) => `${mapKey(entry)}:${entry.value.visitExpression(this, context)}`;
+            return `{${ast.entries.map(mapEntry).join(',')}`;
+        }
+        visitExternalExpr(ast) {
+            return ast.value.moduleName ? `EX:${ast.value.moduleName}:${ast.value.name}` :
+                `EX:${ast.value.runtime.name}`;
+        }
+        visitReadVarExpr(node) {
+            return `VAR:${node.name}`;
+        }
+        visitTypeofExpr(node, context) {
+            return `TYPEOF:${node.expr.visitExpression(this, context)}`;
+        }
+    }
+    function invalid(arg) {
+        throw new Error(`Invalid state: Visitor ${this.constructor.name} doesn't handle ${arg.constructor.name}`);
+    }
+    function isVariable(e) {
+        return e instanceof ReadVarExpr;
+    }
+    function isLongStringLiteral(expr) {
+        return expr instanceof LiteralExpr && typeof expr.value === 'string' &&
+            expr.value.length >= POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const CORE = '@angular/core';
+    class Identifiers {
+    }
+    /* Methods */
+    Identifiers.NEW_METHOD = 'factory';
+    Identifiers.TRANSFORM_METHOD = 'transform';
+    Identifiers.PATCH_DEPS = 'patchedDeps';
+    Identifiers.core = { name: null, moduleName: CORE };
+    /* Instructions */
+    Identifiers.namespaceHTML = { name: 'ɵɵnamespaceHTML', moduleName: CORE };
+    Identifiers.namespaceMathML = { name: 'ɵɵnamespaceMathML', moduleName: CORE };
+    Identifiers.namespaceSVG = { name: 'ɵɵnamespaceSVG', moduleName: CORE };
+    Identifiers.element = { name: 'ɵɵelement', moduleName: CORE };
+    Identifiers.elementStart = { name: 'ɵɵelementStart', moduleName: CORE };
+    Identifiers.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE };
+    Identifiers.advance = { name: 'ɵɵadvance', moduleName: CORE };
+    Identifiers.syntheticHostProperty = { name: 'ɵɵsyntheticHostProperty', moduleName: CORE };
+    Identifiers.syntheticHostListener = { name: 'ɵɵsyntheticHostListener', moduleName: CORE };
+    Identifiers.attribute = { name: 'ɵɵattribute', moduleName: CORE };
+    Identifiers.attributeInterpolate1 = { name: 'ɵɵattributeInterpolate1', moduleName: CORE };
+    Identifiers.attributeInterpolate2 = { name: 'ɵɵattributeInterpolate2', moduleName: CORE };
+    Identifiers.attributeInterpolate3 = { name: 'ɵɵattributeInterpolate3', moduleName: CORE };
+    Identifiers.attributeInterpolate4 = { name: 'ɵɵattributeInterpolate4', moduleName: CORE };
+    Identifiers.attributeInterpolate5 = { name: 'ɵɵattributeInterpolate5', moduleName: CORE };
+    Identifiers.attributeInterpolate6 = { name: 'ɵɵattributeInterpolate6', moduleName: CORE };
+    Identifiers.attributeInterpolate7 = { name: 'ɵɵattributeInterpolate7', moduleName: CORE };
+    Identifiers.attributeInterpolate8 = { name: 'ɵɵattributeInterpolate8', moduleName: CORE };
+    Identifiers.attributeInterpolateV = { name: 'ɵɵattributeInterpolateV', moduleName: CORE };
+    Identifiers.classProp = { name: 'ɵɵclassProp', moduleName: CORE };
+    Identifiers.elementContainerStart = { name: 'ɵɵelementContainerStart', moduleName: CORE };
+    Identifiers.elementContainerEnd = { name: 'ɵɵelementContainerEnd', moduleName: CORE };
+    Identifiers.elementContainer = { name: 'ɵɵelementContainer', moduleName: CORE };
+    Identifiers.styleMap = { name: 'ɵɵstyleMap', moduleName: CORE };
+    Identifiers.styleMapInterpolate1 = { name: 'ɵɵstyleMapInterpolate1', moduleName: CORE };
+    Identifiers.styleMapInterpolate2 = { name: 'ɵɵstyleMapInterpolate2', moduleName: CORE };
+    Identifiers.styleMapInterpolate3 = { name: 'ɵɵstyleMapInterpolate3', moduleName: CORE };
+    Identifiers.styleMapInterpolate4 = { name: 'ɵɵstyleMapInterpolate4', moduleName: CORE };
+    Identifiers.styleMapInterpolate5 = { name: 'ɵɵstyleMapInterpolate5', moduleName: CORE };
+    Identifiers.styleMapInterpolate6 = { name: 'ɵɵstyleMapInterpolate6', moduleName: CORE };
+    Identifiers.styleMapInterpolate7 = { name: 'ɵɵstyleMapInterpolate7', moduleName: CORE };
+    Identifiers.styleMapInterpolate8 = { name: 'ɵɵstyleMapInterpolate8', moduleName: CORE };
+    Identifiers.styleMapInterpolateV = { name: 'ɵɵstyleMapInterpolateV', moduleName: CORE };
+    Identifiers.classMap = { name: 'ɵɵclassMap', moduleName: CORE };
+    Identifiers.classMapInterpolate1 = { name: 'ɵɵclassMapInterpolate1', moduleName: CORE };
+    Identifiers.classMapInterpolate2 = { name: 'ɵɵclassMapInterpolate2', moduleName: CORE };
+    Identifiers.classMapInterpolate3 = { name: 'ɵɵclassMapInterpolate3', moduleName: CORE };
+    Identifiers.classMapInterpolate4 = { name: 'ɵɵclassMapInterpolate4', moduleName: CORE };
+    Identifiers.classMapInterpolate5 = { name: 'ɵɵclassMapInterpolate5', moduleName: CORE };
+    Identifiers.classMapInterpolate6 = { name: 'ɵɵclassMapInterpolate6', moduleName: CORE };
+    Identifiers.classMapInterpolate7 = { name: 'ɵɵclassMapInterpolate7', moduleName: CORE };
+    Identifiers.classMapInterpolate8 = { name: 'ɵɵclassMapInterpolate8', moduleName: CORE };
+    Identifiers.classMapInterpolateV = { name: 'ɵɵclassMapInterpolateV', moduleName: CORE };
+    Identifiers.styleProp = { name: 'ɵɵstyleProp', moduleName: CORE };
+    Identifiers.stylePropInterpolate1 = { name: 'ɵɵstylePropInterpolate1', moduleName: CORE };
+    Identifiers.stylePropInterpolate2 = { name: 'ɵɵstylePropInterpolate2', moduleName: CORE };
+    Identifiers.stylePropInterpolate3 = { name: 'ɵɵstylePropInterpolate3', moduleName: CORE };
+    Identifiers.stylePropInterpolate4 = { name: 'ɵɵstylePropInterpolate4', moduleName: CORE };
+    Identifiers.stylePropInterpolate5 = { name: 'ɵɵstylePropInterpolate5', moduleName: CORE };
+    Identifiers.stylePropInterpolate6 = { name: 'ɵɵstylePropInterpolate6', moduleName: CORE };
+    Identifiers.stylePropInterpolate7 = { name: 'ɵɵstylePropInterpolate7', moduleName: CORE };
+    Identifiers.stylePropInterpolate8 = { name: 'ɵɵstylePropInterpolate8', moduleName: CORE };
+    Identifiers.stylePropInterpolateV = { name: 'ɵɵstylePropInterpolateV', moduleName: CORE };
+    Identifiers.nextContext = { name: 'ɵɵnextContext', moduleName: CORE };
+    Identifiers.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE };
+    Identifiers.text = { name: 'ɵɵtext', moduleName: CORE };
+    Identifiers.enableBindings = { name: 'ɵɵenableBindings', moduleName: CORE };
+    Identifiers.disableBindings = { name: 'ɵɵdisableBindings', moduleName: CORE };
+    Identifiers.getCurrentView = { name: 'ɵɵgetCurrentView', moduleName: CORE };
+    Identifiers.textInterpolate = { name: 'ɵɵtextInterpolate', moduleName: CORE };
+    Identifiers.textInterpolate1 = { name: 'ɵɵtextInterpolate1', moduleName: CORE };
+    Identifiers.textInterpolate2 = { name: 'ɵɵtextInterpolate2', moduleName: CORE };
+    Identifiers.textInterpolate3 = { name: 'ɵɵtextInterpolate3', moduleName: CORE };
+    Identifiers.textInterpolate4 = { name: 'ɵɵtextInterpolate4', moduleName: CORE };
+    Identifiers.textInterpolate5 = { name: 'ɵɵtextInterpolate5', moduleName: CORE };
+    Identifiers.textInterpolate6 = { name: 'ɵɵtextInterpolate6', moduleName: CORE };
+    Identifiers.textInterpolate7 = { name: 'ɵɵtextInterpolate7', moduleName: CORE };
+    Identifiers.textInterpolate8 = { name: 'ɵɵtextInterpolate8', moduleName: CORE };
+    Identifiers.textInterpolateV = { name: 'ɵɵtextInterpolateV', moduleName: CORE };
+    Identifiers.restoreView = { name: 'ɵɵrestoreView', moduleName: CORE };
+    Identifiers.pureFunction0 = { name: 'ɵɵpureFunction0', moduleName: CORE };
+    Identifiers.pureFunction1 = { name: 'ɵɵpureFunction1', moduleName: CORE };
+    Identifiers.pureFunction2 = { name: 'ɵɵpureFunction2', moduleName: CORE };
+    Identifiers.pureFunction3 = { name: 'ɵɵpureFunction3', moduleName: CORE };
+    Identifiers.pureFunction4 = { name: 'ɵɵpureFunction4', moduleName: CORE };
+    Identifiers.pureFunction5 = { name: 'ɵɵpureFunction5', moduleName: CORE };
+    Identifiers.pureFunction6 = { name: 'ɵɵpureFunction6', moduleName: CORE };
+    Identifiers.pureFunction7 = { name: 'ɵɵpureFunction7', moduleName: CORE };
+    Identifiers.pureFunction8 = { name: 'ɵɵpureFunction8', moduleName: CORE };
+    Identifiers.pureFunctionV = { name: 'ɵɵpureFunctionV', moduleName: CORE };
+    Identifiers.pipeBind1 = { name: 'ɵɵpipeBind1', moduleName: CORE };
+    Identifiers.pipeBind2 = { name: 'ɵɵpipeBind2', moduleName: CORE };
+    Identifiers.pipeBind3 = { name: 'ɵɵpipeBind3', moduleName: CORE };
+    Identifiers.pipeBind4 = { name: 'ɵɵpipeBind4', moduleName: CORE };
+    Identifiers.pipeBindV = { name: 'ɵɵpipeBindV', moduleName: CORE };
+    Identifiers.hostProperty = { name: 'ɵɵhostProperty', moduleName: CORE };
+    Identifiers.property = { name: 'ɵɵproperty', moduleName: CORE };
+    Identifiers.propertyInterpolate = { name: 'ɵɵpropertyInterpolate', moduleName: CORE };
+    Identifiers.propertyInterpolate1 = { name: 'ɵɵpropertyInterpolate1', moduleName: CORE };
+    Identifiers.propertyInterpolate2 = { name: 'ɵɵpropertyInterpolate2', moduleName: CORE };
+    Identifiers.propertyInterpolate3 = { name: 'ɵɵpropertyInterpolate3', moduleName: CORE };
+    Identifiers.propertyInterpolate4 = { name: 'ɵɵpropertyInterpolate4', moduleName: CORE };
+    Identifiers.propertyInterpolate5 = { name: 'ɵɵpropertyInterpolate5', moduleName: CORE };
+    Identifiers.propertyInterpolate6 = { name: 'ɵɵpropertyInterpolate6', moduleName: CORE };
+    Identifiers.propertyInterpolate7 = { name: 'ɵɵpropertyInterpolate7', moduleName: CORE };
+    Identifiers.propertyInterpolate8 = { name: 'ɵɵpropertyInterpolate8', moduleName: CORE };
+    Identifiers.propertyInterpolateV = { name: 'ɵɵpropertyInterpolateV', moduleName: CORE };
+    Identifiers.i18n = { name: 'ɵɵi18n', moduleName: CORE };
+    Identifiers.i18nAttributes = { name: 'ɵɵi18nAttributes', moduleName: CORE };
+    Identifiers.i18nExp = { name: 'ɵɵi18nExp', moduleName: CORE };
+    Identifiers.i18nStart = { name: 'ɵɵi18nStart', moduleName: CORE };
+    Identifiers.i18nEnd = { name: 'ɵɵi18nEnd', moduleName: CORE };
+    Identifiers.i18nApply = { name: 'ɵɵi18nApply', moduleName: CORE };
+    Identifiers.i18nPostprocess = { name: 'ɵɵi18nPostprocess', moduleName: CORE };
+    Identifiers.pipe = { name: 'ɵɵpipe', moduleName: CORE };
+    Identifiers.projection = { name: 'ɵɵprojection', moduleName: CORE };
+    Identifiers.projectionDef = { name: 'ɵɵprojectionDef', moduleName: CORE };
+    Identifiers.reference = { name: 'ɵɵreference', moduleName: CORE };
+    Identifiers.inject = { name: 'ɵɵinject', moduleName: CORE };
+    Identifiers.injectAttribute = { name: 'ɵɵinjectAttribute', moduleName: CORE };
+    Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE };
+    Identifiers.invalidFactory = { name: 'ɵɵinvalidFactory', moduleName: CORE };
+    Identifiers.invalidFactoryDep = { name: 'ɵɵinvalidFactoryDep', moduleName: CORE };
+    Identifiers.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE };
+    Identifiers.forwardRef = { name: 'forwardRef', moduleName: CORE };
+    Identifiers.resolveForwardRef = { name: 'resolveForwardRef', moduleName: CORE };
+    Identifiers.ɵɵdefineInjectable = { name: 'ɵɵdefineInjectable', moduleName: CORE };
+    Identifiers.declareInjectable = { name: 'ɵɵngDeclareInjectable', moduleName: CORE };
+    Identifiers.InjectableDeclaration = { name: 'ɵɵInjectableDeclaration', moduleName: CORE };
+    Identifiers.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE };
+    Identifiers.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE };
+    Identifiers.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE };
+    Identifiers.defineComponent = { name: 'ɵɵdefineComponent', moduleName: CORE };
+    Identifiers.declareComponent = { name: 'ɵɵngDeclareComponent', moduleName: CORE };
+    Identifiers.setComponentScope = { name: 'ɵɵsetComponentScope', moduleName: CORE };
+    Identifiers.ChangeDetectionStrategy = {
+        name: 'ChangeDetectionStrategy',
+        moduleName: CORE,
+    };
+    Identifiers.ViewEncapsulation = {
+        name: 'ViewEncapsulation',
+        moduleName: CORE,
+    };
+    Identifiers.ComponentDeclaration = {
+        name: 'ɵɵComponentDeclaration',
+        moduleName: CORE,
+    };
+    Identifiers.FactoryDeclaration = {
+        name: 'ɵɵFactoryDeclaration',
+        moduleName: CORE,
+    };
+    Identifiers.declareFactory = { name: 'ɵɵngDeclareFactory', moduleName: CORE };
+    Identifiers.FactoryTarget = { name: 'ɵɵFactoryTarget', moduleName: CORE };
+    Identifiers.defineDirective = { name: 'ɵɵdefineDirective', moduleName: CORE };
+    Identifiers.declareDirective = { name: 'ɵɵngDeclareDirective', moduleName: CORE };
+    Identifiers.DirectiveDeclaration = {
+        name: 'ɵɵDirectiveDeclaration',
+        moduleName: CORE,
+    };
+    Identifiers.InjectorDef = { name: 'ɵɵInjectorDef', moduleName: CORE };
+    Identifiers.InjectorDeclaration = { name: 'ɵɵInjectorDeclaration', moduleName: CORE };
+    Identifiers.defineInjector = { name: 'ɵɵdefineInjector', moduleName: CORE };
+    Identifiers.declareInjector = { name: 'ɵɵngDeclareInjector', moduleName: CORE };
+    Identifiers.NgModuleDeclaration = {
+        name: 'ɵɵNgModuleDeclaration',
+        moduleName: CORE,
+    };
+    Identifiers.ModuleWithProviders = {
+        name: 'ModuleWithProviders',
+        moduleName: CORE,
+    };
+    Identifiers.defineNgModule = { name: 'ɵɵdefineNgModule', moduleName: CORE };
+    Identifiers.declareNgModule = { name: 'ɵɵngDeclareNgModule', moduleName: CORE };
+    Identifiers.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE };
+    Identifiers.PipeDeclaration = { name: 'ɵɵPipeDeclaration', moduleName: CORE };
+    Identifiers.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE };
+    Identifiers.declarePipe = { name: 'ɵɵngDeclarePipe', moduleName: CORE };
+    Identifiers.declareClassMetadata = { name: 'ɵɵngDeclareClassMetadata', moduleName: CORE };
+    Identifiers.setClassMetadata = { name: 'ɵsetClassMetadata', moduleName: CORE };
+    Identifiers.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE };
+    Identifiers.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE };
+    Identifiers.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE };
+    Identifiers.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE };
+    Identifiers.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE };
+    Identifiers.InheritDefinitionFeature = { name: 'ɵɵInheritDefinitionFeature', moduleName: CORE };
+    Identifiers.CopyDefinitionFeature = { name: 'ɵɵCopyDefinitionFeature', moduleName: CORE };
+    Identifiers.ProvidersFeature = { name: 'ɵɵProvidersFeature', moduleName: CORE };
+    Identifiers.listener = { name: 'ɵɵlistener', moduleName: CORE };
+    Identifiers.getInheritedFactory = {
+        name: 'ɵɵgetInheritedFactory',
+        moduleName: CORE,
+    };
+    // sanitization-related functions
+    Identifiers.sanitizeHtml = { name: 'ɵɵsanitizeHtml', moduleName: CORE };
+    Identifiers.sanitizeStyle = { name: 'ɵɵsanitizeStyle', moduleName: CORE };
+    Identifiers.sanitizeResourceUrl = { name: 'ɵɵsanitizeResourceUrl', moduleName: CORE };
+    Identifiers.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE };
+    Identifiers.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE };
+    Identifiers.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE };
+    Identifiers.trustConstantHtml = { name: 'ɵɵtrustConstantHtml', moduleName: CORE };
+    Identifiers.trustConstantResourceUrl = { name: 'ɵɵtrustConstantResourceUrl', moduleName: CORE };
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const DASH_CASE_REGEXP = /-+([a-z0-9])/g;
     function dashCaseToCamelCase(input) {
         return input.replace(DASH_CASE_REGEXP, (...m) => m[1].toUpperCase());
@@ -2106,1810 +2611,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const CONSTANT_PREFIX = '_c';
     /**
-     * `ConstantPool` tries to reuse literal factories when two or more literals are identical.
-     * We determine whether literals are identical by creating a key out of their AST using the
-     * `KeyVisitor`. This constant is used to replace dynamic expressions which can't be safely
-     * converted into a key. E.g. given an expression `{foo: bar()}`, since we don't know what
-     * the result of `bar` will be, we create a key that looks like `{foo: <unknown>}`. Note
-     * that we use a variable, rather than something like `null` in order to avoid collisions.
+     * This is an R3 `Node`-like wrapper for a raw `html.Comment` node. We do not currently
+     * require the implementation of a visitor for Comments as they are only collected at
+     * the top-level of the R3 AST, and only if `Render3ParseOptions['collectCommentNodes']`
+     * is true.
      */
-    const UNKNOWN_VALUE_KEY = variable('<unknown>');
-    /**
-     * Context to use when producing a key.
-     *
-     * This ensures we see the constant not the reference variable when producing
-     * a key.
-     */
-    const KEY_CONTEXT = {};
-    /**
-     * Generally all primitive values are excluded from the `ConstantPool`, but there is an exclusion
-     * for strings that reach a certain length threshold. This constant defines the length threshold for
-     * strings.
-     */
-    const POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS = 50;
-    /**
-     * A node that is a place-holder that allows the node to be replaced when the actual
-     * node is known.
-     *
-     * This allows the constant pool to change an expression from a direct reference to
-     * a constant to a shared constant. It returns a fix-up node that is later allowed to
-     * change the referenced expression.
-     */
-    class FixupExpression extends Expression {
-        constructor(resolved) {
-            super(resolved.type);
-            this.resolved = resolved;
-            this.original = resolved;
+    class Comment {
+        constructor(value, sourceSpan) {
+            this.value = value;
+            this.sourceSpan = sourceSpan;
         }
-        visitExpression(visitor, context) {
-            if (context === KEY_CONTEXT) {
-                // When producing a key we want to traverse the constant not the
-                // variable used to refer to it.
-                return this.original.visitExpression(visitor, context);
-            }
-            else {
-                return this.resolved.visitExpression(visitor, context);
-            }
-        }
-        isEquivalent(e) {
-            return e instanceof FixupExpression && this.resolved.isEquivalent(e.resolved);
-        }
-        isConstant() {
-            return true;
-        }
-        fixup(expression) {
-            this.resolved = expression;
-            this.shared = true;
+        visit(_visitor) {
+            throw new Error('visit() not implemented for Comment');
         }
     }
-    /**
-     * A constant pool allows a code emitter to share constant in an output context.
-     *
-     * The constant pool also supports sharing access to ivy definitions references.
-     */
-    class ConstantPool {
-        constructor(isClosureCompilerEnabled = false) {
-            this.isClosureCompilerEnabled = isClosureCompilerEnabled;
-            this.statements = [];
-            this.literals = new Map();
-            this.literalFactories = new Map();
-            this.injectorDefinitions = new Map();
-            this.directiveDefinitions = new Map();
-            this.componentDefinitions = new Map();
-            this.pipeDefinitions = new Map();
-            this.nextNameIndex = 0;
-        }
-        getConstLiteral(literal, forceShared) {
-            if ((literal instanceof LiteralExpr && !isLongStringLiteral(literal)) ||
-                literal instanceof FixupExpression) {
-                // Do no put simple literals into the constant pool or try to produce a constant for a
-                // reference to a constant.
-                return literal;
-            }
-            const key = this.keyOf(literal);
-            let fixup = this.literals.get(key);
-            let newValue = false;
-            if (!fixup) {
-                fixup = new FixupExpression(literal);
-                this.literals.set(key, fixup);
-                newValue = true;
-            }
-            if ((!newValue && !fixup.shared) || (newValue && forceShared)) {
-                // Replace the expression with a variable
-                const name = this.freshName();
-                let definition;
-                let usage;
-                if (this.isClosureCompilerEnabled && isLongStringLiteral(literal)) {
-                    // For string literals, Closure will **always** inline the string at
-                    // **all** usages, duplicating it each time. For large strings, this
-                    // unnecessarily bloats bundle size. To work around this restriction, we
-                    // wrap the string in a function, and call that function for each usage.
-                    // This tricks Closure into using inline logic for functions instead of
-                    // string literals. Function calls are only inlined if the body is small
-                    // enough to be worth it. By doing this, very large strings will be
-                    // shared across multiple usages, rather than duplicating the string at
-                    // each usage site.
-                    //
-                    // const myStr = function() { return "very very very long string"; };
-                    // const usage1 = myStr();
-                    // const usage2 = myStr();
-                    definition = variable(name).set(new FunctionExpr([], // Params.
-                    [
-                        // Statements.
-                        new ReturnStatement(literal),
-                    ]));
-                    usage = variable(name).callFn([]);
-                }
-                else {
-                    // Just declare and use the variable directly, without a function call
-                    // indirection. This saves a few bytes and avoids an unncessary call.
-                    definition = variable(name).set(literal);
-                    usage = variable(name);
-                }
-                this.statements.push(definition.toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
-                fixup.fixup(usage);
-            }
-            return fixup;
-        }
-        getDefinition(type, kind, ctx, forceShared = false) {
-            const definitions = this.definitionsOf(kind);
-            let fixup = definitions.get(type);
-            let newValue = false;
-            if (!fixup) {
-                const property = this.propertyNameOf(kind);
-                fixup = new FixupExpression(ctx.importExpr(type).prop(property));
-                definitions.set(type, fixup);
-                newValue = true;
-            }
-            if ((!newValue && !fixup.shared) || (newValue && forceShared)) {
-                const name = this.freshName();
-                this.statements.push(variable(name).set(fixup.resolved).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
-                fixup.fixup(variable(name));
-            }
-            return fixup;
-        }
-        getLiteralFactory(literal) {
-            // Create a pure function that builds an array of a mix of constant and variable expressions
-            if (literal instanceof LiteralArrayExpr) {
-                const argumentsForKey = literal.entries.map(e => e.isConstant() ? e : UNKNOWN_VALUE_KEY);
-                const key = this.keyOf(literalArr(argumentsForKey));
-                return this._getLiteralFactory(key, literal.entries, entries => literalArr(entries));
-            }
-            else {
-                const expressionForKey = literalMap(literal.entries.map(e => ({
-                    key: e.key,
-                    value: e.value.isConstant() ? e.value : UNKNOWN_VALUE_KEY,
-                    quoted: e.quoted
-                })));
-                const key = this.keyOf(expressionForKey);
-                return this._getLiteralFactory(key, literal.entries.map(e => e.value), entries => literalMap(entries.map((value, index) => ({
-                    key: literal.entries[index].key,
-                    value,
-                    quoted: literal.entries[index].quoted
-                }))));
-            }
-        }
-        _getLiteralFactory(key, values, resultMap) {
-            let literalFactory = this.literalFactories.get(key);
-            const literalFactoryArguments = values.filter((e => !e.isConstant()));
-            if (!literalFactory) {
-                const resultExpressions = values.map((e, index) => e.isConstant() ? this.getConstLiteral(e, true) : variable(`a${index}`));
-                const parameters = resultExpressions.filter(isVariable).map(e => new FnParam(e.name, DYNAMIC_TYPE));
-                const pureFunctionDeclaration = fn(parameters, [new ReturnStatement(resultMap(resultExpressions))], INFERRED_TYPE);
-                const name = this.freshName();
-                this.statements.push(variable(name).set(pureFunctionDeclaration).toDeclStmt(INFERRED_TYPE, [
-                    StmtModifier.Final
-                ]));
-                literalFactory = variable(name);
-                this.literalFactories.set(key, literalFactory);
-            }
-            return { literalFactory, literalFactoryArguments };
-        }
-        /**
-         * Produce a unique name.
-         *
-         * The name might be unique among different prefixes if any of the prefixes end in
-         * a digit so the prefix should be a constant string (not based on user input) and
-         * must not end in a digit.
-         */
-        uniqueName(prefix) {
-            return `${prefix}${this.nextNameIndex++}`;
-        }
-        definitionsOf(kind) {
-            switch (kind) {
-                case 2 /* Component */:
-                    return this.componentDefinitions;
-                case 1 /* Directive */:
-                    return this.directiveDefinitions;
-                case 0 /* Injector */:
-                    return this.injectorDefinitions;
-                case 3 /* Pipe */:
-                    return this.pipeDefinitions;
-            }
-            error(`Unknown definition kind ${kind}`);
-            return this.componentDefinitions;
-        }
-        propertyNameOf(kind) {
-            switch (kind) {
-                case 2 /* Component */:
-                    return 'ɵcmp';
-                case 1 /* Directive */:
-                    return 'ɵdir';
-                case 0 /* Injector */:
-                    return 'ɵinj';
-                case 3 /* Pipe */:
-                    return 'ɵpipe';
-            }
-            error(`Unknown definition kind ${kind}`);
-            return '<unknown>';
-        }
-        freshName() {
-            return this.uniqueName(CONSTANT_PREFIX);
-        }
-        keyOf(expression) {
-            return expression.visitExpression(new KeyVisitor(), KEY_CONTEXT);
-        }
-    }
-    /**
-     * Visitor used to determine if 2 expressions are equivalent and can be shared in the
-     * `ConstantPool`.
-     *
-     * When the id (string) generated by the visitor is equal, expressions are considered equivalent.
-     */
-    class KeyVisitor {
-        constructor() {
-            this.visitWrappedNodeExpr = invalid;
-            this.visitWriteVarExpr = invalid;
-            this.visitWriteKeyExpr = invalid;
-            this.visitWritePropExpr = invalid;
-            this.visitInvokeMethodExpr = invalid;
-            this.visitInvokeFunctionExpr = invalid;
-            this.visitTaggedTemplateExpr = invalid;
-            this.visitInstantiateExpr = invalid;
-            this.visitConditionalExpr = invalid;
-            this.visitNotExpr = invalid;
-            this.visitAssertNotNullExpr = invalid;
-            this.visitCastExpr = invalid;
-            this.visitFunctionExpr = invalid;
-            this.visitUnaryOperatorExpr = invalid;
-            this.visitBinaryOperatorExpr = invalid;
-            this.visitReadPropExpr = invalid;
-            this.visitReadKeyExpr = invalid;
-            this.visitCommaExpr = invalid;
-            this.visitLocalizedString = invalid;
-        }
-        visitLiteralExpr(ast) {
-            return `${typeof ast.value === 'string' ? '"' + ast.value + '"' : ast.value}`;
-        }
-        visitLiteralArrayExpr(ast, context) {
-            return `[${ast.entries.map(entry => entry.visitExpression(this, context)).join(',')}]`;
-        }
-        visitLiteralMapExpr(ast, context) {
-            const mapKey = (entry) => {
-                const quote = entry.quoted ? '"' : '';
-                return `${quote}${entry.key}${quote}`;
-            };
-            const mapEntry = (entry) => `${mapKey(entry)}:${entry.value.visitExpression(this, context)}`;
-            return `{${ast.entries.map(mapEntry).join(',')}`;
-        }
-        visitExternalExpr(ast) {
-            return ast.value.moduleName ? `EX:${ast.value.moduleName}:${ast.value.name}` :
-                `EX:${ast.value.runtime.name}`;
-        }
-        visitReadVarExpr(node) {
-            return `VAR:${node.name}`;
-        }
-        visitTypeofExpr(node, context) {
-            return `TYPEOF:${node.expr.visitExpression(this, context)}`;
-        }
-    }
-    function invalid(arg) {
-        throw new Error(`Invalid state: Visitor ${this.constructor.name} doesn't handle ${arg.constructor.name}`);
-    }
-    function isVariable(e) {
-        return e instanceof ReadVarExpr;
-    }
-    function isLongStringLiteral(expr) {
-        return expr instanceof LiteralExpr && typeof expr.value === 'string' &&
-            expr.value.length >= POOL_INCLUSION_LENGTH_THRESHOLD_FOR_STRINGS;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const CORE = '@angular/core';
-    class Identifiers {
-    }
-    Identifiers.ANALYZE_FOR_ENTRY_COMPONENTS = {
-        name: 'ANALYZE_FOR_ENTRY_COMPONENTS',
-        moduleName: CORE,
-    };
-    Identifiers.ElementRef = { name: 'ElementRef', moduleName: CORE };
-    Identifiers.NgModuleRef = { name: 'NgModuleRef', moduleName: CORE };
-    Identifiers.ViewContainerRef = { name: 'ViewContainerRef', moduleName: CORE };
-    Identifiers.ChangeDetectorRef = {
-        name: 'ChangeDetectorRef',
-        moduleName: CORE,
-    };
-    Identifiers.QueryList = { name: 'QueryList', moduleName: CORE };
-    Identifiers.TemplateRef = { name: 'TemplateRef', moduleName: CORE };
-    Identifiers.Renderer2 = { name: 'Renderer2', moduleName: CORE };
-    Identifiers.CodegenComponentFactoryResolver = {
-        name: 'ɵCodegenComponentFactoryResolver',
-        moduleName: CORE,
-    };
-    Identifiers.ComponentFactoryResolver = {
-        name: 'ComponentFactoryResolver',
-        moduleName: CORE,
-    };
-    Identifiers.ComponentFactory = { name: 'ComponentFactory', moduleName: CORE };
-    Identifiers.ComponentRef = { name: 'ComponentRef', moduleName: CORE };
-    Identifiers.NgModuleFactory = { name: 'NgModuleFactory', moduleName: CORE };
-    Identifiers.createModuleFactory = {
-        name: 'ɵcmf',
-        moduleName: CORE,
-    };
-    Identifiers.moduleDef = {
-        name: 'ɵmod',
-        moduleName: CORE,
-    };
-    Identifiers.moduleProviderDef = {
-        name: 'ɵmpd',
-        moduleName: CORE,
-    };
-    Identifiers.RegisterModuleFactoryFn = {
-        name: 'ɵregisterModuleFactory',
-        moduleName: CORE,
-    };
-    Identifiers.inject = { name: 'ɵɵinject', moduleName: CORE };
-    Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE };
-    Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
-    Identifiers.Injector = { name: 'Injector', moduleName: CORE };
-    Identifiers.ɵɵdefineInjectable = { name: 'ɵɵdefineInjectable', moduleName: CORE };
-    Identifiers.InjectableDef = { name: 'ɵɵInjectableDef', moduleName: CORE };
-    Identifiers.ViewEncapsulation = {
-        name: 'ViewEncapsulation',
-        moduleName: CORE,
-    };
-    Identifiers.ChangeDetectionStrategy = {
-        name: 'ChangeDetectionStrategy',
-        moduleName: CORE,
-    };
-    Identifiers.SecurityContext = {
-        name: 'SecurityContext',
-        moduleName: CORE,
-    };
-    Identifiers.LOCALE_ID = { name: 'LOCALE_ID', moduleName: CORE };
-    Identifiers.TRANSLATIONS_FORMAT = {
-        name: 'TRANSLATIONS_FORMAT',
-        moduleName: CORE,
-    };
-    Identifiers.inlineInterpolate = {
-        name: 'ɵinlineInterpolate',
-        moduleName: CORE,
-    };
-    Identifiers.interpolate = { name: 'ɵinterpolate', moduleName: CORE };
-    Identifiers.EMPTY_ARRAY = { name: 'ɵEMPTY_ARRAY', moduleName: CORE };
-    Identifiers.EMPTY_MAP = { name: 'ɵEMPTY_MAP', moduleName: CORE };
-    Identifiers.Renderer = { name: 'Renderer', moduleName: CORE };
-    Identifiers.viewDef = { name: 'ɵvid', moduleName: CORE };
-    Identifiers.elementDef = { name: 'ɵeld', moduleName: CORE };
-    Identifiers.anchorDef = { name: 'ɵand', moduleName: CORE };
-    Identifiers.textDef = { name: 'ɵted', moduleName: CORE };
-    Identifiers.directiveDef = { name: 'ɵdid', moduleName: CORE };
-    Identifiers.providerDef = { name: 'ɵprd', moduleName: CORE };
-    Identifiers.queryDef = { name: 'ɵqud', moduleName: CORE };
-    Identifiers.pureArrayDef = { name: 'ɵpad', moduleName: CORE };
-    Identifiers.pureObjectDef = { name: 'ɵpod', moduleName: CORE };
-    Identifiers.purePipeDef = { name: 'ɵppd', moduleName: CORE };
-    Identifiers.pipeDef = { name: 'ɵpid', moduleName: CORE };
-    Identifiers.nodeValue = { name: 'ɵnov', moduleName: CORE };
-    Identifiers.ngContentDef = { name: 'ɵncd', moduleName: CORE };
-    Identifiers.unwrapValue = { name: 'ɵunv', moduleName: CORE };
-    Identifiers.createRendererType2 = { name: 'ɵcrt', moduleName: CORE };
-    // type only
-    Identifiers.RendererType2 = {
-        name: 'RendererType2',
-        moduleName: CORE,
-    };
-    // type only
-    Identifiers.ViewDefinition = {
-        name: 'ɵViewDefinition',
-        moduleName: CORE,
-    };
-    Identifiers.createComponentFactory = { name: 'ɵccf', moduleName: CORE };
-    Identifiers.setClassMetadata = { name: 'ɵsetClassMetadata', moduleName: CORE };
-    function createTokenForReference(reference) {
-        return { identifier: { reference: reference } };
-    }
-    function createTokenForExternalReference(reflector, reference) {
-        return createTokenForReference(reflector.resolveExternalReference(reference));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A token representing the a reference to a static type.
-     *
-     * This token is unique for a filePath and name and can be used as a hash table key.
-     */
-    class StaticSymbol {
-        constructor(filePath, name, members) {
-            this.filePath = filePath;
-            this.name = name;
-            this.members = members;
-        }
-        assertNoMembers() {
-            if (this.members.length) {
-                throw new Error(`Illegal state: symbol without members expected, but got ${JSON.stringify(this)}.`);
-            }
-        }
-    }
-    /**
-     * A cache of static symbol used by the StaticReflector to return the same symbol for the
-     * same symbol values.
-     */
-    class StaticSymbolCache {
-        constructor() {
-            this.cache = new Map();
-        }
-        get(declarationFile, name, members) {
-            members = members || [];
-            const memberSuffix = members.length ? `.${members.join('.')}` : '';
-            const key = `"${declarationFile}".${name}${memberSuffix}`;
-            let result = this.cache.get(key);
-            if (!result) {
-                result = new StaticSymbol(declarationFile, name, members);
-                this.cache.set(key, result);
-            }
-            return result;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // group 0: "[prop] or (event) or @trigger"
-    // group 1: "prop" from "[prop]"
-    // group 2: "event" from "(event)"
-    // group 3: "@trigger" from "@trigger"
-    const HOST_REG_EXP = /^(?:(?:\[([^\]]+)\])|(?:\(([^\)]+)\)))|(\@[-\w]+)$/;
-    function sanitizeIdentifier(name) {
-        return name.replace(/\W/g, '_');
-    }
-    let _anonymousTypeIndex = 0;
-    function identifierName(compileIdentifier) {
-        if (!compileIdentifier || !compileIdentifier.reference) {
-            return null;
-        }
-        const ref = compileIdentifier.reference;
-        if (ref instanceof StaticSymbol) {
-            return ref.name;
-        }
-        if (ref['__anonymousType']) {
-            return ref['__anonymousType'];
-        }
-        let identifier = stringify(ref);
-        if (identifier.indexOf('(') >= 0) {
-            // case: anonymous functions!
-            identifier = `anonymous_${_anonymousTypeIndex++}`;
-            ref['__anonymousType'] = identifier;
-        }
-        else {
-            identifier = sanitizeIdentifier(identifier);
-        }
-        return identifier;
-    }
-    function viewClassName(compType, embeddedTemplateIndex) {
-        return `View_${identifierName({ reference: compType })}_${embeddedTemplateIndex}`;
-    }
-    function rendererTypeName(compType) {
-        return `RenderType_${identifierName({ reference: compType })}`;
-    }
-    function hostViewClassName(compType) {
-        return `HostView_${identifierName({ reference: compType })}`;
-    }
-    function componentFactoryName(compType) {
-        return `${identifierName({ reference: compType })}NgFactory`;
-    }
-    var CompileSummaryKind;
-    (function (CompileSummaryKind) {
-        CompileSummaryKind[CompileSummaryKind["Pipe"] = 0] = "Pipe";
-        CompileSummaryKind[CompileSummaryKind["Directive"] = 1] = "Directive";
-        CompileSummaryKind[CompileSummaryKind["NgModule"] = 2] = "NgModule";
-        CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
-    })(CompileSummaryKind || (CompileSummaryKind = {}));
-    function tokenName(token) {
-        return token.value != null ? sanitizeIdentifier(token.value) : identifierName(token.identifier);
-    }
-    function tokenReference(token) {
-        if (token.identifier != null) {
-            return token.identifier.reference;
-        }
-        else {
-            return token.value;
-        }
-    }
-    /**
-     * Metadata about a stylesheet
-     */
-    class CompileStylesheetMetadata {
-        constructor({ moduleUrl, styles, styleUrls } = {}) {
-            this.moduleUrl = moduleUrl || null;
-            this.styles = _normalizeArray(styles);
-            this.styleUrls = _normalizeArray(styleUrls);
-        }
-    }
-    /**
-     * Metadata regarding compilation of a template.
-     */
-    class CompileTemplateMetadata {
-        constructor({ encapsulation, template, templateUrl, htmlAst, styles, styleUrls, externalStylesheets, animations, ngContentSelectors, interpolation, isInline, preserveWhitespaces }) {
-            this.encapsulation = encapsulation;
-            this.template = template;
-            this.templateUrl = templateUrl;
-            this.htmlAst = htmlAst;
-            this.styles = _normalizeArray(styles);
-            this.styleUrls = _normalizeArray(styleUrls);
-            this.externalStylesheets = _normalizeArray(externalStylesheets);
-            this.animations = animations ? flatten(animations) : [];
-            this.ngContentSelectors = ngContentSelectors || [];
-            if (interpolation && interpolation.length != 2) {
-                throw new Error(`'interpolation' should have a start and an end symbol.`);
-            }
-            this.interpolation = interpolation;
-            this.isInline = isInline;
-            this.preserveWhitespaces = preserveWhitespaces;
-        }
-        toSummary() {
-            return {
-                ngContentSelectors: this.ngContentSelectors,
-                encapsulation: this.encapsulation,
-                styles: this.styles,
-                animations: this.animations
-            };
-        }
-    }
-    /**
-     * Metadata regarding compilation of a directive.
-     */
-    class CompileDirectiveMetadata {
-        constructor({ isHost, type, isComponent, selector, exportAs, changeDetection, inputs, outputs, hostListeners, hostProperties, hostAttributes, providers, viewProviders, queries, guards, viewQueries, entryComponents, template, componentViewType, rendererType, componentFactory }) {
-            this.isHost = !!isHost;
-            this.type = type;
-            this.isComponent = isComponent;
-            this.selector = selector;
-            this.exportAs = exportAs;
-            this.changeDetection = changeDetection;
-            this.inputs = inputs;
-            this.outputs = outputs;
-            this.hostListeners = hostListeners;
-            this.hostProperties = hostProperties;
-            this.hostAttributes = hostAttributes;
-            this.providers = _normalizeArray(providers);
-            this.viewProviders = _normalizeArray(viewProviders);
-            this.queries = _normalizeArray(queries);
-            this.guards = guards;
-            this.viewQueries = _normalizeArray(viewQueries);
-            this.entryComponents = _normalizeArray(entryComponents);
-            this.template = template;
-            this.componentViewType = componentViewType;
-            this.rendererType = rendererType;
-            this.componentFactory = componentFactory;
-        }
-        static create({ isHost, type, isComponent, selector, exportAs, changeDetection, inputs, outputs, host, providers, viewProviders, queries, guards, viewQueries, entryComponents, template, componentViewType, rendererType, componentFactory }) {
-            const hostListeners = {};
-            const hostProperties = {};
-            const hostAttributes = {};
-            if (host != null) {
-                Object.keys(host).forEach(key => {
-                    const value = host[key];
-                    const matches = key.match(HOST_REG_EXP);
-                    if (matches === null) {
-                        hostAttributes[key] = value;
-                    }
-                    else if (matches[1] != null) {
-                        hostProperties[matches[1]] = value;
-                    }
-                    else if (matches[2] != null) {
-                        hostListeners[matches[2]] = value;
-                    }
-                });
-            }
-            const inputsMap = {};
-            if (inputs != null) {
-                inputs.forEach((bindConfig) => {
-                    // canonical syntax: `dirProp: elProp`
-                    // if there is no `:`, use dirProp = elProp
-                    const parts = splitAtColon(bindConfig, [bindConfig, bindConfig]);
-                    inputsMap[parts[0]] = parts[1];
-                });
-            }
-            const outputsMap = {};
-            if (outputs != null) {
-                outputs.forEach((bindConfig) => {
-                    // canonical syntax: `dirProp: elProp`
-                    // if there is no `:`, use dirProp = elProp
-                    const parts = splitAtColon(bindConfig, [bindConfig, bindConfig]);
-                    outputsMap[parts[0]] = parts[1];
-                });
-            }
-            return new CompileDirectiveMetadata({
-                isHost,
-                type,
-                isComponent: !!isComponent,
-                selector,
-                exportAs,
-                changeDetection,
-                inputs: inputsMap,
-                outputs: outputsMap,
-                hostListeners,
-                hostProperties,
-                hostAttributes,
-                providers,
-                viewProviders,
-                queries,
-                guards,
-                viewQueries,
-                entryComponents,
-                template,
-                componentViewType,
-                rendererType,
-                componentFactory,
-            });
-        }
-        toSummary() {
-            return {
-                summaryKind: CompileSummaryKind.Directive,
-                type: this.type,
-                isComponent: this.isComponent,
-                selector: this.selector,
-                exportAs: this.exportAs,
-                inputs: this.inputs,
-                outputs: this.outputs,
-                hostListeners: this.hostListeners,
-                hostProperties: this.hostProperties,
-                hostAttributes: this.hostAttributes,
-                providers: this.providers,
-                viewProviders: this.viewProviders,
-                queries: this.queries,
-                guards: this.guards,
-                viewQueries: this.viewQueries,
-                entryComponents: this.entryComponents,
-                changeDetection: this.changeDetection,
-                template: this.template && this.template.toSummary(),
-                componentViewType: this.componentViewType,
-                rendererType: this.rendererType,
-                componentFactory: this.componentFactory
-            };
-        }
-    }
-    class CompilePipeMetadata {
-        constructor({ type, name, pure }) {
-            this.type = type;
-            this.name = name;
-            this.pure = !!pure;
-        }
-        toSummary() {
-            return {
-                summaryKind: CompileSummaryKind.Pipe,
-                type: this.type,
-                name: this.name,
-                pure: this.pure
-            };
-        }
-    }
-    /**
-     * Metadata regarding compilation of a module.
-     */
-    class CompileNgModuleMetadata {
-        constructor({ type, providers, declaredDirectives, exportedDirectives, declaredPipes, exportedPipes, entryComponents, bootstrapComponents, importedModules, exportedModules, schemas, transitiveModule, id }) {
-            this.type = type || null;
-            this.declaredDirectives = _normalizeArray(declaredDirectives);
-            this.exportedDirectives = _normalizeArray(exportedDirectives);
-            this.declaredPipes = _normalizeArray(declaredPipes);
-            this.exportedPipes = _normalizeArray(exportedPipes);
-            this.providers = _normalizeArray(providers);
-            this.entryComponents = _normalizeArray(entryComponents);
-            this.bootstrapComponents = _normalizeArray(bootstrapComponents);
-            this.importedModules = _normalizeArray(importedModules);
-            this.exportedModules = _normalizeArray(exportedModules);
-            this.schemas = _normalizeArray(schemas);
-            this.id = id || null;
-            this.transitiveModule = transitiveModule || null;
-        }
-        toSummary() {
-            const module = this.transitiveModule;
-            return {
-                summaryKind: CompileSummaryKind.NgModule,
-                type: this.type,
-                entryComponents: module.entryComponents,
-                providers: module.providers,
-                modules: module.modules,
-                exportedDirectives: module.exportedDirectives,
-                exportedPipes: module.exportedPipes
-            };
-        }
-    }
-    class TransitiveCompileNgModuleMetadata {
-        constructor() {
-            this.directivesSet = new Set();
-            this.directives = [];
-            this.exportedDirectivesSet = new Set();
-            this.exportedDirectives = [];
-            this.pipesSet = new Set();
-            this.pipes = [];
-            this.exportedPipesSet = new Set();
-            this.exportedPipes = [];
-            this.modulesSet = new Set();
-            this.modules = [];
-            this.entryComponentsSet = new Set();
-            this.entryComponents = [];
-            this.providers = [];
-        }
-        addProvider(provider, module) {
-            this.providers.push({ provider: provider, module: module });
-        }
-        addDirective(id) {
-            if (!this.directivesSet.has(id.reference)) {
-                this.directivesSet.add(id.reference);
-                this.directives.push(id);
-            }
-        }
-        addExportedDirective(id) {
-            if (!this.exportedDirectivesSet.has(id.reference)) {
-                this.exportedDirectivesSet.add(id.reference);
-                this.exportedDirectives.push(id);
-            }
-        }
-        addPipe(id) {
-            if (!this.pipesSet.has(id.reference)) {
-                this.pipesSet.add(id.reference);
-                this.pipes.push(id);
-            }
-        }
-        addExportedPipe(id) {
-            if (!this.exportedPipesSet.has(id.reference)) {
-                this.exportedPipesSet.add(id.reference);
-                this.exportedPipes.push(id);
-            }
-        }
-        addModule(id) {
-            if (!this.modulesSet.has(id.reference)) {
-                this.modulesSet.add(id.reference);
-                this.modules.push(id);
-            }
-        }
-        addEntryComponent(ec) {
-            if (!this.entryComponentsSet.has(ec.componentType)) {
-                this.entryComponentsSet.add(ec.componentType);
-                this.entryComponents.push(ec);
-            }
-        }
-    }
-    function _normalizeArray(obj) {
-        return obj || [];
-    }
-    class ProviderMeta {
-        constructor(token, { useClass, useValue, useExisting, useFactory, deps, multi }) {
-            this.token = token;
-            this.useClass = useClass || null;
-            this.useValue = useValue;
-            this.useExisting = useExisting;
-            this.useFactory = useFactory || null;
-            this.dependencies = deps || null;
-            this.multi = !!multi;
-        }
-    }
-    function flatten(list) {
-        return list.reduce((flat, item) => {
-            const flatItem = Array.isArray(item) ? flatten(item) : item;
-            return flat.concat(flatItem);
-        }, []);
-    }
-    function jitSourceUrl(url) {
-        // Note: We need 3 "/" so that ng shows up as a separate domain
-        // in the chrome dev tools.
-        return url.replace(/(\w+:\/\/[\w:-]+)?(\/+)?/, 'ng:///');
-    }
-    function templateSourceUrl(ngModuleType, compMeta, templateMeta) {
-        let url;
-        if (templateMeta.isInline) {
-            if (compMeta.type.reference instanceof StaticSymbol) {
-                // Note: a .ts file might contain multiple components with inline templates,
-                // so we need to give them unique urls, as these will be used for sourcemaps.
-                url = `${compMeta.type.reference.filePath}.${compMeta.type.reference.name}.html`;
-            }
-            else {
-                url = `${identifierName(ngModuleType)}/${identifierName(compMeta.type)}.html`;
-            }
-        }
-        else {
-            url = templateMeta.templateUrl;
-        }
-        return compMeta.type.reference instanceof StaticSymbol ? url : jitSourceUrl(url);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const CORE$1 = '@angular/core';
-    class Identifiers$1 {
-    }
-    /* Methods */
-    Identifiers$1.NEW_METHOD = 'factory';
-    Identifiers$1.TRANSFORM_METHOD = 'transform';
-    Identifiers$1.PATCH_DEPS = 'patchedDeps';
-    Identifiers$1.core = { name: null, moduleName: CORE$1 };
-    /* Instructions */
-    Identifiers$1.namespaceHTML = { name: 'ɵɵnamespaceHTML', moduleName: CORE$1 };
-    Identifiers$1.namespaceMathML = { name: 'ɵɵnamespaceMathML', moduleName: CORE$1 };
-    Identifiers$1.namespaceSVG = { name: 'ɵɵnamespaceSVG', moduleName: CORE$1 };
-    Identifiers$1.element = { name: 'ɵɵelement', moduleName: CORE$1 };
-    Identifiers$1.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
-    Identifiers$1.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
-    Identifiers$1.advance = { name: 'ɵɵadvance', moduleName: CORE$1 };
-    Identifiers$1.syntheticHostProperty = { name: 'ɵɵsyntheticHostProperty', moduleName: CORE$1 };
-    Identifiers$1.syntheticHostListener = { name: 'ɵɵsyntheticHostListener', moduleName: CORE$1 };
-    Identifiers$1.attribute = { name: 'ɵɵattribute', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate1 = { name: 'ɵɵattributeInterpolate1', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate2 = { name: 'ɵɵattributeInterpolate2', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate3 = { name: 'ɵɵattributeInterpolate3', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate4 = { name: 'ɵɵattributeInterpolate4', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate5 = { name: 'ɵɵattributeInterpolate5', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate6 = { name: 'ɵɵattributeInterpolate6', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate7 = { name: 'ɵɵattributeInterpolate7', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolate8 = { name: 'ɵɵattributeInterpolate8', moduleName: CORE$1 };
-    Identifiers$1.attributeInterpolateV = { name: 'ɵɵattributeInterpolateV', moduleName: CORE$1 };
-    Identifiers$1.classProp = { name: 'ɵɵclassProp', moduleName: CORE$1 };
-    Identifiers$1.elementContainerStart = { name: 'ɵɵelementContainerStart', moduleName: CORE$1 };
-    Identifiers$1.elementContainerEnd = { name: 'ɵɵelementContainerEnd', moduleName: CORE$1 };
-    Identifiers$1.elementContainer = { name: 'ɵɵelementContainer', moduleName: CORE$1 };
-    Identifiers$1.styleMap = { name: 'ɵɵstyleMap', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate1 = { name: 'ɵɵstyleMapInterpolate1', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate2 = { name: 'ɵɵstyleMapInterpolate2', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate3 = { name: 'ɵɵstyleMapInterpolate3', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate4 = { name: 'ɵɵstyleMapInterpolate4', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate5 = { name: 'ɵɵstyleMapInterpolate5', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate6 = { name: 'ɵɵstyleMapInterpolate6', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate7 = { name: 'ɵɵstyleMapInterpolate7', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolate8 = { name: 'ɵɵstyleMapInterpolate8', moduleName: CORE$1 };
-    Identifiers$1.styleMapInterpolateV = { name: 'ɵɵstyleMapInterpolateV', moduleName: CORE$1 };
-    Identifiers$1.classMap = { name: 'ɵɵclassMap', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate1 = { name: 'ɵɵclassMapInterpolate1', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate2 = { name: 'ɵɵclassMapInterpolate2', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate3 = { name: 'ɵɵclassMapInterpolate3', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate4 = { name: 'ɵɵclassMapInterpolate4', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate5 = { name: 'ɵɵclassMapInterpolate5', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate6 = { name: 'ɵɵclassMapInterpolate6', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate7 = { name: 'ɵɵclassMapInterpolate7', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolate8 = { name: 'ɵɵclassMapInterpolate8', moduleName: CORE$1 };
-    Identifiers$1.classMapInterpolateV = { name: 'ɵɵclassMapInterpolateV', moduleName: CORE$1 };
-    Identifiers$1.styleProp = { name: 'ɵɵstyleProp', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate1 = { name: 'ɵɵstylePropInterpolate1', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate2 = { name: 'ɵɵstylePropInterpolate2', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate3 = { name: 'ɵɵstylePropInterpolate3', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate4 = { name: 'ɵɵstylePropInterpolate4', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate5 = { name: 'ɵɵstylePropInterpolate5', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate6 = { name: 'ɵɵstylePropInterpolate6', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate7 = { name: 'ɵɵstylePropInterpolate7', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolate8 = { name: 'ɵɵstylePropInterpolate8', moduleName: CORE$1 };
-    Identifiers$1.stylePropInterpolateV = { name: 'ɵɵstylePropInterpolateV', moduleName: CORE$1 };
-    Identifiers$1.nextContext = { name: 'ɵɵnextContext', moduleName: CORE$1 };
-    Identifiers$1.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE$1 };
-    Identifiers$1.text = { name: 'ɵɵtext', moduleName: CORE$1 };
-    Identifiers$1.enableBindings = { name: 'ɵɵenableBindings', moduleName: CORE$1 };
-    Identifiers$1.disableBindings = { name: 'ɵɵdisableBindings', moduleName: CORE$1 };
-    Identifiers$1.getCurrentView = { name: 'ɵɵgetCurrentView', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate = { name: 'ɵɵtextInterpolate', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate1 = { name: 'ɵɵtextInterpolate1', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate2 = { name: 'ɵɵtextInterpolate2', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate3 = { name: 'ɵɵtextInterpolate3', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate4 = { name: 'ɵɵtextInterpolate4', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate5 = { name: 'ɵɵtextInterpolate5', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate6 = { name: 'ɵɵtextInterpolate6', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate7 = { name: 'ɵɵtextInterpolate7', moduleName: CORE$1 };
-    Identifiers$1.textInterpolate8 = { name: 'ɵɵtextInterpolate8', moduleName: CORE$1 };
-    Identifiers$1.textInterpolateV = { name: 'ɵɵtextInterpolateV', moduleName: CORE$1 };
-    Identifiers$1.restoreView = { name: 'ɵɵrestoreView', moduleName: CORE$1 };
-    Identifiers$1.pureFunction0 = { name: 'ɵɵpureFunction0', moduleName: CORE$1 };
-    Identifiers$1.pureFunction1 = { name: 'ɵɵpureFunction1', moduleName: CORE$1 };
-    Identifiers$1.pureFunction2 = { name: 'ɵɵpureFunction2', moduleName: CORE$1 };
-    Identifiers$1.pureFunction3 = { name: 'ɵɵpureFunction3', moduleName: CORE$1 };
-    Identifiers$1.pureFunction4 = { name: 'ɵɵpureFunction4', moduleName: CORE$1 };
-    Identifiers$1.pureFunction5 = { name: 'ɵɵpureFunction5', moduleName: CORE$1 };
-    Identifiers$1.pureFunction6 = { name: 'ɵɵpureFunction6', moduleName: CORE$1 };
-    Identifiers$1.pureFunction7 = { name: 'ɵɵpureFunction7', moduleName: CORE$1 };
-    Identifiers$1.pureFunction8 = { name: 'ɵɵpureFunction8', moduleName: CORE$1 };
-    Identifiers$1.pureFunctionV = { name: 'ɵɵpureFunctionV', moduleName: CORE$1 };
-    Identifiers$1.pipeBind1 = { name: 'ɵɵpipeBind1', moduleName: CORE$1 };
-    Identifiers$1.pipeBind2 = { name: 'ɵɵpipeBind2', moduleName: CORE$1 };
-    Identifiers$1.pipeBind3 = { name: 'ɵɵpipeBind3', moduleName: CORE$1 };
-    Identifiers$1.pipeBind4 = { name: 'ɵɵpipeBind4', moduleName: CORE$1 };
-    Identifiers$1.pipeBindV = { name: 'ɵɵpipeBindV', moduleName: CORE$1 };
-    Identifiers$1.hostProperty = { name: 'ɵɵhostProperty', moduleName: CORE$1 };
-    Identifiers$1.property = { name: 'ɵɵproperty', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate = { name: 'ɵɵpropertyInterpolate', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate1 = { name: 'ɵɵpropertyInterpolate1', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate2 = { name: 'ɵɵpropertyInterpolate2', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate3 = { name: 'ɵɵpropertyInterpolate3', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate4 = { name: 'ɵɵpropertyInterpolate4', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate5 = { name: 'ɵɵpropertyInterpolate5', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate6 = { name: 'ɵɵpropertyInterpolate6', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate7 = { name: 'ɵɵpropertyInterpolate7', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolate8 = { name: 'ɵɵpropertyInterpolate8', moduleName: CORE$1 };
-    Identifiers$1.propertyInterpolateV = { name: 'ɵɵpropertyInterpolateV', moduleName: CORE$1 };
-    Identifiers$1.i18n = { name: 'ɵɵi18n', moduleName: CORE$1 };
-    Identifiers$1.i18nAttributes = { name: 'ɵɵi18nAttributes', moduleName: CORE$1 };
-    Identifiers$1.i18nExp = { name: 'ɵɵi18nExp', moduleName: CORE$1 };
-    Identifiers$1.i18nStart = { name: 'ɵɵi18nStart', moduleName: CORE$1 };
-    Identifiers$1.i18nEnd = { name: 'ɵɵi18nEnd', moduleName: CORE$1 };
-    Identifiers$1.i18nApply = { name: 'ɵɵi18nApply', moduleName: CORE$1 };
-    Identifiers$1.i18nPostprocess = { name: 'ɵɵi18nPostprocess', moduleName: CORE$1 };
-    Identifiers$1.pipe = { name: 'ɵɵpipe', moduleName: CORE$1 };
-    Identifiers$1.projection = { name: 'ɵɵprojection', moduleName: CORE$1 };
-    Identifiers$1.projectionDef = { name: 'ɵɵprojectionDef', moduleName: CORE$1 };
-    Identifiers$1.reference = { name: 'ɵɵreference', moduleName: CORE$1 };
-    Identifiers$1.inject = { name: 'ɵɵinject', moduleName: CORE$1 };
-    Identifiers$1.injectAttribute = { name: 'ɵɵinjectAttribute', moduleName: CORE$1 };
-    Identifiers$1.injectPipeChangeDetectorRef = { name: 'ɵɵinjectPipeChangeDetectorRef', moduleName: CORE$1 };
-    Identifiers$1.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE$1 };
-    Identifiers$1.invalidFactory = { name: 'ɵɵinvalidFactory', moduleName: CORE$1 };
-    Identifiers$1.invalidFactoryDep = { name: 'ɵɵinvalidFactoryDep', moduleName: CORE$1 };
-    Identifiers$1.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
-    Identifiers$1.forwardRef = { name: 'forwardRef', moduleName: CORE$1 };
-    Identifiers$1.resolveForwardRef = { name: 'resolveForwardRef', moduleName: CORE$1 };
-    Identifiers$1.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
-    Identifiers$1.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
-    Identifiers$1.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE$1 };
-    Identifiers$1.defineComponent = { name: 'ɵɵdefineComponent', moduleName: CORE$1 };
-    Identifiers$1.declareComponent = { name: 'ɵɵngDeclareComponent', moduleName: CORE$1 };
-    Identifiers$1.setComponentScope = { name: 'ɵɵsetComponentScope', moduleName: CORE$1 };
-    Identifiers$1.ChangeDetectionStrategy = {
-        name: 'ChangeDetectionStrategy',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.ViewEncapsulation = {
-        name: 'ViewEncapsulation',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.ComponentDefWithMeta = {
-        name: 'ɵɵComponentDefWithMeta',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.FactoryDef = {
-        name: 'ɵɵFactoryDef',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.defineDirective = { name: 'ɵɵdefineDirective', moduleName: CORE$1 };
-    Identifiers$1.declareDirective = { name: 'ɵɵngDeclareDirective', moduleName: CORE$1 };
-    Identifiers$1.DirectiveDefWithMeta = {
-        name: 'ɵɵDirectiveDefWithMeta',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.InjectorDef = {
-        name: 'ɵɵInjectorDef',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.defineInjector = {
-        name: 'ɵɵdefineInjector',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.NgModuleDefWithMeta = {
-        name: 'ɵɵNgModuleDefWithMeta',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.ModuleWithProviders = {
-        name: 'ModuleWithProviders',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.defineNgModule = { name: 'ɵɵdefineNgModule', moduleName: CORE$1 };
-    Identifiers$1.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE$1 };
-    Identifiers$1.PipeDefWithMeta = { name: 'ɵɵPipeDefWithMeta', moduleName: CORE$1 };
-    Identifiers$1.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
-    Identifiers$1.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
-    Identifiers$1.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
-    Identifiers$1.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
-    Identifiers$1.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE$1 };
-    Identifiers$1.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE$1 };
-    Identifiers$1.InheritDefinitionFeature = { name: 'ɵɵInheritDefinitionFeature', moduleName: CORE$1 };
-    Identifiers$1.CopyDefinitionFeature = { name: 'ɵɵCopyDefinitionFeature', moduleName: CORE$1 };
-    Identifiers$1.ProvidersFeature = { name: 'ɵɵProvidersFeature', moduleName: CORE$1 };
-    Identifiers$1.listener = { name: 'ɵɵlistener', moduleName: CORE$1 };
-    Identifiers$1.getFactoryOf = {
-        name: 'ɵɵgetFactoryOf',
-        moduleName: CORE$1,
-    };
-    Identifiers$1.getInheritedFactory = {
-        name: 'ɵɵgetInheritedFactory',
-        moduleName: CORE$1,
-    };
-    // sanitization-related functions
-    Identifiers$1.sanitizeHtml = { name: 'ɵɵsanitizeHtml', moduleName: CORE$1 };
-    Identifiers$1.sanitizeStyle = { name: 'ɵɵsanitizeStyle', moduleName: CORE$1 };
-    Identifiers$1.sanitizeResourceUrl = { name: 'ɵɵsanitizeResourceUrl', moduleName: CORE$1 };
-    Identifiers$1.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE$1 };
-    Identifiers$1.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE$1 };
-    Identifiers$1.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
-    Identifiers$1.trustConstantHtml = { name: 'ɵɵtrustConstantHtml', moduleName: CORE$1 };
-    Identifiers$1.trustConstantResourceUrl = { name: 'ɵɵtrustConstantResourceUrl', moduleName: CORE$1 };
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
-    const VERSION = 3;
-    const JS_B64_PREFIX = '# sourceMappingURL=data:application/json;base64,';
-    class SourceMapGenerator {
-        constructor(file = null) {
-            this.file = file;
-            this.sourcesContent = new Map();
-            this.lines = [];
-            this.lastCol0 = 0;
-            this.hasMappings = false;
-        }
-        // The content is `null` when the content is expected to be loaded using the URL
-        addSource(url, content = null) {
-            if (!this.sourcesContent.has(url)) {
-                this.sourcesContent.set(url, content);
-            }
-            return this;
-        }
-        addLine() {
-            this.lines.push([]);
-            this.lastCol0 = 0;
-            return this;
-        }
-        addMapping(col0, sourceUrl, sourceLine0, sourceCol0) {
-            if (!this.currentLine) {
-                throw new Error(`A line must be added before mappings can be added`);
-            }
-            if (sourceUrl != null && !this.sourcesContent.has(sourceUrl)) {
-                throw new Error(`Unknown source file "${sourceUrl}"`);
-            }
-            if (col0 == null) {
-                throw new Error(`The column in the generated code must be provided`);
-            }
-            if (col0 < this.lastCol0) {
-                throw new Error(`Mapping should be added in output order`);
-            }
-            if (sourceUrl && (sourceLine0 == null || sourceCol0 == null)) {
-                throw new Error(`The source location must be provided when a source url is provided`);
-            }
-            this.hasMappings = true;
-            this.lastCol0 = col0;
-            this.currentLine.push({ col0, sourceUrl, sourceLine0, sourceCol0 });
-            return this;
-        }
-        /**
-         * @internal strip this from published d.ts files due to
-         * https://github.com/microsoft/TypeScript/issues/36216
-         */
-        get currentLine() {
-            return this.lines.slice(-1)[0];
-        }
-        toJSON() {
-            if (!this.hasMappings) {
-                return null;
-            }
-            const sourcesIndex = new Map();
-            const sources = [];
-            const sourcesContent = [];
-            Array.from(this.sourcesContent.keys()).forEach((url, i) => {
-                sourcesIndex.set(url, i);
-                sources.push(url);
-                sourcesContent.push(this.sourcesContent.get(url) || null);
-            });
-            let mappings = '';
-            let lastCol0 = 0;
-            let lastSourceIndex = 0;
-            let lastSourceLine0 = 0;
-            let lastSourceCol0 = 0;
-            this.lines.forEach(segments => {
-                lastCol0 = 0;
-                mappings += segments
-                    .map(segment => {
-                    // zero-based starting column of the line in the generated code
-                    let segAsStr = toBase64VLQ(segment.col0 - lastCol0);
-                    lastCol0 = segment.col0;
-                    if (segment.sourceUrl != null) {
-                        // zero-based index into the “sources” list
-                        segAsStr +=
-                            toBase64VLQ(sourcesIndex.get(segment.sourceUrl) - lastSourceIndex);
-                        lastSourceIndex = sourcesIndex.get(segment.sourceUrl);
-                        // the zero-based starting line in the original source
-                        segAsStr += toBase64VLQ(segment.sourceLine0 - lastSourceLine0);
-                        lastSourceLine0 = segment.sourceLine0;
-                        // the zero-based starting column in the original source
-                        segAsStr += toBase64VLQ(segment.sourceCol0 - lastSourceCol0);
-                        lastSourceCol0 = segment.sourceCol0;
-                    }
-                    return segAsStr;
-                })
-                    .join(',');
-                mappings += ';';
-            });
-            mappings = mappings.slice(0, -1);
-            return {
-                'file': this.file || '',
-                'version': VERSION,
-                'sourceRoot': '',
-                'sources': sources,
-                'sourcesContent': sourcesContent,
-                'mappings': mappings,
-            };
-        }
-        toJsComment() {
-            return this.hasMappings ? '//' + JS_B64_PREFIX + toBase64String(JSON.stringify(this, null, 0)) :
-                '';
-        }
-    }
-    function toBase64String(value) {
-        let b64 = '';
-        const encoded = utf8Encode(value);
-        for (let i = 0; i < encoded.length;) {
-            const i1 = encoded[i++];
-            const i2 = i < encoded.length ? encoded[i++] : null;
-            const i3 = i < encoded.length ? encoded[i++] : null;
-            b64 += toBase64Digit(i1 >> 2);
-            b64 += toBase64Digit(((i1 & 3) << 4) | (i2 === null ? 0 : i2 >> 4));
-            b64 += i2 === null ? '=' : toBase64Digit(((i2 & 15) << 2) | (i3 === null ? 0 : i3 >> 6));
-            b64 += i2 === null || i3 === null ? '=' : toBase64Digit(i3 & 63);
-        }
-        return b64;
-    }
-    function toBase64VLQ(value) {
-        value = value < 0 ? ((-value) << 1) + 1 : value << 1;
-        let out = '';
-        do {
-            let digit = value & 31;
-            value = value >> 5;
-            if (value > 0) {
-                digit = digit | 32;
-            }
-            out += toBase64Digit(digit);
-        } while (value > 0);
-        return out;
-    }
-    const B64_DIGITS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    function toBase64Digit(value) {
-        if (value < 0 || value >= 64) {
-            throw new Error(`Can only encode value in the range [0, 63]`);
-        }
-        return B64_DIGITS[value];
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const _SINGLE_QUOTE_ESCAPE_STRING_RE = /'|\\|\n|\r|\$/g;
-    const _LEGAL_IDENTIFIER_RE = /^[$A-Z_][0-9A-Z_$]*$/i;
-    const _INDENT_WITH = '  ';
-    const CATCH_ERROR_VAR$1 = variable('error', null, null);
-    const CATCH_STACK_VAR$1 = variable('stack', null, null);
-    class _EmittedLine {
-        constructor(indent) {
-            this.indent = indent;
-            this.partsLength = 0;
-            this.parts = [];
-            this.srcSpans = [];
-        }
-    }
-    class EmitterVisitorContext {
-        constructor(_indent) {
-            this._indent = _indent;
-            this._classes = [];
-            this._preambleLineCount = 0;
-            this._lines = [new _EmittedLine(_indent)];
-        }
-        static createRoot() {
-            return new EmitterVisitorContext(0);
-        }
-        /**
-         * @internal strip this from published d.ts files due to
-         * https://github.com/microsoft/TypeScript/issues/36216
-         */
-        get _currentLine() {
-            return this._lines[this._lines.length - 1];
-        }
-        println(from, lastPart = '') {
-            this.print(from || null, lastPart, true);
-        }
-        lineIsEmpty() {
-            return this._currentLine.parts.length === 0;
-        }
-        lineLength() {
-            return this._currentLine.indent * _INDENT_WITH.length + this._currentLine.partsLength;
-        }
-        print(from, part, newLine = false) {
-            if (part.length > 0) {
-                this._currentLine.parts.push(part);
-                this._currentLine.partsLength += part.length;
-                this._currentLine.srcSpans.push(from && from.sourceSpan || null);
-            }
-            if (newLine) {
-                this._lines.push(new _EmittedLine(this._indent));
-            }
-        }
-        removeEmptyLastLine() {
-            if (this.lineIsEmpty()) {
-                this._lines.pop();
-            }
-        }
-        incIndent() {
-            this._indent++;
-            if (this.lineIsEmpty()) {
-                this._currentLine.indent = this._indent;
-            }
-        }
-        decIndent() {
-            this._indent--;
-            if (this.lineIsEmpty()) {
-                this._currentLine.indent = this._indent;
-            }
-        }
-        pushClass(clazz) {
-            this._classes.push(clazz);
-        }
-        popClass() {
-            return this._classes.pop();
-        }
-        get currentClass() {
-            return this._classes.length > 0 ? this._classes[this._classes.length - 1] : null;
-        }
-        toSource() {
-            return this.sourceLines
-                .map(l => l.parts.length > 0 ? _createIndent(l.indent) + l.parts.join('') : '')
-                .join('\n');
-        }
-        toSourceMapGenerator(genFilePath, startsAtLine = 0) {
-            const map = new SourceMapGenerator(genFilePath);
-            let firstOffsetMapped = false;
-            const mapFirstOffsetIfNeeded = () => {
-                if (!firstOffsetMapped) {
-                    // Add a single space so that tools won't try to load the file from disk.
-                    // Note: We are using virtual urls like `ng:///`, so we have to
-                    // provide a content here.
-                    map.addSource(genFilePath, ' ').addMapping(0, genFilePath, 0, 0);
-                    firstOffsetMapped = true;
-                }
-            };
-            for (let i = 0; i < startsAtLine; i++) {
-                map.addLine();
-                mapFirstOffsetIfNeeded();
-            }
-            this.sourceLines.forEach((line, lineIdx) => {
-                map.addLine();
-                const spans = line.srcSpans;
-                const parts = line.parts;
-                let col0 = line.indent * _INDENT_WITH.length;
-                let spanIdx = 0;
-                // skip leading parts without source spans
-                while (spanIdx < spans.length && !spans[spanIdx]) {
-                    col0 += parts[spanIdx].length;
-                    spanIdx++;
-                }
-                if (spanIdx < spans.length && lineIdx === 0 && col0 === 0) {
-                    firstOffsetMapped = true;
-                }
-                else {
-                    mapFirstOffsetIfNeeded();
-                }
-                while (spanIdx < spans.length) {
-                    const span = spans[spanIdx];
-                    const source = span.start.file;
-                    const sourceLine = span.start.line;
-                    const sourceCol = span.start.col;
-                    map.addSource(source.url, source.content)
-                        .addMapping(col0, source.url, sourceLine, sourceCol);
-                    col0 += parts[spanIdx].length;
-                    spanIdx++;
-                    // assign parts without span or the same span to the previous segment
-                    while (spanIdx < spans.length && (span === spans[spanIdx] || !spans[spanIdx])) {
-                        col0 += parts[spanIdx].length;
-                        spanIdx++;
-                    }
-                }
-            });
-            return map;
-        }
-        setPreambleLineCount(count) {
-            return this._preambleLineCount = count;
-        }
-        spanOf(line, column) {
-            const emittedLine = this._lines[line - this._preambleLineCount];
-            if (emittedLine) {
-                let columnsLeft = column - _createIndent(emittedLine.indent).length;
-                for (let partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
-                    const part = emittedLine.parts[partIndex];
-                    if (part.length > columnsLeft) {
-                        return emittedLine.srcSpans[partIndex];
-                    }
-                    columnsLeft -= part.length;
-                }
-            }
-            return null;
-        }
-        /**
-         * @internal strip this from published d.ts files due to
-         * https://github.com/microsoft/TypeScript/issues/36216
-         */
-        get sourceLines() {
-            if (this._lines.length && this._lines[this._lines.length - 1].parts.length === 0) {
-                return this._lines.slice(0, -1);
-            }
-            return this._lines;
-        }
-    }
-    class AbstractEmitterVisitor {
-        constructor(_escapeDollarInStrings) {
-            this._escapeDollarInStrings = _escapeDollarInStrings;
-        }
-        printLeadingComments(stmt, ctx) {
-            if (stmt.leadingComments === undefined) {
-                return;
-            }
-            for (const comment of stmt.leadingComments) {
-                if (comment instanceof JSDocComment) {
-                    ctx.print(stmt, `/*${comment.toString()}*/`, comment.trailingNewline);
-                }
-                else {
-                    if (comment.multiline) {
-                        ctx.print(stmt, `/* ${comment.text} */`, comment.trailingNewline);
-                    }
-                    else {
-                        comment.text.split('\n').forEach((line) => {
-                            ctx.println(stmt, `// ${line}`);
-                        });
-                    }
-                }
-            }
-        }
-        visitExpressionStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            stmt.expr.visitExpression(this, ctx);
-            ctx.println(stmt, ';');
-            return null;
-        }
-        visitReturnStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            ctx.print(stmt, `return `);
-            stmt.value.visitExpression(this, ctx);
-            ctx.println(stmt, ';');
-            return null;
-        }
-        visitIfStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            ctx.print(stmt, `if (`);
-            stmt.condition.visitExpression(this, ctx);
-            ctx.print(stmt, `) {`);
-            const hasElseCase = stmt.falseCase != null && stmt.falseCase.length > 0;
-            if (stmt.trueCase.length <= 1 && !hasElseCase) {
-                ctx.print(stmt, ` `);
-                this.visitAllStatements(stmt.trueCase, ctx);
-                ctx.removeEmptyLastLine();
-                ctx.print(stmt, ` `);
-            }
-            else {
-                ctx.println();
-                ctx.incIndent();
-                this.visitAllStatements(stmt.trueCase, ctx);
-                ctx.decIndent();
-                if (hasElseCase) {
-                    ctx.println(stmt, `} else {`);
-                    ctx.incIndent();
-                    this.visitAllStatements(stmt.falseCase, ctx);
-                    ctx.decIndent();
-                }
-            }
-            ctx.println(stmt, `}`);
-            return null;
-        }
-        visitThrowStmt(stmt, ctx) {
-            this.printLeadingComments(stmt, ctx);
-            ctx.print(stmt, `throw `);
-            stmt.error.visitExpression(this, ctx);
-            ctx.println(stmt, `;`);
-            return null;
-        }
-        visitWriteVarExpr(expr, ctx) {
-            const lineWasEmpty = ctx.lineIsEmpty();
-            if (!lineWasEmpty) {
-                ctx.print(expr, '(');
-            }
-            ctx.print(expr, `${expr.name} = `);
-            expr.value.visitExpression(this, ctx);
-            if (!lineWasEmpty) {
-                ctx.print(expr, ')');
-            }
-            return null;
-        }
-        visitWriteKeyExpr(expr, ctx) {
-            const lineWasEmpty = ctx.lineIsEmpty();
-            if (!lineWasEmpty) {
-                ctx.print(expr, '(');
-            }
-            expr.receiver.visitExpression(this, ctx);
-            ctx.print(expr, `[`);
-            expr.index.visitExpression(this, ctx);
-            ctx.print(expr, `] = `);
-            expr.value.visitExpression(this, ctx);
-            if (!lineWasEmpty) {
-                ctx.print(expr, ')');
-            }
-            return null;
-        }
-        visitWritePropExpr(expr, ctx) {
-            const lineWasEmpty = ctx.lineIsEmpty();
-            if (!lineWasEmpty) {
-                ctx.print(expr, '(');
-            }
-            expr.receiver.visitExpression(this, ctx);
-            ctx.print(expr, `.${expr.name} = `);
-            expr.value.visitExpression(this, ctx);
-            if (!lineWasEmpty) {
-                ctx.print(expr, ')');
-            }
-            return null;
-        }
-        visitInvokeMethodExpr(expr, ctx) {
-            expr.receiver.visitExpression(this, ctx);
-            let name = expr.name;
-            if (expr.builtin != null) {
-                name = this.getBuiltinMethodName(expr.builtin);
-                if (name == null) {
-                    // some builtins just mean to skip the call.
-                    return null;
-                }
-            }
-            ctx.print(expr, `.${name}(`);
-            this.visitAllExpressions(expr.args, ctx, `,`);
-            ctx.print(expr, `)`);
-            return null;
-        }
-        visitInvokeFunctionExpr(expr, ctx) {
-            expr.fn.visitExpression(this, ctx);
-            ctx.print(expr, `(`);
-            this.visitAllExpressions(expr.args, ctx, ',');
-            ctx.print(expr, `)`);
-            return null;
-        }
-        visitTaggedTemplateExpr(expr, ctx) {
-            expr.tag.visitExpression(this, ctx);
-            ctx.print(expr, '`' + expr.template.elements[0].rawText);
-            for (let i = 1; i < expr.template.elements.length; i++) {
-                ctx.print(expr, '${');
-                expr.template.expressions[i - 1].visitExpression(this, ctx);
-                ctx.print(expr, `}${expr.template.elements[i].rawText}`);
-            }
-            ctx.print(expr, '`');
-            return null;
-        }
-        visitWrappedNodeExpr(ast, ctx) {
-            throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
-        }
-        visitTypeofExpr(expr, ctx) {
-            ctx.print(expr, 'typeof ');
-            expr.expr.visitExpression(this, ctx);
-        }
-        visitReadVarExpr(ast, ctx) {
-            let varName = ast.name;
-            if (ast.builtin != null) {
-                switch (ast.builtin) {
-                    case BuiltinVar.Super:
-                        varName = 'super';
-                        break;
-                    case BuiltinVar.This:
-                        varName = 'this';
-                        break;
-                    case BuiltinVar.CatchError:
-                        varName = CATCH_ERROR_VAR$1.name;
-                        break;
-                    case BuiltinVar.CatchStack:
-                        varName = CATCH_STACK_VAR$1.name;
-                        break;
-                    default:
-                        throw new Error(`Unknown builtin variable ${ast.builtin}`);
-                }
-            }
-            ctx.print(ast, varName);
-            return null;
-        }
-        visitInstantiateExpr(ast, ctx) {
-            ctx.print(ast, `new `);
-            ast.classExpr.visitExpression(this, ctx);
-            ctx.print(ast, `(`);
-            this.visitAllExpressions(ast.args, ctx, ',');
-            ctx.print(ast, `)`);
-            return null;
-        }
-        visitLiteralExpr(ast, ctx) {
-            const value = ast.value;
-            if (typeof value === 'string') {
-                ctx.print(ast, escapeIdentifier(value, this._escapeDollarInStrings));
-            }
-            else {
-                ctx.print(ast, `${value}`);
-            }
-            return null;
-        }
-        visitLocalizedString(ast, ctx) {
-            const head = ast.serializeI18nHead();
-            ctx.print(ast, '$localize `' + head.raw);
-            for (let i = 1; i < ast.messageParts.length; i++) {
-                ctx.print(ast, '${');
-                ast.expressions[i - 1].visitExpression(this, ctx);
-                ctx.print(ast, `}${ast.serializeI18nTemplatePart(i).raw}`);
-            }
-            ctx.print(ast, '`');
-            return null;
-        }
-        visitConditionalExpr(ast, ctx) {
-            ctx.print(ast, `(`);
-            ast.condition.visitExpression(this, ctx);
-            ctx.print(ast, '? ');
-            ast.trueCase.visitExpression(this, ctx);
-            ctx.print(ast, ': ');
-            ast.falseCase.visitExpression(this, ctx);
-            ctx.print(ast, `)`);
-            return null;
-        }
-        visitNotExpr(ast, ctx) {
-            ctx.print(ast, '!');
-            ast.condition.visitExpression(this, ctx);
-            return null;
-        }
-        visitAssertNotNullExpr(ast, ctx) {
-            ast.condition.visitExpression(this, ctx);
-            return null;
-        }
-        visitUnaryOperatorExpr(ast, ctx) {
-            let opStr;
-            switch (ast.operator) {
-                case UnaryOperator.Plus:
-                    opStr = '+';
-                    break;
-                case UnaryOperator.Minus:
-                    opStr = '-';
-                    break;
-                default:
-                    throw new Error(`Unknown operator ${ast.operator}`);
-            }
-            if (ast.parens)
-                ctx.print(ast, `(`);
-            ctx.print(ast, opStr);
-            ast.expr.visitExpression(this, ctx);
-            if (ast.parens)
-                ctx.print(ast, `)`);
-            return null;
-        }
-        visitBinaryOperatorExpr(ast, ctx) {
-            let opStr;
-            switch (ast.operator) {
-                case BinaryOperator.Equals:
-                    opStr = '==';
-                    break;
-                case BinaryOperator.Identical:
-                    opStr = '===';
-                    break;
-                case BinaryOperator.NotEquals:
-                    opStr = '!=';
-                    break;
-                case BinaryOperator.NotIdentical:
-                    opStr = '!==';
-                    break;
-                case BinaryOperator.And:
-                    opStr = '&&';
-                    break;
-                case BinaryOperator.BitwiseAnd:
-                    opStr = '&';
-                    break;
-                case BinaryOperator.Or:
-                    opStr = '||';
-                    break;
-                case BinaryOperator.Plus:
-                    opStr = '+';
-                    break;
-                case BinaryOperator.Minus:
-                    opStr = '-';
-                    break;
-                case BinaryOperator.Divide:
-                    opStr = '/';
-                    break;
-                case BinaryOperator.Multiply:
-                    opStr = '*';
-                    break;
-                case BinaryOperator.Modulo:
-                    opStr = '%';
-                    break;
-                case BinaryOperator.Lower:
-                    opStr = '<';
-                    break;
-                case BinaryOperator.LowerEquals:
-                    opStr = '<=';
-                    break;
-                case BinaryOperator.Bigger:
-                    opStr = '>';
-                    break;
-                case BinaryOperator.BiggerEquals:
-                    opStr = '>=';
-                    break;
-                default:
-                    throw new Error(`Unknown operator ${ast.operator}`);
-            }
-            if (ast.parens)
-                ctx.print(ast, `(`);
-            ast.lhs.visitExpression(this, ctx);
-            ctx.print(ast, ` ${opStr} `);
-            ast.rhs.visitExpression(this, ctx);
-            if (ast.parens)
-                ctx.print(ast, `)`);
-            return null;
-        }
-        visitReadPropExpr(ast, ctx) {
-            ast.receiver.visitExpression(this, ctx);
-            ctx.print(ast, `.`);
-            ctx.print(ast, ast.name);
-            return null;
-        }
-        visitReadKeyExpr(ast, ctx) {
-            ast.receiver.visitExpression(this, ctx);
-            ctx.print(ast, `[`);
-            ast.index.visitExpression(this, ctx);
-            ctx.print(ast, `]`);
-            return null;
-        }
-        visitLiteralArrayExpr(ast, ctx) {
-            ctx.print(ast, `[`);
-            this.visitAllExpressions(ast.entries, ctx, ',');
-            ctx.print(ast, `]`);
-            return null;
-        }
-        visitLiteralMapExpr(ast, ctx) {
-            ctx.print(ast, `{`);
-            this.visitAllObjects(entry => {
-                ctx.print(ast, `${escapeIdentifier(entry.key, this._escapeDollarInStrings, entry.quoted)}:`);
-                entry.value.visitExpression(this, ctx);
-            }, ast.entries, ctx, ',');
-            ctx.print(ast, `}`);
-            return null;
-        }
-        visitCommaExpr(ast, ctx) {
-            ctx.print(ast, '(');
-            this.visitAllExpressions(ast.parts, ctx, ',');
-            ctx.print(ast, ')');
-            return null;
-        }
-        visitAllExpressions(expressions, ctx, separator) {
-            this.visitAllObjects(expr => expr.visitExpression(this, ctx), expressions, ctx, separator);
-        }
-        visitAllObjects(handler, expressions, ctx, separator) {
-            let incrementedIndent = false;
-            for (let i = 0; i < expressions.length; i++) {
-                if (i > 0) {
-                    if (ctx.lineLength() > 80) {
-                        ctx.print(null, separator, true);
-                        if (!incrementedIndent) {
-                            // continuation are marked with double indent.
-                            ctx.incIndent();
-                            ctx.incIndent();
-                            incrementedIndent = true;
-                        }
-                    }
-                    else {
-                        ctx.print(null, separator, false);
-                    }
-                }
-                handler(expressions[i]);
-            }
-            if (incrementedIndent) {
-                // continuation are marked with double indent.
-                ctx.decIndent();
-                ctx.decIndent();
-            }
-        }
-        visitAllStatements(statements, ctx) {
-            statements.forEach((stmt) => stmt.visitStatement(this, ctx));
-        }
-    }
-    function escapeIdentifier(input, escapeDollar, alwaysQuote = true) {
-        if (input == null) {
-            return null;
-        }
-        const body = input.replace(_SINGLE_QUOTE_ESCAPE_STRING_RE, (...match) => {
-            if (match[0] == '$') {
-                return escapeDollar ? '\\$' : '$';
-            }
-            else if (match[0] == '\n') {
-                return '\\n';
-            }
-            else if (match[0] == '\r') {
-                return '\\r';
-            }
-            else {
-                return `\\${match[0]}`;
-            }
-        });
-        const requiresQuotes = alwaysQuote || !_LEGAL_IDENTIFIER_RE.test(body);
-        return requiresQuotes ? `'${body}'` : body;
-    }
-    function _createIndent(count) {
-        let res = '';
-        for (let i = 0; i < count; i++) {
-            res += _INDENT_WITH;
-        }
-        return res;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Convert an object map with `Expression` values into a `LiteralMapExpr`.
-     */
-    function mapToMapExpression(map) {
-        const result = Object.keys(map).map(key => ({
-            key,
-            // The assertion here is because really TypeScript doesn't allow us to express that if the
-            // key is present, it will have a value, but this is true in reality.
-            value: map[key],
-            quoted: false,
-        }));
-        return literalMap(result);
-    }
-    function typeWithParameters(type, numParams) {
-        if (numParams === 0) {
-            return expressionType(type);
-        }
-        const params = [];
-        for (let i = 0; i < numParams; i++) {
-            params.push(DYNAMIC_TYPE);
-        }
-        return expressionType(type, undefined, params);
-    }
-    const ANIMATE_SYMBOL_PREFIX = '@';
-    function prepareSyntheticPropertyName(name) {
-        return `${ANIMATE_SYMBOL_PREFIX}${name}`;
-    }
-    function prepareSyntheticListenerName(name, phase) {
-        return `${ANIMATE_SYMBOL_PREFIX}${name}.${phase}`;
-    }
-    function getSafePropertyAccessString(accessor, name) {
-        const escapedName = escapeIdentifier(name, false, false);
-        return escapedName !== name ? `${accessor}[${escapedName}]` : `${accessor}.${name}`;
-    }
-    function prepareSyntheticListenerFunctionName(name, phase) {
-        return `animation_${name}_${phase}`;
-    }
-    function jitOnlyGuardedExpression(expr) {
-        return guardedExpression('ngJitMode', expr);
-    }
-    function guardedExpression(guard, expr) {
-        const guardExpr = new ExternalExpr({ name: guard, moduleName: null });
-        const guardNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(guardExpr), literal('undefined'));
-        const guardUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, guardNotDefined, guardExpr, /* type */ undefined, 
-        /* sourceSpan */ undefined, true);
-        return new BinaryOperatorExpr(BinaryOperator.And, guardUndefinedOrTrue, expr);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     class Text {
         constructor(value, sourceSpan) {
             this.value = value;
@@ -4890,6 +3606,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const IMPLICIT_REFERENCE = '$implicit';
     /** Non bindable attribute name **/
     const NON_BINDABLE_ATTR = 'ngNonBindable';
+    /** Name for the variable keeping track of the context returned by `ɵɵrestoreView`. */
+    const RESTORED_VIEW_CONTEXT_NAME = 'restoredCtx';
     /**
      * Creates an allocator for a temporary variable.
      *
@@ -5069,114 +3787,845 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Generate an expression that has the given `expr` wrapped in the following form:
+     *
+     * ```
+     * forwardRef(() => expr)
+     * ```
+     */
+    function generateForwardRef(expr) {
+        return importExpr(Identifiers.forwardRef).callFn([fn([], [new ReturnStatement(expr)])]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
+    const VERSION = 3;
+    const JS_B64_PREFIX = '# sourceMappingURL=data:application/json;base64,';
+    class SourceMapGenerator {
+        constructor(file = null) {
+            this.file = file;
+            this.sourcesContent = new Map();
+            this.lines = [];
+            this.lastCol0 = 0;
+            this.hasMappings = false;
+        }
+        // The content is `null` when the content is expected to be loaded using the URL
+        addSource(url, content = null) {
+            if (!this.sourcesContent.has(url)) {
+                this.sourcesContent.set(url, content);
+            }
+            return this;
+        }
+        addLine() {
+            this.lines.push([]);
+            this.lastCol0 = 0;
+            return this;
+        }
+        addMapping(col0, sourceUrl, sourceLine0, sourceCol0) {
+            if (!this.currentLine) {
+                throw new Error(`A line must be added before mappings can be added`);
+            }
+            if (sourceUrl != null && !this.sourcesContent.has(sourceUrl)) {
+                throw new Error(`Unknown source file "${sourceUrl}"`);
+            }
+            if (col0 == null) {
+                throw new Error(`The column in the generated code must be provided`);
+            }
+            if (col0 < this.lastCol0) {
+                throw new Error(`Mapping should be added in output order`);
+            }
+            if (sourceUrl && (sourceLine0 == null || sourceCol0 == null)) {
+                throw new Error(`The source location must be provided when a source url is provided`);
+            }
+            this.hasMappings = true;
+            this.lastCol0 = col0;
+            this.currentLine.push({ col0, sourceUrl, sourceLine0, sourceCol0 });
+            return this;
+        }
+        /**
+         * @internal strip this from published d.ts files due to
+         * https://github.com/microsoft/TypeScript/issues/36216
+         */
+        get currentLine() {
+            return this.lines.slice(-1)[0];
+        }
+        toJSON() {
+            if (!this.hasMappings) {
+                return null;
+            }
+            const sourcesIndex = new Map();
+            const sources = [];
+            const sourcesContent = [];
+            Array.from(this.sourcesContent.keys()).forEach((url, i) => {
+                sourcesIndex.set(url, i);
+                sources.push(url);
+                sourcesContent.push(this.sourcesContent.get(url) || null);
+            });
+            let mappings = '';
+            let lastCol0 = 0;
+            let lastSourceIndex = 0;
+            let lastSourceLine0 = 0;
+            let lastSourceCol0 = 0;
+            this.lines.forEach(segments => {
+                lastCol0 = 0;
+                mappings += segments
+                    .map(segment => {
+                    // zero-based starting column of the line in the generated code
+                    let segAsStr = toBase64VLQ(segment.col0 - lastCol0);
+                    lastCol0 = segment.col0;
+                    if (segment.sourceUrl != null) {
+                        // zero-based index into the “sources” list
+                        segAsStr +=
+                            toBase64VLQ(sourcesIndex.get(segment.sourceUrl) - lastSourceIndex);
+                        lastSourceIndex = sourcesIndex.get(segment.sourceUrl);
+                        // the zero-based starting line in the original source
+                        segAsStr += toBase64VLQ(segment.sourceLine0 - lastSourceLine0);
+                        lastSourceLine0 = segment.sourceLine0;
+                        // the zero-based starting column in the original source
+                        segAsStr += toBase64VLQ(segment.sourceCol0 - lastSourceCol0);
+                        lastSourceCol0 = segment.sourceCol0;
+                    }
+                    return segAsStr;
+                })
+                    .join(',');
+                mappings += ';';
+            });
+            mappings = mappings.slice(0, -1);
+            return {
+                'file': this.file || '',
+                'version': VERSION,
+                'sourceRoot': '',
+                'sources': sources,
+                'sourcesContent': sourcesContent,
+                'mappings': mappings,
+            };
+        }
+        toJsComment() {
+            return this.hasMappings ? '//' + JS_B64_PREFIX + toBase64String(JSON.stringify(this, null, 0)) :
+                '';
+        }
+    }
+    function toBase64String(value) {
+        let b64 = '';
+        const encoded = utf8Encode(value);
+        for (let i = 0; i < encoded.length;) {
+            const i1 = encoded[i++];
+            const i2 = i < encoded.length ? encoded[i++] : null;
+            const i3 = i < encoded.length ? encoded[i++] : null;
+            b64 += toBase64Digit(i1 >> 2);
+            b64 += toBase64Digit(((i1 & 3) << 4) | (i2 === null ? 0 : i2 >> 4));
+            b64 += i2 === null ? '=' : toBase64Digit(((i2 & 15) << 2) | (i3 === null ? 0 : i3 >> 6));
+            b64 += i2 === null || i3 === null ? '=' : toBase64Digit(i3 & 63);
+        }
+        return b64;
+    }
+    function toBase64VLQ(value) {
+        value = value < 0 ? ((-value) << 1) + 1 : value << 1;
+        let out = '';
+        do {
+            let digit = value & 31;
+            value = value >> 5;
+            if (value > 0) {
+                digit = digit | 32;
+            }
+            out += toBase64Digit(digit);
+        } while (value > 0);
+        return out;
+    }
+    const B64_DIGITS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    function toBase64Digit(value) {
+        if (value < 0 || value >= 64) {
+            throw new Error(`Can only encode value in the range [0, 63]`);
+        }
+        return B64_DIGITS[value];
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const _SINGLE_QUOTE_ESCAPE_STRING_RE = /'|\\|\n|\r|\$/g;
+    const _LEGAL_IDENTIFIER_RE = /^[$A-Z_][0-9A-Z_$]*$/i;
+    const _INDENT_WITH = '  ';
+    const CATCH_ERROR_VAR$1 = variable('error', null, null);
+    const CATCH_STACK_VAR$1 = variable('stack', null, null);
+    class _EmittedLine {
+        constructor(indent) {
+            this.indent = indent;
+            this.partsLength = 0;
+            this.parts = [];
+            this.srcSpans = [];
+        }
+    }
+    class EmitterVisitorContext {
+        constructor(_indent) {
+            this._indent = _indent;
+            this._classes = [];
+            this._preambleLineCount = 0;
+            this._lines = [new _EmittedLine(_indent)];
+        }
+        static createRoot() {
+            return new EmitterVisitorContext(0);
+        }
+        /**
+         * @internal strip this from published d.ts files due to
+         * https://github.com/microsoft/TypeScript/issues/36216
+         */
+        get _currentLine() {
+            return this._lines[this._lines.length - 1];
+        }
+        println(from, lastPart = '') {
+            this.print(from || null, lastPart, true);
+        }
+        lineIsEmpty() {
+            return this._currentLine.parts.length === 0;
+        }
+        lineLength() {
+            return this._currentLine.indent * _INDENT_WITH.length + this._currentLine.partsLength;
+        }
+        print(from, part, newLine = false) {
+            if (part.length > 0) {
+                this._currentLine.parts.push(part);
+                this._currentLine.partsLength += part.length;
+                this._currentLine.srcSpans.push(from && from.sourceSpan || null);
+            }
+            if (newLine) {
+                this._lines.push(new _EmittedLine(this._indent));
+            }
+        }
+        removeEmptyLastLine() {
+            if (this.lineIsEmpty()) {
+                this._lines.pop();
+            }
+        }
+        incIndent() {
+            this._indent++;
+            if (this.lineIsEmpty()) {
+                this._currentLine.indent = this._indent;
+            }
+        }
+        decIndent() {
+            this._indent--;
+            if (this.lineIsEmpty()) {
+                this._currentLine.indent = this._indent;
+            }
+        }
+        pushClass(clazz) {
+            this._classes.push(clazz);
+        }
+        popClass() {
+            return this._classes.pop();
+        }
+        get currentClass() {
+            return this._classes.length > 0 ? this._classes[this._classes.length - 1] : null;
+        }
+        toSource() {
+            return this.sourceLines
+                .map(l => l.parts.length > 0 ? _createIndent(l.indent) + l.parts.join('') : '')
+                .join('\n');
+        }
+        toSourceMapGenerator(genFilePath, startsAtLine = 0) {
+            const map = new SourceMapGenerator(genFilePath);
+            let firstOffsetMapped = false;
+            const mapFirstOffsetIfNeeded = () => {
+                if (!firstOffsetMapped) {
+                    // Add a single space so that tools won't try to load the file from disk.
+                    // Note: We are using virtual urls like `ng:///`, so we have to
+                    // provide a content here.
+                    map.addSource(genFilePath, ' ').addMapping(0, genFilePath, 0, 0);
+                    firstOffsetMapped = true;
+                }
+            };
+            for (let i = 0; i < startsAtLine; i++) {
+                map.addLine();
+                mapFirstOffsetIfNeeded();
+            }
+            this.sourceLines.forEach((line, lineIdx) => {
+                map.addLine();
+                const spans = line.srcSpans;
+                const parts = line.parts;
+                let col0 = line.indent * _INDENT_WITH.length;
+                let spanIdx = 0;
+                // skip leading parts without source spans
+                while (spanIdx < spans.length && !spans[spanIdx]) {
+                    col0 += parts[spanIdx].length;
+                    spanIdx++;
+                }
+                if (spanIdx < spans.length && lineIdx === 0 && col0 === 0) {
+                    firstOffsetMapped = true;
+                }
+                else {
+                    mapFirstOffsetIfNeeded();
+                }
+                while (spanIdx < spans.length) {
+                    const span = spans[spanIdx];
+                    const source = span.start.file;
+                    const sourceLine = span.start.line;
+                    const sourceCol = span.start.col;
+                    map.addSource(source.url, source.content)
+                        .addMapping(col0, source.url, sourceLine, sourceCol);
+                    col0 += parts[spanIdx].length;
+                    spanIdx++;
+                    // assign parts without span or the same span to the previous segment
+                    while (spanIdx < spans.length && (span === spans[spanIdx] || !spans[spanIdx])) {
+                        col0 += parts[spanIdx].length;
+                        spanIdx++;
+                    }
+                }
+            });
+            return map;
+        }
+        setPreambleLineCount(count) {
+            return this._preambleLineCount = count;
+        }
+        spanOf(line, column) {
+            const emittedLine = this._lines[line - this._preambleLineCount];
+            if (emittedLine) {
+                let columnsLeft = column - _createIndent(emittedLine.indent).length;
+                for (let partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
+                    const part = emittedLine.parts[partIndex];
+                    if (part.length > columnsLeft) {
+                        return emittedLine.srcSpans[partIndex];
+                    }
+                    columnsLeft -= part.length;
+                }
+            }
+            return null;
+        }
+        /**
+         * @internal strip this from published d.ts files due to
+         * https://github.com/microsoft/TypeScript/issues/36216
+         */
+        get sourceLines() {
+            if (this._lines.length && this._lines[this._lines.length - 1].parts.length === 0) {
+                return this._lines.slice(0, -1);
+            }
+            return this._lines;
+        }
+    }
+    class AbstractEmitterVisitor {
+        constructor(_escapeDollarInStrings) {
+            this._escapeDollarInStrings = _escapeDollarInStrings;
+        }
+        printLeadingComments(stmt, ctx) {
+            if (stmt.leadingComments === undefined) {
+                return;
+            }
+            for (const comment of stmt.leadingComments) {
+                if (comment instanceof JSDocComment) {
+                    ctx.print(stmt, `/*${comment.toString()}*/`, comment.trailingNewline);
+                }
+                else {
+                    if (comment.multiline) {
+                        ctx.print(stmt, `/* ${comment.text} */`, comment.trailingNewline);
+                    }
+                    else {
+                        comment.text.split('\n').forEach((line) => {
+                            ctx.println(stmt, `// ${line}`);
+                        });
+                    }
+                }
+            }
+        }
+        visitExpressionStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            stmt.expr.visitExpression(this, ctx);
+            ctx.println(stmt, ';');
+            return null;
+        }
+        visitReturnStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            ctx.print(stmt, `return `);
+            stmt.value.visitExpression(this, ctx);
+            ctx.println(stmt, ';');
+            return null;
+        }
+        visitIfStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            ctx.print(stmt, `if (`);
+            stmt.condition.visitExpression(this, ctx);
+            ctx.print(stmt, `) {`);
+            const hasElseCase = stmt.falseCase != null && stmt.falseCase.length > 0;
+            if (stmt.trueCase.length <= 1 && !hasElseCase) {
+                ctx.print(stmt, ` `);
+                this.visitAllStatements(stmt.trueCase, ctx);
+                ctx.removeEmptyLastLine();
+                ctx.print(stmt, ` `);
+            }
+            else {
+                ctx.println();
+                ctx.incIndent();
+                this.visitAllStatements(stmt.trueCase, ctx);
+                ctx.decIndent();
+                if (hasElseCase) {
+                    ctx.println(stmt, `} else {`);
+                    ctx.incIndent();
+                    this.visitAllStatements(stmt.falseCase, ctx);
+                    ctx.decIndent();
+                }
+            }
+            ctx.println(stmt, `}`);
+            return null;
+        }
+        visitThrowStmt(stmt, ctx) {
+            this.printLeadingComments(stmt, ctx);
+            ctx.print(stmt, `throw `);
+            stmt.error.visitExpression(this, ctx);
+            ctx.println(stmt, `;`);
+            return null;
+        }
+        visitWriteVarExpr(expr, ctx) {
+            const lineWasEmpty = ctx.lineIsEmpty();
+            if (!lineWasEmpty) {
+                ctx.print(expr, '(');
+            }
+            ctx.print(expr, `${expr.name} = `);
+            expr.value.visitExpression(this, ctx);
+            if (!lineWasEmpty) {
+                ctx.print(expr, ')');
+            }
+            return null;
+        }
+        visitWriteKeyExpr(expr, ctx) {
+            const lineWasEmpty = ctx.lineIsEmpty();
+            if (!lineWasEmpty) {
+                ctx.print(expr, '(');
+            }
+            expr.receiver.visitExpression(this, ctx);
+            ctx.print(expr, `[`);
+            expr.index.visitExpression(this, ctx);
+            ctx.print(expr, `] = `);
+            expr.value.visitExpression(this, ctx);
+            if (!lineWasEmpty) {
+                ctx.print(expr, ')');
+            }
+            return null;
+        }
+        visitWritePropExpr(expr, ctx) {
+            const lineWasEmpty = ctx.lineIsEmpty();
+            if (!lineWasEmpty) {
+                ctx.print(expr, '(');
+            }
+            expr.receiver.visitExpression(this, ctx);
+            ctx.print(expr, `.${expr.name} = `);
+            expr.value.visitExpression(this, ctx);
+            if (!lineWasEmpty) {
+                ctx.print(expr, ')');
+            }
+            return null;
+        }
+        visitInvokeMethodExpr(expr, ctx) {
+            expr.receiver.visitExpression(this, ctx);
+            let name = expr.name;
+            if (expr.builtin != null) {
+                name = this.getBuiltinMethodName(expr.builtin);
+                if (name == null) {
+                    // some builtins just mean to skip the call.
+                    return null;
+                }
+            }
+            ctx.print(expr, `.${name}(`);
+            this.visitAllExpressions(expr.args, ctx, `,`);
+            ctx.print(expr, `)`);
+            return null;
+        }
+        visitInvokeFunctionExpr(expr, ctx) {
+            expr.fn.visitExpression(this, ctx);
+            ctx.print(expr, `(`);
+            this.visitAllExpressions(expr.args, ctx, ',');
+            ctx.print(expr, `)`);
+            return null;
+        }
+        visitTaggedTemplateExpr(expr, ctx) {
+            expr.tag.visitExpression(this, ctx);
+            ctx.print(expr, '`' + expr.template.elements[0].rawText);
+            for (let i = 1; i < expr.template.elements.length; i++) {
+                ctx.print(expr, '${');
+                expr.template.expressions[i - 1].visitExpression(this, ctx);
+                ctx.print(expr, `}${expr.template.elements[i].rawText}`);
+            }
+            ctx.print(expr, '`');
+            return null;
+        }
+        visitWrappedNodeExpr(ast, ctx) {
+            throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
+        }
+        visitTypeofExpr(expr, ctx) {
+            ctx.print(expr, 'typeof ');
+            expr.expr.visitExpression(this, ctx);
+        }
+        visitReadVarExpr(ast, ctx) {
+            let varName = ast.name;
+            if (ast.builtin != null) {
+                switch (ast.builtin) {
+                    case BuiltinVar.Super:
+                        varName = 'super';
+                        break;
+                    case BuiltinVar.This:
+                        varName = 'this';
+                        break;
+                    case BuiltinVar.CatchError:
+                        varName = CATCH_ERROR_VAR$1.name;
+                        break;
+                    case BuiltinVar.CatchStack:
+                        varName = CATCH_STACK_VAR$1.name;
+                        break;
+                    default:
+                        throw new Error(`Unknown builtin variable ${ast.builtin}`);
+                }
+            }
+            ctx.print(ast, varName);
+            return null;
+        }
+        visitInstantiateExpr(ast, ctx) {
+            ctx.print(ast, `new `);
+            ast.classExpr.visitExpression(this, ctx);
+            ctx.print(ast, `(`);
+            this.visitAllExpressions(ast.args, ctx, ',');
+            ctx.print(ast, `)`);
+            return null;
+        }
+        visitLiteralExpr(ast, ctx) {
+            const value = ast.value;
+            if (typeof value === 'string') {
+                ctx.print(ast, escapeIdentifier(value, this._escapeDollarInStrings));
+            }
+            else {
+                ctx.print(ast, `${value}`);
+            }
+            return null;
+        }
+        visitLocalizedString(ast, ctx) {
+            const head = ast.serializeI18nHead();
+            ctx.print(ast, '$localize `' + head.raw);
+            for (let i = 1; i < ast.messageParts.length; i++) {
+                ctx.print(ast, '${');
+                ast.expressions[i - 1].visitExpression(this, ctx);
+                ctx.print(ast, `}${ast.serializeI18nTemplatePart(i).raw}`);
+            }
+            ctx.print(ast, '`');
+            return null;
+        }
+        visitConditionalExpr(ast, ctx) {
+            ctx.print(ast, `(`);
+            ast.condition.visitExpression(this, ctx);
+            ctx.print(ast, '? ');
+            ast.trueCase.visitExpression(this, ctx);
+            ctx.print(ast, ': ');
+            ast.falseCase.visitExpression(this, ctx);
+            ctx.print(ast, `)`);
+            return null;
+        }
+        visitNotExpr(ast, ctx) {
+            ctx.print(ast, '!');
+            ast.condition.visitExpression(this, ctx);
+            return null;
+        }
+        visitAssertNotNullExpr(ast, ctx) {
+            ast.condition.visitExpression(this, ctx);
+            return null;
+        }
+        visitUnaryOperatorExpr(ast, ctx) {
+            let opStr;
+            switch (ast.operator) {
+                case UnaryOperator.Plus:
+                    opStr = '+';
+                    break;
+                case UnaryOperator.Minus:
+                    opStr = '-';
+                    break;
+                default:
+                    throw new Error(`Unknown operator ${ast.operator}`);
+            }
+            if (ast.parens)
+                ctx.print(ast, `(`);
+            ctx.print(ast, opStr);
+            ast.expr.visitExpression(this, ctx);
+            if (ast.parens)
+                ctx.print(ast, `)`);
+            return null;
+        }
+        visitBinaryOperatorExpr(ast, ctx) {
+            let opStr;
+            switch (ast.operator) {
+                case BinaryOperator.Equals:
+                    opStr = '==';
+                    break;
+                case BinaryOperator.Identical:
+                    opStr = '===';
+                    break;
+                case BinaryOperator.NotEquals:
+                    opStr = '!=';
+                    break;
+                case BinaryOperator.NotIdentical:
+                    opStr = '!==';
+                    break;
+                case BinaryOperator.And:
+                    opStr = '&&';
+                    break;
+                case BinaryOperator.BitwiseAnd:
+                    opStr = '&';
+                    break;
+                case BinaryOperator.Or:
+                    opStr = '||';
+                    break;
+                case BinaryOperator.Plus:
+                    opStr = '+';
+                    break;
+                case BinaryOperator.Minus:
+                    opStr = '-';
+                    break;
+                case BinaryOperator.Divide:
+                    opStr = '/';
+                    break;
+                case BinaryOperator.Multiply:
+                    opStr = '*';
+                    break;
+                case BinaryOperator.Modulo:
+                    opStr = '%';
+                    break;
+                case BinaryOperator.Lower:
+                    opStr = '<';
+                    break;
+                case BinaryOperator.LowerEquals:
+                    opStr = '<=';
+                    break;
+                case BinaryOperator.Bigger:
+                    opStr = '>';
+                    break;
+                case BinaryOperator.BiggerEquals:
+                    opStr = '>=';
+                    break;
+                case BinaryOperator.NullishCoalesce:
+                    opStr = '??';
+                    break;
+                default:
+                    throw new Error(`Unknown operator ${ast.operator}`);
+            }
+            if (ast.parens)
+                ctx.print(ast, `(`);
+            ast.lhs.visitExpression(this, ctx);
+            ctx.print(ast, ` ${opStr} `);
+            ast.rhs.visitExpression(this, ctx);
+            if (ast.parens)
+                ctx.print(ast, `)`);
+            return null;
+        }
+        visitReadPropExpr(ast, ctx) {
+            ast.receiver.visitExpression(this, ctx);
+            ctx.print(ast, `.`);
+            ctx.print(ast, ast.name);
+            return null;
+        }
+        visitReadKeyExpr(ast, ctx) {
+            ast.receiver.visitExpression(this, ctx);
+            ctx.print(ast, `[`);
+            ast.index.visitExpression(this, ctx);
+            ctx.print(ast, `]`);
+            return null;
+        }
+        visitLiteralArrayExpr(ast, ctx) {
+            ctx.print(ast, `[`);
+            this.visitAllExpressions(ast.entries, ctx, ',');
+            ctx.print(ast, `]`);
+            return null;
+        }
+        visitLiteralMapExpr(ast, ctx) {
+            ctx.print(ast, `{`);
+            this.visitAllObjects(entry => {
+                ctx.print(ast, `${escapeIdentifier(entry.key, this._escapeDollarInStrings, entry.quoted)}:`);
+                entry.value.visitExpression(this, ctx);
+            }, ast.entries, ctx, ',');
+            ctx.print(ast, `}`);
+            return null;
+        }
+        visitCommaExpr(ast, ctx) {
+            ctx.print(ast, '(');
+            this.visitAllExpressions(ast.parts, ctx, ',');
+            ctx.print(ast, ')');
+            return null;
+        }
+        visitAllExpressions(expressions, ctx, separator) {
+            this.visitAllObjects(expr => expr.visitExpression(this, ctx), expressions, ctx, separator);
+        }
+        visitAllObjects(handler, expressions, ctx, separator) {
+            let incrementedIndent = false;
+            for (let i = 0; i < expressions.length; i++) {
+                if (i > 0) {
+                    if (ctx.lineLength() > 80) {
+                        ctx.print(null, separator, true);
+                        if (!incrementedIndent) {
+                            // continuation are marked with double indent.
+                            ctx.incIndent();
+                            ctx.incIndent();
+                            incrementedIndent = true;
+                        }
+                    }
+                    else {
+                        ctx.print(null, separator, false);
+                    }
+                }
+                handler(expressions[i]);
+            }
+            if (incrementedIndent) {
+                // continuation are marked with double indent.
+                ctx.decIndent();
+                ctx.decIndent();
+            }
+        }
+        visitAllStatements(statements, ctx) {
+            statements.forEach((stmt) => stmt.visitStatement(this, ctx));
+        }
+    }
+    function escapeIdentifier(input, escapeDollar, alwaysQuote = true) {
+        if (input == null) {
+            return null;
+        }
+        const body = input.replace(_SINGLE_QUOTE_ESCAPE_STRING_RE, (...match) => {
+            if (match[0] == '$') {
+                return escapeDollar ? '\\$' : '$';
+            }
+            else if (match[0] == '\n') {
+                return '\\n';
+            }
+            else if (match[0] == '\r') {
+                return '\\r';
+            }
+            else {
+                return `\\${match[0]}`;
+            }
+        });
+        const requiresQuotes = alwaysQuote || !_LEGAL_IDENTIFIER_RE.test(body);
+        return requiresQuotes ? `'${body}'` : body;
+    }
+    function _createIndent(count) {
+        let res = '';
+        for (let i = 0; i < count; i++) {
+            res += _INDENT_WITH;
+        }
+        return res;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function typeWithParameters(type, numParams) {
+        if (numParams === 0) {
+            return expressionType(type);
+        }
+        const params = [];
+        for (let i = 0; i < numParams; i++) {
+            params.push(DYNAMIC_TYPE);
+        }
+        return expressionType(type, undefined, params);
+    }
+    const ANIMATE_SYMBOL_PREFIX = '@';
+    function prepareSyntheticPropertyName(name) {
+        return `${ANIMATE_SYMBOL_PREFIX}${name}`;
+    }
+    function prepareSyntheticListenerName(name, phase) {
+        return `${ANIMATE_SYMBOL_PREFIX}${name}.${phase}`;
+    }
+    function getSafePropertyAccessString(accessor, name) {
+        const escapedName = escapeIdentifier(name, false, false);
+        return escapedName !== name ? `${accessor}[${escapedName}]` : `${accessor}.${name}`;
+    }
+    function prepareSyntheticListenerFunctionName(name, phase) {
+        return `animation_${name}_${phase}`;
+    }
+    function jitOnlyGuardedExpression(expr) {
+        return guardedExpression('ngJitMode', expr);
+    }
+    function guardedExpression(guard, expr) {
+        const guardExpr = new ExternalExpr({ name: guard, moduleName: null });
+        const guardNotDefined = new BinaryOperatorExpr(BinaryOperator.Identical, new TypeofExpr(guardExpr), literal('undefined'));
+        const guardUndefinedOrTrue = new BinaryOperatorExpr(BinaryOperator.Or, guardNotDefined, guardExpr, /* type */ undefined, 
+        /* sourceSpan */ undefined, true);
+        return new BinaryOperatorExpr(BinaryOperator.And, guardUndefinedOrTrue, expr);
+    }
+    function wrapReference(value) {
+        const wrapped = new WrappedNodeExpr(value);
+        return { value: wrapped, type: wrapped };
+    }
+    function refsToArray(refs, shouldForwardDeclare) {
+        const values = literalArr(refs.map(ref => ref.value));
+        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var R3FactoryDelegateType;
     (function (R3FactoryDelegateType) {
         R3FactoryDelegateType[R3FactoryDelegateType["Class"] = 0] = "Class";
         R3FactoryDelegateType[R3FactoryDelegateType["Function"] = 1] = "Function";
-        R3FactoryDelegateType[R3FactoryDelegateType["Factory"] = 2] = "Factory";
     })(R3FactoryDelegateType || (R3FactoryDelegateType = {}));
-    var R3FactoryTarget;
-    (function (R3FactoryTarget) {
-        R3FactoryTarget[R3FactoryTarget["Directive"] = 0] = "Directive";
-        R3FactoryTarget[R3FactoryTarget["Component"] = 1] = "Component";
-        R3FactoryTarget[R3FactoryTarget["Injectable"] = 2] = "Injectable";
-        R3FactoryTarget[R3FactoryTarget["Pipe"] = 3] = "Pipe";
-        R3FactoryTarget[R3FactoryTarget["NgModule"] = 4] = "NgModule";
-    })(R3FactoryTarget || (R3FactoryTarget = {}));
-    /**
-     * Resolved type of a dependency.
-     *
-     * Occasionally, dependencies will have special significance which is known statically. In that
-     * case the `R3ResolvedDependencyType` informs the factory generator that a particular dependency
-     * should be generated specially (usually by calling a special injection function instead of the
-     * standard one).
-     */
-    var R3ResolvedDependencyType;
-    (function (R3ResolvedDependencyType) {
-        /**
-         * A normal token dependency.
-         */
-        R3ResolvedDependencyType[R3ResolvedDependencyType["Token"] = 0] = "Token";
-        /**
-         * The dependency is for an attribute.
-         *
-         * The token expression is a string representing the attribute name.
-         */
-        R3ResolvedDependencyType[R3ResolvedDependencyType["Attribute"] = 1] = "Attribute";
-        /**
-         * Injecting the `ChangeDetectorRef` token. Needs special handling when injected into a pipe.
-         */
-        R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
-        /**
-         * An invalid dependency (no token could be determined). An error should be thrown at runtime.
-         */
-        R3ResolvedDependencyType[R3ResolvedDependencyType["Invalid"] = 3] = "Invalid";
-    })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
+    var FactoryTarget;
+    (function (FactoryTarget) {
+        FactoryTarget[FactoryTarget["Directive"] = 0] = "Directive";
+        FactoryTarget[FactoryTarget["Component"] = 1] = "Component";
+        FactoryTarget[FactoryTarget["Injectable"] = 2] = "Injectable";
+        FactoryTarget[FactoryTarget["Pipe"] = 3] = "Pipe";
+        FactoryTarget[FactoryTarget["NgModule"] = 4] = "NgModule";
+    })(FactoryTarget || (FactoryTarget = {}));
     /**
      * Construct a factory function expression for the given `R3FactoryMetadata`.
      */
     function compileFactoryFunction(meta) {
         const t = variable('t');
-        const statements = [];
-        let ctorDepsType = NONE_TYPE;
+        let baseFactoryVar = null;
         // The type to instantiate via constructor invocation. If there is no delegated factory, meaning
         // this type is always created by constructor invocation, then this is the type-to-create
         // parameter provided by the user (t) if specified, or the current type if not. If there is a
         // delegated factory (which is used to create the current type) then this is only the type-to-
         // create parameter (t).
-        const typeForCtor = !isDelegatedMetadata(meta) ?
+        const typeForCtor = !isDelegatedFactoryMetadata(meta) ?
             new BinaryOperatorExpr(BinaryOperator.Or, t, meta.internalType) :
             t;
         let ctorExpr = null;
         if (meta.deps !== null) {
             // There is a constructor (either explicitly or implicitly defined).
             if (meta.deps !== 'invalid') {
-                ctorExpr = new InstantiateExpr(typeForCtor, injectDependencies(meta.deps, meta.injectFn, meta.target === R3FactoryTarget.Pipe));
-                ctorDepsType = createCtorDepsType(meta.deps);
+                ctorExpr = new InstantiateExpr(typeForCtor, injectDependencies(meta.deps, meta.target));
             }
         }
         else {
-            const baseFactory = variable(`ɵ${meta.name}_BaseFactory`);
-            const getInheritedFactory = importExpr(Identifiers$1.getInheritedFactory);
-            const baseFactoryStmt = baseFactory
-                .set(getInheritedFactory.callFn([meta.internalType], /* sourceSpan */ undefined, /* pure */ true))
-                .toDeclStmt(INFERRED_TYPE, [StmtModifier.Exported, StmtModifier.Final]);
-            statements.push(baseFactoryStmt);
             // There is no constructor, use the base class' factory to construct typeForCtor.
-            ctorExpr = baseFactory.callFn([typeForCtor]);
+            baseFactoryVar = variable(`ɵ${meta.name}_BaseFactory`);
+            ctorExpr = baseFactoryVar.callFn([typeForCtor]);
         }
-        const ctorExprFinal = ctorExpr;
         const body = [];
         let retExpr = null;
         function makeConditionalFactory(nonCtorExpr) {
             const r = variable('r');
             body.push(r.set(NULL_EXPR).toDeclStmt());
-            let ctorStmt = null;
-            if (ctorExprFinal !== null) {
-                ctorStmt = r.set(ctorExprFinal).toStmt();
-            }
-            else {
-                ctorStmt = importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt();
-            }
+            const ctorStmt = ctorExpr !== null ? r.set(ctorExpr).toStmt() :
+                importExpr(Identifiers.invalidFactory).callFn([]).toStmt();
             body.push(ifStmt(t, [ctorStmt], [r.set(nonCtorExpr).toStmt()]));
             return r;
         }
-        if (isDelegatedMetadata(meta) && meta.delegateType === R3FactoryDelegateType.Factory) {
-            const delegateFactory = variable(`ɵ${meta.name}_BaseFactory`);
-            const getFactoryOf = importExpr(Identifiers$1.getFactoryOf);
-            if (meta.delegate.isEquivalent(meta.internalType)) {
-                throw new Error(`Illegal state: compiling factory that delegates to itself`);
-            }
-            const delegateFactoryStmt = delegateFactory.set(getFactoryOf.callFn([meta.delegate])).toDeclStmt(INFERRED_TYPE, [
-                StmtModifier.Exported, StmtModifier.Final
-            ]);
-            statements.push(delegateFactoryStmt);
-            retExpr = makeConditionalFactory(delegateFactory.callFn([]));
-        }
-        else if (isDelegatedMetadata(meta)) {
+        if (isDelegatedFactoryMetadata(meta)) {
             // This type is created with a delegated factory. If a type parameter is not specified, call
             // the factory instead.
-            const delegateArgs = injectDependencies(meta.delegateDeps, meta.injectFn, meta.target === R3FactoryTarget.Pipe);
+            const delegateArgs = injectDependencies(meta.delegateDeps, meta.target);
             // Either call `new delegate(...)` or `delegate(...)` depending on meta.delegateType.
             const factoryExpr = new (meta.delegateType === R3FactoryDelegateType.Class ?
                 InstantiateExpr :
@@ -5190,51 +4639,75 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         else {
             retExpr = ctorExpr;
         }
-        if (retExpr !== null) {
-            body.push(new ReturnStatement(retExpr));
+        if (retExpr === null) {
+            // The expression cannot be formed so render an `ɵɵinvalidFactory()` call.
+            body.push(importExpr(Identifiers.invalidFactory).callFn([]).toStmt());
+        }
+        else if (baseFactoryVar !== null) {
+            // This factory uses a base factory, so call `ɵɵgetInheritedFactory()` to compute it.
+            const getInheritedFactoryCall = importExpr(Identifiers.getInheritedFactory).callFn([meta.internalType]);
+            // Memoize the base factoryFn: `baseFactory || (baseFactory = ɵɵgetInheritedFactory(...))`
+            const baseFactory = new BinaryOperatorExpr(BinaryOperator.Or, baseFactoryVar, baseFactoryVar.set(getInheritedFactoryCall));
+            body.push(new ReturnStatement(baseFactory.callFn([typeForCtor])));
         }
         else {
-            body.push(importExpr(Identifiers$1.invalidFactory).callFn([]).toStmt());
+            // This is straightforward factory, just return it.
+            body.push(new ReturnStatement(retExpr));
+        }
+        let factoryFn = fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, `${meta.name}_Factory`);
+        if (baseFactoryVar !== null) {
+            // There is a base factory variable so wrap its declaration along with the factory function into
+            // an IIFE.
+            factoryFn = fn([], [
+                new DeclareVarStmt(baseFactoryVar.name),
+                new ReturnStatement(factoryFn)
+            ]).callFn([], /* sourceSpan */ undefined, /* pure */ true);
         }
         return {
-            factory: fn([new FnParam('t', DYNAMIC_TYPE)], body, INFERRED_TYPE, undefined, `${meta.name}_Factory`),
-            statements,
-            type: expressionType(importExpr(Identifiers$1.FactoryDef, [typeWithParameters(meta.type.type, meta.typeArgumentCount), ctorDepsType]))
+            expression: factoryFn,
+            statements: [],
+            type: createFactoryType(meta),
         };
     }
-    function injectDependencies(deps, injectFn, isPipe) {
-        return deps.map((dep, index) => compileInjectDependency(dep, injectFn, isPipe, index));
+    function createFactoryType(meta) {
+        const ctorDepsType = meta.deps !== null && meta.deps !== 'invalid' ? createCtorDepsType(meta.deps) : NONE_TYPE;
+        return expressionType(importExpr(Identifiers.FactoryDeclaration, [typeWithParameters(meta.type.type, meta.typeArgumentCount), ctorDepsType]));
     }
-    function compileInjectDependency(dep, injectFn, isPipe, index) {
+    function injectDependencies(deps, target) {
+        return deps.map((dep, index) => compileInjectDependency(dep, target, index));
+    }
+    function compileInjectDependency(dep, target, index) {
         // Interpret the dependency according to its resolved type.
-        switch (dep.resolved) {
-            case R3ResolvedDependencyType.Token:
-            case R3ResolvedDependencyType.ChangeDetectorRef:
-                // Build up the injection flags according to the metadata.
-                const flags = 0 /* Default */ | (dep.self ? 2 /* Self */ : 0) |
-                    (dep.skipSelf ? 4 /* SkipSelf */ : 0) | (dep.host ? 1 /* Host */ : 0) |
-                    (dep.optional ? 8 /* Optional */ : 0);
-                // If this dependency is optional or otherwise has non-default flags, then additional
-                // parameters describing how to inject the dependency must be passed to the inject function
-                // that's being used.
-                let flagsParam = (flags !== 0 /* Default */ || dep.optional) ? literal(flags) : null;
-                // We have a separate instruction for injecting ChangeDetectorRef into a pipe.
-                if (isPipe && dep.resolved === R3ResolvedDependencyType.ChangeDetectorRef) {
-                    return importExpr(Identifiers$1.injectPipeChangeDetectorRef).callFn(flagsParam ? [flagsParam] : []);
-                }
-                // Build up the arguments to the injectFn call.
-                const injectArgs = [dep.token];
-                if (flagsParam) {
-                    injectArgs.push(flagsParam);
-                }
-                return importExpr(injectFn).callFn(injectArgs);
-            case R3ResolvedDependencyType.Attribute:
-                // In the case of attributes, the attribute name in question is given as the token.
-                return importExpr(Identifiers$1.injectAttribute).callFn([dep.token]);
-            case R3ResolvedDependencyType.Invalid:
-                return importExpr(Identifiers$1.invalidFactoryDep).callFn([literal(index)]);
-            default:
-                return unsupported(`Unknown R3ResolvedDependencyType: ${R3ResolvedDependencyType[dep.resolved]}`);
+        if (dep.token === null) {
+            return importExpr(Identifiers.invalidFactoryDep).callFn([literal(index)]);
+        }
+        else if (dep.attributeNameType === null) {
+            // Build up the injection flags according to the metadata.
+            const flags = 0 /* Default */ | (dep.self ? 2 /* Self */ : 0) |
+                (dep.skipSelf ? 4 /* SkipSelf */ : 0) | (dep.host ? 1 /* Host */ : 0) |
+                (dep.optional ? 8 /* Optional */ : 0) |
+                (target === FactoryTarget.Pipe ? 16 /* ForPipe */ : 0);
+            // If this dependency is optional or otherwise has non-default flags, then additional
+            // parameters describing how to inject the dependency must be passed to the inject function
+            // that's being used.
+            let flagsParam = (flags !== 0 /* Default */ || dep.optional) ? literal(flags) : null;
+            // Build up the arguments to the injectFn call.
+            const injectArgs = [dep.token];
+            if (flagsParam) {
+                injectArgs.push(flagsParam);
+            }
+            const injectFn = getInjectFn(target);
+            return importExpr(injectFn).callFn(injectArgs);
+        }
+        else {
+            // The `dep.attributeTypeName` value is defined, which indicates that this is an `@Attribute()`
+            // type dependency. For the generated JS we still want to use the `dep.token` value in case the
+            // name given for the attribute is not a string literal. For example given `@Attribute(foo())`,
+            // we want to generate `ɵɵinjectAttribute(foo())`.
+            //
+            // The `dep.attributeTypeName` is only actually used (in `createCtorDepType()`) to generate
+            // typings.
+            return importExpr(Identifiers.injectAttribute).callFn([dep.token]);
         }
     }
     function createCtorDepsType(deps) {
@@ -5258,10 +4731,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function createCtorDepType(dep) {
         const entries = [];
-        if (dep.resolved === R3ResolvedDependencyType.Attribute) {
-            if (dep.attribute !== null) {
-                entries.push({ key: 'attribute', value: dep.attribute, quoted: false });
-            }
+        if (dep.attributeNameType !== null) {
+            entries.push({ key: 'attribute', value: dep.attributeNameType, quoted: false });
         }
         if (dep.optional) {
             entries.push({ key: 'optional', value: literal(true), quoted: false });
@@ -5277,11 +4748,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return entries.length > 0 ? literalMap(entries) : null;
     }
-    function isDelegatedMetadata(meta) {
+    function isDelegatedFactoryMetadata(meta) {
         return meta.delegateType !== undefined;
     }
     function isExpressionFactoryMetadata(meta) {
         return meta.expression !== undefined;
+    }
+    function getInjectFn(target) {
+        switch (target) {
+            case FactoryTarget.Component:
+            case FactoryTarget.Directive:
+            case FactoryTarget.Pipe:
+                return Identifiers.directiveInject;
+            case FactoryTarget.NgModule:
+            case FactoryTarget.Injectable:
+            default:
+                return Identifiers.inject;
+        }
     }
 
     /**
@@ -5291,7 +4774,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function compileInjectable(meta) {
+    function createR3ProviderExpression(expression, isForwardRef) {
+        return { expression, isForwardRef };
+    }
+    function compileInjectable(meta, resolveForwardRefs) {
         let result = null;
         const factoryMeta = {
             name: meta.name,
@@ -5299,8 +4785,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             internalType: meta.internalType,
             typeArgumentCount: meta.typeArgumentCount,
             deps: [],
-            injectFn: Identifiers.inject,
-            target: R3FactoryTarget.Injectable,
+            target: FactoryTarget.Injectable,
         };
         if (meta.useClass !== undefined) {
             // meta.useClass has two modes of operation. Either deps are specified, in which case `new` is
@@ -5309,30 +4794,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             //
             // A special case exists for useClass: Type where Type is the injectable type itself and no
             // deps are specified, in which case 'useClass' is effectively ignored.
-            const useClassOnSelf = meta.useClass.isEquivalent(meta.internalType);
+            const useClassOnSelf = meta.useClass.expression.isEquivalent(meta.internalType);
             let deps = undefined;
-            if (meta.userDeps !== undefined) {
-                deps = meta.userDeps;
+            if (meta.deps !== undefined) {
+                deps = meta.deps;
             }
             if (deps !== undefined) {
                 // factory: () => new meta.useClass(...deps)
-                result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { delegate: meta.useClass, delegateDeps: deps, delegateType: R3FactoryDelegateType.Class }));
+                result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { delegate: meta.useClass.expression, delegateDeps: deps, delegateType: R3FactoryDelegateType.Class }));
             }
             else if (useClassOnSelf) {
                 result = compileFactoryFunction(factoryMeta);
             }
             else {
-                result = delegateToFactory(meta.type.value, meta.useClass);
+                result = {
+                    statements: [],
+                    expression: delegateToFactory(meta.type.value, meta.useClass.expression, resolveForwardRefs)
+                };
             }
         }
         else if (meta.useFactory !== undefined) {
-            if (meta.userDeps !== undefined) {
-                result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { delegate: meta.useFactory, delegateDeps: meta.userDeps || [], delegateType: R3FactoryDelegateType.Function }));
+            if (meta.deps !== undefined) {
+                result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { delegate: meta.useFactory, delegateDeps: meta.deps || [], delegateType: R3FactoryDelegateType.Function }));
             }
             else {
                 result = {
                     statements: [],
-                    factory: fn([], [new ReturnStatement(meta.useFactory.callFn([]))])
+                    expression: fn([], [new ReturnStatement(meta.useFactory.callFn([]))])
                 };
             }
         }
@@ -5340,39 +4828,64 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Note: it's safe to use `meta.useValue` instead of the `USE_VALUE in meta` check used for
             // client code because meta.useValue is an Expression which will be defined even if the actual
             // value is undefined.
-            result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { expression: meta.useValue }));
+            result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { expression: meta.useValue.expression }));
         }
         else if (meta.useExisting !== undefined) {
             // useExisting is an `inject` call on the existing token.
-            result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { expression: importExpr(Identifiers.inject).callFn([meta.useExisting]) }));
+            result = compileFactoryFunction(Object.assign(Object.assign({}, factoryMeta), { expression: importExpr(Identifiers.inject).callFn([meta.useExisting.expression]) }));
         }
         else {
-            result = delegateToFactory(meta.type.value, meta.internalType);
+            result = {
+                statements: [],
+                expression: delegateToFactory(meta.type.value, meta.internalType, resolveForwardRefs)
+            };
         }
         const token = meta.internalType;
-        const injectableProps = { token, factory: result.factory };
+        const injectableProps = new DefinitionMap();
+        injectableProps.set('token', token);
+        injectableProps.set('factory', result.expression);
         // Only generate providedIn property if it has a non-null value
-        if (meta.providedIn.value !== null) {
-            injectableProps.providedIn = meta.providedIn;
+        if (meta.providedIn.expression.value !== null) {
+            injectableProps.set('providedIn', meta.providedIn.isForwardRef ? generateForwardRef(meta.providedIn.expression) :
+                meta.providedIn.expression);
         }
-        const expression = importExpr(Identifiers.ɵɵdefineInjectable).callFn([mapToMapExpression(injectableProps)]);
-        const type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type.type, meta.typeArgumentCount)]));
+        const expression = importExpr(Identifiers.ɵɵdefineInjectable)
+            .callFn([injectableProps.toLiteralMap()], undefined, true);
         return {
             expression,
-            type,
+            type: createInjectableType(meta),
             statements: result.statements,
         };
     }
-    function delegateToFactory(type, internalType) {
-        return {
-            statements: [],
-            // If types are the same, we can generate `factory: type.ɵfac`
-            // If types are different, we have to generate a wrapper function to ensure
-            // the internal type has been resolved (`factory: function(t) { return type.ɵfac(t); }`)
-            factory: type.node === internalType.node ?
-                internalType.prop('ɵfac') :
-                fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(internalType.callMethod('ɵfac', [variable('t')]))])
-        };
+    function createInjectableType(meta) {
+        return new ExpressionType(importExpr(Identifiers.InjectableDeclaration, [typeWithParameters(meta.type.type, meta.typeArgumentCount)]));
+    }
+    function delegateToFactory(type, internalType, unwrapForwardRefs) {
+        if (type.node === internalType.node) {
+            // The types are the same, so we can simply delegate directly to the type's factory.
+            // ```
+            // factory: type.ɵfac
+            // ```
+            return internalType.prop('ɵfac');
+        }
+        if (!unwrapForwardRefs) {
+            // The type is not wrapped in a `forwardRef()`, so we create a simple factory function that
+            // accepts a sub-type as an argument.
+            // ```
+            // factory: function(t) { return internalType.ɵfac(t); }
+            // ```
+            return createFactoryFunction(internalType);
+        }
+        // The internalType is actually wrapped in a `forwardRef()` so we need to resolve that before
+        // calling its factory.
+        // ```
+        // factory: function(t) { return core.resolveForwardRef(type).ɵfac(t); }
+        // ```
+        const unwrappedType = importExpr(Identifiers.resolveForwardRef).callFn([internalType]);
+        return createFactoryFunction(unwrappedType);
+    }
+    function createFactoryFunction(type) {
+        return fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ɵfac', [variable('t')]))]);
     }
 
     /**
@@ -5400,7 +4913,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /[<>]/,
         /^[{}]$/,
         /&(#|[a-z])/i,
-        /^\/\//,
+        /^\/\//, // comment
     ];
     function assertInterpolationSymbols(identifier, value) {
         if (value != null && !(Array.isArray(value) && value.length == 2)) {
@@ -5439,6 +4952,424 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     const DEFAULT_INTERPOLATION_CONFIG = new InterpolationConfig('{{', '}}');
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A token representing the a reference to a static type.
+     *
+     * This token is unique for a filePath and name and can be used as a hash table key.
+     */
+    class StaticSymbol {
+        constructor(filePath, name, members) {
+            this.filePath = filePath;
+            this.name = name;
+            this.members = members;
+        }
+        assertNoMembers() {
+            if (this.members.length) {
+                throw new Error(`Illegal state: symbol without members expected, but got ${JSON.stringify(this)}.`);
+            }
+        }
+    }
+    /**
+     * A cache of static symbol used by the StaticReflector to return the same symbol for the
+     * same symbol values.
+     */
+    class StaticSymbolCache {
+        constructor() {
+            this.cache = new Map();
+        }
+        get(declarationFile, name, members) {
+            members = members || [];
+            const memberSuffix = members.length ? `.${members.join('.')}` : '';
+            const key = `"${declarationFile}".${name}${memberSuffix}`;
+            let result = this.cache.get(key);
+            if (!result) {
+                result = new StaticSymbol(declarationFile, name, members);
+                this.cache.set(key, result);
+            }
+            return result;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // group 0: "[prop] or (event) or @trigger"
+    // group 1: "prop" from "[prop]"
+    // group 2: "event" from "(event)"
+    // group 3: "@trigger" from "@trigger"
+    const HOST_REG_EXP = /^(?:(?:\[([^\]]+)\])|(?:\(([^\)]+)\)))|(\@[-\w]+)$/;
+    function sanitizeIdentifier(name) {
+        return name.replace(/\W/g, '_');
+    }
+    let _anonymousTypeIndex = 0;
+    function identifierName(compileIdentifier) {
+        if (!compileIdentifier || !compileIdentifier.reference) {
+            return null;
+        }
+        const ref = compileIdentifier.reference;
+        if (ref instanceof StaticSymbol) {
+            return ref.name;
+        }
+        if (ref['__anonymousType']) {
+            return ref['__anonymousType'];
+        }
+        if (ref['__forward_ref__']) {
+            // We do not want to try to stringify a `forwardRef()` function because that would cause the
+            // inner function to be evaluated too early, defeating the whole point of the `forwardRef`.
+            return '__forward_ref__';
+        }
+        let identifier = stringify(ref);
+        if (identifier.indexOf('(') >= 0) {
+            // case: anonymous functions!
+            identifier = `anonymous_${_anonymousTypeIndex++}`;
+            ref['__anonymousType'] = identifier;
+        }
+        else {
+            identifier = sanitizeIdentifier(identifier);
+        }
+        return identifier;
+    }
+    function viewClassName(compType, embeddedTemplateIndex) {
+        return `View_${identifierName({ reference: compType })}_${embeddedTemplateIndex}`;
+    }
+    function rendererTypeName(compType) {
+        return `RenderType_${identifierName({ reference: compType })}`;
+    }
+    function hostViewClassName(compType) {
+        return `HostView_${identifierName({ reference: compType })}`;
+    }
+    function componentFactoryName(compType) {
+        return `${identifierName({ reference: compType })}NgFactory`;
+    }
+    var CompileSummaryKind;
+    (function (CompileSummaryKind) {
+        CompileSummaryKind[CompileSummaryKind["Pipe"] = 0] = "Pipe";
+        CompileSummaryKind[CompileSummaryKind["Directive"] = 1] = "Directive";
+        CompileSummaryKind[CompileSummaryKind["NgModule"] = 2] = "NgModule";
+        CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
+    })(CompileSummaryKind || (CompileSummaryKind = {}));
+    function tokenName(token) {
+        return token.value != null ? sanitizeIdentifier(token.value) : identifierName(token.identifier);
+    }
+    function tokenReference(token) {
+        if (token.identifier != null) {
+            return token.identifier.reference;
+        }
+        else {
+            return token.value;
+        }
+    }
+    /**
+     * Metadata about a stylesheet
+     */
+    class CompileStylesheetMetadata {
+        constructor({ moduleUrl, styles, styleUrls } = {}) {
+            this.moduleUrl = moduleUrl || null;
+            this.styles = _normalizeArray(styles);
+            this.styleUrls = _normalizeArray(styleUrls);
+        }
+    }
+    /**
+     * Metadata regarding compilation of a template.
+     */
+    class CompileTemplateMetadata {
+        constructor({ encapsulation, template, templateUrl, htmlAst, styles, styleUrls, externalStylesheets, animations, ngContentSelectors, interpolation, isInline, preserveWhitespaces }) {
+            this.encapsulation = encapsulation;
+            this.template = template;
+            this.templateUrl = templateUrl;
+            this.htmlAst = htmlAst;
+            this.styles = _normalizeArray(styles);
+            this.styleUrls = _normalizeArray(styleUrls);
+            this.externalStylesheets = _normalizeArray(externalStylesheets);
+            this.animations = animations ? flatten(animations) : [];
+            this.ngContentSelectors = ngContentSelectors || [];
+            if (interpolation && interpolation.length != 2) {
+                throw new Error(`'interpolation' should have a start and an end symbol.`);
+            }
+            this.interpolation = interpolation;
+            this.isInline = isInline;
+            this.preserveWhitespaces = preserveWhitespaces;
+        }
+        toSummary() {
+            return {
+                ngContentSelectors: this.ngContentSelectors,
+                encapsulation: this.encapsulation,
+                styles: this.styles,
+                animations: this.animations
+            };
+        }
+    }
+    /**
+     * Metadata regarding compilation of a directive.
+     */
+    class CompileDirectiveMetadata {
+        constructor({ isHost, type, isComponent, selector, exportAs, changeDetection, inputs, outputs, hostListeners, hostProperties, hostAttributes, providers, viewProviders, queries, guards, viewQueries, entryComponents, template, componentViewType, rendererType, componentFactory }) {
+            this.isHost = !!isHost;
+            this.type = type;
+            this.isComponent = isComponent;
+            this.selector = selector;
+            this.exportAs = exportAs;
+            this.changeDetection = changeDetection;
+            this.inputs = inputs;
+            this.outputs = outputs;
+            this.hostListeners = hostListeners;
+            this.hostProperties = hostProperties;
+            this.hostAttributes = hostAttributes;
+            this.providers = _normalizeArray(providers);
+            this.viewProviders = _normalizeArray(viewProviders);
+            this.queries = _normalizeArray(queries);
+            this.guards = guards;
+            this.viewQueries = _normalizeArray(viewQueries);
+            this.entryComponents = _normalizeArray(entryComponents);
+            this.template = template;
+            this.componentViewType = componentViewType;
+            this.rendererType = rendererType;
+            this.componentFactory = componentFactory;
+        }
+        static create({ isHost, type, isComponent, selector, exportAs, changeDetection, inputs, outputs, host, providers, viewProviders, queries, guards, viewQueries, entryComponents, template, componentViewType, rendererType, componentFactory }) {
+            const hostListeners = {};
+            const hostProperties = {};
+            const hostAttributes = {};
+            if (host != null) {
+                Object.keys(host).forEach(key => {
+                    const value = host[key];
+                    const matches = key.match(HOST_REG_EXP);
+                    if (matches === null) {
+                        hostAttributes[key] = value;
+                    }
+                    else if (matches[1] != null) {
+                        hostProperties[matches[1]] = value;
+                    }
+                    else if (matches[2] != null) {
+                        hostListeners[matches[2]] = value;
+                    }
+                });
+            }
+            const inputsMap = {};
+            if (inputs != null) {
+                inputs.forEach((bindConfig) => {
+                    // canonical syntax: `dirProp: elProp`
+                    // if there is no `:`, use dirProp = elProp
+                    const parts = splitAtColon(bindConfig, [bindConfig, bindConfig]);
+                    inputsMap[parts[0]] = parts[1];
+                });
+            }
+            const outputsMap = {};
+            if (outputs != null) {
+                outputs.forEach((bindConfig) => {
+                    // canonical syntax: `dirProp: elProp`
+                    // if there is no `:`, use dirProp = elProp
+                    const parts = splitAtColon(bindConfig, [bindConfig, bindConfig]);
+                    outputsMap[parts[0]] = parts[1];
+                });
+            }
+            return new CompileDirectiveMetadata({
+                isHost,
+                type,
+                isComponent: !!isComponent,
+                selector,
+                exportAs,
+                changeDetection,
+                inputs: inputsMap,
+                outputs: outputsMap,
+                hostListeners,
+                hostProperties,
+                hostAttributes,
+                providers,
+                viewProviders,
+                queries,
+                guards,
+                viewQueries,
+                entryComponents,
+                template,
+                componentViewType,
+                rendererType,
+                componentFactory,
+            });
+        }
+        toSummary() {
+            return {
+                summaryKind: CompileSummaryKind.Directive,
+                type: this.type,
+                isComponent: this.isComponent,
+                selector: this.selector,
+                exportAs: this.exportAs,
+                inputs: this.inputs,
+                outputs: this.outputs,
+                hostListeners: this.hostListeners,
+                hostProperties: this.hostProperties,
+                hostAttributes: this.hostAttributes,
+                providers: this.providers,
+                viewProviders: this.viewProviders,
+                queries: this.queries,
+                guards: this.guards,
+                viewQueries: this.viewQueries,
+                entryComponents: this.entryComponents,
+                changeDetection: this.changeDetection,
+                template: this.template && this.template.toSummary(),
+                componentViewType: this.componentViewType,
+                rendererType: this.rendererType,
+                componentFactory: this.componentFactory
+            };
+        }
+    }
+    class CompilePipeMetadata {
+        constructor({ type, name, pure }) {
+            this.type = type;
+            this.name = name;
+            this.pure = !!pure;
+        }
+        toSummary() {
+            return {
+                summaryKind: CompileSummaryKind.Pipe,
+                type: this.type,
+                name: this.name,
+                pure: this.pure
+            };
+        }
+    }
+    /**
+     * Metadata regarding compilation of a module.
+     */
+    class CompileNgModuleMetadata {
+        constructor({ type, providers, declaredDirectives, exportedDirectives, declaredPipes, exportedPipes, entryComponents, bootstrapComponents, importedModules, exportedModules, schemas, transitiveModule, id }) {
+            this.type = type || null;
+            this.declaredDirectives = _normalizeArray(declaredDirectives);
+            this.exportedDirectives = _normalizeArray(exportedDirectives);
+            this.declaredPipes = _normalizeArray(declaredPipes);
+            this.exportedPipes = _normalizeArray(exportedPipes);
+            this.providers = _normalizeArray(providers);
+            this.entryComponents = _normalizeArray(entryComponents);
+            this.bootstrapComponents = _normalizeArray(bootstrapComponents);
+            this.importedModules = _normalizeArray(importedModules);
+            this.exportedModules = _normalizeArray(exportedModules);
+            this.schemas = _normalizeArray(schemas);
+            this.id = id || null;
+            this.transitiveModule = transitiveModule || null;
+        }
+        toSummary() {
+            const module = this.transitiveModule;
+            return {
+                summaryKind: CompileSummaryKind.NgModule,
+                type: this.type,
+                entryComponents: module.entryComponents,
+                providers: module.providers,
+                modules: module.modules,
+                exportedDirectives: module.exportedDirectives,
+                exportedPipes: module.exportedPipes
+            };
+        }
+    }
+    class TransitiveCompileNgModuleMetadata {
+        constructor() {
+            this.directivesSet = new Set();
+            this.directives = [];
+            this.exportedDirectivesSet = new Set();
+            this.exportedDirectives = [];
+            this.pipesSet = new Set();
+            this.pipes = [];
+            this.exportedPipesSet = new Set();
+            this.exportedPipes = [];
+            this.modulesSet = new Set();
+            this.modules = [];
+            this.entryComponentsSet = new Set();
+            this.entryComponents = [];
+            this.providers = [];
+        }
+        addProvider(provider, module) {
+            this.providers.push({ provider: provider, module: module });
+        }
+        addDirective(id) {
+            if (!this.directivesSet.has(id.reference)) {
+                this.directivesSet.add(id.reference);
+                this.directives.push(id);
+            }
+        }
+        addExportedDirective(id) {
+            if (!this.exportedDirectivesSet.has(id.reference)) {
+                this.exportedDirectivesSet.add(id.reference);
+                this.exportedDirectives.push(id);
+            }
+        }
+        addPipe(id) {
+            if (!this.pipesSet.has(id.reference)) {
+                this.pipesSet.add(id.reference);
+                this.pipes.push(id);
+            }
+        }
+        addExportedPipe(id) {
+            if (!this.exportedPipesSet.has(id.reference)) {
+                this.exportedPipesSet.add(id.reference);
+                this.exportedPipes.push(id);
+            }
+        }
+        addModule(id) {
+            if (!this.modulesSet.has(id.reference)) {
+                this.modulesSet.add(id.reference);
+                this.modules.push(id);
+            }
+        }
+        addEntryComponent(ec) {
+            if (!this.entryComponentsSet.has(ec.componentType)) {
+                this.entryComponentsSet.add(ec.componentType);
+                this.entryComponents.push(ec);
+            }
+        }
+    }
+    function _normalizeArray(obj) {
+        return obj || [];
+    }
+    class ProviderMeta {
+        constructor(token, { useClass, useValue, useExisting, useFactory, deps, multi }) {
+            this.token = token;
+            this.useClass = useClass || null;
+            this.useValue = useValue;
+            this.useExisting = useExisting;
+            this.useFactory = useFactory || null;
+            this.dependencies = deps || null;
+            this.multi = !!multi;
+        }
+    }
+    function flatten(list) {
+        return list.reduce((flat, item) => {
+            const flatItem = Array.isArray(item) ? flatten(item) : item;
+            return flat.concat(flatItem);
+        }, []);
+    }
+    function jitSourceUrl(url) {
+        // Note: We need 3 "/" so that ng shows up as a separate domain
+        // in the chrome dev tools.
+        return url.replace(/(\w+:\/\/[\w:-]+)?(\/+)?/, 'ng:///');
+    }
+    function templateSourceUrl(ngModuleType, compMeta, templateMeta) {
+        let url;
+        if (templateMeta.isInline) {
+            if (compMeta.type.reference instanceof StaticSymbol) {
+                // Note: a .ts file might contain multiple components with inline templates,
+                // so we need to give them unique urls, as these will be used for sourcemaps.
+                url = `${compMeta.type.reference.filePath}.${compMeta.type.reference.name}.html`;
+            }
+            else {
+                url = `${identifierName(ngModuleType)}/${identifierName(compMeta.type)}.html`;
+            }
+        }
+        else {
+            url = templateMeta.templateUrl;
+        }
+        return compMeta.type.reference instanceof StaticSymbol ? url : jitSourceUrl(url);
+    }
 
     /**
      * @license
@@ -5708,9 +5639,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return ((_a = getPolicy()) === null || _a === void 0 ? void 0 : _a.createScript(script)) || script;
     }
     /**
-     * Unsafely call the Function constructor with the given string arguments. It
-     * is only available in development mode, and should be stripped out of
-     * production code.
+     * Unsafely call the Function constructor with the given string arguments.
      * @security This is a security-sensitive function; any use of this function
      * must go through security review. In particular, it must be assured that it
      * is only called from the JIT compiler, as use in other code can lead to XSS
@@ -5727,7 +5656,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // below, where the Chromium bug is also referenced:
         // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
         const fnArgs = args.slice(0, -1).join(',');
-        const fnBody = args.pop().toString();
+        const fnBody = args[args.length - 1];
         const body = `(function anonymous(${fnArgs}
 ) { ${fnBody}
 })`;
@@ -5735,6 +5664,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // being stripped out of JS binaries even if not used. The global['eval']
         // indirection fixes that.
         const fn = _global['eval'](trustedScriptFromString(body));
+        if (fn.bind === undefined) {
+            // Workaround for a browser bug that only exists in Chrome 83, where passing
+            // a TrustedScript to eval just returns the TrustedScript back without
+            // evaluating it. In that case, fall back to the most straightforward
+            // implementation:
+            return new Function(...args);
+        }
         // To completely mimic the behavior of calling "new Function", two more
         // things need to happen:
         // 1. Stringifying the resulting function should return its source code
@@ -6144,6 +6080,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function compileInjector(meta) {
+        const definitionMap = new DefinitionMap();
+        if (meta.providers !== null) {
+            definitionMap.set('providers', meta.providers);
+        }
+        if (meta.imports.length > 0) {
+            definitionMap.set('imports', literalArr(meta.imports));
+        }
+        const expression = importExpr(Identifiers.defineInjector).callFn([definitionMap.toLiteralMap()], undefined, true);
+        const type = createInjectorType(meta);
+        return { expression, type, statements: [] };
+    }
+    function createInjectorType(meta) {
+        return new ExpressionType(importExpr(Identifiers.InjectorDeclaration, [new ExpressionType(meta.type.type)]));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Implementation of `CompileReflector` which resolves references to @angular/core
      * symbols at runtime, according to a consumer-provided mapping.
@@ -6197,43 +6156,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function mapLiteral(obj, quoted = false) {
-        return literalMap(Object.keys(obj).map(key => ({
-            key,
-            quoted,
-            value: obj[key],
-        })));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        const { internalType, type: moduleType, bootstrap, declarations, imports, exports, schemas, containsForwardDecls, emitInline, id } = meta;
-        const additionalStatements = [];
-        const definitionMap = { type: internalType };
-        // Only generate the keys in the metadata if the arrays have values.
-        if (bootstrap.length) {
-            definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
+        const { internalType, bootstrap, declarations, imports, exports, schemas, containsForwardDecls, emitInline, id } = meta;
+        const statements = [];
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('type', internalType);
+        if (bootstrap.length > 0) {
+            definitionMap.set('bootstrap', refsToArray(bootstrap, containsForwardDecls));
         }
-        // If requested to emit scope information inline, pass the declarations, imports and exports to
-        // the `ɵɵdefineNgModule` call. The JIT compilation uses this.
+        // If requested to emit scope information inline, pass the `declarations`, `imports` and `exports`
+        // to the `ɵɵdefineNgModule()` call. The JIT compilation uses this.
         if (emitInline) {
-            if (declarations.length) {
-                definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
+            if (declarations.length > 0) {
+                definitionMap.set('declarations', refsToArray(declarations, containsForwardDecls));
             }
-            if (imports.length) {
-                definitionMap.imports = refsToArray(imports, containsForwardDecls);
+            if (imports.length > 0) {
+                definitionMap.set('imports', refsToArray(imports, containsForwardDecls));
             }
-            if (exports.length) {
-                definitionMap.exports = refsToArray(exports, containsForwardDecls);
+            if (exports.length > 0) {
+                definitionMap.set('exports', refsToArray(exports, containsForwardDecls));
             }
         }
         // If not emitting inline, the scope information is not passed into `ɵɵdefineNgModule` as it would
@@ -6241,21 +6185,51 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         else {
             const setNgModuleScopeCall = generateSetNgModuleScopeCall(meta);
             if (setNgModuleScopeCall !== null) {
-                additionalStatements.push(setNgModuleScopeCall);
+                statements.push(setNgModuleScopeCall);
             }
         }
-        if (schemas && schemas.length) {
-            definitionMap.schemas = literalArr(schemas.map(ref => ref.value));
+        if (schemas !== null && schemas.length > 0) {
+            definitionMap.set('schemas', literalArr(schemas.map(ref => ref.value)));
         }
-        if (id) {
-            definitionMap.id = id;
+        if (id !== null) {
+            definitionMap.set('id', id);
         }
-        const expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)]);
-        const type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
+        const expression = importExpr(Identifiers.defineNgModule).callFn([definitionMap.toLiteralMap()], undefined, true);
+        const type = createNgModuleType(meta);
+        return { expression, type, statements };
+    }
+    /**
+     * This function is used in JIT mode to generate the call to `ɵɵdefineNgModule()` from a call to
+     * `ɵɵngDeclareNgModule()`.
+     */
+    function compileNgModuleDeclarationExpression(meta) {
+        const definitionMap = new DefinitionMap();
+        definitionMap.set('type', new WrappedNodeExpr(meta.type));
+        if (meta.bootstrap !== undefined) {
+            definitionMap.set('bootstrap', new WrappedNodeExpr(meta.bootstrap));
+        }
+        if (meta.declarations !== undefined) {
+            definitionMap.set('declarations', new WrappedNodeExpr(meta.declarations));
+        }
+        if (meta.imports !== undefined) {
+            definitionMap.set('imports', new WrappedNodeExpr(meta.imports));
+        }
+        if (meta.exports !== undefined) {
+            definitionMap.set('exports', new WrappedNodeExpr(meta.exports));
+        }
+        if (meta.schemas !== undefined) {
+            definitionMap.set('schemas', new WrappedNodeExpr(meta.schemas));
+        }
+        if (meta.id !== undefined) {
+            definitionMap.set('id', new WrappedNodeExpr(meta.id));
+        }
+        return importExpr(Identifiers.defineNgModule).callFn([definitionMap.toLiteralMap()]);
+    }
+    function createNgModuleType({ type: moduleType, declarations, imports, exports }) {
+        return new ExpressionType(importExpr(Identifiers.NgModuleDeclaration, [
             new ExpressionType(moduleType.type), tupleTypeOf(declarations), tupleTypeOf(imports),
             tupleTypeOf(exports)
         ]));
-        return { expression, type, additionalStatements };
     }
     /**
      * Generates a function call to `ɵɵsetNgModuleScope` with all necessary information so that the
@@ -6265,23 +6239,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function generateSetNgModuleScopeCall(meta) {
         const { adjacentType: moduleType, declarations, imports, exports, containsForwardDecls } = meta;
-        const scopeMap = {};
-        if (declarations.length) {
-            scopeMap.declarations = refsToArray(declarations, containsForwardDecls);
+        const scopeMap = new DefinitionMap();
+        if (declarations.length > 0) {
+            scopeMap.set('declarations', refsToArray(declarations, containsForwardDecls));
         }
-        if (imports.length) {
-            scopeMap.imports = refsToArray(imports, containsForwardDecls);
+        if (imports.length > 0) {
+            scopeMap.set('imports', refsToArray(imports, containsForwardDecls));
         }
-        if (exports.length) {
-            scopeMap.exports = refsToArray(exports, containsForwardDecls);
+        if (exports.length > 0) {
+            scopeMap.set('exports', refsToArray(exports, containsForwardDecls));
         }
-        if (Object.keys(scopeMap).length === 0) {
+        if (Object.keys(scopeMap.values).length === 0) {
             return null;
         }
         // setNgModuleScope(...)
         const fnCall = new InvokeFunctionExpr(
-        /* fn */ importExpr(Identifiers$1.setNgModuleScope), 
-        /* args */ [moduleType, mapToMapExpression(scopeMap)]);
+        /* fn */ importExpr(Identifiers.setNgModuleScope), 
+        /* args */ [moduleType, scopeMap.toLiteralMap()]);
         // (ngJitMode guard) && setNgModuleScope(...)
         const guardedCall = jitOnlyGuardedExpression(fnCall);
         // function() { (ngJitMode guard) && setNgModuleScope(...); }
@@ -6294,36 +6268,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         /* args */ []);
         return iifeCall.toStmt();
     }
-    function compileInjector(meta) {
-        const result = compileFactoryFunction({
-            name: meta.name,
-            type: meta.type,
-            internalType: meta.internalType,
-            typeArgumentCount: 0,
-            deps: meta.deps,
-            injectFn: Identifiers$1.inject,
-            target: R3FactoryTarget.NgModule,
-        });
-        const definitionMap = {
-            factory: result.factory,
-        };
-        if (meta.providers !== null) {
-            definitionMap.providers = meta.providers;
-        }
-        if (meta.imports.length > 0) {
-            definitionMap.imports = literalArr(meta.imports);
-        }
-        const expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)]);
-        const type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type.type)]));
-        return { expression, type, statements: result.statements };
-    }
     function tupleTypeOf(exp) {
         const types = exp.map(ref => typeofExpr(ref.type));
         return exp.length > 0 ? expressionType(literalArr(types)) : NONE_TYPE;
-    }
-    function refsToArray(refs, shouldForwardDeclare) {
-        const values = literalArr(refs.map(ref => ref.value));
-        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
     /**
@@ -6341,12 +6288,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         definitionMapValues.push({ key: 'type', value: metadata.type.value, quoted: false });
         // e.g. `pure: true`
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
-        const expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
-        const type = new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
+        const expression = importExpr(Identifiers.definePipe).callFn([literalMap(definitionMapValues)], undefined, true);
+        const type = createPipeType(metadata);
+        return { expression, type, statements: [] };
+    }
+    function createPipeType(metadata) {
+        return new ExpressionType(importExpr(Identifiers.PipeDeclaration, [
             typeWithParameters(metadata.type.type, metadata.typeArgumentCount),
             new ExpressionType(new LiteralExpr(metadata.pipeName)),
         ]));
-        return { expression, type };
     }
 
     /**
@@ -6634,22 +6584,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     class MethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args) {
+        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
             super(span, sourceSpan, nameSpan);
             this.receiver = receiver;
             this.name = name;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
             return visitor.visitMethodCall(this, context);
         }
     }
     class SafeMethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args) {
+        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
             super(span, sourceSpan, nameSpan);
             this.receiver = receiver;
             this.name = name;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
             return visitor.visitSafeMethodCall(this, context);
@@ -6830,10 +6782,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name);
         }
         visitMethodCall(ast, context) {
-            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
         }
         visitSafeMethodCall(ast, context) {
-            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args));
+            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
         }
         visitFunctionCall(ast, context) {
             return new FunctionCall(ast.span, ast.sourceSpan, ast.target.visit(this), this.visitAll(ast.args));
@@ -6933,7 +6885,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const receiver = ast.receiver.visit(this);
             const args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
+                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -6941,7 +6893,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const receiver = ast.receiver.visit(this);
             const args = this.visitAll(ast.args);
             if (receiver !== ast.receiver || args !== ast.args) {
-                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args);
+                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -7119,6 +7071,119 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.keySpan = keySpan;
             this.valueSpan = valueSpan;
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const CORE$1 = '@angular/core';
+    class Identifiers$1 {
+    }
+    Identifiers$1.ANALYZE_FOR_ENTRY_COMPONENTS = {
+        name: 'ANALYZE_FOR_ENTRY_COMPONENTS',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.ElementRef = { name: 'ElementRef', moduleName: CORE$1 };
+    Identifiers$1.NgModuleRef = { name: 'NgModuleRef', moduleName: CORE$1 };
+    Identifiers$1.ViewContainerRef = { name: 'ViewContainerRef', moduleName: CORE$1 };
+    Identifiers$1.ChangeDetectorRef = {
+        name: 'ChangeDetectorRef',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.QueryList = { name: 'QueryList', moduleName: CORE$1 };
+    Identifiers$1.TemplateRef = { name: 'TemplateRef', moduleName: CORE$1 };
+    Identifiers$1.Renderer2 = { name: 'Renderer2', moduleName: CORE$1 };
+    Identifiers$1.CodegenComponentFactoryResolver = {
+        name: 'ɵCodegenComponentFactoryResolver',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.ComponentFactoryResolver = {
+        name: 'ComponentFactoryResolver',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.ComponentFactory = { name: 'ComponentFactory', moduleName: CORE$1 };
+    Identifiers$1.ComponentRef = { name: 'ComponentRef', moduleName: CORE$1 };
+    Identifiers$1.NgModuleFactory = { name: 'NgModuleFactory', moduleName: CORE$1 };
+    Identifiers$1.createModuleFactory = {
+        name: 'ɵcmf',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.moduleDef = {
+        name: 'ɵmod',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.moduleProviderDef = {
+        name: 'ɵmpd',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.RegisterModuleFactoryFn = {
+        name: 'ɵregisterModuleFactory',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.inject = { name: 'ɵɵinject', moduleName: CORE$1 };
+    Identifiers$1.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE$1 };
+    Identifiers$1.INJECTOR = { name: 'INJECTOR', moduleName: CORE$1 };
+    Identifiers$1.Injector = { name: 'Injector', moduleName: CORE$1 };
+    Identifiers$1.ViewEncapsulation = {
+        name: 'ViewEncapsulation',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.ChangeDetectionStrategy = {
+        name: 'ChangeDetectionStrategy',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.SecurityContext = {
+        name: 'SecurityContext',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.LOCALE_ID = { name: 'LOCALE_ID', moduleName: CORE$1 };
+    Identifiers$1.TRANSLATIONS_FORMAT = {
+        name: 'TRANSLATIONS_FORMAT',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.inlineInterpolate = {
+        name: 'ɵinlineInterpolate',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.interpolate = { name: 'ɵinterpolate', moduleName: CORE$1 };
+    Identifiers$1.EMPTY_ARRAY = { name: 'ɵEMPTY_ARRAY', moduleName: CORE$1 };
+    Identifiers$1.EMPTY_MAP = { name: 'ɵEMPTY_MAP', moduleName: CORE$1 };
+    Identifiers$1.Renderer = { name: 'Renderer', moduleName: CORE$1 };
+    Identifiers$1.viewDef = { name: 'ɵvid', moduleName: CORE$1 };
+    Identifiers$1.elementDef = { name: 'ɵeld', moduleName: CORE$1 };
+    Identifiers$1.anchorDef = { name: 'ɵand', moduleName: CORE$1 };
+    Identifiers$1.textDef = { name: 'ɵted', moduleName: CORE$1 };
+    Identifiers$1.directiveDef = { name: 'ɵdid', moduleName: CORE$1 };
+    Identifiers$1.providerDef = { name: 'ɵprd', moduleName: CORE$1 };
+    Identifiers$1.queryDef = { name: 'ɵqud', moduleName: CORE$1 };
+    Identifiers$1.pureArrayDef = { name: 'ɵpad', moduleName: CORE$1 };
+    Identifiers$1.pureObjectDef = { name: 'ɵpod', moduleName: CORE$1 };
+    Identifiers$1.purePipeDef = { name: 'ɵppd', moduleName: CORE$1 };
+    Identifiers$1.pipeDef = { name: 'ɵpid', moduleName: CORE$1 };
+    Identifiers$1.nodeValue = { name: 'ɵnov', moduleName: CORE$1 };
+    Identifiers$1.ngContentDef = { name: 'ɵncd', moduleName: CORE$1 };
+    Identifiers$1.unwrapValue = { name: 'ɵunv', moduleName: CORE$1 };
+    Identifiers$1.createRendererType2 = { name: 'ɵcrt', moduleName: CORE$1 };
+    // type only
+    Identifiers$1.RendererType2 = {
+        name: 'RendererType2',
+        moduleName: CORE$1,
+    };
+    // type only
+    Identifiers$1.ViewDefinition = {
+        name: 'ɵViewDefinition',
+        moduleName: CORE$1,
+    };
+    Identifiers$1.createComponentFactory = { name: 'ɵccf', moduleName: CORE$1 };
+    function createTokenForReference(reference) {
+        return { identifier: { reference: reference } };
+    }
+    function createTokenForExternalReference(reflector, reference) {
+        return createTokenForReference(reflector.resolveExternalReference(reference));
     }
 
     /**
@@ -7324,7 +7389,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return `tmp_${bindingId}_${temporaryNumber}`;
     }
     function temporaryDeclaration(bindingId, temporaryNumber) {
-        return new DeclareVarStmt(temporaryName(bindingId, temporaryNumber), NULL_EXPR);
+        return new DeclareVarStmt(temporaryName(bindingId, temporaryNumber));
     }
     function prependTemporaryDecls(temporaryCount, bindingId, statements) {
         for (let i = temporaryCount - 1; i >= 0; i--) {
@@ -7448,6 +7513,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case '>=':
                     op = BinaryOperator.BiggerEquals;
                     break;
+                case '??':
+                    return this.convertNullishCoalesce(ast, mode);
                 default:
                     throw new Error(`Unsupported operation ${ast.operation}`);
             }
@@ -7496,8 +7563,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this.interpolationFunction(args);
             }
             return ast.expressions.length <= 9 ?
-                importExpr(Identifiers.inlineInterpolate).callFn(args) :
-                importExpr(Identifiers.interpolate).callFn([
+                importExpr(Identifiers$1.inlineInterpolate).callFn(args) :
+                importExpr(Identifiers$1.interpolate).callFn([
                     args[0], literalArr(args.slice(1), undefined, this.convertSourceSpan(ast.span))
                 ]);
         }
@@ -7690,7 +7757,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // which comes in as leftMostSafe to this routine.
             let guardedExpression = this._visit(leftMostSafe.receiver, _Mode.Expression);
             let temporary = undefined;
-            if (this.needsTemporary(leftMostSafe.receiver)) {
+            if (this.needsTemporaryInSafeAccess(leftMostSafe.receiver)) {
                 // If the expression has method calls or pipes then we need to save the result into a
                 // temporary variable to avoid calling stateful or impure code more than once.
                 temporary = this.allocateTemporary();
@@ -7703,7 +7770,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // Convert the ast to an unguarded access to the receiver's member. The map will substitute
             // leftMostNode with its unguarded version in the call to `this.visit()`.
             if (leftMostSafe instanceof SafeMethodCall) {
-                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args));
+                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args, leftMostSafe.argumentSpan));
             }
             else {
                 this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name));
@@ -7718,7 +7785,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.releaseTemporary(temporary);
             }
             // Produce the conditional
-            return convertToStatementIfNeeded(mode, condition.conditional(literal(null), access));
+            return convertToStatementIfNeeded(mode, condition.conditional(NULL_EXPR, access));
+        }
+        convertNullishCoalesce(ast, mode) {
+            const left = this._visit(ast.left, _Mode.Expression);
+            const right = this._visit(ast.right, _Mode.Expression);
+            const temporary = this.allocateTemporary();
+            this.releaseTemporary(temporary);
+            // Generate the following expression. It is identical to how TS
+            // transpiles binary expressions with a nullish coalescing operator.
+            // let temp;
+            // (temp = a) !== null && temp !== undefined ? temp : b;
+            return convertToStatementIfNeeded(mode, temporary.set(left)
+                .notIdentical(NULL_EXPR)
+                .and(temporary.notIdentical(literal(undefined)))
+                .conditional(temporary, right));
         }
         // Given an expression of the form a?.b.c?.d.e then the left most safe node is
         // the (a?.b). The . and ?. are left associative thus can be rewritten as:
@@ -7803,7 +7884,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // Returns true of the AST includes a method or a pipe indicating that, if the
         // expression is used as the target of a safe property or method access then
         // the expression should be stored into a temporary variable.
-        needsTemporary(ast) {
+        needsTemporaryInSafeAccess(ast) {
             const visit = (visitor, ast) => {
                 return ast && (this._nodeMap.get(ast) || ast).visit(visitor);
             };
@@ -8213,14 +8294,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * .foo<scopeName> > .bar
          */
         _convertColonHost(cssText) {
-            return this._convertColonRule(cssText, _cssColonHostRe, this._colonHostPartReplacer);
+            return cssText.replace(_cssColonHostRe, (_, hostSelectors, otherSelectors) => {
+                if (hostSelectors) {
+                    const convertedSelectors = [];
+                    const hostSelectorArray = hostSelectors.split(',').map(p => p.trim());
+                    for (const hostSelector of hostSelectorArray) {
+                        if (!hostSelector)
+                            break;
+                        const convertedSelector = _polyfillHostNoCombinator + hostSelector.replace(_polyfillHost, '') + otherSelectors;
+                        convertedSelectors.push(convertedSelector);
+                    }
+                    return convertedSelectors.join(',');
+                }
+                else {
+                    return _polyfillHostNoCombinator + otherSelectors;
+                }
+            });
         }
         /*
          * convert a rule like :host-context(.foo) > .bar { }
          *
          * to
          *
-         * .foo<scopeName> > .bar, .foo scopeName > .bar { }
+         * .foo<scopeName> > .bar, .foo <scopeName> > .bar { }
          *
          * and
          *
@@ -8231,37 +8327,58 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * .foo<scopeName> .bar { ... }
          */
         _convertColonHostContext(cssText) {
-            return this._convertColonRule(cssText, _cssColonHostContextRe, this._colonHostContextPartReplacer);
-        }
-        _convertColonRule(cssText, regExp, partReplacer) {
-            // m[1] = :host(-context), m[2] = contents of (), m[3] rest of rule
-            return cssText.replace(regExp, function (...m) {
-                if (m[2]) {
-                    const parts = m[2].split(',');
-                    const r = [];
-                    for (let i = 0; i < parts.length; i++) {
-                        const p = parts[i].trim();
-                        if (!p)
-                            break;
-                        r.push(partReplacer(_polyfillHostNoCombinator, p, m[3]));
+            return cssText.replace(_cssColonHostContextReGlobal, selectorText => {
+                // We have captured a selector that contains a `:host-context` rule.
+                var _a;
+                // For backward compatibility `:host-context` may contain a comma separated list of selectors.
+                // Each context selector group will contain a list of host-context selectors that must match
+                // an ancestor of the host.
+                // (Normally `contextSelectorGroups` will only contain a single array of context selectors.)
+                const contextSelectorGroups = [[]];
+                // There may be more than `:host-context` in this selector so `selectorText` could look like:
+                // `:host-context(.one):host-context(.two)`.
+                // Execute `_cssColonHostContextRe` over and over until we have extracted all the
+                // `:host-context` selectors from this selector.
+                let match;
+                while (match = _cssColonHostContextRe.exec(selectorText)) {
+                    // `match` = [':host-context(<selectors>)<rest>', <selectors>, <rest>]
+                    // The `<selectors>` could actually be a comma separated list: `:host-context(.one, .two)`.
+                    const newContextSelectors = ((_a = match[1]) !== null && _a !== void 0 ? _a : '').trim().split(',').map(m => m.trim()).filter(m => m !== '');
+                    // We must duplicate the current selector group for each of these new selectors.
+                    // For example if the current groups are:
+                    // ```
+                    // [
+                    //   ['a', 'b', 'c'],
+                    //   ['x', 'y', 'z'],
+                    // ]
+                    // ```
+                    // And we have a new set of comma separated selectors: `:host-context(m,n)` then the new
+                    // groups are:
+                    // ```
+                    // [
+                    //   ['a', 'b', 'c', 'm'],
+                    //   ['x', 'y', 'z', 'm'],
+                    //   ['a', 'b', 'c', 'n'],
+                    //   ['x', 'y', 'z', 'n'],
+                    // ]
+                    // ```
+                    const contextSelectorGroupsLength = contextSelectorGroups.length;
+                    repeatGroups(contextSelectorGroups, newContextSelectors.length);
+                    for (let i = 0; i < newContextSelectors.length; i++) {
+                        for (let j = 0; j < contextSelectorGroupsLength; j++) {
+                            contextSelectorGroups[j + (i * contextSelectorGroupsLength)].push(newContextSelectors[i]);
+                        }
                     }
-                    return r.join(',');
+                    // Update the `selectorText` and see repeat to see if there are more `:host-context`s.
+                    selectorText = match[2];
                 }
-                else {
-                    return _polyfillHostNoCombinator + m[3];
-                }
+                // The context selectors now must be combined with each other to capture all the possible
+                // selectors that `:host-context` can match. See `combineHostContextSelectors()` for more
+                // info about how this is done.
+                return contextSelectorGroups
+                    .map(contextSelectors => combineHostContextSelectors(contextSelectors, selectorText))
+                    .join(', ');
             });
-        }
-        _colonHostContextPartReplacer(host, part, suffix) {
-            if (part.indexOf(_polyfillHost) > -1) {
-                return this._colonHostPartReplacer(host, part, suffix);
-            }
-            else {
-                return host + part + suffix + ', ' + part + ' ' + host + suffix;
-            }
-        }
-        _colonHostPartReplacer(host, part, suffix) {
-            return host + part.replace(_polyfillHost, '') + suffix;
         }
         /*
          * Convert combinators like ::shadow and pseudo-elements like ::content
@@ -8447,11 +8564,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const _polyfillHost = '-shadowcsshost';
     // note: :host-context pre-processed to -shadowcsshostcontext.
     const _polyfillHostContext = '-shadowcsscontext';
-    const _parenSuffix = ')(?:\\((' +
+    const _parenSuffix = '(?:\\((' +
         '(?:\\([^)(]*\\)|[^)(]*)+?' +
         ')\\))?([^,{]*)';
-    const _cssColonHostRe = new RegExp('(' + _polyfillHost + _parenSuffix, 'gim');
-    const _cssColonHostContextRe = new RegExp('(' + _polyfillHostContext + _parenSuffix, 'gim');
+    const _cssColonHostRe = new RegExp(_polyfillHost + _parenSuffix, 'gim');
+    const _cssColonHostContextReGlobal = new RegExp(_polyfillHostContext + _parenSuffix, 'gim');
+    const _cssColonHostContextRe = new RegExp(_polyfillHostContext + _parenSuffix, 'im');
     const _polyfillHostNoCombinator = _polyfillHost + '-no-combinator';
     const _polyfillHostNoCombinatorRe = /-shadowcsshost-no-combinator([^\s]*)/;
     const _shadowDOMSelectorsRe = [
@@ -8558,6 +8676,80 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             resultParts.push(input.substring(nonBlockStartIndex));
         }
         return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
+    }
+    /**
+     * Combine the `contextSelectors` with the `hostMarker` and the `otherSelectors`
+     * to create a selector that matches the same as `:host-context()`.
+     *
+     * Given a single context selector `A` we need to output selectors that match on the host and as an
+     * ancestor of the host:
+     *
+     * ```
+     * A <hostMarker>, A<hostMarker> {}
+     * ```
+     *
+     * When there is more than one context selector we also have to create combinations of those
+     * selectors with each other. For example if there are `A` and `B` selectors the output is:
+     *
+     * ```
+     * AB<hostMarker>, AB <hostMarker>, A B<hostMarker>,
+     * B A<hostMarker>, A B <hostMarker>, B A <hostMarker> {}
+     * ```
+     *
+     * And so on...
+     *
+     * @param hostMarker the string that selects the host element.
+     * @param contextSelectors an array of context selectors that will be combined.
+     * @param otherSelectors the rest of the selectors that are not context selectors.
+     */
+    function combineHostContextSelectors(contextSelectors, otherSelectors) {
+        const hostMarker = _polyfillHostNoCombinator;
+        _polyfillHostRe.lastIndex = 0; // reset the regex to ensure we get an accurate test
+        const otherSelectorsHasHost = _polyfillHostRe.test(otherSelectors);
+        // If there are no context selectors then just output a host marker
+        if (contextSelectors.length === 0) {
+            return hostMarker + otherSelectors;
+        }
+        const combined = [contextSelectors.pop() || ''];
+        while (contextSelectors.length > 0) {
+            const length = combined.length;
+            const contextSelector = contextSelectors.pop();
+            for (let i = 0; i < length; i++) {
+                const previousSelectors = combined[i];
+                // Add the new selector as a descendant of the previous selectors
+                combined[length * 2 + i] = previousSelectors + ' ' + contextSelector;
+                // Add the new selector as an ancestor of the previous selectors
+                combined[length + i] = contextSelector + ' ' + previousSelectors;
+                // Add the new selector to act on the same element as the previous selectors
+                combined[i] = contextSelector + previousSelectors;
+            }
+        }
+        // Finally connect the selector to the `hostMarker`s: either acting directly on the host
+        // (A<hostMarker>) or as an ancestor (A <hostMarker>).
+        return combined
+            .map(s => otherSelectorsHasHost ?
+            `${s}${otherSelectors}` :
+            `${s}${hostMarker}${otherSelectors}, ${s} ${hostMarker}${otherSelectors}`)
+            .join(',');
+    }
+    /**
+     * Mutate the given `groups` array so that there are `multiples` clones of the original array
+     * stored.
+     *
+     * For example `repeatGroups([a, b], 3)` will result in `[a, b, a, b, a, b]` - but importantly the
+     * newly added groups will be clones of the original.
+     *
+     * @param groups An array of groups of strings that will be repeated. This array is mutated
+     *     in-place.
+     * @param multiples The number of times the current groups should appear.
+     */
+    function repeatGroups(groups, multiples) {
+        const length = groups.length;
+        for (let i = 1; i < multiples; i++) {
+            for (let j = 0; j < length; j++) {
+                groups[j + (i * length)] = groups[j].slice(0);
+            }
+        }
     }
 
     /**
@@ -8701,7 +8893,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitElement(this, context);
         }
     }
-    class Comment {
+    class Comment$1 {
         constructor(value, sourceSpan) {
             this.value = value;
             this.sourceSpan = sourceSpan;
@@ -9160,7 +9352,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 tagName = openTagToken.parts[1];
                 this._attemptCharCodeUntilFn(isNotWhitespace);
                 while (this._cursor.peek() !== $SLASH && this._cursor.peek() !== $GT &&
-                    this._cursor.peek() !== $LT) {
+                    this._cursor.peek() !== $LT && this._cursor.peek() !== $EOF) {
                     this._consumeAttributeName();
                     this._attemptCharCodeUntilFn(isNotWhitespace);
                     if (this._attemptCharCode($EQ)) {
@@ -9386,7 +9578,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function isNameEnd(code) {
         return isWhitespace(code) || code === $GT || code === $LT ||
-            code === $SLASH || code === $SQ || code === $DQ || code === $EQ;
+            code === $SLASH || code === $SQ || code === $DQ || code === $EQ ||
+            code === $EOF;
     }
     function isPrefixEnd(code) {
         return (code < $a || $z < code) && (code < $A || $Z < code) &&
@@ -9758,7 +9951,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const text = this._advanceIf(TokenType.RAW_TEXT);
             this._advanceIf(TokenType.COMMENT_END);
             const value = text != null ? text.parts[0].trim() : null;
-            this._addToParent(new Comment(value, token.sourceSpan));
+            this._addToParent(new Comment$1(value, token.sourceSpan));
         }
         _consumeExpansion(token) {
             const switchValue = this._advance();
@@ -9881,7 +10074,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this._advance();
                 selfClosing = false;
             }
-            const end = this._peek.sourceSpan.start;
+            const end = this._peek.sourceSpan.fullStart;
             const span = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
             // Create a separate `startSpan` because `span` will be modified when there is an `end` span.
             const startSpan = new ParseSourceSpan(startTagToken.sourceSpan.start, end, startTagToken.sourceSpan.fullStart);
@@ -10585,15 +10778,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this._addQueryReadsTo(provider.token, provider.token, this._queriedTokens);
             });
             if (isTemplate) {
-                const templateRefId = createTokenForExternalReference(this.viewContext.reflector, Identifiers.TemplateRef);
+                const templateRefId = createTokenForExternalReference(this.viewContext.reflector, Identifiers$1.TemplateRef);
                 this._addQueryReadsTo(templateRefId, templateRefId, this._queriedTokens);
             }
             refs.forEach((refAst) => {
                 let defaultQueryValue = refAst.value ||
-                    createTokenForExternalReference(this.viewContext.reflector, Identifiers.ElementRef);
+                    createTokenForExternalReference(this.viewContext.reflector, Identifiers$1.ElementRef);
                 this._addQueryReadsTo({ value: refAst.name }, defaultQueryValue, this._queriedTokens);
             });
-            if (this._queriedTokens.get(this.viewContext.reflector.resolveExternalReference(Identifiers.ViewContainerRef))) {
+            if (this._queriedTokens.get(this.viewContext.reflector.resolveExternalReference(Identifiers$1.ViewContainerRef))) {
                 this.transformedHasViewContainer = true;
             }
             // create the providers that we know are eager first
@@ -10736,23 +10929,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if ((requestingProviderType === ProviderAstType.Directive ||
                     requestingProviderType === ProviderAstType.Component)) {
                     if (tokenReference(dep.token) ===
-                        this.viewContext.reflector.resolveExternalReference(Identifiers.Renderer) ||
+                        this.viewContext.reflector.resolveExternalReference(Identifiers$1.Renderer) ||
                         tokenReference(dep.token) ===
-                            this.viewContext.reflector.resolveExternalReference(Identifiers.ElementRef) ||
+                            this.viewContext.reflector.resolveExternalReference(Identifiers$1.ElementRef) ||
                         tokenReference(dep.token) ===
-                            this.viewContext.reflector.resolveExternalReference(Identifiers.ChangeDetectorRef) ||
+                            this.viewContext.reflector.resolveExternalReference(Identifiers$1.ChangeDetectorRef) ||
                         tokenReference(dep.token) ===
-                            this.viewContext.reflector.resolveExternalReference(Identifiers.TemplateRef)) {
+                            this.viewContext.reflector.resolveExternalReference(Identifiers$1.TemplateRef)) {
                         return dep;
                     }
                     if (tokenReference(dep.token) ===
-                        this.viewContext.reflector.resolveExternalReference(Identifiers.ViewContainerRef)) {
+                        this.viewContext.reflector.resolveExternalReference(Identifiers$1.ViewContainerRef)) {
                         this.transformedHasViewContainer = true;
                     }
                 }
                 // access the injector
                 if (tokenReference(dep.token) ===
-                    this.viewContext.reflector.resolveExternalReference(Identifiers.Injector)) {
+                    this.viewContext.reflector.resolveExternalReference(Identifiers$1.Injector)) {
                     return dep;
                 }
                 // access providers
@@ -11015,8 +11208,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseInterpolation(value, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.fullStart.offset;
             try {
-                const ast = this._exprParser.parseInterpolation(value, sourceInfo, sourceSpan.start.offset, this._interpolationConfig);
+                const ast = this._exprParser.parseInterpolation(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11024,7 +11218,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -11034,8 +11228,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          */
         parseInterpolationExpression(expression, sourceSpan) {
             const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.start.offset;
             try {
-                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, sourceSpan.start.offset);
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, absoluteOffset);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11043,7 +11238,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             catch (e) {
                 this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         }
         /**
@@ -11917,7 +12112,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 else if (!component) {
                     let refToken = null;
                     if (isTemplateElement) {
-                        refToken = createTokenForExternalReference(this.reflector, Identifiers.TemplateRef);
+                        refToken = createTokenForExternalReference(this.reflector, Identifiers$1.TemplateRef);
                     }
                     targetReferences.push(new ReferenceAst(elOrDirRef.name, refToken, elOrDirRef.value, elOrDirRef.sourceSpan));
                 }
@@ -12450,7 +12645,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (isEmptyExpression(value)) {
                 return null;
             }
-            name = normalizePropName(name);
+            // CSS custom properties are case-sensitive so we shouldn't normalize them.
+            // See: https://www.w3.org/TR/css-variables-1/#defining-variables
+            if (!isCssCustomProperty(name)) {
+                name = hyphenate(name);
+            }
             const { property, hasOverrideFlag, suffix: bindingSuffix } = parseProperty(name);
             suffix = typeof suffix === 'string' && suffix.length !== 0 ? suffix : bindingSuffix;
             const entry = { name: property, suffix: suffix, value, sourceSpan, hasOverrideFlag };
@@ -12474,9 +12673,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const { property, hasOverrideFlag } = parseProperty(name);
             const entry = { name: property, value, sourceSpan, hasOverrideFlag, suffix: null };
             if (isMapBased) {
-                if (this._classMapInput) {
-                    throw new Error('[class] and [className] bindings cannot be used on the same element simultaneously');
-                }
                 this._classMapInput = entry;
             }
             else {
@@ -12588,7 +12784,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     getStyleMapInterpolationExpression(mapValue);
             }
             else {
-                reference = isClassBased ? Identifiers$1.classMap : Identifiers$1.styleMap;
+                reference = isClassBased ? Identifiers.classMap : Identifiers.styleMap;
             }
             return {
                 reference,
@@ -12662,13 +12858,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         _buildClassInputs(valueConverter) {
             if (this._singleClassInputs) {
-                return this._buildSingleInputs(Identifiers$1.classProp, this._singleClassInputs, valueConverter, null, true);
+                return this._buildSingleInputs(Identifiers.classProp, this._singleClassInputs, valueConverter, null, true);
             }
             return [];
         }
         _buildStyleInputs(valueConverter) {
             if (this._singleStyleInputs) {
-                return this._buildSingleInputs(Identifiers$1.styleProp, this._singleStyleInputs, valueConverter, getStylePropInterpolationExpression, false);
+                return this._buildSingleInputs(Identifiers.styleProp, this._singleStyleInputs, valueConverter, getStylePropInterpolationExpression, false);
             }
             return [];
         }
@@ -12721,25 +12917,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function getClassMapInterpolationExpression(interpolation) {
         switch (getInterpolationArgsLength(interpolation)) {
             case 1:
-                return Identifiers$1.classMap;
+                return Identifiers.classMap;
             case 3:
-                return Identifiers$1.classMapInterpolate1;
+                return Identifiers.classMapInterpolate1;
             case 5:
-                return Identifiers$1.classMapInterpolate2;
+                return Identifiers.classMapInterpolate2;
             case 7:
-                return Identifiers$1.classMapInterpolate3;
+                return Identifiers.classMapInterpolate3;
             case 9:
-                return Identifiers$1.classMapInterpolate4;
+                return Identifiers.classMapInterpolate4;
             case 11:
-                return Identifiers$1.classMapInterpolate5;
+                return Identifiers.classMapInterpolate5;
             case 13:
-                return Identifiers$1.classMapInterpolate6;
+                return Identifiers.classMapInterpolate6;
             case 15:
-                return Identifiers$1.classMapInterpolate7;
+                return Identifiers.classMapInterpolate7;
             case 17:
-                return Identifiers$1.classMapInterpolate8;
+                return Identifiers.classMapInterpolate8;
             default:
-                return Identifiers$1.classMapInterpolateV;
+                return Identifiers.classMapInterpolateV;
         }
     }
     /**
@@ -12749,25 +12945,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function getStyleMapInterpolationExpression(interpolation) {
         switch (getInterpolationArgsLength(interpolation)) {
             case 1:
-                return Identifiers$1.styleMap;
+                return Identifiers.styleMap;
             case 3:
-                return Identifiers$1.styleMapInterpolate1;
+                return Identifiers.styleMapInterpolate1;
             case 5:
-                return Identifiers$1.styleMapInterpolate2;
+                return Identifiers.styleMapInterpolate2;
             case 7:
-                return Identifiers$1.styleMapInterpolate3;
+                return Identifiers.styleMapInterpolate3;
             case 9:
-                return Identifiers$1.styleMapInterpolate4;
+                return Identifiers.styleMapInterpolate4;
             case 11:
-                return Identifiers$1.styleMapInterpolate5;
+                return Identifiers.styleMapInterpolate5;
             case 13:
-                return Identifiers$1.styleMapInterpolate6;
+                return Identifiers.styleMapInterpolate6;
             case 15:
-                return Identifiers$1.styleMapInterpolate7;
+                return Identifiers.styleMapInterpolate7;
             case 17:
-                return Identifiers$1.styleMapInterpolate8;
+                return Identifiers.styleMapInterpolate8;
             default:
-                return Identifiers$1.styleMapInterpolateV;
+                return Identifiers.styleMapInterpolateV;
         }
     }
     /**
@@ -12777,29 +12973,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function getStylePropInterpolationExpression(interpolation) {
         switch (getInterpolationArgsLength(interpolation)) {
             case 1:
-                return Identifiers$1.styleProp;
+                return Identifiers.styleProp;
             case 3:
-                return Identifiers$1.stylePropInterpolate1;
+                return Identifiers.stylePropInterpolate1;
             case 5:
-                return Identifiers$1.stylePropInterpolate2;
+                return Identifiers.stylePropInterpolate2;
             case 7:
-                return Identifiers$1.stylePropInterpolate3;
+                return Identifiers.stylePropInterpolate3;
             case 9:
-                return Identifiers$1.stylePropInterpolate4;
+                return Identifiers.stylePropInterpolate4;
             case 11:
-                return Identifiers$1.stylePropInterpolate5;
+                return Identifiers.stylePropInterpolate5;
             case 13:
-                return Identifiers$1.stylePropInterpolate6;
+                return Identifiers.stylePropInterpolate6;
             case 15:
-                return Identifiers$1.stylePropInterpolate7;
+                return Identifiers.stylePropInterpolate7;
             case 17:
-                return Identifiers$1.stylePropInterpolate8;
+                return Identifiers.stylePropInterpolate8;
             default:
-                return Identifiers$1.stylePropInterpolateV;
+                return Identifiers.stylePropInterpolateV;
         }
     }
-    function normalizePropName(prop) {
-        return hyphenate(prop);
+    /**
+     * Checks whether property name is a custom CSS property.
+     * See: https://www.w3.org/TR/css-variables-1
+     */
+    function isCssCustomProperty(name) {
+        return name.startsWith('--');
     }
 
     /**
@@ -12985,7 +13185,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case $CARET:
                     return this.scanOperator(start, String.fromCharCode(peek));
                 case $QUESTION:
-                    return this.scanComplexOperator(start, '?', $PERIOD, '.');
+                    return this.scanQuestion(start);
                 case $LT:
                 case $GT:
                     return this.scanComplexOperator(start, String.fromCharCode(peek), $EQ, '=');
@@ -13113,6 +13313,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const last = input.substring(marker, this.index);
             this.advance(); // Skip terminating quote.
             return newStringToken(start, this.index, buffer + last);
+        }
+        scanQuestion(start) {
+            this.advance();
+            let str = '?';
+            // Either `a ?? b` or 'a?.b'.
+            if (this.peek === $QUESTION || this.peek === $PERIOD) {
+                str += this.peek === $PERIOD ? '.' : '?';
+                this.advance();
+            }
+            return newOperatorToken(start, this.index, str);
         }
         error(message, offset) {
             const position = this.index + offset;
@@ -13364,13 +13574,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                     const fullEnd = exprEnd + interpEnd.length;
                     const text = input.substring(exprStart, exprEnd);
-                    if (text.trim().length > 0) {
-                        expressions.push({ text, start: fullStart, end: fullEnd });
-                    }
-                    else {
+                    if (text.trim().length === 0) {
                         this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${i} in`, location);
-                        expressions.push({ text: '$implicit', start: fullStart, end: fullEnd });
                     }
+                    expressions.push({ text, start: fullStart, end: fullEnd });
                     offsets.push(exprStart);
                     i = fullEnd;
                     atInterpolation = false;
@@ -13553,13 +13760,36 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         get currentAbsoluteOffset() {
             return this.absoluteOffset + this.inputIndex;
         }
-        span(start) {
-            return new ParseSpan(start, this.currentEndIndex);
+        /**
+         * Retrieve a `ParseSpan` from `start` to the current position (or to `artificialEndIndex` if
+         * provided).
+         *
+         * @param start Position from which the `ParseSpan` will start.
+         * @param artificialEndIndex Optional ending index to be used if provided (and if greater than the
+         *     natural ending index)
+         */
+        span(start, artificialEndIndex) {
+            let endIndex = this.currentEndIndex;
+            if (artificialEndIndex !== undefined && artificialEndIndex > this.currentEndIndex) {
+                endIndex = artificialEndIndex;
+            }
+            // In some unusual parsing scenarios (like when certain tokens are missing and an `EmptyExpr` is
+            // being created), the current token may already be advanced beyond the `currentEndIndex`. This
+            // appears to be a deep-seated parser bug.
+            //
+            // As a workaround for now, swap the start and end indices to ensure a valid `ParseSpan`.
+            // TODO(alxhub): fix the bug upstream in the parser state, and remove this workaround.
+            if (start > endIndex) {
+                const tmp = endIndex;
+                endIndex = start;
+                start = tmp;
+            }
+            return new ParseSpan(start, endIndex);
         }
-        sourceSpan(start) {
-            const serial = `${start}@${this.inputIndex}`;
+        sourceSpan(start, artificialEndIndex) {
+            const serial = `${start}@${this.inputIndex}:${artificialEndIndex}`;
             if (!this.sourceSpanCache.has(serial)) {
-                this.sourceSpanCache.set(serial, this.span(start).toAbsolute(this.absoluteOffset));
+                this.sourceSpanCache.set(serial, this.span(start, artificialEndIndex).toAbsolute(this.absoluteOffset));
             }
             return this.sourceSpanCache.get(serial);
         }
@@ -13622,7 +13852,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword()) {
                 this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
-                return '';
+                return null;
             }
             this.advance();
             return n.toString();
@@ -13653,13 +13883,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     this.error(`Unexpected token '${this.next}'`);
                 }
             }
-            if (exprs.length == 0)
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            if (exprs.length == 0) {
+                // We have no expressions so create an empty expression that spans the entire input length
+                const artificialStart = this.offset;
+                const artificialEnd = this.offset + this.inputLength;
+                return new EmptyExpr(this.span(artificialStart, artificialEnd), this.sourceSpan(artificialStart, artificialEnd));
+            }
             if (exprs.length == 1)
                 return exprs[0];
             return new Chain(this.span(start), this.sourceSpan(start), exprs);
         }
         parsePipe() {
+            const start = this.inputIndex;
             let result = this.parseExpression();
             if (this.consumeOptionalOperator('|')) {
                 if (this.parseAction) {
@@ -13667,15 +13902,35 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 do {
                     const nameStart = this.inputIndex;
-                    const name = this.expectIdentifierOrKeyword();
-                    const nameSpan = this.sourceSpan(nameStart);
+                    let nameId = this.expectIdentifierOrKeyword();
+                    let nameSpan;
+                    let fullSpanEnd = undefined;
+                    if (nameId !== null) {
+                        nameSpan = this.sourceSpan(nameStart);
+                    }
+                    else {
+                        // No valid identifier was found, so we'll assume an empty pipe name ('').
+                        nameId = '';
+                        // However, there may have been whitespace present between the pipe character and the next
+                        // token in the sequence (or the end of input). We want to track this whitespace so that
+                        // the `BindingPipe` we produce covers not just the pipe character, but any trailing
+                        // whitespace beyond it. Another way of thinking about this is that the zero-length name
+                        // is assumed to be at the end of any whitespace beyond the pipe character.
+                        //
+                        // Therefore, we push the end of the `ParseSpan` for this pipe all the way up to the
+                        // beginning of the next token, or until the end of input if the next token is EOF.
+                        fullSpanEnd = this.next.index !== -1 ? this.next.index : this.inputLength + this.offset;
+                        // The `nameSpan` for an empty pipe name is zero-length at the end of any whitespace
+                        // beyond the pipe character.
+                        nameSpan = new ParseSpan(fullSpanEnd, fullSpanEnd).toAbsolute(this.absoluteOffset);
+                    }
                     const args = [];
                     while (this.consumeOptionalCharacter($COLON)) {
                         args.push(this.parseExpression());
+                        // If there are additional expressions beyond the name, then the artificial end for the
+                        // name is no longer relevant.
                     }
-                    const { start } = result.span;
-                    result =
-                        new BindingPipe(this.span(start), this.sourceSpan(start), result, name, args, nameSpan);
+                    result = new BindingPipe(this.span(start), this.sourceSpan(start, fullSpanEnd), result, nameId, args, nameSpan);
                 } while (this.consumeOptionalOperator('|'));
             }
             return result;
@@ -13706,26 +13961,37 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseLogicalOr() {
             // '||'
+            const start = this.inputIndex;
             let result = this.parseLogicalAnd();
             while (this.consumeOptionalOperator('||')) {
                 const right = this.parseLogicalAnd();
-                const { start } = result.span;
                 result = new Binary(this.span(start), this.sourceSpan(start), '||', result, right);
             }
             return result;
         }
         parseLogicalAnd() {
             // '&&'
-            let result = this.parseEquality();
+            const start = this.inputIndex;
+            let result = this.parseNullishCoalescing();
             while (this.consumeOptionalOperator('&&')) {
-                const right = this.parseEquality();
-                const { start } = result.span;
+                const right = this.parseNullishCoalescing();
                 result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
+            }
+            return result;
+        }
+        parseNullishCoalescing() {
+            // '??'
+            const start = this.inputIndex;
+            let result = this.parseEquality();
+            while (this.consumeOptionalOperator('??')) {
+                const right = this.parseEquality();
+                result = new Binary(this.span(start), this.sourceSpan(start), '??', result, right);
             }
             return result;
         }
         parseEquality() {
             // '==','!=','===','!=='
+            const start = this.inputIndex;
             let result = this.parseRelational();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13736,7 +14002,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '!==':
                         this.advance();
                         const right = this.parseRelational();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13746,6 +14011,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseRelational() {
             // '<', '>', '<=', '>='
+            const start = this.inputIndex;
             let result = this.parseAdditive();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13756,7 +14022,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '>=':
                         this.advance();
                         const right = this.parseAdditive();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13766,6 +14031,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseAdditive() {
             // '+', '-'
+            const start = this.inputIndex;
             let result = this.parseMultiplicative();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13774,7 +14040,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '-':
                         this.advance();
                         let right = this.parseMultiplicative();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13784,6 +14049,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         parseMultiplicative() {
             // '*', '%', '/'
+            const start = this.inputIndex;
             let result = this.parsePrefix();
             while (this.next.type == TokenType$1.Operator) {
                 const operator = this.next.strValue;
@@ -13793,7 +14059,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     case '/':
                         this.advance();
                         let right = this.parsePrefix();
-                        const { start } = result.span;
                         result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
                         continue;
                 }
@@ -13824,14 +14089,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return this.parseCallChain();
         }
         parseCallChain() {
+            const start = this.inputIndex;
             let result = this.parsePrimary();
-            const resultStart = result.span.start;
             while (true) {
                 if (this.consumeOptionalCharacter($PERIOD)) {
-                    result = this.parseAccessMemberOrMethodCall(result, false);
+                    result = this.parseAccessMemberOrMethodCall(result, start, false);
                 }
                 else if (this.consumeOptionalOperator('?.')) {
-                    result = this.parseAccessMemberOrMethodCall(result, true);
+                    result = this.parseAccessMemberOrMethodCall(result, start, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
                     this.withContext(ParseContextFlags.Writable, () => {
@@ -13844,11 +14109,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         this.expectCharacter($RBRACKET);
                         if (this.consumeOptionalOperator('=')) {
                             const value = this.parseConditional();
-                            result = new KeyedWrite(this.span(resultStart), this.sourceSpan(resultStart), result, key, value);
+                            result = new KeyedWrite(this.span(start), this.sourceSpan(start), result, key, value);
                         }
                         else {
-                            result =
-                                new KeyedRead(this.span(resultStart), this.sourceSpan(resultStart), result, key);
+                            result = new KeyedRead(this.span(start), this.sourceSpan(start), result, key);
                         }
                     });
                 }
@@ -13857,11 +14121,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     const args = this.parseCallArguments();
                     this.rparensExpected--;
                     this.expectCharacter($RPAREN);
-                    result =
-                        new FunctionCall(this.span(resultStart), this.sourceSpan(resultStart), result, args);
+                    result = new FunctionCall(this.span(start), this.sourceSpan(start), result, args);
                 }
                 else if (this.consumeOptionalOperator('!')) {
-                    result = new NonNullAssert(this.span(resultStart), this.sourceSpan(resultStart), result);
+                    result = new NonNullAssert(this.span(start), this.sourceSpan(start), result);
                 }
                 else {
                     return result;
@@ -13908,7 +14171,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this.parseLiteralMap();
             }
             else if (this.next.isIdentifier()) {
-                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), false);
+                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
             }
             else if (this.next.isNumber()) {
                 const value = this.next.toNumber();
@@ -13960,11 +14223,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
         }
-        parseAccessMemberOrMethodCall(receiver, isSafe = false) {
-            const start = receiver.span.start;
+        parseAccessMemberOrMethodCall(receiver, start, isSafe = false) {
             const nameStart = this.inputIndex;
             const id = this.withContext(ParseContextFlags.Writable, () => {
-                const id = this.expectIdentifierOrKeyword();
+                var _a;
+                const id = (_a = this.expectIdentifierOrKeyword()) !== null && _a !== void 0 ? _a : '';
                 if (id.length === 0) {
                     this.error(`Expected identifier for property access`, receiver.span.end);
                 }
@@ -13972,14 +14235,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             });
             const nameSpan = this.sourceSpan(nameStart);
             if (this.consumeOptionalCharacter($LPAREN)) {
+                const argumentStart = this.inputIndex;
                 this.rparensExpected++;
                 const args = this.parseCallArguments();
+                const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
                 this.expectCharacter($RPAREN);
                 this.rparensExpected--;
                 const span = this.span(start);
                 const sourceSpan = this.sourceSpan(start);
-                return isSafe ? new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args) :
-                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args);
+                return isSafe ?
+                    new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan) :
+                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan);
             }
             else {
                 if (isSafe) {
@@ -14312,6 +14578,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function mapLiteral(obj, quoted = false) {
+        return literalMap(Object.keys(obj).map(key => ({
+            key,
+            quoted,
+            value: obj[key],
+        })));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // =================================================================================================
     // =================================================================================================
     // =========== S T O P   -  S T O P   -  S T O P   -  S T O P   -  S T O P   -  S T O P  ===========
@@ -14504,7 +14785,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         'progress^[HTMLElement]|#max,#value',
         'q,blockquote,cite^[HTMLElement]|',
         'script^[HTMLElement]|!async,charset,%crossOrigin,!defer,event,htmlFor,integrity,src,text,type',
-        'select^[HTMLElement]|!autofocus,!disabled,#length,!multiple,name,!required,#selectedIndex,#size,value',
+        'select^[HTMLElement]|autocomplete,!autofocus,!disabled,#length,!multiple,name,!required,#selectedIndex,#size,value',
         'shadow^[HTMLElement]|',
         'slot^[HTMLElement]|name',
         'source^[HTMLElement]|media,sizes,src,srcset,type',
@@ -14517,7 +14798,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         'tr^[HTMLElement]|align,bgColor,ch,chOff,vAlign',
         'tfoot,thead,tbody^[HTMLElement]|align,ch,chOff,vAlign',
         'template^[HTMLElement]|',
-        'textarea^[HTMLElement]|autocapitalize,!autofocus,#cols,defaultValue,dirName,!disabled,#maxLength,#minLength,name,placeholder,!readOnly,!required,#rows,selectionDirection,#selectionEnd,#selectionStart,value,wrap',
+        'textarea^[HTMLElement]|autocapitalize,autocomplete,!autofocus,#cols,defaultValue,dirName,!disabled,#maxLength,#minLength,name,placeholder,!readOnly,!required,#rows,selectionDirection,#selectionEnd,#selectionStart,value,wrap',
         'title^[HTMLElement]|text',
         'track^[HTMLElement]|!default,kind,label,src,srclang',
         'ul^[HTMLElement]|!compact,type',
@@ -14870,26 +15151,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         EVENT: { start: '(', end: ')' },
     };
     const TEMPLATE_ATTR_PREFIX$2 = '*';
-    function htmlAstToRender3Ast(htmlNodes, bindingParser) {
-        const transformer = new HtmlAstToIvyAst(bindingParser);
+    function htmlAstToRender3Ast(htmlNodes, bindingParser, options) {
+        const transformer = new HtmlAstToIvyAst(bindingParser, options);
         const ivyNodes = visitAll$1(transformer, htmlNodes);
         // Errors might originate in either the binding parser or the html to ivy transformer
         const allErrors = bindingParser.errors.concat(transformer.errors);
-        return {
+        const result = {
             nodes: ivyNodes,
             errors: allErrors,
             styleUrls: transformer.styleUrls,
             styles: transformer.styles,
-            ngContentSelectors: transformer.ngContentSelectors,
+            ngContentSelectors: transformer.ngContentSelectors
         };
+        if (options.collectCommentNodes) {
+            result.commentNodes = transformer.commentNodes;
+        }
+        return result;
     }
     class HtmlAstToIvyAst {
-        constructor(bindingParser) {
+        constructor(bindingParser, options) {
             this.bindingParser = bindingParser;
+            this.options = options;
             this.errors = [];
             this.styles = [];
             this.styleUrls = [];
             this.ngContentSelectors = [];
+            // This array will be populated if `Render3ParseOptions['collectCommentNodes']` is true
+            this.commentNodes = [];
             this.inI18nBlock = false;
         }
         // HTML visitor
@@ -15058,6 +15346,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return null;
         }
         visitComment(comment) {
+            if (this.options.collectCommentNodes) {
+                this.commentNodes.push(new Comment(comment.value || '', comment.sourceSpan));
+            }
             return null;
         }
         // convert view engine `ParsedProperty` to a format suitable for IVY
@@ -15193,6 +15484,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             else if (identifier.length === 0) {
                 this.reportError(`Reference does not have a name`, sourceSpan);
             }
+            else if (references.some(reference => reference.name === identifier)) {
+                this.reportError(`Reference "#${identifier}" is defined more than once`, sourceSpan);
+            }
             references.push(new Reference(identifier, value, sourceSpan, keySpan, valueSpan));
         }
         parseAssignmentEvent(name, expression, sourceSpan, valueSpan, targetMatchableAttrs, boundEvents, keySpan) {
@@ -15246,7 +15540,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return node instanceof Text$2 && node.value.trim().length == 0;
     }
     function isCommentNode(node) {
-        return node instanceof Comment;
+        return node instanceof Comment$1;
     }
     function textContents(node) {
         if (node.children.length !== 1 || !(node.children[0] instanceof Text$2)) {
@@ -16236,7 +16530,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     // Global symbols available only inside event bindings.
     const EVENT_BINDING_SCOPE_GLOBALS = new Set(['$event']);
     // List of supported global targets for event listeners
-    const GLOBAL_TARGET_RESOLVERS = new Map([['window', Identifiers$1.resolveWindow], ['document', Identifiers$1.resolveDocument], ['body', Identifiers$1.resolveBody]]);
+    const GLOBAL_TARGET_RESOLVERS = new Map([['window', Identifiers.resolveWindow], ['document', Identifiers.resolveDocument], ['body', Identifiers.resolveBody]]);
     const LEADING_TRIVIA_CHARS = [' ', '\n', '\r', '\t'];
     //  if (rf & flags) { .. }
     function renderFlagCheckIfStmt(flags, statements) {
@@ -16256,8 +16550,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', () => error('Unexpected interpolation'), eventAst.handlerSpan, implicitReceiverAccesses, EVENT_BINDING_SCOPE_GLOBALS);
         const statements = [];
         if (scope) {
-            statements.push(...scope.restoreViewStatement());
+            // `variableDeclarations` needs to run first, because
+            // `restoreViewStatement` depends on the result.
             statements.push(...scope.variableDeclarations());
+            statements.unshift(...scope.restoreViewStatement());
         }
         statements.push(...bindingExpr.render3Stmts);
         const eventName = type === 1 /* Animation */ ? prepareSyntheticListenerName(name, phase) : name;
@@ -16355,12 +16651,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     this.pipes.add(pipeType);
                 }
                 this._bindingScope.set(this.level, localName, value);
-                this.creationInstruction(null, Identifiers$1.pipe, [literal(slot), literal(name)]);
+                this.creationInstruction(null, Identifiers.pipe, [literal(slot), literal(name)]);
             });
         }
         buildTemplateFunction(nodes, variables, ngContentSelectorsOffset = 0, i18n) {
             this._ngContentSelectorsOffset = ngContentSelectorsOffset;
-            if (this._namespace !== Identifiers$1.namespaceHTML) {
+            if (this._namespace !== Identifiers.namespaceHTML) {
                 this.creationInstruction(null, this._namespace);
             }
             // Create variable bindings
@@ -16406,7 +16702,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Since we accumulate ngContent selectors while processing template elements,
                 // we *prepend* `projectionDef` to creation instructions block, to put it before
                 // any `projection` instructions
-                this.creationInstruction(null, Identifiers$1.projectionDef, parameters, /* prepend */ true);
+                this.creationInstruction(null, Identifiers.projectionDef, parameters, /* prepend */ true);
             }
             if (initI18nContext) {
                 this.i18nEnd(null, selfClosingI18nInstruction);
@@ -16461,8 +16757,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._bindingScope.set(retrievalLevel, variable$1.name, lhs, 1 /* CONTEXT */, (scope, relativeLevel) => {
                 let rhs;
                 if (scope.bindingLevel === retrievalLevel) {
-                    // e.g. ctx
-                    rhs = variable(CONTEXT_NAME);
+                    if (scope.isListenerScope() && scope.hasRestoreViewVariable()) {
+                        // e.g. restoredCtx.
+                        // We have to get the context from a view reference, if one is available, because
+                        // the context that was passed in during creation may not be correct anymore.
+                        // For more information see: https://github.com/angular/angular/pull/40360.
+                        rhs = variable(RESTORED_VIEW_CONTEXT_NAME);
+                        scope.notifyRestoredViewContextUse();
+                    }
+                    else {
+                        // e.g. ctx
+                        rhs = variable(CONTEXT_NAME);
+                    }
                 }
                 else {
                     const sharedCtxVar = scope.getSharedContextName(retrievalLevel);
@@ -16553,7 +16859,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         if (Object.keys(icuMapping).length) {
                             args.push(mapLiteral(icuMapping, true));
                         }
-                        return instruction(null, Identifiers$1.i18nPostprocess, args);
+                        return instruction(null, Identifiers.i18nPostprocess, args);
                     };
                 }
                 this.i18nTranslate(meta, params, context.ref, transformFn);
@@ -16572,7 +16878,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // into i18nStart call for top level i18n context
                 params.push(literal(id));
             }
-            this.creationInstruction(span, selfClosing ? Identifiers$1.i18n : Identifiers$1.i18nStart, params);
+            this.creationInstruction(span, selfClosing ? Identifiers.i18n : Identifiers.i18nStart, params);
         }
         i18nEnd(span = null, selfClosing) {
             if (!this.i18n) {
@@ -16595,11 +16901,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // for i18n block, advance to the most recent element index (by taking the current number of
                 // elements and subtracting one) before invoking `i18nExp` instructions, to make sure the
                 // necessary lifecycle hooks of components/directives are properly flushed.
-                this.updateInstructionChainWithAdvance(this.getConstCount() - 1, Identifiers$1.i18nExp, chainBindings);
-                this.updateInstruction(span, Identifiers$1.i18nApply, [literal(index)]);
+                this.updateInstructionChainWithAdvance(this.getConstCount() - 1, Identifiers.i18nExp, chainBindings);
+                this.updateInstruction(span, Identifiers.i18nApply, [literal(index)]);
             }
             if (!selfClosing) {
-                this.creationInstruction(span, Identifiers$1.i18nEnd);
+                this.creationInstruction(span, Identifiers.i18nEnd);
             }
             this.i18n = null; // reset local i18n context
         }
@@ -16625,25 +16931,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             if (bindings.length > 0) {
-                this.updateInstructionChainWithAdvance(nodeIndex, Identifiers$1.i18nExp, bindings);
+                this.updateInstructionChainWithAdvance(nodeIndex, Identifiers.i18nExp, bindings);
             }
             if (i18nAttrArgs.length > 0) {
                 const index = literal(this.allocateDataSlot());
                 const constIndex = this.addToConsts(literalArr(i18nAttrArgs));
-                this.creationInstruction(sourceSpan, Identifiers$1.i18nAttributes, [index, constIndex]);
+                this.creationInstruction(sourceSpan, Identifiers.i18nAttributes, [index, constIndex]);
                 if (hasBindings) {
-                    this.updateInstruction(sourceSpan, Identifiers$1.i18nApply, [index]);
+                    this.updateInstruction(sourceSpan, Identifiers.i18nApply, [index]);
                 }
             }
         }
         getNamespaceInstruction(namespaceKey) {
             switch (namespaceKey) {
                 case 'math':
-                    return Identifiers$1.namespaceMathML;
+                    return Identifiers.namespaceMathML;
                 case 'svg':
-                    return Identifiers$1.namespaceSVG;
+                    return Identifiers.namespaceSVG;
                 default:
-                    return Identifiers$1.namespaceHTML;
+                    return Identifiers.namespaceHTML;
             }
         }
         addNamespaceInstruction(nsInstruction, element) {
@@ -16670,7 +16976,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             else if (projectionSlotIdx !== 0) {
                 parameters.push(literal(projectionSlotIdx));
             }
-            this.creationInstruction(ngContent.sourceSpan, Identifiers$1.projection, parameters);
+            this.creationInstruction(ngContent.sourceSpan, Identifiers.projection, parameters);
             if (this.i18n) {
                 this.i18n.appendProjection(ngContent.i18n, slot);
             }
@@ -16745,12 +17051,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 element.outputs.length === 0 && boundI18nAttrs.length === 0 && !hasChildren;
             const createSelfClosingI18nInstruction = !createSelfClosingInstruction && hasTextChildrenOnly(element.children);
             if (createSelfClosingInstruction) {
-                this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainer : Identifiers$1.element, trimTrailingNulls(parameters));
+                this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers.elementContainer : Identifiers.element, trimTrailingNulls(parameters));
             }
             else {
-                this.creationInstruction(element.startSourceSpan, isNgContainer$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
+                this.creationInstruction(element.startSourceSpan, isNgContainer$1 ? Identifiers.elementContainerStart : Identifiers.elementStart, trimTrailingNulls(parameters));
                 if (isNonBindableMode) {
-                    this.creationInstruction(element.startSourceSpan, Identifiers$1.disableBindings);
+                    this.creationInstruction(element.startSourceSpan, Identifiers.disableBindings);
                 }
                 if (boundI18nAttrs.length > 0) {
                     this.i18nAttributesInstruction(elementIndex, boundI18nAttrs, (_a = element.startSourceSpan) !== null && _a !== void 0 ? _a : element.sourceSpan);
@@ -16761,7 +17067,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         sourceSpan: outputAst.sourceSpan,
                         params: this.prepareListenerParameter(element.name, outputAst, elementIndex)
                     }));
-                    this.creationInstructionChain(Identifiers$1.listener, listeners);
+                    this.creationInstructionChain(Identifiers.listener, listeners);
                 }
                 // Note: it's important to keep i18n/i18nStart instructions after i18nAttributes and
                 // listeners, to make sure i18nAttributes instruction targets current element at runtime.
@@ -16867,7 +17173,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         }
                         else {
                             // class prop
-                            this.updateInstructionWithAdvance(elementIndex, input.sourceSpan, Identifiers$1.classProp, () => {
+                            this.updateInstructionWithAdvance(elementIndex, input.sourceSpan, Identifiers.classProp, () => {
                                 return [
                                     literal(elementIndex), literal(attrName), this.convertPropertyBinding(value),
                                     ...params
@@ -16878,10 +17184,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             if (propertyBindings.length > 0) {
-                this.updateInstructionChainWithAdvance(elementIndex, Identifiers$1.property, propertyBindings);
+                this.updateInstructionChainWithAdvance(elementIndex, Identifiers.property, propertyBindings);
             }
             if (attributeBindings.length > 0) {
-                this.updateInstructionChainWithAdvance(elementIndex, Identifiers$1.attribute, attributeBindings);
+                this.updateInstructionChainWithAdvance(elementIndex, Identifiers.attribute, attributeBindings);
             }
             // Traverse element child nodes
             visitAll(this, element.children);
@@ -16895,9 +17201,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     this.i18nEnd(span, createSelfClosingI18nInstruction);
                 }
                 if (isNonBindableMode) {
-                    this.creationInstruction(span, Identifiers$1.enableBindings);
+                    this.creationInstruction(span, Identifiers.enableBindings);
                 }
-                this.creationInstruction(span, isNgContainer$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
+                this.creationInstruction(span, isNgContainer$1 ? Identifiers.elementContainerEnd : Identifiers.elementEnd);
             }
         }
         visitTemplate(template) {
@@ -16926,7 +17232,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (template.references && template.references.length) {
                 const refs = this.prepareRefsArray(template.references);
                 parameters.push(this.addToConsts(refs));
-                parameters.push(importExpr(Identifiers$1.templateRefExtractor));
+                parameters.push(importExpr(Identifiers.templateRefExtractor));
             }
             // Create the template function
             const templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix, this.i18nUseExternalIds, this._constants);
@@ -16942,7 +17248,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             // e.g. template(1, MyComp_Template_1)
-            this.creationInstruction(template.sourceSpan, Identifiers$1.templateCreate, () => {
+            this.creationInstruction(template.sourceSpan, Identifiers.templateCreate, () => {
                 parameters.splice(2, 0, literal(templateVisitor.getConstCount()), literal(templateVisitor.getVarCount()));
                 return trimTrailingNulls(parameters);
             });
@@ -16968,7 +17274,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         sourceSpan: outputAst.sourceSpan,
                         params: this.prepareListenerParameter('ng_template', outputAst, templateIndex)
                     }));
-                    this.creationInstructionChain(Identifiers$1.listener, listeners);
+                    this.creationInstructionChain(Identifiers.listener, listeners);
                 }
             }
         }
@@ -16983,7 +17289,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return;
             }
             const nodeIndex = this.allocateDataSlot();
-            this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(nodeIndex)]);
+            this.creationInstruction(text.sourceSpan, Identifiers.text, [literal(nodeIndex)]);
             const value = text.value.visit(this._valueConverter);
             this.allocateBindingSlots(value);
             if (value instanceof Interpolation) {
@@ -16998,7 +17304,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // block, we exclude this text element from instructions set,
             // since it will be captured in i18n content and processed at runtime
             if (!this.i18n) {
-                this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(this.allocateDataSlot()), literal(text.value)]);
+                this.creationInstruction(text.sourceSpan, Identifiers.text, [literal(this.allocateDataSlot()), literal(text.value)]);
             }
         }
         visitIcu(icu) {
@@ -17023,7 +17329,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const transformFn = (raw) => {
                 const params = Object.assign(Object.assign({}, vars), placeholders);
                 const formatted = i18nFormatPlaceholderNames(params, /* useCamelCase */ false);
-                return instruction(null, Identifiers$1.i18nPostprocess, [raw, mapLiteral(formatted, true)]);
+                return instruction(null, Identifiers.i18nPostprocess, [raw, mapLiteral(formatted, true)]);
             };
             // in case the whole i18n message is a single ICU - we do not need to
             // create a separate top-level translation, we can use the root ref instead
@@ -17090,7 +17396,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             if (propertyBindings.length > 0) {
-                this.updateInstructionChainWithAdvance(templateIndex, Identifiers$1.property, propertyBindings);
+                this.updateInstructionChainWithAdvance(templateIndex, Identifiers.property, propertyBindings);
             }
         }
         // Bindings must only be resolved after all local refs have been visited, so all
@@ -17166,7 +17472,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 if (delta < 1) {
                     throw new Error('advance instruction can only go forwards');
                 }
-                this.instructionFn(this._updateCodeFns, span, Identifiers$1.advance, [literal(delta)]);
+                this.instructionFn(this._updateCodeFns, span, Identifiers.advance, [literal(delta)]);
                 this._currentIndex = nodeIndex;
             }
         }
@@ -17356,7 +17662,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     // e.g. nextContext(2);
                     const nextContextStmt = relativeLevel > 0 ? [generateNextContextExpr(relativeLevel).toStmt()] : [];
                     // e.g. const $foo$ = reference(1);
-                    const refExpr = lhs.set(importExpr(Identifiers$1.reference).callFn([literal(slot)]));
+                    const refExpr = lhs.set(importExpr(Identifiers.reference).callFn([literal(slot)]));
                     return nextContextStmt.concat(refExpr.toConstDecl());
                 }, true);
                 return [reference.name, reference.value];
@@ -17434,22 +17740,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     // Pipes always have at least one parameter, the value they operate on
-    const pipeBindingIdentifiers = [Identifiers$1.pipeBind1, Identifiers$1.pipeBind2, Identifiers$1.pipeBind3, Identifiers$1.pipeBind4];
+    const pipeBindingIdentifiers = [Identifiers.pipeBind1, Identifiers.pipeBind2, Identifiers.pipeBind3, Identifiers.pipeBind4];
     function pipeBindingCallInfo(args) {
         const identifier = pipeBindingIdentifiers[args.length];
         return {
-            identifier: identifier || Identifiers$1.pipeBindV,
+            identifier: identifier || Identifiers.pipeBindV,
             isVarLength: !identifier,
         };
     }
     const pureFunctionIdentifiers = [
-        Identifiers$1.pureFunction0, Identifiers$1.pureFunction1, Identifiers$1.pureFunction2, Identifiers$1.pureFunction3, Identifiers$1.pureFunction4,
-        Identifiers$1.pureFunction5, Identifiers$1.pureFunction6, Identifiers$1.pureFunction7, Identifiers$1.pureFunction8
+        Identifiers.pureFunction0, Identifiers.pureFunction1, Identifiers.pureFunction2, Identifiers.pureFunction3, Identifiers.pureFunction4,
+        Identifiers.pureFunction5, Identifiers.pureFunction6, Identifiers.pureFunction7, Identifiers.pureFunction8
     ];
     function pureFunctionCallInfo(args) {
         const identifier = pureFunctionIdentifiers[args.length];
         return {
-            identifier: identifier || Identifiers$1.pureFunctionV,
+            identifier: identifier || Identifiers.pureFunctionV,
             isVarLength: !identifier,
         };
     }
@@ -17458,7 +17764,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     // e.g. x(2);
     function generateNextContextExpr(relativeLevelDiff) {
-        return importExpr(Identifiers$1.nextContext)
+        return importExpr(Identifiers.nextContext)
             .callFn(relativeLevelDiff > 1 ? [literal(relativeLevelDiff)] : []);
     }
     function getLiteralFactory(constantPool, literal$1, allocateSlots) {
@@ -17505,6 +17811,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.map = new Map();
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
+            this.usesRestoredViewContext = false;
             if (globals !== undefined) {
                 for (const name of globals) {
                     this.set(0, name, variable(name));
@@ -17661,16 +17968,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         }
         restoreViewStatement() {
-            // restoreView($state$);
-            return this.restoreViewVariable ?
-                [instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]).toStmt()] :
-                [];
+            const statements = [];
+            if (this.restoreViewVariable) {
+                const restoreCall = instruction(null, Identifiers.restoreView, [this.restoreViewVariable]);
+                // Either `const restoredCtx = restoreView($state$);` or `restoreView($state$);`
+                // depending on whether it is being used.
+                statements.push(this.usesRestoredViewContext ?
+                    variable(RESTORED_VIEW_CONTEXT_NAME).set(restoreCall).toConstDecl() :
+                    restoreCall.toStmt());
+            }
+            return statements;
         }
         viewSnapshotStatements() {
             // const $state$ = getCurrentView();
-            const getCurrentViewInstruction = instruction(null, Identifiers$1.getCurrentView, []);
             return this.restoreViewVariable ?
-                [this.restoreViewVariable.set(getCurrentViewInstruction).toConstDecl()] :
+                [this.restoreViewVariable.set(instruction(null, Identifiers.getCurrentView, [])).toConstDecl()] :
                 [];
         }
         isListenerScope() {
@@ -17695,6 +18007,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 current = current.parent;
             const ref = `${REFERENCE_PREFIX}${current.referenceNameIndex++}`;
             return ref;
+        }
+        hasRestoreViewVariable() {
+            return !!this.restoreViewVariable;
+        }
+        notifyRestoredViewContextUse() {
+            this.usesRestoredViewContext = true;
         }
     }
     /**
@@ -17732,25 +18050,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function getPropertyInterpolationExpression(interpolation) {
         switch (getInterpolationArgsLength(interpolation)) {
             case 1:
-                return Identifiers$1.propertyInterpolate;
+                return Identifiers.propertyInterpolate;
             case 3:
-                return Identifiers$1.propertyInterpolate1;
+                return Identifiers.propertyInterpolate1;
             case 5:
-                return Identifiers$1.propertyInterpolate2;
+                return Identifiers.propertyInterpolate2;
             case 7:
-                return Identifiers$1.propertyInterpolate3;
+                return Identifiers.propertyInterpolate3;
             case 9:
-                return Identifiers$1.propertyInterpolate4;
+                return Identifiers.propertyInterpolate4;
             case 11:
-                return Identifiers$1.propertyInterpolate5;
+                return Identifiers.propertyInterpolate5;
             case 13:
-                return Identifiers$1.propertyInterpolate6;
+                return Identifiers.propertyInterpolate6;
             case 15:
-                return Identifiers$1.propertyInterpolate7;
+                return Identifiers.propertyInterpolate7;
             case 17:
-                return Identifiers$1.propertyInterpolate8;
+                return Identifiers.propertyInterpolate8;
             default:
-                return Identifiers$1.propertyInterpolateV;
+                return Identifiers.propertyInterpolateV;
         }
     }
     /**
@@ -17760,23 +18078,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function getAttributeInterpolationExpression(interpolation) {
         switch (getInterpolationArgsLength(interpolation)) {
             case 3:
-                return Identifiers$1.attributeInterpolate1;
+                return Identifiers.attributeInterpolate1;
             case 5:
-                return Identifiers$1.attributeInterpolate2;
+                return Identifiers.attributeInterpolate2;
             case 7:
-                return Identifiers$1.attributeInterpolate3;
+                return Identifiers.attributeInterpolate3;
             case 9:
-                return Identifiers$1.attributeInterpolate4;
+                return Identifiers.attributeInterpolate4;
             case 11:
-                return Identifiers$1.attributeInterpolate5;
+                return Identifiers.attributeInterpolate5;
             case 13:
-                return Identifiers$1.attributeInterpolate6;
+                return Identifiers.attributeInterpolate6;
             case 15:
-                return Identifiers$1.attributeInterpolate7;
+                return Identifiers.attributeInterpolate7;
             case 17:
-                return Identifiers$1.attributeInterpolate8;
+                return Identifiers.attributeInterpolate8;
             default:
-                return Identifiers$1.attributeInterpolateV;
+                return Identifiers.attributeInterpolateV;
         }
     }
     /**
@@ -17786,25 +18104,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function getTextInterpolationExpression(interpolation) {
         switch (getInterpolationArgsLength(interpolation)) {
             case 1:
-                return Identifiers$1.textInterpolate;
+                return Identifiers.textInterpolate;
             case 3:
-                return Identifiers$1.textInterpolate1;
+                return Identifiers.textInterpolate1;
             case 5:
-                return Identifiers$1.textInterpolate2;
+                return Identifiers.textInterpolate2;
             case 7:
-                return Identifiers$1.textInterpolate3;
+                return Identifiers.textInterpolate3;
             case 9:
-                return Identifiers$1.textInterpolate4;
+                return Identifiers.textInterpolate4;
             case 11:
-                return Identifiers$1.textInterpolate5;
+                return Identifiers.textInterpolate5;
             case 13:
-                return Identifiers$1.textInterpolate6;
+                return Identifiers.textInterpolate6;
             case 15:
-                return Identifiers$1.textInterpolate7;
+                return Identifiers.textInterpolate7;
             case 17:
-                return Identifiers$1.textInterpolate8;
+                return Identifiers.textInterpolate8;
             default:
-                return Identifiers$1.textInterpolateV;
+                return Identifiers.textInterpolateV;
         }
     }
     /**
@@ -17815,27 +18133,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options = {}) {
-        var _a;
         const { interpolationConfig, preserveWhitespaces, enableI18nLegacyMessageIdFormat } = options;
-        const isInline = (_a = options.isInline) !== null && _a !== void 0 ? _a : false;
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
-        if (parseResult.errors && parseResult.errors.length > 0) {
-            // TODO(ayazhafiz): we may not always want to bail out at this point (e.g. in
-            // the context of a language service).
-            return {
+        if (!options.alwaysAttemptHtmlToR3AstConversion && parseResult.errors &&
+            parseResult.errors.length > 0) {
+            const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
                 styles: [],
                 ngContentSelectors: []
             };
+            if (options.collectCommentNodes) {
+                parsedTemplate.commentNodes = [];
+            }
+            return parsedTemplate;
         }
         let rootNodes = parseResult.rootNodes;
         // process i18n meta information (scan attributes, generate ids)
@@ -17844,19 +18160,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // message ids
         const i18nMetaVisitor = new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ !preserveWhitespaces, enableI18nLegacyMessageIdFormat);
         const i18nMetaResult = i18nMetaVisitor.visitAllWithErrors(rootNodes);
-        if (i18nMetaResult.errors && i18nMetaResult.errors.length > 0) {
-            return {
+        if (!options.alwaysAttemptHtmlToR3AstConversion && i18nMetaResult.errors &&
+            i18nMetaResult.errors.length > 0) {
+            const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: i18nMetaResult.errors,
                 nodes: [],
                 styleUrls: [],
                 styles: [],
                 ngContentSelectors: []
             };
+            if (options.collectCommentNodes) {
+                parsedTemplate.commentNodes = [];
+            }
+            return parsedTemplate;
         }
         rootNodes = i18nMetaResult.rootNodes;
         if (!preserveWhitespaces) {
@@ -17869,19 +18187,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 rootNodes = visitAll$1(new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ false), rootNodes);
             }
         }
-        const { nodes, errors, styleUrls, styles, ngContentSelectors } = htmlAstToRender3Ast(rootNodes, bindingParser);
-        return {
+        const { nodes, errors, styleUrls, styles, ngContentSelectors, commentNodes } = htmlAstToRender3Ast(rootNodes, bindingParser, { collectCommentNodes: !!options.collectCommentNodes });
+        errors.push(...parseResult.errors, ...i18nMetaResult.errors);
+        const parsedTemplate = {
             interpolationConfig,
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
-            template,
-            templateUrl,
-            isInline,
             nodes,
             styleUrls,
             styles,
             ngContentSelectors
         };
+        if (options.collectCommentNodes) {
+            parsedTemplate.commentNodes = commentNodes;
+        }
+        return parsedTemplate;
     }
     const elementRegistry = new DomElementSchemaRegistry();
     /**
@@ -17893,18 +18213,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function resolveSanitizationFn(context, isAttribute) {
         switch (context) {
             case SecurityContext.HTML:
-                return importExpr(Identifiers$1.sanitizeHtml);
+                return importExpr(Identifiers.sanitizeHtml);
             case SecurityContext.SCRIPT:
-                return importExpr(Identifiers$1.sanitizeScript);
+                return importExpr(Identifiers.sanitizeScript);
             case SecurityContext.STYLE:
                 // the compiler does not fill in an instruction for [style.prop?] binding
                 // values because the style algorithm knows internally what props are subject
                 // to sanitization (only [attr.style] values are explicitly sanitized)
-                return isAttribute ? importExpr(Identifiers$1.sanitizeStyle) : null;
+                return isAttribute ? importExpr(Identifiers.sanitizeStyle) : null;
             case SecurityContext.URL:
-                return importExpr(Identifiers$1.sanitizeUrl);
+                return importExpr(Identifiers.sanitizeUrl);
             case SecurityContext.RESOURCE_URL:
-                return importExpr(Identifiers$1.sanitizeResourceUrl);
+                return importExpr(Identifiers.sanitizeResourceUrl);
             default:
                 return null;
         }
@@ -17914,10 +18234,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (isTrustedTypesSink(tagName, attr.name)) {
             switch (elementRegistry.securityContext(tagName, attr.name, /* isAttribute */ true)) {
                 case SecurityContext.HTML:
-                    return taggedTemplate(importExpr(Identifiers$1.trustConstantHtml), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
+                    return taggedTemplate(importExpr(Identifiers.trustConstantHtml), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
                 // NB: no SecurityContext.SCRIPT here, as the corresponding tags are stripped by the compiler.
                 case SecurityContext.RESOURCE_URL:
-                    return taggedTemplate(importExpr(Identifiers$1.trustConstantResourceUrl), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
+                    return taggedTemplate(importExpr(Identifiers.trustConstantResourceUrl), new TemplateLiteral([new TemplateLiteralElement(attr.value)], []), undefined, attr.valueSpan);
                 default:
                     return value;
             }
@@ -18037,16 +18357,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (viewProviders) {
                 args.push(viewProviders);
             }
-            features.push(importExpr(Identifiers$1.ProvidersFeature).callFn(args));
+            features.push(importExpr(Identifiers.ProvidersFeature).callFn(args));
         }
         if (meta.usesInheritance) {
-            features.push(importExpr(Identifiers$1.InheritDefinitionFeature));
+            features.push(importExpr(Identifiers.InheritDefinitionFeature));
         }
         if (meta.fullInheritance) {
-            features.push(importExpr(Identifiers$1.CopyDefinitionFeature));
+            features.push(importExpr(Identifiers.CopyDefinitionFeature));
         }
         if (meta.lifecycle.usesOnChanges) {
-            features.push(importExpr(Identifiers$1.NgOnChangesFeature));
+            features.push(importExpr(Identifiers.NgOnChangesFeature));
         }
         if (features.length) {
             definitionMap.set('features', literalArr(features));
@@ -18058,9 +18378,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function compileDirectiveFromMetadata(meta, constantPool, bindingParser) {
         const definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         addFeatures(definitionMap, meta);
-        const expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
+        const expression = importExpr(Identifiers.defineDirective).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createDirectiveType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
@@ -18095,7 +18415,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const pipesUsed = new Set();
         const changeDetection = meta.changeDetection;
         const template = meta.template;
-        const templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.createRootScope(), 0, templateTypeName, null, null, templateName, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
+        const templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.createRootScope(), 0, templateTypeName, null, null, templateName, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
         const templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, []);
         // We need to provide this so that dynamically generated components know what
         // projected content blocks to pass through to the component when it is instantiated.
@@ -18161,9 +18481,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (changeDetection != null && changeDetection !== ChangeDetectionStrategy.Default) {
             definitionMap.set('changeDetection', literal(changeDetection));
         }
-        const expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
+        const expression = importExpr(Identifiers.defineComponent).callFn([definitionMap.toLiteralMap()], undefined, true);
         const type = createComponentType(meta);
-        return { expression, type };
+        return { expression, type, statements: [] };
     }
     /**
      * Creates the type specification from the component meta. This type is inserted into .d.ts files
@@ -18172,7 +18492,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     function createComponentType(meta) {
         const typeParams = createDirectiveTypeParams(meta);
         typeParams.push(stringArrayAsType(meta.template.ngContentSelectors));
-        return expressionType(importExpr(Identifiers$1.ComponentDefWithMeta, typeParams));
+        return expressionType(importExpr(Identifiers.ComponentDeclaration, typeParams));
     }
     /**
      * Compiles the array literal of declarations into an expression according to the provided emit
@@ -18188,7 +18508,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return fn([], [new ReturnStatement(list)]);
             case 2 /* ClosureResolved */:
                 // directives: function () { return [MyDir].map(ng.resolveForwardRef); }
-                const resolvedList = list.callMethod('map', [importExpr(Identifiers$1.resolveForwardRef)]);
+                const resolvedList = list.callMethod('map', [importExpr(Identifiers.resolveForwardRef)]);
                 return fn([], [new ReturnStatement(resolvedList)]);
         }
     }
@@ -18223,13 +18543,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         for (const query of queries) {
             // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
-            createStatements.push(importExpr(Identifiers$1.contentQuery)
+            createStatements.push(importExpr(Identifiers.contentQuery)
                 .callFn([variable('dirIndex'), ...prepareQueryParams(query, constantPool)])
                 .toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
             const temporary = tempAllocator();
-            const getQueryList = importExpr(Identifiers$1.loadQuery).callFn([]);
-            const refresh = importExpr(Identifiers$1.queryRefresh).callFn([temporary.set(getQueryList)]);
+            const getQueryList = importExpr(Identifiers.loadQuery).callFn([]);
+            const refresh = importExpr(Identifiers.queryRefresh).callFn([temporary.set(getQueryList)]);
             const updateDirective = variable(CONTEXT_NAME)
                 .prop(query.propertyName)
                 .set(query.first ? temporary.prop('first') : temporary);
@@ -18281,7 +18601,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function createDirectiveType(meta) {
         const typeParams = createDirectiveTypeParams(meta);
-        return expressionType(importExpr(Identifiers$1.DirectiveDefWithMeta, typeParams));
+        return expressionType(importExpr(Identifiers.DirectiveDeclaration, typeParams));
     }
     // Define and update any view queries
     function createViewQueriesFunction(viewQueries, constantPool, name) {
@@ -18290,12 +18610,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         viewQueries.forEach((query) => {
             // creation, e.g. r3.viewQuery(somePredicate, true);
-            const queryDefinition = importExpr(Identifiers$1.viewQuery).callFn(prepareQueryParams(query, constantPool));
+            const queryDefinition = importExpr(Identifiers.viewQuery).callFn(prepareQueryParams(query, constantPool));
             createStatements.push(queryDefinition.toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
             const temporary = tempAllocator();
-            const getQueryList = importExpr(Identifiers$1.loadQuery).callFn([]);
-            const refresh = importExpr(Identifiers$1.queryRefresh).callFn([temporary.set(getQueryList)]);
+            const getQueryList = importExpr(Identifiers.loadQuery).callFn([]);
+            const refresh = importExpr(Identifiers.queryRefresh).callFn([temporary.set(getQueryList)]);
             const updateDirective = variable(CONTEXT_NAME)
                 .prop(query.propertyName)
                 .set(query.first ? temporary.prop('first') : temporary);
@@ -18375,10 +18695,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     securityContexts.indexOf(SecurityContext.URL) > -1 &&
                     securityContexts.indexOf(SecurityContext.RESOURCE_URL) > -1) {
                     // Special case for some URL attributes (such as "src" and "href") that may be a part
-                    // of different security contexts. In this case we use special santitization function and
+                    // of different security contexts. In this case we use special sanitization function and
                     // select the actual sanitizer at runtime based on a tag name that is provided while
                     // invoking sanitization function.
-                    sanitizerFn = importExpr(Identifiers$1.sanitizeUrlOrResourceUrl);
+                    sanitizerFn = importExpr(Identifiers.sanitizeUrlOrResourceUrl);
                 }
                 else {
                     sanitizerFn = resolveSanitizationFn(securityContexts[0], isAttribute);
@@ -18389,13 +18709,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 instructionParams.push(sanitizerFn);
             }
             updateStatements.push(...bindingExpr.stmts);
-            if (instruction === Identifiers$1.hostProperty) {
+            if (instruction === Identifiers.hostProperty) {
                 propertyBindings.push(instructionParams);
             }
-            else if (instruction === Identifiers$1.attribute) {
+            else if (instruction === Identifiers.attribute) {
                 attributeBindings.push(instructionParams);
             }
-            else if (instruction === Identifiers$1.syntheticHostProperty) {
+            else if (instruction === Identifiers.syntheticHostProperty) {
                 syntheticHostBindings.push(instructionParams);
             }
             else {
@@ -18403,13 +18723,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         });
         if (propertyBindings.length > 0) {
-            updateStatements.push(chainedInstruction(Identifiers$1.hostProperty, propertyBindings).toStmt());
+            updateStatements.push(chainedInstruction(Identifiers.hostProperty, propertyBindings).toStmt());
         }
         if (attributeBindings.length > 0) {
-            updateStatements.push(chainedInstruction(Identifiers$1.attribute, attributeBindings).toStmt());
+            updateStatements.push(chainedInstruction(Identifiers.attribute, attributeBindings).toStmt());
         }
         if (syntheticHostBindings.length > 0) {
-            updateStatements.push(chainedInstruction(Identifiers$1.syntheticHostProperty, syntheticHostBindings).toStmt());
+            updateStatements.push(chainedInstruction(Identifiers.syntheticHostProperty, syntheticHostBindings).toStmt());
         }
         // since we're dealing with directives/components and both have hostBinding
         // functions, we need to generate a special hostAttrs instruction that deals
@@ -18467,7 +18787,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const attrMatches = bindingName.match(ATTR_REGEX);
         if (attrMatches) {
             bindingName = attrMatches[1];
-            instruction = Identifiers$1.attribute;
+            instruction = Identifiers.attribute;
         }
         else {
             if (binding.isAnimation) {
@@ -18475,10 +18795,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // host bindings that have a synthetic property (e.g. @foo) should always be rendered
                 // in the context of the component and not the parent. Therefore there is a special
                 // compatibility instruction available for this purpose.
-                instruction = Identifiers$1.syntheticHostProperty;
+                instruction = Identifiers.syntheticHostProperty;
             }
             else {
-                instruction = Identifiers$1.hostProperty;
+                instruction = Identifiers.hostProperty;
             }
         }
         return { bindingName, instruction, isAttribute: !!attrMatches };
@@ -18502,10 +18822,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         });
         if (syntheticListeners.length > 0) {
-            instructions.push(chainedInstruction(Identifiers$1.syntheticHostListener, syntheticListeners).toStmt());
+            instructions.push(chainedInstruction(Identifiers.syntheticHostListener, syntheticListeners).toStmt());
         }
         if (listeners.length > 0) {
-            instructions.push(chainedInstruction(Identifiers$1.listener, listeners).toStmt());
+            instructions.push(chainedInstruction(Identifiers.listener, listeners).toStmt());
         }
         return instructions;
     }
@@ -18625,8 +18945,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     class CompilerFacadeImpl {
         constructor(jitEvaluator = new JitEvaluator()) {
             this.jitEvaluator = jitEvaluator;
-            this.R3ResolvedDependencyType = R3ResolvedDependencyType;
-            this.R3FactoryTarget = R3FactoryTarget;
+            this.FactoryTarget = FactoryTarget;
             this.ResourceLoader = ResourceLoader;
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
@@ -18635,27 +18954,51 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 name: facade.name,
                 type: wrapReference(facade.type),
                 internalType: new WrappedNodeExpr(facade.type),
-                typeArgumentCount: facade.typeArgumentCount,
-                deps: convertR3DependencyMetadataArray(facade.deps),
+                typeArgumentCount: 0,
+                deps: null,
                 pipeName: facade.pipeName,
                 pure: facade.pure,
             };
             const res = compilePipeFromMetadata(metadata);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
+        compilePipeDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const meta = convertDeclarePipeFacadeToMetadata(declaration);
+            const res = compilePipeFromMetadata(meta);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+        }
         compileInjectable(angularCoreEnv, sourceMapUrl, facade) {
+            var _a;
             const { expression, statements } = compileInjectable({
                 name: facade.name,
                 type: wrapReference(facade.type),
                 internalType: new WrappedNodeExpr(facade.type),
                 typeArgumentCount: facade.typeArgumentCount,
                 providedIn: computeProvidedIn(facade.providedIn),
-                useClass: wrapExpression(facade, USE_CLASS),
+                useClass: convertToProviderExpression(facade, USE_CLASS),
                 useFactory: wrapExpression(facade, USE_FACTORY),
-                useValue: wrapExpression(facade, USE_VALUE),
-                useExisting: wrapExpression(facade, USE_EXISTING),
-                userDeps: convertR3DependencyMetadataArray(facade.userDeps) || undefined,
-            });
+                useValue: convertToProviderExpression(facade, USE_VALUE),
+                useExisting: convertToProviderExpression(facade, USE_EXISTING),
+                deps: (_a = facade.deps) === null || _a === void 0 ? void 0 : _a.map(convertR3DependencyMetadata),
+            }, 
+            /* resolveForwardRefs */ true);
+            return this.jitExpression(expression, angularCoreEnv, sourceMapUrl, statements);
+        }
+        compileInjectableDeclaration(angularCoreEnv, sourceMapUrl, facade) {
+            var _a;
+            const { expression, statements } = compileInjectable({
+                name: facade.type.name,
+                type: wrapReference(facade.type),
+                internalType: new WrappedNodeExpr(facade.type),
+                typeArgumentCount: 0,
+                providedIn: computeProvidedIn(facade.providedIn),
+                useClass: convertToProviderExpression(facade, USE_CLASS),
+                useFactory: wrapExpression(facade, USE_FACTORY),
+                useValue: convertToProviderExpression(facade, USE_VALUE),
+                useExisting: convertToProviderExpression(facade, USE_EXISTING),
+                deps: (_a = facade.deps) === null || _a === void 0 ? void 0 : _a.map(convertR3DeclareDependencyMetadata),
+            }, 
+            /* resolveForwardRefs */ true);
             return this.jitExpression(expression, angularCoreEnv, sourceMapUrl, statements);
         }
         compileInjector(angularCoreEnv, sourceMapUrl, facade) {
@@ -18663,12 +19006,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 name: facade.name,
                 type: wrapReference(facade.type),
                 internalType: new WrappedNodeExpr(facade.type),
-                deps: convertR3DependencyMetadataArray(facade.deps),
                 providers: new WrappedNodeExpr(facade.providers),
                 imports: facade.imports.map(i => new WrappedNodeExpr(i)),
             };
             const res = compileInjector(meta);
-            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+        }
+        compileInjectorDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const meta = convertDeclareInjectorFacadeToMetadata(declaration);
+            const res = compileInjector(meta);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileNgModule(angularCoreEnv, sourceMapUrl, facade) {
             const meta = {
@@ -18686,6 +19033,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             };
             const res = compileNgModule(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+        }
+        compileNgModuleDeclaration(angularCoreEnv, sourceMapUrl, declaration) {
+            const expression = compileNgModuleDeclarationExpression(declaration);
+            return this.jitExpression(expression, angularCoreEnv, sourceMapUrl, []);
         }
         compileDirective(angularCoreEnv, sourceMapUrl, facade) {
             const meta = convertDirectiveFacadeToMetadata(facade);
@@ -18729,11 +19080,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 internalType: new WrappedNodeExpr(meta.type),
                 typeArgumentCount: meta.typeArgumentCount,
                 deps: convertR3DependencyMetadataArray(meta.deps),
-                injectFn: meta.injectFn === 'directiveInject' ? Identifiers.directiveInject :
-                    Identifiers.inject,
                 target: meta.target,
             });
-            return this.jitExpression(factoryRes.factory, angularCoreEnv, sourceMapUrl, factoryRes.statements);
+            return this.jitExpression(factoryRes.expression, angularCoreEnv, sourceMapUrl, factoryRes.statements);
+        }
+        compileFactoryDeclaration(angularCoreEnv, sourceMapUrl, meta) {
+            const factoryRes = compileFactoryFunction({
+                name: meta.type.name,
+                type: wrapReference(meta.type),
+                internalType: new WrappedNodeExpr(meta.type),
+                typeArgumentCount: 0,
+                deps: meta.deps && meta.deps.map(convertR3DeclareDependencyMetadata),
+                target: meta.target,
+            });
+            return this.jitExpression(factoryRes.expression, angularCoreEnv, sourceMapUrl, factoryRes.statements);
         }
         createParseSourceSpan(kind, typeName, sourceUrl) {
             return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
@@ -18763,10 +19123,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const USE_FACTORY = Object.keys({ useFactory: null })[0];
     const USE_VALUE = Object.keys({ useValue: null })[0];
     const USE_EXISTING = Object.keys({ useExisting: null })[0];
-    const wrapReference = function (value) {
-        const wrapped = new WrappedNodeExpr(value);
-        return { value: wrapped, type: wrapped };
-    };
     function convertToR3QueryMetadata(facade) {
         return Object.assign(Object.assign({}, facade), { predicate: Array.isArray(facade.predicate) ? facade.predicate :
                 new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static, emitDistinctChangesOnly: facade.emitDistinctChangesOnly });
@@ -18803,7 +19159,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 });
             }
         }
-        return Object.assign(Object.assign({}, facade), { typeSourceSpan: facade.typeSourceSpan, type: wrapReference(facade.type), internalType: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.propMetadata, facade.typeSourceSpan, facade.host), inputs: Object.assign(Object.assign({}, inputsFromMetadata), inputsFromType), outputs: Object.assign(Object.assign({}, outputsFromMetadata), outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), fullInheritance: false });
+        return Object.assign(Object.assign({}, facade), { typeArgumentCount: 0, typeSourceSpan: facade.typeSourceSpan, type: wrapReference(facade.type), internalType: new WrappedNodeExpr(facade.type), deps: null, host: extractHostBindings(facade.propMetadata, facade.typeSourceSpan, facade.host), inputs: Object.assign(Object.assign({}, inputsFromMetadata), inputsFromType), outputs: Object.assign(Object.assign({}, outputsFromMetadata), outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), fullInheritance: false });
     }
     function convertDeclareDirectiveFacadeToMetadata(declaration, typeSourceSpan) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -18848,12 +19204,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return result;
     }
     function convertDeclareComponentFacadeToMetadata(declaration, typeSourceSpan, sourceMapUrl) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const { template, interpolation } = parseJitTemplate(declaration.template, declaration.type.name, sourceMapUrl, (_a = declaration.preserveWhitespaces) !== null && _a !== void 0 ? _a : false, declaration.interpolation);
-        return Object.assign(Object.assign({}, convertDeclareDirectiveFacadeToMetadata(declaration, typeSourceSpan)), { template, styles: (_b = declaration.styles) !== null && _b !== void 0 ? _b : [], directives: ((_c = declaration.directives) !== null && _c !== void 0 ? _c : []).map(convertUsedDirectiveDeclarationToMetadata), pipes: convertUsedPipesToMetadata(declaration.pipes), viewProviders: declaration.viewProviders !== undefined ?
+        return Object.assign(Object.assign({}, convertDeclareDirectiveFacadeToMetadata(declaration, typeSourceSpan)), { template, styles: (_b = declaration.styles) !== null && _b !== void 0 ? _b : [], directives: ((_c = declaration.components) !== null && _c !== void 0 ? _c : [])
+                .concat((_d = declaration.directives) !== null && _d !== void 0 ? _d : [])
+                .map(convertUsedDirectiveDeclarationToMetadata), pipes: convertUsedPipesToMetadata(declaration.pipes), viewProviders: declaration.viewProviders !== undefined ?
                 new WrappedNodeExpr(declaration.viewProviders) :
                 null, animations: declaration.animations !== undefined ? new WrappedNodeExpr(declaration.animations) :
-                null, changeDetection: (_d = declaration.changeDetection) !== null && _d !== void 0 ? _d : ChangeDetectionStrategy.Default, encapsulation: (_e = declaration.encapsulation) !== null && _e !== void 0 ? _e : ViewEncapsulation.Emulated, interpolation, declarationListEmitMode: 2 /* ClosureResolved */, relativeContextFilePath: '', i18nUseExternalIds: true });
+                null, changeDetection: (_e = declaration.changeDetection) !== null && _e !== void 0 ? _e : ChangeDetectionStrategy.Default, encapsulation: (_f = declaration.encapsulation) !== null && _f !== void 0 ? _f : ViewEncapsulation.Emulated, interpolation, declarationListEmitMode: 2 /* ClosureResolved */, relativeContextFilePath: '', i18nUseExternalIds: true });
     }
     function convertUsedDirectiveDeclarationToMetadata(declaration) {
         var _a, _b, _c;
@@ -18886,6 +19244,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return { template: parsed, interpolation: interpolationConfig };
     }
+    /**
+     * Convert the expression, if present to an `R3ProviderExpression`.
+     *
+     * In JIT mode we do not want the compiler to wrap the expression in a `forwardRef()` call because,
+     * if it is referencing a type that has not yet been defined, it will have already been wrapped in
+     * a `forwardRef()` - either by the application developer or during partial-compilation. Thus we can
+     * set `isForwardRef` to `false`.
+     */
+    function convertToProviderExpression(obj, property) {
+        if (obj.hasOwnProperty(property)) {
+            return createR3ProviderExpression(new WrappedNodeExpr(obj[property]), /* isForwardRef */ false);
+        }
+        else {
+            return undefined;
+        }
+    }
     function wrapExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
             return new WrappedNodeExpr(obj[property]);
@@ -18895,36 +19269,35 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function computeProvidedIn(providedIn) {
-        if (providedIn == null || typeof providedIn === 'string') {
-            return new LiteralExpr(providedIn);
-        }
-        else {
-            return new WrappedNodeExpr(providedIn);
-        }
-    }
-    function convertR3DependencyMetadata(facade) {
-        let tokenExpr;
-        if (facade.token === null) {
-            tokenExpr = new LiteralExpr(null);
-        }
-        else if (facade.resolved === R3ResolvedDependencyType.Attribute) {
-            tokenExpr = new LiteralExpr(facade.token);
-        }
-        else {
-            tokenExpr = new WrappedNodeExpr(facade.token);
-        }
-        return {
-            token: tokenExpr,
-            attribute: null,
-            resolved: facade.resolved,
-            host: facade.host,
-            optional: facade.optional,
-            self: facade.self,
-            skipSelf: facade.skipSelf,
-        };
+        const expression = (providedIn == null || typeof providedIn === 'string') ?
+            new LiteralExpr(providedIn !== null && providedIn !== void 0 ? providedIn : null) :
+            new WrappedNodeExpr(providedIn);
+        // See `convertToProviderExpression()` for why `isForwardRef` is false.
+        return createR3ProviderExpression(expression, /* isForwardRef */ false);
     }
     function convertR3DependencyMetadataArray(facades) {
         return facades == null ? null : facades.map(convertR3DependencyMetadata);
+    }
+    function convertR3DependencyMetadata(facade) {
+        const isAttributeDep = facade.attribute != null; // both `null` and `undefined`
+        const rawToken = facade.token === null ? null : new WrappedNodeExpr(facade.token);
+        // In JIT mode, if the dep is an `@Attribute()` then we use the attribute name given in
+        // `attribute` rather than the `token`.
+        const token = isAttributeDep ? new WrappedNodeExpr(facade.attribute) : rawToken;
+        return createR3DependencyMetadata(token, isAttributeDep, facade.host, facade.optional, facade.self, facade.skipSelf);
+    }
+    function convertR3DeclareDependencyMetadata(facade) {
+        var _a, _b, _c, _d, _e;
+        const isAttributeDep = (_a = facade.attribute) !== null && _a !== void 0 ? _a : false;
+        const token = facade.token === null ? null : new WrappedNodeExpr(facade.token);
+        return createR3DependencyMetadata(token, isAttributeDep, (_b = facade.host) !== null && _b !== void 0 ? _b : false, (_c = facade.optional) !== null && _c !== void 0 ? _c : false, (_d = facade.self) !== null && _d !== void 0 ? _d : false, (_e = facade.skipSelf) !== null && _e !== void 0 ? _e : false);
+    }
+    function createR3DependencyMetadata(token, isAttributeDep, host, optional, self, skipSelf) {
+        // If the dep is an `@Attribute()` the `attributeNameType` ought to be the `unknown` type.
+        // But types are not available at runtime so we just use a literal `"<unknown>"` string as a dummy
+        // marker.
+        const attributeNameType = isAttributeDep ? literal('unknown') : null;
+        return { token, attributeNameType, host, optional, self, skipSelf };
     }
     function extractHostBindings(propMetadata, sourceSpan, host) {
         // First parse the declarations from the metadata.
@@ -18972,6 +19345,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return map;
         }, {});
     }
+    function convertDeclarePipeFacadeToMetadata(declaration) {
+        var _a;
+        return {
+            name: declaration.type.name,
+            type: wrapReference(declaration.type),
+            internalType: new WrappedNodeExpr(declaration.type),
+            typeArgumentCount: 0,
+            pipeName: declaration.name,
+            deps: null,
+            pure: (_a = declaration.pure) !== null && _a !== void 0 ? _a : true,
+        };
+    }
+    function convertDeclareInjectorFacadeToMetadata(declaration) {
+        return {
+            name: declaration.type.name,
+            type: wrapReference(declaration.type),
+            internalType: new WrappedNodeExpr(declaration.type),
+            providers: declaration.providers !== undefined ? new WrappedNodeExpr(declaration.providers) :
+                null,
+            imports: declaration.imports !== undefined ?
+                declaration.imports.map(i => new WrappedNodeExpr(i)) :
+                [],
+        };
+    }
     function publishFacade(global) {
         const ng = global.ng || (global.ng = {});
         ng.ɵcompilerFacade = new CompilerFacadeImpl();
@@ -18984,7 +19381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.1.0-next.4+175.sha-02ff4ed');
+    const VERSION$1 = new Version('12.0.0-next.8+133.sha-d5b13ce');
 
     /**
      * @license
@@ -19532,6 +19929,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     const ERROR_COMPONENT_TYPE = 'ngComponentType';
+    const MISSING_NG_MODULE_METADATA_ERROR_DATA = 'ngMissingNgModuleMetadataErrorData';
     // Design notes:
     // - don't lazily create metadata:
     //   For some metadata, we need to do async work sometimes,
@@ -19641,7 +20039,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 const hostView = this.getHostComponentViewClass(dirType);
                 // Note: ngContentSelectors will be filled later once the template is
                 // loaded.
-                const createComponentFactory = this._reflector.resolveExternalReference(Identifiers.createComponentFactory);
+                const createComponentFactory = this._reflector.resolveExternalReference(Identifiers$1.createComponentFactory);
                 return createComponentFactory(selector, dirType, hostView, inputs, outputs, []);
             }
         }
@@ -19999,7 +20397,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         const importedModuleSummary = this.getNgModuleSummary(importedModuleType, alreadyCollecting);
                         alreadyCollecting.delete(importedModuleType);
                         if (!importedModuleSummary) {
-                            this._reportError(syntaxError(`Unexpected ${this._getTypeDescriptor(importedType)} '${stringifyType(importedType)}' imported by the module '${stringifyType(moduleType)}'. Please add a @NgModule annotation.`), moduleType);
+                            const err = syntaxError(`Unexpected ${this._getTypeDescriptor(importedType)} '${stringifyType(importedType)}' imported by the module '${stringifyType(moduleType)}'. Please add a @NgModule annotation.`);
+                            // If possible, record additional context for this error to enable more useful
+                            // diagnostics on the compiler side.
+                            if (importedType instanceof StaticSymbol) {
+                                err[MISSING_NG_MODULE_METADATA_ERROR_DATA] = {
+                                    fileName: importedType.filePath,
+                                    className: importedType.name,
+                                };
+                            }
+                            this._reportError(err, moduleType);
                             return;
                         }
                         importedModules.push(importedModuleSummary);
@@ -20391,7 +20798,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         return;
                     }
                     if (providerMeta.token ===
-                        this._reflector.resolveExternalReference(Identifiers.ANALYZE_FOR_ENTRY_COMPONENTS)) {
+                        this._reflector.resolveExternalReference(Identifiers$1.ANALYZE_FOR_ENTRY_COMPONENTS)) {
                         targetEntryComponents.push(...this._getEntryComponentsFromProvider(providerMeta, type));
                     }
                     else {
@@ -21960,6 +22367,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                                             return left / right;
                                         case '%':
                                             return left % right;
+                                        case '??':
+                                            return left !== null && left !== void 0 ? left : right;
                                     }
                                     return null;
                                 case 'if':
@@ -22462,6 +22871,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         _ComponentIndex[_ComponentIndex["Fragment"] = 7] = "Fragment";
     })(_ComponentIndex || (_ComponentIndex = {}));
 
+    var FactoryTarget$1;
+    (function (FactoryTarget) {
+        FactoryTarget[FactoryTarget["Directive"] = 0] = "Directive";
+        FactoryTarget[FactoryTarget["Component"] = 1] = "Component";
+        FactoryTarget[FactoryTarget["Injectable"] = 2] = "Injectable";
+        FactoryTarget[FactoryTarget["Pipe"] = 3] = "Pipe";
+        FactoryTarget[FactoryTarget["NgModule"] = 4] = "NgModule";
+    })(FactoryTarget$1 || (FactoryTarget$1 = {}));
+
     /**
      * @license
      * Copyright Google LLC All Rights Reserved.
@@ -22751,8 +23169,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         var _a;
         for (const diDep of type.diDeps) {
             const diDepName = identifierName((_a = diDep.token) === null || _a === void 0 ? void 0 : _a.identifier);
-            if (diDepName === Identifiers.TemplateRef.name ||
-                diDepName === Identifiers.ViewContainerRef.name) {
+            if (diDepName === Identifiers$1.TemplateRef.name ||
+                diDepName === Identifiers$1.ViewContainerRef.name) {
                 return true;
             }
         }
@@ -24111,7 +24529,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         'progress^[HTMLElement]|#max,#value',
         'q,blockquote,cite^[HTMLElement]|',
         'script^[HTMLElement]|!async,charset,%crossOrigin,!defer,event,htmlFor,integrity,src,text,type',
-        'select^[HTMLElement]|!autofocus,!disabled,#length,!multiple,name,!required,#selectedIndex,#size,value',
+        'select^[HTMLElement]|autocomplete,!autofocus,!disabled,#length,!multiple,name,!required,#selectedIndex,#size,value',
         'shadow^[HTMLElement]|',
         'slot^[HTMLElement]|name',
         'source^[HTMLElement]|media,sizes,src,srcset,type',
@@ -24124,7 +24542,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         'tr^[HTMLElement]|align,bgColor,ch,chOff,vAlign',
         'tfoot,thead,tbody^[HTMLElement]|align,ch,chOff,vAlign',
         'template^[HTMLElement]|',
-        'textarea^[HTMLElement]|autocapitalize,!autofocus,#cols,defaultValue,dirName,!disabled,#maxLength,#minLength,name,placeholder,!readOnly,!required,#rows,selectionDirection,#selectionEnd,#selectionStart,value,wrap',
+        'textarea^[HTMLElement]|autocapitalize,autocomplete,!autofocus,#cols,defaultValue,dirName,!disabled,#maxLength,#minLength,name,placeholder,!readOnly,!required,#rows,selectionDirection,#selectionEnd,#selectionStart,value,wrap',
         'title^[HTMLElement]|text',
         'track^[HTMLElement]|!default,kind,label,src,srclang',
         'ul^[HTMLElement]|!compact,type',
@@ -25690,7 +26108,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * These directives allows declaration of "let" variables, adds context-specific
          * symbols like $implicit, index, count, among other behaviors.
          * For a complete description of such format, see
-         * https://angular.io/guide/structural-directives#the-asterisk--prefix
+         * https://angular.io/guide/structural-directives#asterisk
          *
          * @param attr descriptor for attribute name and value pair
          * @param binding template binding for the expression in the attribute
@@ -26855,6 +27273,98 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Base URL for the error details page.
+    // Keep this value in sync with a similar const in
+    // `packages/compiler-cli/src/ngtsc/diagnostics/src/error_code.ts`.
+    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
+    class RuntimeError extends Error {
+        constructor(code, message) {
+            super(formatRuntimeError(code, message));
+            this.code = code;
+        }
+    }
+    // Contains a set of error messages that have details guides at angular.io.
+    // Full list of available error guides can be found at https://angular.io/errors
+    /* tslint:disable:no-toplevel-property-access */
+    const RUNTIME_ERRORS_WITH_GUIDES = new Set([
+        "100" /* EXPRESSION_CHANGED_AFTER_CHECKED */,
+        "200" /* CYCLIC_DI_DEPENDENCY */,
+        "201" /* PROVIDER_NOT_FOUND */,
+        "300" /* MULTIPLE_COMPONENTS_MATCH */,
+        "301" /* EXPORT_NOT_FOUND */,
+        "302" /* PIPE_NOT_FOUND */,
+    ]);
+    /* tslint:enable:no-toplevel-property-access */
+    /** Called to format a runtime error */
+    function formatRuntimeError(code, message) {
+        const fullCode = code ? `NG0${code}: ` : '';
+        let errorMessage = `${fullCode}${message}`;
+        // Some runtime errors are still thrown without `ngDevMode` (for example
+        // `throwProviderNotFoundError`), so we add `ngDevMode` check here to avoid pulling
+        // `RUNTIME_ERRORS_WITH_GUIDES` symbol into prod bundles.
+        // TODO: revisit all instances where `RuntimeError` is thrown and see if `ngDevMode` can be added
+        // there instead to tree-shake more devmode-only code (and eventually remove `ngDevMode` check
+        // from this code).
+        if (ngDevMode && RUNTIME_ERRORS_WITH_GUIDES.has(code)) {
+            errorMessage = `${errorMessage}. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG0${code}`;
+        }
+        return errorMessage;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Used for stringify render output in Ivy.
+     * Important! This function is very performance-sensitive and we should
+     * be extra careful not to introduce megamorphic reads in it.
+     * Check `core/test/render3/perf/render_stringify` for benchmarks and alternate implementations.
+     */
+    function renderStringify(value) {
+        if (typeof value === 'string')
+            return value;
+        if (value == null)
+            return '';
+        // Use `String` so that it invokes the `toString` method of the value. Note that this
+        // appears to be faster than calling `value.toString` (see `render_stringify` benchmark).
+        return String(value);
+    }
+    /**
+     * Used to stringify a value so that it can be displayed in an error message.
+     * Important! This function contains a megamorphic read and should only be
+     * used for error messages.
+     */
+    function stringifyForError(value) {
+        if (typeof value === 'function')
+            return value.name || value.toString();
+        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
+            return value.type.name || value.type.toString();
+        }
+        return renderStringify(value);
+    }
+
+    /** Called when directives inject each other (creating a circular dependency) */
+    function throwCyclicDependencyError(token, path) {
+        const depPath = path ? `. Dependency path: ${path.join(' > ')} > ${token}` : '';
+        throw new RuntimeError("200" /* CYCLIC_DI_DEPENDENCY */, `Circular dependency in DI detected for ${token}${depPath}`);
+    }
+    /** Throws an error when a token is not found in DI. */
+    function throwProviderNotFoundError(token, injectorName) {
+        const injectorDetails = injectorName ? ` in ${injectorName}` : '';
+        throw new RuntimeError("201" /* PROVIDER_NOT_FOUND */, `No provider for ${stringifyForError(token)} found${injectorDetails}`);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertNumber(actual, msg) {
         if (!(typeof actual === 'number')) {
             throwError(msg, typeof actual, 'number', '===');
@@ -26938,8 +27448,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Construct an `InjectableDef` which defines how a token will be constructed by the DI system, and
-     * in which injectors (if any) it will be available.
+     * Construct an injectable definition which defines how a token will be constructed by the DI
+     * system, and in which injectors (if any) it will be available.
      *
      * This should be assigned to a static `ɵprov` field on a type, which will then be an
      * `InjectableType`.
@@ -26970,9 +27480,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * Options:
      *
-     * * `factory`: an `InjectorType` is an instantiable type, so a zero argument `factory` function to
-     *   create the type must be provided. If that factory function needs to inject arguments, it can
-     *   use the `inject` function.
      * * `providers`: an optional array of providers to add to the injector. Each provider must
      *   either have a factory or point to a type which has a `ɵprov` static property (the
      *   type must be an `InjectableType`).
@@ -26983,11 +27490,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @codeGenApi
      */
     function ɵɵdefineInjector(options) {
-        return {
-            factory: options.factory,
-            providers: options.providers || [],
-            imports: options.imports || [],
-        };
+        return { providers: options.providers || [], imports: options.imports || [] };
     }
     /**
      * Read the injectable def (`ɵprov`) for `type` in a way which is immune to accidentally reading
@@ -27075,7 +27578,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *
      * If no injector exists, we can still inject tree-shakable providers which have `providedIn` set to
      * `"root"`. This is known as the limp mode injection. In such case the value is stored in the
-     * `InjectableDef`.
+     * injectable definition.
      */
     function injectRootLimpMode(token, notFoundValue, flags) {
         const injectableDef = getInjectableDef(token);
@@ -27087,7 +27590,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return null;
         if (notFoundValue !== undefined)
             return notFoundValue;
-        throw new Error(`Injector: NOT_FOUND [${stringify$1(token)}]`);
+        throwProviderNotFoundError(stringify$1(token), 'Injector');
     }
 
     /**
@@ -27422,7 +27925,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const TViewTypeAsString = [
         'Root',
         'Component',
-        'Embedded',
+        'Embedded', // 2
     ];
 
     /**
@@ -27565,6 +28068,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throwError(`Index out of range (expecting ${lower} <= ${index} < ${upper})`);
         }
     }
+    function assertProjectionSlots(lView, errMessage) {
+        assertDefined(lView[DECLARATION_COMPONENT_VIEW], 'Component views should exist.');
+        assertDefined(lView[DECLARATION_COMPONENT_VIEW][T_HOST].projection, errMessage ||
+            'Components with projection nodes (<ng-content>) must have projection slots defined.');
+    }
+    function assertParentView(lView, errMessage) {
+        assertDefined(lView, errMessage || 'Component views should always have a parent view (component\'s host view)');
+    }
     /**
      * This is a basic sanity check that the `injectorIndex` seems to point to what looks like a
      * NodeInjector data structure.
@@ -27599,97 +28110,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throw new Error(`Type ${stringify$1(type)} does not have 'ɵfac' property.`);
         }
         return hasFactoryDef ? type[NG_FACTORY_DEF] : null;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // Base URL for the error details page.
-    // Keep this value in sync with a similar const in
-    // `packages/compiler-cli/src/ngtsc/diagnostics/src/error_code.ts`.
-    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
-    class RuntimeError extends Error {
-        constructor(code, message) {
-            super(formatRuntimeError(code, message));
-            this.code = code;
-        }
-    }
-    // Contains a set of error messages that have details guides at angular.io.
-    // Full list of available error guides can be found at https://angular.io/errors
-    /* tslint:disable:no-toplevel-property-access */
-    const RUNTIME_ERRORS_WITH_GUIDES = new Set([
-        "100" /* EXPRESSION_CHANGED_AFTER_CHECKED */,
-        "200" /* CYCLIC_DI_DEPENDENCY */,
-        "201" /* PROVIDER_NOT_FOUND */,
-        "300" /* MULTIPLE_COMPONENTS_MATCH */,
-        "301" /* EXPORT_NOT_FOUND */,
-    ]);
-    /* tslint:enable:no-toplevel-property-access */
-    /** Called to format a runtime error */
-    function formatRuntimeError(code, message) {
-        const fullCode = code ? `NG0${code}: ` : '';
-        let errorMessage = `${fullCode}${message}`;
-        // Some runtime errors are still thrown without `ngDevMode` (for example
-        // `throwProviderNotFoundError`), so we add `ngDevMode` check here to avoid pulling
-        // `RUNTIME_ERRORS_WITH_GUIDES` symbol into prod bundles.
-        // TODO: revisit all instances where `RuntimeError` is thrown and see if `ngDevMode` can be added
-        // there instead to tree-shake more devmode-only code (and eventually remove `ngDevMode` check
-        // from this code).
-        if (ngDevMode && RUNTIME_ERRORS_WITH_GUIDES.has(code)) {
-            errorMessage = `${errorMessage}. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG0${code}`;
-        }
-        return errorMessage;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Used for stringify render output in Ivy.
-     * Important! This function is very performance-sensitive and we should
-     * be extra careful not to introduce megamorphic reads in it.
-     * Check `core/test/render3/perf/render_stringify` for benchmarks and alternate implementations.
-     */
-    function renderStringify(value) {
-        if (typeof value === 'string')
-            return value;
-        if (value == null)
-            return '';
-        // Use `String` so that it invokes the `toString` method of the value. Note that this
-        // appears to be faster than calling `value.toString` (see `render_stringify` benchmark).
-        return String(value);
-    }
-    /**
-     * Used to stringify a value so that it can be displayed in an error message.
-     * Important! This function contains a megamorphic read and should only be
-     * used for error messages.
-     */
-    function stringifyForError(value) {
-        if (typeof value === 'function')
-            return value.name || value.toString();
-        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
-            return value.type.name || value.type.toString();
-        }
-        return renderStringify(value);
-    }
-
-    /** Called when directives inject each other (creating a circular dependency) */
-    function throwCyclicDependencyError(token, path) {
-        const depPath = path ? `. Dependency path: ${path.join(' > ')} > ${token}` : '';
-        throw new RuntimeError("200" /* CYCLIC_DI_DEPENDENCY */, `Circular dependency in DI detected for ${token}${depPath}`);
-    }
-    /** Throws an error when a token is not found in DI. */
-    function throwProviderNotFoundError(token, injectorName) {
-        const injectorDetails = injectorName ? ` in ${injectorName}` : '';
-        throw new RuntimeError("201" /* PROVIDER_NOT_FOUND */, `No provider for ${stringifyForError(token)} found${injectorDetails}`);
     }
 
     /**
@@ -27789,8 +28209,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
-    const MATH_ML_NAMESPACE = 'http://www.w3.org/1998/MathML/';
+    /**
+     * Profiler function which wraps user code executed by the runtime.
+     *
+     * @param event ProfilerEvent corresponding to the execution context
+     * @param instance component instance
+     * @param hookOrListener lifecycle hook function or output listener. The value depends on the
+     *  execution context
+     * @returns
+     */
+    const profiler = function (event, instance, hookOrListener) {
+    };
 
     /**
      * @license
@@ -27799,10 +28228,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * This property will be monkey-patched on elements, components and directives
-     */
-    const MONKEY_PATCH_KEY_NAME = '__ngContext__';
+    const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+    const MATH_ML_NAMESPACE = 'http://www.w3.org/1998/MathML/';
 
     /**
      * @license
@@ -27915,21 +28342,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         const slotValue = hostView[nodeIndex];
         const lView = isLView(slotValue) ? slotValue : slotValue[HOST];
         return lView;
-    }
-    /**
-     * Returns the monkey-patch value data present on the target (which could be
-     * a component, directive or a DOM node).
-     */
-    function readPatchedData(target) {
-        ngDevMode && assertDefined(target, 'Target expected');
-        return target[MONKEY_PATCH_KEY_NAME] || null;
-    }
-    function readPatchedLView(target) {
-        const value = readPatchedData(target);
-        if (value) {
-            return Array.isArray(value) ? value : value.lView;
-        }
-        return null;
     }
     /** Checks whether a given view is in creation mode */
     function isCreationMode(view) {
@@ -28485,11 +28897,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 (currentView[PREORDER_HOOK_FLAGS] >> 16 /* NumberOfInitHooksCalledShift */) &&
                 (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
                 currentView[FLAGS] += 2048 /* IndexWithinInitPhaseIncrementer */;
-                hook.call(directive);
+                try {
+                    hook.call(directive);
+                }
+                finally {
+                }
             }
         }
         else {
-            hook.call(directive);
+            try {
+                hook.call(directive);
+            }
+            finally {
+            }
         }
     }
 
@@ -29079,7 +29499,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                         lookupTokenUsingModuleInjector(lView, token, flags, notFoundValue);
                 }
                 try {
-                    const value = bloomHash();
+                    const value = bloomHash(flags);
                     if (value == null && !(flags & InjectFlags.Optional)) {
                         throwProviderNotFoundError(token);
                     }
@@ -29586,9 +30006,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     const ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
     // Stores the default value of `emitDistinctChangesOnly` when the `emitDistinctChangesOnly` is not
-    // explicitly set. This value will be changed to `true` in v12.
-    // TODO(misko): switch the default in v12 to `true`. See: packages/compiler/src/core.ts
-    const emitDistinctChangesOnlyDefaultValue$1 = false;
+    // explicitly set.
+    const emitDistinctChangesOnlyDefaultValue$1 = true;
     /**
      * Base class for query metadata.
      *
@@ -29644,21 +30063,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var R3ResolvedDependencyType$1;
-    (function (R3ResolvedDependencyType) {
-        R3ResolvedDependencyType[R3ResolvedDependencyType["Token"] = 0] = "Token";
-        R3ResolvedDependencyType[R3ResolvedDependencyType["Attribute"] = 1] = "Attribute";
-        R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 2] = "ChangeDetectorRef";
-        R3ResolvedDependencyType[R3ResolvedDependencyType["Invalid"] = 3] = "Invalid";
-    })(R3ResolvedDependencyType$1 || (R3ResolvedDependencyType$1 = {}));
-    var R3FactoryTarget$1;
-    (function (R3FactoryTarget) {
-        R3FactoryTarget[R3FactoryTarget["Directive"] = 0] = "Directive";
-        R3FactoryTarget[R3FactoryTarget["Component"] = 1] = "Component";
-        R3FactoryTarget[R3FactoryTarget["Injectable"] = 2] = "Injectable";
-        R3FactoryTarget[R3FactoryTarget["Pipe"] = 3] = "Pipe";
-        R3FactoryTarget[R3FactoryTarget["NgModule"] = 4] = "NgModule";
-    })(R3FactoryTarget$1 || (R3FactoryTarget$1 = {}));
+    var FactoryTarget$2;
+    (function (FactoryTarget) {
+        FactoryTarget[FactoryTarget["Directive"] = 0] = "Directive";
+        FactoryTarget[FactoryTarget["Component"] = 1] = "Component";
+        FactoryTarget[FactoryTarget["Injectable"] = 2] = "Injectable";
+        FactoryTarget[FactoryTarget["Pipe"] = 3] = "Pipe";
+        FactoryTarget[FactoryTarget["NgModule"] = 4] = "NgModule";
+    })(FactoryTarget$2 || (FactoryTarget$2 = {}));
     var ViewEncapsulation$2;
     (function (ViewEncapsulation) {
         ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
@@ -29736,14 +30148,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *     var _this = _super.apply(this, arguments) || this;
      * ```
      *
+     * downleveled to ES5 with `downlevelIteration` for TypeScript < 4.2:
      * ```
      *   function MyClass() {
      *     var _this = _super.apply(this, __spread(arguments)) || this;
      * ```
      *
+     * or downleveled to ES5 with `downlevelIteration` for TypeScript >= 4.2:
+     * ```
+     *   function MyClass() {
+     *     var _this = _super.apply(this, __spreadArray([], __read(arguments))) || this;
+     * ```
+     *
      * More details can be found in: https://github.com/angular/angular/issues/38453.
      */
-    const ES5_DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*(arguments|[^()]+\(arguments\))\)/;
+    const ES5_DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*(arguments|(?:[^()]+\(\[\],)?[^()]+\(arguments\))\)/;
     /** Regular expression that detects ES2015 classes which extend from other classes. */
     const ES2015_INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{/;
     /**
@@ -30263,7 +30682,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // below, where the Chromium bug is also referenced:
         // https://github.com/w3c/webappsec-trusted-types/wiki/Trusted-Types-for-function-constructor
         const fnArgs = args.slice(0, -1).join(',');
-        const fnBody = args.pop().toString();
+        const fnBody = args[args.length - 1];
         const body = `(function anonymous(${fnArgs}
 ) { ${fnBody}
 })`;
@@ -30271,6 +30690,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // being stripped out of JS binaries even if not used. The global['eval']
         // indirection fixes that.
         const fn = _global$1['eval'](trustedScriptFromString$1(body));
+        if (fn.bind === undefined) {
+            // Workaround for a browser bug that only exists in Chrome 83, where passing
+            // a TrustedScript to eval just returns the TrustedScript back without
+            // evaluating it. In that case, fall back to the most straightforward
+            // implementation:
+            return new Function(...args);
+        }
         // To completely mimic the behavior of calling "new Function", two more
         // things need to happen:
         // 1. Stringifying the resulting function should return its source code
@@ -30381,6 +30807,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         SecurityContext[SecurityContext["URL"] = 4] = "URL";
         SecurityContext[SecurityContext["RESOURCE_URL"] = 5] = "RESOURCE_URL";
     })(SecurityContext$1 || (SecurityContext$1 = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * This property will be monkey-patched on elements, components and directives.
+     */
+    const MONKEY_PATCH_KEY_NAME = '__ngContext__';
+    /**
+     * Assigns the given data to the given target (which could be a component,
+     * directive or DOM node instance) using monkey-patching.
+     */
+    function attachPatchData(target, data) {
+        ngDevMode && assertDefined(target, 'Target expected');
+        target[MONKEY_PATCH_KEY_NAME] = data;
+    }
+    /**
+     * Returns the monkey-patch value data present on the target (which could be
+     * a component, directive or a DOM node).
+     */
+    function readPatchedData(target) {
+        ngDevMode && assertDefined(target, 'Target expected');
+        return target[MONKEY_PATCH_KEY_NAME] || null;
+    }
+    function readPatchedLView(target) {
+        const value = readPatchedData(target);
+        if (value) {
+            return Array.isArray(value) ? value : value.lView;
+        }
+        return null;
+    }
 
     /**
      * @license
@@ -30526,21 +30987,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         else {
             throw new Error('Looks like we are in \'prod mode\', but we are creating a named Array type, which is wrong! Check your code');
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Assigns the given data to the given target (which could be a component,
-     * directive or DOM node instance) using monkey-patching.
-     */
-    function attachPatchData(target, data) {
-        target[MONKEY_PATCH_KEY_NAME] = data;
     }
 
     /**
@@ -31002,6 +31448,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function nativeParentNode(renderer, node) {
         return (isProceduralRenderer(renderer) ? renderer.parentNode(node) : node.parentNode);
+    }
+    function getProjectionNodes(lView, tNode) {
+        if (tNode !== null) {
+            const componentView = lView[DECLARATION_COMPONENT_VIEW];
+            const componentHost = componentView[T_HOST];
+            const slotIdx = tNode.projection;
+            ngDevMode && assertProjectionSlots(lView);
+            return componentHost.projection[slotIdx];
+        }
+        return null;
     }
     /**
      * Removes a native node itself using a given renderer. To remove the node we are looking up its
@@ -31472,7 +31928,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 return embeddedArray;
         }
-        throw new Error('unreachable code');
     }
     function nameSuffix(text) {
         if (text == null)
@@ -32400,13 +32855,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function executeTemplate(tView, lView, templateFn, rf, context) {
         const prevSelectedIndex = getSelectedIndex();
+        const isUpdatePhase = rf & 2 /* Update */;
         try {
             setSelectedIndex(-1);
-            if (rf & 2 /* Update */ && lView.length > HEADER_OFFSET) {
+            if (isUpdatePhase && lView.length > HEADER_OFFSET) {
                 // When we're updating, inherently select 0 so we don't
                 // have to generate that instruction for most update blocks.
                 selectIndexInternal(tView, lView, HEADER_OFFSET, isInCheckNoChangesMode());
             }
+            const preHookType = isUpdatePhase ? 2 /* TemplateUpdateStart */ : 0 /* TemplateCreateStart */;
+            profiler(preHookType, context);
             templateFn(rf, context);
         }
         finally {
@@ -33261,7 +33719,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // This means we have never seen this record, see if it is tree shakable provider.
                 const injectableDef = getInjectableDef(token);
                 if (injectableDef) {
-                    const providedIn = injectableDef && injectableDef.providedIn;
+                    const providedIn = injectableDef && resolveForwardRef$1(injectableDef.providedIn);
                     if (providedIn === 'any' || providedIn != null && providedIn === this.scope) {
                         records.set(token, record = resolveProvider({ provide: token, useFactory: injectableDef.factory, deps: EMPTY }));
                     }
@@ -33678,7 +34136,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     const ɵ0$7 = getClosureSafeProperty;
     const USE_VALUE$4 = getClosureSafeProperty({ provide: String, useValue: ɵ0$7 });
-    const EMPTY_ARRAY$1 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
             const reflectionCapabilities = new ReflectionCapabilities();
@@ -33696,7 +34153,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         else if (provider.useFactory) {
             const factoryProvider = provider;
-            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY$1));
+            return () => factoryProvider.useFactory(...injectArgs(factoryProvider.deps || EMPTY_ARRAY));
         }
         else if (provider.useClass) {
             const classProvider = provider;
@@ -34620,31 +35077,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // It's up to the caller to ensure that obj.then conforms to the spec
         return !!obj && typeof obj.then === 'function';
     }
-
     /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
+     * Determine if the argument is a Subscribable
      */
-    /**
-     * This file contains reuseable "empty" symbols that can be used as default return values
-     * in different parts of the rendering code. Because the same symbols are returned, this
-     * allows for identity checks against these values to be consistently used by the framework
-     * code.
-     */
-    const EMPTY_OBJ$1 = {};
-    const EMPTY_ARRAY$2 = [];
-    // freezing the values prevents any code from accidentally inserting new values in
-    if ((typeof ngDevMode === 'undefined' || ngDevMode) && initNgDevMode()) {
-        // These property accesses can be ignored because ngDevMode will be set to false
-        // when optimizing code and the whole if statement will be dropped.
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_OBJ$1);
-        // tslint:disable-next-line:no-toplevel-property-access
-        Object.freeze(EMPTY_ARRAY$2);
+    function isSubscribable(obj) {
+        return !!obj && typeof obj.subscribe === 'function';
     }
+    /**
+     * Determine if the argument is an Observable
+     *
+     * Strictly this tests that the `obj` is `Subscribable`, since `Observable`
+     * types need additional methods, such as `lift()`. But it is adequate for our
+     * needs since within the Angular framework code we only ever need to use the
+     * `subscribe()` method, and RxJS has mechanisms to wrap `Subscribable` objects
+     * into `Observable` as needed.
+     */
+    const isObservable = isSubscribable;
 
     /**
      * @license
@@ -34991,7 +35439,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.1.0-next.4+175.sha-02ff4ed');
+    const VERSION$2 = new Version$1('12.0.0-next.8+133.sha-d5b13ce');
 
     /**
      * @license
@@ -35243,24 +35691,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 // Remove the record from the collection since we know it does not match the item.
                 this._remove(record);
             }
-            // Attempt to see if we have seen the item before.
-            record = this._linkedRecords === null ? null : this._linkedRecords.get(itemTrackBy, index);
+            // See if we have evicted the item, which used to be at some anterior position of _itHead list.
+            record = this._unlinkedRecords === null ? null : this._unlinkedRecords.get(itemTrackBy, null);
             if (record !== null) {
-                // We have seen this before, we need to move it forward in the collection.
-                // But first we need to check if identity changed, so we can update in view if necessary
+                // It is an item which we have evicted earlier: reinsert it back into the list.
+                // But first we need to check if identity changed, so we can update in view if necessary.
                 if (!Object.is(record.item, item))
                     this._addIdentityChange(record, item);
-                this._moveAfter(record, previousRecord, index);
+                this._reinsertAfter(record, previousRecord, index);
             }
             else {
-                // Never seen it, check evicted list.
-                record = this._unlinkedRecords === null ? null : this._unlinkedRecords.get(itemTrackBy, null);
+                // Attempt to see if the item is at some posterior position of _itHead list.
+                record = this._linkedRecords === null ? null : this._linkedRecords.get(itemTrackBy, index);
                 if (record !== null) {
-                    // It is an item which we have evicted earlier: reinsert it back into the list.
-                    // But first we need to check if identity changed, so we can update in view if necessary
+                    // We have the item in _itHead at/after `index` position. We need to move it forward in the
+                    // collection.
+                    // But first we need to check if identity changed, so we can update in view if necessary.
                     if (!Object.is(record.item, item))
                         this._addIdentityChange(record, item);
-                    this._reinsertAfter(record, previousRecord, index);
+                    this._moveAfter(record, previousRecord, index);
                 }
                 else {
                     // It is a new item: add it.
@@ -36091,19 +36540,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
             else if (tNodeType & 16 /* Projection */) {
-                const componentView = lView[DECLARATION_COMPONENT_VIEW];
-                const componentHost = componentView[T_HOST];
-                const slotIdx = tNode.projection;
-                ngDevMode &&
-                    assertDefined(componentHost.projection, 'Components with projection nodes (<ng-content>) must have projection slots defined.');
-                const nodesInSlot = componentHost.projection[slotIdx];
+                const nodesInSlot = getProjectionNodes(lView, tNode);
                 if (Array.isArray(nodesInSlot)) {
                     result.push(...nodesInSlot);
                 }
                 else {
-                    const parentView = getLViewParent(componentView);
-                    ngDevMode &&
-                        assertDefined(parentView, 'Component views should always have a parent view (component\'s host view)');
+                    const parentView = getLViewParent(lView[DECLARATION_COMPONENT_VIEW]);
+                    ngDevMode && assertParentView(parentView);
                     collectNativeNodes(parentView[TVIEW], parentView, nodesInSlot, result, true);
                 }
             }
@@ -36152,6 +36595,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         get context() {
             return this._lView[CONTEXT];
+        }
+        set context(value) {
+            this._lView[CONTEXT] = value;
         }
         get destroyed() {
             return (this._lView[FLAGS] & 256 /* Destroyed */) === 256 /* Destroyed */;
@@ -36459,13 +36905,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @nocollapse
      */
     ChangeDetectorRef.__NG_ELEMENT_ID__ = SWITCH_CHANGE_DETECTOR_REF_FACTORY;
-    /**
-     * This marker is need so that the JIT compiler can correctly identify this class as special.
-     *
-     * @internal
-     * @nocollapse
-     */
-    ChangeDetectorRef.__ChangeDetectorRef__ = true;
 
     /**
      * @license
@@ -36814,18 +37253,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
 
     /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation. All rights reserved.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of the
-    License at http://www.apache.org/licenses/LICENSE-2.0
+    Copyright (c) Microsoft Corporation.
 
-    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-    MERCHANTABLITY OR NON-INFRINGEMENT.
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
 
-    See the Apache Version 2.0 License for specific language governing permissions
-    and limitations under the License.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
     /* global Reflect, Promise */
 
@@ -36913,6 +37352,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._parentOrParents = null;
             this._subscriptions = null;
             if (unsubscribe) {
+                this._ctorUnsubscribe = true;
                 this._unsubscribe = unsubscribe;
             }
         }
@@ -36921,7 +37361,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this.closed) {
                 return;
             }
-            var _a = this, _parentOrParents = _a._parentOrParents, _unsubscribe = _a._unsubscribe, _subscriptions = _a._subscriptions;
+            var _a = this, _parentOrParents = _a._parentOrParents, _ctorUnsubscribe = _a._ctorUnsubscribe, _unsubscribe = _a._unsubscribe, _subscriptions = _a._subscriptions;
             this.closed = true;
             this._parentOrParents = null;
             this._subscriptions = null;
@@ -36935,6 +37375,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             }
             if (isFunction(_unsubscribe)) {
+                if (_ctorUnsubscribe) {
+                    this._unsubscribe = undefined;
+                }
                 try {
                     _unsubscribe.call(this);
                 }
@@ -37305,12 +37748,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     var observable = /*@__PURE__*/ (function () { return typeof Symbol === 'function' && Symbol.observable || '@@observable'; })();
 
     /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-    function noop$1() { }
+    function identity(x) {
+        return x;
+    }
 
-    /** PURE_IMPORTS_START _noop PURE_IMPORTS_END */
+    /** PURE_IMPORTS_START _identity PURE_IMPORTS_END */
     function pipeFromArray(fns) {
-        if (!fns) {
-            return noop$1;
+        if (fns.length === 0) {
+            return identity;
         }
         if (fns.length === 1) {
             return fns[0];
@@ -37806,11 +38251,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
 
-    /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-    function identity(x) {
-        return x;
-    }
-
     /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
     function map(project, thisArg) {
         return function mapOperation(source) {
@@ -37853,49 +38293,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return MapSubscriber;
     }(Subscriber));
 
-    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
-    var OuterSubscriber = /*@__PURE__*/ (function (_super) {
-        __extends(OuterSubscriber, _super);
-        function OuterSubscriber() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        OuterSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
-            this.destination.next(innerValue);
-        };
-        OuterSubscriber.prototype.notifyError = function (error, innerSub) {
-            this.destination.error(error);
-        };
-        OuterSubscriber.prototype.notifyComplete = function (innerSub) {
-            this.destination.complete();
-        };
-        return OuterSubscriber;
-    }(Subscriber));
-
-    /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
-    var InnerSubscriber = /*@__PURE__*/ (function (_super) {
-        __extends(InnerSubscriber, _super);
-        function InnerSubscriber(parent, outerValue, outerIndex) {
-            var _this = _super.call(this) || this;
-            _this.parent = parent;
-            _this.outerValue = outerValue;
-            _this.outerIndex = outerIndex;
-            _this.index = 0;
-            return _this;
-        }
-        InnerSubscriber.prototype._next = function (value) {
-            this.parent.notifyNext(this.outerValue, value, this.outerIndex, this.index++, this);
-        };
-        InnerSubscriber.prototype._error = function (error) {
-            this.parent.notifyError(error, this);
-            this.unsubscribe();
-        };
-        InnerSubscriber.prototype._complete = function () {
-            this.parent.notifyComplete(this);
-            this.unsubscribe();
-        };
-        return InnerSubscriber;
-    }(Subscriber));
-
     /** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */
     var subscribeToPromise = function (promise) {
         return function (subscriber) {
@@ -37924,7 +38321,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return function (subscriber) {
             var iterator$1 = iterable[iterator]();
             do {
-                var item = iterator$1.next();
+                var item = void 0;
+                try {
+                    item = iterator$1.next();
+                }
+                catch (err) {
+                    subscriber.error(err);
+                    return subscriber;
+                }
                 if (item.done) {
                     subscriber.complete();
                     break;
@@ -37987,20 +38391,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             throw new TypeError(msg);
         }
     };
-
-    /** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo,_Observable PURE_IMPORTS_END */
-    function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, innerSubscriber) {
-        if (innerSubscriber === void 0) {
-            innerSubscriber = new InnerSubscriber(outerSubscriber, outerValue, outerIndex);
-        }
-        if (innerSubscriber.closed) {
-            return undefined;
-        }
-        if (result instanceof Observable) {
-            return result.subscribe(innerSubscriber);
-        }
-        return subscribeTo(result)(innerSubscriber);
-    }
 
     /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable PURE_IMPORTS_END */
     function scheduleObservable(input, scheduler) {
@@ -38121,7 +38511,61 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
 
-    /** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
+    /** PURE_IMPORTS_START tslib,_Subscriber,_Observable,_util_subscribeTo PURE_IMPORTS_END */
+    var SimpleInnerSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(SimpleInnerSubscriber, _super);
+        function SimpleInnerSubscriber(parent) {
+            var _this = _super.call(this) || this;
+            _this.parent = parent;
+            return _this;
+        }
+        SimpleInnerSubscriber.prototype._next = function (value) {
+            this.parent.notifyNext(value);
+        };
+        SimpleInnerSubscriber.prototype._error = function (error) {
+            this.parent.notifyError(error);
+            this.unsubscribe();
+        };
+        SimpleInnerSubscriber.prototype._complete = function () {
+            this.parent.notifyComplete();
+            this.unsubscribe();
+        };
+        return SimpleInnerSubscriber;
+    }(Subscriber));
+    var SimpleOuterSubscriber = /*@__PURE__*/ (function (_super) {
+        __extends(SimpleOuterSubscriber, _super);
+        function SimpleOuterSubscriber() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SimpleOuterSubscriber.prototype.notifyNext = function (innerValue) {
+            this.destination.next(innerValue);
+        };
+        SimpleOuterSubscriber.prototype.notifyError = function (err) {
+            this.destination.error(err);
+        };
+        SimpleOuterSubscriber.prototype.notifyComplete = function () {
+            this.destination.complete();
+        };
+        return SimpleOuterSubscriber;
+    }(Subscriber));
+    function innerSubscribe(result, innerSubscriber) {
+        if (innerSubscriber.closed) {
+            return undefined;
+        }
+        if (result instanceof Observable) {
+            return result.subscribe(innerSubscriber);
+        }
+        var subscription;
+        try {
+            subscription = subscribeTo(result)(innerSubscriber);
+        }
+        catch (error) {
+            innerSubscriber.error(error);
+        }
+        return subscription;
+    }
+
+    /** PURE_IMPORTS_START tslib,_map,_observable_from,_innerSubscribe PURE_IMPORTS_END */
     function mergeMap(project, resultSelector, concurrent) {
         if (concurrent === void 0) {
             concurrent = Number.POSITIVE_INFINITY;
@@ -38181,13 +38625,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return;
             }
             this.active++;
-            this._innerSub(result, value, index);
+            this._innerSub(result);
         };
-        MergeMapSubscriber.prototype._innerSub = function (ish, value, index) {
-            var innerSubscriber = new InnerSubscriber(this, value, index);
+        MergeMapSubscriber.prototype._innerSub = function (ish) {
+            var innerSubscriber = new SimpleInnerSubscriber(this);
             var destination = this.destination;
             destination.add(innerSubscriber);
-            var innerSubscription = subscribeToResult(this, ish, undefined, undefined, innerSubscriber);
+            var innerSubscription = innerSubscribe(ish, innerSubscriber);
             if (innerSubscription !== innerSubscriber) {
                 destination.add(innerSubscription);
             }
@@ -38199,12 +38643,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             this.unsubscribe();
         };
-        MergeMapSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
+        MergeMapSubscriber.prototype.notifyNext = function (innerValue) {
             this.destination.next(innerValue);
         };
-        MergeMapSubscriber.prototype.notifyComplete = function (innerSub) {
+        MergeMapSubscriber.prototype.notifyComplete = function () {
             var buffer = this.buffer;
-            this.remove(innerSub);
             this.active--;
             if (buffer.length > 0) {
                 this._next(buffer.shift());
@@ -38214,7 +38657,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
         };
         return MergeMapSubscriber;
-    }(OuterSubscriber));
+    }(SimpleOuterSubscriber));
 
     /** PURE_IMPORTS_START _mergeMap,_util_identity PURE_IMPORTS_END */
     function mergeAll(concurrent) {
@@ -38263,58 +38706,37 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         emit(value) {
             super.next(value);
         }
-        subscribe(generatorOrNext, error, complete) {
-            let schedulerFn;
-            let errorFn = (err) => null;
-            let completeFn = () => null;
-            if (generatorOrNext && typeof generatorOrNext === 'object') {
-                schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => generatorOrNext.next(value));
-                } : (value) => {
-                    generatorOrNext.next(value);
-                };
-                if (generatorOrNext.error) {
-                    errorFn = this.__isAsync ? (err) => {
-                        setTimeout(() => generatorOrNext.error(err));
-                    } : (err) => {
-                        generatorOrNext.error(err);
-                    };
+        subscribe(observerOrNext, error, complete) {
+            var _a, _b, _c;
+            let nextFn = observerOrNext;
+            let errorFn = error || (() => null);
+            let completeFn = complete;
+            if (observerOrNext && typeof observerOrNext === 'object') {
+                const observer = observerOrNext;
+                nextFn = (_a = observer.next) === null || _a === void 0 ? void 0 : _a.bind(observer);
+                errorFn = (_b = observer.error) === null || _b === void 0 ? void 0 : _b.bind(observer);
+                completeFn = (_c = observer.complete) === null || _c === void 0 ? void 0 : _c.bind(observer);
+            }
+            if (this.__isAsync) {
+                errorFn = _wrapInTimeout(errorFn);
+                if (nextFn) {
+                    nextFn = _wrapInTimeout(nextFn);
                 }
-                if (generatorOrNext.complete) {
-                    completeFn = this.__isAsync ? () => {
-                        setTimeout(() => generatorOrNext.complete());
-                    } : () => {
-                        generatorOrNext.complete();
-                    };
+                if (completeFn) {
+                    completeFn = _wrapInTimeout(completeFn);
                 }
             }
-            else {
-                schedulerFn = this.__isAsync ? (value) => {
-                    setTimeout(() => generatorOrNext(value));
-                } : (value) => {
-                    generatorOrNext(value);
-                };
-                if (error) {
-                    errorFn = this.__isAsync ? (err) => {
-                        setTimeout(() => error(err));
-                    } : (err) => {
-                        error(err);
-                    };
-                }
-                if (complete) {
-                    completeFn = this.__isAsync ? () => {
-                        setTimeout(() => complete());
-                    } : () => {
-                        complete();
-                    };
-                }
-            }
-            const sink = super.subscribe(schedulerFn, errorFn, completeFn);
-            if (generatorOrNext instanceof Subscription) {
-                generatorOrNext.add(sink);
+            const sink = super.subscribe({ next: nextFn, error: errorFn, complete: completeFn });
+            if (observerOrNext instanceof Subscription) {
+                observerOrNext.add(sink);
             }
             return sink;
         }
+    }
+    function _wrapInTimeout(fn) {
+        return (value) => {
+            setTimeout(fn, undefined, value);
+        };
     }
     /**
      * @publicApi
@@ -38462,11 +38884,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         if (metadata && metadata.exports) {
             imports = [...imports, metadata.exports];
         }
-        moduleType.ɵinj = ɵɵdefineInjector({
-            factory: convertInjectableProviderToFactory(moduleType, { useClass: moduleType }),
-            providers: metadata && metadata.providers,
-            imports: imports,
-        });
+        const moduleInjectorType = moduleType;
+        moduleInjectorType.ɵfac = convertInjectableProviderToFactory(moduleType, { useClass: moduleType });
+        moduleInjectorType.ɵinj =
+            ɵɵdefineInjector({ providers: metadata && metadata.providers, imports: imports });
     }
     const SWITCH_COMPILE_NGMODULE__PRE_R3__ = preR3NgModuleCompile;
     const SWITCH_COMPILE_NGMODULE = SWITCH_COMPILE_NGMODULE__PRE_R3__;
@@ -38527,8 +38948,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * one or more initialization functions.
      *
      * The provided functions are injected at application startup and executed during
-     * app initialization. If any of these functions returns a Promise, initialization
-     * does not complete until the Promise is resolved.
+     * app initialization. If any of these functions returns a Promise or an Observable, initialization
+     * does not complete until the Promise is resolved or the Observable is completed.
      *
      * You can, for example, create a factory function that loads language data
      * or an external configuration, and provide that function to the `APP_INITIALIZER` token.
@@ -38536,6 +38957,59 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * and the needed data is available on startup.
      *
      * @see `ApplicationInitStatus`
+     *
+     * @usageNotes
+     *
+     * The following example illustrates how to configure a multi-provider using `APP_INITIALIZER` token
+     * and a function returning a promise.
+     *
+     * ```
+     *  function initializeApp(): Promise<any> {
+     *    return new Promise((resolve, reject) => {
+     *      // Do some asynchronous stuff
+     *      resolve();
+     *    });
+     *  }
+     *
+     *  @NgModule({
+     *   imports: [BrowserModule],
+     *   declarations: [AppComponent],
+     *   bootstrap: [AppComponent],
+     *   providers: [{
+     *     provide: APP_INITIALIZER,
+     *     useFactory: () => initializeApp,
+     *     multi: true
+     *    }]
+     *   })
+     *  export class AppModule {}
+     * ```
+     *
+     * It's also possible to configure a multi-provider using `APP_INITIALIZER` token and a function
+     * returning an observable, see an example below. Note: the `HttpClient` in this example is used for
+     * demo purposes to illustrate how the factory function can work with other providers available
+     * through DI.
+     *
+     * ```
+     *  function initializeApp(httpClient: HttpClient): Observable<any> {
+     *   return httpClient.get("https://someUrl.com/api/user")
+     *     .pipe(
+     *        tap(user => { ... })
+     *     )
+     *  }
+     *
+     *  @NgModule({
+     *    imports: [BrowserModule, HttpClientModule],
+     *    declarations: [AppComponent],
+     *    bootstrap: [AppComponent],
+     *    providers: [{
+     *      provide: APP_INITIALIZER,
+     *      useFactory: initializeApp,
+     *      deps: [HttpClient],
+     *      multi: true
+     *    }]
+     *  })
+     *  export class AppModule {}
+     * ```
      *
      * @publicApi
      */
@@ -38573,6 +39047,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     if (isPromise$1(initResult)) {
                         asyncInitPromises.push(initResult);
                     }
+                    else if (isObservable(initResult)) {
+                        const observableAsPromise = new Promise((resolve, reject) => {
+                            initResult.subscribe({ complete: resolve, error: reject });
+                        });
+                        asyncInitPromises.push(observableAsPromise);
+                    }
                 }
             }
             Promise.all(asyncInitPromises)
@@ -38592,7 +39072,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         { type: Injectable }
     ];
     ApplicationInitStatus.ctorParameters = () => [
-        { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
+        { type: undefined, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
     ];
 
     /**
@@ -39168,6 +39648,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     const EMPTY_PAYLOAD = {};
     function checkStable(zone) {
+        // TODO: @JiaLiPassion, should check zone.isCheckStableRunning to prevent
+        // re-entry. The case is:
+        //
+        // @Component({...})
+        // export class AppComponent {
+        // constructor(private ngZone: NgZone) {
+        //   this.ngZone.onStable.subscribe(() => {
+        //     this.ngZone.run(() => console.log('stable'););
+        //   });
+        // }
+        //
+        // The onStable subscriber run another function inside ngZone
+        // which causes `checkStable()` re-entry.
+        // But this fix causes some issues in g3, so this fix will be
+        // launched in another PR.
         if (zone._nesting == 0 && !zone.hasPendingMicrotasks && !zone.isStable) {
             try {
                 zone._nesting++;
@@ -39187,7 +39682,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
     }
     function delayChangeDetectionForEvents(zone) {
-        if (zone.lastRequestAnimationFrameId !== -1) {
+        /**
+         * We also need to check _nesting here
+         * Consider the following case with shouldCoalesceRunChangeDetection = true
+         *
+         * ngZone.run(() => {});
+         * ngZone.run(() => {});
+         *
+         * We want the two `ngZone.run()` only trigger one change detection
+         * when shouldCoalesceRunChangeDetection is true.
+         * And because in this case, change detection run in async way(requestAnimationFrame),
+         * so we also need to check the _nesting here to prevent multiple
+         * change detections.
+         */
+        if (zone.isCheckStableRunning || zone.lastRequestAnimationFrameId !== -1) {
             return;
         }
         zone.lastRequestAnimationFrameId = zone.nativeRequestAnimationFrame.call(_global$1, () => {
@@ -39204,7 +39712,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 zone.fakeTopEventTask = Zone.root.scheduleEventTask('fakeTopEventTask', () => {
                     zone.lastRequestAnimationFrameId = -1;
                     updateMicroTaskStatus(zone);
+                    zone.isCheckStableRunning = true;
                     checkStable(zone);
+                    zone.isCheckStableRunning = false;
                 }, undefined, () => { }, () => { });
             }
             zone.fakeTopEventTask.invoke();
@@ -39458,7 +39968,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         whenStable(doneCb, timeout, updateCb) {
             if (updateCb && !this.taskTrackingZone) {
                 throw new Error('Task tracking zone is required when passing an update callback to ' +
-                    'whenStable(). Is "zone.js/dist/task-tracking.js" loaded?');
+                    'whenStable(). Is "zone.js/plugins/task-tracking" loaded?');
             }
             // These arguments are 'Function' above to keep the public API simple.
             this.addCallback(doneCb, timeout, updateCb);
@@ -39969,9 +40479,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     class ApplicationRef {
         /** @internal */
-        constructor(_zone, _console, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
+        constructor(_zone, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
             this._zone = _zone;
-            this._console = _console;
             this._injector = _injector;
             this._exceptionHandler = _exceptionHandler;
             this._componentFactoryResolver = _componentFactoryResolver;
@@ -40087,8 +40596,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
             });
             this._loadComponent(compRef);
-            {
-                this._console.log(`Angular is running in development mode. Call enableProdMode() to enable production mode.`);
+            // Note that we have still left the `isDevMode()` condition in order to avoid
+            // creating a breaking change for projects that still use the View Engine.
+            if ((typeof ngDevMode === 'undefined' || ngDevMode) && isDevMode()) {
+                const _console = this._injector.get(Console);
+                _console.log(`Angular is running in development mode. Call enableProdMode() to enable production mode.`);
             }
             return compRef;
         }
@@ -40170,7 +40682,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     ];
     ApplicationRef.ctorParameters = () => [
         { type: NgZone },
-        { type: Console },
         { type: Injector },
         { type: ErrorHandler },
         { type: ComponentFactoryResolver },
@@ -40257,7 +40768,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         {
             provide: ApplicationRef,
             useClass: ApplicationRef,
-            deps: [NgZone, Console, Injector, ErrorHandler, ComponentFactoryResolver, ApplicationInitStatus]
+            deps: [NgZone, Injector, ErrorHandler, ComponentFactoryResolver, ApplicationInitStatus]
         },
         { provide: SCHEDULER, deps: [NgZone], useFactory: zoneSchedulerFactory },
         {
@@ -42112,14 +42623,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Create a `LanguageServiceHost`
-     */
-    function createLanguageServiceFromTypescript(host, service) {
-        const ngHost = new TypeScriptServiceHost(host, service);
-        const ngServer = createLanguageService(ngHost);
-        return ngServer;
-    }
-    /**
      * The language service never needs the normalized versions of the metadata. To avoid parsing
      * the content and resolving references, return an empty file. This also allows normalizing
      * template that are syntatically incorrect which is required to provide completions in
@@ -42592,7 +43095,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             );
             const htmlResult = htmlParser.parse(template.source, fileName, {
                 tokenizeExpansionForms: true,
-                preserveLineEndings: true,
+                preserveLineEndings: true, // do not convert CRLF to LF
             });
             const { directives, pipes, schemas } = this.getModuleMetadataForDirective(classSymbol);
             const parseResult = parser.tryParseHtml(htmlResult, data.metadata, directives, pipes, schemas);
@@ -42799,6 +43302,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // not implemented in VE Language Service
             return undefined;
         }
+        function getSignatureHelpItems(fileName, position, options) {
+            // not implemented in VE Language Service
+            return undefined;
+        }
+        function getTcb(fileName, position) {
+            // Not implemented in VE Language Service
+            return undefined;
+        }
+        function getComponentLocationsForTemplate(fileName) {
+            // Not implemented in VE Language Service
+            return [];
+        }
         return Object.assign(Object.assign({}, tsLS), { 
             // Then override the methods supported by Angular language service
             getCompletionsAtPosition,
@@ -42808,13 +43323,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             getDefinitionAndBoundSpan,
             getTypeDefinitionAtPosition,
             getReferencesAtPosition,
-            findRenameLocations });
+            getSignatureHelpItems,
+            findRenameLocations,
+            getTcb,
+            getComponentLocationsForTemplate });
     }
 
-    exports.TypeScriptServiceHost = TypeScriptServiceHost;
     exports.create = create;
-    exports.createLanguageService = createLanguageService;
-    exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
     exports.getExternalFiles = getExternalFiles;
 
     Object.defineProperty(exports, '__esModule', { value: true });
