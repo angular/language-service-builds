@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+130.sha-d3edc5c
+ * @license Angular v12.0.0-next.8+132.sha-62e3f32
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18133,9 +18133,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options = {}) {
-        var _a;
         const { interpolationConfig, preserveWhitespaces, enableI18nLegacyMessageIdFormat } = options;
-        const isInline = (_a = options.isInline) !== null && _a !== void 0 ? _a : false;
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
@@ -18144,9 +18142,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -18170,9 +18165,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: i18nMetaResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -18201,9 +18193,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             interpolationConfig,
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
-            template,
-            templateUrl,
-            isInline,
             nodes,
             styleUrls,
             styles,
@@ -19392,7 +19381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+130.sha-d3edc5c');
+    const VERSION$1 = new Version('12.0.0-next.8+132.sha-62e3f32');
 
     /**
      * @license
@@ -47356,7 +47345,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+130.sha-d3edc5c');
+    const VERSION$2 = new Version$1('12.0.0-next.8+132.sha-62e3f32');
 
     /**
      * @license

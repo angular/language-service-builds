@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+130.sha-d3edc5c
+ * @license Angular v12.0.0-next.8+132.sha-62e3f32
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16592,9 +16592,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options = {}) {
-        var _a;
         const { interpolationConfig, preserveWhitespaces, enableI18nLegacyMessageIdFormat } = options;
-        const isInline = (_a = options.isInline) !== null && _a !== void 0 ? _a : false;
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
@@ -16603,9 +16601,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -16629,9 +16624,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: i18nMetaResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -16660,9 +16652,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             interpolationConfig,
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
-            template,
-            templateUrl,
-            isInline,
             nodes,
             styleUrls,
             styles,
@@ -17851,7 +17840,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+130.sha-d3edc5c');
+    const VERSION$1 = new Version('12.0.0-next.8+132.sha-62e3f32');
 
     /**
      * @license
@@ -18490,7 +18479,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0-next.8+130.sha-d3edc5c'));
+        definitionMap.set('version', literal('12.0.0-next.8+132.sha-62e3f32'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18530,7 +18519,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0-next.8+130.sha-d3edc5c'));
+        definitionMap.set('version', literal('12.0.0-next.8+132.sha-62e3f32'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18617,8 +18606,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /**
      * Compile a component declaration defined by the `R3ComponentMetadata`.
      */
-    function compileDeclareComponentFromMetadata(meta, template) {
-        const definitionMap = createComponentDefinitionMap(meta, template);
+    function compileDeclareComponentFromMetadata(meta, template, additionalTemplateInfo) {
+        const definitionMap = createComponentDefinitionMap(meta, template, additionalTemplateInfo);
         const expression = importExpr(Identifiers.declareComponent).callFn([definitionMap.toLiteralMap()]);
         const type = createComponentType(meta);
         return { expression, type, statements: [] };
@@ -18626,10 +18615,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /**
      * Gathers the declaration fields for a component into a `DefinitionMap`.
      */
-    function createComponentDefinitionMap(meta, template) {
+    function createComponentDefinitionMap(meta, template, templateInfo) {
         const definitionMap = createDirectiveDefinitionMap(meta);
-        definitionMap.set('template', getTemplateExpression(template));
-        if (template.isInline) {
+        definitionMap.set('template', getTemplateExpression(template, templateInfo));
+        if (templateInfo.isInline) {
             definitionMap.set('isInline', literal(true));
         }
         definitionMap.set('styles', toOptionalLiteralArray(meta.styles, literal));
@@ -18653,28 +18642,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return definitionMap;
     }
-    function getTemplateExpression(template) {
-        if (typeof template.template === 'string') {
-            if (template.isInline) {
-                // The template is inline but not a simple literal string, so give up with trying to
-                // source-map it and just return a simple literal here.
-                return literal(template.template);
-            }
-            else {
-                // The template is external so we must synthesize an expression node with the appropriate
-                // source-span.
-                const contents = template.template;
-                const file = new ParseSourceFile(contents, template.templateUrl);
-                const start = new ParseLocation(file, 0, 0, 0);
-                const end = computeEndLocation(file, contents);
-                const span = new ParseSourceSpan(start, end);
-                return literal(contents, null, span);
-            }
+    function getTemplateExpression(template, templateInfo) {
+        // If the template has been defined using a direct literal, we use that expression directly
+        // without any modifications. This is ensures proper source mapping from the partially
+        // compiled code to the source file declaring the template. Note that this does not capture
+        // template literals referenced indirectly through an identifier.
+        if (templateInfo.inlineTemplateLiteralExpression !== null) {
+            return templateInfo.inlineTemplateLiteralExpression;
         }
-        else {
-            // The template is inline so we can just reuse the current expression node.
-            return template.template;
+        // If the template is defined inline but not through a literal, the template has been resolved
+        // through static interpretation. We create a literal but cannot provide any source span. Note
+        // that we cannot use the expression defining the template because the linker expects the template
+        // to be defined as a literal in the declaration.
+        if (templateInfo.isInline) {
+            return literal(templateInfo.content, null, null);
         }
+        // The template is external so we must synthesize an expression node with
+        // the appropriate source-span.
+        const contents = templateInfo.content;
+        const file = new ParseSourceFile(contents, templateInfo.sourceUrl);
+        const start = new ParseLocation(file, 0, 0, 0);
+        const end = computeEndLocation(file, contents);
+        const span = new ParseSourceSpan(start, end);
+        return literal(contents, null, span);
     }
     function computeEndLocation(file, contents) {
         const length = contents.length;
@@ -18746,7 +18736,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0-next.8+130.sha-d3edc5c'));
+        definitionMap.set('version', literal('12.0.0-next.8+132.sha-62e3f32'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18788,7 +18778,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0-next.8+130.sha-d3edc5c'));
+        definitionMap.set('version', literal('12.0.0-next.8+132.sha-62e3f32'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18867,7 +18857,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0-next.8+130.sha-d3edc5c'));
+        definitionMap.set('version', literal('12.0.0-next.8+132.sha-62e3f32'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18904,7 +18894,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0-next.8+130.sha-d3edc5c'));
+        definitionMap.set('version', literal('12.0.0-next.8+132.sha-62e3f32'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18962,7 +18952,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0-next.8+130.sha-d3edc5c'));
+        definitionMap.set('version', literal('12.0.0-next.8+132.sha-62e3f32'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18994,7 +18984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+130.sha-d3edc5c');
+    const VERSION$2 = new Version('12.0.0-next.8+132.sha-62e3f32');
 
     /**
      * @license
@@ -28215,7 +28205,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const templateDecl = this.parseTemplateDeclaration(decorator, component, containingFile);
                 template = this.extractTemplate(node, templateDecl);
             }
-            const templateResource = template.isInline ? { path: null, expression: component.get('template') } : {
+            const templateResource = template.declaration.isInline ? { path: null, expression: component.get('template') } : {
                 path: absoluteFrom(template.declaration.resolvedTemplateUrl),
                 expression: template.sourceMapping.node
             };
@@ -28351,7 +28341,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 selector,
                 boundTemplate,
                 templateMeta: {
-                    isInline: analysis.template.isInline,
+                    isInline: analysis.template.declaration.isInline,
                     file: analysis.template.file,
                 },
             });
@@ -28572,9 +28562,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (analysis.template.errors !== null && analysis.template.errors.length > 0) {
                 return [];
             }
+            const templateInfo = {
+                content: analysis.template.content,
+                sourceUrl: analysis.template.declaration.resolvedTemplateUrl,
+                isInline: analysis.template.declaration.isInline,
+                inlineTemplateLiteralExpression: analysis.template.sourceMapping.type === 'direct' ?
+                    new WrappedNodeExpr(analysis.template.sourceMapping.node) :
+                    null,
+            };
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
             const fac = compileDeclareFactory(toFactoryMetadata(meta, FactoryTarget.Component));
-            const def = compileDeclareComponentFromMetadata(meta, analysis.template);
+            const def = compileDeclareComponentFromMetadata(meta, analysis.template, templateInfo);
             const classMetadata = analysis.classMetadata !== null ?
                 compileDeclareClassMetadata(analysis.classMetadata).toStmt() :
                 null;
@@ -28716,10 +28714,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         extractTemplate(node, template) {
             if (template.isInline) {
-                let templateStr;
-                let templateLiteral = null;
-                let templateUrl = '';
-                let templateRange = null;
+                let sourceStr;
+                let sourceParseRange = null;
+                let templateContent;
                 let sourceMapping;
                 let escapedString = false;
                 // We only support SourceMaps for inline templates that are simple string literals.
@@ -28727,10 +28724,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                     ts$1.isNoSubstitutionTemplateLiteral(template.expression)) {
                     // the start and end of the `templateExpr` node includes the quotation marks, which we must
                     // strip
-                    templateRange = getTemplateRange(template.expression);
-                    templateStr = template.expression.getSourceFile().text;
-                    templateLiteral = template.expression;
-                    templateUrl = template.templateUrl;
+                    sourceParseRange = getTemplateRange(template.expression);
+                    sourceStr = template.expression.getSourceFile().text;
+                    templateContent = template.expression.text;
                     escapedString = true;
                     sourceMapping = {
                         type: 'direct',
@@ -28742,44 +28738,46 @@ Either add the @Injectable() decorator to '${provider.node.name
                     if (typeof resolvedTemplate !== 'string') {
                         throw createValueHasWrongTypeError(template.expression, resolvedTemplate, 'template must be a string');
                     }
-                    templateStr = resolvedTemplate;
+                    // We do not parse the template directly from the source file using a lexer range, so
+                    // the template source and content are set to the statically resolved template.
+                    sourceStr = resolvedTemplate;
+                    templateContent = resolvedTemplate;
                     sourceMapping = {
                         type: 'indirect',
                         node: template.expression,
                         componentClass: node,
-                        template: templateStr,
+                        template: templateContent,
                     };
                 }
-                return Object.assign(Object.assign({}, this._parseTemplate(template, templateStr, templateRange, escapedString)), { sourceMapping, declaration: template });
+                return Object.assign(Object.assign({}, this._parseTemplate(template, sourceStr, sourceParseRange, escapedString)), { content: templateContent, sourceMapping, declaration: template });
             }
             else {
-                const templateStr = this.resourceLoader.load(template.resolvedTemplateUrl);
+                const templateContent = this.resourceLoader.load(template.resolvedTemplateUrl);
                 if (this.depTracker !== null) {
                     this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(template.resolvedTemplateUrl));
                 }
-                return Object.assign(Object.assign({}, this._parseTemplate(template, templateStr, /* templateRange */ null, 
-                /* escapedString */ false)), { sourceMapping: {
+                return Object.assign(Object.assign({}, this._parseTemplate(template, /* sourceStr */ templateContent, /* sourceParseRange */ null, 
+                /* escapedString */ false)), { content: templateContent, sourceMapping: {
                         type: 'external',
                         componentClass: node,
                         // TODO(alxhub): TS in g3 is unable to make this inference on its own, so cast it here
                         // until g3 is able to figure this out.
                         node: template.templateUrlExpression,
-                        template: templateStr,
+                        template: templateContent,
                         templateUrl: template.resolvedTemplateUrl,
                     }, declaration: template });
             }
         }
-        _parseTemplate(template, templateStr, templateRange, escapedString) {
+        _parseTemplate(template, sourceStr, sourceParseRange, escapedString) {
             // We always normalize line endings if the template has been escaped (i.e. is inline).
             const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
-            const parsedTemplate = parseTemplate(templateStr, template.sourceMapUrl, {
+            const parsedTemplate = parseTemplate(sourceStr, template.sourceMapUrl, {
                 preserveWhitespaces: template.preserveWhitespaces,
                 interpolationConfig: template.interpolationConfig,
-                range: templateRange !== null && templateRange !== void 0 ? templateRange : undefined,
+                range: sourceParseRange !== null && sourceParseRange !== void 0 ? sourceParseRange : undefined,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
-                isInline: template.isInline,
                 alwaysAttemptHtmlToR3AstConversion: this.usePoisonedData,
             });
             // Unfortunately, the primary parse of the template above may not contain accurate source map
@@ -28796,19 +28794,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             //
             // In order to guarantee the correctness of diagnostics, templates are parsed a second time
             // with the above options set to preserve source mappings.
-            const { nodes: diagNodes } = parseTemplate(templateStr, template.sourceMapUrl, {
+            const { nodes: diagNodes } = parseTemplate(sourceStr, template.sourceMapUrl, {
                 preserveWhitespaces: true,
                 preserveLineEndings: true,
                 interpolationConfig: template.interpolationConfig,
-                range: templateRange !== null && templateRange !== void 0 ? templateRange : undefined,
+                range: sourceParseRange !== null && sourceParseRange !== void 0 ? sourceParseRange : undefined,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
                 leadingTriviaChars: [],
-                isInline: template.isInline,
                 alwaysAttemptHtmlToR3AstConversion: this.usePoisonedData,
             });
-            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: template.isInline ? new WrappedNodeExpr(template.expression) : templateStr, templateUrl: template.resolvedTemplateUrl, isInline: template.isInline, file: new ParseSourceFile(templateStr, template.resolvedTemplateUrl) });
+            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, file: new ParseSourceFile(sourceStr, template.resolvedTemplateUrl) });
         }
         parseTemplateDeclaration(decorator, component, containingFile) {
             let preserveWhitespaces = this.defaultPreserveWhitespaces;
