@@ -100,4 +100,9 @@ export declare class CompletionBuilder<N extends TmplAstNode | AST> {
     private getElementAttributeCompletionSymbol;
     private isPipeCompletion;
     private getPipeCompletions;
+    /**
+     * From the AST node of the cursor position, include completion of string literals, number
+     * literals, `true`, `false`, `null`, and `undefined`.
+     */
+    private isValidNodeContextCompletion;
 }
