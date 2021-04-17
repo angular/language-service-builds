@@ -1,15 +1,15 @@
 {
   "name": "@angular/language-service",
-  "version": "9.0.0-rc.1+246.sha-d3cfad7.with-local-changes",
+  "version": "12.0.0-next.8+77.sha-917664e",
   "description": "Angular - language services",
-  "main": "./bundles/language-service.umd.js",
-  "module": "./fesm5/language-service.js",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "angular",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/angular/angular.git"
+    "url": "https://github.com/angular/angular.git",
+    "directory": "packages/language-service"
   },
   "ng-update": {
     "packageGroup": [
@@ -24,8 +24,6 @@
       "@angular/platform-browser-dynamic",
       "@angular/forms",
       "@angular/platform-server",
-      "@angular/platform-webworker",
-      "@angular/platform-webworker-dynamic",
       "@angular/upgrade",
       "@angular/router",
       "@angular/language-service",
