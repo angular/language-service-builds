@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+185.sha-364ff96
+ * @license Angular v12.0.0-next.8+186.sha-73824d5
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17213,15 +17213,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
-            const tagName = sanitizeIdentifier(template.tagName || '');
-            const contextName = `${this.contextName}${tagName ? '_' + tagName : ''}_${templateIndex}`;
+            const tagNameWithoutNamespace = template.tagName ? splitNsName(template.tagName)[1] : template.tagName;
+            const contextName = `${this.contextName}${template.tagName ? '_' + sanitizeIdentifier(template.tagName) : ''}_${templateIndex}`;
             const templateName = `${contextName}_Template`;
             const parameters = [
                 literal(templateIndex),
                 variable(templateName),
                 // We don't care about the tag's namespace here, because we infer
                 // it based on the parent nodes inside the template instruction.
-                literal(template.tagName ? splitNsName(template.tagName)[1] : template.tagName),
+                literal(tagNameWithoutNamespace),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
@@ -17255,7 +17255,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // handle property bindings e.g. ɵɵproperty('ngForOf', ctx.items), et al;
             this.templatePropertyBindings(templateIndex, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
-            if (template.tagName === NG_TEMPLATE_TAG_NAME) {
+            if (tagNameWithoutNamespace === NG_TEMPLATE_TAG_NAME) {
                 const [i18nInputs, inputs] = partitionArray(template.inputs, hasI18nMeta);
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
@@ -19381,7 +19381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+185.sha-364ff96');
+    const VERSION$1 = new Version('12.0.0-next.8+186.sha-73824d5');
 
     /**
      * @license
@@ -47345,7 +47345,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+185.sha-364ff96');
+    const VERSION$2 = new Version$1('12.0.0-next.8+186.sha-73824d5');
 
     /**
      * @license
