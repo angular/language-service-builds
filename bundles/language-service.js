@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+77.sha-21256bb
+ * @license Angular v12.0.0-next.8+189.sha-d573373
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -7389,7 +7389,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return `tmp_${bindingId}_${temporaryNumber}`;
     }
     function temporaryDeclaration(bindingId, temporaryNumber) {
-        return new DeclareVarStmt(temporaryName(bindingId, temporaryNumber), NULL_EXPR);
+        return new DeclareVarStmt(temporaryName(bindingId, temporaryNumber));
     }
     function prependTemporaryDecls(temporaryCount, bindingId, statements) {
         for (let i = temporaryCount - 1; i >= 0; i--) {
@@ -7785,14 +7785,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.releaseTemporary(temporary);
             }
             // Produce the conditional
-            return convertToStatementIfNeeded(mode, condition.conditional(literal(null), access));
+            return convertToStatementIfNeeded(mode, condition.conditional(NULL_EXPR, access));
         }
         convertNullishCoalesce(ast, mode) {
-            // Allocate the temporary variable before visiting the LHS and RHS, because they
-            // may allocate temporary variables too and we don't want them to be reused.
-            const temporary = this.allocateTemporary();
             const left = this._visit(ast.left, _Mode.Expression);
             const right = this._visit(ast.right, _Mode.Expression);
+            const temporary = this.allocateTemporary();
             this.releaseTemporary(temporary);
             // Generate the following expression. It is identical to how TS
             // transpiles binary expressions with a nullish coalescing operator.
@@ -17215,15 +17213,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
-            const tagName = sanitizeIdentifier(template.tagName || '');
-            const contextName = `${this.contextName}${tagName ? '_' + tagName : ''}_${templateIndex}`;
+            const tagNameWithoutNamespace = template.tagName ? splitNsName(template.tagName)[1] : template.tagName;
+            const contextName = `${this.contextName}${template.tagName ? '_' + sanitizeIdentifier(template.tagName) : ''}_${templateIndex}`;
             const templateName = `${contextName}_Template`;
             const parameters = [
                 literal(templateIndex),
                 variable(templateName),
                 // We don't care about the tag's namespace here, because we infer
                 // it based on the parent nodes inside the template instruction.
-                literal(template.tagName ? splitNsName(template.tagName)[1] : template.tagName),
+                literal(tagNameWithoutNamespace),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
@@ -17257,7 +17255,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // handle property bindings e.g. ɵɵproperty('ngForOf', ctx.items), et al;
             this.templatePropertyBindings(templateIndex, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
-            if (template.tagName === NG_TEMPLATE_TAG_NAME) {
+            if (tagNameWithoutNamespace === NG_TEMPLATE_TAG_NAME) {
                 const [i18nInputs, inputs] = partitionArray(template.inputs, hasI18nMeta);
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
@@ -18135,9 +18133,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options = {}) {
-        var _a;
         const { interpolationConfig, preserveWhitespaces, enableI18nLegacyMessageIdFormat } = options;
-        const isInline = (_a = options.isInline) !== null && _a !== void 0 ? _a : false;
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
@@ -18146,9 +18142,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -18172,9 +18165,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: i18nMetaResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -18203,9 +18193,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             interpolationConfig,
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
-            template,
-            templateUrl,
-            isInline,
             nodes,
             styleUrls,
             styles,
@@ -19394,7 +19381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+77.sha-21256bb');
+    const VERSION$1 = new Version('12.0.0-next.8+189.sha-d573373');
 
     /**
      * @license
@@ -35452,7 +35439,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+77.sha-21256bb');
+    const VERSION$2 = new Version$1('12.0.0-next.8+189.sha-d573373');
 
     /**
      * @license
