@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+204.sha-64567d3
+ * @license Angular v12.0.0-next.8+206.sha-de4fafb
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19381,7 +19381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+204.sha-64567d3');
+    const VERSION$1 = new Version('12.0.0-next.8+206.sha-de4fafb');
 
     /**
      * @license
@@ -38238,6 +38238,13 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             (typeof value === 'object' && value instanceof InjectionToken);
     }
 
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function INJECTOR_IMPL__POST_R3__(providers, parent, name) {
         return createInjector({ name: name }, parent, providers, name);
     }
@@ -38324,7 +38331,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function getComponent(element) {
         assertDomElement(element);
-        const context = loadLContext(element, false);
+        const context = getLContext(element);
         if (context === null)
             return null;
         if (context.component === undefined) {
@@ -38346,7 +38353,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function getContext(element) {
         assertDomElement(element);
-        const context = loadLContext(element, false);
+        const context = getLContext(element);
         return context === null ? null : context.lView[CONTEXT];
     }
     /**
@@ -38365,7 +38372,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @globalApi ng
      */
     function getOwningComponent(elementOrDir) {
-        const context = loadLContext(elementOrDir, false);
+        const context = getLContext(elementOrDir);
         if (context === null)
             return null;
         let lView = context.lView;
@@ -38401,7 +38408,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @globalApi ng
      */
     function getInjector(elementOrDir) {
-        const context = loadLContext(elementOrDir, false);
+        const context = getLContext(elementOrDir);
         if (context === null)
             return Injector.NULL;
         const tNode = context.lView[TVIEW].data[context.nodeIndex];
@@ -38435,7 +38442,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         if (node instanceof Text) {
             return [];
         }
-        const context = loadLContext(node, false);
+        const context = getLContext(node);
         if (context === null) {
             return [];
         }
@@ -38486,14 +38493,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
         return null;
     }
-    function loadLContext(target, throwOnNotFound = true) {
-        const context = getLContext(target);
-        if (!context && throwOnNotFound) {
-            throw new Error(ngDevMode ? `Unable to find context associated with ${stringifyForError(target)}` :
-                'Invalid ng target');
-        }
-        return context;
-    }
     /**
      * Retrieves the host element of a component or directive instance.
      * The host element is the DOM element that matched the selector of the directive.
@@ -38539,7 +38538,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function getListeners(element) {
         assertDomElement(element);
-        const lContext = loadLContext(element, false);
+        const lContext = getLContext(element);
         if (lContext === null)
             return [];
         const lView = lContext.lView;
@@ -47345,7 +47344,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+204.sha-64567d3');
+    const VERSION$2 = new Version$1('12.0.0-next.8+206.sha-de4fafb');
 
     /**
      * @license
