@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+223.sha-6d9e340
+ * @license Angular v12.0.0-next.8+224.sha-18b33e7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19381,7 +19381,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+223.sha-6d9e340');
+    const VERSION$1 = new Version('12.0.0-next.8+224.sha-18b33e7');
 
     /**
      * @license
@@ -28283,6 +28283,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const DECLARATION_LCONTAINER = 17;
     const PREORDER_HOOK_FLAGS = 18;
     const QUERIES = 19;
+    const ID = 20;
     /**
      * Size of LView's header. Necessary to adjust for it when setting slots.
      *
@@ -28290,7 +28291,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * instruction index into `LView` index. All other indexes should be in the `LView` index space and
      * there should be no need to refer to `HEADER_OFFSET` anywhere else.
      */
-    const HEADER_OFFSET = 20;
+    const HEADER_OFFSET = 21;
     /**
      * Converts `TViewType` into human readable text.
      * Make sure this matches with `TViewType`
@@ -32882,6 +32883,75 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Keeps track of the currently-active LViews.
+    const TRACKED_LVIEWS = new Map();
+    // Used for generating unique IDs for LViews.
+    let uniqueIdCounter = 0;
+    /** Starts tracking an LView and returns a unique ID that can be used for future lookups. */
+    function registerLView(lView) {
+        const id = uniqueIdCounter++;
+        TRACKED_LVIEWS.set(id, lView);
+        return id;
+    }
+    /** Gets an LView by its unique ID. */
+    function getLViewById(id) {
+        ngDevMode && assertNumber(id, 'ID used for LView lookup must be a number');
+        return TRACKED_LVIEWS.get(id) || null;
+    }
+    /** Stops tracking an LView. */
+    function unregisterLView(lView) {
+        ngDevMode && assertNumber(lView[ID], 'Cannot stop tracking an LView that does not have an ID');
+        TRACKED_LVIEWS.delete(lView[ID]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The internal view context which is specific to a given DOM element, directive or
+     * component instance. Each value in here (besides the LView and element node details)
+     * can be present, null or undefined. If undefined then it implies the value has not been
+     * looked up yet, otherwise, if null, then a lookup was executed and nothing was found.
+     *
+     * Each value will get filled when the respective value is examined within the getContext
+     * function. The component, element and each directive instance will share the same instance
+     * of the context.
+     */
+    class LContext {
+        constructor(
+        /**
+         * ID of the component's parent view data.
+         */
+        lViewId, 
+        /**
+         * The index instance of the node.
+         */
+        nodeIndex, 
+        /**
+         * The instance of the DOM node that is attached to the lNode.
+         */
+        native) {
+            this.lViewId = lViewId;
+            this.nodeIndex = nodeIndex;
+            this.native = native;
+        }
+        /** Component's parent view data. */
+        get lView() {
+            return getLViewById(this.lViewId);
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Returns the matching `LContext` data for a given DOM node, directive or component instance.
      *
@@ -32907,7 +32977,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         if (mpValue) {
             // only when it's an array is it considered an LView instance
             // ... otherwise it's an already constructed LContext instance
-            if (Array.isArray(mpValue)) {
+            if (isLView(mpValue)) {
                 const lView = mpValue;
                 let nodeIndex;
                 let component = undefined;
@@ -32966,13 +33036,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             while (parent = parent.parentNode) {
                 const parentContext = readPatchedData(parent);
                 if (parentContext) {
-                    let lView;
-                    if (Array.isArray(parentContext)) {
-                        lView = parentContext;
-                    }
-                    else {
-                        lView = parentContext.lView;
-                    }
+                    const lView = Array.isArray(parentContext) ? parentContext : parentContext.lView;
                     // the edge of the app was also reached here through another means
                     // (maybe because the DOM was changed manually).
                     if (!lView) {
@@ -32995,14 +33059,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Creates an empty instance of a `LContext` context
      */
     function createLContext(lView, nodeIndex, native) {
-        return {
-            lView,
-            nodeIndex,
-            native,
-            component: undefined,
-            directives: undefined,
-            localRefs: undefined,
-        };
+        return new LContext(lView[ID], nodeIndex, native);
     }
     /**
      * Takes a component instance and returns the view for that component.
@@ -33011,21 +33068,24 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @returns The component's view
      */
     function getComponentViewByInstance(componentInstance) {
-        let lView = readPatchedData(componentInstance);
-        let view;
-        if (Array.isArray(lView)) {
-            const nodeIndex = findViaComponent(lView, componentInstance);
-            view = getComponentLViewByIndex(nodeIndex, lView);
-            const context = createLContext(lView, nodeIndex, view[HOST]);
+        let patchedData = readPatchedData(componentInstance);
+        let lView;
+        if (isLView(patchedData)) {
+            const contextLView = patchedData;
+            const nodeIndex = findViaComponent(contextLView, componentInstance);
+            lView = getComponentLViewByIndex(nodeIndex, contextLView);
+            const context = createLContext(contextLView, nodeIndex, lView[HOST]);
             context.component = componentInstance;
             attachPatchData(componentInstance, context);
             attachPatchData(context.native, context);
         }
         else {
-            const context = lView;
-            view = getComponentLViewByIndex(context.nodeIndex, context.lView);
+            const context = patchedData;
+            const contextLView = context.lView;
+            ngDevMode && assertLView(contextLView);
+            lView = getComponentLViewByIndex(context.nodeIndex, contextLView);
         }
-        return view;
+        return lView;
     }
     /**
      * This property will be monkey-patched on elements, components and directives.
@@ -33037,7 +33097,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function attachPatchData(target, data) {
         ngDevMode && assertDefined(target, 'Target expected');
-        target[MONKEY_PATCH_KEY_NAME] = data;
+        // Only attach the ID of the view in order to avoid memory leaks (see #41047). We only do this
+        // for `LView`, because we have control over when an `LView` is created and destroyed, whereas
+        // we can't know when to remove an `LContext`.
+        target[MONKEY_PATCH_KEY_NAME] = isLView(data) ? data[ID] : data;
     }
     /**
      * Returns the monkey-patch value data present on the target (which could be
@@ -33045,12 +33108,13 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function readPatchedData(target) {
         ngDevMode && assertDefined(target, 'Target expected');
-        return target[MONKEY_PATCH_KEY_NAME] || null;
+        const data = target[MONKEY_PATCH_KEY_NAME];
+        return (typeof data === 'number') ? getLViewById(data) : data || null;
     }
     function readPatchedLView(target) {
         const value = readPatchedData(target);
         if (value) {
-            return Array.isArray(value) ? value : value.lView;
+            return isLView(value) ? value : value.lView;
         }
         return null;
     }
@@ -33986,6 +34050,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 applyView(tView, lView, renderer, 3 /* Destroy */, null, null);
             }
             destroyViewTree(lView);
+            unregisterLView(lView);
         }
     }
     /**
@@ -35722,6 +35787,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         get tHost() {
             return this._raw_lView[T_HOST];
         }
+        get id() {
+            return this._raw_lView[ID];
+        }
         get decls() {
             return toLViewRange(this.tView, this._raw_lView, HEADER_OFFSET, this.tView.bindingStartIndex);
         }
@@ -35966,6 +36034,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         lView[SANITIZER] = sanitizer || parentLView && parentLView[SANITIZER] || null;
         lView[INJECTOR] = injector || parentLView && parentLView[INJECTOR] || null;
         lView[T_HOST] = tHostNode;
+        lView[ID] = registerLView(lView);
         ngDevMode &&
             assertEqual(tView.type == 2 /* Embedded */ ? parentLView !== null : true, true, 'Embedded views must have parentLView');
         lView[DECLARATION_COMPONENT_VIEW] =
@@ -37489,8 +37558,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         for (let i = 0; i < rootContext.components.length; i++) {
             const rootComponent = rootContext.components[i];
             const lView = readPatchedLView(rootComponent);
-            const tView = lView[TVIEW];
-            renderComponentOrTemplate(tView, lView, tView.template, rootComponent);
+            // We might not have an `LView` if the component was destroyed.
+            if (lView !== null) {
+                const tView = lView[TVIEW];
+                renderComponentOrTemplate(tView, lView, tView.template, rootComponent);
+            }
         }
     }
     function detectChangesInternal(tView, lView, context) {
@@ -38330,12 +38402,16 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @globalApi ng
      */
     function getComponent(element) {
-        assertDomElement(element);
+        ngDevMode && assertDomElement(element);
         const context = getLContext(element);
         if (context === null)
             return null;
         if (context.component === undefined) {
-            context.component = getComponentAtNodeIndex(context.nodeIndex, context.lView);
+            const lView = context.lView;
+            if (lView === null) {
+                return null;
+            }
+            context.component = getComponentAtNodeIndex(context.nodeIndex, lView);
         }
         return context.component;
     }
@@ -38354,7 +38430,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     function getContext(element) {
         assertDomElement(element);
         const context = getLContext(element);
-        return context === null ? null : context.lView[CONTEXT];
+        const lView = context ? context.lView : null;
+        return lView === null ? null : lView[CONTEXT];
     }
     /**
      * Retrieves the component instance whose view contains the DOM element.
@@ -38373,11 +38450,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function getOwningComponent(elementOrDir) {
         const context = getLContext(elementOrDir);
-        if (context === null)
+        let lView = context ? context.lView : null;
+        if (lView === null)
             return null;
-        let lView = context.lView;
         let parent;
-        ngDevMode && assertLView(lView);
         while (lView[TVIEW].type === 2 /* Embedded */ && (parent = getLViewParent(lView))) {
             lView = parent;
         }
@@ -38395,7 +38471,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @globalApi ng
      */
     function getRootComponents(elementOrDir) {
-        return [...getRootContext(elementOrDir).components];
+        const lView = readPatchedLView(elementOrDir);
+        return lView !== null ? [...getRootContext(lView).components] : [];
     }
     /**
      * Retrieves an `Injector` associated with an element, component or directive instance.
@@ -38409,10 +38486,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      */
     function getInjector(elementOrDir) {
         const context = getLContext(elementOrDir);
-        if (context === null)
+        const lView = context ? context.lView : null;
+        if (lView === null)
             return Injector.NULL;
-        const tNode = context.lView[TVIEW].data[context.nodeIndex];
-        return new NodeInjector(tNode, context.lView);
+        const tNode = lView[TVIEW].data[context.nodeIndex];
+        return new NodeInjector(tNode, lView);
     }
     /**
      * Retrieves directive instances associated with a given DOM node. Does not include
@@ -38443,10 +38521,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             return [];
         }
         const context = getLContext(node);
-        if (context === null) {
+        const lView = context ? context.lView : null;
+        if (lView === null) {
             return [];
         }
-        const lView = context.lView;
         const tView = lView[TVIEW];
         const nodeIndex = context.nodeIndex;
         if (!(tView === null || tView === void 0 ? void 0 : tView.data[nodeIndex])) {
@@ -38537,11 +38615,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @globalApi ng
      */
     function getListeners(element) {
-        assertDomElement(element);
+        ngDevMode && assertDomElement(element);
         const lContext = getLContext(element);
-        if (lContext === null)
+        const lView = lContext === null ? null : lContext.lView;
+        if (lView === null)
             return [];
-        const lView = lContext.lView;
         const tView = lView[TVIEW];
         const lCleanup = lView[CLEANUP];
         const tCleanup = tView.cleanup;
@@ -47344,7 +47422,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+223.sha-6d9e340');
+    const VERSION$2 = new Version$1('12.0.0-next.8+224.sha-18b33e7');
 
     /**
      * @license
