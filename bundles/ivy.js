@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+168.sha-24b4cf5
+ * @license Angular v12.0.0-next.8+252.sha-08d111f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -15672,15 +15672,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
-            const tagName = sanitizeIdentifier(template.tagName || '');
-            const contextName = `${this.contextName}${tagName ? '_' + tagName : ''}_${templateIndex}`;
+            const tagNameWithoutNamespace = template.tagName ? splitNsName(template.tagName)[1] : template.tagName;
+            const contextName = `${this.contextName}${template.tagName ? '_' + sanitizeIdentifier(template.tagName) : ''}_${templateIndex}`;
             const templateName = `${contextName}_Template`;
             const parameters = [
                 literal(templateIndex),
                 variable(templateName),
                 // We don't care about the tag's namespace here, because we infer
                 // it based on the parent nodes inside the template instruction.
-                literal(template.tagName ? splitNsName(template.tagName)[1] : template.tagName),
+                literal(tagNameWithoutNamespace),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
@@ -15714,7 +15714,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // handle property bindings e.g. ɵɵproperty('ngForOf', ctx.items), et al;
             this.templatePropertyBindings(templateIndex, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
-            if (template.tagName === NG_TEMPLATE_TAG_NAME) {
+            if (tagNameWithoutNamespace === NG_TEMPLATE_TAG_NAME) {
                 const [i18nInputs, inputs] = partitionArray(template.inputs, hasI18nMeta);
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
@@ -17840,7 +17840,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+168.sha-24b4cf5');
+    const VERSION$1 = new Version('12.0.0-next.8+252.sha-08d111f');
 
     /**
      * @license
@@ -18479,7 +18479,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0-next.8+168.sha-24b4cf5'));
+        definitionMap.set('version', literal('12.0.0-next.8+252.sha-08d111f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18519,7 +18519,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0-next.8+168.sha-24b4cf5'));
+        definitionMap.set('version', literal('12.0.0-next.8+252.sha-08d111f'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18736,7 +18736,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0-next.8+168.sha-24b4cf5'));
+        definitionMap.set('version', literal('12.0.0-next.8+252.sha-08d111f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18778,7 +18778,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0-next.8+168.sha-24b4cf5'));
+        definitionMap.set('version', literal('12.0.0-next.8+252.sha-08d111f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18857,7 +18857,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0-next.8+168.sha-24b4cf5'));
+        definitionMap.set('version', literal('12.0.0-next.8+252.sha-08d111f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18894,7 +18894,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0-next.8+168.sha-24b4cf5'));
+        definitionMap.set('version', literal('12.0.0-next.8+252.sha-08d111f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18952,7 +18952,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0-next.8+168.sha-24b4cf5'));
+        definitionMap.set('version', literal('12.0.0-next.8+252.sha-08d111f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18984,7 +18984,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+168.sha-24b4cf5');
+    const VERSION$2 = new Version('12.0.0-next.8+252.sha-08d111f');
 
     /**
      * @license
