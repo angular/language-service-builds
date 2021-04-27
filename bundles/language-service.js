@@ -1,5 +1,5 @@
 /**
- * @license Angular v11.2.11+20.sha-7756ead
+ * @license Angular v11.2.11+23.sha-84a44a9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8307,6 +8307,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     rule.selector.startsWith('@page') || rule.selector.startsWith('@document')) {
                     content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 }
+                else if (rule.selector.startsWith('@font-face')) {
+                    content = this._stripScopingSelectors(rule.content, scopeSelector, hostSelector);
+                }
+                return new CssRule(selector, content);
+            });
+        }
+        /**
+         * Handle a css text that is within a rule that should not contain scope selectors by simply
+         * removing them! An example of such a rule is `@font-face`.
+         *
+         * `@font-face` rules cannot contain nested selectors. Nor can they be nested under a selector.
+         * Normally this would be a syntax error by the author of the styles. But in some rare cases, such
+         * as importing styles from a library, and applying `:host ::ng-deep` to the imported styles, we
+         * can end up with broken css if the imported styles happen to contain @font-face rules.
+         *
+         * For example:
+         *
+         * ```
+         * :host ::ng-deep {
+         *   import 'some/lib/containing/font-face';
+         * }
+         * ```
+         */
+        _stripScopingSelectors(cssText, scopeSelector, hostSelector) {
+            return processRules(cssText, rule => {
+                const selector = rule.selector.replace(_shadowDeepSelectors, ' ')
+                    .replace(_polyfillHostNoCombinatorRe, ' ');
+                const content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 return new CssRule(selector, content);
             });
         }
@@ -19180,7 +19208,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('11.2.11+20.sha-7756ead');
+    const VERSION$1 = new Version('11.2.11+23.sha-84a44a9');
 
     /**
      * @license
@@ -35242,7 +35270,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('11.2.11+20.sha-7756ead');
+    const VERSION$2 = new Version$1('11.2.11+23.sha-84a44a9');
 
     /**
      * @license
