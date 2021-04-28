@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-rc.0+81.sha-98de217
+ * @license Angular v12.0.0-rc.1+6.sha-c691b66
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19409,7 +19409,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-rc.0+81.sha-98de217');
+    const VERSION$1 = new Version('12.0.0-rc.1+6.sha-c691b66');
 
     /**
      * @license
@@ -35508,7 +35508,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-rc.0+81.sha-98de217');
+    const VERSION$2 = new Version$1('12.0.0-rc.1+6.sha-c691b66');
 
     /**
      * @license
@@ -36696,9 +36696,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         /**
          * Marks a view and all of its ancestors dirty.
-         *
-         * It also triggers change detection by calling `scheduleTick` internally, which coalesces
-         * multiple `markForCheck` calls to into one change detection run.
          *
          * This can be used to ensure an {@link ChangeDetectionStrategy#OnPush OnPush} component is
          * checked when it needs to be re-rendered but the two normal triggers haven't marked it
