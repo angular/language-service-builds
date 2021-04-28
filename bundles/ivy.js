@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+121.sha-72c4288
+ * @license Angular v12.0.0-next.8+278.sha-c0be765
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8432,6 +8432,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     rule.selector.startsWith('@page') || rule.selector.startsWith('@document')) {
                     content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 }
+                else if (rule.selector.startsWith('@font-face')) {
+                    content = this._stripScopingSelectors(rule.content, scopeSelector, hostSelector);
+                }
+                return new CssRule(selector, content);
+            });
+        }
+        /**
+         * Handle a css text that is within a rule that should not contain scope selectors by simply
+         * removing them! An example of such a rule is `@font-face`.
+         *
+         * `@font-face` rules cannot contain nested selectors. Nor can they be nested under a selector.
+         * Normally this would be a syntax error by the author of the styles. But in some rare cases, such
+         * as importing styles from a library, and applying `:host ::ng-deep` to the imported styles, we
+         * can end up with broken css if the imported styles happen to contain @font-face rules.
+         *
+         * For example:
+         *
+         * ```
+         * :host ::ng-deep {
+         *   import 'some/lib/containing/font-face';
+         * }
+         * ```
+         */
+        _stripScopingSelectors(cssText, scopeSelector, hostSelector) {
+            return processRules(cssText, rule => {
+                const selector = rule.selector.replace(_shadowDeepSelectors, ' ')
+                    .replace(_polyfillHostNoCombinatorRe, ' ');
+                const content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 return new CssRule(selector, content);
             });
         }
@@ -15672,15 +15700,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
-            const tagName = sanitizeIdentifier(template.tagName || '');
-            const contextName = `${this.contextName}${tagName ? '_' + tagName : ''}_${templateIndex}`;
+            const tagNameWithoutNamespace = template.tagName ? splitNsName(template.tagName)[1] : template.tagName;
+            const contextName = `${this.contextName}${template.tagName ? '_' + sanitizeIdentifier(template.tagName) : ''}_${templateIndex}`;
             const templateName = `${contextName}_Template`;
             const parameters = [
                 literal(templateIndex),
                 variable(templateName),
                 // We don't care about the tag's namespace here, because we infer
                 // it based on the parent nodes inside the template instruction.
-                literal(template.tagName ? splitNsName(template.tagName)[1] : template.tagName),
+                literal(tagNameWithoutNamespace),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives(NG_TEMPLATE_TAG_NAME, template);
@@ -15714,7 +15742,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // handle property bindings e.g. ɵɵproperty('ngForOf', ctx.items), et al;
             this.templatePropertyBindings(templateIndex, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit <ng-template> elements.
-            if (template.tagName === NG_TEMPLATE_TAG_NAME) {
+            if (tagNameWithoutNamespace === NG_TEMPLATE_TAG_NAME) {
                 const [i18nInputs, inputs] = partitionArray(template.inputs, hasI18nMeta);
                 // Add i18n attributes that may act as inputs to directives. If such attributes are present,
                 // generate `i18nAttributes` instruction. Note: we generate it only for explicit <ng-template>
@@ -16592,9 +16620,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options = {}) {
-        var _a;
         const { interpolationConfig, preserveWhitespaces, enableI18nLegacyMessageIdFormat } = options;
-        const isInline = (_a = options.isInline) !== null && _a !== void 0 ? _a : false;
         const bindingParser = makeBindingParser(interpolationConfig);
         const htmlParser = new HtmlParser();
         const parseResult = htmlParser.parse(template, templateUrl, Object.assign(Object.assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options), { tokenizeExpansionForms: true }));
@@ -16603,9 +16629,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: parseResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -16629,9 +16652,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const parsedTemplate = {
                 interpolationConfig,
                 preserveWhitespaces,
-                template,
-                templateUrl,
-                isInline,
                 errors: i18nMetaResult.errors,
                 nodes: [],
                 styleUrls: [],
@@ -16660,9 +16680,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             interpolationConfig,
             preserveWhitespaces,
             errors: errors.length > 0 ? errors : null,
-            template,
-            templateUrl,
-            isInline,
             nodes,
             styleUrls,
             styles,
@@ -17851,7 +17868,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+121.sha-72c4288');
+    const VERSION$1 = new Version('12.0.0-next.8+278.sha-c0be765');
 
     /**
      * @license
@@ -18490,7 +18507,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0-next.8+121.sha-72c4288'));
+        definitionMap.set('version', literal('12.0.0-next.8+278.sha-c0be765'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18530,7 +18547,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0-next.8+121.sha-72c4288'));
+        definitionMap.set('version', literal('12.0.0-next.8+278.sha-c0be765'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18617,8 +18634,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /**
      * Compile a component declaration defined by the `R3ComponentMetadata`.
      */
-    function compileDeclareComponentFromMetadata(meta, template) {
-        const definitionMap = createComponentDefinitionMap(meta, template);
+    function compileDeclareComponentFromMetadata(meta, template, additionalTemplateInfo) {
+        const definitionMap = createComponentDefinitionMap(meta, template, additionalTemplateInfo);
         const expression = importExpr(Identifiers.declareComponent).callFn([definitionMap.toLiteralMap()]);
         const type = createComponentType(meta);
         return { expression, type, statements: [] };
@@ -18626,10 +18643,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /**
      * Gathers the declaration fields for a component into a `DefinitionMap`.
      */
-    function createComponentDefinitionMap(meta, template) {
+    function createComponentDefinitionMap(meta, template, templateInfo) {
         const definitionMap = createDirectiveDefinitionMap(meta);
-        definitionMap.set('template', getTemplateExpression(template));
-        if (template.isInline) {
+        definitionMap.set('template', getTemplateExpression(template, templateInfo));
+        if (templateInfo.isInline) {
             definitionMap.set('isInline', literal(true));
         }
         definitionMap.set('styles', toOptionalLiteralArray(meta.styles, literal));
@@ -18653,28 +18670,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return definitionMap;
     }
-    function getTemplateExpression(template) {
-        if (typeof template.template === 'string') {
-            if (template.isInline) {
-                // The template is inline but not a simple literal string, so give up with trying to
-                // source-map it and just return a simple literal here.
-                return literal(template.template);
-            }
-            else {
-                // The template is external so we must synthesize an expression node with the appropriate
-                // source-span.
-                const contents = template.template;
-                const file = new ParseSourceFile(contents, template.templateUrl);
-                const start = new ParseLocation(file, 0, 0, 0);
-                const end = computeEndLocation(file, contents);
-                const span = new ParseSourceSpan(start, end);
-                return literal(contents, null, span);
-            }
+    function getTemplateExpression(template, templateInfo) {
+        // If the template has been defined using a direct literal, we use that expression directly
+        // without any modifications. This is ensures proper source mapping from the partially
+        // compiled code to the source file declaring the template. Note that this does not capture
+        // template literals referenced indirectly through an identifier.
+        if (templateInfo.inlineTemplateLiteralExpression !== null) {
+            return templateInfo.inlineTemplateLiteralExpression;
         }
-        else {
-            // The template is inline so we can just reuse the current expression node.
-            return template.template;
+        // If the template is defined inline but not through a literal, the template has been resolved
+        // through static interpretation. We create a literal but cannot provide any source span. Note
+        // that we cannot use the expression defining the template because the linker expects the template
+        // to be defined as a literal in the declaration.
+        if (templateInfo.isInline) {
+            return literal(templateInfo.content, null, null);
         }
+        // The template is external so we must synthesize an expression node with
+        // the appropriate source-span.
+        const contents = templateInfo.content;
+        const file = new ParseSourceFile(contents, templateInfo.sourceUrl);
+        const start = new ParseLocation(file, 0, 0, 0);
+        const end = computeEndLocation(file, contents);
+        const span = new ParseSourceSpan(start, end);
+        return literal(contents, null, span);
     }
     function computeEndLocation(file, contents) {
         const length = contents.length;
@@ -18746,7 +18764,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0-next.8+121.sha-72c4288'));
+        definitionMap.set('version', literal('12.0.0-next.8+278.sha-c0be765'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18788,7 +18806,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0-next.8+121.sha-72c4288'));
+        definitionMap.set('version', literal('12.0.0-next.8+278.sha-c0be765'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18867,7 +18885,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0-next.8+121.sha-72c4288'));
+        definitionMap.set('version', literal('12.0.0-next.8+278.sha-c0be765'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18904,7 +18922,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0-next.8+121.sha-72c4288'));
+        definitionMap.set('version', literal('12.0.0-next.8+278.sha-c0be765'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18962,7 +18980,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0-next.8+121.sha-72c4288'));
+        definitionMap.set('version', literal('12.0.0-next.8+278.sha-c0be765'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -18994,7 +19012,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+121.sha-72c4288');
+    const VERSION$2 = new Version('12.0.0-next.8+278.sha-c0be765');
 
     /**
      * @license
@@ -28215,7 +28233,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const templateDecl = this.parseTemplateDeclaration(decorator, component, containingFile);
                 template = this.extractTemplate(node, templateDecl);
             }
-            const templateResource = template.isInline ? { path: null, expression: component.get('template') } : {
+            const templateResource = template.declaration.isInline ? { path: null, expression: component.get('template') } : {
                 path: absoluteFrom(template.declaration.resolvedTemplateUrl),
                 expression: template.sourceMapping.node
             };
@@ -28351,7 +28369,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 selector,
                 boundTemplate,
                 templateMeta: {
-                    isInline: analysis.template.isInline,
+                    isInline: analysis.template.declaration.isInline,
                     file: analysis.template.file,
                 },
             });
@@ -28572,9 +28590,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (analysis.template.errors !== null && analysis.template.errors.length > 0) {
                 return [];
             }
+            const templateInfo = {
+                content: analysis.template.content,
+                sourceUrl: analysis.template.declaration.resolvedTemplateUrl,
+                isInline: analysis.template.declaration.isInline,
+                inlineTemplateLiteralExpression: analysis.template.sourceMapping.type === 'direct' ?
+                    new WrappedNodeExpr(analysis.template.sourceMapping.node) :
+                    null,
+            };
             const meta = Object.assign(Object.assign({}, analysis.meta), resolution);
             const fac = compileDeclareFactory(toFactoryMetadata(meta, FactoryTarget.Component));
-            const def = compileDeclareComponentFromMetadata(meta, analysis.template);
+            const def = compileDeclareComponentFromMetadata(meta, analysis.template, templateInfo);
             const classMetadata = analysis.classMetadata !== null ?
                 compileDeclareClassMetadata(analysis.classMetadata).toStmt() :
                 null;
@@ -28716,10 +28742,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         extractTemplate(node, template) {
             if (template.isInline) {
-                let templateStr;
-                let templateLiteral = null;
-                let templateUrl = '';
-                let templateRange = null;
+                let sourceStr;
+                let sourceParseRange = null;
+                let templateContent;
                 let sourceMapping;
                 let escapedString = false;
                 // We only support SourceMaps for inline templates that are simple string literals.
@@ -28727,10 +28752,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                     ts$1.isNoSubstitutionTemplateLiteral(template.expression)) {
                     // the start and end of the `templateExpr` node includes the quotation marks, which we must
                     // strip
-                    templateRange = getTemplateRange(template.expression);
-                    templateStr = template.expression.getSourceFile().text;
-                    templateLiteral = template.expression;
-                    templateUrl = template.templateUrl;
+                    sourceParseRange = getTemplateRange(template.expression);
+                    sourceStr = template.expression.getSourceFile().text;
+                    templateContent = template.expression.text;
                     escapedString = true;
                     sourceMapping = {
                         type: 'direct',
@@ -28742,44 +28766,46 @@ Either add the @Injectable() decorator to '${provider.node.name
                     if (typeof resolvedTemplate !== 'string') {
                         throw createValueHasWrongTypeError(template.expression, resolvedTemplate, 'template must be a string');
                     }
-                    templateStr = resolvedTemplate;
+                    // We do not parse the template directly from the source file using a lexer range, so
+                    // the template source and content are set to the statically resolved template.
+                    sourceStr = resolvedTemplate;
+                    templateContent = resolvedTemplate;
                     sourceMapping = {
                         type: 'indirect',
                         node: template.expression,
                         componentClass: node,
-                        template: templateStr,
+                        template: templateContent,
                     };
                 }
-                return Object.assign(Object.assign({}, this._parseTemplate(template, templateStr, templateRange, escapedString)), { sourceMapping, declaration: template });
+                return Object.assign(Object.assign({}, this._parseTemplate(template, sourceStr, sourceParseRange, escapedString)), { content: templateContent, sourceMapping, declaration: template });
             }
             else {
-                const templateStr = this.resourceLoader.load(template.resolvedTemplateUrl);
+                const templateContent = this.resourceLoader.load(template.resolvedTemplateUrl);
                 if (this.depTracker !== null) {
                     this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(template.resolvedTemplateUrl));
                 }
-                return Object.assign(Object.assign({}, this._parseTemplate(template, templateStr, /* templateRange */ null, 
-                /* escapedString */ false)), { sourceMapping: {
+                return Object.assign(Object.assign({}, this._parseTemplate(template, /* sourceStr */ templateContent, /* sourceParseRange */ null, 
+                /* escapedString */ false)), { content: templateContent, sourceMapping: {
                         type: 'external',
                         componentClass: node,
                         // TODO(alxhub): TS in g3 is unable to make this inference on its own, so cast it here
                         // until g3 is able to figure this out.
                         node: template.templateUrlExpression,
-                        template: templateStr,
+                        template: templateContent,
                         templateUrl: template.resolvedTemplateUrl,
                     }, declaration: template });
             }
         }
-        _parseTemplate(template, templateStr, templateRange, escapedString) {
+        _parseTemplate(template, sourceStr, sourceParseRange, escapedString) {
             // We always normalize line endings if the template has been escaped (i.e. is inline).
             const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
-            const parsedTemplate = parseTemplate(templateStr, template.sourceMapUrl, {
+            const parsedTemplate = parseTemplate(sourceStr, template.sourceMapUrl, {
                 preserveWhitespaces: template.preserveWhitespaces,
                 interpolationConfig: template.interpolationConfig,
-                range: templateRange !== null && templateRange !== void 0 ? templateRange : undefined,
+                range: sourceParseRange !== null && sourceParseRange !== void 0 ? sourceParseRange : undefined,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
-                isInline: template.isInline,
                 alwaysAttemptHtmlToR3AstConversion: this.usePoisonedData,
             });
             // Unfortunately, the primary parse of the template above may not contain accurate source map
@@ -28796,19 +28822,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             //
             // In order to guarantee the correctness of diagnostics, templates are parsed a second time
             // with the above options set to preserve source mappings.
-            const { nodes: diagNodes } = parseTemplate(templateStr, template.sourceMapUrl, {
+            const { nodes: diagNodes } = parseTemplate(sourceStr, template.sourceMapUrl, {
                 preserveWhitespaces: true,
                 preserveLineEndings: true,
                 interpolationConfig: template.interpolationConfig,
-                range: templateRange !== null && templateRange !== void 0 ? templateRange : undefined,
+                range: sourceParseRange !== null && sourceParseRange !== void 0 ? sourceParseRange : undefined,
                 escapedString,
                 enableI18nLegacyMessageIdFormat: this.enableI18nLegacyMessageIdFormat,
                 i18nNormalizeLineEndingsInICUs,
                 leadingTriviaChars: [],
-                isInline: template.isInline,
                 alwaysAttemptHtmlToR3AstConversion: this.usePoisonedData,
             });
-            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, template: template.isInline ? new WrappedNodeExpr(template.expression) : templateStr, templateUrl: template.resolvedTemplateUrl, isInline: template.isInline, file: new ParseSourceFile(templateStr, template.resolvedTemplateUrl) });
+            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, file: new ParseSourceFile(sourceStr, template.resolvedTemplateUrl) });
         }
         parseTemplateDeclaration(decorator, component, containingFile) {
             let preserveWhitespaces = this.defaultPreserveWhitespaces;
@@ -32565,56 +32590,63 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.data = data;
             this.shimPath = shimPath;
             /**
-             * Cache of `GlobalCompletion`s for various levels of the template, including the root template
-             * (`null`).
+             * Cache of completions for various levels of the template, including the root template (`null`).
+             * Memoizes `getTemplateContextCompletions`.
              */
-            this.globalCompletionCache = new Map();
+            this.templateContextCache = new Map();
             this.expressionCompletionCache = new Map();
-        }
-        /**
-         * Get global completions within the given template context - either a `TmplAstTemplate` embedded
-         * view, or `null` for the root template context.
-         */
-        getGlobalCompletions(context) {
-            if (this.globalCompletionCache.has(context)) {
-                return this.globalCompletionCache.get(context);
-            }
             // Find the component completion expression within the TCB. This looks like: `ctx. /* ... */;`
             const globalRead = findFirstMatchingNode(this.tcb, {
                 filter: ts$1.isPropertyAccessExpression,
                 withExpressionIdentifier: ExpressionIdentifier.COMPONENT_COMPLETION
             });
-            if (globalRead === null) {
-                return null;
-            }
-            const completion = {
-                componentContext: {
+            if (globalRead !== null) {
+                this.componentContext = {
                     shimPath: this.shimPath,
                     // `globalRead.name` is an empty `ts.Identifier`, so its start position immediately follows
                     // the `.` in `ctx.`. TS autocompletion APIs can then be used to access completion results
                     // for the component context.
                     positionInShimFile: globalRead.name.getStart(),
-                },
-                templateContext: new Map(),
-            };
-            // The bound template already has details about the references and variables in scope in the
-            // `context` template - they just need to be converted to `Completion`s.
-            for (const node of this.data.boundTarget.getEntitiesInTemplateScope(context)) {
-                if (node instanceof Reference) {
-                    completion.templateContext.set(node.name, {
-                        kind: CompletionKind.Reference,
-                        node,
-                    });
-                }
-                else {
-                    completion.templateContext.set(node.name, {
-                        kind: CompletionKind.Variable,
-                        node,
-                    });
+                };
+            }
+            else {
+                this.componentContext = null;
+            }
+        }
+        /**
+         * Get global completions within the given template context and AST node.
+         *
+         * @param context the given template context - either a `TmplAstTemplate` embedded view, or `null`
+         *     for the root
+         * template context.
+         * @param node the given AST node
+         */
+        getGlobalCompletions(context, node) {
+            if (this.componentContext === null) {
+                return null;
+            }
+            const templateContext = this.getTemplateContextCompletions(context);
+            if (templateContext === null) {
+                return null;
+            }
+            let nodeContext = null;
+            if (node instanceof EmptyExpr) {
+                const nodeLocation = findFirstMatchingNode(this.tcb, {
+                    filter: ts$1.isIdentifier,
+                    withSpan: node.sourceSpan,
+                });
+                if (nodeLocation !== null) {
+                    nodeContext = {
+                        shimPath: this.shimPath,
+                        positionInShimFile: nodeLocation.getStart(),
+                    };
                 }
             }
-            this.globalCompletionCache.set(context, completion);
-            return completion;
+            return {
+                componentContext: this.componentContext,
+                templateContext,
+                nodeContext,
+            };
         }
         getExpressionCompletionLocation(expr) {
             if (this.expressionCompletionCache.has(expr)) {
@@ -32658,6 +32690,34 @@ Either add the @Injectable() decorator to '${provider.node.name
             };
             this.expressionCompletionCache.set(expr, res);
             return res;
+        }
+        /**
+         * Get global completions within the given template context - either a `TmplAstTemplate` embedded
+         * view, or `null` for the root context.
+         */
+        getTemplateContextCompletions(context) {
+            if (this.templateContextCache.has(context)) {
+                return this.templateContextCache.get(context);
+            }
+            const templateContext = new Map();
+            // The bound template already has details about the references and variables in scope in the
+            // `context` template - they just need to be converted to `Completion`s.
+            for (const node of this.data.boundTarget.getEntitiesInTemplateScope(context)) {
+                if (node instanceof Reference) {
+                    templateContext.set(node.name, {
+                        kind: CompletionKind.Reference,
+                        node,
+                    });
+                }
+                else {
+                    templateContext.set(node.name, {
+                        kind: CompletionKind.Variable,
+                        node,
+                    });
+                }
+            }
+            this.templateContextCache.set(context, templateContext);
+            return templateContext;
         }
     }
 
@@ -37285,12 +37345,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         getTypeCheckBlock(component) {
             return this.getLatestComponentState(component).tcb;
         }
-        getGlobalCompletions(context, component) {
+        getGlobalCompletions(context, component, node) {
             const engine = this.getOrCreateCompletionEngine(component);
             if (engine === null) {
                 return null;
             }
-            return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getGlobalCompletions(context));
+            return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getGlobalCompletions(context, node));
         }
         getExpressionCompletionLocation(ast, component) {
             const engine = this.getOrCreateCompletionEngine(component);
@@ -40287,17 +40347,17 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * Get completions for a property expression in a global context (e.g. `{{y|}}`).
          */
         getGlobalPropertyExpressionCompletion(options) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component, this.node);
             if (completions === null) {
                 return undefined;
             }
-            const { componentContext, templateContext } = completions;
+            const { componentContext, templateContext, nodeContext: astContext } = completions;
             const replacementSpan = makeReplacementSpanFromAst(this.node);
             // Merge TS completion results with results from the template scope.
             let entries = [];
-            const tsLsCompletions = this.tsLS.getCompletionsAtPosition(componentContext.shimPath, componentContext.positionInShimFile, options);
-            if (tsLsCompletions !== undefined) {
-                for (const tsCompletion of tsLsCompletions.entries) {
+            const componentCompletions = this.tsLS.getCompletionsAtPosition(componentContext.shimPath, componentContext.positionInShimFile, options);
+            if (componentCompletions !== undefined) {
+                for (const tsCompletion of componentCompletions.entries) {
                     // Skip completions that are shadowed by a template entity definition.
                     if (templateContext.has(tsCompletion.name)) {
                         continue;
@@ -40306,6 +40366,20 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         // Substitute the TS completion's `replacementSpan` (which uses offsets within the TCB)
                         // with the `replacementSpan` within the template source.
                         replacementSpan }));
+                }
+            }
+            // Merge TS completion results with results from the ast context.
+            if (astContext !== null) {
+                const nodeCompletions = this.tsLS.getCompletionsAtPosition(astContext.shimPath, astContext.positionInShimFile, options);
+                if (nodeCompletions !== undefined) {
+                    for (const tsCompletion of nodeCompletions.entries) {
+                        if (this.isValidNodeContextCompletion(tsCompletion)) {
+                            entries.push(Object.assign(Object.assign({}, tsCompletion), { 
+                                // Substitute the TS completion's `replacementSpan` (which uses offsets within the
+                                // TCB) with the `replacementSpan` within the template source.
+                                replacementSpan }));
+                        }
+                    }
                 }
             }
             for (const [name, entity] of templateContext) {
@@ -40333,7 +40407,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * `{{y|}}`).
          */
         getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component, this.node);
             if (completions === null) {
                 return undefined;
             }
@@ -40366,7 +40440,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * `{{y|}}`).
          */
         getGlobalPropertyExpressionCompletionSymbol(entryName) {
-            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component);
+            const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component, this.node);
             if (completions === null) {
                 return undefined;
             }
@@ -40635,6 +40709,24 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 isMemberCompletion: false,
                 isNewIdentifierLocation: false,
             };
+        }
+        /**
+         * From the AST node of the cursor position, include completion of string literals, number
+         * literals, `true`, `false`, `null`, and `undefined`.
+         */
+        isValidNodeContextCompletion(completion) {
+            if (completion.kind === ts$1.ScriptElementKind.string) {
+                // 'string' kind includes both string literals and number literals
+                return true;
+            }
+            if (completion.kind === ts$1.ScriptElementKind.keyword) {
+                return completion.name === 'true' || completion.name === 'false' ||
+                    completion.name === 'null';
+            }
+            if (completion.kind === ts$1.ScriptElementKind.variableElement) {
+                return completion.name === 'undefined';
+            }
+            return false;
         }
     }
     function makeReplacementSpanFromParseSourceSpan(span) {
