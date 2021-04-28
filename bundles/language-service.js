@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+213.sha-45ffab5
+ * @license Angular v12.0.0-next.8+272.sha-083ceec
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8400,6 +8400,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     rule.selector.startsWith('@page') || rule.selector.startsWith('@document')) {
                     content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 }
+                else if (rule.selector.startsWith('@font-face')) {
+                    content = this._stripScopingSelectors(rule.content, scopeSelector, hostSelector);
+                }
+                return new CssRule(selector, content);
+            });
+        }
+        /**
+         * Handle a css text that is within a rule that should not contain scope selectors by simply
+         * removing them! An example of such a rule is `@font-face`.
+         *
+         * `@font-face` rules cannot contain nested selectors. Nor can they be nested under a selector.
+         * Normally this would be a syntax error by the author of the styles. But in some rare cases, such
+         * as importing styles from a library, and applying `:host ::ng-deep` to the imported styles, we
+         * can end up with broken css if the imported styles happen to contain @font-face rules.
+         *
+         * For example:
+         *
+         * ```
+         * :host ::ng-deep {
+         *   import 'some/lib/containing/font-face';
+         * }
+         * ```
+         */
+        _stripScopingSelectors(cssText, scopeSelector, hostSelector) {
+            return processRules(cssText, rule => {
+                const selector = rule.selector.replace(_shadowDeepSelectors, ' ')
+                    .replace(_polyfillHostNoCombinatorRe, ' ');
+                const content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 return new CssRule(selector, content);
             });
         }
@@ -19381,7 +19409,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+213.sha-45ffab5');
+    const VERSION$1 = new Version('12.0.0-next.8+272.sha-083ceec');
 
     /**
      * @license
@@ -27910,6 +27938,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const DECLARATION_LCONTAINER = 17;
     const PREORDER_HOOK_FLAGS = 18;
     const QUERIES = 19;
+    const ID = 20;
     /**
      * Size of LView's header. Necessary to adjust for it when setting slots.
      *
@@ -27917,7 +27946,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * instruction index into `LView` index. All other indexes should be in the `LView` index space and
      * there should be no need to refer to `HEADER_OFFSET` anywhere else.
      */
-    const HEADER_OFFSET = 20;
+    const HEADER_OFFSET = 21;
     /**
      * Converts `TViewType` into human readable text.
      * Make sure this matches with `TViewType`
@@ -30815,6 +30844,34 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Keeps track of the currently-active LViews.
+    const TRACKED_LVIEWS = new Map();
+    // Used for generating unique IDs for LViews.
+    let uniqueIdCounter = 0;
+    /** Starts tracking an LView and returns a unique ID that can be used for future lookups. */
+    function registerLView(lView) {
+        const id = uniqueIdCounter++;
+        TRACKED_LVIEWS.set(id, lView);
+        return id;
+    }
+    /** Gets an LView by its unique ID. */
+    function getLViewById(id) {
+        ngDevMode && assertNumber(id, 'ID used for LView lookup must be a number');
+        return TRACKED_LVIEWS.get(id) || null;
+    }
+    /** Stops tracking an LView. */
+    function unregisterLView(lView) {
+        ngDevMode && assertNumber(lView[ID], 'Cannot stop tracking an LView that does not have an ID');
+        TRACKED_LVIEWS.delete(lView[ID]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * This property will be monkey-patched on elements, components and directives.
      */
@@ -30825,7 +30882,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function attachPatchData(target, data) {
         ngDevMode && assertDefined(target, 'Target expected');
-        target[MONKEY_PATCH_KEY_NAME] = data;
+        // Only attach the ID of the view in order to avoid memory leaks (see #41047). We only do this
+        // for `LView`, because we have control over when an `LView` is created and destroyed, whereas
+        // we can't know when to remove an `LContext`.
+        target[MONKEY_PATCH_KEY_NAME] = isLView(data) ? data[ID] : data;
     }
     /**
      * Returns the monkey-patch value data present on the target (which could be
@@ -30833,12 +30893,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      */
     function readPatchedData(target) {
         ngDevMode && assertDefined(target, 'Target expected');
-        return target[MONKEY_PATCH_KEY_NAME] || null;
+        const data = target[MONKEY_PATCH_KEY_NAME];
+        return (typeof data === 'number') ? getLViewById(data) : data || null;
     }
     function readPatchedLView(target) {
         const value = readPatchedData(target);
         if (value) {
-            return Array.isArray(value) ? value : value.lView;
+            return isLView(value) ? value : value.lView;
         }
         return null;
     }
@@ -31296,6 +31357,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 applyView(tView, lView, renderer, 3 /* Destroy */, null, null);
             }
             destroyViewTree(lView);
+            unregisterLView(lView);
         }
     }
     /**
@@ -32334,6 +32396,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         get tHost() {
             return this._raw_lView[T_HOST];
         }
+        get id() {
+            return this._raw_lView[ID];
+        }
         get decls() {
             return toLViewRange(this.tView, this._raw_lView, HEADER_OFFSET, this.tView.bindingStartIndex);
         }
@@ -32552,6 +32617,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         lView[SANITIZER] = sanitizer || parentLView && parentLView[SANITIZER] || null;
         lView[INJECTOR] = injector || parentLView && parentLView[INJECTOR] || null;
         lView[T_HOST] = tHostNode;
+        lView[ID] = registerLView(lView);
         ngDevMode &&
             assertEqual(tView.type == 2 /* Embedded */ ? parentLView !== null : true, true, 'Embedded views must have parentLView');
         lView[DECLARATION_COMPONENT_VIEW] =
@@ -33465,8 +33531,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         for (let i = 0; i < rootContext.components.length; i++) {
             const rootComponent = rootContext.components[i];
             const lView = readPatchedLView(rootComponent);
-            const tView = lView[TVIEW];
-            renderComponentOrTemplate(tView, lView, tView.template, rootComponent);
+            // We might not have an `LView` if the component was destroyed.
+            if (lView !== null) {
+                const tView = lView[TVIEW];
+                renderComponentOrTemplate(tView, lView, tView.template, rootComponent);
+            }
         }
     }
     function detectChangesInternal(tView, lView, context) {
@@ -35439,7 +35508,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+213.sha-45ffab5');
+    const VERSION$2 = new Version$1('12.0.0-next.8+272.sha-083ceec');
 
     /**
      * @license
