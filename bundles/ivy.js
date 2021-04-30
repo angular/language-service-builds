@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-rc.1+21.sha-be9b19e
+ * @license Angular v12.0.0-rc.1+35.sha-d59330b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17868,7 +17868,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-rc.1+21.sha-be9b19e');
+    const VERSION$1 = new Version('12.0.0-rc.1+35.sha-d59330b');
 
     /**
      * @license
@@ -18507,7 +18507,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0-rc.1+21.sha-be9b19e'));
+        definitionMap.set('version', literal('12.0.0-rc.1+35.sha-d59330b'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18547,7 +18547,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0-rc.1+21.sha-be9b19e'));
+        definitionMap.set('version', literal('12.0.0-rc.1+35.sha-d59330b'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18764,7 +18764,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0-rc.1+21.sha-be9b19e'));
+        definitionMap.set('version', literal('12.0.0-rc.1+35.sha-d59330b'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18806,7 +18806,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0-rc.1+21.sha-be9b19e'));
+        definitionMap.set('version', literal('12.0.0-rc.1+35.sha-d59330b'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18885,7 +18885,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0-rc.1+21.sha-be9b19e'));
+        definitionMap.set('version', literal('12.0.0-rc.1+35.sha-d59330b'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18922,7 +18922,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0-rc.1+21.sha-be9b19e'));
+        definitionMap.set('version', literal('12.0.0-rc.1+35.sha-d59330b'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18980,7 +18980,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0-rc.1+21.sha-be9b19e'));
+        definitionMap.set('version', literal('12.0.0-rc.1+35.sha-d59330b'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19012,7 +19012,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-rc.1+21.sha-be9b19e');
+    const VERSION$2 = new Version('12.0.0-rc.1+35.sha-d59330b');
 
     /**
      * @license
@@ -19361,6 +19361,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return ts$1.isEnumDeclaration(node) || ts$1.isTypeAliasDeclaration(node) ||
             ts$1.isInterfaceDeclaration(node);
     }
+    function isNamedDeclaration(node) {
+        const namedNode = node;
+        return namedNode.name !== undefined && ts$1.isIdentifier(namedNode.name);
+    }
     function isExported(node) {
         let topLevel = node;
         if (ts$1.isVariableDeclaration(node) && ts$1.isVariableDeclarationList(node.parent)) {
@@ -19440,16 +19444,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         if (exports === null) {
             return null;
         }
+        const declaredName = isNamedDeclaration(target) ? target.name.text : null;
         // Look for the export which declares the node.
-        const keys = Array.from(exports.keys());
-        const name = keys.find(key => {
-            const decl = exports.get(key);
-            return decl !== undefined && decl.node === target;
-        });
-        if (name === undefined) {
+        let foundExportName = null;
+        for (const [exportName, declaration] of exports) {
+            if (declaration.node !== target) {
+                continue;
+            }
+            if (exportName === declaredName) {
+                // A non-alias export exists which is always preferred, so use that one.
+                return exportName;
+            }
+            foundExportName = exportName;
+        }
+        if (foundExportName === null) {
             throw new Error(`Failed to find exported name of node (${target.getText()}) in '${file.fileName}'.`);
         }
-        return name;
+        return foundExportName;
     }
 
     /**
@@ -19610,9 +19621,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return null;
             }
             const exportMap = new Map();
-            exports.forEach((declaration, name) => {
+            for (const [name, declaration] of exports) {
+                if (exportMap.has(declaration.node)) {
+                    // An export for this declaration has already been registered. We prefer an export that
+                    // has the same name as the declared name, i.e. is not an aliased export. This is relevant
+                    // for partial compilations where emitted references should import symbols using a stable
+                    // name. This is particularly relevant for declarations inside VE-generated libraries, as
+                    // such libraries contain private, unstable reexports of symbols.
+                    const existingExport = exportMap.get(declaration.node);
+                    if (isNamedDeclaration(declaration.node) && declaration.node.name.text === existingExport) {
+                        continue;
+                    }
+                }
                 exportMap.set(declaration.node, name);
-            });
+            }
             return { module: entryPointFile, exportMap };
         }
     }
