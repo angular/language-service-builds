@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+295.sha-2dd96e0
+ * @license Angular v12.0.0-next.8+296.sha-6581a1b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19409,7 +19409,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+295.sha-2dd96e0');
+    const VERSION$1 = new Version('12.0.0-next.8+296.sha-6581a1b');
 
     /**
      * @license
@@ -33456,21 +33456,21 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @codeGenApi
      */
     function ɵɵresolveWindow(element) {
-        return { name: 'window', target: element.ownerDocument.defaultView };
+        return element.ownerDocument.defaultView;
     }
     /**
      *
      * @codeGenApi
      */
     function ɵɵresolveDocument(element) {
-        return { name: 'document', target: element.ownerDocument };
+        return element.ownerDocument;
     }
     /**
      *
      * @codeGenApi
      */
     function ɵɵresolveBody(element) {
-        return { name: 'body', target: element.ownerDocument.body };
+        return element.ownerDocument.body;
     }
     /**
      * The special delimiter we use to separate property names, prefixes, and suffixes
@@ -41303,11 +41303,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @codeGenApi
      */
-    function ɵɵlistener(eventName, listenerFn, useCapture = false, eventTargetResolver) {
+    function ɵɵlistener(eventName, listenerFn, useCapture, eventTargetResolver) {
         const lView = getLView();
         const tView = getTView();
         const tNode = getCurrentTNode();
-        listenerInternal(tView, lView, lView[RENDERER], tNode, eventName, listenerFn, useCapture, eventTargetResolver);
+        listenerInternal(tView, lView, lView[RENDERER], tNode, eventName, listenerFn, !!useCapture, eventTargetResolver);
         return ɵɵlistener;
     }
     /**
@@ -41331,13 +41331,13 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @codeGenApi
      */
-    function ɵɵsyntheticHostListener(eventName, listenerFn, useCapture = false, eventTargetResolver) {
+    function ɵɵsyntheticHostListener(eventName, listenerFn) {
         const tNode = getCurrentTNode();
         const lView = getLView();
         const tView = getTView();
         const currentDef = getCurrentDirectiveDef(tView.data);
         const renderer = loadComponentRenderer(currentDef, tNode, lView);
-        listenerInternal(tView, lView, renderer, tNode, eventName, listenerFn, useCapture, eventTargetResolver);
+        listenerInternal(tView, lView, renderer, tNode, eventName, listenerFn, false);
         return ɵɵsyntheticHostListener;
     }
     /**
@@ -41370,7 +41370,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
         return null;
     }
-    function listenerInternal(tView, lView, renderer, tNode, eventName, listenerFn, useCapture = false, eventTargetResolver) {
+    function listenerInternal(tView, lView, renderer, tNode, eventName, listenerFn, useCapture, eventTargetResolver) {
         const isTNodeDirectiveHost = isDirectiveHost(tNode);
         const firstCreatePass = tView.firstCreatePass;
         const tCleanup = firstCreatePass && getOrCreateTViewCleanup(tView);
@@ -41384,11 +41384,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         // add native event listener - applicable to elements only
         if (tNode.type & 3 /* AnyRNode */) {
             const native = getNativeByTNode(tNode, lView);
-            const resolved = eventTargetResolver ? eventTargetResolver(native) : EMPTY_OBJ;
-            const target = resolved.target || native;
+            const target = eventTargetResolver ? eventTargetResolver(native) : native;
             const lCleanupIndex = lCleanup.length;
             const idxOrTargetGetter = eventTargetResolver ?
-                (_lView) => eventTargetResolver(unwrapRNode(_lView[tNode.index])).target :
+                (_lView) => eventTargetResolver(unwrapRNode(_lView[tNode.index])) :
                 tNode.index;
             // In order to match current behavior, native DOM event listeners must be added for all
             // events (including outputs).
@@ -41424,11 +41423,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     processOutputs = false;
                 }
                 else {
-                    // The first argument of `listen` function in Procedural Renderer is:
-                    // - either a target name (as a string) in case of global target (window, document, body)
-                    // - or element reference (in all other cases)
                     listenerFn = wrapListener(tNode, lView, context, listenerFn, false /** preventDefault */);
-                    const cleanupFn = renderer.listen(resolved.name || target, eventName, listenerFn);
+                    const cleanupFn = renderer.listen(target, eventName, listenerFn);
                     ngDevMode && ngDevMode.rendererAddEventListener++;
                     lCleanup.push(listenerFn, cleanupFn);
                     tCleanup && tCleanup.push(eventName, idxOrTargetGetter, lCleanupIndex, lCleanupIndex + 1);
@@ -47372,7 +47368,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+295.sha-2dd96e0');
+    const VERSION$2 = new Version$1('12.0.0-next.8+296.sha-6581a1b');
 
     /**
      * @license
