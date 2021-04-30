@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+298.sha-35450c7
+ * @license Angular v12.0.0-next.8+301.sha-9b4b281
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19409,7 +19409,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+298.sha-35450c7');
+    const VERSION$1 = new Version('12.0.0-next.8+301.sha-9b4b281');
 
     /**
      * @license
@@ -46172,7 +46172,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const hasBinding = text.match(BINDING_REGEXP);
         const tNode = createTNodeAndAddOpCode(tView, rootTNode, existingTNodes, lView, createOpCodes, hasBinding ? null : text, false);
         if (hasBinding) {
-            generateBindingUpdateOpCodes(updateOpCodes, text, tNode.index);
+            generateBindingUpdateOpCodes(updateOpCodes, text, tNode.index, null, 0, null);
         }
     }
     /**
@@ -46200,7 +46200,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     }
                     // i18n attributes that hit this code path are guaranteed to have bindings, because
                     // the compiler treats static i18n attributes as regular attribute bindings.
-                    generateBindingUpdateOpCodes(updateOpCodes, message, previousElementIndex, attrName);
+                    // Since this may not be the first i18n attribute on this element we need to pass in how
+                    // many previous bindings there have already been.
+                    generateBindingUpdateOpCodes(updateOpCodes, message, previousElementIndex, attrName, countBindings(updateOpCodes), null);
                 }
             }
             tView.data[index] = updateOpCodes;
@@ -46214,8 +46216,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @param destinationNode Index of the destination node which will receive the binding.
      * @param attrName Name of the attribute, if the string belongs to an attribute.
      * @param sanitizeFn Sanitization function used to sanitize the string after update, if necessary.
+     * @param bindingStart The lView index of the next expression that can be bound via an opCode.
+     * @returns The mask value for these bindings
      */
-    function generateBindingUpdateOpCodes(updateOpCodes, str, destinationNode, attrName, sanitizeFn = null) {
+    function generateBindingUpdateOpCodes(updateOpCodes, str, destinationNode, attrName, bindingStart, sanitizeFn) {
         ngDevMode &&
             assertGreaterThanOrEqual(destinationNode, HEADER_OFFSET, 'Index must be in absolute LView offset');
         const maskIndex = updateOpCodes.length; // Location of mask
@@ -46231,7 +46235,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             const textValue = textParts[j];
             if (j & 1) {
                 // Odd indexes are bindings
-                const bindingIndex = parseInt(textValue, 10);
+                const bindingIndex = bindingStart + parseInt(textValue, 10);
                 updateOpCodes.push(-1 - bindingIndex);
                 mask = mask | toMaskBit(bindingIndex);
             }
@@ -46248,6 +46252,28 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         updateOpCodes[maskIndex] = mask;
         updateOpCodes[sizeIndex] = updateOpCodes.length - startIndex;
         return mask;
+    }
+    /**
+     * Count the number of bindings in the given `opCodes`.
+     *
+     * It could be possible to speed this up, by passing the number of bindings found back from
+     * `generateBindingUpdateOpCodes()` to `i18nAttributesFirstPass()` but this would then require more
+     * complexity in the code and/or transient objects to be created.
+     *
+     * Since this function is only called once when the template is instantiated, is trivial in the
+     * first instance (since `opCodes` will be an empty array), and it is not common for elements to
+     * contain multiple i18n bound attributes, it seems like this is a reasonable compromise.
+     */
+    function countBindings(opCodes) {
+        let count = 0;
+        for (let i = 0; i < opCodes.length; i++) {
+            const opCode = opCodes[i];
+            // Bindings are negative numbers.
+            if (typeof opCode === 'number' && opCode < 0) {
+                count++;
+            }
+        }
+        return count;
     }
     /**
      * Convert binding index to mask bit.
@@ -46500,13 +46526,13 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                             if (hasBinding) {
                                 if (VALID_ATTRS.hasOwnProperty(lowerAttrName)) {
                                     if (URI_ATTRS[lowerAttrName]) {
-                                        generateBindingUpdateOpCodes(update, attr.value, newIndex, attr.name, _sanitizeUrl);
+                                        generateBindingUpdateOpCodes(update, attr.value, newIndex, attr.name, 0, _sanitizeUrl);
                                     }
                                     else if (SRCSET_ATTRS[lowerAttrName]) {
-                                        generateBindingUpdateOpCodes(update, attr.value, newIndex, attr.name, sanitizeSrcset);
+                                        generateBindingUpdateOpCodes(update, attr.value, newIndex, attr.name, 0, sanitizeSrcset);
                                     }
                                     else {
-                                        generateBindingUpdateOpCodes(update, attr.value, newIndex, attr.name);
+                                        generateBindingUpdateOpCodes(update, attr.value, newIndex, attr.name, 0, null);
                                     }
                                 }
                                 else {
@@ -46532,7 +46558,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                     addCreateNodeAndAppend(create, null, hasBinding ? '' : value, parentIdx, newIndex);
                     addRemoveNode(remove, newIndex, depth);
                     if (hasBinding) {
-                        bindingMask = generateBindingUpdateOpCodes(update, value, newIndex) | bindingMask;
+                        bindingMask =
+                            generateBindingUpdateOpCodes(update, value, newIndex, null, 0, null) | bindingMask;
                     }
                     break;
                 case Node.COMMENT_NODE:
@@ -47368,7 +47395,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+298.sha-35450c7');
+    const VERSION$2 = new Version$1('12.0.0-next.8+301.sha-9b4b281');
 
     /**
      * @license
