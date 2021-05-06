@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+343.sha-efe8566
+ * @license Angular v12.0.0-next.8+344.sha-abcd4bb
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8433,16 +8433,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return processRules(cssText, (rule) => {
                 let selector = rule.selector;
                 let content = rule.content;
-                if (rule.selector[0] != '@') {
+                if (rule.selector[0] !== '@') {
                     selector =
                         this._scopeSelector(rule.selector, scopeSelector, hostSelector, this.strictStyling);
                 }
                 else if (rule.selector.startsWith('@media') || rule.selector.startsWith('@supports') ||
-                    rule.selector.startsWith('@page') || rule.selector.startsWith('@document')) {
+                    rule.selector.startsWith('@document')) {
                     content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 }
-                else if (rule.selector.startsWith('@font-face')) {
-                    content = this._stripScopingSelectors(rule.content, scopeSelector, hostSelector);
+                else if (rule.selector.startsWith('@font-face') || rule.selector.startsWith('@page')) {
+                    content = this._stripScopingSelectors(rule.content);
                 }
                 return new CssRule(selector, content);
             });
@@ -8462,14 +8462,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * :host ::ng-deep {
          *   import 'some/lib/containing/font-face';
          * }
+         *
+         * Similar logic applies to `@page` rules which can contain a particular set of properties,
+         * as well as some specific at-rules. Since they can't be encapsulated, we have to strip
+         * any scoping selectors from them. For more information: https://www.w3.org/TR/css-page-3
          * ```
          */
-        _stripScopingSelectors(cssText, scopeSelector, hostSelector) {
+        _stripScopingSelectors(cssText) {
             return processRules(cssText, rule => {
                 const selector = rule.selector.replace(_shadowDeepSelectors, ' ')
                     .replace(_polyfillHostNoCombinatorRe, ' ');
-                const content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
-                return new CssRule(selector, content);
+                return new CssRule(selector, rule.content);
             });
         }
         _scopeSelector(selector, scopeSelector, hostSelector, strict) {
@@ -19450,7 +19453,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+343.sha-efe8566');
+    const VERSION$1 = new Version('12.0.0-next.8+344.sha-abcd4bb');
 
     /**
      * @license
@@ -35508,7 +35511,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+343.sha-efe8566');
+    const VERSION$2 = new Version$1('12.0.0-next.8+344.sha-abcd4bb');
 
     /**
      * @license

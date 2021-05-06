@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+343.sha-efe8566
+ * @license Angular v12.0.0-next.8+344.sha-abcd4bb
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8465,16 +8465,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return processRules(cssText, (rule) => {
                 let selector = rule.selector;
                 let content = rule.content;
-                if (rule.selector[0] != '@') {
+                if (rule.selector[0] !== '@') {
                     selector =
                         this._scopeSelector(rule.selector, scopeSelector, hostSelector, this.strictStyling);
                 }
                 else if (rule.selector.startsWith('@media') || rule.selector.startsWith('@supports') ||
-                    rule.selector.startsWith('@page') || rule.selector.startsWith('@document')) {
+                    rule.selector.startsWith('@document')) {
                     content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
                 }
-                else if (rule.selector.startsWith('@font-face')) {
-                    content = this._stripScopingSelectors(rule.content, scopeSelector, hostSelector);
+                else if (rule.selector.startsWith('@font-face') || rule.selector.startsWith('@page')) {
+                    content = this._stripScopingSelectors(rule.content);
                 }
                 return new CssRule(selector, content);
             });
@@ -8494,14 +8494,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * :host ::ng-deep {
          *   import 'some/lib/containing/font-face';
          * }
+         *
+         * Similar logic applies to `@page` rules which can contain a particular set of properties,
+         * as well as some specific at-rules. Since they can't be encapsulated, we have to strip
+         * any scoping selectors from them. For more information: https://www.w3.org/TR/css-page-3
          * ```
          */
-        _stripScopingSelectors(cssText, scopeSelector, hostSelector) {
+        _stripScopingSelectors(cssText) {
             return processRules(cssText, rule => {
                 const selector = rule.selector.replace(_shadowDeepSelectors, ' ')
                     .replace(_polyfillHostNoCombinatorRe, ' ');
-                const content = this._scopeSelectors(rule.content, scopeSelector, hostSelector);
-                return new CssRule(selector, content);
+                return new CssRule(selector, rule.content);
             });
         }
         _scopeSelector(selector, scopeSelector, hostSelector, strict) {
@@ -17909,7 +17912,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+343.sha-efe8566');
+    const VERSION$1 = new Version('12.0.0-next.8+344.sha-abcd4bb');
 
     /**
      * @license
@@ -18548,7 +18551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0-next.8+343.sha-efe8566'));
+        definitionMap.set('version', literal('12.0.0-next.8+344.sha-abcd4bb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18588,7 +18591,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0-next.8+343.sha-efe8566'));
+        definitionMap.set('version', literal('12.0.0-next.8+344.sha-abcd4bb'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18805,7 +18808,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0-next.8+343.sha-efe8566'));
+        definitionMap.set('version', literal('12.0.0-next.8+344.sha-abcd4bb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18847,7 +18850,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0-next.8+343.sha-efe8566'));
+        definitionMap.set('version', literal('12.0.0-next.8+344.sha-abcd4bb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18926,7 +18929,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0-next.8+343.sha-efe8566'));
+        definitionMap.set('version', literal('12.0.0-next.8+344.sha-abcd4bb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18963,7 +18966,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0-next.8+343.sha-efe8566'));
+        definitionMap.set('version', literal('12.0.0-next.8+344.sha-abcd4bb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19021,7 +19024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0-next.8+343.sha-efe8566'));
+        definitionMap.set('version', literal('12.0.0-next.8+344.sha-abcd4bb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19053,7 +19056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+343.sha-efe8566');
+    const VERSION$2 = new Version('12.0.0-next.8+344.sha-abcd4bb');
 
     /**
      * @license
