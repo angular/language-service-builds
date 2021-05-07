@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+365.sha-3927e25
+ * @license Angular v12.0.0-next.8+367.sha-cb418bd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19453,7 +19453,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+365.sha-3927e25');
+    const VERSION$1 = new Version('12.0.0-next.8+367.sha-cb418bd');
 
     /**
      * @license
@@ -31472,11 +31472,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     const toCall = destroyHooks[i + 1];
                     if (Array.isArray(toCall)) {
                         for (let j = 0; j < toCall.length; j += 2) {
-                            toCall[j + 1].call(context[toCall[j]]);
+                            const callContext = context[toCall[j]];
+                            const hook = toCall[j + 1];
+                            try {
+                                hook.call(callContext);
+                            }
+                            finally {
+                            }
                         }
                     }
                     else {
-                        toCall.call(context);
+                        try {
+                            toCall.call(context);
+                        }
+                        finally {
+                        }
                     }
                 }
             }
@@ -35511,7 +35521,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+365.sha-3927e25');
+    const VERSION$2 = new Version$1('12.0.0-next.8+367.sha-cb418bd');
 
     /**
      * @license
