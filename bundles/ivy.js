@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+372.sha-2843f15
+ * @license Angular v12.0.0-next.8+373.sha-cd252b9
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17912,7 +17912,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+372.sha-2843f15');
+    const VERSION$1 = new Version('12.0.0-next.8+373.sha-cd252b9');
 
     /**
      * @license
@@ -18551,7 +18551,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0-next.8+372.sha-2843f15'));
+        definitionMap.set('version', literal('12.0.0-next.8+373.sha-cd252b9'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18591,7 +18591,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0-next.8+372.sha-2843f15'));
+        definitionMap.set('version', literal('12.0.0-next.8+373.sha-cd252b9'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18808,7 +18808,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0-next.8+372.sha-2843f15'));
+        definitionMap.set('version', literal('12.0.0-next.8+373.sha-cd252b9'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18850,7 +18850,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0-next.8+372.sha-2843f15'));
+        definitionMap.set('version', literal('12.0.0-next.8+373.sha-cd252b9'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18929,7 +18929,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0-next.8+372.sha-2843f15'));
+        definitionMap.set('version', literal('12.0.0-next.8+373.sha-cd252b9'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18966,7 +18966,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0-next.8+372.sha-2843f15'));
+        definitionMap.set('version', literal('12.0.0-next.8+373.sha-cd252b9'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19024,7 +19024,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0-next.8+372.sha-2843f15'));
+        definitionMap.set('version', literal('12.0.0-next.8+373.sha-cd252b9'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19056,7 +19056,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-next.8+372.sha-2843f15');
+    const VERSION$2 = new Version('12.0.0-next.8+373.sha-cd252b9');
 
     /**
      * @license
@@ -28831,6 +28831,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 let templateContent;
                 let sourceMapping;
                 let escapedString = false;
+                let sourceMapUrl;
                 // We only support SourceMaps for inline templates that are simple string literals.
                 if (ts$1.isStringLiteral(template.expression) ||
                     ts$1.isNoSubstitutionTemplateLiteral(template.expression)) {
@@ -28844,6 +28845,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         type: 'direct',
                         node: template.expression,
                     };
+                    sourceMapUrl = template.potentialSourceMapUrl;
                 }
                 else {
                     const resolvedTemplate = this.evaluator.evaluate(template.expression);
@@ -28860,8 +28862,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                         componentClass: node,
                         template: templateContent,
                     };
+                    // Indirect templates cannot be mapped to a particular byte range of any input file, since
+                    // they're computed by expressions that may span many files. Don't attempt to map them back
+                    // to a given file.
+                    sourceMapUrl = null;
                 }
-                return Object.assign(Object.assign({}, this._parseTemplate(template, sourceStr, sourceParseRange, escapedString)), { content: templateContent, sourceMapping, declaration: template });
+                return Object.assign(Object.assign({}, this._parseTemplate(template, sourceStr, sourceParseRange, escapedString, sourceMapUrl)), { content: templateContent, sourceMapping, declaration: template });
             }
             else {
                 const templateContent = this.resourceLoader.load(template.resolvedTemplateUrl);
@@ -28869,7 +28875,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                     this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(template.resolvedTemplateUrl));
                 }
                 return Object.assign(Object.assign({}, this._parseTemplate(template, /* sourceStr */ templateContent, /* sourceParseRange */ null, 
-                /* escapedString */ false)), { content: templateContent, sourceMapping: {
+                /* escapedString */ false, 
+                /* sourceMapUrl */ template.potentialSourceMapUrl)), { content: templateContent, sourceMapping: {
                         type: 'external',
                         componentClass: node,
                         // TODO(alxhub): TS in g3 is unable to make this inference on its own, so cast it here
@@ -28880,10 +28887,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     }, declaration: template });
             }
         }
-        _parseTemplate(template, sourceStr, sourceParseRange, escapedString) {
+        _parseTemplate(template, sourceStr, sourceParseRange, escapedString, sourceMapUrl) {
             // We always normalize line endings if the template has been escaped (i.e. is inline).
             const i18nNormalizeLineEndingsInICUs = escapedString || this.i18nNormalizeLineEndingsInICUs;
-            const parsedTemplate = parseTemplate(sourceStr, template.sourceMapUrl, {
+            const parsedTemplate = parseTemplate(sourceStr, sourceMapUrl !== null && sourceMapUrl !== void 0 ? sourceMapUrl : '', {
                 preserveWhitespaces: template.preserveWhitespaces,
                 interpolationConfig: template.interpolationConfig,
                 range: sourceParseRange !== null && sourceParseRange !== void 0 ? sourceParseRange : undefined,
@@ -28906,7 +28913,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             //
             // In order to guarantee the correctness of diagnostics, templates are parsed a second time
             // with the above options set to preserve source mappings.
-            const { nodes: diagNodes } = parseTemplate(sourceStr, template.sourceMapUrl, {
+            const { nodes: diagNodes } = parseTemplate(sourceStr, sourceMapUrl !== null && sourceMapUrl !== void 0 ? sourceMapUrl : '', {
                 preserveWhitespaces: true,
                 preserveLineEndings: true,
                 interpolationConfig: template.interpolationConfig,
@@ -28917,7 +28924,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 leadingTriviaChars: [],
                 alwaysAttemptHtmlToR3AstConversion: this.usePoisonedData,
             });
-            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, file: new ParseSourceFile(sourceStr, template.resolvedTemplateUrl) });
+            return Object.assign(Object.assign({}, parsedTemplate), { diagNodes, file: new ParseSourceFile(sourceStr, sourceMapUrl !== null && sourceMapUrl !== void 0 ? sourceMapUrl : '') });
         }
         parseTemplateDeclaration(decorator, component, containingFile) {
             let preserveWhitespaces = this.defaultPreserveWhitespaces;
@@ -28954,7 +28961,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         templateUrl,
                         templateUrlExpression: templateUrlExpr,
                         resolvedTemplateUrl: resourceUrl,
-                        sourceMapUrl: sourceMapUrl(resourceUrl),
+                        potentialSourceMapUrl: sourceMapUrl(resourceUrl),
                     };
                 }
                 catch (e) {
@@ -28969,7 +28976,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     expression: component.get('template'),
                     templateUrl: containingFile,
                     resolvedTemplateUrl: containingFile,
-                    sourceMapUrl: containingFile,
+                    potentialSourceMapUrl: containingFile,
                 };
             }
             else {
