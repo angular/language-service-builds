@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+376.sha-23f6b76
+ * @license Angular v12.0.0-next.8+386.sha-a529d4f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19453,7 +19453,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+376.sha-23f6b76');
+    const VERSION$1 = new Version('12.0.0-next.8+386.sha-a529d4f');
 
     /**
      * @license
@@ -47454,7 +47454,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+376.sha-23f6b76');
+    const VERSION$2 = new Version$1('12.0.0-next.8+386.sha-a529d4f');
 
     /**
      * @license
@@ -52877,8 +52877,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * NgModule the component belongs to. We keep the list of compiled components here so that the
      * TestBed can reset it later.
      */
-    let ownerNgModule = new Map();
-    let verifiedNgModule = new Map();
+    let ownerNgModule = new WeakMap();
+    let verifiedNgModule = new WeakMap();
     /**
      * Computes the combined declarations of explicit declarations, as well as declarations inherited by
      * traversing the exports of imported modules.
