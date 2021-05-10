@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-rc.2+24.sha-7a4d980
+ * @license Angular v12.0.0-rc.2+38.sha-cffba6f
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2865,10 +2865,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     class Version {
         constructor(full) {
             this.full = full;
-            const splits = full.split('.');
-            this.major = splits[0];
-            this.minor = splits[1];
-            this.patch = splits.slice(2).join('.');
+            const [major, minor, ...rest] = full.split('.');
+            this.major = major;
+            this.minor = minor;
+            this.patch = rest.join('.');
         }
     }
     const __window = typeof window !== 'undefined' && window;
@@ -17871,7 +17871,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-rc.2+24.sha-7a4d980');
+    const VERSION$1 = new Version('12.0.0-rc.2+38.sha-cffba6f');
 
     /**
      * @license
@@ -18510,7 +18510,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0-rc.2+24.sha-7a4d980'));
+        definitionMap.set('version', literal('12.0.0-rc.2+38.sha-cffba6f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18550,7 +18550,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0-rc.2+24.sha-7a4d980'));
+        definitionMap.set('version', literal('12.0.0-rc.2+38.sha-cffba6f'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18767,7 +18767,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0-rc.2+24.sha-7a4d980'));
+        definitionMap.set('version', literal('12.0.0-rc.2+38.sha-cffba6f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18809,7 +18809,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0-rc.2+24.sha-7a4d980'));
+        definitionMap.set('version', literal('12.0.0-rc.2+38.sha-cffba6f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18888,7 +18888,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0-rc.2+24.sha-7a4d980'));
+        definitionMap.set('version', literal('12.0.0-rc.2+38.sha-cffba6f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18925,7 +18925,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0-rc.2+24.sha-7a4d980'));
+        definitionMap.set('version', literal('12.0.0-rc.2+38.sha-cffba6f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18983,7 +18983,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0-rc.2+24.sha-7a4d980'));
+        definitionMap.set('version', literal('12.0.0-rc.2+38.sha-cffba6f'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19015,7 +19015,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0-rc.2+24.sha-7a4d980');
+    const VERSION$2 = new Version('12.0.0-rc.2+38.sha-cffba6f');
 
     /**
      * @license
@@ -25910,89 +25910,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    let _tsSourceMapBug29300Fixed;
-    /**
-     * Test the current version of TypeScript to see if it has fixed the external SourceMap
-     * file bug: https://github.com/Microsoft/TypeScript/issues/29300.
-     *
-     * The bug is fixed in TS 3.3+ but this check avoid us having to rely upon the version number,
-     * and allows us to gracefully fail if the TS version still has the bug.
-     *
-     * We check for the bug by compiling a very small program `a;` and transforming it to `b;`,
-     * where we map the new `b` identifier to an external source file, which has different lines to
-     * the original source file.  If the bug is fixed then the output SourceMap should contain
-     * mappings that correspond ot the correct line/col pairs for this transformed node.
-     *
-     * @returns true if the bug is fixed.
-     */
-    function tsSourceMapBug29300Fixed() {
-        if (_tsSourceMapBug29300Fixed === undefined) {
-            let writtenFiles = {};
-            const sourceFile = ts$1.createSourceFile('test.ts', 'a;', ts$1.ScriptTarget.ES2015, true, ts$1.ScriptKind.TS);
-            const host = {
-                getSourceFile() {
-                    return sourceFile;
-                },
-                fileExists() {
-                    return true;
-                },
-                readFile() {
-                    return '';
-                },
-                writeFile(fileName, data) {
-                    writtenFiles[fileName] = data;
-                },
-                getDefaultLibFileName() {
-                    return '';
-                },
-                getCurrentDirectory() {
-                    return '';
-                },
-                getDirectories() {
-                    return [];
-                },
-                getCanonicalFileName() {
-                    return '';
-                },
-                useCaseSensitiveFileNames() {
-                    return true;
-                },
-                getNewLine() {
-                    return '\n';
-                },
-            };
-            const transform = (context) => {
-                return (node) => ts$1.visitNode(node, visitor);
-                function visitor(node) {
-                    if (ts$1.isIdentifier(node) && node.text === 'a') {
-                        const newNode = ts$1.createIdentifier('b');
-                        ts$1.setSourceMapRange(newNode, {
-                            pos: 16,
-                            end: 16,
-                            source: ts$1.createSourceMapSource('test.html', 'abc\ndef\nghi\njkl\nmno\npqr')
-                        });
-                        return newNode;
-                    }
-                    return ts$1.visitEachChild(node, visitor, context);
-                }
-            };
-            const program = ts$1.createProgram(['test.ts'], { sourceMap: true }, host);
-            program.emit(sourceFile, undefined, undefined, undefined, { after: [transform] });
-            // The first two mappings in the source map should look like:
-            // [0,1,4,0] col 0 => source file 1, row 4, column 0)
-            // [1,0,0,0] col 1 => source file 1, row 4, column 0)
-            _tsSourceMapBug29300Fixed = /ACIA,CAAA/.test(writtenFiles['test.js.map']);
-        }
-        return _tsSourceMapBug29300Fixed;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function getConstructorDependencies(clazz, reflector, isCore) {
         const deps = [];
         const errors = [];
@@ -28786,7 +28703,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         type: 'direct',
                         node: template.expression,
                     };
-                    sourceMapUrl = template.potentialSourceMapUrl;
+                    sourceMapUrl = template.resolvedTemplateUrl;
                 }
                 else {
                     const resolvedTemplate = this.evaluator.evaluate(template.expression);
@@ -28817,7 +28734,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 return Object.assign(Object.assign({}, this._parseTemplate(template, /* sourceStr */ templateContent, /* sourceParseRange */ null, 
                 /* escapedString */ false, 
-                /* sourceMapUrl */ template.potentialSourceMapUrl)), { content: templateContent, sourceMapping: {
+                /* sourceMapUrl */ template.resolvedTemplateUrl)), { content: templateContent, sourceMapping: {
                         type: 'external',
                         componentClass: node,
                         // TODO(alxhub): TS in g3 is unable to make this inference on its own, so cast it here
@@ -28902,7 +28819,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                         templateUrl,
                         templateUrlExpression: templateUrlExpr,
                         resolvedTemplateUrl: resourceUrl,
-                        potentialSourceMapUrl: sourceMapUrl(resourceUrl),
                     };
                 }
                 catch (e) {
@@ -28917,7 +28833,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                     expression: component.get('template'),
                     templateUrl: containingFile,
                     resolvedTemplateUrl: containingFile,
-                    potentialSourceMapUrl: containingFile,
                 };
             }
             else {
@@ -28992,17 +28907,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             startCol: character,
             endPos: templateExpr.getEnd() - 1,
         };
-    }
-    function sourceMapUrl(resourceUrl) {
-        if (!tsSourceMapBug29300Fixed()) {
-            // By removing the template URL we are telling the translator not to try to
-            // map the external source file to the generated code, since the version
-            // of TS that is running does not support it.
-            return '';
-        }
-        else {
-            return resourceUrl;
-        }
     }
     /** Determines if the result of an evaluation is a string array. */
     function isStringArray(resolvedValue) {
