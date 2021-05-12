@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+395.sha-eac42e9
+ * @license Angular v12.0.0-next.8+396.sha-a74eb52
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -2608,10 +2608,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     class Version {
         constructor(full) {
             this.full = full;
-            const [major, minor, ...rest] = full.split('.');
-            this.major = major;
-            this.minor = minor;
-            this.patch = rest.join('.');
+            const splits = full.split('.');
+            this.major = splits[0];
+            this.minor = splits[1];
+            this.patch = splits.slice(2).join('.');
         }
     }
     const __window = typeof window !== 'undefined' && window;
@@ -19453,7 +19453,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+395.sha-eac42e9');
+    const VERSION$1 = new Version('12.0.0-next.8+396.sha-a74eb52');
 
     /**
      * @license
@@ -35513,16 +35513,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     class Version$1 {
         constructor(full) {
             this.full = full;
-            const [major, minor, ...rest] = full.split('.');
-            this.major = major;
-            this.minor = minor;
-            this.patch = rest.join('.');
+            this.major = full.split('.')[0];
+            this.minor = full.split('.')[1];
+            this.patch = full.split('.').slice(2).join('.');
         }
     }
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+395.sha-eac42e9');
+    const VERSION$2 = new Version$1('12.0.0-next.8+396.sha-a74eb52');
 
     /**
      * @license
