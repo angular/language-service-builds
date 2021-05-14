@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+410.sha-2e7eb27
+ * @license Angular v12.0.0-next.8+411.sha-4bc5b4d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19453,7 +19453,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+410.sha-2e7eb27');
+    const VERSION$1 = new Version('12.0.0-next.8+411.sha-4bc5b4d');
 
     /**
      * @license
@@ -41439,8 +41439,11 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const lCleanup = getOrCreateLViewCleanup(lView);
         ngDevMode && assertTNodeType(tNode, 3 /* AnyRNode */ | 12 /* AnyContainer */);
         let processOutputs = true;
-        // add native event listener - applicable to elements only
-        if (tNode.type & 3 /* AnyRNode */) {
+        // Adding a native event listener is applicable when:
+        // - The corresponding TNode represents a DOM element.
+        // - The event target has a resolver (usually resulting in a global object,
+        //   such as `window` or `document`).
+        if ((tNode.type & 3 /* AnyRNode */) || eventTargetResolver) {
             const native = getNativeByTNode(tNode, lView);
             const target = eventTargetResolver ? eventTargetResolver(native) : native;
             const lCleanupIndex = lCleanup.length;
@@ -47453,7 +47456,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+410.sha-2e7eb27');
+    const VERSION$2 = new Version$1('12.0.0-next.8+411.sha-4bc5b4d');
 
     /**
      * @license
