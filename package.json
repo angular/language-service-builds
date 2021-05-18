@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "12.0.0+34.sha-a20ef16",
+  "version": "12.0.0+37.sha-aa9a86c",
   "description": "Angular - language services",
   "main": "./index.js",
   "typings": "./index.d.ts",
@@ -33,8 +33,5 @@
       "@angular/localize",
       "@angular/service-worker"
     ]
-  },
-  "publishConfig":{
-    "registry":"https://wombat-dressing-room.appspot.com"
   }
 }
