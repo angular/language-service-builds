@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0-next.8+426.sha-4579200
+ * @license Angular v12.0.0-next.8+432.sha-6d14776
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13085,11 +13085,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     (function (TokenType) {
         TokenType[TokenType["Character"] = 0] = "Character";
         TokenType[TokenType["Identifier"] = 1] = "Identifier";
-        TokenType[TokenType["Keyword"] = 2] = "Keyword";
-        TokenType[TokenType["String"] = 3] = "String";
-        TokenType[TokenType["Operator"] = 4] = "Operator";
-        TokenType[TokenType["Number"] = 5] = "Number";
-        TokenType[TokenType["Error"] = 6] = "Error";
+        TokenType[TokenType["PrivateIdentifier"] = 2] = "PrivateIdentifier";
+        TokenType[TokenType["Keyword"] = 3] = "Keyword";
+        TokenType[TokenType["String"] = 4] = "String";
+        TokenType[TokenType["Operator"] = 5] = "Operator";
+        TokenType[TokenType["Number"] = 6] = "Number";
+        TokenType[TokenType["Error"] = 7] = "Error";
     })(TokenType$1 || (TokenType$1 = {}));
     const KEYWORDS = ['var', 'let', 'as', 'null', 'undefined', 'true', 'false', 'if', 'else', 'this'];
     class Lexer {
@@ -13127,6 +13128,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         isIdentifier() {
             return this.type == TokenType$1.Identifier;
         }
+        isPrivateIdentifier() {
+            return this.type == TokenType$1.PrivateIdentifier;
+        }
         isKeyword() {
             return this.type == TokenType$1.Keyword;
         }
@@ -13163,6 +13167,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case TokenType$1.Identifier:
                 case TokenType$1.Keyword:
                 case TokenType$1.Operator:
+                case TokenType$1.PrivateIdentifier:
                 case TokenType$1.String:
                 case TokenType$1.Error:
                     return this.strValue;
@@ -13178,6 +13183,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     }
     function newIdentifierToken(index, end, text) {
         return new Token$1(index, end, TokenType$1.Identifier, 0, text);
+    }
+    function newPrivateIdentifierToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.PrivateIdentifier, 0, text);
     }
     function newKeywordToken(index, end, text) {
         return new Token$1(index, end, TokenType$1.Keyword, 0, text);
@@ -13249,6 +13257,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 case $DQ:
                     return this.scanString();
                 case $HASH:
+                    return this.scanPrivateIdentifier();
                 case $PLUS:
                 case $MINUS:
                 case $STAR:
@@ -13315,6 +13324,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const str = this.input.substring(start, this.index);
             return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, this.index, str) :
                 newIdentifierToken(start, this.index, str);
+        }
+        /** Scans an ECMAScript private identifier. */
+        scanPrivateIdentifier() {
+            const start = this.index;
+            this.advance();
+            if (!isIdentifierStart(this.peek)) {
+                return this.error('Invalid character [#]', -1);
+            }
+            while (isIdentifierPart(this.peek))
+                this.advance();
+            const identifierName = this.input.substring(start, this.index);
+            return newPrivateIdentifierToken(start, this.index, identifierName);
         }
         scanNumber(start) {
             let simple = (this.index === start);
@@ -13923,7 +13944,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         expectIdentifierOrKeyword() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword()) {
-                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
+                if (n.isPrivateIdentifier()) {
+                    this._reportErrorForPrivateIdentifier(n, 'expected identifier or keyword');
+                }
+                else {
+                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
+                }
                 return null;
             }
             this.advance();
@@ -13932,7 +13958,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         expectIdentifierOrKeywordOrString() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword() && !n.isString()) {
-                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
+                if (n.isPrivateIdentifier()) {
+                    this._reportErrorForPrivateIdentifier(n, 'expected identifier, keyword or string');
+                }
+                else {
+                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
+                }
                 return '';
             }
             this.advance();
@@ -14255,6 +14286,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.advance();
                 return new LiteralPrimitive(this.span(start), this.sourceSpan(start), literalValue);
             }
+            else if (this.next.isPrivateIdentifier()) {
+                this._reportErrorForPrivateIdentifier(this.next, null);
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            }
             else if (this.index >= this.tokens.length) {
                 this.error(`Unexpected end of expression: ${this.input}`);
                 return new EmptyExpr(this.span(start), this.sourceSpan(start));
@@ -14550,6 +14585,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 index = this.index;
             return (index < this.tokens.length) ? `at column ${this.tokens[index].index + 1} in` :
                 `at the end of the expression`;
+        }
+        /**
+         * Records an error for an unexpected private identifier being discovered.
+         * @param token Token representing a private identifier.
+         * @param extraMessage Optional additional message being appended to the error.
+         */
+        _reportErrorForPrivateIdentifier(token, extraMessage) {
+            let errorMessage = `Private identifiers are not supported. Unexpected private identifier: ${token}`;
+            if (extraMessage !== null) {
+                errorMessage += `, ${extraMessage}`;
+            }
+            this.error(errorMessage);
         }
         /**
          * Error recovery should skip tokens until it encounters a recovery point.
@@ -19453,7 +19500,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0-next.8+426.sha-4579200');
+    const VERSION$1 = new Version('12.0.0-next.8+432.sha-6d14776');
 
     /**
      * @license
@@ -47456,7 +47503,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.0-next.8+426.sha-4579200');
+    const VERSION$2 = new Version$1('12.0.0-next.8+432.sha-6d14776');
 
     /**
      * @license
