@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.0+26.sha-6861911
+ * @license Angular v12.0.0+32.sha-c58e15a
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -11503,11 +11503,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     (function (TokenType) {
         TokenType[TokenType["Character"] = 0] = "Character";
         TokenType[TokenType["Identifier"] = 1] = "Identifier";
-        TokenType[TokenType["Keyword"] = 2] = "Keyword";
-        TokenType[TokenType["String"] = 3] = "String";
-        TokenType[TokenType["Operator"] = 4] = "Operator";
-        TokenType[TokenType["Number"] = 5] = "Number";
-        TokenType[TokenType["Error"] = 6] = "Error";
+        TokenType[TokenType["PrivateIdentifier"] = 2] = "PrivateIdentifier";
+        TokenType[TokenType["Keyword"] = 3] = "Keyword";
+        TokenType[TokenType["String"] = 4] = "String";
+        TokenType[TokenType["Operator"] = 5] = "Operator";
+        TokenType[TokenType["Number"] = 6] = "Number";
+        TokenType[TokenType["Error"] = 7] = "Error";
     })(TokenType$1 || (TokenType$1 = {}));
     const KEYWORDS = ['var', 'let', 'as', 'null', 'undefined', 'true', 'false', 'if', 'else', 'this'];
     class Lexer {
@@ -11545,6 +11546,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         isIdentifier() {
             return this.type == TokenType$1.Identifier;
         }
+        isPrivateIdentifier() {
+            return this.type == TokenType$1.PrivateIdentifier;
+        }
         isKeyword() {
             return this.type == TokenType$1.Keyword;
         }
@@ -11581,6 +11585,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case TokenType$1.Identifier:
                 case TokenType$1.Keyword:
                 case TokenType$1.Operator:
+                case TokenType$1.PrivateIdentifier:
                 case TokenType$1.String:
                 case TokenType$1.Error:
                     return this.strValue;
@@ -11596,6 +11601,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function newIdentifierToken(index, end, text) {
         return new Token$1(index, end, TokenType$1.Identifier, 0, text);
+    }
+    function newPrivateIdentifierToken(index, end, text) {
+        return new Token$1(index, end, TokenType$1.PrivateIdentifier, 0, text);
     }
     function newKeywordToken(index, end, text) {
         return new Token$1(index, end, TokenType$1.Keyword, 0, text);
@@ -11667,6 +11675,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 case $DQ:
                     return this.scanString();
                 case $HASH:
+                    return this.scanPrivateIdentifier();
                 case $PLUS:
                 case $MINUS:
                 case $STAR:
@@ -11733,6 +11742,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const str = this.input.substring(start, this.index);
             return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, this.index, str) :
                 newIdentifierToken(start, this.index, str);
+        }
+        /** Scans an ECMAScript private identifier. */
+        scanPrivateIdentifier() {
+            const start = this.index;
+            this.advance();
+            if (!isIdentifierStart(this.peek)) {
+                return this.error('Invalid character [#]', -1);
+            }
+            while (isIdentifierPart(this.peek))
+                this.advance();
+            const identifierName = this.input.substring(start, this.index);
+            return newPrivateIdentifierToken(start, this.index, identifierName);
         }
         scanNumber(start) {
             let simple = (this.index === start);
@@ -12341,7 +12362,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         expectIdentifierOrKeyword() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword()) {
-                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
+                if (n.isPrivateIdentifier()) {
+                    this._reportErrorForPrivateIdentifier(n, 'expected identifier or keyword');
+                }
+                else {
+                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
+                }
                 return null;
             }
             this.advance();
@@ -12350,7 +12376,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         expectIdentifierOrKeywordOrString() {
             const n = this.next;
             if (!n.isIdentifier() && !n.isKeyword() && !n.isString()) {
-                this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
+                if (n.isPrivateIdentifier()) {
+                    this._reportErrorForPrivateIdentifier(n, 'expected identifier, keyword or string');
+                }
+                else {
+                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
+                }
                 return '';
             }
             this.advance();
@@ -12673,6 +12704,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this.advance();
                 return new LiteralPrimitive(this.span(start), this.sourceSpan(start), literalValue);
             }
+            else if (this.next.isPrivateIdentifier()) {
+                this._reportErrorForPrivateIdentifier(this.next, null);
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            }
             else if (this.index >= this.tokens.length) {
                 this.error(`Unexpected end of expression: ${this.input}`);
                 return new EmptyExpr(this.span(start), this.sourceSpan(start));
@@ -12968,6 +13003,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 index = this.index;
             return (index < this.tokens.length) ? `at column ${this.tokens[index].index + 1} in` :
                 `at the end of the expression`;
+        }
+        /**
+         * Records an error for an unexpected private identifier being discovered.
+         * @param token Token representing a private identifier.
+         * @param extraMessage Optional additional message being appended to the error.
+         */
+        _reportErrorForPrivateIdentifier(token, extraMessage) {
+            let errorMessage = `Private identifiers are not supported. Unexpected private identifier: ${token}`;
+            if (extraMessage !== null) {
+                errorMessage += `, ${extraMessage}`;
+            }
+            this.error(errorMessage);
         }
         /**
          * Error recovery should skip tokens until it encounters a recovery point.
@@ -17871,7 +17918,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.0+26.sha-6861911');
+    const VERSION$1 = new Version('12.0.0+32.sha-c58e15a');
 
     /**
      * @license
@@ -18510,7 +18557,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.0+26.sha-6861911'));
+        definitionMap.set('version', literal('12.0.0+32.sha-c58e15a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18550,7 +18597,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.0+26.sha-6861911'));
+        definitionMap.set('version', literal('12.0.0+32.sha-c58e15a'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18767,7 +18814,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.0+26.sha-6861911'));
+        definitionMap.set('version', literal('12.0.0+32.sha-c58e15a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18809,7 +18856,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.0+26.sha-6861911'));
+        definitionMap.set('version', literal('12.0.0+32.sha-c58e15a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18888,7 +18935,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.0+26.sha-6861911'));
+        definitionMap.set('version', literal('12.0.0+32.sha-c58e15a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18925,7 +18972,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.0+26.sha-6861911'));
+        definitionMap.set('version', literal('12.0.0+32.sha-c58e15a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -18983,7 +19030,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.0+26.sha-6861911'));
+        definitionMap.set('version', literal('12.0.0+32.sha-c58e15a'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19015,7 +19062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.0+26.sha-6861911');
+    const VERSION$2 = new Version('12.0.0+32.sha-c58e15a');
 
     /**
      * @license
