@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.2+80.sha-6da0c97
+ * @license Angular v12.1.0-next.2+84.sha-b7721aa
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19500,7 +19500,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.2+80.sha-6da0c97');
+    const VERSION$1 = new Version('12.1.0-next.2+84.sha-b7721aa');
 
     /**
      * @license
@@ -38442,17 +38442,19 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @usageNotes
      * Given the following DOM structure:
+     *
      * ```html
-     * <my-app>
+     * <app-root>
      *   <div>
      *     <child-comp></child-comp>
      *   </div>
-     * </my-app>
+     * </app-root>
      * ```
+     *
      * Calling `getComponent` on `<child-comp>` will return the instance of `ChildComponent`
      * associated with this DOM element.
      *
-     * Calling the function on `<my-app>` will return the `MyApp` instance.
+     * Calling the function on `<app-root>` will return the `MyApp` instance.
      *
      *
      * @param element DOM element from which the component should be retrieved.
@@ -38553,12 +38555,14 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @usageNotes
      * Given the following DOM structure:
-     * ```
-     * <my-app>
+     *
+     * ```html
+     * <app-root>
      *   <button my-button></button>
      *   <my-comp></my-comp>
-     * </my-app>
+     * </app-root>
      * ```
+     *
      * Calling `getDirectives` on `<button>` will return an array with an instance of the `MyButton`
      * directive that is associated with the DOM node.
      *
@@ -38647,14 +38651,16 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @usageNotes
      * Given the following DOM structure:
-     * ```
-     * <my-app>
-     *   <div (click)="doSomething()"></div>
-     * </my-app>
      *
+     * ```html
+     * <app-root>
+     *   <div (click)="doSomething()"></div>
+     * </app-root>
      * ```
+     *
      * Calling `getListeners` on `<div>` will return an object that looks as follows:
-     * ```
+     *
+     * ```ts
      * {
      *   name: 'click',
      *   element: <div>,
@@ -47503,7 +47509,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.0-next.2+80.sha-6da0c97');
+    const VERSION$2 = new Version$1('12.1.0-next.2+84.sha-b7721aa');
 
     /**
      * @license
@@ -48703,7 +48709,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
          *
          * ```typescript
          * @Component({
-         *   selector: 'my-app',
+         *   selector: 'app-root',
          *   template: `Number of ticks: {{numberOfTicks}}`
          *   changeDetection: ChangeDetectionStrategy.OnPush,
          * })
@@ -48823,7 +48829,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
          * }
          *
          * @Component({
-         *   selector: 'my-app',
+         *   selector: 'app-root',
          *   providers: [DataProvider],
          *   template: `
          *     Live Update: <input type="checkbox" [(ngModel)]="live">
