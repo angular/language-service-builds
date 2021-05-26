@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "9.1.13",
+  "version": "9.1.13+2.sha-fc25f94",
   "description": "Angular - language services",
   "main": "./bundles/language-service.umd.js",
   "module": "./fesm5/language-service.js",
