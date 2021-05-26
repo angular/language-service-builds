@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.1+66.sha-c01da21
+ * @license Angular v12.0.1+83.sha-54b23ae
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19459,7 +19459,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.1+66.sha-c01da21');
+    const VERSION$1 = new Version('12.0.1+83.sha-54b23ae');
 
     /**
      * @license
@@ -35527,7 +35527,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.1+66.sha-c01da21');
+    const VERSION$2 = new Version$1('12.0.1+83.sha-54b23ae');
 
     /**
      * @license
@@ -36727,7 +36727,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          *
          * ```typescript
          * @Component({
-         *   selector: 'my-app',
+         *   selector: 'app-root',
          *   template: `Number of ticks: {{numberOfTicks}}`
          *   changeDetection: ChangeDetectionStrategy.OnPush,
          * })
@@ -36847,7 +36847,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * }
          *
          * @Component({
-         *   selector: 'my-app',
+         *   selector: 'app-root',
          *   providers: [DataProvider],
          *   template: `
          *     Live Update: <input type="checkbox" [(ngModel)]="live">
