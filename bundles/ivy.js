@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.3+60.sha-3e192bf
+ * @license Angular v12.1.0-next.3+62.sha-e039075
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17959,7 +17959,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.3+60.sha-3e192bf');
+    const VERSION$1 = new Version('12.1.0-next.3+62.sha-e039075');
 
     /**
      * @license
@@ -18598,7 +18598,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.3+60.sha-3e192bf'));
+        definitionMap.set('version', literal('12.1.0-next.3+62.sha-e039075'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18638,7 +18638,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.3+60.sha-3e192bf'));
+        definitionMap.set('version', literal('12.1.0-next.3+62.sha-e039075'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18855,7 +18855,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.3+60.sha-3e192bf'));
+        definitionMap.set('version', literal('12.1.0-next.3+62.sha-e039075'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18897,7 +18897,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.3+60.sha-3e192bf'));
+        definitionMap.set('version', literal('12.1.0-next.3+62.sha-e039075'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18976,7 +18976,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.3+60.sha-3e192bf'));
+        definitionMap.set('version', literal('12.1.0-next.3+62.sha-e039075'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19013,7 +19013,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.3+60.sha-3e192bf'));
+        definitionMap.set('version', literal('12.1.0-next.3+62.sha-e039075'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19071,7 +19071,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.3+60.sha-3e192bf'));
+        definitionMap.set('version', literal('12.1.0-next.3+62.sha-e039075'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19103,7 +19103,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.3+60.sha-3e192bf');
+    const VERSION$2 = new Version('12.1.0-next.3+62.sha-e039075');
 
     /**
      * @license
@@ -19455,14 +19455,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function isNamedDeclaration(node) {
         const namedNode = node;
         return namedNode.name !== undefined && ts$1.isIdentifier(namedNode.name);
-    }
-    function isExported(node) {
-        let topLevel = node;
-        if (ts$1.isVariableDeclaration(node) && ts$1.isVariableDeclarationList(node.parent)) {
-            topLevel = node.parent.parent;
-        }
-        return topLevel.modifiers !== undefined &&
-            topLevel.modifiers.some(modifier => modifier.kind === ts$1.SyntaxKind.ExportKeyword);
     }
     function getRootDirs(host, options) {
         const rootDirs = [];
@@ -21212,6 +21204,32 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         getAdjacentNameOfClass(clazz) {
             return clazz.name;
         }
+        isStaticallyExported(clazz) {
+            // First check if there's an `export` modifier directly on the class declaration.
+            let topLevel = clazz;
+            if (ts$1.isVariableDeclaration(clazz) && ts$1.isVariableDeclarationList(clazz.parent)) {
+                topLevel = clazz.parent.parent;
+            }
+            if (topLevel.modifiers !== undefined &&
+                topLevel.modifiers.some(modifier => modifier.kind === ts$1.SyntaxKind.ExportKeyword)) {
+                // The node is part of a declaration that's directly exported.
+                return true;
+            }
+            // If `topLevel` is not directly exported via a modifier, then it might be indirectly exported,
+            // e.g.:
+            //
+            // class Foo {}
+            // export {Foo};
+            //
+            // The only way to check this is to look at the module level for exports of the class. As a
+            // performance optimization, this check is only performed if the class is actually declared at
+            // the top level of the file and thus eligible for exporting in the first place.
+            if (topLevel.parent === undefined || !ts$1.isSourceFile(topLevel.parent)) {
+                return false;
+            }
+            const localExports = this.getLocalExportedClassesOfSourceFile(clazz.getSourceFile());
+            return localExports.has(clazz);
+        }
         getDirectImportOfIdentifier(id) {
             const symbol = this.checker.getSymbolAtLocation(id);
             if (symbol === undefined || symbol.declarations === undefined ||
@@ -21412,6 +21430,49 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 isStatic,
             };
         }
+        /**
+         * Get the set of classes declared in `file` which are exported.
+         */
+        getLocalExportedClassesOfSourceFile(file) {
+            const cacheSf = file;
+            if (cacheSf[LocalExportedClasses] !== undefined) {
+                // TS does not currently narrow symbol-keyed fields, hence the non-null assert is needed.
+                return cacheSf[LocalExportedClasses];
+            }
+            const exportSet = new Set();
+            cacheSf[LocalExportedClasses] = exportSet;
+            const sfSymbol = this.checker.getSymbolAtLocation(cacheSf);
+            if (sfSymbol === undefined || sfSymbol.exports === undefined) {
+                return exportSet;
+            }
+            // Scan the exported symbol of the `ts.SourceFile` for the original `symbol` of the class
+            // declaration.
+            //
+            // Note: when checking multiple classes declared in the same file, this repeats some operations.
+            // In theory, this could be expensive if run in the context of a massive input file (like a
+            // large FESM in ngcc). If performance does become an issue here, it should be possible to
+            // create a `Set<>`
+            // Unfortunately, `ts.Iterator` doesn't implement the iterator protocol, so iteration here is
+            // done manually.
+            const iter = sfSymbol.exports.values();
+            let item = iter.next();
+            while (item.done !== true) {
+                let exportedSymbol = item.value;
+                // If this exported symbol comes from an `export {Foo}` statement, then the symbol is actually
+                // for the export declaration, not the original declaration. Such a symbol will be an alias,
+                // so unwrap aliasing if necessary.
+                if (exportedSymbol.flags & ts$1.SymbolFlags.Alias) {
+                    exportedSymbol = this.checker.getAliasedSymbol(exportedSymbol);
+                }
+                if (exportedSymbol.valueDeclaration !== undefined &&
+                    exportedSymbol.valueDeclaration.getSourceFile() === file &&
+                    this.isClass(exportedSymbol.valueDeclaration)) {
+                    exportSet.add(exportedSymbol.valueDeclaration);
+                }
+                item = iter.next();
+            }
+            return exportSet;
+        }
     }
     function reflectTypeEntityToDeclaration(type, checker) {
         let realSymbol = checker.getSymbolAtLocation(type);
@@ -21561,6 +21622,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             (decl.propertyName !== undefined ? decl.propertyName : decl.name).text :
             originalId.text;
     }
+    const LocalExportedClasses = Symbol('LocalExportedClasses');
 
     /**
      * @license
@@ -24177,7 +24239,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.fileToClasses.get(sf).add(record.node);
         }
         scanClassForTraits(clazz) {
-            if (!this.compileNonExportedClasses && !isExported(clazz)) {
+            if (!this.compileNonExportedClasses && !this.reflector.isStaticallyExported(clazz)) {
                 return null;
             }
             const decorators = this.reflector.getDecoratorsOfDeclaration(clazz);
