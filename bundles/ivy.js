@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.4+24.sha-bd1836b
+ * @license Angular v12.1.0-next.4+30.sha-69e5782
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17959,7 +17959,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.4+24.sha-bd1836b');
+    const VERSION$1 = new Version('12.1.0-next.4+30.sha-69e5782');
 
     /**
      * @license
@@ -18598,7 +18598,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.4+24.sha-bd1836b'));
+        definitionMap.set('version', literal('12.1.0-next.4+30.sha-69e5782'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18638,7 +18638,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.4+24.sha-bd1836b'));
+        definitionMap.set('version', literal('12.1.0-next.4+30.sha-69e5782'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18855,7 +18855,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.4+24.sha-bd1836b'));
+        definitionMap.set('version', literal('12.1.0-next.4+30.sha-69e5782'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18897,7 +18897,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.4+24.sha-bd1836b'));
+        definitionMap.set('version', literal('12.1.0-next.4+30.sha-69e5782'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18976,7 +18976,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.4+24.sha-bd1836b'));
+        definitionMap.set('version', literal('12.1.0-next.4+30.sha-69e5782'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19013,7 +19013,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.4+24.sha-bd1836b'));
+        definitionMap.set('version', literal('12.1.0-next.4+30.sha-69e5782'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19071,7 +19071,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.4+24.sha-bd1836b'));
+        definitionMap.set('version', literal('12.1.0-next.4+30.sha-69e5782'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19103,7 +19103,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.4+24.sha-bd1836b');
+    const VERSION$2 = new Version('12.1.0-next.4+30.sha-69e5782');
 
     /**
      * @license
@@ -25460,19 +25460,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     class DtsTransformRegistry {
         constructor() {
             this.ivyDeclarationTransforms = new Map();
-            this.returnTypeTransforms = new Map();
         }
         getIvyDeclarationTransform(sf) {
             if (!this.ivyDeclarationTransforms.has(sf)) {
                 this.ivyDeclarationTransforms.set(sf, new IvyDeclarationDtsTransform());
             }
             return this.ivyDeclarationTransforms.get(sf);
-        }
-        getReturnTypeTransform(sf) {
-            if (!this.returnTypeTransforms.has(sf)) {
-                this.returnTypeTransforms.set(sf, new ReturnTypeTransform());
-            }
-            return this.returnTypeTransforms.get(sf);
         }
         /**
          * Gets the dts transforms to be applied for the given source file, or `null` if no transform is
@@ -25491,10 +25484,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (this.ivyDeclarationTransforms.has(originalSf)) {
                 transforms = [];
                 transforms.push(this.ivyDeclarationTransforms.get(originalSf));
-            }
-            if (this.returnTypeTransforms.has(originalSf)) {
-                transforms = transforms || [];
-                transforms.push(this.returnTypeTransforms.get(originalSf));
             }
             return transforms;
         }
@@ -25634,44 +25623,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function markForEmitAsSingleLine(node) {
         ts$1.setEmitFlags(node, ts$1.EmitFlags.SingleLine);
         ts$1.forEachChild(node, markForEmitAsSingleLine);
-    }
-    class ReturnTypeTransform {
-        constructor() {
-            this.typeReplacements = new Map();
-        }
-        addTypeReplacement(declaration, type) {
-            this.typeReplacements.set(declaration, type);
-        }
-        transformClassElement(element, imports) {
-            if (ts$1.isMethodDeclaration(element)) {
-                const original = ts$1.getOriginalNode(element, ts$1.isMethodDeclaration);
-                if (!this.typeReplacements.has(original)) {
-                    return element;
-                }
-                const returnType = this.typeReplacements.get(original);
-                const tsReturnType = translateType(returnType, imports);
-                return ts$1.updateMethod(element, element.decorators, element.modifiers, element.asteriskToken, element.name, element.questionToken, element.typeParameters, element.parameters, tsReturnType, element.body);
-            }
-            return element;
-        }
-        transformFunctionDeclaration(element, imports) {
-            const original = ts$1.getOriginalNode(element);
-            if (!this.typeReplacements.has(original)) {
-                return element;
-            }
-            const returnType = this.typeReplacements.get(original);
-            const tsReturnType = translateType(returnType, imports);
-            return ts$1.updateFunctionDeclaration(
-            /* node */ element, 
-            /* decorators */ element.decorators, 
-            /* modifiers */ element.modifiers, 
-            /* asteriskToken */ element.asteriskToken, 
-            /* name */ element.name, 
-            /* typeParameters */ element.typeParameters, 
-            /* parameters */ element.parameters, 
-            /* type */ tsReturnType, 
-            /* body */ element.body);
-        }
     }
 
     /**
@@ -30737,145 +30688,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         });
         return analysis;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class ModuleWithProvidersScanner {
-        constructor(host, evaluator, emitter) {
-            this.host = host;
-            this.evaluator = evaluator;
-            this.emitter = emitter;
-        }
-        scan(sf, dts) {
-            for (const stmt of sf.statements) {
-                this.visitStatement(dts, stmt);
-            }
-        }
-        visitStatement(dts, stmt) {
-            // Detect whether a statement is exported, which is used as one of the hints whether to look
-            // more closely at possible MWP functions within. This is a syntactic check, not a semantic
-            // check, so it won't detect cases like:
-            //
-            // var X = ...;
-            // export {X}
-            //
-            // This is intentional, because the alternative is slow and this will catch 99% of the cases we
-            // need to handle.
-            const isExported = stmt.modifiers !== undefined &&
-                stmt.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.ExportKeyword);
-            if (!isExported) {
-                return;
-            }
-            if (ts$1.isClassDeclaration(stmt)) {
-                for (const member of stmt.members) {
-                    if (!ts$1.isMethodDeclaration(member) || !isStatic(member)) {
-                        continue;
-                    }
-                    this.visitFunctionOrMethodDeclaration(dts, member);
-                }
-            }
-            else if (ts$1.isFunctionDeclaration(stmt)) {
-                this.visitFunctionOrMethodDeclaration(dts, stmt);
-            }
-        }
-        visitFunctionOrMethodDeclaration(dts, decl) {
-            // First, some sanity. This should have a method body with a single return statement.
-            if (decl.body === undefined || decl.body.statements.length !== 1) {
-                return;
-            }
-            const retStmt = decl.body.statements[0];
-            if (!ts$1.isReturnStatement(retStmt) || retStmt.expression === undefined) {
-                return;
-            }
-            const retValue = retStmt.expression;
-            // Now, look at the return type of the method. Maybe bail if the type is already marked, or if
-            // it's incompatible with a MWP function.
-            const returnType = this.returnTypeOf(decl);
-            if (returnType === ReturnType.OTHER || returnType === ReturnType.MWP_WITH_TYPE) {
-                // Don't process this declaration, it either already declares the right return type, or an
-                // incompatible one.
-                return;
-            }
-            const value = this.evaluator.evaluate(retValue);
-            if (!(value instanceof Map) || !value.has('ngModule')) {
-                // The return value does not provide sufficient information to be able to add a generic type.
-                return;
-            }
-            if (returnType === ReturnType.INFERRED && !isModuleWithProvidersType(value)) {
-                // The return type is inferred but the returned object is not of the correct shape, so we
-                // shouldn's modify the return type to become `ModuleWithProviders`.
-                return;
-            }
-            // The return type has been verified to represent the `ModuleWithProviders` type, but either the
-            // return type is inferred or the generic type argument is missing. In both cases, a new return
-            // type is created where the `ngModule` type is included as generic type argument.
-            const ngModule = value.get('ngModule');
-            if (!(ngModule instanceof Reference$1) || !ts$1.isClassDeclaration(ngModule.node)) {
-                return;
-            }
-            const ngModuleExpr = this.emitter.emit(ngModule, decl.getSourceFile(), ImportFlags.ForceNewImport);
-            const ngModuleType = new ExpressionType(ngModuleExpr.expression);
-            const mwpNgType = new ExpressionType(new ExternalExpr(Identifiers.ModuleWithProviders), [ /* modifiers */], [ngModuleType]);
-            dts.addTypeReplacement(decl, mwpNgType);
-        }
-        returnTypeOf(decl) {
-            if (decl.type === undefined) {
-                return ReturnType.INFERRED;
-            }
-            else if (!ts$1.isTypeReferenceNode(decl.type)) {
-                return ReturnType.OTHER;
-            }
-            // Try to figure out if the type is of a familiar form, something that looks like it was
-            // imported.
-            let typeId;
-            if (ts$1.isIdentifier(decl.type.typeName)) {
-                // def: ModuleWithProviders
-                typeId = decl.type.typeName;
-            }
-            else if (ts$1.isQualifiedName(decl.type.typeName) && ts$1.isIdentifier(decl.type.typeName.left)) {
-                // def: i0.ModuleWithProviders
-                typeId = decl.type.typeName.right;
-            }
-            else {
-                return ReturnType.OTHER;
-            }
-            const importDecl = this.host.getImportOfIdentifier(typeId);
-            if (importDecl === null || importDecl.from !== '@angular/core' ||
-                importDecl.name !== 'ModuleWithProviders') {
-                return ReturnType.OTHER;
-            }
-            if (decl.type.typeArguments === undefined || decl.type.typeArguments.length === 0) {
-                // The return type is indeed ModuleWithProviders, but no generic type parameter was found.
-                return ReturnType.MWP_NO_TYPE;
-            }
-            else {
-                // The return type is ModuleWithProviders, and the user has already specified a generic type.
-                return ReturnType.MWP_WITH_TYPE;
-            }
-        }
-    }
-    var ReturnType;
-    (function (ReturnType) {
-        ReturnType[ReturnType["INFERRED"] = 0] = "INFERRED";
-        ReturnType[ReturnType["MWP_NO_TYPE"] = 1] = "MWP_NO_TYPE";
-        ReturnType[ReturnType["MWP_WITH_TYPE"] = 2] = "MWP_WITH_TYPE";
-        ReturnType[ReturnType["OTHER"] = 3] = "OTHER";
-    })(ReturnType || (ReturnType = {}));
-    /** Whether the resolved value map represents a ModuleWithProviders object */
-    function isModuleWithProvidersType(value) {
-        const ngModule = value.has('ngModule');
-        const providers = value.has('providers');
-        return ngModule && (value.size === 1 || (providers && value.size === 2));
-    }
-    function isStatic(node) {
-        return node.modifiers !== undefined &&
-            node.modifiers.some(mod => mod.kind === ts$1.SyntaxKind.StaticKeyword);
     }
 
     /**
@@ -38196,7 +38008,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                             continue;
                         }
                         let analysisPromise = this.compilation.traitCompiler.analyzeAsync(sf);
-                        this.scanForMwp(sf);
                         if (analysisPromise !== undefined) {
                             promises.push(analysisPromise);
                         }
@@ -38300,7 +38111,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                         continue;
                     }
                     this.compilation.traitCompiler.analyzeSync(sf);
-                    this.scanForMwp(sf);
                 }
                 this.perfRecorder.memory(PerfCheckpoint.Analysis);
                 this.resolveCompilation(this.compilation.traitCompiler);
@@ -38471,15 +38281,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return this.nonTemplateDiagnostics;
         }
-        scanForMwp(sf) {
-            this.compilation.mwpScanner.scan(sf, {
-                addTypeReplacement: (node, type) => {
-                    // Only obtain the return type transform for the source file once there's a type to replace,
-                    // so that no transform is allocated when there's nothing to do.
-                    this.compilation.dtsTransforms.getReturnTypeTransform(sf).addTypeReplacement(node, type);
-                }
-            });
-        }
         makeCompilation() {
             const checker = this.inputProgram.getTypeChecker();
             const reflector = new TypeScriptReflectionHost(checker);
@@ -38562,7 +38363,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const routeAnalyzer = new NgModuleRouteAnalyzer(this.moduleResolver, evaluator);
             const dtsTransforms = new DtsTransformRegistry();
-            const mwpScanner = new ModuleWithProvidersScanner(reflector, evaluator, refEmitter);
             const isCore = isAngularCorePackage(this.inputProgram);
             const resourceRegistry = new ResourceRegistry();
             const compilationMode = this.options.compilationMode === 'partial' ? CompilationMode.PARTIAL : CompilationMode.FULL;
@@ -38602,7 +38402,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 dtsTransforms,
                 exportReferenceGraph,
                 routeAnalyzer,
-                mwpScanner,
                 metaReader,
                 typeCheckScopeRegistry,
                 aliasingHost,
