@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.4+33.sha-47270d9
+ * @license Angular v12.1.0-next.4+34.sha-ba08485
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6530,19 +6530,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     class KeyedRead extends AST {
-        constructor(span, sourceSpan, obj, key) {
+        constructor(span, sourceSpan, receiver, key) {
             super(span, sourceSpan);
-            this.obj = obj;
+            this.receiver = receiver;
             this.key = key;
         }
         visit(visitor, context = null) {
             return visitor.visitKeyedRead(this, context);
         }
     }
-    class KeyedWrite extends AST {
-        constructor(span, sourceSpan, obj, key, value) {
+    class SafeKeyedRead extends AST {
+        constructor(span, sourceSpan, receiver, key) {
             super(span, sourceSpan);
-            this.obj = obj;
+            this.receiver = receiver;
+            this.key = key;
+        }
+        visit(visitor, context = null) {
+            return visitor.visitSafeKeyedRead(this, context);
+        }
+    }
+    class KeyedWrite extends AST {
+        constructor(span, sourceSpan, receiver, key, value) {
+            super(span, sourceSpan);
+            this.receiver = receiver;
             this.key = key;
             this.value = value;
         }
@@ -6791,11 +6801,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.visitAll(ast.expressions, context);
         }
         visitKeyedRead(ast, context) {
-            this.visit(ast.obj, context);
+            this.visit(ast.receiver, context);
             this.visit(ast.key, context);
         }
         visitKeyedWrite(ast, context) {
-            this.visit(ast.obj, context);
+            this.visit(ast.receiver, context);
             this.visit(ast.key, context);
             this.visit(ast.value, context);
         }
@@ -6829,6 +6839,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitSafeMethodCall(ast, context) {
             this.visit(ast.receiver, context);
             this.visitAll(ast.args, context);
+        }
+        visitSafeKeyedRead(ast, context) {
+            this.visit(ast.receiver, context);
+            this.visit(ast.key, context);
         }
         visitQuote(ast, context) { }
         // This is not part of the AstVisitor interface, just a helper method
@@ -6901,10 +6915,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return new BindingPipe(ast.span, ast.sourceSpan, ast.exp.visit(this), ast.name, this.visitAll(ast.args), ast.nameSpan);
         }
         visitKeyedRead(ast, context) {
-            return new KeyedRead(ast.span, ast.sourceSpan, ast.obj.visit(this), ast.key.visit(this));
+            return new KeyedRead(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.key.visit(this));
         }
         visitKeyedWrite(ast, context) {
-            return new KeyedWrite(ast.span, ast.sourceSpan, ast.obj.visit(this), ast.key.visit(this), ast.value.visit(this));
+            return new KeyedWrite(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.key.visit(this), ast.value.visit(this));
         }
         visitAll(asts) {
             const res = [];
@@ -6918,6 +6932,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitQuote(ast, context) {
             return new Quote(ast.span, ast.sourceSpan, ast.prefix, ast.uninterpretedExpression, ast.location);
+        }
+        visitSafeKeyedRead(ast, context) {
+            return new SafeKeyedRead(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.key.visit(this));
         }
     }
     // A transformer that only creates new nodes if the transformer makes a change or
@@ -7052,18 +7069,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return ast;
         }
         visitKeyedRead(ast, context) {
-            const obj = ast.obj.visit(this);
+            const obj = ast.receiver.visit(this);
             const key = ast.key.visit(this);
-            if (obj !== ast.obj || key !== ast.key) {
+            if (obj !== ast.receiver || key !== ast.key) {
                 return new KeyedRead(ast.span, ast.sourceSpan, obj, key);
             }
             return ast;
         }
         visitKeyedWrite(ast, context) {
-            const obj = ast.obj.visit(this);
+            const obj = ast.receiver.visit(this);
             const key = ast.key.visit(this);
             const value = ast.value.visit(this);
-            if (obj !== ast.obj || key !== ast.key || value !== ast.value) {
+            if (obj !== ast.receiver || key !== ast.key || value !== ast.value) {
                 return new KeyedWrite(ast.span, ast.sourceSpan, obj, key, value);
             }
             return ast;
@@ -7087,6 +7104,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return ast;
         }
         visitQuote(ast, context) {
+            return ast;
+        }
+        visitSafeKeyedRead(ast, context) {
+            const obj = ast.receiver.visit(this);
+            const key = ast.key.visit(this);
+            if (obj !== ast.receiver || key !== ast.key) {
+                return new SafeKeyedRead(ast.span, ast.sourceSpan, obj, key);
+            }
             return ast;
         }
     }
@@ -7647,11 +7672,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return this.convertSafeAccess(ast, leftMostSafe, mode);
             }
             else {
-                return convertToStatementIfNeeded(mode, this._visit(ast.obj, _Mode.Expression).key(this._visit(ast.key, _Mode.Expression)));
+                return convertToStatementIfNeeded(mode, this._visit(ast.receiver, _Mode.Expression).key(this._visit(ast.key, _Mode.Expression)));
             }
         }
         visitKeyedWrite(ast, mode) {
-            const obj = this._visit(ast.obj, _Mode.Expression);
+            const obj = this._visit(ast.receiver, _Mode.Expression);
             const key = this._visit(ast.key, _Mode.Expression);
             const value = this._visit(ast.value, _Mode.Expression);
             return convertToStatementIfNeeded(mode, obj.key(key).set(value));
@@ -7779,6 +7804,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitSafeMethodCall(ast, mode) {
             return this.convertSafeAccess(ast, this.leftMostSafeNode(ast), mode);
         }
+        visitSafeKeyedRead(ast, mode) {
+            return this.convertSafeAccess(ast, this.leftMostSafeNode(ast), mode);
+        }
         visitAll(asts, mode) {
             return asts.map(ast => this._visit(ast, mode));
         }
@@ -7844,6 +7872,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // leftMostNode with its unguarded version in the call to `this.visit()`.
             if (leftMostSafe instanceof SafeMethodCall) {
                 this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args, leftMostSafe.argumentSpan));
+            }
+            else if (leftMostSafe instanceof SafeKeyedRead) {
+                this._nodeMap.set(leftMostSafe, new KeyedRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.receiver, leftMostSafe.key));
             }
             else {
                 this._nodeMap.set(leftMostSafe, new PropertyRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name));
@@ -7911,7 +7942,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     return null;
                 },
                 visitKeyedRead(ast) {
-                    return visit(this, ast.obj);
+                    return visit(this, ast.receiver);
                 },
                 visitKeyedWrite(ast) {
                     return null;
@@ -7950,6 +7981,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     return visit(this, ast.receiver) || ast;
                 },
                 visitSafePropertyRead(ast) {
+                    return visit(this, ast.receiver) || ast;
+                },
+                visitSafeKeyedRead(ast) {
                     return visit(this, ast.receiver) || ast;
                 }
             });
@@ -8029,6 +8063,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     return true;
                 },
                 visitSafePropertyRead(ast) {
+                    return false;
+                },
+                visitSafeKeyedRead(ast) {
                     return false;
                 }
             });
@@ -12658,25 +12695,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     result = this.parseAccessMemberOrMethodCall(result, start, false);
                 }
                 else if (this.consumeOptionalOperator('?.')) {
-                    result = this.parseAccessMemberOrMethodCall(result, start, true);
+                    result = this.consumeOptionalCharacter($LBRACKET) ?
+                        this.parseKeyedReadOrWrite(result, start, true) :
+                        this.parseAccessMemberOrMethodCall(result, start, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
-                    this.withContext(ParseContextFlags.Writable, () => {
-                        this.rbracketsExpected++;
-                        const key = this.parsePipe();
-                        if (key instanceof EmptyExpr) {
-                            this.error(`Key access cannot be empty`);
-                        }
-                        this.rbracketsExpected--;
-                        this.expectCharacter($RBRACKET);
-                        if (this.consumeOptionalOperator('=')) {
-                            const value = this.parseConditional();
-                            result = new KeyedWrite(this.span(start), this.sourceSpan(start), result, key, value);
-                        }
-                        else {
-                            result = new KeyedRead(this.span(start), this.sourceSpan(start), result, key);
-                        }
-                    });
+                    result = this.parseKeyedReadOrWrite(result, start, false);
                 }
                 else if (this.consumeOptionalCharacter($LPAREN)) {
                     this.rparensExpected++;
@@ -12789,7 +12813,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
         }
-        parseAccessMemberOrMethodCall(receiver, start, isSafe = false) {
+        parseAccessMemberOrMethodCall(receiver, start, isSafe) {
             const nameStart = this.inputIndex;
             const id = this.withContext(ParseContextFlags.Writable, () => {
                 var _a;
@@ -12923,6 +12947,31 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this.consumeStatementTerminator();
             }
             return new TemplateBindingParseResult(bindings, [] /* warnings */, this.errors);
+        }
+        parseKeyedReadOrWrite(receiver, start, isSafe) {
+            return this.withContext(ParseContextFlags.Writable, () => {
+                this.rbracketsExpected++;
+                const key = this.parsePipe();
+                if (key instanceof EmptyExpr) {
+                    this.error(`Key access cannot be empty`);
+                }
+                this.rbracketsExpected--;
+                this.expectCharacter($RBRACKET);
+                if (this.consumeOptionalOperator('=')) {
+                    if (isSafe) {
+                        this.error('The \'?.\' operator cannot be used in the assignment');
+                    }
+                    else {
+                        const value = this.parseConditional();
+                        return new KeyedWrite(this.span(start), this.sourceSpan(start), receiver, key, value);
+                    }
+                }
+                else {
+                    return isSafe ? new SafeKeyedRead(this.span(start), this.sourceSpan(start), receiver, key) :
+                        new KeyedRead(this.span(start), this.sourceSpan(start), receiver, key);
+                }
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            });
         }
         /**
          * Parse a directive keyword, followed by a mandatory expression.
@@ -13131,6 +13180,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitChain(ast, context) { }
         visitQuote(ast, context) { }
+        visitSafeKeyedRead(ast, context) { }
     }
     /**
      * This class implements SimpleExpressionChecker used in View Engine and performs more strict checks
@@ -17959,7 +18009,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.4+33.sha-47270d9');
+    const VERSION$1 = new Version('12.1.0-next.4+34.sha-ba08485');
 
     /**
      * @license
@@ -18598,7 +18648,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.4+33.sha-47270d9'));
+        definitionMap.set('version', literal('12.1.0-next.4+34.sha-ba08485'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18638,7 +18688,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.4+33.sha-47270d9'));
+        definitionMap.set('version', literal('12.1.0-next.4+34.sha-ba08485'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18855,7 +18905,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.4+33.sha-47270d9'));
+        definitionMap.set('version', literal('12.1.0-next.4+34.sha-ba08485'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18897,7 +18947,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.4+33.sha-47270d9'));
+        definitionMap.set('version', literal('12.1.0-next.4+34.sha-ba08485'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18976,7 +19026,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.4+33.sha-47270d9'));
+        definitionMap.set('version', literal('12.1.0-next.4+34.sha-ba08485'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19013,7 +19063,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.4+33.sha-47270d9'));
+        definitionMap.set('version', literal('12.1.0-next.4+34.sha-ba08485'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19071,7 +19121,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.4+33.sha-47270d9'));
+        definitionMap.set('version', literal('12.1.0-next.4+34.sha-ba08485'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19103,7 +19153,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.4+33.sha-47270d9');
+    const VERSION$2 = new Version('12.1.0-next.4+34.sha-ba08485');
 
     /**
      * @license
@@ -34045,14 +34095,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             return ast.expressions.reduce((lhs, ast) => ts$1.createBinary(lhs, ts$1.SyntaxKind.PlusToken, wrapForTypeChecker(this.translate(ast))), ts$1.createLiteral(''));
         }
         visitKeyedRead(ast) {
-            const receiver = wrapForDiagnostics(this.translate(ast.obj));
+            const receiver = wrapForDiagnostics(this.translate(ast.receiver));
             const key = this.translate(ast.key);
             const node = ts$1.createElementAccess(receiver, key);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitKeyedWrite(ast) {
-            const receiver = wrapForDiagnostics(this.translate(ast.obj));
+            const receiver = wrapForDiagnostics(this.translate(ast.receiver));
             const left = ts$1.createElementAccess(receiver, this.translate(ast.key));
             // TODO(joost): annotate `left` with the span of the element access, which is not currently
             //  available on `ast`.
@@ -34211,6 +34261,30 @@ Either add the @Injectable() decorator to '${provider.node.name
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
+        visitSafeKeyedRead(ast) {
+            const receiver = wrapForDiagnostics(this.translate(ast.receiver));
+            const key = this.translate(ast.key);
+            let node;
+            // The form of safe property reads depends on whether strictness is in use.
+            if (this.config.strictSafeNavigationTypes) {
+                // "a?.[...]" becomes (null as any ? a![...] : undefined)
+                const expr = ts$1.createElementAccess(ts$1.createNonNullExpression(receiver), key);
+                addParseSpanInfo(expr, ast.sourceSpan);
+                node = ts$1.createParen(ts$1.createConditional(NULL_AS_ANY, expr, UNDEFINED));
+            }
+            else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
+                // "a?.[...]" becomes (a as any)[...]
+                node = ts$1.createElementAccess(tsCastToAny(receiver), key);
+            }
+            else {
+                // "a?.[...]" becomes (a!.[...] as any)
+                const expr = ts$1.createElementAccess(ts$1.createNonNullExpression(receiver), key);
+                addParseSpanInfo(expr, ast.sourceSpan);
+                node = tsCastToAny(expr);
+            }
+            addParseSpanInfo(node, ast.sourceSpan);
+            return node;
+        }
     }
     /**
      * Checks whether View Engine will infer a type of 'any' for the left-hand side of a safe navigation
@@ -34227,7 +34301,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     class VeSafeLhsInferenceBugDetector {
         static veWillInferAnyFor(ast) {
-            return ast.receiver.visit(VeSafeLhsInferenceBugDetector.SINGLETON);
+            const visitor = VeSafeLhsInferenceBugDetector.SINGLETON;
+            return ast instanceof SafeKeyedRead ? ast.receiver.visit(visitor) : ast.receiver.visit(visitor);
         }
         visitUnary(ast) {
             return ast.expr.visit(this);
@@ -34293,6 +34368,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             return true;
         }
         visitSafePropertyRead(ast) {
+            return false;
+        }
+        visitSafeKeyedRead(ast) {
             return false;
         }
     }
