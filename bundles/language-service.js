@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.4+41.sha-6929625
+ * @license Angular v12.1.0-next.4+43.sha-71e14a7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -4700,8 +4700,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // There is a base factory variable so wrap its declaration along with the factory function into
             // an IIFE.
             factoryFn = fn([], [
-                new DeclareVarStmt(baseFactoryVar.name),
-                new ReturnStatement(factoryFn)
+                new DeclareVarStmt(baseFactoryVar.name), new ReturnStatement(factoryFn)
             ]).callFn([], /* sourceSpan */ undefined, /* pure */ true);
         }
         return {
@@ -19550,7 +19549,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.4+41.sha-6929625');
+    const VERSION$1 = new Version('12.1.0-next.4+43.sha-71e14a7');
 
     /**
      * @license
@@ -25106,6 +25105,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         function allParameterTypesMatch(signature) {
             const tc = context.checker;
             return signature.getParameters().every((parameter, i) => {
+                if (parameter.valueDeclaration === undefined) {
+                    return false;
+                }
                 const type = tc.getTypeOfSymbolAtLocation(parameter, parameter.valueDeclaration);
                 return type === passedInTypes[i];
             });
@@ -47567,7 +47569,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.0-next.4+41.sha-6929625');
+    const VERSION$2 = new Version$1('12.1.0-next.4+43.sha-71e14a7');
 
     /**
      * @license
