@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.4+41.sha-6929625
+ * @license Angular v12.1.0-next.4+43.sha-71e14a7
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5092,8 +5092,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // There is a base factory variable so wrap its declaration along with the factory function into
             // an IIFE.
             factoryFn = fn([], [
-                new DeclareVarStmt(baseFactoryVar.name),
-                new ReturnStatement(factoryFn)
+                new DeclareVarStmt(baseFactoryVar.name), new ReturnStatement(factoryFn)
             ]).callFn([], /* sourceSpan */ undefined, /* pure */ true);
         }
         return {
@@ -18009,7 +18008,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.4+41.sha-6929625');
+    const VERSION$1 = new Version('12.1.0-next.4+43.sha-71e14a7');
 
     /**
      * @license
@@ -18648,7 +18647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.4+41.sha-6929625'));
+        definitionMap.set('version', literal('12.1.0-next.4+43.sha-71e14a7'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18688,7 +18687,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.4+41.sha-6929625'));
+        definitionMap.set('version', literal('12.1.0-next.4+43.sha-71e14a7'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18905,7 +18904,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.4+41.sha-6929625'));
+        definitionMap.set('version', literal('12.1.0-next.4+43.sha-71e14a7'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18947,7 +18946,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.4+41.sha-6929625'));
+        definitionMap.set('version', literal('12.1.0-next.4+43.sha-71e14a7'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19026,7 +19025,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.4+41.sha-6929625'));
+        definitionMap.set('version', literal('12.1.0-next.4+43.sha-71e14a7'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19063,7 +19062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.4+41.sha-6929625'));
+        definitionMap.set('version', literal('12.1.0-next.4+43.sha-71e14a7'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19121,7 +19120,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.4+41.sha-6929625'));
+        definitionMap.set('version', literal('12.1.0-next.4+43.sha-71e14a7'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19153,7 +19152,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.4+41.sha-6929625');
+    const VERSION$2 = new Version('12.1.0-next.4+43.sha-71e14a7');
 
     /**
      * @license
@@ -19456,6 +19455,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     const D_TS = /\.d\.ts$/i;
+    function isSymbolWithValueDeclaration(symbol) {
+        // If there is a value declaration set, then the `declarations` property is never undefined. We
+        // still check for the property to exist as this matches with the type that `symbol` is narrowed
+        // to.
+        return symbol != null && symbol.valueDeclaration !== undefined &&
+            symbol.declarations !== undefined;
+    }
     function isDtsPath(filePath) {
         return D_TS.test(filePath);
     }
@@ -21322,7 +21328,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return null;
             }
             const namespaceSymbol = this.checker.getSymbolAtLocation(namespaceIdentifier);
-            if (!namespaceSymbol) {
+            if (!namespaceSymbol || namespaceSymbol.declarations === undefined) {
                 return null;
             }
             const declaration = namespaceSymbol.declarations.length === 1 ? namespaceSymbol.declarations[0] : null;
@@ -31387,6 +31393,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (alias === null) {
                 return dirOrPipe;
             }
+            // TypeScript incorrectly narrows the type here:
+            // https://github.com/microsoft/TypeScript/issues/43966.
+            // TODO: Remove/Update once https://github.com/microsoft/TypeScript/issues/43966 is resolved.
             return Object.assign(Object.assign({}, dirOrPipe), { ref: ref.cloneWithAlias(alias) });
         }
     }
@@ -36785,8 +36794,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 .map(node => {
                 var _a;
                 const symbol = this.getSymbolOfTsNode(node.parent);
-                if (symbol === null || symbol.tsSymbol === null ||
-                    symbol.tsSymbol.valueDeclaration === undefined ||
+                if (symbol === null || !isSymbolWithValueDeclaration(symbol.tsSymbol) ||
                     !ts$1.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                     return null;
                 }
@@ -36942,7 +36950,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             // In either case, `_t1["index"]` or `_t1.index`, `node.expression` is _t1.
             // The retrieved symbol for _t1 will be the variable declaration.
             const tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.expression);
-            if (tsSymbol === undefined || tsSymbol.declarations.length === 0 || selector === null) {
+            if ((tsSymbol === null || tsSymbol === void 0 ? void 0 : tsSymbol.declarations) === undefined || tsSymbol.declarations.length === 0 ||
+                selector === null) {
                 return null;
             }
             const [declaration] = tsSymbol.declarations;
@@ -36954,8 +36963,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             const symbol = this.getSymbolOfTsNode(declaration);
-            if (symbol === null || symbol.tsSymbol === null ||
-                symbol.tsSymbol.valueDeclaration === undefined ||
+            if (symbol === null || !isSymbolWithValueDeclaration(symbol.tsSymbol) ||
                 !ts$1.isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                 return null;
             }
@@ -37055,7 +37063,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             const pipeInstance = this.getSymbolOfTsNode(pipeDeclaration.valueDeclaration);
-            if (pipeInstance === null || pipeInstance.tsSymbol === null) {
+            // The instance should never be null, nor should the symbol lack a value declaration. This
+            // is because the node used to look for the `pipeInstance` symbol info is a value
+            // declaration of another symbol (i.e. the `pipeDeclaration` symbol).
+            if (pipeInstance === null || !isSymbolWithValueDeclaration(pipeInstance.tsSymbol)) {
                 return null;
             }
             const symbolInfo = this.getSymbolOfTsNode(methodAccess);
@@ -37590,7 +37601,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     continue;
                 }
                 const tsSymbol = typeChecker.getSymbolAtLocation(dir.ref.node.name);
-                if (tsSymbol === undefined) {
+                if (!isSymbolWithValueDeclaration(tsSymbol)) {
                     continue;
                 }
                 let ngModule = null;
@@ -38967,7 +38978,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const members = [];
         const apparentProps = typeChecker.getTypeAtLocation(clazz).getApparentProperties();
         for (const prop of apparentProps) {
-            if (ts$1.isMethodDeclaration(prop.valueDeclaration) && prop.valueDeclaration) {
+            if (prop.valueDeclaration && ts$1.isMethodDeclaration(prop.valueDeclaration)) {
                 members.push(prop.valueDeclaration);
             }
         }
@@ -40244,9 +40255,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         /**
          * Analogue for `ts.LanguageService.getCompletionEntryDetails`.
          */
-        getCompletionEntryDetails(entryName, formatOptions, preferences) {
+        getCompletionEntryDetails(entryName, formatOptions, preferences, data) {
             if (this.isPropertyExpressionCompletion()) {
-                return this.getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
+                return this.getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences, data);
             }
             else if (this.isElementTagCompletion()) {
                 return this.getElementTagCompletionDetails(entryName);
@@ -40314,12 +40325,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         /**
          * Get the details of a specific completion for a property expression.
          */
-        getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
+        getPropertyExpressionCompletionDetails(entryName, formatOptions, preferences, data) {
             let details = undefined;
             if (this.node instanceof EmptyExpr || this.node instanceof BoundEvent ||
                 this.node.receiver instanceof ImplicitReceiver) {
-                details =
-                    this.getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences);
+                details = this.getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences, data);
             }
             else {
                 const location = this.compiler.getTemplateTypeChecker().getExpressionCompletionLocation(this.node, this.component);
@@ -40327,7 +40337,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     return undefined;
                 }
                 details = this.tsLS.getCompletionEntryDetails(location.shimPath, location.positionInShimFile, entryName, formatOptions, 
-                /* source */ undefined, preferences);
+                /* source */ undefined, preferences, data);
             }
             if (details !== undefined) {
                 details.displayParts = filterAliasImports(details.displayParts);
@@ -40413,7 +40423,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * Get the details of a specific completion for a property expression in a global context (e.g.
          * `{{y|}}`).
          */
-        getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences) {
+        getGlobalPropertyExpressionCompletionDetails(entryName, formatOptions, preferences, data) {
             const completions = this.templateTypeChecker.getGlobalCompletions(this.template, this.component, this.node);
             if (completions === null) {
                 return undefined;
@@ -40438,7 +40448,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
             else {
                 return this.tsLS.getCompletionEntryDetails(componentContext.shimPath, componentContext.positionInShimFile, entryName, formatOptions, 
-                /* source */ undefined, preferences);
+                /* source */ undefined, preferences, data);
             }
         }
         /**
@@ -42091,7 +42101,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
             return builder.getCompletionsAtPosition(options);
         }
-        getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences) {
+        getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences, data) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsCompletions, (compiler) => {
                 if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
@@ -42100,7 +42110,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (builder === null) {
                     return undefined;
                 }
-                return builder.getCompletionEntryDetails(entryName, formatOptions, preferences);
+                return builder.getCompletionEntryDetails(entryName, formatOptions, preferences, data);
             });
         }
         getSignatureHelpItems(fileName, position, options) {
@@ -42447,14 +42457,14 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return (_a = tsLS.getCompletionsAtPosition(fileName, position, options)) !== null && _a !== void 0 ? _a : ngLS.getCompletionsAtPosition(fileName, position, options);
             }
         }
-        function getCompletionEntryDetails(fileName, position, entryName, formatOptions, source, preferences) {
+        function getCompletionEntryDetails(fileName, position, entryName, formatOptions, source, preferences, data) {
             var _a;
             if (angularOnly) {
-                return ngLS.getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences);
+                return ngLS.getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences, data);
             }
             else {
                 // If TS could answer the query, then return that result. Otherwise, return from Angular LS.
-                return (_a = tsLS.getCompletionEntryDetails(fileName, position, entryName, formatOptions, source, preferences)) !== null && _a !== void 0 ? _a : ngLS.getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences);
+                return (_a = tsLS.getCompletionEntryDetails(fileName, position, entryName, formatOptions, source, preferences, data)) !== null && _a !== void 0 ? _a : ngLS.getCompletionEntryDetails(fileName, position, entryName, formatOptions, preferences, data);
             }
         }
         function getCompletionEntrySymbol(fileName, position, name, source) {
