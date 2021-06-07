@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.4+51.sha-cc904b5
+ * @license Angular v12.1.0-next.4+53.sha-f4c55e4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18008,7 +18008,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.4+51.sha-cc904b5');
+    const VERSION$1 = new Version('12.1.0-next.4+53.sha-f4c55e4');
 
     /**
      * @license
@@ -18647,7 +18647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.4+51.sha-cc904b5'));
+        definitionMap.set('version', literal('12.1.0-next.4+53.sha-f4c55e4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18687,7 +18687,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.4+51.sha-cc904b5'));
+        definitionMap.set('version', literal('12.1.0-next.4+53.sha-f4c55e4'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18904,7 +18904,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.4+51.sha-cc904b5'));
+        definitionMap.set('version', literal('12.1.0-next.4+53.sha-f4c55e4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18946,7 +18946,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.4+51.sha-cc904b5'));
+        definitionMap.set('version', literal('12.1.0-next.4+53.sha-f4c55e4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19025,7 +19025,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.4+51.sha-cc904b5'));
+        definitionMap.set('version', literal('12.1.0-next.4+53.sha-f4c55e4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19062,7 +19062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.4+51.sha-cc904b5'));
+        definitionMap.set('version', literal('12.1.0-next.4+53.sha-f4c55e4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19120,7 +19120,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.4+51.sha-cc904b5'));
+        definitionMap.set('version', literal('12.1.0-next.4+53.sha-f4c55e4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19152,7 +19152,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.4+51.sha-cc904b5');
+    const VERSION$2 = new Version('12.1.0-next.4+53.sha-f4c55e4');
 
     /**
      * @license
@@ -19253,6 +19253,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * sheet.
          */
         ErrorCode[ErrorCode["COMPONENT_RESOURCE_NOT_FOUND"] = 2008] = "COMPONENT_RESOURCE_NOT_FOUND";
+        /**
+         * Raised when a component uses `ShadowDom` view encapsulation, but its selector
+         * does not match the shadow DOM tag name requirements.
+         */
+        ErrorCode[ErrorCode["COMPONENT_INVALID_SHADOW_DOM_SELECTOR"] = 2009] = "COMPONENT_INVALID_SHADOW_DOM_SELECTOR";
         ErrorCode[ErrorCode["SYMBOL_NOT_EXPORTED"] = 3001] = "SYMBOL_NOT_EXPORTED";
         ErrorCode[ErrorCode["SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME"] = 3002] = "SYMBOL_EXPORTED_UNDER_DIFFERENT_NAME";
         /**
@@ -19393,6 +19398,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         ErrorCode.SCHEMA_INVALID_ELEMENT,
         ErrorCode.SCHEMA_INVALID_ATTRIBUTE,
         ErrorCode.MISSING_REFERENCE_TARGET,
+        ErrorCode.COMPONENT_INVALID_SHADOW_DOM_SELECTOR,
     ]);
     /**
      * @internal
@@ -28290,7 +28296,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 .then(() => undefined);
         }
         analyze(node, decorator, flags = HandlerFlags.NONE) {
-            var _a;
+            var _a, _b;
             this.perf.eventCount(PerfEvent.AnalyzeComponent);
             const containingFile = node.getSourceFile().fileName;
             this.literalCache.delete(decorator);
@@ -28307,6 +28313,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // Next, read the `@Component`-specific fields.
             const { decorator: component, metadata, inputs, outputs } = directiveResult;
+            const encapsulation = (_a = this._resolveEnumValue(component, 'encapsulation', 'ViewEncapsulation')) !== null && _a !== void 0 ? _a : ViewEncapsulation.Emulated;
+            const changeDetection = this._resolveEnumValue(component, 'changeDetection', 'ChangeDetectionStrategy');
+            let animations = null;
+            if (component.has('animations')) {
+                animations = new WrappedNodeExpr(component.get('animations'));
+            }
             // Go through the root directories for this project, and select the one with the smallest
             // relative path representation.
             const relativeContextFilePath = this.rootDirs.reduce((previous, rootDir) => {
@@ -28371,7 +28383,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         this.depTracker.addResourceDependency(node.getSourceFile(), absoluteFrom(resourceUrl));
                     }
                 }
-                catch (_b) {
+                catch (_c) {
                     if (diagnostics === undefined) {
                         diagnostics = [];
                     }
@@ -28380,6 +28392,15 @@ Either add the @Injectable() decorator to '${provider.node.name
                         1 /* StylesheetFromTemplate */;
                     diagnostics.push(this.makeResourceNotFoundError(styleUrl.url, styleUrl.nodeForError, resourceType)
                         .toDiagnostic());
+                }
+            }
+            if (encapsulation === ViewEncapsulation.ShadowDom && metadata.selector !== null) {
+                const selectorError = checkCustomElementSelectorForErrors(metadata.selector);
+                if (selectorError !== null) {
+                    if (diagnostics === undefined) {
+                        diagnostics = [];
+                    }
+                    diagnostics.push(makeDiagnostic(ErrorCode.COMPONENT_INVALID_SHADOW_DOM_SELECTOR, component.get('selector'), selectorError));
                 }
             }
             // If inline styles were preprocessed use those
@@ -28410,12 +28431,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (template.styles.length > 0) {
                 styles.push(...template.styles);
             }
-            const encapsulation = this._resolveEnumValue(component, 'encapsulation', 'ViewEncapsulation') || 0;
-            const changeDetection = this._resolveEnumValue(component, 'changeDetection', 'ChangeDetectionStrategy');
-            let animations = null;
-            if (component.has('animations')) {
-                animations = new WrappedNodeExpr(component.get('animations'));
-            }
             const output = {
                 analysis: {
                     baseClass: readBaseClass$1(node, this.reflector, this.evaluator),
@@ -28424,7 +28439,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     meta: Object.assign(Object.assign({}, metadata), { template: {
                             nodes: template.nodes,
                             ngContentSelectors: template.ngContentSelectors,
-                        }, encapsulation, interpolation: (_a = template.interpolationConfig) !== null && _a !== void 0 ? _a : DEFAULT_INTERPOLATION_CONFIG, styles,
+                        }, encapsulation, interpolation: (_b = template.interpolationConfig) !== null && _b !== void 0 ? _b : DEFAULT_INTERPOLATION_CONFIG, styles,
                         // These will be replaced during the compilation step, after all `NgModule`s have been
                         // analyzed and the full compilation scope for the component can be realized.
                         animations, viewProviders: wrappedViewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath }),
@@ -29107,6 +29122,28 @@ Either add the @Injectable() decorator to '${provider.node.name
         const path = cycle.getPath().map(sf => sf.fileName).join(' -> ');
         const message = `The ${type} '${name}' is used in the template but importing it would create a cycle: `;
         return makeRelatedInformation(ref.node, message + path);
+    }
+    /**
+     * Checks whether a selector is a valid custom element tag name.
+     * Based loosely on https://github.com/sindresorhus/validate-element-name.
+     */
+    function checkCustomElementSelectorForErrors(selector) {
+        // Avoid flagging components with an attribute or class selector. This isn't bulletproof since it
+        // won't catch cases like `foo[]bar`, but we don't need it to be. This is mainly to avoid flagging
+        // something like `foo-bar[baz]` incorrectly.
+        if (selector.includes('.') || (selector.includes('[') && selector.includes(']'))) {
+            return null;
+        }
+        if (!(/^[a-z]/.test(selector))) {
+            return 'Selector of a ShadowDom-encapsulated component must start with a lower case letter.';
+        }
+        if (/[A-Z]/.test(selector)) {
+            return 'Selector of a ShadowDom-encapsulated component must all be in lower case.';
+        }
+        if (!selector.includes('-')) {
+            return 'Selector of a component that uses ViewEncapsulation.ShadowDom must contain a hyphen.';
+        }
+        return null;
     }
 
     /**

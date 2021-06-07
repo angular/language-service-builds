@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.4+51.sha-cc904b5
+ * @license Angular v12.1.0-next.4+53.sha-f4c55e4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19549,7 +19549,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.4+51.sha-cc904b5');
+    const VERSION$1 = new Version('12.1.0-next.4+53.sha-f4c55e4');
 
     /**
      * @license
@@ -33470,6 +33470,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     };
     /**
      * Defines a schema that allows any property on any element.
+     *
+     * This schema allows you to ignore the errors related to any unknown elements or properties in a
+     * template. The usage of this schema is generally discouraged because it prevents useful validation
+     * and may hide real errors in your template. Consider using the `CUSTOM_ELEMENTS_SCHEMA` instead.
      *
      * @publicApi
      */
@@ -47569,7 +47573,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.0-next.4+51.sha-cc904b5');
+    const VERSION$2 = new Version$1('12.1.0-next.4+53.sha-f4c55e4');
 
     /**
      * @license
