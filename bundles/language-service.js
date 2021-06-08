@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.3+44.sha-cba68e3
+ * @license Angular v12.0.3+50.sha-a77ec5b
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19459,7 +19459,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.3+44.sha-cba68e3');
+    const VERSION$1 = new Version('12.0.3+50.sha-a77ec5b');
 
     /**
      * @license
@@ -35366,6 +35366,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * then use the factory's `create()` method to create a component of that type.
      *
      * @see [Dynamic Components](guide/dynamic-component-loader)
+     * @see [Usage Example](guide/dynamic-component-loader#resolving-components)
+     * @see <live-example name="dynamic-component-loader" noDownload></live-example>
+    of the code in this cookbook
      * @publicApi
      */
     class ComponentFactoryResolver {
@@ -35527,7 +35530,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.3+44.sha-cba68e3');
+    const VERSION$2 = new Version$1('12.0.3+50.sha-a77ec5b');
 
     /**
      * @license
