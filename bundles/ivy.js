@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.4+2.sha-785da0f
+ * @license Angular v12.0.4+4.sha-a75874c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17918,7 +17918,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.4+2.sha-785da0f');
+    const VERSION$1 = new Version('12.0.4+4.sha-a75874c');
 
     /**
      * @license
@@ -18557,7 +18557,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.4+2.sha-785da0f'));
+        definitionMap.set('version', literal('12.0.4+4.sha-a75874c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18597,7 +18597,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.4+2.sha-785da0f'));
+        definitionMap.set('version', literal('12.0.4+4.sha-a75874c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18814,7 +18814,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.4+2.sha-785da0f'));
+        definitionMap.set('version', literal('12.0.4+4.sha-a75874c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18856,7 +18856,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.4+2.sha-785da0f'));
+        definitionMap.set('version', literal('12.0.4+4.sha-a75874c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18935,7 +18935,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.4+2.sha-785da0f'));
+        definitionMap.set('version', literal('12.0.4+4.sha-a75874c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18972,7 +18972,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.4+2.sha-785da0f'));
+        definitionMap.set('version', literal('12.0.4+4.sha-a75874c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19030,7 +19030,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.4+2.sha-785da0f'));
+        definitionMap.set('version', literal('12.0.4+4.sha-a75874c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19062,7 +19062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.4+2.sha-785da0f');
+    const VERSION$2 = new Version('12.0.4+4.sha-a75874c');
 
     /**
      * @license
@@ -24140,6 +24140,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 records.push(this.classes.get(clazz));
             }
             return records;
+        }
+        getAnalyzedRecords() {
+            const result = new Map();
+            for (const [sf, classes] of this.fileToClasses) {
+                const records = [];
+                for (const clazz of classes) {
+                    records.push(this.classes.get(clazz));
+                }
+                result.set(sf, records);
+            }
+            return result;
         }
         /**
          * Import a `ClassRecord` from a previous compilation.
@@ -30156,7 +30167,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 versions: this.versions,
                 depGraph: this.depGraph,
                 semanticDepGraph: newGraph,
-                traitCompiler,
+                priorAnalysis: traitCompiler.getAnalyzedRecords(),
                 typeCheckResults: null,
                 emitted,
             };
@@ -30191,7 +30202,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (this.step.logicallyChangedTsFiles.has(sfPath)) {
                 return null;
             }
-            return this.step.priorState.traitCompiler.recordsFor(sf);
+            const priorAnalysis = this.step.priorState.priorAnalysis;
+            if (!priorAnalysis.has(sf)) {
+                return null;
+            }
+            return priorAnalysis.get(sf);
         }
         priorTypeCheckingResultsFor(sf) {
             if (this.phase.kind !== PhaseKind.TypeCheckAndEmit) {
