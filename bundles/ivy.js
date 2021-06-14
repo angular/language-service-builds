@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.5+30.sha-228beea
+ * @license Angular v12.1.0-next.5+31.sha-4001e9d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18012,7 +18012,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.5+30.sha-228beea');
+    const VERSION$1 = new Version('12.1.0-next.5+31.sha-4001e9d');
 
     /**
      * @license
@@ -18651,7 +18651,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
+        definitionMap.set('version', literal('12.1.0-next.5+31.sha-4001e9d'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18691,7 +18691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
+        definitionMap.set('version', literal('12.1.0-next.5+31.sha-4001e9d'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18908,7 +18908,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
+        definitionMap.set('version', literal('12.1.0-next.5+31.sha-4001e9d'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18950,7 +18950,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
+        definitionMap.set('version', literal('12.1.0-next.5+31.sha-4001e9d'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19029,7 +19029,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
+        definitionMap.set('version', literal('12.1.0-next.5+31.sha-4001e9d'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19066,7 +19066,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
+        definitionMap.set('version', literal('12.1.0-next.5+31.sha-4001e9d'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19124,7 +19124,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
+        definitionMap.set('version', literal('12.1.0-next.5+31.sha-4001e9d'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19156,7 +19156,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.5+30.sha-228beea');
+    const VERSION$2 = new Version('12.1.0-next.5+31.sha-4001e9d');
 
     /**
      * @license
@@ -40895,10 +40895,246 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Converts a `ShimLocation` to a more genericly named `FilePosition`.
+     */
+    function toFilePosition(shimLocation) {
+        return { fileName: shimLocation.shimPath, position: shimLocation.positionInShimFile };
+    }
+    /**
+     * Takes a position in a template and finds equivalent targets in TS files as well as details about
+     * the targeted template node.
+     */
+    function getTargetDetailsAtTemplatePosition({ template, component }, position, templateTypeChecker) {
+        // Find the AST node in the template at the position.
+        const positionDetails = getTargetAtPosition(template, position);
+        if (positionDetails === null) {
+            return null;
+        }
+        const nodes = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
+            positionDetails.context.nodes :
+            [positionDetails.context.node];
+        const details = [];
+        for (const node of nodes) {
+            // Get the information about the TCB at the template position.
+            const symbol = templateTypeChecker.getSymbolOfNode(node, component);
+            if (symbol === null) {
+                continue;
+            }
+            const templateTarget = node;
+            switch (symbol.kind) {
+                case SymbolKind.Directive:
+                case SymbolKind.Template:
+                    // References to elements, templates, and directives will be through template references
+                    // (#ref). They shouldn't be used directly for a Language Service reference request.
+                    break;
+                case SymbolKind.Element: {
+                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
+                    details.push({
+                        typescriptLocations: getPositionsForDirectives(matches),
+                        templateTarget,
+                        symbol,
+                    });
+                    break;
+                }
+                case SymbolKind.DomBinding: {
+                    // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
+                    // have a shim location. This means we can't match dom bindings to their lib.dom
+                    // reference, but we can still see if they match to a directive.
+                    if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
+                        return null;
+                    }
+                    const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
+                    details.push({
+                        typescriptLocations: getPositionsForDirectives(directives),
+                        templateTarget,
+                        symbol,
+                    });
+                    break;
+                }
+                case SymbolKind.Reference: {
+                    details.push({
+                        typescriptLocations: [toFilePosition(symbol.referenceVarLocation)],
+                        templateTarget,
+                        symbol,
+                    });
+                    break;
+                }
+                case SymbolKind.Variable: {
+                    if ((templateTarget instanceof Variable)) {
+                        if (templateTarget.valueSpan !== undefined &&
+                            isWithin(position, templateTarget.valueSpan)) {
+                            // In the valueSpan of the variable, we want to get the reference of the initializer.
+                            details.push({
+                                typescriptLocations: [toFilePosition(symbol.initializerLocation)],
+                                templateTarget,
+                                symbol,
+                            });
+                        }
+                        else if (isWithin(position, templateTarget.keySpan)) {
+                            // In the keySpan of the variable, we want to get the reference of the local variable.
+                            details.push({
+                                typescriptLocations: [toFilePosition(symbol.localVarLocation)],
+                                templateTarget,
+                                symbol,
+                            });
+                        }
+                    }
+                    else {
+                        // If the templateNode is not the `TmplAstVariable`, it must be a usage of the
+                        // variable somewhere in the template.
+                        details.push({
+                            typescriptLocations: [toFilePosition(symbol.localVarLocation)],
+                            templateTarget,
+                            symbol,
+                        });
+                    }
+                    break;
+                }
+                case SymbolKind.Input:
+                case SymbolKind.Output: {
+                    details.push({
+                        typescriptLocations: symbol.bindings.map(binding => toFilePosition(binding.shimLocation)),
+                        templateTarget,
+                        symbol,
+                    });
+                    break;
+                }
+                case SymbolKind.Pipe:
+                case SymbolKind.Expression: {
+                    details.push({
+                        typescriptLocations: [toFilePosition(symbol.shimLocation)],
+                        templateTarget,
+                        symbol,
+                    });
+                    break;
+                }
+            }
+        }
+        return details.length > 0 ? details : null;
+    }
+    /**
+     * Given a set of `DirectiveSymbol`s, finds the equivalent `FilePosition` of the class declaration.
+     */
+    function getPositionsForDirectives(directives) {
+        const allDirectives = [];
+        for (const dir of directives.values()) {
+            const dirClass = dir.tsSymbol.valueDeclaration;
+            if (dirClass === undefined || !ts$1.isClassDeclaration(dirClass) || dirClass.name === undefined) {
+                continue;
+            }
+            const { fileName } = dirClass.getSourceFile();
+            const position = dirClass.name.getStart();
+            allDirectives.push({ fileName, position });
+        }
+        return allDirectives;
+    }
+    /**
+     * Creates a "key" for a rename/reference location by concatenating file name, span start, and span
+     * length. This allows us to de-duplicate template results when an item may appear several times
+     * in the TCB but map back to the same template location.
+     */
+    function createLocationKey(ds) {
+        return ds.fileName + ds.textSpan.start + ds.textSpan.length;
+    }
+    /**
+     * Converts a given `ts.DocumentSpan` in a shim file to its equivalent `ts.DocumentSpan` in the
+     * template.
+     *
+     * You can optionally provide a `requiredNodeText` that ensures the equivalent template node's text
+     * matches. If it does not, this function will return `null`.
+     */
+    function convertToTemplateDocumentSpan(shimDocumentSpan, templateTypeChecker, program, requiredNodeText) {
+        const sf = program.getSourceFile(shimDocumentSpan.fileName);
+        if (sf === undefined) {
+            return null;
+        }
+        const tcbNode = findTightestNode(sf, shimDocumentSpan.textSpan.start);
+        if (tcbNode === undefined ||
+            hasExpressionIdentifier(sf, tcbNode, ExpressionIdentifier.EVENT_PARAMETER)) {
+            // If the reference result is the $event parameter in the subscribe/addEventListener
+            // function in the TCB, we want to filter this result out of the references. We really only
+            // want to return references to the parameter in the template itself.
+            return null;
+        }
+        // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project
+        // serverHost or LSParseConfigHost in the adapter. We should have a better defined way to
+        // normalize paths.
+        const mapping = getTemplateLocationFromShimLocation(templateTypeChecker, absoluteFrom(shimDocumentSpan.fileName), shimDocumentSpan.textSpan.start);
+        if (mapping === null) {
+            return null;
+        }
+        const { span, templateUrl } = mapping;
+        if (requiredNodeText !== undefined && span.toString() !== requiredNodeText) {
+            return null;
+        }
+        return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span), 
+            // Specifically clear other text span values because we do not have enough knowledge to
+            // convert these to spans in the template.
+            contextSpan: undefined, originalContextSpan: undefined, originalTextSpan: undefined });
+    }
+    /**
+     * Finds the text and `ts.TextSpan` for the node at a position in a template.
+     */
+    function getRenameTextAndSpanAtPosition(node, position) {
+        if (node instanceof BoundAttribute || node instanceof TextAttribute ||
+            node instanceof BoundEvent) {
+            if (node.keySpan === undefined) {
+                return null;
+            }
+            return { text: node.name, span: toTextSpan(node.keySpan) };
+        }
+        else if (node instanceof Variable || node instanceof Reference) {
+            if (isWithin(position, node.keySpan)) {
+                return { text: node.keySpan.toString(), span: toTextSpan(node.keySpan) };
+            }
+            else if (node.valueSpan && isWithin(position, node.valueSpan)) {
+                return { text: node.valueSpan.toString(), span: toTextSpan(node.valueSpan) };
+            }
+        }
+        if (node instanceof PropertyRead || node instanceof MethodCall || node instanceof PropertyWrite ||
+            node instanceof SafePropertyRead || node instanceof SafeMethodCall ||
+            node instanceof BindingPipe) {
+            return { text: node.name, span: toTextSpan(node.nameSpan) };
+        }
+        else if (node instanceof LiteralPrimitive) {
+            const span = toTextSpan(node.sourceSpan);
+            const text = node.value;
+            if (typeof text === 'string') {
+                // The span of a string literal includes the quotes but they should be removed for renaming.
+                span.start += 1;
+                span.length -= 2;
+            }
+            return { text, span };
+        }
+        return null;
+    }
+    /**
+     * Retrives the `PipeMeta` or `DirectiveMeta` of the given `ts.Node`'s parent class.
+     *
+     * Returns `null` if the node has no parent class or there is no meta associated with the class.
+     */
+    function getParentClassMeta(requestNode, compiler) {
+        const parentClass = getParentClassDeclaration(requestNode);
+        if (parentClass === undefined) {
+            return null;
+        }
+        return compiler.getMeta(parentClass);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     class DefinitionBuilder {
-        constructor(tsLS, compiler) {
+        constructor(tsLS, compiler, driver) {
             this.tsLS = tsLS;
             this.compiler = compiler;
+            this.driver = driver;
+            this.ttc = this.compiler.getTemplateTypeChecker();
         }
         getDefinitionAndBoundSpan(fileName, position) {
             var _a;
@@ -40993,10 +41229,33 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getDefinitionsForSymbols(...symbols) {
             return flatMap(symbols, ({ shimLocation }) => {
-                var _a;
                 const { shimPath, positionInShimFile } = shimLocation;
-                return (_a = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+                const definitionInfos = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile);
+                if (definitionInfos === undefined) {
+                    return [];
+                }
+                return this.mapShimResultsToTemplates(definitionInfos);
             });
+        }
+        /**
+         * Converts and definition info result that points to a template typecheck file to a reference to
+         * the corresponding location in the template.
+         */
+        mapShimResultsToTemplates(definitionInfos) {
+            const result = [];
+            for (const info of definitionInfos) {
+                if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(info.fileName))) {
+                    const templateDefinitionInfo = convertToTemplateDocumentSpan(info, this.ttc, this.driver.getProgram());
+                    if (templateDefinitionInfo === null) {
+                        continue;
+                    }
+                    result.push(templateDefinitionInfo);
+                }
+                else {
+                    result.push(info);
+                }
+            }
+            return result;
         }
         getTypeDefinitionsAtPosition(fileName, position) {
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
@@ -41346,240 +41605,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             displayParts,
             documentation,
         };
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Converts a `ShimLocation` to a more genericly named `FilePosition`.
-     */
-    function toFilePosition(shimLocation) {
-        return { fileName: shimLocation.shimPath, position: shimLocation.positionInShimFile };
-    }
-    /**
-     * Takes a position in a template and finds equivalent targets in TS files as well as details about
-     * the targeted template node.
-     */
-    function getTargetDetailsAtTemplatePosition({ template, component }, position, templateTypeChecker) {
-        // Find the AST node in the template at the position.
-        const positionDetails = getTargetAtPosition(template, position);
-        if (positionDetails === null) {
-            return null;
-        }
-        const nodes = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
-            positionDetails.context.nodes :
-            [positionDetails.context.node];
-        const details = [];
-        for (const node of nodes) {
-            // Get the information about the TCB at the template position.
-            const symbol = templateTypeChecker.getSymbolOfNode(node, component);
-            if (symbol === null) {
-                continue;
-            }
-            const templateTarget = node;
-            switch (symbol.kind) {
-                case SymbolKind.Directive:
-                case SymbolKind.Template:
-                    // References to elements, templates, and directives will be through template references
-                    // (#ref). They shouldn't be used directly for a Language Service reference request.
-                    break;
-                case SymbolKind.Element: {
-                    const matches = getDirectiveMatchesForElementTag(symbol.templateNode, symbol.directives);
-                    details.push({
-                        typescriptLocations: getPositionsForDirectives(matches),
-                        templateTarget,
-                        symbol,
-                    });
-                    break;
-                }
-                case SymbolKind.DomBinding: {
-                    // Dom bindings aren't currently type-checked (see `checkTypeOfDomBindings`) so they don't
-                    // have a shim location. This means we can't match dom bindings to their lib.dom
-                    // reference, but we can still see if they match to a directive.
-                    if (!(node instanceof TextAttribute) && !(node instanceof BoundAttribute)) {
-                        return null;
-                    }
-                    const directives = getDirectiveMatchesForAttribute(node.name, symbol.host.templateNode, symbol.host.directives);
-                    details.push({
-                        typescriptLocations: getPositionsForDirectives(directives),
-                        templateTarget,
-                        symbol,
-                    });
-                    break;
-                }
-                case SymbolKind.Reference: {
-                    details.push({
-                        typescriptLocations: [toFilePosition(symbol.referenceVarLocation)],
-                        templateTarget,
-                        symbol,
-                    });
-                    break;
-                }
-                case SymbolKind.Variable: {
-                    if ((templateTarget instanceof Variable)) {
-                        if (templateTarget.valueSpan !== undefined &&
-                            isWithin(position, templateTarget.valueSpan)) {
-                            // In the valueSpan of the variable, we want to get the reference of the initializer.
-                            details.push({
-                                typescriptLocations: [toFilePosition(symbol.initializerLocation)],
-                                templateTarget,
-                                symbol,
-                            });
-                        }
-                        else if (isWithin(position, templateTarget.keySpan)) {
-                            // In the keySpan of the variable, we want to get the reference of the local variable.
-                            details.push({
-                                typescriptLocations: [toFilePosition(symbol.localVarLocation)],
-                                templateTarget,
-                                symbol,
-                            });
-                        }
-                    }
-                    else {
-                        // If the templateNode is not the `TmplAstVariable`, it must be a usage of the
-                        // variable somewhere in the template.
-                        details.push({
-                            typescriptLocations: [toFilePosition(symbol.localVarLocation)],
-                            templateTarget,
-                            symbol,
-                        });
-                    }
-                    break;
-                }
-                case SymbolKind.Input:
-                case SymbolKind.Output: {
-                    details.push({
-                        typescriptLocations: symbol.bindings.map(binding => toFilePosition(binding.shimLocation)),
-                        templateTarget,
-                        symbol,
-                    });
-                    break;
-                }
-                case SymbolKind.Pipe:
-                case SymbolKind.Expression: {
-                    details.push({
-                        typescriptLocations: [toFilePosition(symbol.shimLocation)],
-                        templateTarget,
-                        symbol,
-                    });
-                    break;
-                }
-            }
-        }
-        return details.length > 0 ? details : null;
-    }
-    /**
-     * Given a set of `DirectiveSymbol`s, finds the equivalent `FilePosition` of the class declaration.
-     */
-    function getPositionsForDirectives(directives) {
-        const allDirectives = [];
-        for (const dir of directives.values()) {
-            const dirClass = dir.tsSymbol.valueDeclaration;
-            if (dirClass === undefined || !ts$1.isClassDeclaration(dirClass) || dirClass.name === undefined) {
-                continue;
-            }
-            const { fileName } = dirClass.getSourceFile();
-            const position = dirClass.name.getStart();
-            allDirectives.push({ fileName, position });
-        }
-        return allDirectives;
-    }
-    /**
-     * Creates a "key" for a rename/reference location by concatenating file name, span start, and span
-     * length. This allows us to de-duplicate template results when an item may appear several times
-     * in the TCB but map back to the same template location.
-     */
-    function createLocationKey(ds) {
-        return ds.fileName + ds.textSpan.start + ds.textSpan.length;
-    }
-    /**
-     * Converts a given `ts.DocumentSpan` in a shim file to its equivalent `ts.DocumentSpan` in the
-     * template.
-     *
-     * You can optionally provide a `requiredNodeText` that ensures the equivalent template node's text
-     * matches. If it does not, this function will return `null`.
-     */
-    function convertToTemplateDocumentSpan(shimDocumentSpan, templateTypeChecker, program, requiredNodeText) {
-        const sf = program.getSourceFile(shimDocumentSpan.fileName);
-        if (sf === undefined) {
-            return null;
-        }
-        const tcbNode = findTightestNode(sf, shimDocumentSpan.textSpan.start);
-        if (tcbNode === undefined ||
-            hasExpressionIdentifier(sf, tcbNode, ExpressionIdentifier.EVENT_PARAMETER)) {
-            // If the reference result is the $event parameter in the subscribe/addEventListener
-            // function in the TCB, we want to filter this result out of the references. We really only
-            // want to return references to the parameter in the template itself.
-            return null;
-        }
-        // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project
-        // serverHost or LSParseConfigHost in the adapter. We should have a better defined way to
-        // normalize paths.
-        const mapping = getTemplateLocationFromShimLocation(templateTypeChecker, absoluteFrom(shimDocumentSpan.fileName), shimDocumentSpan.textSpan.start);
-        if (mapping === null) {
-            return null;
-        }
-        const { span, templateUrl } = mapping;
-        if (requiredNodeText !== undefined && span.toString() !== requiredNodeText) {
-            return null;
-        }
-        return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span), 
-            // Specifically clear other text span values because we do not have enough knowledge to
-            // convert these to spans in the template.
-            contextSpan: undefined, originalContextSpan: undefined, originalTextSpan: undefined });
-    }
-    /**
-     * Finds the text and `ts.TextSpan` for the node at a position in a template.
-     */
-    function getRenameTextAndSpanAtPosition(node, position) {
-        if (node instanceof BoundAttribute || node instanceof TextAttribute ||
-            node instanceof BoundEvent) {
-            if (node.keySpan === undefined) {
-                return null;
-            }
-            return { text: node.name, span: toTextSpan(node.keySpan) };
-        }
-        else if (node instanceof Variable || node instanceof Reference) {
-            if (isWithin(position, node.keySpan)) {
-                return { text: node.keySpan.toString(), span: toTextSpan(node.keySpan) };
-            }
-            else if (node.valueSpan && isWithin(position, node.valueSpan)) {
-                return { text: node.valueSpan.toString(), span: toTextSpan(node.valueSpan) };
-            }
-        }
-        if (node instanceof PropertyRead || node instanceof MethodCall || node instanceof PropertyWrite ||
-            node instanceof SafePropertyRead || node instanceof SafeMethodCall ||
-            node instanceof BindingPipe) {
-            return { text: node.name, span: toTextSpan(node.nameSpan) };
-        }
-        else if (node instanceof LiteralPrimitive) {
-            const span = toTextSpan(node.sourceSpan);
-            const text = node.value;
-            if (typeof text === 'string') {
-                // The span of a string literal includes the quotes but they should be removed for renaming.
-                span.start += 1;
-                span.length -= 2;
-            }
-            return { text, span };
-        }
-        return null;
-    }
-    /**
-     * Retrives the `PipeMeta` or `DirectiveMeta` of the given `ts.Node`'s parent class.
-     *
-     * Returns `null` if the node has no parent class or there is no meta associated with the class.
-     */
-    function getParentClassMeta(requestNode, compiler) {
-        const parentClass = getParentClassDeclaration(requestNode);
-        if (parentClass === undefined) {
-            return null;
-        }
-        return compiler.getMeta(parentClass);
     }
 
     class ReferencesBuilder {
@@ -42079,7 +42104,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (!isInAngularContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
-                return new DefinitionBuilder(this.tsLS, compiler)
+                return new DefinitionBuilder(this.tsLS, compiler, this.programDriver)
                     .getDefinitionAndBoundSpan(fileName, position);
             });
         }
@@ -42088,7 +42113,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
-                return new DefinitionBuilder(this.tsLS, compiler)
+                return new DefinitionBuilder(this.tsLS, compiler, this.programDriver)
                     .getTypeDefinitionsAtPosition(fileName, position);
             });
         }
