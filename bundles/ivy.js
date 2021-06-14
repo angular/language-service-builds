@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.5+28.sha-044e022
+ * @license Angular v12.1.0-next.5+30.sha-228beea
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -10170,6 +10170,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * opening tag is recovered).
          */
         _popElement(fullName, endSourceSpan) {
+            let unexpectedCloseTagDetected = false;
             for (let stackIndex = this._elementStack.length - 1; stackIndex >= 0; stackIndex--) {
                 const el = this._elementStack[stackIndex];
                 if (el.name == fullName) {
@@ -10179,10 +10180,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     el.endSourceSpan = endSourceSpan;
                     el.sourceSpan.end = endSourceSpan !== null ? endSourceSpan.end : el.sourceSpan.end;
                     this._elementStack.splice(stackIndex, this._elementStack.length - stackIndex);
-                    return true;
+                    return !unexpectedCloseTagDetected;
                 }
                 if (!this.getTagDefinition(el.name).closedByParent) {
-                    return false;
+                    // Note that we encountered an unexpected close tag but continue processing the element
+                    // stack so we can assign an `endSourceSpan` if there is a corresponding start tag for this
+                    // end tag in the stack.
+                    unexpectedCloseTagDetected = true;
                 }
             }
             return false;
@@ -18008,7 +18012,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.5+28.sha-044e022');
+    const VERSION$1 = new Version('12.1.0-next.5+30.sha-228beea');
 
     /**
      * @license
@@ -18647,7 +18651,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.5+28.sha-044e022'));
+        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18687,7 +18691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.5+28.sha-044e022'));
+        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18904,7 +18908,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.5+28.sha-044e022'));
+        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18946,7 +18950,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.5+28.sha-044e022'));
+        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19025,7 +19029,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.5+28.sha-044e022'));
+        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19062,7 +19066,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.5+28.sha-044e022'));
+        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19120,7 +19124,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.5+28.sha-044e022'));
+        definitionMap.set('version', literal('12.1.0-next.5+30.sha-228beea'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19152,7 +19156,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.5+28.sha-044e022');
+    const VERSION$2 = new Version('12.1.0-next.5+30.sha-228beea');
 
     /**
      * @license
@@ -40105,7 +40109,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         visit(node) {
             const { start, end } = getSpanIncludingEndTag(node);
-            if (!isWithin(this.position, { start, end })) {
+            if (end !== null && !isWithin(this.position, { start, end })) {
                 return;
             }
             const last = this.path[this.path.length - 1];
@@ -40239,8 +40243,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         // the end of the closing tag. Otherwise, for situation like
         // <my-component></my-comp¦onent> where the cursor is in the closing tag
         // we will not be able to return any information.
-        if ((ast instanceof Element || ast instanceof Template) && ast.endSourceSpan) {
-            result.end = ast.endSourceSpan.end.offset;
+        if (ast instanceof Element || ast instanceof Template) {
+            if (ast.endSourceSpan) {
+                result.end = ast.endSourceSpan.end.offset;
+            }
+            else if (ast.children.length > 0) {
+                // If the AST has children but no end source span, then it is an unclosed element with an end
+                // that should be the end of the last child.
+                result.end = getSpanIncludingEndTag(ast.children[ast.children.length - 1]).end;
+            }
         }
         return result;
     }
