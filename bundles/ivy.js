@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.4+21.sha-11e0f53
+ * @license Angular v12.0.4+25.sha-6bf4cb6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -17922,7 +17922,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.4+21.sha-11e0f53');
+    const VERSION$1 = new Version('12.0.4+25.sha-6bf4cb6');
 
     /**
      * @license
@@ -18561,7 +18561,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.0.4+21.sha-11e0f53'));
+        definitionMap.set('version', literal('12.0.4+25.sha-6bf4cb6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18601,7 +18601,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.0.4+21.sha-11e0f53'));
+        definitionMap.set('version', literal('12.0.4+25.sha-6bf4cb6'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18818,7 +18818,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.0.4+21.sha-11e0f53'));
+        definitionMap.set('version', literal('12.0.4+25.sha-6bf4cb6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18860,7 +18860,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.0.4+21.sha-11e0f53'));
+        definitionMap.set('version', literal('12.0.4+25.sha-6bf4cb6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -18939,7 +18939,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.0.4+21.sha-11e0f53'));
+        definitionMap.set('version', literal('12.0.4+25.sha-6bf4cb6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -18976,7 +18976,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.0.4+21.sha-11e0f53'));
+        definitionMap.set('version', literal('12.0.4+25.sha-6bf4cb6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19034,7 +19034,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.0.4+21.sha-11e0f53'));
+        definitionMap.set('version', literal('12.0.4+25.sha-6bf4cb6'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19066,7 +19066,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.0.4+21.sha-11e0f53');
+    const VERSION$2 = new Version('12.0.4+25.sha-6bf4cb6');
 
     /**
      * @license
@@ -40892,10 +40892,56 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Converts a given `ts.DocumentSpan` in a shim file to its equivalent `ts.DocumentSpan` in the
+     * template.
+     *
+     * You can optionally provide a `requiredNodeText` that ensures the equivalent template node's text
+     * matches. If it does not, this function will return `null`.
+     */
+    function convertToTemplateDocumentSpan(shimDocumentSpan, templateTypeChecker, program, requiredNodeText) {
+        const sf = program.getSourceFile(shimDocumentSpan.fileName);
+        if (sf === undefined) {
+            return null;
+        }
+        const tcbNode = findTightestNode(sf, shimDocumentSpan.textSpan.start);
+        if (tcbNode === undefined ||
+            hasExpressionIdentifier(sf, tcbNode, ExpressionIdentifier.EVENT_PARAMETER)) {
+            // If the reference result is the $event parameter in the subscribe/addEventListener
+            // function in the TCB, we want to filter this result out of the references. We really only
+            // want to return references to the parameter in the template itself.
+            return null;
+        }
+        // TODO(atscott): Determine how to consistently resolve paths. i.e. with the project
+        // serverHost or LSParseConfigHost in the adapter. We should have a better defined way to
+        // normalize paths.
+        const mapping = getTemplateLocationFromShimLocation(templateTypeChecker, absoluteFrom(shimDocumentSpan.fileName), shimDocumentSpan.textSpan.start);
+        if (mapping === null) {
+            return null;
+        }
+        const { span, templateUrl } = mapping;
+        if (requiredNodeText !== undefined && span.toString() !== requiredNodeText) {
+            return null;
+        }
+        return Object.assign(Object.assign({}, shimDocumentSpan), { fileName: templateUrl, textSpan: toTextSpan(span), 
+            // Specifically clear other text span values because we do not have enough knowledge to
+            // convert these to spans in the template.
+            contextSpan: undefined, originalContextSpan: undefined, originalTextSpan: undefined });
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     class DefinitionBuilder {
-        constructor(tsLS, compiler) {
+        constructor(tsLS, compiler, driver) {
             this.tsLS = tsLS;
             this.compiler = compiler;
+            this.driver = driver;
+            this.ttc = this.compiler.getTemplateTypeChecker();
         }
         getDefinitionAndBoundSpan(fileName, position) {
             var _a;
@@ -40990,10 +41036,33 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getDefinitionsForSymbols(...symbols) {
             return flatMap(symbols, ({ shimLocation }) => {
-                var _a;
                 const { shimPath, positionInShimFile } = shimLocation;
-                return (_a = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile)) !== null && _a !== void 0 ? _a : [];
+                const definitionInfos = this.tsLS.getDefinitionAtPosition(shimPath, positionInShimFile);
+                if (definitionInfos === undefined) {
+                    return [];
+                }
+                return this.mapShimResultsToTemplates(definitionInfos);
             });
+        }
+        /**
+         * Converts and definition info result that points to a template typecheck file to a reference to
+         * the corresponding location in the template.
+         */
+        mapShimResultsToTemplates(definitionInfos) {
+            const result = [];
+            for (const info of definitionInfos) {
+                if (this.ttc.isTrackedTypeCheckFile(absoluteFrom(info.fileName))) {
+                    const templateDefinitionInfo = convertToTemplateDocumentSpan(info, this.ttc, this.driver.getProgram());
+                    if (templateDefinitionInfo === null) {
+                        continue;
+                    }
+                    result.push(templateDefinitionInfo);
+                }
+                else {
+                    result.push(info);
+                }
+            }
+            return result;
         }
         getTypeDefinitionsAtPosition(fileName, position) {
             const templateInfo = getTemplateInfoAtPosition(fileName, position, this.compiler);
@@ -41893,7 +41962,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (!isInAngularContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
-                return new DefinitionBuilder(this.tsLS, compiler)
+                return new DefinitionBuilder(this.tsLS, compiler, this.programDriver)
                     .getDefinitionAndBoundSpan(fileName, position);
             });
         }
@@ -41902,7 +41971,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 if (!isTemplateContext(compiler.getCurrentProgram(), fileName, position)) {
                     return undefined;
                 }
-                return new DefinitionBuilder(this.tsLS, compiler)
+                return new DefinitionBuilder(this.tsLS, compiler, this.programDriver)
                     .getTypeDefinitionsAtPosition(fileName, position);
             });
         }
