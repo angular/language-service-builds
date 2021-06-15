@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.4+19.sha-18d8322
+ * @license Angular v12.0.4+21.sha-11e0f53
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -10148,6 +10148,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
          * opening tag is recovered).
          */
         _popElement(fullName, endSourceSpan) {
+            let unexpectedCloseTagDetected = false;
             for (let stackIndex = this._elementStack.length - 1; stackIndex >= 0; stackIndex--) {
                 const el = this._elementStack[stackIndex];
                 if (el.name == fullName) {
@@ -10157,10 +10158,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     el.endSourceSpan = endSourceSpan;
                     el.sourceSpan.end = endSourceSpan !== null ? endSourceSpan.end : el.sourceSpan.end;
                     this._elementStack.splice(stackIndex, this._elementStack.length - stackIndex);
-                    return true;
+                    return !unexpectedCloseTagDetected;
                 }
                 if (!this.getTagDefinition(el.name).closedByParent) {
-                    return false;
+                    // Note that we encountered an unexpected close tag but continue processing the element
+                    // stack so we can assign an `endSourceSpan` if there is a corresponding start tag for this
+                    // end tag in the stack.
+                    unexpectedCloseTagDetected = true;
                 }
             }
             return false;
@@ -19459,7 +19463,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.4+19.sha-18d8322');
+    const VERSION$1 = new Version('12.0.4+21.sha-11e0f53');
 
     /**
      * @license
@@ -35530,7 +35534,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.4+19.sha-18d8322');
+    const VERSION$2 = new Version$1('12.0.4+21.sha-11e0f53');
 
     /**
      * @license
