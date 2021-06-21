@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.0.5+23.sha-1cb85ba
+ * @license Angular v12.0.5+28.sha-1ce5c20
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -7581,6 +7581,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const obj = this._visit(ast.obj, _Mode.Expression);
             const key = this._visit(ast.key, _Mode.Expression);
             const value = this._visit(ast.value, _Mode.Expression);
+            if (obj === this._implicitReceiver) {
+                this._localResolver.maybeRestoreView(0, false);
+            }
             return convertToStatementIfNeeded(mode, obj.key(key).set(value));
         }
         visitLiteralArray(ast, mode) {
@@ -8013,6 +8016,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.globals = globals;
         }
         notifyImplicitReceiverUse() { }
+        maybeRestoreView() { }
         getLocal(name) {
             if (name === EventHandlerVars.event.name) {
                 return EventHandlerVars.event;
@@ -16823,6 +16827,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         notifyImplicitReceiverUse() {
             this._bindingScope.notifyImplicitReceiverUse();
         }
+        // LocalResolver
+        maybeRestoreView(retrievalLevel, localRefLookup) {
+            this._bindingScope.maybeRestoreView(retrievalLevel, localRefLookup);
+        }
         i18nTranslate(message, params = {}, ref, transformFn) {
             const _ref = ref || this.i18nGenerateMainBlockVar();
             // Closure Compiler requires const names to start with `MSG_` but disallows any other const to
@@ -19463,7 +19471,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.0.5+23.sha-1cb85ba');
+    const VERSION$1 = new Version('12.0.5+28.sha-1ce5c20');
 
     /**
      * @license
@@ -35534,7 +35542,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.0.5+23.sha-1cb85ba');
+    const VERSION$2 = new Version$1('12.0.5+28.sha-1ce5c20');
 
     /**
      * @license
