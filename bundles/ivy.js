@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.6+25.sha-d77f560
+ * @license Angular v12.1.0-next.6+27.sha-e83d7cb
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18012,7 +18012,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.6+25.sha-d77f560');
+    const VERSION$1 = new Version('12.1.0-next.6+27.sha-e83d7cb');
 
     /**
      * @license
@@ -18651,7 +18651,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.6+25.sha-d77f560'));
+        definitionMap.set('version', literal('12.1.0-next.6+27.sha-e83d7cb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18691,7 +18691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.6+25.sha-d77f560'));
+        definitionMap.set('version', literal('12.1.0-next.6+27.sha-e83d7cb'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18908,7 +18908,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.6+25.sha-d77f560'));
+        definitionMap.set('version', literal('12.1.0-next.6+27.sha-e83d7cb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18950,7 +18950,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.6+25.sha-d77f560'));
+        definitionMap.set('version', literal('12.1.0-next.6+27.sha-e83d7cb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19029,7 +19029,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.6+25.sha-d77f560'));
+        definitionMap.set('version', literal('12.1.0-next.6+27.sha-e83d7cb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19066,7 +19066,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.6+25.sha-d77f560'));
+        definitionMap.set('version', literal('12.1.0-next.6+27.sha-e83d7cb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19124,7 +19124,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.6+25.sha-d77f560'));
+        definitionMap.set('version', literal('12.1.0-next.6+27.sha-e83d7cb'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19156,7 +19156,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.6+25.sha-d77f560');
+    const VERSION$2 = new Version('12.1.0-next.6+27.sha-e83d7cb');
 
     /**
      * @license
@@ -24558,6 +24558,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 }
             }
         }
+        xi18n(bundle) {
+            for (const clazz of this.classes.keys()) {
+                const record = this.classes.get(clazz);
+                for (const trait of record.traits) {
+                    if (trait.state !== TraitState.Analyzed && trait.state !== TraitState.Resolved) {
+                        // Skip traits that haven't been analyzed successfully.
+                        continue;
+                    }
+                    else if (trait.handler.xi18n === undefined) {
+                        // Skip traits that don't support xi18n.
+                        continue;
+                    }
+                    if (trait.analysis !== null) {
+                        trait.handler.xi18n(bundle, clazz, trait.analysis);
+                    }
+                }
+            }
+        }
         updateResources(clazz) {
             if (!this.reflector.isClass(clazz) || !this.classes.has(clazz)) {
                 return;
@@ -28687,6 +28705,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return { diagnostics };
             }
             return { data };
+        }
+        xi18n(ctx, node, analysis) {
+            var _a;
+            ctx.updateFromTemplate(analysis.template.content, analysis.template.declaration.resolvedTemplateUrl, (_a = analysis.template.interpolationConfig) !== null && _a !== void 0 ? _a : DEFAULT_INTERPOLATION_CONFIG);
         }
         updateResources(node, analysis) {
             const containingFile = node.getSourceFile().fileName;
@@ -38241,6 +38263,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             const context = new IndexingContext();
             compilation.traitCompiler.index(context);
             return generateAnalysis(context);
+        }
+        /**
+         * Collect i18n messages into the `Xi18nContext`.
+         */
+        xi18n(ctx) {
+            // Note that the 'resolve' phase is not strictly necessary for xi18n, but this is not currently
+            // optimized.
+            const compilation = this.ensureAnalyzed();
+            compilation.traitCompiler.xi18n(ctx);
         }
         ensureAnalyzed() {
             if (this.compilation === null) {
