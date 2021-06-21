@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.6+28.sha-8793d1a
+ * @license Angular v12.1.0-next.6+33.sha-6b2a475
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -7678,6 +7678,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const obj = this._visit(ast.receiver, _Mode.Expression);
             const key = this._visit(ast.key, _Mode.Expression);
             const value = this._visit(ast.value, _Mode.Expression);
+            if (obj === this._implicitReceiver) {
+                this._localResolver.maybeRestoreView(0, false);
+            }
             return convertToStatementIfNeeded(mode, obj.key(key).set(value));
         }
         visitLiteralArray(ast, mode) {
@@ -8122,6 +8125,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.globals = globals;
         }
         notifyImplicitReceiverUse() { }
+        maybeRestoreView() { }
         getLocal(name) {
             if (name === EventHandlerVars.event.name) {
                 return EventHandlerVars.event;
@@ -15372,6 +15376,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         notifyImplicitReceiverUse() {
             this._bindingScope.notifyImplicitReceiverUse();
         }
+        // LocalResolver
+        maybeRestoreView(retrievalLevel, localRefLookup) {
+            this._bindingScope.maybeRestoreView(retrievalLevel, localRefLookup);
+        }
         i18nTranslate(message, params = {}, ref, transformFn) {
             const _ref = ref || this.i18nGenerateMainBlockVar();
             // Closure Compiler requires const names to start with `MSG_` but disallows any other const to
@@ -18012,7 +18020,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.6+28.sha-8793d1a');
+    const VERSION$1 = new Version('12.1.0-next.6+33.sha-6b2a475');
 
     /**
      * @license
@@ -18651,7 +18659,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.6+28.sha-8793d1a'));
+        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18691,7 +18699,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.6+28.sha-8793d1a'));
+        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18908,7 +18916,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.6+28.sha-8793d1a'));
+        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18950,7 +18958,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.6+28.sha-8793d1a'));
+        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19029,7 +19037,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.6+28.sha-8793d1a'));
+        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19066,7 +19074,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.6+28.sha-8793d1a'));
+        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19124,7 +19132,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.6+28.sha-8793d1a'));
+        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19156,7 +19164,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.6+28.sha-8793d1a');
+    const VERSION$2 = new Version('12.1.0-next.6+33.sha-6b2a475');
 
     /**
      * @license
@@ -33119,6 +33127,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const INELIGIBLE = {};
     /**
      * Determines whether the provided type can be emitted, which means that it can be safely emitted
      * into a different location.
@@ -33130,13 +33139,24 @@ Either add the @Injectable() decorator to '${provider.node.name
     function canEmitType(type, resolver) {
         return canEmitTypeWorker(type);
         function canEmitTypeWorker(type) {
-            return visitTypeNode(type, {
-                visitTypeReferenceNode: type => canEmitTypeReference(type),
-                visitArrayTypeNode: type => canEmitTypeWorker(type.elementType),
-                visitKeywordType: () => true,
-                visitLiteralType: () => true,
-                visitOtherType: () => false,
-            });
+            return visitNode(type) !== INELIGIBLE;
+        }
+        // To determine whether a type can be emitted, we have to recursively look through all type nodes.
+        // If a type reference node is found at any position within the type and that type reference
+        // cannot be emitted, then the `INELIGIBLE` constant is returned to stop the recursive walk as
+        // the type as a whole cannot be emitted in that case. Otherwise, the result of visiting all child
+        // nodes determines the result. If no ineligible type reference node is found then the walk
+        // returns `undefined`, indicating that no type node was visited that could not be emitted.
+        function visitNode(node) {
+            // Emitting a type reference node in a different context requires that an import for the type
+            // can be created. If a type reference node cannot be emitted, `INELIGIBLE` is returned to stop
+            // the walk.
+            if (ts$1.isTypeReferenceNode(node) && !canEmitTypeReference(node)) {
+                return INELIGIBLE;
+            }
+            else {
+                return ts$1.forEachChild(node, visitNode);
+            }
         }
         function canEmitTypeReference(type) {
             const reference = resolver(type);
@@ -33144,10 +33164,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (reference === null) {
                 return false;
             }
-            // If the type is a reference without a owning module, consider the type not to be eligible for
-            // emitting.
-            if (reference instanceof Reference$1 && !reference.hasOwningModuleGuess) {
-                return false;
+            // If the type is a reference, consider the type to be eligible for emitting.
+            if (reference instanceof Reference$1) {
+                return true;
             }
             // The type can be emitted if either it does not have any type arguments, or all of them can be
             // emitted.
@@ -33189,15 +33208,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.emitReference = emitReference;
         }
         emitType(type) {
-            return visitTypeNode(type, {
-                visitTypeReferenceNode: type => this.emitTypeReference(type),
-                visitArrayTypeNode: type => ts$1.updateArrayTypeNode(type, this.emitType(type.elementType)),
-                visitKeywordType: type => type,
-                visitLiteralType: type => type,
-                visitOtherType: () => {
-                    throw new Error('Unable to emit a complex type');
-                },
-            });
+            const typeReferenceTransformer = context => {
+                const visitNode = (node) => {
+                    if (ts$1.isTypeReferenceNode(node)) {
+                        return this.emitTypeReference(node);
+                    }
+                    else {
+                        return ts$1.visitEachChild(node, visitNode, context);
+                    }
+                };
+                return node => ts$1.visitNode(node, visitNode);
+            };
+            return ts$1.transform(type, [typeReferenceTransformer]).transformed[0];
         }
         emitTypeReference(type) {
             // Determine the reference that the type corresponds with.
@@ -33213,9 +33235,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Emit the type name.
             let typeName = type.typeName;
             if (reference instanceof Reference$1) {
-                if (!reference.hasOwningModuleGuess) {
-                    throw new Error('A type reference to emit must be imported from an absolute module');
-                }
                 const emittedType = this.emitReference(reference);
                 if (!ts$1.isTypeReferenceNode(emittedType)) {
                     throw new Error(`Expected TypeReferenceNode for emitted reference, got ${ts$1.SyntaxKind[emittedType.kind]}`);
@@ -33223,30 +33242,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 typeName = emittedType.typeName;
             }
             return ts$1.updateTypeReferenceNode(type, typeName, typeArguments);
-        }
-    }
-    function visitTypeNode(type, visitor) {
-        if (ts$1.isTypeReferenceNode(type)) {
-            return visitor.visitTypeReferenceNode(type);
-        }
-        else if (ts$1.isArrayTypeNode(type)) {
-            return visitor.visitArrayTypeNode(type);
-        }
-        else if (ts$1.isLiteralTypeNode(type)) {
-            return visitor.visitLiteralType(type);
-        }
-        switch (type.kind) {
-            case ts$1.SyntaxKind.AnyKeyword:
-            case ts$1.SyntaxKind.UnknownKeyword:
-            case ts$1.SyntaxKind.NumberKeyword:
-            case ts$1.SyntaxKind.ObjectKeyword:
-            case ts$1.SyntaxKind.BooleanKeyword:
-            case ts$1.SyntaxKind.StringKeyword:
-            case ts$1.SyntaxKind.UndefinedKeyword:
-            case ts$1.SyntaxKind.NullKeyword:
-                return visitor.visitKeywordType(type);
-            default:
-                return visitor.visitOtherType(type);
         }
     }
 
@@ -33275,11 +33270,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return true;
             }
             return this.typeParameters.every(typeParam => {
-                if (typeParam.constraint === undefined) {
-                    return true;
-                }
-                return canEmitType(typeParam.constraint, type => this.resolveTypeReference(type));
+                return this.canEmitType(typeParam.constraint) && this.canEmitType(typeParam.default);
             });
+        }
+        canEmitType(type) {
+            if (type === undefined) {
+                return true;
+            }
+            return canEmitType(type, typeReference => this.resolveTypeReference(typeReference));
         }
         /**
          * Emits the type parameters using the provided emitter function for `Reference`s.
@@ -33291,11 +33289,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             const emitter = new TypeEmitter(type => this.resolveTypeReference(type), emitReference);
             return this.typeParameters.map(typeParam => {
                 const constraint = typeParam.constraint !== undefined ? emitter.emitType(typeParam.constraint) : undefined;
+                const defaultType = typeParam.default !== undefined ? emitter.emitType(typeParam.default) : undefined;
                 return ts$1.updateTypeParameterDeclaration(
                 /* node */ typeParam, 
                 /* name */ typeParam.name, 
                 /* constraint */ constraint, 
-                /* defaultType */ typeParam.default);
+                /* defaultType */ defaultType);
             });
         }
         resolveTypeReference(type) {
@@ -33318,7 +33317,15 @@ Either add the @Injectable() decorator to '${provider.node.name
                     resolutionContext: type.getSourceFile().fileName,
                 };
             }
+            // If no owning module is known, the reference needs to be exported to be able to emit an import
+            // statement for it. If the declaration is not exported, null is returned to prevent emit.
+            if (owningModule === null && !this.isStaticallyExported(declaration.node)) {
+                return null;
+            }
             return new Reference$1(declaration.node, owningModule);
+        }
+        isStaticallyExported(decl) {
+            return isNamedClassDeclaration(decl) && this.reflector.isStaticallyExported(decl);
         }
         isLocalTypeParameter(decl) {
             // Checking for local type parameters only occurs during resolution of type parameters, so it is
