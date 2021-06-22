@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.6+33.sha-6b2a475
+ * @license Angular v12.1.0-next.6+35.sha-cc672f0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -12809,11 +12809,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!this.consumeOptionalCharacter($RBRACE)) {
                 this.rbracesExpected++;
                 do {
+                    const keyStart = this.inputIndex;
                     const quoted = this.next.isString();
                     const key = this.expectIdentifierOrKeywordOrString();
                     keys.push({ key, quoted });
-                    this.expectCharacter($COLON);
-                    values.push(this.parsePipe());
+                    // Properties with quoted keys can't use the shorthand syntax.
+                    if (quoted) {
+                        this.expectCharacter($COLON);
+                        values.push(this.parsePipe());
+                    }
+                    else if (this.consumeOptionalCharacter($COLON)) {
+                        values.push(this.parsePipe());
+                    }
+                    else {
+                        const span = this.span(keyStart);
+                        const sourceSpan = this.sourceSpan(keyStart);
+                        values.push(new PropertyRead(span, sourceSpan, sourceSpan, new ImplicitReceiver(span, sourceSpan), key));
+                    }
                 } while (this.consumeOptionalCharacter($COMMA));
                 this.rbracesExpected--;
                 this.expectCharacter($RBRACE);
@@ -18020,7 +18032,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.6+33.sha-6b2a475');
+    const VERSION$1 = new Version('12.1.0-next.6+35.sha-cc672f0');
 
     /**
      * @license
@@ -18659,7 +18671,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
+        definitionMap.set('version', literal('12.1.0-next.6+35.sha-cc672f0'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18699,7 +18711,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
+        definitionMap.set('version', literal('12.1.0-next.6+35.sha-cc672f0'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18916,7 +18928,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
+        definitionMap.set('version', literal('12.1.0-next.6+35.sha-cc672f0'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18958,7 +18970,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
+        definitionMap.set('version', literal('12.1.0-next.6+35.sha-cc672f0'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19037,7 +19049,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
+        definitionMap.set('version', literal('12.1.0-next.6+35.sha-cc672f0'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19074,7 +19086,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
+        definitionMap.set('version', literal('12.1.0-next.6+35.sha-cc672f0'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19132,7 +19144,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.6+33.sha-6b2a475'));
+        definitionMap.set('version', literal('12.1.0-next.6+35.sha-cc672f0'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19164,7 +19176,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.6+33.sha-6b2a475');
+    const VERSION$2 = new Version('12.1.0-next.6+35.sha-cc672f0');
 
     /**
      * @license
@@ -37173,7 +37185,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             const withSpan = (expression instanceof PropertyWrite || expression instanceof MethodCall) ?
                 expression.nameSpan :
                 expression.sourceSpan;
-            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: (n) => true });
+            let node = null;
+            // Property reads in templates usually map to a `PropertyAccessExpression`
+            // (e.g. `ctx.foo`) so try looking for one first.
+            if (expression instanceof PropertyRead) {
+                node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: ts$1.isPropertyAccessExpression });
+            }
+            // Otherwise fall back to searching for any AST node.
+            if (node === null) {
+                node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: anyNodeFilter });
+            }
             if (node === null) {
                 return null;
             }
@@ -37246,6 +37267,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return node.getStart();
             }
         }
+    }
+    /** Filter predicate function that matches any AST node. */
+    function anyNodeFilter(n) {
+        return true;
     }
 
     /**

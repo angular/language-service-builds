@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.6+33.sha-6b2a475
+ * @license Angular v12.1.0-next.6+35.sha-cc672f0
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -14350,11 +14350,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!this.consumeOptionalCharacter($RBRACE)) {
                 this.rbracesExpected++;
                 do {
+                    const keyStart = this.inputIndex;
                     const quoted = this.next.isString();
                     const key = this.expectIdentifierOrKeywordOrString();
                     keys.push({ key, quoted });
-                    this.expectCharacter($COLON);
-                    values.push(this.parsePipe());
+                    // Properties with quoted keys can't use the shorthand syntax.
+                    if (quoted) {
+                        this.expectCharacter($COLON);
+                        values.push(this.parsePipe());
+                    }
+                    else if (this.consumeOptionalCharacter($COLON)) {
+                        values.push(this.parsePipe());
+                    }
+                    else {
+                        const span = this.span(keyStart);
+                        const sourceSpan = this.sourceSpan(keyStart);
+                        values.push(new PropertyRead(span, sourceSpan, sourceSpan, new ImplicitReceiver(span, sourceSpan), key));
+                    }
                 } while (this.consumeOptionalCharacter($COMMA));
                 this.rbracesExpected--;
                 this.expectCharacter($RBRACE);
@@ -19561,7 +19573,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.6+33.sha-6b2a475');
+    const VERSION$1 = new Version('12.1.0-next.6+35.sha-cc672f0');
 
     /**
      * @license
@@ -35643,7 +35655,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.0-next.6+33.sha-6b2a475');
+    const VERSION$2 = new Version$1('12.1.0-next.6+35.sha-cc672f0');
 
     /**
      * @license
