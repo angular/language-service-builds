@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.6+39.sha-8a67770
+ * @license Angular v12.1.0-next.6+41.sha-9de65db
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -9639,10 +9639,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     parts.push(this._readChar(true));
                 }
             } while (!this._isTextEnd());
+            // It is possible that an interpolation was started but not ended inside this text token.
+            // Make sure that we reset the state of the lexer correctly.
+            this._inInterpolation = false;
             this._endToken([this._processCarriageReturns(parts.join(''))]);
         }
         _isTextEnd() {
-            if (this._cursor.peek() === $LT || this._cursor.peek() === $EOF) {
+            if (this._isTagStart() || this._cursor.peek() === $EOF) {
                 return true;
             }
             if (this._tokenizeIcu && !this._inInterpolation) {
@@ -9652,6 +9655,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 if (this._cursor.peek() === $RBRACE && this._isInExpansionCase()) {
                     // end of and expansion case
+                    return true;
+                }
+            }
+            return false;
+        }
+        /**
+         * Returns true if the current cursor is pointing to the start of a tag
+         * (opening/closing/comments/cdata/etc).
+         */
+        _isTagStart() {
+            if (this._cursor.peek() === $LT) {
+                // We assume that `<` followed by whitespace is not the start of an HTML element.
+                const tmp = this._cursor.clone();
+                tmp.advance();
+                // If the next character is alphabetic, ! nor / then it is a tag start
+                const code = tmp.peek();
+                if (($a <= code && code <= $z) || ($A <= code && code <= $Z) ||
+                    code === $SLASH || code === $BANG) {
                     return true;
                 }
             }
@@ -19573,7 +19594,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.6+39.sha-8a67770');
+    const VERSION$1 = new Version('12.1.0-next.6+41.sha-9de65db');
 
     /**
      * @license
@@ -35655,7 +35676,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.0-next.6+39.sha-8a67770');
+    const VERSION$2 = new Version$1('12.1.0-next.6+41.sha-9de65db');
 
     /**
      * @license
