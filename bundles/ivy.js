@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.5+49.sha-18fe044
+ * @license Angular v12.1.0-next.6+60.sha-d71d521
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -7678,6 +7678,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const obj = this._visit(ast.receiver, _Mode.Expression);
             const key = this._visit(ast.key, _Mode.Expression);
             const value = this._visit(ast.value, _Mode.Expression);
+            if (obj === this._implicitReceiver) {
+                this._localResolver.maybeRestoreView(0, false);
+            }
             return convertToStatementIfNeeded(mode, obj.key(key).set(value));
         }
         visitLiteralArray(ast, mode) {
@@ -8122,6 +8125,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.globals = globals;
         }
         notifyImplicitReceiverUse() { }
+        maybeRestoreView() { }
         getLocal(name) {
             if (name === EventHandlerVars.event.name) {
                 return EventHandlerVars.event;
@@ -9580,10 +9584,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     parts.push(this._readChar(true));
                 }
             } while (!this._isTextEnd());
+            // It is possible that an interpolation was started but not ended inside this text token.
+            // Make sure that we reset the state of the lexer correctly.
+            this._inInterpolation = false;
             this._endToken([this._processCarriageReturns(parts.join(''))]);
         }
         _isTextEnd() {
-            if (this._cursor.peek() === $LT || this._cursor.peek() === $EOF) {
+            if (this._isTagStart() || this._cursor.peek() === $EOF) {
                 return true;
             }
             if (this._tokenizeIcu && !this._inInterpolation) {
@@ -9593,6 +9600,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 }
                 if (this._cursor.peek() === $RBRACE && this._isInExpansionCase()) {
                     // end of and expansion case
+                    return true;
+                }
+            }
+            return false;
+        }
+        /**
+         * Returns true if the current cursor is pointing to the start of a tag
+         * (opening/closing/comments/cdata/etc).
+         */
+        _isTagStart() {
+            if (this._cursor.peek() === $LT) {
+                // We assume that `<` followed by whitespace is not the start of an HTML element.
+                const tmp = this._cursor.clone();
+                tmp.advance();
+                // If the next character is alphabetic, ! nor / then it is a tag start
+                const code = tmp.peek();
+                if (($a <= code && code <= $z) || ($A <= code && code <= $Z) ||
+                    code === $SLASH || code === $BANG) {
                     return true;
                 }
             }
@@ -12805,11 +12830,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!this.consumeOptionalCharacter($RBRACE)) {
                 this.rbracesExpected++;
                 do {
+                    const keyStart = this.inputIndex;
                     const quoted = this.next.isString();
                     const key = this.expectIdentifierOrKeywordOrString();
                     keys.push({ key, quoted });
-                    this.expectCharacter($COLON);
-                    values.push(this.parsePipe());
+                    // Properties with quoted keys can't use the shorthand syntax.
+                    if (quoted) {
+                        this.expectCharacter($COLON);
+                        values.push(this.parsePipe());
+                    }
+                    else if (this.consumeOptionalCharacter($COLON)) {
+                        values.push(this.parsePipe());
+                    }
+                    else {
+                        const span = this.span(keyStart);
+                        const sourceSpan = this.sourceSpan(keyStart);
+                        values.push(new PropertyRead(span, sourceSpan, sourceSpan, new ImplicitReceiver(span, sourceSpan), key));
+                    }
                 } while (this.consumeOptionalCharacter($COMMA));
                 this.rbracesExpected--;
                 this.expectCharacter($RBRACE);
@@ -15371,6 +15408,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // LocalResolver
         notifyImplicitReceiverUse() {
             this._bindingScope.notifyImplicitReceiverUse();
+        }
+        // LocalResolver
+        maybeRestoreView(retrievalLevel, localRefLookup) {
+            this._bindingScope.maybeRestoreView(retrievalLevel, localRefLookup);
         }
         i18nTranslate(message, params = {}, ref, transformFn) {
             const _ref = ref || this.i18nGenerateMainBlockVar();
@@ -18012,7 +18053,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.5+49.sha-18fe044');
+    const VERSION$1 = new Version('12.1.0-next.6+60.sha-d71d521');
 
     /**
      * @license
@@ -18651,7 +18692,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.5+49.sha-18fe044'));
+        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18691,7 +18732,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.5+49.sha-18fe044'));
+        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18908,7 +18949,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.5+49.sha-18fe044'));
+        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18950,7 +18991,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.5+49.sha-18fe044'));
+        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19029,7 +19070,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.5+49.sha-18fe044'));
+        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19066,7 +19107,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.5+49.sha-18fe044'));
+        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19124,7 +19165,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.5+49.sha-18fe044'));
+        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19156,7 +19197,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.5+49.sha-18fe044');
+    const VERSION$2 = new Version('12.1.0-next.6+60.sha-d71d521');
 
     /**
      * @license
@@ -24558,6 +24599,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 }
             }
         }
+        xi18n(bundle) {
+            for (const clazz of this.classes.keys()) {
+                const record = this.classes.get(clazz);
+                for (const trait of record.traits) {
+                    if (trait.state !== TraitState.Analyzed && trait.state !== TraitState.Resolved) {
+                        // Skip traits that haven't been analyzed successfully.
+                        continue;
+                    }
+                    else if (trait.handler.xi18n === undefined) {
+                        // Skip traits that don't support xi18n.
+                        continue;
+                    }
+                    if (trait.analysis !== null) {
+                        trait.handler.xi18n(bundle, clazz, trait.analysis);
+                    }
+                }
+            }
+        }
         updateResources(clazz) {
             if (!this.reflector.isClass(clazz) || !this.classes.has(clazz)) {
                 return;
@@ -28687,6 +28746,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return { diagnostics };
             }
             return { data };
+        }
+        xi18n(ctx, node, analysis) {
+            var _a;
+            ctx.updateFromTemplate(analysis.template.content, analysis.template.declaration.resolvedTemplateUrl, (_a = analysis.template.interpolationConfig) !== null && _a !== void 0 ? _a : DEFAULT_INTERPOLATION_CONFIG);
         }
         updateResources(node, analysis) {
             const containingFile = node.getSourceFile().fileName;
@@ -33097,6 +33160,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const INELIGIBLE = {};
     /**
      * Determines whether the provided type can be emitted, which means that it can be safely emitted
      * into a different location.
@@ -33108,13 +33172,24 @@ Either add the @Injectable() decorator to '${provider.node.name
     function canEmitType(type, resolver) {
         return canEmitTypeWorker(type);
         function canEmitTypeWorker(type) {
-            return visitTypeNode(type, {
-                visitTypeReferenceNode: type => canEmitTypeReference(type),
-                visitArrayTypeNode: type => canEmitTypeWorker(type.elementType),
-                visitKeywordType: () => true,
-                visitLiteralType: () => true,
-                visitOtherType: () => false,
-            });
+            return visitNode(type) !== INELIGIBLE;
+        }
+        // To determine whether a type can be emitted, we have to recursively look through all type nodes.
+        // If a type reference node is found at any position within the type and that type reference
+        // cannot be emitted, then the `INELIGIBLE` constant is returned to stop the recursive walk as
+        // the type as a whole cannot be emitted in that case. Otherwise, the result of visiting all child
+        // nodes determines the result. If no ineligible type reference node is found then the walk
+        // returns `undefined`, indicating that no type node was visited that could not be emitted.
+        function visitNode(node) {
+            // Emitting a type reference node in a different context requires that an import for the type
+            // can be created. If a type reference node cannot be emitted, `INELIGIBLE` is returned to stop
+            // the walk.
+            if (ts$1.isTypeReferenceNode(node) && !canEmitTypeReference(node)) {
+                return INELIGIBLE;
+            }
+            else {
+                return ts$1.forEachChild(node, visitNode);
+            }
         }
         function canEmitTypeReference(type) {
             const reference = resolver(type);
@@ -33122,10 +33197,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (reference === null) {
                 return false;
             }
-            // If the type is a reference without a owning module, consider the type not to be eligible for
-            // emitting.
-            if (reference instanceof Reference$1 && !reference.hasOwningModuleGuess) {
-                return false;
+            // If the type is a reference, consider the type to be eligible for emitting.
+            if (reference instanceof Reference$1) {
+                return true;
             }
             // The type can be emitted if either it does not have any type arguments, or all of them can be
             // emitted.
@@ -33167,15 +33241,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.emitReference = emitReference;
         }
         emitType(type) {
-            return visitTypeNode(type, {
-                visitTypeReferenceNode: type => this.emitTypeReference(type),
-                visitArrayTypeNode: type => ts$1.updateArrayTypeNode(type, this.emitType(type.elementType)),
-                visitKeywordType: type => type,
-                visitLiteralType: type => type,
-                visitOtherType: () => {
-                    throw new Error('Unable to emit a complex type');
-                },
-            });
+            const typeReferenceTransformer = context => {
+                const visitNode = (node) => {
+                    if (ts$1.isTypeReferenceNode(node)) {
+                        return this.emitTypeReference(node);
+                    }
+                    else {
+                        return ts$1.visitEachChild(node, visitNode, context);
+                    }
+                };
+                return node => ts$1.visitNode(node, visitNode);
+            };
+            return ts$1.transform(type, [typeReferenceTransformer]).transformed[0];
         }
         emitTypeReference(type) {
             // Determine the reference that the type corresponds with.
@@ -33191,9 +33268,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Emit the type name.
             let typeName = type.typeName;
             if (reference instanceof Reference$1) {
-                if (!reference.hasOwningModuleGuess) {
-                    throw new Error('A type reference to emit must be imported from an absolute module');
-                }
                 const emittedType = this.emitReference(reference);
                 if (!ts$1.isTypeReferenceNode(emittedType)) {
                     throw new Error(`Expected TypeReferenceNode for emitted reference, got ${ts$1.SyntaxKind[emittedType.kind]}`);
@@ -33201,30 +33275,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 typeName = emittedType.typeName;
             }
             return ts$1.updateTypeReferenceNode(type, typeName, typeArguments);
-        }
-    }
-    function visitTypeNode(type, visitor) {
-        if (ts$1.isTypeReferenceNode(type)) {
-            return visitor.visitTypeReferenceNode(type);
-        }
-        else if (ts$1.isArrayTypeNode(type)) {
-            return visitor.visitArrayTypeNode(type);
-        }
-        else if (ts$1.isLiteralTypeNode(type)) {
-            return visitor.visitLiteralType(type);
-        }
-        switch (type.kind) {
-            case ts$1.SyntaxKind.AnyKeyword:
-            case ts$1.SyntaxKind.UnknownKeyword:
-            case ts$1.SyntaxKind.NumberKeyword:
-            case ts$1.SyntaxKind.ObjectKeyword:
-            case ts$1.SyntaxKind.BooleanKeyword:
-            case ts$1.SyntaxKind.StringKeyword:
-            case ts$1.SyntaxKind.UndefinedKeyword:
-            case ts$1.SyntaxKind.NullKeyword:
-                return visitor.visitKeywordType(type);
-            default:
-                return visitor.visitOtherType(type);
         }
     }
 
@@ -33253,11 +33303,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return true;
             }
             return this.typeParameters.every(typeParam => {
-                if (typeParam.constraint === undefined) {
-                    return true;
-                }
-                return canEmitType(typeParam.constraint, type => this.resolveTypeReference(type));
+                return this.canEmitType(typeParam.constraint) && this.canEmitType(typeParam.default);
             });
+        }
+        canEmitType(type) {
+            if (type === undefined) {
+                return true;
+            }
+            return canEmitType(type, typeReference => this.resolveTypeReference(typeReference));
         }
         /**
          * Emits the type parameters using the provided emitter function for `Reference`s.
@@ -33269,11 +33322,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             const emitter = new TypeEmitter(type => this.resolveTypeReference(type), emitReference);
             return this.typeParameters.map(typeParam => {
                 const constraint = typeParam.constraint !== undefined ? emitter.emitType(typeParam.constraint) : undefined;
+                const defaultType = typeParam.default !== undefined ? emitter.emitType(typeParam.default) : undefined;
                 return ts$1.updateTypeParameterDeclaration(
                 /* node */ typeParam, 
                 /* name */ typeParam.name, 
                 /* constraint */ constraint, 
-                /* defaultType */ typeParam.default);
+                /* defaultType */ defaultType);
             });
         }
         resolveTypeReference(type) {
@@ -33296,7 +33350,15 @@ Either add the @Injectable() decorator to '${provider.node.name
                     resolutionContext: type.getSourceFile().fileName,
                 };
             }
+            // If no owning module is known, the reference needs to be exported to be able to emit an import
+            // statement for it. If the declaration is not exported, null is returned to prevent emit.
+            if (owningModule === null && !this.isStaticallyExported(declaration.node)) {
+                return null;
+            }
             return new Reference$1(declaration.node, owningModule);
+        }
+        isStaticallyExported(decl) {
+            return isNamedClassDeclaration(decl) && this.reflector.isStaticallyExported(decl);
         }
         isLocalTypeParameter(decl) {
             // Checking for local type parameters only occurs during resolution of type parameters, so it is
@@ -37144,7 +37206,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             const withSpan = (expression instanceof PropertyWrite || expression instanceof MethodCall) ?
                 expression.nameSpan :
                 expression.sourceSpan;
-            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: (n) => true });
+            let node = null;
+            // Property reads in templates usually map to a `PropertyAccessExpression`
+            // (e.g. `ctx.foo`) so try looking for one first.
+            if (expression instanceof PropertyRead) {
+                node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: ts$1.isPropertyAccessExpression });
+            }
+            // Otherwise fall back to searching for any AST node.
+            if (node === null) {
+                node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: anyNodeFilter });
+            }
             if (node === null) {
                 return null;
             }
@@ -37217,6 +37288,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return node.getStart();
             }
         }
+    }
+    /** Filter predicate function that matches any AST node. */
+    function anyNodeFilter(n) {
+        return true;
     }
 
     /**
@@ -38241,6 +38316,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             const context = new IndexingContext();
             compilation.traitCompiler.index(context);
             return generateAnalysis(context);
+        }
+        /**
+         * Collect i18n messages into the `Xi18nContext`.
+         */
+        xi18n(ctx) {
+            // Note that the 'resolve' phase is not strictly necessary for xi18n, but this is not currently
+            // optimized.
+            const compilation = this.ensureAnalyzed();
+            compilation.traitCompiler.xi18n(ctx);
         }
         ensureAnalyzed() {
             if (this.compilation === null) {

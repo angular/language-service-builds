@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.5+49.sha-18fe044
+ * @license Angular v12.1.0-next.6+60.sha-d71d521
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -7646,6 +7646,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const obj = this._visit(ast.receiver, _Mode.Expression);
             const key = this._visit(ast.key, _Mode.Expression);
             const value = this._visit(ast.value, _Mode.Expression);
+            if (obj === this._implicitReceiver) {
+                this._localResolver.maybeRestoreView(0, false);
+            }
             return convertToStatementIfNeeded(mode, obj.key(key).set(value));
         }
         visitLiteralArray(ast, mode) {
@@ -8090,6 +8093,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.globals = globals;
         }
         notifyImplicitReceiverUse() { }
+        maybeRestoreView() { }
         getLocal(name) {
             if (name === EventHandlerVars.event.name) {
                 return EventHandlerVars.event;
@@ -9635,10 +9639,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     parts.push(this._readChar(true));
                 }
             } while (!this._isTextEnd());
+            // It is possible that an interpolation was started but not ended inside this text token.
+            // Make sure that we reset the state of the lexer correctly.
+            this._inInterpolation = false;
             this._endToken([this._processCarriageReturns(parts.join(''))]);
         }
         _isTextEnd() {
-            if (this._cursor.peek() === $LT || this._cursor.peek() === $EOF) {
+            if (this._isTagStart() || this._cursor.peek() === $EOF) {
                 return true;
             }
             if (this._tokenizeIcu && !this._inInterpolation) {
@@ -9648,6 +9655,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 if (this._cursor.peek() === $RBRACE && this._isInExpansionCase()) {
                     // end of and expansion case
+                    return true;
+                }
+            }
+            return false;
+        }
+        /**
+         * Returns true if the current cursor is pointing to the start of a tag
+         * (opening/closing/comments/cdata/etc).
+         */
+        _isTagStart() {
+            if (this._cursor.peek() === $LT) {
+                // We assume that `<` followed by whitespace is not the start of an HTML element.
+                const tmp = this._cursor.clone();
+                tmp.advance();
+                // If the next character is alphabetic, ! nor / then it is a tag start
+                const code = tmp.peek();
+                if (($a <= code && code <= $z) || ($A <= code && code <= $Z) ||
+                    code === $SLASH || code === $BANG) {
                     return true;
                 }
             }
@@ -14346,11 +14371,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             if (!this.consumeOptionalCharacter($RBRACE)) {
                 this.rbracesExpected++;
                 do {
+                    const keyStart = this.inputIndex;
                     const quoted = this.next.isString();
                     const key = this.expectIdentifierOrKeywordOrString();
                     keys.push({ key, quoted });
-                    this.expectCharacter($COLON);
-                    values.push(this.parsePipe());
+                    // Properties with quoted keys can't use the shorthand syntax.
+                    if (quoted) {
+                        this.expectCharacter($COLON);
+                        values.push(this.parsePipe());
+                    }
+                    else if (this.consumeOptionalCharacter($COLON)) {
+                        values.push(this.parsePipe());
+                    }
+                    else {
+                        const span = this.span(keyStart);
+                        const sourceSpan = this.sourceSpan(keyStart);
+                        values.push(new PropertyRead(span, sourceSpan, sourceSpan, new ImplicitReceiver(span, sourceSpan), key));
+                    }
                 } while (this.consumeOptionalCharacter($COMMA));
                 this.rbracesExpected--;
                 this.expectCharacter($RBRACE);
@@ -16912,6 +16949,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         // LocalResolver
         notifyImplicitReceiverUse() {
             this._bindingScope.notifyImplicitReceiverUse();
+        }
+        // LocalResolver
+        maybeRestoreView(retrievalLevel, localRefLookup) {
+            this._bindingScope.maybeRestoreView(retrievalLevel, localRefLookup);
         }
         i18nTranslate(message, params = {}, ref, transformFn) {
             const _ref = ref || this.i18nGenerateMainBlockVar();
@@ -19553,7 +19594,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.5+49.sha-18fe044');
+    const VERSION$1 = new Version('12.1.0-next.6+60.sha-d71d521');
 
     /**
      * @license
@@ -35635,7 +35676,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.0-next.5+49.sha-18fe044');
+    const VERSION$2 = new Version$1('12.1.0-next.6+60.sha-d71d521');
 
     /**
      * @license
@@ -40743,20 +40784,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 merge$1(isCurrentlyStable, isStable.pipe(share()));
         }
         /**
-         * Bootstrap a new component at the root level of the application.
+         * Bootstrap a component onto the element identified by its selector or, optionally, to a
+         * specified element.
          *
          * @usageNotes
          * ### Bootstrap process
          *
-         * When bootstrapping a new root component into an application, Angular mounts the
-         * specified application component onto DOM elements identified by the componentType's
-         * selector and kicks off automatic change detection to finish initializing the component.
+         * When bootstrapping a component, Angular mounts it onto a target DOM element
+         * and kicks off automatic change detection. The target DOM element can be
+         * provided using the `rootSelectorOrNode` argument.
          *
-         * Optionally, a component can be mounted onto a DOM element that does not match the
-         * componentType's selector.
+         * If the target DOM element is not provided, Angular tries to find one on a page
+         * using the `selector` of the component that is being bootstrapped
+         * (first matched element is used).
          *
          * ### Example
-         * {@example core/ts/platform/platform.ts region='longform'}
+         *
+         * Generally, we define the component to bootstrap in the `bootstrap` array of `NgModule`,
+         * but it requires us to know the component while writing the application code.
+         *
+         * Imagine a situation where we have to wait for an API call to decide about the component to
+         * bootstrap. We can use the `ngDoBootstrap` hook of the `NgModule` and call this method to
+         * dynamically bootstrap a component.
+         *
+         * {@example core/ts/platform/platform.ts region='componentSelector'}
+         *
+         * Optionally, a component can be mounted onto a DOM element that does not match the
+         * selector of the bootstrapped component.
+         *
+         * In the following example, we are providing a CSS selector to match the target element.
+         *
+         * {@example core/ts/platform/platform.ts region='cssSelector'}
+         *
+         * While in this example, we are providing reference to a DOM node.
+         *
+         * {@example core/ts/platform/platform.ts region='domNode'}
          */
         bootstrap(componentOrFactory, rootSelectorOrNode) {
             if (!this._initStatus.done) {
