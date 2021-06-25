@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.0-next.6+60.sha-d71d521
+ * @license Angular v12.1.0+2.sha-f6b828e
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18053,7 +18053,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.0-next.6+60.sha-d71d521');
+    const VERSION$1 = new Version('12.1.0+2.sha-f6b828e');
 
     /**
      * @license
@@ -18692,7 +18692,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
+        definitionMap.set('version', literal('12.1.0+2.sha-f6b828e'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18732,7 +18732,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
+        definitionMap.set('version', literal('12.1.0+2.sha-f6b828e'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18949,7 +18949,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
+        definitionMap.set('version', literal('12.1.0+2.sha-f6b828e'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18991,7 +18991,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
+        definitionMap.set('version', literal('12.1.0+2.sha-f6b828e'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19070,7 +19070,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
+        definitionMap.set('version', literal('12.1.0+2.sha-f6b828e'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19107,7 +19107,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
+        definitionMap.set('version', literal('12.1.0+2.sha-f6b828e'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19165,7 +19165,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.0-next.6+60.sha-d71d521'));
+        definitionMap.set('version', literal('12.1.0+2.sha-f6b828e'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19197,7 +19197,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.0-next.6+60.sha-d71d521');
+    const VERSION$2 = new Version('12.1.0+2.sha-f6b828e');
 
     /**
      * @license
@@ -22467,8 +22467,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         static fromComplexFunctionCall(node, fn) {
             return new DynamicValue(node, fn, 6 /* COMPLEX_FUNCTION_CALL */);
         }
+        static fromDynamicType(node) {
+            return new DynamicValue(node, undefined, 7 /* DYNAMIC_TYPE */);
+        }
         static fromUnknown(node) {
-            return new DynamicValue(node, undefined, 7 /* UNKNOWN */);
+            return new DynamicValue(node, undefined, 8 /* UNKNOWN */);
         }
         isFromDynamicInput() {
             return this.code === 0 /* DYNAMIC_INPUT */;
@@ -22491,8 +22494,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         isFromComplexFunctionCall() {
             return this.code === 6 /* COMPLEX_FUNCTION_CALL */;
         }
+        isFromDynamicType() {
+            return this.code === 7 /* DYNAMIC_TYPE */;
+        }
         isFromUnknown() {
-            return this.code === 7 /* UNKNOWN */;
+            return this.code === 8 /* UNKNOWN */;
         }
         accept(visitor) {
             switch (this.code) {
@@ -22510,7 +22516,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     return visitor.visitInvalidExpressionType(this);
                 case 6 /* COMPLEX_FUNCTION_CALL */:
                     return visitor.visitComplexFunctionCall(this);
-                case 7 /* UNKNOWN */:
+                case 7 /* DYNAMIC_TYPE */:
+                    return visitor.visitDynamicType(this);
+                case 8 /* UNKNOWN */:
                     return visitor.visitUnknown(this);
             }
         }
@@ -22677,6 +22685,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitUnknownIdentifier(value) {
             return [makeRelatedInformation(value.node, 'Unknown reference.')];
+        }
+        visitDynamicType(value) {
+            return [makeRelatedInformation(value.node, 'Dynamic type.')];
         }
         visitUnsupportedSyntax(value) {
             return [makeRelatedInformation(value.node, 'This syntax is not supported.')];
@@ -23167,6 +23178,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return this.visitExpression(value, context);
             }
             else if (isVariableDeclarationDeclared(node)) {
+                // If the declaration has a literal type that can be statically reduced to a value, resolve to
+                // that value. If not, the historical behavior for variable declarations is to return a
+                // `Reference` to the variable, as the consumer could use it in a context where knowing its
+                // static value is not necessary.
+                //
+                // Arguably, since the value cannot be statically determined, we should return a
+                // `DynamicValue`. This returns a `Reference` because it's the same behavior as before
+                // `visitType` was introduced.
+                //
+                // TODO(zarend): investigate switching to a `DynamicValue` and verify this won't break any
+                // use cases, especially in ngcc
+                if (node.type !== undefined) {
+                    const evaluatedType = this.visitType(node.type, context);
+                    if (!(evaluatedType instanceof DynamicValue)) {
+                        return evaluatedType;
+                    }
+                }
                 return this.getReference(node, context);
             }
             else {
@@ -23523,6 +23551,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         getReference(node, context) {
             return new Reference$1(node, owningModule(context));
+        }
+        visitType(node, context) {
+            if (ts$1.isLiteralTypeNode(node)) {
+                return this.visitExpression(node.literal, context);
+            }
+            else if (ts$1.isTupleTypeNode(node)) {
+                return this.visitTupleType(node, context);
+            }
+            else if (ts$1.isNamedTupleMember(node)) {
+                return this.visitType(node.type, context);
+            }
+            return DynamicValue.fromDynamicType(node);
+        }
+        visitTupleType(node, context) {
+            const res = [];
+            for (const elem of node.elements) {
+                res.push(this.visitType(elem, context));
+            }
+            return res;
         }
     }
     function isFunctionOrMethodReference(ref) {
