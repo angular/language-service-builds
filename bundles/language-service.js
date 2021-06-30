@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.0+22.sha-234b5ed
+ * @license Angular v12.2.0-next.0+23.sha-9f5cc7c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -13404,10 +13404,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         scanNumber(start) {
             let simple = (this.index === start);
+            let hasSeparators = false;
             this.advance(); // Skip initial digit.
             while (true) {
                 if (isDigit(this.peek)) ;
-                else if (this.peek == $PERIOD) {
+                else if (this.peek === $_) {
+                    // Separators are only valid when they're surrounded by digits. E.g. `1_0_1` is
+                    // valid while `_101` and `101_` are not. The separator can't be next to the decimal
+                    // point or another separator either. Note that it's unlikely that we'll hit a case where
+                    // the underscore is at the start, because that's a valid identifier and it will be picked
+                    // up earlier in the parsing. We validate for it anyway just in case.
+                    if (!isDigit(this.input.charCodeAt(this.index - 1)) ||
+                        !isDigit(this.input.charCodeAt(this.index + 1))) {
+                        return this.error('Invalid numeric separator', 0);
+                    }
+                    hasSeparators = true;
+                }
+                else if (this.peek === $PERIOD) {
                     simple = false;
                 }
                 else if (isExponentStart(this.peek)) {
@@ -13423,7 +13436,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 }
                 this.advance();
             }
-            const str = this.input.substring(start, this.index);
+            let str = this.input.substring(start, this.index);
+            if (hasSeparators) {
+                str = str.replace(/_/g, '');
+            }
             const value = simple ? parseIntAutoRadix(str) : parseFloat(str);
             return newNumberToken(start, this.index, value);
         }
@@ -19594,7 +19610,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.0+22.sha-234b5ed');
+    const VERSION$1 = new Version('12.2.0-next.0+23.sha-9f5cc7c');
 
     /**
      * @license
@@ -47621,7 +47637,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.0-next.0+22.sha-234b5ed');
+    const VERSION$2 = new Version$1('12.2.0-next.0+23.sha-9f5cc7c');
 
     /**
      * @license
