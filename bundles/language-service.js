@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.1+4.sha-df5cc1f
+ * @license Angular v12.1.1+5.sha-97c18f4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19594,7 +19594,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.1+4.sha-df5cc1f');
+    const VERSION$1 = new Version('12.1.1+5.sha-97c18f4');
 
     /**
      * @license
@@ -35676,7 +35676,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.1+4.sha-df5cc1f');
+    const VERSION$2 = new Version$1('12.1.1+5.sha-97c18f4');
 
     /**
      * @license
@@ -43545,22 +43545,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return ngLS.getDefinitionAndBoundSpan(fileName, position);
         }
-        function getTypeDefinitionAtPosition(fileName, position) {
-            // Not implemented in VE Language Service
-            return undefined;
-        }
-        function getReferencesAtPosition(fileName, position) {
-            // Not implemented in VE Language Service
-            return undefined;
-        }
-        function findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename) {
-            // not implemented in VE Language Service
-            return undefined;
-        }
-        function getSignatureHelpItems(fileName, position, options) {
-            // not implemented in VE Language Service
-            return undefined;
-        }
         function getTcb(fileName, position) {
             // Not implemented in VE Language Service
             return undefined;
@@ -43576,10 +43560,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             getSemanticDiagnostics,
             getDefinitionAtPosition,
             getDefinitionAndBoundSpan,
-            getTypeDefinitionAtPosition,
-            getReferencesAtPosition,
-            getSignatureHelpItems,
-            findRenameLocations,
             getTcb,
             getComponentLocationsForTemplate });
     }
