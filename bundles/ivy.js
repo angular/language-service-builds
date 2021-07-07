@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+25.sha-95ba5b4
+ * @license Angular v12.2.0-next.1+26.sha-30c82cd
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18069,7 +18069,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+25.sha-95ba5b4');
+    const VERSION$1 = new Version('12.2.0-next.1+26.sha-30c82cd');
 
     /**
      * @license
@@ -18708,7 +18708,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.0-next.1+25.sha-95ba5b4'));
+        definitionMap.set('version', literal('12.2.0-next.1+26.sha-30c82cd'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18748,7 +18748,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.0-next.1+25.sha-95ba5b4'));
+        definitionMap.set('version', literal('12.2.0-next.1+26.sha-30c82cd'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18965,7 +18965,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.0-next.1+25.sha-95ba5b4'));
+        definitionMap.set('version', literal('12.2.0-next.1+26.sha-30c82cd'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -19007,7 +19007,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.0-next.1+25.sha-95ba5b4'));
+        definitionMap.set('version', literal('12.2.0-next.1+26.sha-30c82cd'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19086,7 +19086,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.0-next.1+25.sha-95ba5b4'));
+        definitionMap.set('version', literal('12.2.0-next.1+26.sha-30c82cd'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19123,7 +19123,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.0-next.1+25.sha-95ba5b4'));
+        definitionMap.set('version', literal('12.2.0-next.1+26.sha-30c82cd'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19181,7 +19181,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.0-next.1+25.sha-95ba5b4'));
+        definitionMap.set('version', literal('12.2.0-next.1+26.sha-30c82cd'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19213,7 +19213,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.0-next.1+25.sha-95ba5b4');
+    const VERSION$2 = new Version('12.2.0-next.1+26.sha-30c82cd');
 
     /**
      * @license
@@ -30105,6 +30105,213 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    const NgOriginalFile = Symbol('NgOriginalFile');
+    var UpdateMode;
+    (function (UpdateMode) {
+        /**
+         * A complete update creates a completely new overlay of type-checking code on top of the user's
+         * original program, which doesn't include type-checking code from previous calls to
+         * `updateFiles`.
+         */
+        UpdateMode[UpdateMode["Complete"] = 0] = "Complete";
+        /**
+         * An incremental update changes the contents of some files in the type-checking program without
+         * reverting any prior changes.
+         */
+        UpdateMode[UpdateMode["Incremental"] = 1] = "Incremental";
+    })(UpdateMode || (UpdateMode = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A `Symbol` which is used to patch extension data onto `ts.SourceFile`s.
+     */
+    const NgExtension = Symbol('NgExtension');
+    /**
+     * Narrows a `ts.SourceFile` if it has an `NgExtension` property.
+     */
+    function isExtended(sf) {
+        return sf[NgExtension] !== undefined;
+    }
+    /**
+     * Check whether `sf` is a shim `ts.SourceFile` (either a per-file shim or a top-level shim).
+     */
+    function isShim(sf) {
+        return isExtended(sf) && (sf[NgExtension].fileShim !== null || sf[NgExtension].isTopLevelShim);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const STRIP_NG_FACTORY = /(.*)NgFactory$/;
+    function generatedFactoryTransform(factoryMap, importRewriter) {
+        return (context) => {
+            return (file) => {
+                return transformFactorySourceFile(factoryMap, context, importRewriter, file);
+            };
+        };
+    }
+    function transformFactorySourceFile(factoryMap, context, importRewriter, file) {
+        // If this is not a generated file, it won't have factory info associated with it.
+        if (!factoryMap.has(file.fileName)) {
+            // Don't transform non-generated code.
+            return file;
+        }
+        const { moduleSymbols, sourceFilePath } = factoryMap.get(file.fileName);
+        // Not every exported factory statement is valid. They were generated before the program was
+        // analyzed, and before ngtsc knew which symbols were actually NgModules. factoryMap contains
+        // that knowledge now, so this transform filters the statement list and removes exported factories
+        // that aren't actually factories.
+        //
+        // This could leave the generated factory file empty. To prevent this (it causes issues with
+        // closure compiler) a 'ɵNonEmptyModule' export was added when the factory shim was created.
+        // Preserve that export if needed, and remove it otherwise.
+        //
+        // Additionally, an import to @angular/core is generated, but the current compilation unit could
+        // actually be @angular/core, in which case such an import is invalid and should be replaced with
+        // the proper path to access Ivy symbols in core.
+        // The filtered set of statements.
+        const transformedStatements = [];
+        // The statement identified as the ɵNonEmptyModule export.
+        let nonEmptyExport = null;
+        // Extracted identifiers which refer to import statements from @angular/core.
+        const coreImportIdentifiers = new Set();
+        // Consider all the statements.
+        for (const stmt of file.statements) {
+            // Look for imports to @angular/core.
+            if (ts$1.isImportDeclaration(stmt) && ts$1.isStringLiteral(stmt.moduleSpecifier) &&
+                stmt.moduleSpecifier.text === '@angular/core') {
+                // Update the import path to point to the correct file using the ImportRewriter.
+                const rewrittenModuleSpecifier = importRewriter.rewriteSpecifier('@angular/core', sourceFilePath);
+                if (rewrittenModuleSpecifier !== stmt.moduleSpecifier.text) {
+                    transformedStatements.push(ts$1.updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts$1.createStringLiteral(rewrittenModuleSpecifier)));
+                    // Record the identifier by which this imported module goes, so references to its symbols
+                    // can be discovered later.
+                    if (stmt.importClause !== undefined && stmt.importClause.namedBindings !== undefined &&
+                        ts$1.isNamespaceImport(stmt.importClause.namedBindings)) {
+                        coreImportIdentifiers.add(stmt.importClause.namedBindings.name.text);
+                    }
+                }
+                else {
+                    transformedStatements.push(stmt);
+                }
+            }
+            else if (ts$1.isVariableStatement(stmt) && stmt.declarationList.declarations.length === 1) {
+                const decl = stmt.declarationList.declarations[0];
+                // If this is the ɵNonEmptyModule export, then save it for later.
+                if (ts$1.isIdentifier(decl.name)) {
+                    if (decl.name.text === 'ɵNonEmptyModule') {
+                        nonEmptyExport = stmt;
+                        continue;
+                    }
+                    // Otherwise, check if this export is a factory for a known NgModule, and retain it if so.
+                    const match = STRIP_NG_FACTORY.exec(decl.name.text);
+                    const module = match ? moduleSymbols.get(match[1]) : null;
+                    if (module) {
+                        // If the module can be tree shaken, then the factory should be wrapped in a
+                        // `noSideEffects()` call which tells Closure to treat the expression as pure, allowing
+                        // it to be removed if the result is not used.
+                        //
+                        // `NgModule`s with an `id` property will be lazy loaded. Google-internal lazy loading
+                        // infra relies on a side effect from the `new NgModuleFactory()` call, which registers
+                        // the module globally. Because of this, we **cannot** tree shake any module which has
+                        // an `id` property. Doing so would cause lazy loaded modules to never be registered.
+                        const moduleIsTreeShakable = !module.hasId;
+                        const newStmt = !moduleIsTreeShakable ?
+                            stmt :
+                            updateInitializers(stmt, (init) => init ? wrapInNoSideEffects(init) : undefined);
+                        transformedStatements.push(newStmt);
+                    }
+                }
+                else {
+                    // Leave the statement alone, as it can't be understood.
+                    transformedStatements.push(stmt);
+                }
+            }
+            else {
+                // Include non-variable statements (imports, etc).
+                transformedStatements.push(stmt);
+            }
+        }
+        // Check whether the empty module export is still needed.
+        if (!transformedStatements.some(ts$1.isVariableStatement) && nonEmptyExport !== null) {
+            // If the resulting file has no factories, include an empty export to
+            // satisfy closure compiler.
+            transformedStatements.push(nonEmptyExport);
+        }
+        file = ts$1.updateSourceFileNode(file, transformedStatements);
+        // If any imports to @angular/core were detected and rewritten (which happens when compiling
+        // @angular/core), go through the SourceFile and rewrite references to symbols imported from core.
+        if (coreImportIdentifiers.size > 0) {
+            const visit = (node) => {
+                node = ts$1.visitEachChild(node, child => visit(child), context);
+                // Look for expressions of the form "i.s" where 'i' is a detected name for an @angular/core
+                // import that was changed above. Rewrite 's' using the ImportResolver.
+                if (ts$1.isPropertyAccessExpression(node) && ts$1.isIdentifier(node.expression) &&
+                    coreImportIdentifiers.has(node.expression.text)) {
+                    // This is an import of a symbol from @angular/core. Transform it with the importRewriter.
+                    const rewrittenSymbol = importRewriter.rewriteSymbol(node.name.text, '@angular/core');
+                    if (rewrittenSymbol !== node.name.text) {
+                        const updated = ts$1.updatePropertyAccess(node, node.expression, ts$1.createIdentifier(rewrittenSymbol));
+                        node = updated;
+                    }
+                }
+                return node;
+            };
+            file = visit(file);
+        }
+        return file;
+    }
+    /**
+     * Wraps the given expression in a call to `ɵnoSideEffects()`, which tells
+     * Closure we don't care about the side effects of this expression and it should
+     * be treated as "pure". Closure is free to tree shake this expression if its
+     * result is not used.
+     *
+     * Example: Takes `1 + 2` and returns `i0.ɵnoSideEffects(() => 1 + 2)`.
+     */
+    function wrapInNoSideEffects(expr) {
+        const noSideEffects = ts$1.createPropertyAccess(ts$1.createIdentifier('i0'), 'ɵnoSideEffects');
+        return ts$1.createCall(noSideEffects, 
+        /* typeArguments */ [], 
+        /* arguments */
+        [
+            ts$1.createFunctionExpression(
+            /* modifiers */ [], 
+            /* asteriskToken */ undefined, 
+            /* name */ undefined, 
+            /* typeParameters */ [], 
+            /* parameters */ [], 
+            /* type */ undefined, 
+            /* body */ ts$1.createBlock([
+                ts$1.createReturn(expr),
+            ])),
+        ]);
+    }
+    /**
+     * Clones and updates the initializers for a given statement to use the new
+     * expression provided. Does not mutate the input statement.
+     */
+    function updateInitializers(stmt, update) {
+        return ts$1.updateVariableStatement(stmt, stmt.modifiers, ts$1.updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts$1.updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * An implementation of the `DependencyTracker` dependency graph API.
      *
@@ -30301,11 +30508,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                         break;
                 }
                 const oldVersions = priorAnalysis.versions;
-                const oldFilesArray = oldProgram.getSourceFiles().map(sf => toUnredirectedSourceFile(sf));
+                const oldFilesArray = oldProgram.getSourceFiles().map(toOriginalSourceFile);
                 const oldFiles = new Set(oldFilesArray);
                 const deletedTsFiles = new Set(oldFilesArray.map(sf => absoluteFromSourceFile(sf)));
                 for (const possiblyRedirectedNewFile of program.getSourceFiles()) {
-                    const sf = toUnredirectedSourceFile(possiblyRedirectedNewFile);
+                    const sf = toOriginalSourceFile(possiblyRedirectedNewFile);
                     const sfPath = absoluteFromSourceFile(sf);
                     // Since we're seeing a file in the incoming program with this name, it can't have been
                     // deleted.
@@ -30493,6 +30700,31 @@ Either add the @Injectable() decorator to '${provider.node.name
             // successful compilation. However, as a defense-in-depth against incorrectness, we explicitly
             // check that the last emit included this file, and re-emit it otherwise.
             return this.step.priorState.emitted.has(sfPath);
+        }
+    }
+    /**
+     * To accurately detect whether a source file was affected during an incremental rebuild, the
+     * "original" source file needs to be consistently used.
+     *
+     * First, TypeScript may have created source file redirects when declaration files of the same
+     * version of a library are included multiple times. The non-redirected source file should be used
+     * to detect changes, as otherwise the redirected source files cause a mismatch when compared to
+     * a prior program.
+     *
+     * Second, the program that is used for template type checking may contain mutated source files, if
+     * inline type constructors or inline template type-check blocks had to be used. Such source files
+     * store their original, non-mutated source file from the original program in a symbol. For
+     * computing the affected files in an incremental build this original source file should be used, as
+     * the mutated source file would always be considered affected.
+     */
+    function toOriginalSourceFile(sf) {
+        const unredirectedSf = toUnredirectedSourceFile(sf);
+        const originalFile = unredirectedSf[NgOriginalFile];
+        if (originalFile !== undefined) {
+            return originalFile;
+        }
+        else {
+            return unredirectedSf;
         }
     }
 
@@ -32199,190 +32431,6 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * A `Symbol` which is used to patch extension data onto `ts.SourceFile`s.
-     */
-    const NgExtension = Symbol('NgExtension');
-    /**
-     * Narrows a `ts.SourceFile` if it has an `NgExtension` property.
-     */
-    function isExtended(sf) {
-        return sf[NgExtension] !== undefined;
-    }
-    /**
-     * Check whether `sf` is a shim `ts.SourceFile` (either a per-file shim or a top-level shim).
-     */
-    function isShim(sf) {
-        return isExtended(sf) && (sf[NgExtension].fileShim !== null || sf[NgExtension].isTopLevelShim);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const STRIP_NG_FACTORY = /(.*)NgFactory$/;
-    function generatedFactoryTransform(factoryMap, importRewriter) {
-        return (context) => {
-            return (file) => {
-                return transformFactorySourceFile(factoryMap, context, importRewriter, file);
-            };
-        };
-    }
-    function transformFactorySourceFile(factoryMap, context, importRewriter, file) {
-        // If this is not a generated file, it won't have factory info associated with it.
-        if (!factoryMap.has(file.fileName)) {
-            // Don't transform non-generated code.
-            return file;
-        }
-        const { moduleSymbols, sourceFilePath } = factoryMap.get(file.fileName);
-        // Not every exported factory statement is valid. They were generated before the program was
-        // analyzed, and before ngtsc knew which symbols were actually NgModules. factoryMap contains
-        // that knowledge now, so this transform filters the statement list and removes exported factories
-        // that aren't actually factories.
-        //
-        // This could leave the generated factory file empty. To prevent this (it causes issues with
-        // closure compiler) a 'ɵNonEmptyModule' export was added when the factory shim was created.
-        // Preserve that export if needed, and remove it otherwise.
-        //
-        // Additionally, an import to @angular/core is generated, but the current compilation unit could
-        // actually be @angular/core, in which case such an import is invalid and should be replaced with
-        // the proper path to access Ivy symbols in core.
-        // The filtered set of statements.
-        const transformedStatements = [];
-        // The statement identified as the ɵNonEmptyModule export.
-        let nonEmptyExport = null;
-        // Extracted identifiers which refer to import statements from @angular/core.
-        const coreImportIdentifiers = new Set();
-        // Consider all the statements.
-        for (const stmt of file.statements) {
-            // Look for imports to @angular/core.
-            if (ts$1.isImportDeclaration(stmt) && ts$1.isStringLiteral(stmt.moduleSpecifier) &&
-                stmt.moduleSpecifier.text === '@angular/core') {
-                // Update the import path to point to the correct file using the ImportRewriter.
-                const rewrittenModuleSpecifier = importRewriter.rewriteSpecifier('@angular/core', sourceFilePath);
-                if (rewrittenModuleSpecifier !== stmt.moduleSpecifier.text) {
-                    transformedStatements.push(ts$1.updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts$1.createStringLiteral(rewrittenModuleSpecifier)));
-                    // Record the identifier by which this imported module goes, so references to its symbols
-                    // can be discovered later.
-                    if (stmt.importClause !== undefined && stmt.importClause.namedBindings !== undefined &&
-                        ts$1.isNamespaceImport(stmt.importClause.namedBindings)) {
-                        coreImportIdentifiers.add(stmt.importClause.namedBindings.name.text);
-                    }
-                }
-                else {
-                    transformedStatements.push(stmt);
-                }
-            }
-            else if (ts$1.isVariableStatement(stmt) && stmt.declarationList.declarations.length === 1) {
-                const decl = stmt.declarationList.declarations[0];
-                // If this is the ɵNonEmptyModule export, then save it for later.
-                if (ts$1.isIdentifier(decl.name)) {
-                    if (decl.name.text === 'ɵNonEmptyModule') {
-                        nonEmptyExport = stmt;
-                        continue;
-                    }
-                    // Otherwise, check if this export is a factory for a known NgModule, and retain it if so.
-                    const match = STRIP_NG_FACTORY.exec(decl.name.text);
-                    const module = match ? moduleSymbols.get(match[1]) : null;
-                    if (module) {
-                        // If the module can be tree shaken, then the factory should be wrapped in a
-                        // `noSideEffects()` call which tells Closure to treat the expression as pure, allowing
-                        // it to be removed if the result is not used.
-                        //
-                        // `NgModule`s with an `id` property will be lazy loaded. Google-internal lazy loading
-                        // infra relies on a side effect from the `new NgModuleFactory()` call, which registers
-                        // the module globally. Because of this, we **cannot** tree shake any module which has
-                        // an `id` property. Doing so would cause lazy loaded modules to never be registered.
-                        const moduleIsTreeShakable = !module.hasId;
-                        const newStmt = !moduleIsTreeShakable ?
-                            stmt :
-                            updateInitializers(stmt, (init) => init ? wrapInNoSideEffects(init) : undefined);
-                        transformedStatements.push(newStmt);
-                    }
-                }
-                else {
-                    // Leave the statement alone, as it can't be understood.
-                    transformedStatements.push(stmt);
-                }
-            }
-            else {
-                // Include non-variable statements (imports, etc).
-                transformedStatements.push(stmt);
-            }
-        }
-        // Check whether the empty module export is still needed.
-        if (!transformedStatements.some(ts$1.isVariableStatement) && nonEmptyExport !== null) {
-            // If the resulting file has no factories, include an empty export to
-            // satisfy closure compiler.
-            transformedStatements.push(nonEmptyExport);
-        }
-        file = ts$1.updateSourceFileNode(file, transformedStatements);
-        // If any imports to @angular/core were detected and rewritten (which happens when compiling
-        // @angular/core), go through the SourceFile and rewrite references to symbols imported from core.
-        if (coreImportIdentifiers.size > 0) {
-            const visit = (node) => {
-                node = ts$1.visitEachChild(node, child => visit(child), context);
-                // Look for expressions of the form "i.s" where 'i' is a detected name for an @angular/core
-                // import that was changed above. Rewrite 's' using the ImportResolver.
-                if (ts$1.isPropertyAccessExpression(node) && ts$1.isIdentifier(node.expression) &&
-                    coreImportIdentifiers.has(node.expression.text)) {
-                    // This is an import of a symbol from @angular/core. Transform it with the importRewriter.
-                    const rewrittenSymbol = importRewriter.rewriteSymbol(node.name.text, '@angular/core');
-                    if (rewrittenSymbol !== node.name.text) {
-                        const updated = ts$1.updatePropertyAccess(node, node.expression, ts$1.createIdentifier(rewrittenSymbol));
-                        node = updated;
-                    }
-                }
-                return node;
-            };
-            file = visit(file);
-        }
-        return file;
-    }
-    /**
-     * Wraps the given expression in a call to `ɵnoSideEffects()`, which tells
-     * Closure we don't care about the side effects of this expression and it should
-     * be treated as "pure". Closure is free to tree shake this expression if its
-     * result is not used.
-     *
-     * Example: Takes `1 + 2` and returns `i0.ɵnoSideEffects(() => 1 + 2)`.
-     */
-    function wrapInNoSideEffects(expr) {
-        const noSideEffects = ts$1.createPropertyAccess(ts$1.createIdentifier('i0'), 'ɵnoSideEffects');
-        return ts$1.createCall(noSideEffects, 
-        /* typeArguments */ [], 
-        /* arguments */
-        [
-            ts$1.createFunctionExpression(
-            /* modifiers */ [], 
-            /* asteriskToken */ undefined, 
-            /* name */ undefined, 
-            /* typeParameters */ [], 
-            /* parameters */ [], 
-            /* type */ undefined, 
-            /* body */ ts$1.createBlock([
-                ts$1.createReturn(expr),
-            ])),
-        ]);
-    }
-    /**
-     * Clones and updates the initializers for a given statement to use the new
-     * expression provided. Does not mutate the input statement.
-     */
-    function updateInitializers(stmt, update) {
-        return ts$1.updateVariableStatement(stmt, stmt.modifiers, ts$1.updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts$1.updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const IVY_SWITCH_PRE_SUFFIX = '__PRE_R3__';
     const IVY_SWITCH_POST_SUFFIX = '__POST_R3__';
     function ivySwitchTransform(_) {
@@ -32489,28 +32537,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         return stmt.declarationList.declarations.some(decl => decl.initializer !== undefined && ts$1.isIdentifier(decl.initializer) &&
             decl.initializer.text.endsWith(IVY_SWITCH_PRE_SUFFIX));
     }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var UpdateMode;
-    (function (UpdateMode) {
-        /**
-         * A complete update creates a completely new overlay of type-checking code on top of the user's
-         * original program, which doesn't include type-checking code from previous calls to
-         * `updateFiles`.
-         */
-        UpdateMode[UpdateMode["Complete"] = 0] = "Complete";
-        /**
-         * An incremental update changes the contents of some files in the type-checking program without
-         * reverting any prior changes.
-         */
-        UpdateMode[UpdateMode["Incremental"] = 1] = "Incremental";
-    })(UpdateMode || (UpdateMode = {}));
 
     /**
      * @license
@@ -36617,7 +36643,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             for (const originalSf of this.opMap.keys()) {
                 const newText = this.transform(originalSf);
                 if (newText !== null) {
-                    updates.set(absoluteFromSourceFile(originalSf), newText);
+                    updates.set(absoluteFromSourceFile(originalSf), {
+                        newText,
+                        originalFile: originalSf,
+                    });
                 }
             }
             // Then go through each input file that has pending code generation operations.
@@ -36633,7 +36662,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                         path: pendingShimData.file.fileName,
                         templates: pendingShimData.templates,
                     });
-                    updates.set(pendingShimData.file.fileName, pendingShimData.file.render(false /* removeComments */));
+                    const sfText = pendingShimData.file.render(false /* removeComments */);
+                    updates.set(pendingShimData.file.fileName, {
+                        newText: sfText,
+                        // Shim files do not have an associated original file.
+                        originalFile: null,
+                    });
                 }
             }
             return updates;
@@ -42575,7 +42609,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return program;
             },
             updateFiles(contents) {
-                for (const [fileName, newText] of contents) {
+                for (const [fileName, { newText }] of contents) {
                     const scriptInfo = getOrCreateTypeCheckScriptInfo(project, fileName);
                     const snapshot = scriptInfo.getSnapshot();
                     const length = snapshot.getLength();
