@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.1+41.sha-f6bce31
+ * @license Angular v12.1.1+43.sha-a8d5a31
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19594,7 +19594,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.1+41.sha-f6bce31');
+    const VERSION$1 = new Version('12.1.1+43.sha-a8d5a31');
 
     /**
      * @license
@@ -35676,7 +35676,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.1+41.sha-f6bce31');
+    const VERSION$2 = new Version$1('12.1.1+43.sha-a8d5a31');
 
     /**
      * @license
@@ -39224,11 +39224,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * through DI.
      *
      * ```
-     *  function initializeApp(httpClient: HttpClient): Observable<any> {
-     *   return httpClient.get("https://someUrl.com/api/user")
+     *  function initializeAppFactory(httpClient: HttpClient): () => Observable<any> {
+     *   return () => httpClient.get("https://someUrl.com/api/user")
      *     .pipe(
      *        tap(user => { ... })
-     *     )
+     *     );
      *  }
      *
      *  @NgModule({
@@ -39237,7 +39237,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      *    bootstrap: [AppComponent],
      *    providers: [{
      *      provide: APP_INITIALIZER,
-     *      useFactory: initializeApp,
+     *      useFactory: initializeAppFactory,
      *      deps: [HttpClient],
      *      multi: true
      *    }]
