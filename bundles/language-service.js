@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+67.sha-e8be045
+ * @license Angular v12.2.0-next.1+89.sha-b5ab7af
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6372,9 +6372,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.span = span;
             this.sourceSpan = sourceSpan;
         }
-        visit(visitor, context = null) {
-            return null;
-        }
         toString() {
             return 'AST';
         }
@@ -8119,7 +8116,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     class BuiltinFunctionCall extends FunctionCall {
         constructor(span, sourceSpan, args, converter) {
             super(span, sourceSpan, null, args);
-            this.args = args;
             this.converter = converter;
         }
     }
@@ -19151,13 +19147,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * An interface for retrieving documents by URL that the compiler uses
-     * to load templates.
+     * An interface for retrieving documents by URL that the compiler uses to
+     * load templates.
+     *
+     * This is an abstract class, rather than an interface, so that it can be used
+     * as injection token.
      */
     class ResourceLoader {
-        get(url) {
-            return '';
-        }
     }
 
     /**
@@ -19606,7 +19602,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+67.sha-e8be045');
+    const VERSION$1 = new Version('12.2.0-next.1+89.sha-b5ab7af');
 
     /**
      * @license
@@ -47629,7 +47625,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.0-next.1+67.sha-e8be045');
+    const VERSION$2 = new Version$1('12.2.0-next.1+89.sha-b5ab7af');
 
     /**
      * @license
