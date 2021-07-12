@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.1+55.sha-2ed5a2d
+ * @license Angular v12.1.1+60.sha-91a576d
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -7647,7 +7647,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const key = this._visit(ast.key, _Mode.Expression);
             const value = this._visit(ast.value, _Mode.Expression);
             if (obj === this._implicitReceiver) {
-                this._localResolver.maybeRestoreView(0, false);
+                this._localResolver.maybeRestoreView();
             }
             return convertToStatementIfNeeded(mode, obj.key(key).set(value));
         }
@@ -16951,8 +16951,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this._bindingScope.notifyImplicitReceiverUse();
         }
         // LocalResolver
-        maybeRestoreView(retrievalLevel, localRefLookup) {
-            this._bindingScope.maybeRestoreView(retrievalLevel, localRefLookup);
+        maybeRestoreView() {
+            this._bindingScope.maybeRestoreView();
         }
         i18nTranslate(message, params = {}, ref, transformFn) {
             const _ref = ref || this.i18nGenerateMainBlockVar();
@@ -18046,14 +18046,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                             lhs: value.lhs,
                             declareLocalCallback: value.declareLocalCallback,
                             declare: false,
-                            priority: value.priority,
-                            localRef: value.localRef
+                            priority: value.priority
                         };
                         // Cache the value locally.
                         this.map.set(name, value);
                         // Possibly generate a shared context var
                         this.maybeGenerateSharedContextVar(value);
-                        this.maybeRestoreView(value.retrievalLevel, value.localRef);
+                        this.maybeRestoreView();
                     }
                     if (value.declareLocalCallback && !value.declare) {
                         value.declare = true;
@@ -18093,7 +18092,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 declare: false,
                 declareLocalCallback: declareLocalCallback,
                 priority: priority,
-                localRef: localRef || false
             });
             return this;
         }
@@ -18157,22 +18155,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 },
                 declare: false,
                 priority: 2 /* SHARED_CONTEXT */,
-                localRef: false
             });
         }
         getComponentProperty(name) {
             const componentValue = this.map.get(SHARED_CONTEXT_KEY + 0);
             componentValue.declare = true;
-            this.maybeRestoreView(0, false);
+            this.maybeRestoreView();
             return componentValue.lhs.prop(name);
         }
-        maybeRestoreView(retrievalLevel, localRefLookup) {
-            // We want to restore the current view in listener fns if:
-            // 1 - we are accessing a value in a parent view, which requires walking the view tree rather
-            // than using the ctx arg. In this case, the retrieval and binding level will be different.
-            // 2 - we are looking up a local ref, which requires restoring the view where the local
-            // ref is stored
-            if (this.isListenerScope() && (retrievalLevel < this.bindingLevel || localRefLookup)) {
+        maybeRestoreView() {
+            // View restoration is required for listener instructions inside embedded views, because
+            // they only run in creation mode and they can have references to the context object.
+            // If the context object changes in update mode, the reference will be incorrect, because
+            // it was established during creation.
+            if (this.isListenerScope()) {
                 if (!this.parent.restoreViewVariable) {
                     // parent saves variable to generate a shared `const $s$ = getCurrentView();` instruction
                     this.parent.restoreViewVariable = variable(this.parent.freshReferenceName());
@@ -19594,7 +19590,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.1+55.sha-2ed5a2d');
+    const VERSION$1 = new Version('12.1.1+60.sha-91a576d');
 
     /**
      * @license
@@ -31159,11 +31155,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         /** @internal */
         _findContext(error) {
-            if (error) {
-                return getDebugContext(error) ? getDebugContext(error) :
-                    this._findContext(getOriginalError(error));
-            }
-            return null;
+            return error ? (getDebugContext(error) || this._findContext(getOriginalError(error))) : null;
         }
         /** @internal */
         _findOriginalError(error) {
@@ -35676,7 +35668,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.1+55.sha-2ed5a2d');
+    const VERSION$2 = new Version$1('12.1.1+60.sha-91a576d');
 
     /**
      * @license
