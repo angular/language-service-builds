@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+62.sha-40da386
+ * @license Angular v12.2.0-next.1+63.sha-4c482bf
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -18069,7 +18069,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+62.sha-40da386');
+    const VERSION$1 = new Version('12.2.0-next.1+63.sha-4c482bf');
 
     /**
      * @license
@@ -18708,7 +18708,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.0-next.1+62.sha-40da386'));
+        definitionMap.set('version', literal('12.2.0-next.1+63.sha-4c482bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18748,7 +18748,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.0-next.1+62.sha-40da386'));
+        definitionMap.set('version', literal('12.2.0-next.1+63.sha-4c482bf'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18965,7 +18965,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.0-next.1+62.sha-40da386'));
+        definitionMap.set('version', literal('12.2.0-next.1+63.sha-4c482bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -19007,7 +19007,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.0-next.1+62.sha-40da386'));
+        definitionMap.set('version', literal('12.2.0-next.1+63.sha-4c482bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19086,7 +19086,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.0-next.1+62.sha-40da386'));
+        definitionMap.set('version', literal('12.2.0-next.1+63.sha-4c482bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19123,7 +19123,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.0-next.1+62.sha-40da386'));
+        definitionMap.set('version', literal('12.2.0-next.1+63.sha-4c482bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19181,7 +19181,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.0-next.1+62.sha-40da386'));
+        definitionMap.set('version', literal('12.2.0-next.1+63.sha-4c482bf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19213,7 +19213,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.0-next.1+62.sha-40da386');
+    const VERSION$2 = new Version('12.2.0-next.1+63.sha-4c482bf');
 
     /**
      * @license
@@ -33267,12 +33267,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             return visitNode(type) !== INELIGIBLE;
         }
         // To determine whether a type can be emitted, we have to recursively look through all type nodes.
-        // If a type reference node is found at any position within the type and that type reference
-        // cannot be emitted, then the `INELIGIBLE` constant is returned to stop the recursive walk as
-        // the type as a whole cannot be emitted in that case. Otherwise, the result of visiting all child
-        // nodes determines the result. If no ineligible type reference node is found then the walk
-        // returns `undefined`, indicating that no type node was visited that could not be emitted.
+        // If an unsupported type node is found at any position within the type, then the `INELIGIBLE`
+        // constant is returned to stop the recursive walk as the type as a whole cannot be emitted in
+        // that case. Otherwise, the result of visiting all child nodes determines the result. If no
+        // ineligible type reference node is found then the walk returns `undefined`, indicating that
+        // no type node was visited that could not be emitted.
         function visitNode(node) {
+            // `import('module')` type nodes are not supported, as it may require rewriting the module
+            // specifier which is currently not done.
+            if (ts$1.isImportTypeNode(node)) {
+                return INELIGIBLE;
+            }
             // Emitting a type reference node in a different context requires that an import for the type
             // can be created. If a type reference node cannot be emitted, `INELIGIBLE` is returned to stop
             // the walk.
@@ -33335,8 +33340,22 @@ Either add the @Injectable() decorator to '${provider.node.name
         emitType(type) {
             const typeReferenceTransformer = context => {
                 const visitNode = (node) => {
+                    if (ts$1.isImportTypeNode(node)) {
+                        throw new Error('Unable to emit import type');
+                    }
                     if (ts$1.isTypeReferenceNode(node)) {
                         return this.emitTypeReference(node);
+                    }
+                    else if (ts$1.isLiteralExpression(node)) {
+                        // TypeScript would typically take the emit text for a literal expression from the source
+                        // file itself. As the type node is being emitted into a different file, however,
+                        // TypeScript would extract the literal text from the wrong source file. To mitigate this
+                        // issue the literal is cloned and explicitly marked as synthesized by setting its text
+                        // range to a negative range, forcing TypeScript to determine the node's literal text from
+                        // the synthesized node's text instead of the incorrect source file.
+                        const clone = ts$1.getMutableClone(node);
+                        ts$1.setTextRange(clone, { pos: -1, end: -1 });
+                        return clone;
                     }
                     else {
                         return ts$1.visitEachChild(node, visitNode, context);
