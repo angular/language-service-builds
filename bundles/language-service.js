@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.1+60.sha-91a576d
+ * @license Angular v12.1.1+83.sha-4f8a728
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6372,9 +6372,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.span = span;
             this.sourceSpan = sourceSpan;
         }
-        visit(visitor, context = null) {
-            return null;
-        }
         toString() {
             return 'AST';
         }
@@ -8119,7 +8116,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     class BuiltinFunctionCall extends FunctionCall {
         constructor(span, sourceSpan, args, converter) {
             super(span, sourceSpan, null, args);
-            this.args = args;
             this.converter = converter;
         }
     }
@@ -19135,13 +19131,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * An interface for retrieving documents by URL that the compiler uses
-     * to load templates.
+     * An interface for retrieving documents by URL that the compiler uses to
+     * load templates.
+     *
+     * This is an abstract class, rather than an interface, so that it can be used
+     * as injection token.
      */
     class ResourceLoader {
-        get(url) {
-            return '';
-        }
     }
 
     /**
@@ -19590,7 +19586,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.1+60.sha-91a576d');
+    const VERSION$1 = new Version('12.1.1+83.sha-4f8a728');
 
     /**
      * @license
@@ -35668,7 +35664,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.1.1+60.sha-91a576d');
+    const VERSION$2 = new Version$1('12.1.1+83.sha-4f8a728');
 
     /**
      * @license

@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.1+60.sha-91a576d
+ * @license Angular v12.1.1+83.sha-4f8a728
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6410,9 +6410,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.span = span;
             this.sourceSpan = sourceSpan;
         }
-        visit(visitor, context = null) {
-            return null;
-        }
         toString() {
             return 'AST';
         }
@@ -8151,7 +8148,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     class BuiltinFunctionCall extends FunctionCall {
         constructor(span, sourceSpan, args, converter) {
             super(span, sourceSpan, null, args);
-            this.args = args;
             this.converter = converter;
         }
     }
@@ -17594,13 +17590,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * An interface for retrieving documents by URL that the compiler uses
-     * to load templates.
+     * An interface for retrieving documents by URL that the compiler uses to
+     * load templates.
+     *
+     * This is an abstract class, rather than an interface, so that it can be used
+     * as injection token.
      */
     class ResourceLoader {
-        get(url) {
-            return '';
-        }
     }
 
     /**
@@ -18049,7 +18045,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.1+60.sha-91a576d');
+    const VERSION$1 = new Version('12.1.1+83.sha-4f8a728');
 
     /**
      * @license
@@ -18180,7 +18176,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const { directives, bindings, references } = DirectiveBinder.apply(target.template, this.directiveMatcher);
             // Finally, run the TemplateBinder to bind references, variables, and other entities within the
             // template. This extracts all the metadata that doesn't depend on directive matching.
-            const { expressions, symbols, nestingLevel, usedPipes } = TemplateBinder.apply(target.template, scope);
+            const { expressions, symbols, nestingLevel, usedPipes } = TemplateBinder.applyWithScope(target.template, scope);
             return new R3BoundTarget(target, directives, bindings, references, expressions, symbols, nestingLevel, templateEntities, usedPipes);
         }
     }
@@ -18457,7 +18453,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * nesting level (how many levels deep within the template structure the `Template` is), starting
          * at 1.
          */
-        static apply(template, scope) {
+        static applyWithScope(template, scope) {
             const expressions = new Map();
             const symbols = new Map();
             const nestingLevel = new Map();
@@ -18688,7 +18684,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.1+60.sha-91a576d'));
+        definitionMap.set('version', literal('12.1.1+83.sha-4f8a728'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -18728,7 +18724,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.1+60.sha-91a576d'));
+        definitionMap.set('version', literal('12.1.1+83.sha-4f8a728'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -18945,7 +18941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.1+60.sha-91a576d'));
+        definitionMap.set('version', literal('12.1.1+83.sha-4f8a728'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -18987,7 +18983,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.1+60.sha-91a576d'));
+        definitionMap.set('version', literal('12.1.1+83.sha-4f8a728'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -19066,7 +19062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.1+60.sha-91a576d'));
+        definitionMap.set('version', literal('12.1.1+83.sha-4f8a728'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -19103,7 +19099,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.1+60.sha-91a576d'));
+        definitionMap.set('version', literal('12.1.1+83.sha-4f8a728'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -19161,7 +19157,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.1+60.sha-91a576d'));
+        definitionMap.set('version', literal('12.1.1+83.sha-4f8a728'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -19193,7 +19189,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.1+60.sha-91a576d');
+    const VERSION$2 = new Version('12.1.1+83.sha-4f8a728');
 
     /**
      * @license
@@ -25834,13 +25830,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
              * Maps statements to an array of statements that should be inserted after them.
              */
             this._after = new Map();
-        }
-        /**
-         * Visit a class declaration, returning at least the transformed declaration and optionally other
-         * nodes to insert before the declaration.
-         */
-        visitClassDeclaration(node) {
-            return { node };
         }
         _visitListEntryNode(node, visitor) {
             const result = visitor(node);
@@ -35030,7 +35019,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     /**
      * A `TcbOp` which constructs an instance of a non-generic directive _without_ setting any of its
-     * inputs. Inputs  are later set in the `TcbDirectiveInputsOp`. Type checking was found to be
+     * inputs. Inputs are later set in the `TcbDirectiveInputsOp`. Type checking was found to be
      * faster when done in this way as opposed to `TcbDirectiveCtorOp` which is only necessary when the
      * directive is generic.
      *
@@ -40173,10 +40162,19 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         TargetNodeKind[TargetNodeKind["TwoWayBindingContext"] = 7] = "TwoWayBindingContext";
     })(TargetNodeKind || (TargetNodeKind = {}));
     /**
+     * Special marker AST that can be used when the cursor is within the `sourceSpan` but not
+     * the key or value span of a node with key/value spans.
+     */
+    class OutsideKeyValueMarkerAst extends AST {
+        visit() {
+            return null;
+        }
+    }
+    /**
      * This special marker is added to the path when the cursor is within the sourceSpan but not the key
      * or value span of a node with key/value spans.
      */
-    const OUTSIDE_K_V_MARKER = new AST(new ParseSpan(-1, -1), new AbsoluteSourceSpan(-1, -1));
+    const OUTSIDE_K_V_MARKER = new OutsideKeyValueMarkerAst(new ParseSpan(-1, -1), new AbsoluteSourceSpan(-1, -1));
     /**
      * Return the template AST node or expression AST node that most accurately
      * represents the node at the specified cursor `position`.
