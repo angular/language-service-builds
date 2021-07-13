@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+99.sha-88b15d5
+ * @license Angular v12.2.0-next.1+100.sha-81dce5c
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19941,7 +19941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+99.sha-88b15d5');
+    const VERSION$1 = new Version('12.2.0-next.1+100.sha-81dce5c');
 
     /**
      * @license
@@ -20580,7 +20580,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.0-next.1+99.sha-88b15d5'));
+        definitionMap.set('version', literal('12.2.0-next.1+100.sha-81dce5c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20620,7 +20620,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.0-next.1+99.sha-88b15d5'));
+        definitionMap.set('version', literal('12.2.0-next.1+100.sha-81dce5c'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20837,7 +20837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.0-next.1+99.sha-88b15d5'));
+        definitionMap.set('version', literal('12.2.0-next.1+100.sha-81dce5c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20879,7 +20879,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.0-next.1+99.sha-88b15d5'));
+        definitionMap.set('version', literal('12.2.0-next.1+100.sha-81dce5c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20958,7 +20958,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.0-next.1+99.sha-88b15d5'));
+        definitionMap.set('version', literal('12.2.0-next.1+100.sha-81dce5c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20995,7 +20995,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.0-next.1+99.sha-88b15d5'));
+        definitionMap.set('version', literal('12.2.0-next.1+100.sha-81dce5c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21053,7 +21053,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.0-next.1+99.sha-88b15d5'));
+        definitionMap.set('version', literal('12.2.0-next.1+100.sha-81dce5c'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21085,7 +21085,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.0-next.1+99.sha-88b15d5');
+    const VERSION$2 = new Version('12.2.0-next.1+100.sha-81dce5c');
 
     /**
      * @license
@@ -21283,6 +21283,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * ```
          */
         ErrorCode[ErrorCode["DUPLICATE_VARIABLE_DECLARATION"] = 8006] = "DUPLICATE_VARIABLE_DECLARATION";
+        /**
+         * A template has a two way binding (two bindings created by a single syntactial element)
+         * in which the input and output are going to different places.
+         */
+        ErrorCode[ErrorCode["SPLIT_TWO_WAY_BINDING"] = 8007] = "SPLIT_TWO_WAY_BINDING";
         /**
          * The template type-checking engine would need to generate an inline type check block for a
          * component, but the current type-checking environment doesn't support it.
@@ -34789,18 +34794,21 @@ Either add the @Injectable() decorator to '${provider.node.name
     /**
      * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
      */
-    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessage) {
+    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessages) {
         if (mapping.type === 'direct') {
             let relatedInformation = undefined;
-            if (relatedMessage !== undefined) {
-                relatedInformation = [{
+            if (relatedMessages !== undefined) {
+                relatedInformation = [];
+                for (const relatedMessage of relatedMessages) {
+                    relatedInformation.push({
                         category: ts$1.DiagnosticCategory.Message,
                         code: 0,
-                        file: mapping.node.getSourceFile(),
-                        start: relatedMessage.span.start.offset,
-                        length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
+                        file: relatedMessage.sourceFile,
+                        start: relatedMessage.start,
+                        length: relatedMessage.end - relatedMessage.start,
                         messageText: relatedMessage.text,
-                    }];
+                    });
+                }
             }
             // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
             // constant within the `@Component` decorator for the template. This allows us to map the error
@@ -34834,15 +34842,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Also investigate caching the file to avoid running the parser multiple times.
             const sf = ts$1.createSourceFile(fileName, mapping.template, ts$1.ScriptTarget.Latest, false, ts$1.ScriptKind.JSX);
             let relatedInformation = [];
-            if (relatedMessage !== undefined) {
-                relatedInformation.push({
-                    category: ts$1.DiagnosticCategory.Message,
-                    code: 0,
-                    file: sf,
-                    start: relatedMessage.span.start.offset,
-                    length: relatedMessage.span.end.offset - relatedMessage.span.start.offset,
-                    messageText: relatedMessage.text,
-                });
+            if (relatedMessages !== undefined) {
+                for (const relatedMessage of relatedMessages) {
+                    relatedInformation.push({
+                        category: ts$1.DiagnosticCategory.Message,
+                        code: 0,
+                        file: relatedMessage.sourceFile,
+                        start: relatedMessage.start,
+                        length: relatedMessage.end - relatedMessage.start,
+                        messageText: relatedMessage.text,
+                    });
+                }
             }
             relatedInformation.push({
                 category: ts$1.DiagnosticCategory.Message,
@@ -35876,6 +35886,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.recordedPipes.add(ast);
         }
         illegalAssignmentToTemplateVar(templateId, assignment, target) {
+            var _a, _b;
             const mapping = this.resolver.getSourceMapping(templateId);
             const errorMsg = `Cannot use variable '${assignment
             .name}' as the left-hand side of an assignment expression. Template variables are read-only.`;
@@ -35883,10 +35894,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (sourceSpan === null) {
                 throw new Error(`Assertion failure: no SourceLocation found for property binding.`);
             }
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, {
-                text: `The variable ${assignment.name} is declared here.`,
-                span: target.valueSpan || target.sourceSpan,
-            }));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, [{
+                    text: `The variable ${assignment.name} is declared here.`,
+                    start: ((_a = target.valueSpan) === null || _a === void 0 ? void 0 : _a.start.offset) || target.sourceSpan.start.offset,
+                    end: ((_b = target.valueSpan) === null || _b === void 0 ? void 0 : _b.end.offset) || target.sourceSpan.end.offset,
+                    sourceFile: mapping.node.getSourceFile(),
+                }]));
         }
         duplicateTemplateVar(templateId, variable, firstDecl) {
             const mapping = this.resolver.getSourceMapping(templateId);
@@ -35896,10 +35909,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             // variable in question.
             //
             // TODO(alxhub): allocate to a tighter span once one is available.
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, variable.sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, {
-                text: `The variable '${firstDecl.name}' was first declared here.`,
-                span: firstDecl.sourceSpan,
-            }));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, variable.sourceSpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, [{
+                    text: `The variable '${firstDecl.name}' was first declared here.`,
+                    start: firstDecl.sourceSpan.start.offset,
+                    end: firstDecl.sourceSpan.end.offset,
+                    sourceFile: mapping.node.getSourceFile(),
+                }]));
         }
         requiresInlineTcb(templateId, node) {
             this._diagnostics.push(makeInlineDiagnostic(templateId, ErrorCode.INLINE_TCB_REQUIRED, node.name, `This component requires inline template type-checking, which is not supported by the current environment.`));
@@ -35939,6 +35954,39 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const message = `This structural directive supports advanced type inference, but the current compiler configuration prevents its usage. The variable ${varIdentification} will have type 'any' as a result.\n\nConsider enabling the 'strictTemplates' option in your tsconfig.json for better type inference within this template.`;
             this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, diagnosticVar.keySpan, ts$1.DiagnosticCategory.Suggestion, ngErrorCode(ErrorCode.SUGGEST_SUBOPTIMAL_TYPE_INFERENCE), message));
+        }
+        splitTwoWayBinding(templateId, input, output, inputConsumer, outputConsumer) {
+            const mapping = this.resolver.getSourceMapping(templateId);
+            const errorMsg = `The property and event halves of the two-way binding '${input.name}' are not bound to the same target.
+            Find more at https://angular.io/guide/two-way-binding#how-two-way-binding-works`;
+            const relatedMessages = [];
+            relatedMessages.push({
+                text: `The property half of the binding is to the '${inputConsumer.name.text}' component.`,
+                start: inputConsumer.name.getStart(),
+                end: inputConsumer.name.getEnd(),
+                sourceFile: inputConsumer.name.getSourceFile(),
+            });
+            if (outputConsumer instanceof Element) {
+                let message = `The event half of the binding is to a native event called '${input.name}' on the <${outputConsumer.name}> DOM element.`;
+                if (!mapping.node.getSourceFile().isDeclarationFile) {
+                    message += `\n \n Are you missing an output declaration called '${output.name}'?`;
+                }
+                relatedMessages.push({
+                    text: message,
+                    start: outputConsumer.sourceSpan.start.offset + 1,
+                    end: outputConsumer.sourceSpan.start.offset + outputConsumer.name.length + 1,
+                    sourceFile: mapping.node.getSourceFile(),
+                });
+            }
+            else {
+                relatedMessages.push({
+                    text: `The event half of the binding is to the '${outputConsumer.name.text}' component.`,
+                    start: outputConsumer.name.getStart(),
+                    end: outputConsumer.name.getEnd(),
+                    sourceFile: outputConsumer.name.getSourceFile(),
+                });
+            }
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, input.keySpan, ts$1.DiagnosticCategory.Error, ngErrorCode(ErrorCode.SPLIT_TWO_WAY_BINDING), errorMsg, relatedMessages));
         }
     }
     function makeInlineDiagnostic(templateId, code, node, messageText, relatedInformation) {
@@ -37385,6 +37433,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (output.type !== 0 /* Regular */ || !outputs.hasBindingPropertyName(output.name)) {
                     continue;
                 }
+                if (this.tcb.env.config.checkTypeOfOutputEvents && output.name.endsWith('Change')) {
+                    const inputName = output.name.slice(0, -6);
+                    isSplitTwoWayBinding(inputName, output, this.node.inputs, this.tcb);
+                }
                 // TODO(alxhub): consider supporting multiple fields with the same property name for outputs.
                 const field = outputs.getByBindingPropertyName(output.name)[0].classPropertyName;
                 if (dirId === null) {
@@ -37443,6 +37495,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (this.claimedOutputs.has(output.name)) {
                     // Skip this event handler as it was claimed by a directive.
                     continue;
+                }
+                if (this.tcb.env.config.checkTypeOfOutputEvents && output.name.endsWith('Change')) {
+                    const inputName = output.name.slice(0, -6);
+                    if (isSplitTwoWayBinding(inputName, output, this.element.inputs, this.tcb)) {
+                        // Skip this event handler as the error was already handled.
+                        continue;
+                    }
                 }
                 if (output.type === 1 /* Animation */) {
                     // Animation output bindings always have an `$event` parameter of type `AnimationEvent`.
@@ -38256,6 +38315,28 @@ Either add the @Injectable() decorator to '${provider.node.name
     function tcbEventHandlerExpression(ast, tcb, scope) {
         const translator = new TcbEventHandlerTranslator(tcb, scope);
         return translator.translate(ast);
+    }
+    function isSplitTwoWayBinding(inputName, output, inputs, tcb) {
+        const input = inputs.find(input => input.name === inputName);
+        if (input === undefined || input.sourceSpan !== output.sourceSpan) {
+            return false;
+        }
+        // Input consumer should be a directive because it's claimed
+        const inputConsumer = tcb.boundTarget.getConsumerOfBinding(input);
+        const outputConsumer = tcb.boundTarget.getConsumerOfBinding(output);
+        if (outputConsumer === null || inputConsumer.ref === undefined ||
+            outputConsumer instanceof Template) {
+            return false;
+        }
+        if (outputConsumer instanceof Element) {
+            tcb.oobRecorder.splitTwoWayBinding(tcb.id, input, output, inputConsumer.ref.node, outputConsumer);
+            return true;
+        }
+        else if (outputConsumer.ref !== inputConsumer.ref) {
+            tcb.oobRecorder.splitTwoWayBinding(tcb.id, input, output, inputConsumer.ref.node, outputConsumer.ref.node);
+            return true;
+        }
+        return false;
     }
     class TcbEventHandlerTranslator extends TcbExpressionTranslator {
         resolve(ast) {
