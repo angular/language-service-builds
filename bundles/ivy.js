@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.2+3.sha-e6f01d7
+ * @license Angular v12.1.2+13.sha-97fa1cf
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19925,7 +19925,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.2+3.sha-e6f01d7');
+    const VERSION$1 = new Version('12.1.2+13.sha-97fa1cf');
 
     /**
      * @license
@@ -20564,7 +20564,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.2+3.sha-e6f01d7'));
+        definitionMap.set('version', literal('12.1.2+13.sha-97fa1cf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20604,7 +20604,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.2+3.sha-e6f01d7'));
+        definitionMap.set('version', literal('12.1.2+13.sha-97fa1cf'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20821,7 +20821,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.2+3.sha-e6f01d7'));
+        definitionMap.set('version', literal('12.1.2+13.sha-97fa1cf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20863,7 +20863,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.2+3.sha-e6f01d7'));
+        definitionMap.set('version', literal('12.1.2+13.sha-97fa1cf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20942,7 +20942,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.2+3.sha-e6f01d7'));
+        definitionMap.set('version', literal('12.1.2+13.sha-97fa1cf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20979,7 +20979,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.2+3.sha-e6f01d7'));
+        definitionMap.set('version', literal('12.1.2+13.sha-97fa1cf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21037,7 +21037,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.2+3.sha-e6f01d7'));
+        definitionMap.set('version', literal('12.1.2+13.sha-97fa1cf'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21069,7 +21069,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.2+3.sha-e6f01d7');
+    const VERSION$2 = new Version('12.1.2+13.sha-97fa1cf');
 
     /**
      * @license
@@ -31557,6 +31557,13 @@ Either add the @Injectable() decorator to '${provider.node.name
     class CycleAnalyzer {
         constructor(importGraph) {
             this.importGraph = importGraph;
+            /**
+             * Cycle detection is requested with the same `from` source file for all used directives and pipes
+             * within a component, which makes it beneficial to cache the results as long as the `from` source
+             * file has not changed. This avoids visiting the import graph that is reachable from multiple
+             * directives/pipes more than once.
+             */
+            this.cachedResults = null;
         }
         /**
          * Check for a cycle to be created in the `ts.Program` by adding an import between `from` and
@@ -31566,10 +31573,12 @@ Either add the @Injectable() decorator to '${provider.node.name
          *     otherwise.
          */
         wouldCreateCycle(from, to) {
+            // Try to reuse the cached results as long as the `from` source file is the same.
+            if (this.cachedResults === null || this.cachedResults.from !== from) {
+                this.cachedResults = new CycleResults(from, this.importGraph);
+            }
             // Import of 'from' -> 'to' is illegal if an edge 'to' -> 'from' already exists.
-            return this.importGraph.transitiveImportsOf(to).has(from) ?
-                new Cycle(this.importGraph, from, to) :
-                null;
+            return this.cachedResults.wouldBeCyclic(to) ? new Cycle(this.importGraph, from, to) : null;
         }
         /**
          * Record a synthetic import from `from` to `to`.
@@ -31578,7 +31587,71 @@ Either add the @Injectable() decorator to '${provider.node.name
          * import graph for cycle creation.
          */
         recordSyntheticImport(from, to) {
+            this.cachedResults = null;
             this.importGraph.addSyntheticImport(from, to);
+        }
+    }
+    const NgCyclicResult = Symbol('NgCyclicResult');
+    /**
+     * Stores the results of cycle detection in a memory efficient manner. A symbol is attached to
+     * source files that indicate what the cyclic analysis result is, as indicated by two markers that
+     * are unique to this instance. This alleviates memory pressure in large import graphs, as each
+     * execution is able to store its results in the same memory location (i.e. in the symbol
+     * on the source file) as earlier executions.
+     */
+    class CycleResults {
+        constructor(from, importGraph) {
+            this.from = from;
+            this.importGraph = importGraph;
+            this.cyclic = {};
+            this.acyclic = {};
+        }
+        wouldBeCyclic(sf) {
+            const cached = this.getCachedResult(sf);
+            if (cached !== null) {
+                // The result for this source file has already been computed, so return its result.
+                return cached;
+            }
+            if (sf === this.from) {
+                // We have reached the source file that we want to create an import from, which means that
+                // doing so would create a cycle.
+                return true;
+            }
+            // Assume for now that the file will be acyclic; this prevents infinite recursion in the case
+            // that `sf` is visited again as part of an existing cycle in the graph.
+            this.markAcyclic(sf);
+            const imports = this.importGraph.importsOf(sf);
+            for (const imported of imports) {
+                if (this.wouldBeCyclic(imported)) {
+                    this.markCyclic(sf);
+                    return true;
+                }
+            }
+            return false;
+        }
+        /**
+         * Returns whether the source file is already known to be cyclic, or `null` if the result is not
+         * yet known.
+         */
+        getCachedResult(sf) {
+            const result = sf[NgCyclicResult];
+            if (result === this.cyclic) {
+                return true;
+            }
+            else if (result === this.acyclic) {
+                return false;
+            }
+            else {
+                // Either the symbol is missing or its value does not correspond with one of the current
+                // result markers. As such, the result is unknown.
+                return null;
+            }
+        }
+        markCyclic(sf) {
+            sf[NgCyclicResult] = this.cyclic;
+        }
+        markAcyclic(sf) {
+            sf[NgCyclicResult] = this.acyclic;
         }
     }
     /**
@@ -31621,7 +31694,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         constructor(checker, perf) {
             this.checker = checker;
             this.perf = perf;
-            this.map = new Map();
+            this.imports = new Map();
         }
         /**
          * List the direct (not transitive) imports of a given `ts.SourceFile`.
@@ -31629,27 +31702,10 @@ Either add the @Injectable() decorator to '${provider.node.name
          * This operation is cached.
          */
         importsOf(sf) {
-            if (!this.map.has(sf)) {
-                this.map.set(sf, this.scanImports(sf));
+            if (!this.imports.has(sf)) {
+                this.imports.set(sf, this.scanImports(sf));
             }
-            return this.map.get(sf);
-        }
-        /**
-         * Lists the transitive imports of a given `ts.SourceFile`.
-         */
-        transitiveImportsOf(sf) {
-            const imports = new Set();
-            this.transitiveImportsOfHelper(sf, imports);
-            return imports;
-        }
-        transitiveImportsOfHelper(sf, results) {
-            if (results.has(sf)) {
-                return;
-            }
-            results.add(sf);
-            this.importsOf(sf).forEach(imported => {
-                this.transitiveImportsOfHelper(imported, results);
-            });
+            return this.imports.get(sf);
         }
         /**
          * Find an import path from the `start` SourceFile to the `end` SourceFile.
