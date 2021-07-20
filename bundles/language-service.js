@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.2+38.sha-722eb5d
+ * @license Angular v12.2.0-next.2+39.sha-307dac6
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21482,7 +21482,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.2+38.sha-722eb5d');
+    const VERSION$1 = new Version('12.2.0-next.2+39.sha-307dac6');
 
     /**
      * @license
@@ -40047,6 +40047,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             this.assertNotDestroyed();
             // Set the injection context.
             const previousInjector = setCurrentInjector(this);
+            const previousInjectImplementation = setInjectImplementation(undefined);
             try {
                 // Check for the SkipSelf flag.
                 if (!(flags & InjectFlags.SkipSelf)) {
@@ -40099,7 +40100,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 }
             }
             finally {
-                // Lastly, clean up the state by restoring the previous injector.
+                // Lastly, restore the previous injection context.
+                setInjectImplementation(previousInjectImplementation);
                 setCurrentInjector(previousInjector);
             }
         }
@@ -49495,7 +49497,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.0-next.2+38.sha-722eb5d');
+    const VERSION$2 = new Version$1('12.2.0-next.2+39.sha-307dac6');
 
     /**
      * @license
