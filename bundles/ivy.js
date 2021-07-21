@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.1.2+34.sha-b0854e2
+ * @license Angular v12.1.3+5.sha-f589b01.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19925,7 +19925,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.1.2+34.sha-b0854e2');
+    const VERSION$1 = new Version('12.1.3+5.sha-f589b01.with-local-changes');
 
     /**
      * @license
@@ -20564,7 +20564,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.1.2+34.sha-b0854e2'));
+        definitionMap.set('version', literal('12.1.3+5.sha-f589b01.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20604,7 +20604,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.1.2+34.sha-b0854e2'));
+        definitionMap.set('version', literal('12.1.3+5.sha-f589b01.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20821,7 +20821,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.1.2+34.sha-b0854e2'));
+        definitionMap.set('version', literal('12.1.3+5.sha-f589b01.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20863,7 +20863,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.1.2+34.sha-b0854e2'));
+        definitionMap.set('version', literal('12.1.3+5.sha-f589b01.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20942,7 +20942,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.1.2+34.sha-b0854e2'));
+        definitionMap.set('version', literal('12.1.3+5.sha-f589b01.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20979,7 +20979,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.1.2+34.sha-b0854e2'));
+        definitionMap.set('version', literal('12.1.3+5.sha-f589b01.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21037,7 +21037,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.1.2+34.sha-b0854e2'));
+        definitionMap.set('version', literal('12.1.3+5.sha-f589b01.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21069,7 +21069,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.1.2+34.sha-b0854e2');
+    const VERSION$2 = new Version('12.1.3+5.sha-f589b01.with-local-changes');
 
     /**
      * @license
@@ -26168,6 +26168,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
              * Ivy traits.
              */
             this.fileToClasses = new Map();
+            /**
+             * Tracks which source files have been analyzed but did not contain any traits. This set allows
+             * the compiler to skip analyzing these files in an incremental rebuild.
+             */
+            this.filesWithoutTraits = new Set();
             this.reexportMap = new Map();
             this.handlersByName = new Map();
             for (const handler of handlers) {
@@ -26190,11 +26195,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const promises = [];
             const priorWork = this.incrementalBuild.priorAnalysisFor(sf);
             if (priorWork !== null) {
-                for (const priorRecord of priorWork) {
-                    this.adopt(priorRecord);
-                }
                 this.perf.eventCount(PerfEvent.SourceFileReuseAnalysis);
-                this.perf.eventCount(PerfEvent.TraitReuseAnalysis, priorWork.length);
+                if (priorWork.length > 0) {
+                    for (const priorRecord of priorWork) {
+                        this.adopt(priorRecord);
+                    }
+                    this.perf.eventCount(PerfEvent.TraitReuseAnalysis, priorWork.length);
+                }
+                else {
+                    this.filesWithoutTraits.add(sf);
+                }
                 // Skip the rest of analysis, as this file's prior traits are being reused.
                 return;
             }
@@ -26238,6 +26248,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     records.push(this.classes.get(clazz));
                 }
                 result.set(sf, records);
+            }
+            for (const sf of this.filesWithoutTraits) {
+                result.set(sf, []);
             }
             return result;
         }
