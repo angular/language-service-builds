@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.3+2.sha-992dc93.with-local-changes
+ * @license Angular v12.2.0-next.3+4.sha-eefe168.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21482,7 +21482,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.3+2.sha-992dc93.with-local-changes');
+    const VERSION$1 = new Version('12.2.0-next.3+4.sha-eefe168.with-local-changes');
 
     /**
      * @license
@@ -32986,7 +32986,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return error[ERROR_ORIGINAL_ERROR];
     }
     function getErrorLogger(error) {
-        return error[ERROR_LOGGER] || defaultErrorLogger;
+        return error && error[ERROR_LOGGER] || defaultErrorLogger;
     }
     function defaultErrorLogger(console, ...values) {
         console.error(...values);
@@ -33051,11 +33051,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         /** @internal */
         _findOriginalError(error) {
-            let e = getOriginalError(error);
+            let e = error && getOriginalError(error);
             while (e && getOriginalError(e)) {
                 e = getOriginalError(e);
             }
-            return e;
+            return e || null;
         }
     }
 
@@ -37560,7 +37560,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.0-next.3+2.sha-992dc93.with-local-changes');
+    const VERSION$2 = new Version$1('12.2.0-next.3+4.sha-eefe168.with-local-changes');
 
     /**
      * @license
