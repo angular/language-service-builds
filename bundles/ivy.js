@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+80.sha-22290af.with-local-changes
+ * @license Angular v12.2.0-next.1+81.sha-c13ccc3.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19941,7 +19941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+80.sha-22290af.with-local-changes');
+    const VERSION$1 = new Version('12.2.0-next.1+81.sha-c13ccc3.with-local-changes');
 
     /**
      * @license
@@ -20580,7 +20580,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.0-next.1+80.sha-22290af.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20620,7 +20620,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.0-next.1+80.sha-22290af.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20837,7 +20837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.0-next.1+80.sha-22290af.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20879,7 +20879,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.0-next.1+80.sha-22290af.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20958,7 +20958,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.0-next.1+80.sha-22290af.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20995,7 +20995,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.0-next.1+80.sha-22290af.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21053,7 +21053,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.0-next.1+80.sha-22290af.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21085,7 +21085,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.0-next.1+80.sha-22290af.with-local-changes');
+    const VERSION$2 = new Version('12.2.0-next.1+81.sha-c13ccc3.with-local-changes');
 
     /**
      * @license
@@ -23770,7 +23770,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function extractReferencesFromType(checker, def, ngModuleImportedFrom, resolutionContext) {
+    function extractReferencesFromType(checker, def, bestGuessOwningModule) {
         if (!ts$1.isTupleTypeNode(def)) {
             return [];
         }
@@ -23783,12 +23783,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!isNamedClassDeclaration(node)) {
                 throw new Error(`Expected named ClassDeclaration: ${nodeDebugInfo(node)}`);
             }
-            const specifier = (from !== null && !from.startsWith('.') ? from : ngModuleImportedFrom);
-            if (specifier !== null) {
-                return new Reference$1(node, { specifier, resolutionContext });
+            if (from !== null && !from.startsWith('.')) {
+                // The symbol was imported using an absolute module specifier so return a reference that
+                // uses that absolute module specifier as its best guess owning module.
+                return new Reference$1(node, { specifier: from, resolutionContext: def.getSourceFile().fileName });
             }
             else {
-                return new Reference$1(node);
+                // For local symbols or symbols that were imported using a relative module import it is
+                // assumed that the symbol is exported from the provided best guess owning module.
+                return new Reference$1(node, bestGuessOwningModule);
             }
         });
     }
@@ -23983,7 +23986,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          */
         getNgModuleMetadata(ref) {
             const clazz = ref.node;
-            const resolutionContext = clazz.getSourceFile().fileName;
             // This operation is explicitly not memoized, as it depends on `ref.ownedByModuleGuess`.
             // TODO(alxhub): investigate caching of .d.ts module metadata.
             const ngModuleDef = this.reflector.getMembersOfClass(clazz).find(member => member.name === 'ɵmod' && member.isStatic);
@@ -24001,9 +24003,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const [_, declarationMetadata, importMetadata, exportMetadata] = ngModuleDef.type.typeArguments;
             return {
                 ref,
-                declarations: extractReferencesFromType(this.checker, declarationMetadata, ref.ownedByModuleGuess, resolutionContext),
-                exports: extractReferencesFromType(this.checker, exportMetadata, ref.ownedByModuleGuess, resolutionContext),
-                imports: extractReferencesFromType(this.checker, importMetadata, ref.ownedByModuleGuess, resolutionContext),
+                declarations: extractReferencesFromType(this.checker, declarationMetadata, ref.bestGuessOwningModule),
+                exports: extractReferencesFromType(this.checker, exportMetadata, ref.bestGuessOwningModule),
+                imports: extractReferencesFromType(this.checker, importMetadata, ref.bestGuessOwningModule),
                 schemas: [],
                 rawDeclarations: null,
             };
