@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+81.sha-c13ccc3.with-local-changes
+ * @license Angular v12.2.0-next.1+82.sha-01e869a.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19941,7 +19941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+81.sha-c13ccc3.with-local-changes');
+    const VERSION$1 = new Version('12.2.0-next.1+82.sha-01e869a.with-local-changes');
 
     /**
      * @license
@@ -20580,7 +20580,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+82.sha-01e869a.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20620,7 +20620,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+82.sha-01e869a.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20837,7 +20837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+82.sha-01e869a.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20879,7 +20879,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+82.sha-01e869a.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20958,7 +20958,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+82.sha-01e869a.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20995,7 +20995,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+82.sha-01e869a.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21053,7 +21053,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.0-next.1+81.sha-c13ccc3.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+82.sha-01e869a.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21085,7 +21085,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.0-next.1+81.sha-c13ccc3.with-local-changes');
+    const VERSION$2 = new Version('12.2.0-next.1+82.sha-01e869a.with-local-changes');
 
     /**
      * @license
@@ -34556,6 +34556,128 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
+     */
+    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessages) {
+        if (mapping.type === 'direct') {
+            let relatedInformation = undefined;
+            if (relatedMessages !== undefined) {
+                relatedInformation = [];
+                for (const relatedMessage of relatedMessages) {
+                    relatedInformation.push({
+                        category: ts$1.DiagnosticCategory.Message,
+                        code: 0,
+                        file: relatedMessage.sourceFile,
+                        start: relatedMessage.start,
+                        length: relatedMessage.end - relatedMessage.start,
+                        messageText: relatedMessage.text,
+                    });
+                }
+            }
+            // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
+            // constant within the `@Component` decorator for the template. This allows us to map the error
+            // directly into the bytes of the source file.
+            return {
+                source: 'ngtsc',
+                code,
+                category,
+                messageText,
+                file: mapping.node.getSourceFile(),
+                componentFile: mapping.node.getSourceFile(),
+                templateId,
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                relatedInformation,
+            };
+        }
+        else if (mapping.type === 'indirect' || mapping.type === 'external') {
+            // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
+            // to a string constant in the decorator), the component's file name is given with a suffix
+            // indicating it's not the TS file being displayed, but a template.
+            // For external temoplates, the HTML filename is used.
+            const componentSf = mapping.componentClass.getSourceFile();
+            const componentName = mapping.componentClass.name.text;
+            // TODO(alxhub): remove cast when TS in g3 supports this narrowing.
+            const fileName = mapping.type === 'indirect' ?
+                `${componentSf.fileName} (${componentName} template)` :
+                mapping.templateUrl;
+            // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
+            // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
+            // Also investigate caching the file to avoid running the parser multiple times.
+            const sf = ts$1.createSourceFile(fileName, mapping.template, ts$1.ScriptTarget.Latest, false, ts$1.ScriptKind.JSX);
+            let relatedInformation = [];
+            if (relatedMessages !== undefined) {
+                for (const relatedMessage of relatedMessages) {
+                    relatedInformation.push({
+                        category: ts$1.DiagnosticCategory.Message,
+                        code: 0,
+                        file: relatedMessage.sourceFile,
+                        start: relatedMessage.start,
+                        length: relatedMessage.end - relatedMessage.start,
+                        messageText: relatedMessage.text,
+                    });
+                }
+            }
+            relatedInformation.push({
+                category: ts$1.DiagnosticCategory.Message,
+                code: 0,
+                file: componentSf,
+                // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
+                // and getEnd() are used because they don't include surrounding whitespace.
+                start: mapping.node.getStart(),
+                length: mapping.node.getEnd() - mapping.node.getStart(),
+                messageText: `Error occurs in the template of component ${componentName}.`,
+            });
+            return {
+                source: 'ngtsc',
+                category,
+                code,
+                messageText,
+                file: sf,
+                componentFile: componentSf,
+                templateId,
+                start: span.start.offset,
+                length: span.end.offset - span.start.offset,
+                // Show a secondary message indicating the component whose template contains the error.
+                relatedInformation,
+            };
+        }
+        else {
+            throw new Error(`Unexpected source mapping type: ${mapping.type}`);
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const TEMPLATE_ID = Symbol('ngTemplateId');
+    const NEXT_TEMPLATE_ID = Symbol('ngNextTemplateId');
+    function getTemplateId(clazz) {
+        const node = clazz;
+        if (node[TEMPLATE_ID] === undefined) {
+            node[TEMPLATE_ID] = allocateTemplateId(node.getSourceFile());
+        }
+        return node[TEMPLATE_ID];
+    }
+    function allocateTemplateId(sf) {
+        if (sf[NEXT_TEMPLATE_ID] === undefined) {
+            sf[NEXT_TEMPLATE_ID] = 1;
+        }
+        return (`tcb${sf[NEXT_TEMPLATE_ID]++}`);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const parseSpanComment = /^(\d+),(\d+)$/;
     /**
      * Reads the trailing comments and finds the first match which is a span comment (i.e. 4,10) on a
@@ -34854,128 +34976,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.templateContextCache.set(context, templateContext);
             return templateContext;
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Constructs a `ts.Diagnostic` for a given `ParseSourceSpan` within a template.
-     */
-    function makeTemplateDiagnostic(templateId, mapping, span, category, code, messageText, relatedMessages) {
-        if (mapping.type === 'direct') {
-            let relatedInformation = undefined;
-            if (relatedMessages !== undefined) {
-                relatedInformation = [];
-                for (const relatedMessage of relatedMessages) {
-                    relatedInformation.push({
-                        category: ts$1.DiagnosticCategory.Message,
-                        code: 0,
-                        file: relatedMessage.sourceFile,
-                        start: relatedMessage.start,
-                        length: relatedMessage.end - relatedMessage.start,
-                        messageText: relatedMessage.text,
-                    });
-                }
-            }
-            // For direct mappings, the error is shown inline as ngtsc was able to pinpoint a string
-            // constant within the `@Component` decorator for the template. This allows us to map the error
-            // directly into the bytes of the source file.
-            return {
-                source: 'ngtsc',
-                code,
-                category,
-                messageText,
-                file: mapping.node.getSourceFile(),
-                componentFile: mapping.node.getSourceFile(),
-                templateId,
-                start: span.start.offset,
-                length: span.end.offset - span.start.offset,
-                relatedInformation,
-            };
-        }
-        else if (mapping.type === 'indirect' || mapping.type === 'external') {
-            // For indirect mappings (template was declared inline, but ngtsc couldn't map it directly
-            // to a string constant in the decorator), the component's file name is given with a suffix
-            // indicating it's not the TS file being displayed, but a template.
-            // For external temoplates, the HTML filename is used.
-            const componentSf = mapping.componentClass.getSourceFile();
-            const componentName = mapping.componentClass.name.text;
-            // TODO(alxhub): remove cast when TS in g3 supports this narrowing.
-            const fileName = mapping.type === 'indirect' ?
-                `${componentSf.fileName} (${componentName} template)` :
-                mapping.templateUrl;
-            // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
-            // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
-            // Also investigate caching the file to avoid running the parser multiple times.
-            const sf = ts$1.createSourceFile(fileName, mapping.template, ts$1.ScriptTarget.Latest, false, ts$1.ScriptKind.JSX);
-            let relatedInformation = [];
-            if (relatedMessages !== undefined) {
-                for (const relatedMessage of relatedMessages) {
-                    relatedInformation.push({
-                        category: ts$1.DiagnosticCategory.Message,
-                        code: 0,
-                        file: relatedMessage.sourceFile,
-                        start: relatedMessage.start,
-                        length: relatedMessage.end - relatedMessage.start,
-                        messageText: relatedMessage.text,
-                    });
-                }
-            }
-            relatedInformation.push({
-                category: ts$1.DiagnosticCategory.Message,
-                code: 0,
-                file: componentSf,
-                // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
-                // and getEnd() are used because they don't include surrounding whitespace.
-                start: mapping.node.getStart(),
-                length: mapping.node.getEnd() - mapping.node.getStart(),
-                messageText: `Error occurs in the template of component ${componentName}.`,
-            });
-            return {
-                source: 'ngtsc',
-                category,
-                code,
-                messageText,
-                file: sf,
-                componentFile: componentSf,
-                templateId,
-                start: span.start.offset,
-                length: span.end.offset - span.start.offset,
-                // Show a secondary message indicating the component whose template contains the error.
-                relatedInformation,
-            };
-        }
-        else {
-            throw new Error(`Unexpected source mapping type: ${mapping.type}`);
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const TEMPLATE_ID = Symbol('ngTemplateId');
-    const NEXT_TEMPLATE_ID = Symbol('ngNextTemplateId');
-    function getTemplateId(clazz) {
-        const node = clazz;
-        if (node[TEMPLATE_ID] === undefined) {
-            node[TEMPLATE_ID] = allocateTemplateId(node.getSourceFile());
-        }
-        return node[TEMPLATE_ID];
-    }
-    function allocateTemplateId(sf) {
-        if (sf[NEXT_TEMPLATE_ID] === undefined) {
-            sf[NEXT_TEMPLATE_ID] = 1;
-        }
-        return (`tcb${sf[NEXT_TEMPLATE_ID]++}`);
     }
 
     /**
@@ -39665,6 +39665,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             fileData.shimData.delete(shimPath);
             fileData.isComplete = false;
             this.isComplete = false;
+        }
+        makeTemplateDiagnostic(clazz, sourceSpan, category, errorCode, message, relatedInformation) {
+            const sfPath = absoluteFromSourceFile(clazz.getSourceFile());
+            const fileRecord = this.state.get(sfPath);
+            const templateId = fileRecord.sourceManager.getTemplateId(clazz);
+            const mapping = fileRecord.sourceManager.getSourceMapping(templateId);
+            return makeTemplateDiagnostic(templateId, mapping, sourceSpan, category, errorCode, message, relatedInformation);
         }
         getOrCreateCompletionEngine(component) {
             if (this.completionCache.has(component)) {
