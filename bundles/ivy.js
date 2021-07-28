@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+87.sha-1dffa51.with-local-changes
+ * @license Angular v12.2.0-next.1+90.sha-a524af1.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19941,7 +19941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+87.sha-1dffa51.with-local-changes');
+    const VERSION$1 = new Version('12.2.0-next.1+90.sha-a524af1.with-local-changes');
 
     /**
      * @license
@@ -20580,7 +20580,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.0-next.1+87.sha-1dffa51.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+90.sha-a524af1.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20620,7 +20620,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.0-next.1+87.sha-1dffa51.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+90.sha-a524af1.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20837,7 +20837,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.0-next.1+87.sha-1dffa51.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+90.sha-a524af1.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20879,7 +20879,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.0-next.1+87.sha-1dffa51.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+90.sha-a524af1.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20958,7 +20958,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.0-next.1+87.sha-1dffa51.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+90.sha-a524af1.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20995,7 +20995,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.0-next.1+87.sha-1dffa51.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+90.sha-a524af1.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21053,7 +21053,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.0-next.1+87.sha-1dffa51.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.1+90.sha-a524af1.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21085,7 +21085,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.0-next.1+87.sha-1dffa51.with-local-changes');
+    const VERSION$2 = new Version('12.2.0-next.1+90.sha-a524af1.with-local-changes');
 
     /**
      * @license
@@ -34948,6 +34948,41 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.expressionCompletionCache.set(expr, res);
             return res;
         }
+        getLiteralCompletionLocation(expr) {
+            if (this.expressionCompletionCache.has(expr)) {
+                return this.expressionCompletionCache.get(expr);
+            }
+            let tsExpr = null;
+            if (expr instanceof TextAttribute) {
+                const strNode = findFirstMatchingNode(this.tcb, {
+                    filter: ts$1.isParenthesizedExpression,
+                    withSpan: expr.sourceSpan,
+                });
+                if (strNode !== null && ts$1.isStringLiteral(strNode.expression)) {
+                    tsExpr = strNode.expression;
+                }
+            }
+            else {
+                tsExpr = findFirstMatchingNode(this.tcb, {
+                    filter: (n) => ts$1.isStringLiteral(n) || ts$1.isNumericLiteral(n),
+                    withSpan: expr.sourceSpan,
+                });
+            }
+            if (tsExpr === null) {
+                return null;
+            }
+            let positionInShimFile = tsExpr.getEnd();
+            if (ts$1.isStringLiteral(tsExpr)) {
+                // In the shimFile, if `tsExpr` is a string, the position should be in the quotes.
+                positionInShimFile -= 1;
+            }
+            const res = {
+                shimPath: this.shimPath,
+                positionInShimFile,
+            };
+            this.expressionCompletionCache.set(expr, res);
+            return res;
+        }
         /**
          * Get global completions within the given template context - either a `TmplAstTemplate` embedded
          * view, or `null` for the root context.
@@ -39652,6 +39687,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getExpressionCompletionLocation(ast));
         }
+        getLiteralCompletionLocation(node, component) {
+            const engine = this.getOrCreateCompletionEngine(component);
+            if (engine === null) {
+                return null;
+            }
+            return this.perf.inPhase(PerfPhase.TtcAutocompletion, () => engine.getLiteralCompletionLocation(node));
+        }
         invalidateClass(clazz) {
             this.completionCache.delete(clazz);
             this.symbolBuilderCache.delete(clazz);
@@ -42570,9 +42612,57 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             else if (this.isPipeCompletion()) {
                 return this.getPipeCompletions();
             }
+            else if (this.isLiteralCompletion()) {
+                return this.getLiteralCompletions(options);
+            }
             else {
                 return undefined;
             }
+        }
+        isLiteralCompletion() {
+            return this.node instanceof LiteralPrimitive ||
+                (this.node instanceof TextAttribute &&
+                    this.nodeContext === CompletionNodeContext.ElementAttributeValue);
+        }
+        getLiteralCompletions(options) {
+            const location = this.compiler.getTemplateTypeChecker().getLiteralCompletionLocation(this.node, this.component);
+            if (location === null) {
+                return undefined;
+            }
+            const tsResults = this.tsLS.getCompletionsAtPosition(location.shimPath, location.positionInShimFile, options);
+            if (tsResults === undefined) {
+                return undefined;
+            }
+            let replacementSpan;
+            if (this.node instanceof TextAttribute && this.node.value.length > 0 && this.node.valueSpan) {
+                replacementSpan = {
+                    start: this.node.valueSpan.start.offset,
+                    length: this.node.value.length,
+                };
+            }
+            if (this.node instanceof LiteralPrimitive) {
+                if (typeof this.node.value === 'string' && this.node.value.length > 0) {
+                    replacementSpan = {
+                        // The sourceSpan of `LiteralPrimitive` includes the open quote and the completion entries
+                        // don't, so skip the open quote here.
+                        start: this.node.sourceSpan.start + 1,
+                        length: this.node.value.length,
+                    };
+                }
+                else if (typeof this.node.value === 'number') {
+                    replacementSpan = {
+                        start: this.node.sourceSpan.start,
+                        length: this.node.value.toString().length,
+                    };
+                }
+            }
+            let ngResults = [];
+            for (const result of tsResults.entries) {
+                if (this.isValidNodeContextCompletion(result)) {
+                    ngResults.push(Object.assign(Object.assign({}, result), { replacementSpan }));
+                }
+            }
+            return Object.assign(Object.assign({}, tsResults), { entries: ngResults });
         }
         /**
          * Analogue for `ts.LanguageService.getCompletionEntryDetails`.
@@ -43135,6 +43225,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             case TargetNodeKind.AttributeInValueContext:
                 if (target.node instanceof BoundEvent) {
                     return CompletionNodeContext.EventValue;
+                }
+                else if (target.node instanceof TextAttribute) {
+                    return CompletionNodeContext.ElementAttributeValue;
                 }
                 else {
                     return CompletionNodeContext.None;
