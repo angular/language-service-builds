@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+100.sha-81dce5c.with-local-changes
+ * @license Angular v12.2.0-next.1+97.sha-3d66816.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8428,7 +8428,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     // Support for `>>>`, `deep`, `::ng-deep` is then also deprecated and will be removed in the future.
     // see https://github.com/angular/angular/pull/17677
     const _shadowDeepSelectors = /(?:>>>)|(?:\/deep\/)|(?:::ng-deep)/g;
-    const _selectorReSuffix = '([>\\s~+[.,{:][\\s\\S]*)?$';
+    const _selectorReSuffix = '([>\\s~+\[.,{:][\\s\\S]*)?$';
     const _polyfillHostRe = /-shadowcsshost/gim;
     const _colonHostRe = /:host/gim;
     const _colonHostContextRe = /:host-context/gim;
@@ -21482,7 +21482,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+100.sha-81dce5c.with-local-changes');
+    const VERSION$1 = new Version('12.2.0-next.1+97.sha-3d66816.with-local-changes');
 
     /**
      * @license
@@ -37560,7 +37560,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.0-next.1+100.sha-81dce5c.with-local-changes');
+    const VERSION$2 = new Version$1('12.2.0-next.1+97.sha-3d66816.with-local-changes');
 
     /**
      * @license
