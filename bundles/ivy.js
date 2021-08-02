@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0-next.1+97.sha-3d66816.with-local-changes
+ * @license Angular v12.2.0-next.2+8.sha-c556128.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -455,7 +455,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return [null, elementName];
         }
         const colonIndex = elementName.indexOf(':', 1);
-        if (colonIndex == -1) {
+        if (colonIndex === -1) {
             throw new Error(`Unsupported format "${elementName}" expecting ":namespace:name"`);
         }
         return [elementName.slice(1, colonIndex), elementName.slice(colonIndex + 1)];
@@ -506,7 +506,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         getContentType(prefix) {
             if (typeof this.contentType === 'object') {
-                const overrideType = prefix == null ? undefined : this.contentType[prefix];
+                const overrideType = prefix === undefined ? undefined : this.contentType[prefix];
                 return overrideType !== null && overrideType !== void 0 ? overrideType : this.contentType.default;
             }
             return this.contentType;
@@ -4736,13 +4736,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var R3FactoryDelegateType;
     (function (R3FactoryDelegateType) {
         R3FactoryDelegateType[R3FactoryDelegateType["Class"] = 0] = "Class";
@@ -5141,8 +5134,249 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function sanitizeIdentifier(name) {
-        return name.replace(/\W/g, '_');
+    const $EOF = 0;
+    const $BSPACE = 8;
+    const $TAB = 9;
+    const $LF = 10;
+    const $VTAB = 11;
+    const $FF = 12;
+    const $CR = 13;
+    const $SPACE = 32;
+    const $BANG = 33;
+    const $DQ = 34;
+    const $HASH = 35;
+    const $$ = 36;
+    const $PERCENT = 37;
+    const $AMPERSAND = 38;
+    const $SQ = 39;
+    const $LPAREN = 40;
+    const $RPAREN = 41;
+    const $STAR = 42;
+    const $PLUS = 43;
+    const $COMMA = 44;
+    const $MINUS = 45;
+    const $PERIOD = 46;
+    const $SLASH = 47;
+    const $COLON = 58;
+    const $SEMICOLON = 59;
+    const $LT = 60;
+    const $EQ = 61;
+    const $GT = 62;
+    const $QUESTION = 63;
+    const $0 = 48;
+    const $7 = 55;
+    const $9 = 57;
+    const $A = 65;
+    const $E = 69;
+    const $F = 70;
+    const $X = 88;
+    const $Z = 90;
+    const $LBRACKET = 91;
+    const $BACKSLASH = 92;
+    const $RBRACKET = 93;
+    const $CARET = 94;
+    const $_ = 95;
+    const $a = 97;
+    const $b = 98;
+    const $e = 101;
+    const $f = 102;
+    const $n = 110;
+    const $r = 114;
+    const $t = 116;
+    const $u = 117;
+    const $v = 118;
+    const $x = 120;
+    const $z = 122;
+    const $LBRACE = 123;
+    const $BAR = 124;
+    const $RBRACE = 125;
+    const $NBSP = 160;
+    const $BT = 96;
+    function isWhitespace(code) {
+        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
+    }
+    function isDigit(code) {
+        return $0 <= code && code <= $9;
+    }
+    function isAsciiLetter(code) {
+        return code >= $a && code <= $z || code >= $A && code <= $Z;
+    }
+    function isAsciiHexDigit(code) {
+        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
+    }
+    function isNewLine(code) {
+        return code === $LF || code === $CR;
+    }
+    function isOctalDigit(code) {
+        return $0 <= code && code <= $7;
+    }
+    function isQuote(code) {
+        return code === $SQ || code === $DQ || code === $BT;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class ParseLocation {
+        constructor(file, offset, line, col) {
+            this.file = file;
+            this.offset = offset;
+            this.line = line;
+            this.col = col;
+        }
+        toString() {
+            return this.offset != null ? `${this.file.url}@${this.line}:${this.col}` : this.file.url;
+        }
+        moveBy(delta) {
+            const source = this.file.content;
+            const len = source.length;
+            let offset = this.offset;
+            let line = this.line;
+            let col = this.col;
+            while (offset > 0 && delta < 0) {
+                offset--;
+                delta++;
+                const ch = source.charCodeAt(offset);
+                if (ch == $LF) {
+                    line--;
+                    const priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
+                    col = priorLine > 0 ? offset - priorLine : offset;
+                }
+                else {
+                    col--;
+                }
+            }
+            while (offset < len && delta > 0) {
+                const ch = source.charCodeAt(offset);
+                offset++;
+                delta--;
+                if (ch == $LF) {
+                    line++;
+                    col = 0;
+                }
+                else {
+                    col++;
+                }
+            }
+            return new ParseLocation(this.file, offset, line, col);
+        }
+        // Return the source around the location
+        // Up to `maxChars` or `maxLines` on each side of the location
+        getContext(maxChars, maxLines) {
+            const content = this.file.content;
+            let startOffset = this.offset;
+            if (startOffset != null) {
+                if (startOffset > content.length - 1) {
+                    startOffset = content.length - 1;
+                }
+                let endOffset = startOffset;
+                let ctxChars = 0;
+                let ctxLines = 0;
+                while (ctxChars < maxChars && startOffset > 0) {
+                    startOffset--;
+                    ctxChars++;
+                    if (content[startOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                ctxChars = 0;
+                ctxLines = 0;
+                while (ctxChars < maxChars && endOffset < content.length - 1) {
+                    endOffset++;
+                    ctxChars++;
+                    if (content[endOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                return {
+                    before: content.substring(startOffset, this.offset),
+                    after: content.substring(this.offset, endOffset + 1),
+                };
+            }
+            return null;
+        }
+    }
+    class ParseSourceFile {
+        constructor(content, url) {
+            this.content = content;
+            this.url = url;
+        }
+    }
+    class ParseSourceSpan {
+        /**
+         * Create an object that holds information about spans of tokens/nodes captured during
+         * lexing/parsing of text.
+         *
+         * @param start
+         * The location of the start of the span (having skipped leading trivia).
+         * Skipping leading trivia makes source-spans more "user friendly", since things like HTML
+         * elements will appear to begin at the start of the opening tag, rather than at the start of any
+         * leading trivia, which could include newlines.
+         *
+         * @param end
+         * The location of the end of the span.
+         *
+         * @param fullStart
+         * The start of the token without skipping the leading trivia.
+         * This is used by tooling that splits tokens further, such as extracting Angular interpolations
+         * from text tokens. Such tooling creates new source-spans relative to the original token's
+         * source-span. If leading trivia characters have been skipped then the new source-spans may be
+         * incorrectly offset.
+         *
+         * @param details
+         * Additional information (such as identifier names) that should be associated with the span.
+         */
+        constructor(start, end, fullStart = start, details = null) {
+            this.start = start;
+            this.end = end;
+            this.fullStart = fullStart;
+            this.details = details;
+        }
+        toString() {
+            return this.start.file.content.substring(this.start.offset, this.end.offset);
+        }
+    }
+    var ParseErrorLevel;
+    (function (ParseErrorLevel) {
+        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
+        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
+    })(ParseErrorLevel || (ParseErrorLevel = {}));
+    class ParseError {
+        constructor(span, msg, level = ParseErrorLevel.ERROR) {
+            this.span = span;
+            this.msg = msg;
+            this.level = level;
+        }
+        contextualMessage() {
+            const ctx = this.span.start.getContext(100, 3);
+            return ctx ? `${this.msg} ("${ctx.before}[${ParseErrorLevel[this.level]} ->]${ctx.after}")` :
+                this.msg;
+        }
+        toString() {
+            const details = this.span.details ? `, ${this.span.details}` : '';
+            return `${this.contextualMessage()}: ${this.span.start}${details}`;
+        }
+    }
+    /**
+     * Generates Source Span object for a given R3 Type for JIT mode.
+     *
+     * @param kind Component or Directive.
+     * @param typeName name of the Component or Directive.
+     * @param sourceUrl reference to Component or Directive source.
+     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
+     */
+    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
+        const sourceFileName = `in ${kind} ${typeName} in ${sourceUrl}`;
+        const sourceFile = new ParseSourceFile('', sourceFileName);
+        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
     }
     let _anonymousTypeIndex = 0;
     function identifierName(compileIdentifier) {
@@ -5172,18 +5406,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return identifier;
     }
-    var CompileSummaryKind;
-    (function (CompileSummaryKind) {
-        CompileSummaryKind[CompileSummaryKind["Pipe"] = 0] = "Pipe";
-        CompileSummaryKind[CompileSummaryKind["Directive"] = 1] = "Directive";
-        CompileSummaryKind[CompileSummaryKind["NgModule"] = 2] = "NgModule";
-        CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
-    })(CompileSummaryKind || (CompileSummaryKind = {}));
-    function flatten(list) {
-        return list.reduce((flat, item) => {
-            const flatItem = Array.isArray(item) ? flatten(item) : item;
-            return flat.concat(flatItem);
-        }, []);
+    function sanitizeIdentifier(name) {
+        return name.replace(/\W/g, '_');
     }
 
     /**
@@ -5637,255 +5861,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function isUseStrictStatement(statement) {
         return statement.isEquivalent(literal('use strict').toStmt());
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const $EOF = 0;
-    const $BSPACE = 8;
-    const $TAB = 9;
-    const $LF = 10;
-    const $VTAB = 11;
-    const $FF = 12;
-    const $CR = 13;
-    const $SPACE = 32;
-    const $BANG = 33;
-    const $DQ = 34;
-    const $HASH = 35;
-    const $$ = 36;
-    const $PERCENT = 37;
-    const $AMPERSAND = 38;
-    const $SQ = 39;
-    const $LPAREN = 40;
-    const $RPAREN = 41;
-    const $STAR = 42;
-    const $PLUS = 43;
-    const $COMMA = 44;
-    const $MINUS = 45;
-    const $PERIOD = 46;
-    const $SLASH = 47;
-    const $COLON = 58;
-    const $SEMICOLON = 59;
-    const $LT = 60;
-    const $EQ = 61;
-    const $GT = 62;
-    const $QUESTION = 63;
-    const $0 = 48;
-    const $7 = 55;
-    const $9 = 57;
-    const $A = 65;
-    const $E = 69;
-    const $F = 70;
-    const $X = 88;
-    const $Z = 90;
-    const $LBRACKET = 91;
-    const $BACKSLASH = 92;
-    const $RBRACKET = 93;
-    const $CARET = 94;
-    const $_ = 95;
-    const $a = 97;
-    const $b = 98;
-    const $e = 101;
-    const $f = 102;
-    const $n = 110;
-    const $r = 114;
-    const $t = 116;
-    const $u = 117;
-    const $v = 118;
-    const $x = 120;
-    const $z = 122;
-    const $LBRACE = 123;
-    const $BAR = 124;
-    const $RBRACE = 125;
-    const $NBSP = 160;
-    const $BT = 96;
-    function isWhitespace(code) {
-        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
-    }
-    function isDigit(code) {
-        return $0 <= code && code <= $9;
-    }
-    function isAsciiLetter(code) {
-        return code >= $a && code <= $z || code >= $A && code <= $Z;
-    }
-    function isAsciiHexDigit(code) {
-        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
-    }
-    function isNewLine(code) {
-        return code === $LF || code === $CR;
-    }
-    function isOctalDigit(code) {
-        return $0 <= code && code <= $7;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class ParseLocation {
-        constructor(file, offset, line, col) {
-            this.file = file;
-            this.offset = offset;
-            this.line = line;
-            this.col = col;
-        }
-        toString() {
-            return this.offset != null ? `${this.file.url}@${this.line}:${this.col}` : this.file.url;
-        }
-        moveBy(delta) {
-            const source = this.file.content;
-            const len = source.length;
-            let offset = this.offset;
-            let line = this.line;
-            let col = this.col;
-            while (offset > 0 && delta < 0) {
-                offset--;
-                delta++;
-                const ch = source.charCodeAt(offset);
-                if (ch == $LF) {
-                    line--;
-                    const priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
-                    col = priorLine > 0 ? offset - priorLine : offset;
-                }
-                else {
-                    col--;
-                }
-            }
-            while (offset < len && delta > 0) {
-                const ch = source.charCodeAt(offset);
-                offset++;
-                delta--;
-                if (ch == $LF) {
-                    line++;
-                    col = 0;
-                }
-                else {
-                    col++;
-                }
-            }
-            return new ParseLocation(this.file, offset, line, col);
-        }
-        // Return the source around the location
-        // Up to `maxChars` or `maxLines` on each side of the location
-        getContext(maxChars, maxLines) {
-            const content = this.file.content;
-            let startOffset = this.offset;
-            if (startOffset != null) {
-                if (startOffset > content.length - 1) {
-                    startOffset = content.length - 1;
-                }
-                let endOffset = startOffset;
-                let ctxChars = 0;
-                let ctxLines = 0;
-                while (ctxChars < maxChars && startOffset > 0) {
-                    startOffset--;
-                    ctxChars++;
-                    if (content[startOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                ctxChars = 0;
-                ctxLines = 0;
-                while (ctxChars < maxChars && endOffset < content.length - 1) {
-                    endOffset++;
-                    ctxChars++;
-                    if (content[endOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                return {
-                    before: content.substring(startOffset, this.offset),
-                    after: content.substring(this.offset, endOffset + 1),
-                };
-            }
-            return null;
-        }
-    }
-    class ParseSourceFile {
-        constructor(content, url) {
-            this.content = content;
-            this.url = url;
-        }
-    }
-    class ParseSourceSpan {
-        /**
-         * Create an object that holds information about spans of tokens/nodes captured during
-         * lexing/parsing of text.
-         *
-         * @param start
-         * The location of the start of the span (having skipped leading trivia).
-         * Skipping leading trivia makes source-spans more "user friendly", since things like HTML
-         * elements will appear to begin at the start of the opening tag, rather than at the start of any
-         * leading trivia, which could include newlines.
-         *
-         * @param end
-         * The location of the end of the span.
-         *
-         * @param fullStart
-         * The start of the token without skipping the leading trivia.
-         * This is used by tooling that splits tokens further, such as extracting Angular interpolations
-         * from text tokens. Such tooling creates new source-spans relative to the original token's
-         * source-span. If leading trivia characters have been skipped then the new source-spans may be
-         * incorrectly offset.
-         *
-         * @param details
-         * Additional information (such as identifier names) that should be associated with the span.
-         */
-        constructor(start, end, fullStart = start, details = null) {
-            this.start = start;
-            this.end = end;
-            this.fullStart = fullStart;
-            this.details = details;
-        }
-        toString() {
-            return this.start.file.content.substring(this.start.offset, this.end.offset);
-        }
-    }
-    var ParseErrorLevel;
-    (function (ParseErrorLevel) {
-        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
-        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
-    })(ParseErrorLevel || (ParseErrorLevel = {}));
-    class ParseError {
-        constructor(span, msg, level = ParseErrorLevel.ERROR) {
-            this.span = span;
-            this.msg = msg;
-            this.level = level;
-        }
-        contextualMessage() {
-            const ctx = this.span.start.getContext(100, 3);
-            return ctx ? `${this.msg} ("${ctx.before}[${ParseErrorLevel[this.level]} ->]${ctx.after}")` :
-                this.msg;
-        }
-        toString() {
-            const details = this.span.details ? `, ${this.span.details}` : '';
-            return `${this.contextualMessage()}: ${this.span.start}${details}`;
-        }
-    }
-    /**
-     * Generates Source Span object for a given R3 Type for JIT mode.
-     *
-     * @param kind Component or Directive.
-     * @param typeName name of the Component or Directive.
-     * @param sourceUrl reference to Component or Directive source.
-     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
-     */
-    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
-        const sourceFileName = `in ${kind} ${typeName} in ${sourceUrl}`;
-        const sourceFile = new ParseSourceFile('', sourceFileName);
-        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
     }
 
     /**
@@ -8460,7 +8435,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     // Support for `>>>`, `deep`, `::ng-deep` is then also deprecated and will be removed in the future.
     // see https://github.com/angular/angular/pull/17677
     const _shadowDeepSelectors = /(?:>>>)|(?:\/deep\/)|(?:::ng-deep)/g;
-    const _selectorReSuffix = '([>\\s~+\[.,{:][\\s\\S]*)?$';
+    const _selectorReSuffix = '([>\\s~+[.,{:][\\s\\S]*)?$';
     const _polyfillHostRe = /-shadowcsshost/gim;
     const _colonHostRe = /:host/gim;
     const _colonHostContextRe = /:host-context/gim;
@@ -8636,6 +8611,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var CompileSummaryKind;
+    (function (CompileSummaryKind) {
+        CompileSummaryKind[CompileSummaryKind["Pipe"] = 0] = "Pipe";
+        CompileSummaryKind[CompileSummaryKind["Directive"] = 1] = "Directive";
+        CompileSummaryKind[CompileSummaryKind["NgModule"] = 2] = "NgModule";
+        CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
+    })(CompileSummaryKind || (CompileSummaryKind = {}));
+    function flatten(list) {
+        return list.reduce((flat, item) => {
+            const flatItem = Array.isArray(item) ? flatten(item) : item;
+            return flat.concat(flatItem);
+        }, []);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const COMPONENT_VARIABLE = '%COMP%';
     const HOST_ATTR = `_nghost-${COMPONENT_VARIABLE}`;
     const CONTENT_ATTR = `_ngcontent-${COMPONENT_VARIABLE}`;
@@ -8654,9 +8650,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     class Text$2 extends NodeWithI18n {
-        constructor(value, sourceSpan, i18n) {
+        constructor(value, sourceSpan, tokens, i18n) {
             super(sourceSpan, i18n);
             this.value = value;
+            this.tokens = tokens;
         }
         visit(visitor, context) {
             return visitor.visitText(this, context);
@@ -8687,12 +8684,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     class Attribute extends NodeWithI18n {
-        constructor(name, value, sourceSpan, keySpan, valueSpan, i18n) {
+        constructor(name, value, sourceSpan, keySpan, valueSpan, valueTokens, i18n) {
             super(sourceSpan, i18n);
             this.name = name;
             this.value = value;
             this.keySpan = keySpan;
             this.valueSpan = valueSpan;
+            this.valueTokens = valueTokens;
         }
         visit(visitor, context) {
             return visitor.visitAttribute(this, context);
@@ -10884,38 +10882,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var TokenType;
-    (function (TokenType) {
-        TokenType[TokenType["TAG_OPEN_START"] = 0] = "TAG_OPEN_START";
-        TokenType[TokenType["TAG_OPEN_END"] = 1] = "TAG_OPEN_END";
-        TokenType[TokenType["TAG_OPEN_END_VOID"] = 2] = "TAG_OPEN_END_VOID";
-        TokenType[TokenType["TAG_CLOSE"] = 3] = "TAG_CLOSE";
-        TokenType[TokenType["INCOMPLETE_TAG_OPEN"] = 4] = "INCOMPLETE_TAG_OPEN";
-        TokenType[TokenType["TEXT"] = 5] = "TEXT";
-        TokenType[TokenType["ESCAPABLE_RAW_TEXT"] = 6] = "ESCAPABLE_RAW_TEXT";
-        TokenType[TokenType["RAW_TEXT"] = 7] = "RAW_TEXT";
-        TokenType[TokenType["COMMENT_START"] = 8] = "COMMENT_START";
-        TokenType[TokenType["COMMENT_END"] = 9] = "COMMENT_END";
-        TokenType[TokenType["CDATA_START"] = 10] = "CDATA_START";
-        TokenType[TokenType["CDATA_END"] = 11] = "CDATA_END";
-        TokenType[TokenType["ATTR_NAME"] = 12] = "ATTR_NAME";
-        TokenType[TokenType["ATTR_QUOTE"] = 13] = "ATTR_QUOTE";
-        TokenType[TokenType["ATTR_VALUE"] = 14] = "ATTR_VALUE";
-        TokenType[TokenType["DOC_TYPE"] = 15] = "DOC_TYPE";
-        TokenType[TokenType["EXPANSION_FORM_START"] = 16] = "EXPANSION_FORM_START";
-        TokenType[TokenType["EXPANSION_CASE_VALUE"] = 17] = "EXPANSION_CASE_VALUE";
-        TokenType[TokenType["EXPANSION_CASE_EXP_START"] = 18] = "EXPANSION_CASE_EXP_START";
-        TokenType[TokenType["EXPANSION_CASE_EXP_END"] = 19] = "EXPANSION_CASE_EXP_END";
-        TokenType[TokenType["EXPANSION_FORM_END"] = 20] = "EXPANSION_FORM_END";
-        TokenType[TokenType["EOF"] = 21] = "EOF";
-    })(TokenType || (TokenType = {}));
-    class Token {
-        constructor(type, parts, sourceSpan) {
-            this.type = type;
-            this.parts = parts;
-            this.sourceSpan = sourceSpan;
-        }
-    }
     class TokenError extends ParseError {
         constructor(errorMsg, tokenType, span) {
             super(span, errorMsg);
@@ -11022,14 +10988,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                         }
                     }
                     else if (!(this._tokenizeIcu && this._tokenizeExpansionForm())) {
-                        this._consumeText();
+                        // In (possibly interpolated) text the end of the text is given by `isTextEnd()`, while
+                        // the premature end of an interpolation is given by the start of a new HTML element.
+                        this._consumeWithInterpolation(5 /* TEXT */, 8 /* INTERPOLATION */, () => this._isTextEnd(), () => this._isTagStart());
                     }
                 }
                 catch (e) {
                     this.handleError(e);
                 }
             }
-            this._beginToken(TokenType.EOF);
+            this._beginToken(24 /* EOF */);
             this._endToken([]);
         }
         /**
@@ -11068,7 +11036,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (this._currentTokenType === null) {
                 throw new TokenError('Programming error - attempted to end a token which has no token type', null, this._cursor.getSpan(this._currentTokenStart));
             }
-            const token = new Token(this._currentTokenType, parts, this._cursor.getSpan(this._currentTokenStart, this._leadingTriviaCodePoints));
+            const token = {
+                type: this._currentTokenType,
+                parts,
+                sourceSpan: (end !== null && end !== void 0 ? end : this._cursor).getSpan(this._currentTokenStart, this._leadingTriviaCodePoints),
+            };
             this.tokens.push(token);
             this._currentTokenStart = null;
             this._currentTokenType = null;
@@ -11161,19 +11133,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this._cursor.advance();
             }
         }
-        _readChar(decodeEntities) {
-            if (decodeEntities && this._cursor.peek() === $AMPERSAND) {
-                return this._decodeEntity();
-            }
-            else {
-                // Don't rely upon reading directly from `_input` as the actual char value
-                // may have been generated from an escape sequence.
-                const char = String.fromCodePoint(this._cursor.peek());
-                this._cursor.advance();
-                return char;
-            }
+        _readChar() {
+            // Don't rely upon reading directly from `_input` as the actual char value
+            // may have been generated from an escape sequence.
+            const char = String.fromCodePoint(this._cursor.peek());
+            this._cursor.advance();
+            return char;
         }
-        _decodeEntity() {
+        _consumeEntity(textTokenType) {
+            this._beginToken(9 /* ENCODED_ENTITY */);
             const start = this._cursor.clone();
             this._cursor.advance();
             if (this._attemptCharCode($HASH)) {
@@ -11191,7 +11159,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this._cursor.advance();
                 try {
                     const charCode = parseInt(strNum, isHex ? 16 : 10);
-                    return String.fromCharCode(charCode);
+                    this._endToken([String.fromCharCode(charCode), this._cursor.getChars(start)]);
                 }
                 catch (_a) {
                     throw this._createError(_unknownEntityErrorMsg(this._cursor.getChars(start)), this._cursor.getSpan());
@@ -11201,20 +11169,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 const nameStart = this._cursor.clone();
                 this._attemptCharCodeUntilFn(isNamedEntityEnd);
                 if (this._cursor.peek() != $SEMICOLON) {
+                    // No semicolon was found so abort the encoded entity token that was in progress, and treat
+                    // this as a text token
+                    this._beginToken(textTokenType, start);
                     this._cursor = nameStart;
-                    return '&';
+                    this._endToken(['&']);
                 }
-                const name = this._cursor.getChars(nameStart);
-                this._cursor.advance();
-                const char = NAMED_ENTITIES[name];
-                if (!char) {
-                    throw this._createError(_unknownEntityErrorMsg(name), this._cursor.getSpan(start));
+                else {
+                    const name = this._cursor.getChars(nameStart);
+                    this._cursor.advance();
+                    const char = NAMED_ENTITIES[name];
+                    if (!char) {
+                        throw this._createError(_unknownEntityErrorMsg(name), this._cursor.getSpan(start));
+                    }
+                    this._endToken([char, `&${name};`]);
                 }
-                return char;
             }
         }
-        _consumeRawText(decodeEntities, endMarkerPredicate) {
-            this._beginToken(decodeEntities ? TokenType.ESCAPABLE_RAW_TEXT : TokenType.RAW_TEXT);
+        _consumeRawText(consumeEntities, endMarkerPredicate) {
+            this._beginToken(consumeEntities ? 6 /* ESCAPABLE_RAW_TEXT */ : 7 /* RAW_TEXT */);
             const parts = [];
             while (true) {
                 const tagCloseStart = this._cursor.clone();
@@ -11223,30 +11196,38 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 if (foundEndMarker) {
                     break;
                 }
-                parts.push(this._readChar(decodeEntities));
+                if (consumeEntities && this._cursor.peek() === $AMPERSAND) {
+                    this._endToken([this._processCarriageReturns(parts.join(''))]);
+                    parts.length = 0;
+                    this._consumeEntity(6 /* ESCAPABLE_RAW_TEXT */);
+                    this._beginToken(6 /* ESCAPABLE_RAW_TEXT */);
+                }
+                else {
+                    parts.push(this._readChar());
+                }
             }
-            return this._endToken([this._processCarriageReturns(parts.join(''))]);
+            this._endToken([this._processCarriageReturns(parts.join(''))]);
         }
         _consumeComment(start) {
-            this._beginToken(TokenType.COMMENT_START, start);
+            this._beginToken(10 /* COMMENT_START */, start);
             this._requireCharCode($MINUS);
             this._endToken([]);
             this._consumeRawText(false, () => this._attemptStr('-->'));
-            this._beginToken(TokenType.COMMENT_END);
+            this._beginToken(11 /* COMMENT_END */);
             this._requireStr('-->');
             this._endToken([]);
         }
         _consumeCdata(start) {
-            this._beginToken(TokenType.CDATA_START, start);
+            this._beginToken(12 /* CDATA_START */, start);
             this._requireStr('CDATA[');
             this._endToken([]);
             this._consumeRawText(false, () => this._attemptStr(']]>'));
-            this._beginToken(TokenType.CDATA_END);
+            this._beginToken(13 /* CDATA_END */);
             this._requireStr(']]>');
             this._endToken([]);
         }
         _consumeDocType(start) {
-            this._beginToken(TokenType.DOC_TYPE, start);
+            this._beginToken(18 /* DOC_TYPE */, start);
             const contentStart = this._cursor.clone();
             this._attemptUntilChar($GT);
             const content = this._cursor.getChars(contentStart);
@@ -11300,12 +11281,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 if (e instanceof _ControlFlowError) {
                     if (openTagToken) {
                         // We errored before we could close the opening tag, so it is incomplete.
-                        openTagToken.type = TokenType.INCOMPLETE_TAG_OPEN;
+                        openTagToken.type = 4 /* INCOMPLETE_TAG_OPEN */;
                     }
                     else {
                         // When the start tag is invalid, assume we want a "<" as text.
                         // Back to back text tokens are merged at the end.
-                        this._beginToken(TokenType.TEXT, start);
+                        this._beginToken(5 /* TEXT */, start);
                         this._endToken(['<']);
                     }
                     return;
@@ -11320,8 +11301,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this._consumeRawTextWithTagClose(prefix, tagName, true);
             }
         }
-        _consumeRawTextWithTagClose(prefix, tagName, decodeEntities) {
-            this._consumeRawText(decodeEntities, () => {
+        _consumeRawTextWithTagClose(prefix, tagName, consumeEntities) {
+            this._consumeRawText(consumeEntities, () => {
                 if (!this._attemptCharCode($LT))
                     return false;
                 if (!this._attemptCharCode($SLASH))
@@ -11332,13 +11313,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this._attemptCharCodeUntilFn(isNotWhitespace);
                 return this._attemptCharCode($GT);
             });
-            this._beginToken(TokenType.TAG_CLOSE);
+            this._beginToken(3 /* TAG_CLOSE */);
             this._requireCharCodeUntilFn(code => code === $GT, 3);
             this._cursor.advance(); // Consume the `>`
             this._endToken([prefix, tagName]);
         }
         _consumeTagOpenStart(start) {
-            this._beginToken(TokenType.TAG_OPEN_START, start);
+            this._beginToken(0 /* TAG_OPEN_START */, start);
             const parts = this._consumePrefixAndName();
             return this._endToken(parts);
         }
@@ -11347,44 +11328,38 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (attrNameStart === $SQ || attrNameStart === $DQ) {
                 throw this._createError(_unexpectedCharacterErrorMsg(attrNameStart), this._cursor.getSpan());
             }
-            this._beginToken(TokenType.ATTR_NAME);
+            this._beginToken(14 /* ATTR_NAME */);
             const prefixAndName = this._consumePrefixAndName();
             this._endToken(prefixAndName);
         }
         _consumeAttributeValue() {
-            let value;
             if (this._cursor.peek() === $SQ || this._cursor.peek() === $DQ) {
-                this._beginToken(TokenType.ATTR_QUOTE);
                 const quoteChar = this._cursor.peek();
-                this._cursor.advance();
-                this._endToken([String.fromCodePoint(quoteChar)]);
-                this._beginToken(TokenType.ATTR_VALUE);
-                const parts = [];
-                while (this._cursor.peek() !== quoteChar) {
-                    parts.push(this._readChar(true));
-                }
-                value = parts.join('');
-                this._endToken([this._processCarriageReturns(value)]);
-                this._beginToken(TokenType.ATTR_QUOTE);
-                this._cursor.advance();
-                this._endToken([String.fromCodePoint(quoteChar)]);
+                this._consumeQuote(quoteChar);
+                // In an attribute then end of the attribute value and the premature end to an interpolation
+                // are both triggered by the `quoteChar`.
+                const endPredicate = () => this._cursor.peek() === quoteChar;
+                this._consumeWithInterpolation(16 /* ATTR_VALUE_TEXT */, 17 /* ATTR_VALUE_INTERPOLATION */, endPredicate, endPredicate);
+                this._consumeQuote(quoteChar);
             }
             else {
-                this._beginToken(TokenType.ATTR_VALUE);
-                const valueStart = this._cursor.clone();
-                this._requireCharCodeUntilFn(isNameEnd, 1);
-                value = this._cursor.getChars(valueStart);
-                this._endToken([this._processCarriageReturns(value)]);
+                const endPredicate = () => isNameEnd(this._cursor.peek());
+                this._consumeWithInterpolation(16 /* ATTR_VALUE_TEXT */, 17 /* ATTR_VALUE_INTERPOLATION */, endPredicate, endPredicate);
             }
         }
+        _consumeQuote(quoteChar) {
+            this._beginToken(15 /* ATTR_QUOTE */);
+            this._requireCharCode(quoteChar);
+            this._endToken([String.fromCodePoint(quoteChar)]);
+        }
         _consumeTagOpenEnd() {
-            const tokenType = this._attemptCharCode($SLASH) ? TokenType.TAG_OPEN_END_VOID : TokenType.TAG_OPEN_END;
+            const tokenType = this._attemptCharCode($SLASH) ? 2 /* TAG_OPEN_END_VOID */ : 1 /* TAG_OPEN_END */;
             this._beginToken(tokenType);
             this._requireCharCode($GT);
             this._endToken([]);
         }
         _consumeTagClose(start) {
-            this._beginToken(TokenType.TAG_CLOSE, start);
+            this._beginToken(3 /* TAG_CLOSE */, start);
             this._attemptCharCodeUntilFn(isNotWhitespace);
             const prefixAndName = this._consumePrefixAndName();
             this._attemptCharCodeUntilFn(isNotWhitespace);
@@ -11392,11 +11367,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this._endToken(prefixAndName);
         }
         _consumeExpansionFormStart() {
-            this._beginToken(TokenType.EXPANSION_FORM_START);
+            this._beginToken(19 /* EXPANSION_FORM_START */);
             this._requireCharCode($LBRACE);
             this._endToken([]);
-            this._expansionCaseStack.push(TokenType.EXPANSION_FORM_START);
-            this._beginToken(TokenType.RAW_TEXT);
+            this._expansionCaseStack.push(19 /* EXPANSION_FORM_START */);
+            this._beginToken(7 /* RAW_TEXT */);
             const condition = this._readUntil($COMMA);
             const normalizedCondition = this._processCarriageReturns(condition);
             if (this._i18nNormalizeLineEndingsInICUs) {
@@ -11412,58 +11387,138 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             this._requireCharCode($COMMA);
             this._attemptCharCodeUntilFn(isNotWhitespace);
-            this._beginToken(TokenType.RAW_TEXT);
+            this._beginToken(7 /* RAW_TEXT */);
             const type = this._readUntil($COMMA);
             this._endToken([type]);
             this._requireCharCode($COMMA);
             this._attemptCharCodeUntilFn(isNotWhitespace);
         }
         _consumeExpansionCaseStart() {
-            this._beginToken(TokenType.EXPANSION_CASE_VALUE);
+            this._beginToken(20 /* EXPANSION_CASE_VALUE */);
             const value = this._readUntil($LBRACE).trim();
             this._endToken([value]);
             this._attemptCharCodeUntilFn(isNotWhitespace);
-            this._beginToken(TokenType.EXPANSION_CASE_EXP_START);
+            this._beginToken(21 /* EXPANSION_CASE_EXP_START */);
             this._requireCharCode($LBRACE);
             this._endToken([]);
             this._attemptCharCodeUntilFn(isNotWhitespace);
-            this._expansionCaseStack.push(TokenType.EXPANSION_CASE_EXP_START);
+            this._expansionCaseStack.push(21 /* EXPANSION_CASE_EXP_START */);
         }
         _consumeExpansionCaseEnd() {
-            this._beginToken(TokenType.EXPANSION_CASE_EXP_END);
+            this._beginToken(22 /* EXPANSION_CASE_EXP_END */);
             this._requireCharCode($RBRACE);
             this._endToken([]);
             this._attemptCharCodeUntilFn(isNotWhitespace);
             this._expansionCaseStack.pop();
         }
         _consumeExpansionFormEnd() {
-            this._beginToken(TokenType.EXPANSION_FORM_END);
+            this._beginToken(23 /* EXPANSION_FORM_END */);
             this._requireCharCode($RBRACE);
             this._endToken([]);
             this._expansionCaseStack.pop();
         }
-        _consumeText() {
-            const start = this._cursor.clone();
-            this._beginToken(TokenType.TEXT, start);
+        /**
+         * Consume a string that may contain interpolation expressions.
+         *
+         * The first token consumed will be of `tokenType` and then there will be alternating
+         * `interpolationTokenType` and `tokenType` tokens until the `endPredicate()` returns true.
+         *
+         * If an interpolation token ends prematurely it will have no end marker in its `parts` array.
+         *
+         * @param textTokenType the kind of tokens to interleave around interpolation tokens.
+         * @param interpolationTokenType the kind of tokens that contain interpolation.
+         * @param endPredicate a function that should return true when we should stop consuming.
+         * @param endInterpolation a function that should return true if there is a premature end to an
+         *     interpolation expression - i.e. before we get to the normal interpolation closing marker.
+         */
+        _consumeWithInterpolation(textTokenType, interpolationTokenType, endPredicate, endInterpolation) {
+            this._beginToken(textTokenType);
             const parts = [];
-            do {
+            while (!endPredicate()) {
+                const current = this._cursor.clone();
                 if (this._interpolationConfig && this._attemptStr(this._interpolationConfig.start)) {
-                    parts.push(this._interpolationConfig.start);
-                    this._inInterpolation = true;
+                    this._endToken([this._processCarriageReturns(parts.join(''))], current);
+                    parts.length = 0;
+                    this._consumeInterpolation(interpolationTokenType, current, endInterpolation);
+                    this._beginToken(textTokenType);
                 }
-                else if (this._interpolationConfig && this._inInterpolation &&
-                    this._attemptStr(this._interpolationConfig.end)) {
-                    parts.push(this._interpolationConfig.end);
-                    this._inInterpolation = false;
+                else if (this._cursor.peek() === $AMPERSAND) {
+                    this._endToken([this._processCarriageReturns(parts.join(''))]);
+                    parts.length = 0;
+                    this._consumeEntity(textTokenType);
+                    this._beginToken(textTokenType);
                 }
                 else {
-                    parts.push(this._readChar(true));
+                    parts.push(this._readChar());
                 }
-            } while (!this._isTextEnd());
+            }
             // It is possible that an interpolation was started but not ended inside this text token.
             // Make sure that we reset the state of the lexer correctly.
             this._inInterpolation = false;
             this._endToken([this._processCarriageReturns(parts.join(''))]);
+        }
+        /**
+         * Consume a block of text that has been interpreted as an Angular interpolation.
+         *
+         * @param interpolationTokenType the type of the interpolation token to generate.
+         * @param interpolationStart a cursor that points to the start of this interpolation.
+         * @param prematureEndPredicate a function that should return true if the next characters indicate
+         *     an end to the interpolation before its normal closing marker.
+         */
+        _consumeInterpolation(interpolationTokenType, interpolationStart, prematureEndPredicate) {
+            const parts = [];
+            this._beginToken(interpolationTokenType, interpolationStart);
+            parts.push(this._interpolationConfig.start);
+            // Find the end of the interpolation, ignoring content inside quotes.
+            const expressionStart = this._cursor.clone();
+            let inQuote = null;
+            let inComment = false;
+            while (this._cursor.peek() !== $EOF &&
+                (prematureEndPredicate === null || !prematureEndPredicate())) {
+                const current = this._cursor.clone();
+                if (this._isTagStart()) {
+                    // We are starting what looks like an HTML element in the middle of this interpolation.
+                    // Reset the cursor to before the `<` character and end the interpolation token.
+                    // (This is actually wrong but here for backward compatibility).
+                    this._cursor = current;
+                    parts.push(this._getProcessedChars(expressionStart, current));
+                    this._endToken(parts);
+                    return;
+                }
+                if (inQuote === null) {
+                    if (this._attemptStr(this._interpolationConfig.end)) {
+                        // We are not in a string, and we hit the end interpolation marker
+                        parts.push(this._getProcessedChars(expressionStart, current));
+                        parts.push(this._interpolationConfig.end);
+                        this._endToken(parts);
+                        return;
+                    }
+                    else if (this._attemptStr('//')) {
+                        // Once we are in a comment we ignore any quotes
+                        inComment = true;
+                    }
+                }
+                const char = this._cursor.peek();
+                this._cursor.advance();
+                if (char === $BACKSLASH) {
+                    // Skip the next character because it was escaped.
+                    this._cursor.advance();
+                }
+                else if (char === inQuote) {
+                    // Exiting the current quoted string
+                    inQuote = null;
+                }
+                else if (!inComment && inQuote === null && isQuote(char)) {
+                    // Entering a new quoted string
+                    inQuote = char;
+                }
+            }
+            // We hit EOF without finding a closing interpolation marker
+            parts.push(this._getProcessedChars(expressionStart, this._cursor));
+            this._endToken(parts);
+        }
+        _getProcessedChars(start, end) {
+            return this._processCarriageReturns(end.getChars(start));
         }
         _isTextEnd() {
             if (this._isTagStart() || this._cursor.peek() === $EOF) {
@@ -11507,12 +11562,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         _isInExpansionCase() {
             return this._expansionCaseStack.length > 0 &&
                 this._expansionCaseStack[this._expansionCaseStack.length - 1] ===
-                    TokenType.EXPANSION_CASE_EXP_START;
+                    21 /* EXPANSION_CASE_EXP_START */;
         }
         _isInExpansionForm() {
             return this._expansionCaseStack.length > 0 &&
                 this._expansionCaseStack[this._expansionCaseStack.length - 1] ===
-                    TokenType.EXPANSION_FORM_START;
+                    19 /* EXPANSION_FORM_START */;
         }
         isExpansionFormStart() {
             if (this._cursor.peek() !== $LBRACE) {
@@ -11540,16 +11595,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             (code < $0 || code > $9);
     }
     function isDigitEntityEnd(code) {
-        return code == $SEMICOLON || code == $EOF || !isAsciiHexDigit(code);
+        return code === $SEMICOLON || code === $EOF || !isAsciiHexDigit(code);
     }
     function isNamedEntityEnd(code) {
-        return code == $SEMICOLON || code == $EOF || !isAsciiLetter(code);
+        return code === $SEMICOLON || code === $EOF || !isAsciiLetter(code);
     }
     function isExpansionCaseStart(peek) {
         return peek !== $RBRACE;
     }
     function compareCharCodeCaseInsensitive(code1, code2) {
-        return toUpperCaseCharCode(code1) == toUpperCaseCharCode(code2);
+        return toUpperCaseCharCode(code1) === toUpperCaseCharCode(code2);
     }
     function toUpperCaseCharCode(code) {
         return code >= $a && code <= $z ? code - $a + $A : code;
@@ -11559,7 +11614,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         let lastDstToken = undefined;
         for (let i = 0; i < srcTokens.length; i++) {
             const token = srcTokens[i];
-            if (lastDstToken && lastDstToken.type == TokenType.TEXT && token.type == TokenType.TEXT) {
+            if ((lastDstToken && lastDstToken.type === 5 /* TEXT */ && token.type === 5 /* TEXT */) ||
+                (lastDstToken && lastDstToken.type === 16 /* ATTR_VALUE_TEXT */ &&
+                    token.type === 16 /* ATTR_VALUE_TEXT */)) {
                 lastDstToken.parts[0] += token.parts[0];
                 lastDstToken.sourceSpan.end = token.sourceSpan.end;
             }
@@ -11852,28 +11909,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this._advance();
         }
         build() {
-            while (this._peek.type !== TokenType.EOF) {
-                if (this._peek.type === TokenType.TAG_OPEN_START ||
-                    this._peek.type === TokenType.INCOMPLETE_TAG_OPEN) {
+            while (this._peek.type !== 24 /* EOF */) {
+                if (this._peek.type === 0 /* TAG_OPEN_START */ ||
+                    this._peek.type === 4 /* INCOMPLETE_TAG_OPEN */) {
                     this._consumeStartTag(this._advance());
                 }
-                else if (this._peek.type === TokenType.TAG_CLOSE) {
+                else if (this._peek.type === 3 /* TAG_CLOSE */) {
                     this._consumeEndTag(this._advance());
                 }
-                else if (this._peek.type === TokenType.CDATA_START) {
+                else if (this._peek.type === 12 /* CDATA_START */) {
                     this._closeVoidElement();
                     this._consumeCdata(this._advance());
                 }
-                else if (this._peek.type === TokenType.COMMENT_START) {
+                else if (this._peek.type === 10 /* COMMENT_START */) {
                     this._closeVoidElement();
                     this._consumeComment(this._advance());
                 }
-                else if (this._peek.type === TokenType.TEXT || this._peek.type === TokenType.RAW_TEXT ||
-                    this._peek.type === TokenType.ESCAPABLE_RAW_TEXT) {
+                else if (this._peek.type === 5 /* TEXT */ || this._peek.type === 7 /* RAW_TEXT */ ||
+                    this._peek.type === 6 /* ESCAPABLE_RAW_TEXT */) {
                     this._closeVoidElement();
                     this._consumeText(this._advance());
                 }
-                else if (this._peek.type === TokenType.EXPANSION_FORM_START) {
+                else if (this._peek.type === 19 /* EXPANSION_FORM_START */) {
                     this._consumeExpansion(this._advance());
                 }
                 else {
@@ -11899,11 +11956,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         _consumeCdata(_startToken) {
             this._consumeText(this._advance());
-            this._advanceIf(TokenType.CDATA_END);
+            this._advanceIf(13 /* CDATA_END */);
         }
         _consumeComment(token) {
-            const text = this._advanceIf(TokenType.RAW_TEXT);
-            this._advanceIf(TokenType.COMMENT_END);
+            const text = this._advanceIf(7 /* RAW_TEXT */);
+            this._advanceIf(11 /* COMMENT_END */);
             const value = text != null ? text.parts[0].trim() : null;
             this._addToParent(new Comment$1(value, token.sourceSpan));
         }
@@ -11912,14 +11969,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const type = this._advance();
             const cases = [];
             // read =
-            while (this._peek.type === TokenType.EXPANSION_CASE_VALUE) {
+            while (this._peek.type === 20 /* EXPANSION_CASE_VALUE */) {
                 const expCase = this._parseExpansionCase();
                 if (!expCase)
                     return; // error
                 cases.push(expCase);
             }
             // read the final }
-            if (this._peek.type !== TokenType.EXPANSION_FORM_END) {
+            if (this._peek.type !== 23 /* EXPANSION_FORM_END */) {
                 this.errors.push(TreeError.create(null, this._peek.sourceSpan, `Invalid ICU message. Missing '}'.`));
                 return;
             }
@@ -11930,7 +11987,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         _parseExpansionCase() {
             const value = this._advance();
             // read {
-            if (this._peek.type !== TokenType.EXPANSION_CASE_EXP_START) {
+            if (this._peek.type !== 21 /* EXPANSION_CASE_EXP_START */) {
                 this.errors.push(TreeError.create(null, this._peek.sourceSpan, `Invalid ICU message. Missing '{'.`));
                 return null;
             }
@@ -11940,7 +11997,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!exp)
                 return null;
             const end = this._advance();
-            exp.push(new Token(TokenType.EOF, [], end.sourceSpan));
+            exp.push({ type: 24 /* EOF */, parts: [], sourceSpan: end.sourceSpan });
             // parse everything in between { and }
             const expansionCaseParser = new _TreeBuilder(exp, this.getTagDefinition);
             expansionCaseParser.build();
@@ -11954,16 +12011,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         _collectExpansionExpTokens(start) {
             const exp = [];
-            const expansionFormStack = [TokenType.EXPANSION_CASE_EXP_START];
+            const expansionFormStack = [21 /* EXPANSION_CASE_EXP_START */];
             while (true) {
-                if (this._peek.type === TokenType.EXPANSION_FORM_START ||
-                    this._peek.type === TokenType.EXPANSION_CASE_EXP_START) {
+                if (this._peek.type === 19 /* EXPANSION_FORM_START */ ||
+                    this._peek.type === 21 /* EXPANSION_CASE_EXP_START */) {
                     expansionFormStack.push(this._peek.type);
                 }
-                if (this._peek.type === TokenType.EXPANSION_CASE_EXP_END) {
-                    if (lastOnStack(expansionFormStack, TokenType.EXPANSION_CASE_EXP_START)) {
+                if (this._peek.type === 22 /* EXPANSION_CASE_EXP_END */) {
+                    if (lastOnStack(expansionFormStack, 21 /* EXPANSION_CASE_EXP_START */)) {
                         expansionFormStack.pop();
-                        if (expansionFormStack.length == 0)
+                        if (expansionFormStack.length === 0)
                             return exp;
                     }
                     else {
@@ -11971,8 +12028,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                         return null;
                     }
                 }
-                if (this._peek.type === TokenType.EXPANSION_FORM_END) {
-                    if (lastOnStack(expansionFormStack, TokenType.EXPANSION_FORM_START)) {
+                if (this._peek.type === 23 /* EXPANSION_FORM_END */) {
+                    if (lastOnStack(expansionFormStack, 19 /* EXPANSION_FORM_START */)) {
                         expansionFormStack.pop();
                     }
                     else {
@@ -11980,7 +12037,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                         return null;
                     }
                 }
-                if (this._peek.type === TokenType.EOF) {
+                if (this._peek.type === 24 /* EOF */) {
                     this.errors.push(TreeError.create(null, start.sourceSpan, `Invalid ICU message. Missing '}'.`));
                     return null;
                 }
@@ -11988,16 +12045,38 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         }
         _consumeText(token) {
+            const tokens = [token];
+            const startSpan = token.sourceSpan;
             let text = token.parts[0];
-            if (text.length > 0 && text[0] == '\n') {
+            if (text.length > 0 && text[0] === '\n') {
                 const parent = this._getParentElement();
-                if (parent != null && parent.children.length == 0 &&
+                if (parent != null && parent.children.length === 0 &&
                     this.getTagDefinition(parent.name).ignoreFirstLf) {
                     text = text.substring(1);
+                    tokens[0] = { type: token.type, sourceSpan: token.sourceSpan, parts: [text] };
+                }
+            }
+            while (this._peek.type === 8 /* INTERPOLATION */ || this._peek.type === 5 /* TEXT */ ||
+                this._peek.type === 9 /* ENCODED_ENTITY */) {
+                token = this._advance();
+                tokens.push(token);
+                if (token.type === 8 /* INTERPOLATION */) {
+                    // For backward compatibility we decode HTML entities that appear in interpolation
+                    // expressions. This is arguably a bug, but it could be a considerable breaking change to
+                    // fix it. It should be addressed in a larger project to refactor the entire parser/lexer
+                    // chain after View Engine has been removed.
+                    text += token.parts.join('').replace(/&([^;]+);/g, decodeEntity);
+                }
+                else if (token.type === 9 /* ENCODED_ENTITY */) {
+                    text += token.parts[0];
+                }
+                else {
+                    text += token.parts.join('');
                 }
             }
             if (text.length > 0) {
-                this._addToParent(new Text$2(text, token.sourceSpan));
+                const endSpan = token.sourceSpan;
+                this._addToParent(new Text$2(text, new ParseSourceSpan(startSpan.start, endSpan.end, startSpan.fullStart, startSpan.details), tokens));
             }
         }
         _closeVoidElement() {
@@ -12009,14 +12088,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         _consumeStartTag(startTagToken) {
             const [prefix, name] = startTagToken.parts;
             const attrs = [];
-            while (this._peek.type === TokenType.ATTR_NAME) {
+            while (this._peek.type === 14 /* ATTR_NAME */) {
                 attrs.push(this._consumeAttr(this._advance()));
             }
             const fullName = this._getElementFullName(prefix, name, this._getParentElement());
             let selfClosing = false;
             // Note: There could have been a tokenizer error
             // so that we don't get a token for the end tag...
-            if (this._peek.type === TokenType.TAG_OPEN_END_VOID) {
+            if (this._peek.type === 2 /* TAG_OPEN_END_VOID */) {
                 this._advance();
                 selfClosing = true;
                 const tagDef = this.getTagDefinition(fullName);
@@ -12024,7 +12103,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     this.errors.push(TreeError.create(fullName, startTagToken.sourceSpan, `Only void and foreign elements can be self closed "${startTagToken.parts[1]}"`));
                 }
             }
-            else if (this._peek.type === TokenType.TAG_OPEN_END) {
+            else if (this._peek.type === 1 /* TAG_OPEN_END */) {
                 this._advance();
                 selfClosing = false;
             }
@@ -12039,7 +12118,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // element start tag also represents the end tag.
                 this._popElement(fullName, span);
             }
-            else if (startTagToken.type === TokenType.INCOMPLETE_TAG_OPEN) {
+            else if (startTagToken.type === 4 /* INCOMPLETE_TAG_OPEN */) {
                 // We already know the opening tag is not complete, so it is unlikely it has a corresponding
                 // close tag. Let's optimistically parse it as a full element and emit an error.
                 this._popElement(fullName, null);
@@ -12074,7 +12153,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             let unexpectedCloseTagDetected = false;
             for (let stackIndex = this._elementStack.length - 1; stackIndex >= 0; stackIndex--) {
                 const el = this._elementStack[stackIndex];
-                if (el.name == fullName) {
+                if (el.name === fullName) {
                     // Record the parse span with the element that is being closed. Any elements that are
                     // removed from the element stack at this point are closed implicitly, so they won't get
                     // an end source span (as there is no explicit closing element).
@@ -12094,24 +12173,53 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         _consumeAttr(attrName) {
             const fullName = mergeNsAndName(attrName.parts[0], attrName.parts[1]);
-            let end = attrName.sourceSpan.end;
-            let value = '';
-            let valueSpan = undefined;
-            if (this._peek.type === TokenType.ATTR_QUOTE) {
+            let attrEnd = attrName.sourceSpan.end;
+            // Consume any quote
+            if (this._peek.type === 15 /* ATTR_QUOTE */) {
                 this._advance();
             }
-            if (this._peek.type === TokenType.ATTR_VALUE) {
-                const valueToken = this._advance();
-                value = valueToken.parts[0];
-                end = valueToken.sourceSpan.end;
-                valueSpan = valueToken.sourceSpan;
+            // Consume the attribute value
+            let value = '';
+            const valueTokens = [];
+            let valueStartSpan = undefined;
+            let valueEnd = undefined;
+            // NOTE: We need to use a new variable `nextTokenType` here to hide the actual type of
+            // `_peek.type` from TS. Otherwise TS will narrow the type of `_peek.type` preventing it from
+            // being able to consider `ATTR_VALUE_INTERPOLATION` as an option. This is because TS is not
+            // able to see that `_advance()` will actually mutate `_peek`.
+            const nextTokenType = this._peek.type;
+            if (nextTokenType === 16 /* ATTR_VALUE_TEXT */) {
+                valueStartSpan = this._peek.sourceSpan;
+                valueEnd = this._peek.sourceSpan.end;
+                while (this._peek.type === 16 /* ATTR_VALUE_TEXT */ ||
+                    this._peek.type === 17 /* ATTR_VALUE_INTERPOLATION */ ||
+                    this._peek.type === 9 /* ENCODED_ENTITY */) {
+                    const valueToken = this._advance();
+                    valueTokens.push(valueToken);
+                    if (valueToken.type === 17 /* ATTR_VALUE_INTERPOLATION */) {
+                        // For backward compatibility we decode HTML entities that appear in interpolation
+                        // expressions. This is arguably a bug, but it could be a considerable breaking change to
+                        // fix it. It should be addressed in a larger project to refactor the entire parser/lexer
+                        // chain after View Engine has been removed.
+                        value += valueToken.parts.join('').replace(/&([^;]+);/g, decodeEntity);
+                    }
+                    else if (valueToken.type === 9 /* ENCODED_ENTITY */) {
+                        value += valueToken.parts[0];
+                    }
+                    else {
+                        value += valueToken.parts.join('');
+                    }
+                    valueEnd = attrEnd = valueToken.sourceSpan.end;
+                }
             }
-            if (this._peek.type === TokenType.ATTR_QUOTE) {
+            // Consume any quote
+            if (this._peek.type === 15 /* ATTR_QUOTE */) {
                 const quoteToken = this._advance();
-                end = quoteToken.sourceSpan.end;
+                attrEnd = quoteToken.sourceSpan.end;
             }
-            const keySpan = new ParseSourceSpan(attrName.sourceSpan.start, attrName.sourceSpan.end);
-            return new Attribute(fullName, value, new ParseSourceSpan(attrName.sourceSpan.start, end, attrName.sourceSpan.fullStart), keySpan, valueSpan);
+            const valueSpan = valueStartSpan && valueEnd &&
+                new ParseSourceSpan(valueStartSpan.start, valueEnd, valueStartSpan.fullStart);
+            return new Attribute(fullName, value, new ParseSourceSpan(attrName.sourceSpan.start, attrEnd, attrName.sourceSpan.fullStart), attrName.sourceSpan, valueSpan, valueTokens.length > 0 ? valueTokens : undefined, undefined);
         }
         _getParentElement() {
             return this._elementStack.length > 0 ? this._elementStack[this._elementStack.length - 1] : null;
@@ -12141,6 +12249,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function lastOnStack(stack, element) {
         return stack.length > 0 && stack[stack.length - 1] === element;
+    }
+    /**
+     * Decode the `entity` string, which we believe is the contents of an HTML entity.
+     *
+     * If the string is not actually a valid/known entity then just return the original `match` string.
+     */
+    function decodeEntity(match, entity) {
+        if (NAMED_ENTITIES[entity] !== undefined) {
+            return NAMED_ENTITIES[entity] || match;
+        }
+        if (/^#x[a-f0-9]+$/i.test(entity)) {
+            return String.fromCodePoint(parseInt(entity.slice(2), 16));
+        }
+        if (/^#\d+$/.test(entity)) {
+            return String.fromCodePoint(parseInt(entity.slice(1), 10));
+        }
+        return match;
     }
 
     /**
@@ -12217,7 +12342,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const hasExpansionSibling = context &&
                 (context.prev instanceof Expansion || context.next instanceof Expansion);
             if (isNotBlank || hasExpansionSibling) {
-                return new Text$2(replaceNgsp(text.value).replace(WS_REPLACE_REGEXP, ' '), text.sourceSpan, text.i18n);
+                // Process the whitespace in the tokens of this Text node
+                const tokens = text.tokens.map(token => token.type === 5 /* TEXT */ ? createWhitespaceProcessedTextToken(token) : token);
+                // Process the whitespace of the value of this Text node
+                const value = processWhitespace(text.value);
+                return new Text$2(value, text.sourceSpan, tokens, text.i18n);
             }
             return null;
         }
@@ -12230,6 +12359,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitExpansionCase(expansionCase, context) {
             return expansionCase;
         }
+    }
+    function createWhitespaceProcessedTextToken({ type, parts, sourceSpan }) {
+        return { type, parts: [processWhitespace(parts[0])], sourceSpan };
+    }
+    function processWhitespace(text) {
+        return replaceNgsp(text).replace(WS_REPLACE_REGEXP, ' ');
     }
     function visitAllWithSiblings(visitor, nodes) {
         const result = [];
@@ -13481,7 +13616,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var TokenType$1;
+    var TokenType;
     (function (TokenType) {
         TokenType[TokenType["Character"] = 0] = "Character";
         TokenType[TokenType["Identifier"] = 1] = "Identifier";
@@ -13491,7 +13626,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         TokenType[TokenType["Operator"] = 5] = "Operator";
         TokenType[TokenType["Number"] = 6] = "Number";
         TokenType[TokenType["Error"] = 7] = "Error";
-    })(TokenType$1 || (TokenType$1 = {}));
+    })(TokenType || (TokenType = {}));
     const KEYWORDS = ['var', 'let', 'as', 'null', 'undefined', 'true', 'false', 'if', 'else', 'this'];
     class Lexer {
         tokenize(text) {
@@ -13505,7 +13640,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return tokens;
         }
     }
-    class Token$1 {
+    class Token {
         constructor(index, end, type, numValue, strValue) {
             this.index = index;
             this.end = end;
@@ -13514,64 +13649,64 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.strValue = strValue;
         }
         isCharacter(code) {
-            return this.type == TokenType$1.Character && this.numValue == code;
+            return this.type == TokenType.Character && this.numValue == code;
         }
         isNumber() {
-            return this.type == TokenType$1.Number;
+            return this.type == TokenType.Number;
         }
         isString() {
-            return this.type == TokenType$1.String;
+            return this.type == TokenType.String;
         }
         isOperator(operator) {
-            return this.type == TokenType$1.Operator && this.strValue == operator;
+            return this.type == TokenType.Operator && this.strValue == operator;
         }
         isIdentifier() {
-            return this.type == TokenType$1.Identifier;
+            return this.type == TokenType.Identifier;
         }
         isPrivateIdentifier() {
-            return this.type == TokenType$1.PrivateIdentifier;
+            return this.type == TokenType.PrivateIdentifier;
         }
         isKeyword() {
-            return this.type == TokenType$1.Keyword;
+            return this.type == TokenType.Keyword;
         }
         isKeywordLet() {
-            return this.type == TokenType$1.Keyword && this.strValue == 'let';
+            return this.type == TokenType.Keyword && this.strValue == 'let';
         }
         isKeywordAs() {
-            return this.type == TokenType$1.Keyword && this.strValue == 'as';
+            return this.type == TokenType.Keyword && this.strValue == 'as';
         }
         isKeywordNull() {
-            return this.type == TokenType$1.Keyword && this.strValue == 'null';
+            return this.type == TokenType.Keyword && this.strValue == 'null';
         }
         isKeywordUndefined() {
-            return this.type == TokenType$1.Keyword && this.strValue == 'undefined';
+            return this.type == TokenType.Keyword && this.strValue == 'undefined';
         }
         isKeywordTrue() {
-            return this.type == TokenType$1.Keyword && this.strValue == 'true';
+            return this.type == TokenType.Keyword && this.strValue == 'true';
         }
         isKeywordFalse() {
-            return this.type == TokenType$1.Keyword && this.strValue == 'false';
+            return this.type == TokenType.Keyword && this.strValue == 'false';
         }
         isKeywordThis() {
-            return this.type == TokenType$1.Keyword && this.strValue == 'this';
+            return this.type == TokenType.Keyword && this.strValue == 'this';
         }
         isError() {
-            return this.type == TokenType$1.Error;
+            return this.type == TokenType.Error;
         }
         toNumber() {
-            return this.type == TokenType$1.Number ? this.numValue : -1;
+            return this.type == TokenType.Number ? this.numValue : -1;
         }
         toString() {
             switch (this.type) {
-                case TokenType$1.Character:
-                case TokenType$1.Identifier:
-                case TokenType$1.Keyword:
-                case TokenType$1.Operator:
-                case TokenType$1.PrivateIdentifier:
-                case TokenType$1.String:
-                case TokenType$1.Error:
+                case TokenType.Character:
+                case TokenType.Identifier:
+                case TokenType.Keyword:
+                case TokenType.Operator:
+                case TokenType.PrivateIdentifier:
+                case TokenType.String:
+                case TokenType.Error:
                     return this.strValue;
-                case TokenType$1.Number:
+                case TokenType.Number:
                     return this.numValue.toString();
                 default:
                     return null;
@@ -13579,30 +13714,30 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     function newCharacterToken(index, end, code) {
-        return new Token$1(index, end, TokenType$1.Character, code, String.fromCharCode(code));
+        return new Token(index, end, TokenType.Character, code, String.fromCharCode(code));
     }
     function newIdentifierToken(index, end, text) {
-        return new Token$1(index, end, TokenType$1.Identifier, 0, text);
+        return new Token(index, end, TokenType.Identifier, 0, text);
     }
     function newPrivateIdentifierToken(index, end, text) {
-        return new Token$1(index, end, TokenType$1.PrivateIdentifier, 0, text);
+        return new Token(index, end, TokenType.PrivateIdentifier, 0, text);
     }
     function newKeywordToken(index, end, text) {
-        return new Token$1(index, end, TokenType$1.Keyword, 0, text);
+        return new Token(index, end, TokenType.Keyword, 0, text);
     }
     function newOperatorToken(index, end, text) {
-        return new Token$1(index, end, TokenType$1.Operator, 0, text);
+        return new Token(index, end, TokenType.Operator, 0, text);
     }
     function newStringToken(index, end, text) {
-        return new Token$1(index, end, TokenType$1.String, 0, text);
+        return new Token(index, end, TokenType.String, 0, text);
     }
     function newNumberToken(index, end, n) {
-        return new Token$1(index, end, TokenType$1.Number, n, '');
+        return new Token(index, end, TokenType.Number, n, '');
     }
     function newErrorToken(index, end, message) {
-        return new Token$1(index, end, TokenType$1.Error, 0, message);
+        return new Token(index, end, TokenType.Error, 0, message);
     }
-    const EOF = new Token$1(-1, -1, TokenType$1.Character, 0, '');
+    const EOF = new Token(-1, -1, TokenType.Character, 0, '');
     class _Scanner {
         constructor(input) {
             this.input = input;
@@ -13865,9 +14000,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function isExponentSign(code) {
         return code == $MINUS || code == $PLUS;
-    }
-    function isQuote(code) {
-        return code === $SQ || code === $DQ || code === $BT;
     }
     function unescape(code) {
         switch (code) {
@@ -14512,7 +14644,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // '==','!=','===','!=='
             const start = this.inputIndex;
             let result = this.parseRelational();
-            while (this.next.type == TokenType$1.Operator) {
+            while (this.next.type == TokenType.Operator) {
                 const operator = this.next.strValue;
                 switch (operator) {
                     case '==':
@@ -14532,7 +14664,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // '<', '>', '<=', '>='
             const start = this.inputIndex;
             let result = this.parseAdditive();
-            while (this.next.type == TokenType$1.Operator) {
+            while (this.next.type == TokenType.Operator) {
                 const operator = this.next.strValue;
                 switch (operator) {
                     case '<':
@@ -14552,7 +14684,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // '+', '-'
             const start = this.inputIndex;
             let result = this.parseMultiplicative();
-            while (this.next.type == TokenType$1.Operator) {
+            while (this.next.type == TokenType.Operator) {
                 const operator = this.next.strValue;
                 switch (operator) {
                     case '+':
@@ -14570,7 +14702,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // '*', '%', '/'
             const start = this.inputIndex;
             let result = this.parsePrefix();
-            while (this.next.type == TokenType$1.Operator) {
+            while (this.next.type == TokenType.Operator) {
                 const operator = this.next.strValue;
                 switch (operator) {
                     case '*':
@@ -14586,7 +14718,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return result;
         }
         parsePrefix() {
-            if (this.next.type == TokenType$1.Operator) {
+            if (this.next.type == TokenType.Operator) {
                 const start = this.inputIndex;
                 const operator = this.next.strValue;
                 let result;
@@ -16518,11 +16650,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return context.visitNodeFn(el, node);
         }
         visitAttribute(attribute, context) {
-            const node = this._visitTextWithInterpolation(attribute.value, attribute.valueSpan || attribute.sourceSpan, context, attribute.i18n);
+            const node = attribute.valueTokens === undefined || attribute.valueTokens.length === 1 ?
+                new Text$1(attribute.value, attribute.valueSpan || attribute.sourceSpan) :
+                this._visitTextWithInterpolation(attribute.valueTokens, attribute.valueSpan || attribute.sourceSpan, context, attribute.i18n);
             return context.visitNodeFn(attribute, node);
         }
         visitText(text, context) {
-            const node = this._visitTextWithInterpolation(text.value, text.sourceSpan, context, text.i18n);
+            const node = text.tokens.length === 1 ?
+                new Text$1(text.value, text.sourceSpan) :
+                this._visitTextWithInterpolation(text.tokens, text.sourceSpan, context, text.i18n);
             return context.visitNodeFn(text, node);
         }
         visitComment(comment, context) {
@@ -16561,61 +16697,39 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             throw new Error('Unreachable code');
         }
         /**
-         * Split the, potentially interpolated, text up into text and placeholder pieces.
+         * Convert, text and interpolated tokens up into text and placeholder pieces.
          *
-         * @param text The potentially interpolated string to be split.
+         * @param tokens The text and interpolated tokens.
          * @param sourceSpan The span of the whole of the `text` string.
          * @param context The current context of the visitor, used to compute and store placeholders.
          * @param previousI18n Any i18n metadata associated with this `text` from a previous pass.
          */
-        _visitTextWithInterpolation(text, sourceSpan, context, previousI18n) {
-            const { strings, expressions } = this._expressionParser.splitInterpolation(text, sourceSpan.start.toString(), this._interpolationConfig);
-            // No expressions, return a single text.
-            if (expressions.length === 0) {
-                return new Text$1(text, sourceSpan);
-            }
+        _visitTextWithInterpolation(tokens, sourceSpan, context, previousI18n) {
             // Return a sequence of `Text` and `Placeholder` nodes grouped in a `Container`.
             const nodes = [];
-            for (let i = 0; i < strings.length - 1; i++) {
-                this._addText(nodes, strings[i], sourceSpan);
-                this._addPlaceholder(nodes, context, expressions[i], sourceSpan);
+            for (const token of tokens) {
+                switch (token.type) {
+                    case 8 /* INTERPOLATION */:
+                    case 17 /* ATTR_VALUE_INTERPOLATION */:
+                        const expression = token.parts[1];
+                        const baseName = extractPlaceholderName(expression) || 'INTERPOLATION';
+                        const phName = context.placeholderRegistry.getPlaceholderName(baseName, expression);
+                        context.placeholderToContent[phName] = {
+                            text: token.parts.join(''),
+                            sourceSpan: token.sourceSpan
+                        };
+                        nodes.push(new Placeholder(expression, phName, token.sourceSpan));
+                        break;
+                    default:
+                        if (token.parts[0].length > 0) {
+                            nodes.push(new Text$1(token.parts[0], token.sourceSpan));
+                        }
+                        break;
+                }
             }
-            // The last index contains no expression
-            this._addText(nodes, strings[strings.length - 1], sourceSpan);
             // Whitespace removal may have invalidated the interpolation source-spans.
             reusePreviousSourceSpans(nodes, previousI18n);
             return new Container(nodes, sourceSpan);
-        }
-        /**
-         * Create a new `Text` node from the `textPiece` and add it to the `nodes` collection.
-         *
-         * @param nodes The nodes to which the created `Text` node should be added.
-         * @param textPiece The text and relative span information for this `Text` node.
-         * @param interpolationSpan The span of the whole interpolated text.
-         */
-        _addText(nodes, textPiece, interpolationSpan) {
-            if (textPiece.text.length > 0) {
-                // No need to add empty strings
-                const stringSpan = getOffsetSourceSpan(interpolationSpan, textPiece);
-                nodes.push(new Text$1(textPiece.text, stringSpan));
-            }
-        }
-        /**
-         * Create a new `Placeholder` node from the `expression` and add it to the `nodes` collection.
-         *
-         * @param nodes The nodes to which the created `Text` node should be added.
-         * @param context The current context of the visitor, used to compute and store placeholders.
-         * @param expression The expression text and relative span information for this `Placeholder`
-         *     node.
-         * @param interpolationSpan The span of the whole interpolated text.
-         */
-        _addPlaceholder(nodes, context, expression, interpolationSpan) {
-            const sourceSpan = getOffsetSourceSpan(interpolationSpan, expression);
-            const baseName = extractPlaceholderName(expression.text) || 'INTERPOLATION';
-            const phName = context.placeholderRegistry.getPlaceholderName(baseName, expression.text);
-            const text = this._interpolationConfig.start + expression.text + this._interpolationConfig.end;
-            context.placeholderToContent[phName] = { text, sourceSpan };
-            nodes.push(new Placeholder(expression.text, phName, sourceSpan));
         }
     }
     /**
@@ -16637,7 +16751,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         if (previousI18n instanceof Container) {
             // The `previousI18n` is a `Container`, which means that this is a second i18n extraction pass
-            // after whitespace has been removed from the AST ndoes.
+            // after whitespace has been removed from the AST nodes.
             assertEquivalentNodes(previousI18n.children, nodes);
             // Reuse the source-spans from the first pass.
             for (let i = 0; i < nodes.length; i++) {
@@ -16665,12 +16779,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         if (previousNodes.some((node, i) => nodes[i].constructor !== node.constructor)) {
             throw new Error('The types of the i18n message children changed between first and second pass.');
         }
-    }
-    /**
-     * Create a new `ParseSourceSpan` from the `sourceSpan`, offset by the `start` and `end` values.
-     */
-    function getOffsetSourceSpan(sourceSpan, { start, end }) {
-        return new ParseSourceSpan(sourceSpan.fullStart.moveBy(start), sourceSpan.fullStart.moveBy(end));
     }
     const _CUSTOM_PH_EXP = /\/\/[\s\S]*i18n[\s\S]*\([\s\S]*ph[\s\S]*=[\s\S]*("|')([\s\S]*?)\1[\s\S]*\)/g;
     function extractPlaceholderName(input) {
@@ -16991,7 +17099,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 context[context.length - 1].text += text.value;
             }
             else {
-                context.push(new LiteralPiece(text.value, text.sourceSpan));
+                const sourceSpan = new ParseSourceSpan(text.sourceSpan.fullStart, text.sourceSpan.end, text.sourceSpan.fullStart, text.sourceSpan.details);
+                context.push(new LiteralPiece(text.value, sourceSpan));
             }
         }
         visitContainer(container, context) {
@@ -17035,7 +17144,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function getSourceSpan(message) {
         const startNode = message.nodes[0];
         const endNode = message.nodes[message.nodes.length - 1];
-        return new ParseSourceSpan(startNode.sourceSpan.start, endNode.sourceSpan.end, startNode.sourceSpan.fullStart, startNode.sourceSpan.details);
+        return new ParseSourceSpan(startNode.sourceSpan.fullStart, endNode.sourceSpan.end, startNode.sourceSpan.fullStart, startNode.sourceSpan.details);
     }
     /**
      * Convert the list of serialized MessagePieces into two arrays.
@@ -19941,7 +20050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0-next.1+97.sha-3d66816.with-local-changes');
+    const VERSION$1 = new Version('12.2.0-next.2+8.sha-c556128.with-local-changes');
 
     /**
      * @license
@@ -20580,7 +20689,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.0-next.1+97.sha-3d66816.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.2+8.sha-c556128.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20620,7 +20729,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.0-next.1+97.sha-3d66816.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.2+8.sha-c556128.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20837,7 +20946,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.0-next.1+97.sha-3d66816.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.2+8.sha-c556128.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20879,7 +20988,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.0-next.1+97.sha-3d66816.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.2+8.sha-c556128.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20958,7 +21067,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.0-next.1+97.sha-3d66816.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.2+8.sha-c556128.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20995,7 +21104,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.0-next.1+97.sha-3d66816.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.2+8.sha-c556128.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21053,7 +21162,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.0-next.1+97.sha-3d66816.with-local-changes'));
+        definitionMap.set('version', literal('12.2.0-next.2+8.sha-c556128.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21085,7 +21194,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.0-next.1+97.sha-3d66816.with-local-changes');
+    const VERSION$2 = new Version('12.2.0-next.2+8.sha-c556128.with-local-changes');
 
     /**
      * @license
