@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.0+9.sha-8a3d2aa.with-local-changes
+ * @license Angular v12.2.0+12.sha-7da3570.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21482,7 +21482,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.0+9.sha-8a3d2aa.with-local-changes');
+    const VERSION$1 = new Version('12.2.0+12.sha-7da3570.with-local-changes');
 
     /**
      * @license
@@ -37561,7 +37561,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.0+9.sha-8a3d2aa.with-local-changes');
+    const VERSION$2 = new Version$1('12.2.0+12.sha-7da3570.with-local-changes');
 
     /**
      * @license
@@ -42875,16 +42875,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * Work out the locale from the potential global properties.
      *
-     * * Closure Compiler: use `goog.LOCALE`.
+     * * Closure Compiler: use `goog.getLocale()`.
      * * Ivy enabled: use `$localize.locale`
      */
     function getGlobalLocale() {
         if (typeof ngI18nClosureMode !== 'undefined' && ngI18nClosureMode &&
-            typeof goog !== 'undefined' && goog.LOCALE !== 'en') {
-            // * The default `goog.LOCALE` value is `en`, while Angular used `en-US`.
+            typeof goog !== 'undefined' && goog.getLocale() !== 'en') {
+            // * The default `goog.getLocale()` value is `en`, while Angular used `en-US`.
             // * In order to preserve backwards compatibility, we use Angular default value over
             //   Closure Compiler's one.
-            return goog.LOCALE;
+            return goog.getLocale();
         }
         else {
             // KEEP `typeof $localize !== 'undefined' && $localize.locale` IN SYNC WITH THE LOCALIZE
