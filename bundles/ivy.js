@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.1+22.sha-564ad06.with-local-changes
+ * @license Angular v13.0.0-next.1+29.sha-66f1962.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -455,7 +455,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return [null, elementName];
         }
         const colonIndex = elementName.indexOf(':', 1);
-        if (colonIndex == -1) {
+        if (colonIndex === -1) {
             throw new Error(`Unsupported format "${elementName}" expecting ":namespace:name"`);
         }
         return [elementName.slice(1, colonIndex), elementName.slice(colonIndex + 1)];
@@ -506,7 +506,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         getContentType(prefix) {
             if (typeof this.contentType === 'object') {
-                const overrideType = prefix == null ? undefined : this.contentType[prefix];
+                const overrideType = prefix === undefined ? undefined : this.contentType[prefix];
                 return overrideType !== null && overrideType !== void 0 ? overrideType : this.contentType.default;
             }
             return this.contentType;
@@ -4740,13 +4740,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var R3FactoryDelegateType;
     (function (R3FactoryDelegateType) {
         R3FactoryDelegateType[R3FactoryDelegateType["Class"] = 0] = "Class";
@@ -5145,8 +5138,249 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function sanitizeIdentifier(name) {
-        return name.replace(/\W/g, '_');
+    const $EOF = 0;
+    const $BSPACE = 8;
+    const $TAB = 9;
+    const $LF = 10;
+    const $VTAB = 11;
+    const $FF = 12;
+    const $CR = 13;
+    const $SPACE = 32;
+    const $BANG = 33;
+    const $DQ = 34;
+    const $HASH = 35;
+    const $$ = 36;
+    const $PERCENT = 37;
+    const $AMPERSAND = 38;
+    const $SQ = 39;
+    const $LPAREN = 40;
+    const $RPAREN = 41;
+    const $STAR = 42;
+    const $PLUS = 43;
+    const $COMMA = 44;
+    const $MINUS = 45;
+    const $PERIOD = 46;
+    const $SLASH = 47;
+    const $COLON = 58;
+    const $SEMICOLON = 59;
+    const $LT = 60;
+    const $EQ = 61;
+    const $GT = 62;
+    const $QUESTION = 63;
+    const $0 = 48;
+    const $7 = 55;
+    const $9 = 57;
+    const $A = 65;
+    const $E = 69;
+    const $F = 70;
+    const $X = 88;
+    const $Z = 90;
+    const $LBRACKET = 91;
+    const $BACKSLASH = 92;
+    const $RBRACKET = 93;
+    const $CARET = 94;
+    const $_ = 95;
+    const $a = 97;
+    const $b = 98;
+    const $e = 101;
+    const $f = 102;
+    const $n = 110;
+    const $r = 114;
+    const $t = 116;
+    const $u = 117;
+    const $v = 118;
+    const $x = 120;
+    const $z = 122;
+    const $LBRACE = 123;
+    const $BAR = 124;
+    const $RBRACE = 125;
+    const $NBSP = 160;
+    const $BT = 96;
+    function isWhitespace(code) {
+        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
+    }
+    function isDigit(code) {
+        return $0 <= code && code <= $9;
+    }
+    function isAsciiLetter(code) {
+        return code >= $a && code <= $z || code >= $A && code <= $Z;
+    }
+    function isAsciiHexDigit(code) {
+        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
+    }
+    function isNewLine(code) {
+        return code === $LF || code === $CR;
+    }
+    function isOctalDigit(code) {
+        return $0 <= code && code <= $7;
+    }
+    function isQuote(code) {
+        return code === $SQ || code === $DQ || code === $BT;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class ParseLocation {
+        constructor(file, offset, line, col) {
+            this.file = file;
+            this.offset = offset;
+            this.line = line;
+            this.col = col;
+        }
+        toString() {
+            return this.offset != null ? `${this.file.url}@${this.line}:${this.col}` : this.file.url;
+        }
+        moveBy(delta) {
+            const source = this.file.content;
+            const len = source.length;
+            let offset = this.offset;
+            let line = this.line;
+            let col = this.col;
+            while (offset > 0 && delta < 0) {
+                offset--;
+                delta++;
+                const ch = source.charCodeAt(offset);
+                if (ch == $LF) {
+                    line--;
+                    const priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
+                    col = priorLine > 0 ? offset - priorLine : offset;
+                }
+                else {
+                    col--;
+                }
+            }
+            while (offset < len && delta > 0) {
+                const ch = source.charCodeAt(offset);
+                offset++;
+                delta--;
+                if (ch == $LF) {
+                    line++;
+                    col = 0;
+                }
+                else {
+                    col++;
+                }
+            }
+            return new ParseLocation(this.file, offset, line, col);
+        }
+        // Return the source around the location
+        // Up to `maxChars` or `maxLines` on each side of the location
+        getContext(maxChars, maxLines) {
+            const content = this.file.content;
+            let startOffset = this.offset;
+            if (startOffset != null) {
+                if (startOffset > content.length - 1) {
+                    startOffset = content.length - 1;
+                }
+                let endOffset = startOffset;
+                let ctxChars = 0;
+                let ctxLines = 0;
+                while (ctxChars < maxChars && startOffset > 0) {
+                    startOffset--;
+                    ctxChars++;
+                    if (content[startOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                ctxChars = 0;
+                ctxLines = 0;
+                while (ctxChars < maxChars && endOffset < content.length - 1) {
+                    endOffset++;
+                    ctxChars++;
+                    if (content[endOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                return {
+                    before: content.substring(startOffset, this.offset),
+                    after: content.substring(this.offset, endOffset + 1),
+                };
+            }
+            return null;
+        }
+    }
+    class ParseSourceFile {
+        constructor(content, url) {
+            this.content = content;
+            this.url = url;
+        }
+    }
+    class ParseSourceSpan {
+        /**
+         * Create an object that holds information about spans of tokens/nodes captured during
+         * lexing/parsing of text.
+         *
+         * @param start
+         * The location of the start of the span (having skipped leading trivia).
+         * Skipping leading trivia makes source-spans more "user friendly", since things like HTML
+         * elements will appear to begin at the start of the opening tag, rather than at the start of any
+         * leading trivia, which could include newlines.
+         *
+         * @param end
+         * The location of the end of the span.
+         *
+         * @param fullStart
+         * The start of the token without skipping the leading trivia.
+         * This is used by tooling that splits tokens further, such as extracting Angular interpolations
+         * from text tokens. Such tooling creates new source-spans relative to the original token's
+         * source-span. If leading trivia characters have been skipped then the new source-spans may be
+         * incorrectly offset.
+         *
+         * @param details
+         * Additional information (such as identifier names) that should be associated with the span.
+         */
+        constructor(start, end, fullStart = start, details = null) {
+            this.start = start;
+            this.end = end;
+            this.fullStart = fullStart;
+            this.details = details;
+        }
+        toString() {
+            return this.start.file.content.substring(this.start.offset, this.end.offset);
+        }
+    }
+    var ParseErrorLevel;
+    (function (ParseErrorLevel) {
+        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
+        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
+    })(ParseErrorLevel || (ParseErrorLevel = {}));
+    class ParseError {
+        constructor(span, msg, level = ParseErrorLevel.ERROR) {
+            this.span = span;
+            this.msg = msg;
+            this.level = level;
+        }
+        contextualMessage() {
+            const ctx = this.span.start.getContext(100, 3);
+            return ctx ? `${this.msg} ("${ctx.before}[${ParseErrorLevel[this.level]} ->]${ctx.after}")` :
+                this.msg;
+        }
+        toString() {
+            const details = this.span.details ? `, ${this.span.details}` : '';
+            return `${this.contextualMessage()}: ${this.span.start}${details}`;
+        }
+    }
+    /**
+     * Generates Source Span object for a given R3 Type for JIT mode.
+     *
+     * @param kind Component or Directive.
+     * @param typeName name of the Component or Directive.
+     * @param sourceUrl reference to Component or Directive source.
+     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
+     */
+    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
+        const sourceFileName = `in ${kind} ${typeName} in ${sourceUrl}`;
+        const sourceFile = new ParseSourceFile('', sourceFileName);
+        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
     }
     let _anonymousTypeIndex = 0;
     function identifierName(compileIdentifier) {
@@ -5176,18 +5410,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return identifier;
     }
-    var CompileSummaryKind;
-    (function (CompileSummaryKind) {
-        CompileSummaryKind[CompileSummaryKind["Pipe"] = 0] = "Pipe";
-        CompileSummaryKind[CompileSummaryKind["Directive"] = 1] = "Directive";
-        CompileSummaryKind[CompileSummaryKind["NgModule"] = 2] = "NgModule";
-        CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
-    })(CompileSummaryKind || (CompileSummaryKind = {}));
-    function flatten(list) {
-        return list.reduce((flat, item) => {
-            const flatItem = Array.isArray(item) ? flatten(item) : item;
-            return flat.concat(flatItem);
-        }, []);
+    function sanitizeIdentifier(name) {
+        return name.replace(/\W/g, '_');
     }
 
     /**
@@ -5641,255 +5865,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function isUseStrictStatement(statement) {
         return statement.isEquivalent(literal('use strict').toStmt());
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const $EOF = 0;
-    const $BSPACE = 8;
-    const $TAB = 9;
-    const $LF = 10;
-    const $VTAB = 11;
-    const $FF = 12;
-    const $CR = 13;
-    const $SPACE = 32;
-    const $BANG = 33;
-    const $DQ = 34;
-    const $HASH = 35;
-    const $$ = 36;
-    const $PERCENT = 37;
-    const $AMPERSAND = 38;
-    const $SQ = 39;
-    const $LPAREN = 40;
-    const $RPAREN = 41;
-    const $STAR = 42;
-    const $PLUS = 43;
-    const $COMMA = 44;
-    const $MINUS = 45;
-    const $PERIOD = 46;
-    const $SLASH = 47;
-    const $COLON = 58;
-    const $SEMICOLON = 59;
-    const $LT = 60;
-    const $EQ = 61;
-    const $GT = 62;
-    const $QUESTION = 63;
-    const $0 = 48;
-    const $7 = 55;
-    const $9 = 57;
-    const $A = 65;
-    const $E = 69;
-    const $F = 70;
-    const $X = 88;
-    const $Z = 90;
-    const $LBRACKET = 91;
-    const $BACKSLASH = 92;
-    const $RBRACKET = 93;
-    const $CARET = 94;
-    const $_ = 95;
-    const $a = 97;
-    const $b = 98;
-    const $e = 101;
-    const $f = 102;
-    const $n = 110;
-    const $r = 114;
-    const $t = 116;
-    const $u = 117;
-    const $v = 118;
-    const $x = 120;
-    const $z = 122;
-    const $LBRACE = 123;
-    const $BAR = 124;
-    const $RBRACE = 125;
-    const $NBSP = 160;
-    const $BT = 96;
-    function isWhitespace(code) {
-        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
-    }
-    function isDigit(code) {
-        return $0 <= code && code <= $9;
-    }
-    function isAsciiLetter(code) {
-        return code >= $a && code <= $z || code >= $A && code <= $Z;
-    }
-    function isAsciiHexDigit(code) {
-        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
-    }
-    function isNewLine(code) {
-        return code === $LF || code === $CR;
-    }
-    function isOctalDigit(code) {
-        return $0 <= code && code <= $7;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class ParseLocation {
-        constructor(file, offset, line, col) {
-            this.file = file;
-            this.offset = offset;
-            this.line = line;
-            this.col = col;
-        }
-        toString() {
-            return this.offset != null ? `${this.file.url}@${this.line}:${this.col}` : this.file.url;
-        }
-        moveBy(delta) {
-            const source = this.file.content;
-            const len = source.length;
-            let offset = this.offset;
-            let line = this.line;
-            let col = this.col;
-            while (offset > 0 && delta < 0) {
-                offset--;
-                delta++;
-                const ch = source.charCodeAt(offset);
-                if (ch == $LF) {
-                    line--;
-                    const priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
-                    col = priorLine > 0 ? offset - priorLine : offset;
-                }
-                else {
-                    col--;
-                }
-            }
-            while (offset < len && delta > 0) {
-                const ch = source.charCodeAt(offset);
-                offset++;
-                delta--;
-                if (ch == $LF) {
-                    line++;
-                    col = 0;
-                }
-                else {
-                    col++;
-                }
-            }
-            return new ParseLocation(this.file, offset, line, col);
-        }
-        // Return the source around the location
-        // Up to `maxChars` or `maxLines` on each side of the location
-        getContext(maxChars, maxLines) {
-            const content = this.file.content;
-            let startOffset = this.offset;
-            if (startOffset != null) {
-                if (startOffset > content.length - 1) {
-                    startOffset = content.length - 1;
-                }
-                let endOffset = startOffset;
-                let ctxChars = 0;
-                let ctxLines = 0;
-                while (ctxChars < maxChars && startOffset > 0) {
-                    startOffset--;
-                    ctxChars++;
-                    if (content[startOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                ctxChars = 0;
-                ctxLines = 0;
-                while (ctxChars < maxChars && endOffset < content.length - 1) {
-                    endOffset++;
-                    ctxChars++;
-                    if (content[endOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                return {
-                    before: content.substring(startOffset, this.offset),
-                    after: content.substring(this.offset, endOffset + 1),
-                };
-            }
-            return null;
-        }
-    }
-    class ParseSourceFile {
-        constructor(content, url) {
-            this.content = content;
-            this.url = url;
-        }
-    }
-    class ParseSourceSpan {
-        /**
-         * Create an object that holds information about spans of tokens/nodes captured during
-         * lexing/parsing of text.
-         *
-         * @param start
-         * The location of the start of the span (having skipped leading trivia).
-         * Skipping leading trivia makes source-spans more "user friendly", since things like HTML
-         * elements will appear to begin at the start of the opening tag, rather than at the start of any
-         * leading trivia, which could include newlines.
-         *
-         * @param end
-         * The location of the end of the span.
-         *
-         * @param fullStart
-         * The start of the token without skipping the leading trivia.
-         * This is used by tooling that splits tokens further, such as extracting Angular interpolations
-         * from text tokens. Such tooling creates new source-spans relative to the original token's
-         * source-span. If leading trivia characters have been skipped then the new source-spans may be
-         * incorrectly offset.
-         *
-         * @param details
-         * Additional information (such as identifier names) that should be associated with the span.
-         */
-        constructor(start, end, fullStart = start, details = null) {
-            this.start = start;
-            this.end = end;
-            this.fullStart = fullStart;
-            this.details = details;
-        }
-        toString() {
-            return this.start.file.content.substring(this.start.offset, this.end.offset);
-        }
-    }
-    var ParseErrorLevel;
-    (function (ParseErrorLevel) {
-        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
-        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
-    })(ParseErrorLevel || (ParseErrorLevel = {}));
-    class ParseError {
-        constructor(span, msg, level = ParseErrorLevel.ERROR) {
-            this.span = span;
-            this.msg = msg;
-            this.level = level;
-        }
-        contextualMessage() {
-            const ctx = this.span.start.getContext(100, 3);
-            return ctx ? `${this.msg} ("${ctx.before}[${ParseErrorLevel[this.level]} ->]${ctx.after}")` :
-                this.msg;
-        }
-        toString() {
-            const details = this.span.details ? `, ${this.span.details}` : '';
-            return `${this.contextualMessage()}: ${this.span.start}${details}`;
-        }
-    }
-    /**
-     * Generates Source Span object for a given R3 Type for JIT mode.
-     *
-     * @param kind Component or Directive.
-     * @param typeName name of the Component or Directive.
-     * @param sourceUrl reference to Component or Directive source.
-     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
-     */
-    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
-        const sourceFileName = `in ${kind} ${typeName} in ${sourceUrl}`;
-        const sourceFile = new ParseSourceFile('', sourceFileName);
-        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
     }
 
     /**
@@ -8631,6 +8606,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 groups[j + (i * length)] = groups[j].slice(0);
             }
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var CompileSummaryKind;
+    (function (CompileSummaryKind) {
+        CompileSummaryKind[CompileSummaryKind["Pipe"] = 0] = "Pipe";
+        CompileSummaryKind[CompileSummaryKind["Directive"] = 1] = "Directive";
+        CompileSummaryKind[CompileSummaryKind["NgModule"] = 2] = "NgModule";
+        CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
+    })(CompileSummaryKind || (CompileSummaryKind = {}));
+    function flatten(list) {
+        return list.reduce((flat, item) => {
+            const flatItem = Array.isArray(item) ? flatten(item) : item;
+            return flat.concat(flatItem);
+        }, []);
     }
 
     /**
@@ -11544,16 +11540,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             (code < $0 || code > $9);
     }
     function isDigitEntityEnd(code) {
-        return code == $SEMICOLON || code == $EOF || !isAsciiHexDigit(code);
+        return code === $SEMICOLON || code === $EOF || !isAsciiHexDigit(code);
     }
     function isNamedEntityEnd(code) {
-        return code == $SEMICOLON || code == $EOF || !isAsciiLetter(code);
+        return code === $SEMICOLON || code === $EOF || !isAsciiLetter(code);
     }
     function isExpansionCaseStart(peek) {
         return peek !== $RBRACE;
     }
     function compareCharCodeCaseInsensitive(code1, code2) {
-        return toUpperCaseCharCode(code1) == toUpperCaseCharCode(code2);
+        return toUpperCaseCharCode(code1) === toUpperCaseCharCode(code2);
     }
     function toUpperCaseCharCode(code) {
         return code >= $a && code <= $z ? code - $a + $A : code;
@@ -11563,7 +11559,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         let lastDstToken = undefined;
         for (let i = 0; i < srcTokens.length; i++) {
             const token = srcTokens[i];
-            if (lastDstToken && lastDstToken.type == TokenType.TEXT && token.type == TokenType.TEXT) {
+            if (lastDstToken && lastDstToken.type === TokenType.TEXT && token.type === TokenType.TEXT) {
                 lastDstToken.parts[0] += token.parts[0];
                 lastDstToken.sourceSpan.end = token.sourceSpan.end;
             }
@@ -11967,7 +11963,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 if (this._peek.type === TokenType.EXPANSION_CASE_EXP_END) {
                     if (lastOnStack(expansionFormStack, TokenType.EXPANSION_CASE_EXP_START)) {
                         expansionFormStack.pop();
-                        if (expansionFormStack.length == 0)
+                        if (expansionFormStack.length === 0)
                             return exp;
                     }
                     else {
@@ -11993,9 +11989,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         _consumeText(token) {
             let text = token.parts[0];
-            if (text.length > 0 && text[0] == '\n') {
+            if (text.length > 0 && text[0] === '\n') {
                 const parent = this._getParentElement();
-                if (parent != null && parent.children.length == 0 &&
+                if (parent != null && parent.children.length === 0 &&
                     this.getTagDefinition(parent.name).ignoreFirstLf) {
                     text = text.substring(1);
                 }
@@ -12078,7 +12074,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             let unexpectedCloseTagDetected = false;
             for (let stackIndex = this._elementStack.length - 1; stackIndex >= 0; stackIndex--) {
                 const el = this._elementStack[stackIndex];
-                if (el.name == fullName) {
+                if (el.name === fullName) {
                     // Record the parse span with the element that is being closed. Any elements that are
                     // removed from the element stack at this point are closed implicitly, so they won't get
                     // an end source span (as there is no explicit closing element).
@@ -13869,9 +13865,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function isExponentSign(code) {
         return code == $MINUS || code == $PLUS;
-    }
-    function isQuote(code) {
-        return code === $SQ || code === $DQ || code === $BT;
     }
     function unescape(code) {
         switch (code) {
@@ -19945,7 +19938,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.1+22.sha-564ad06.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.1+29.sha-66f1962.with-local-changes');
 
     /**
      * @license
@@ -20584,7 +20577,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('13.0.0-next.1+22.sha-564ad06.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.1+29.sha-66f1962.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20624,7 +20617,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('13.0.0-next.1+22.sha-564ad06.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.1+29.sha-66f1962.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20841,7 +20834,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('13.0.0-next.1+22.sha-564ad06.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.1+29.sha-66f1962.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20883,7 +20876,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('13.0.0-next.1+22.sha-564ad06.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.1+29.sha-66f1962.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20962,7 +20955,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('13.0.0-next.1+22.sha-564ad06.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.1+29.sha-66f1962.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20999,7 +20992,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('13.0.0-next.1+22.sha-564ad06.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.1+29.sha-66f1962.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21057,7 +21050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('13.0.0-next.1+22.sha-564ad06.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.1+29.sha-66f1962.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21089,7 +21082,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('13.0.0-next.1+22.sha-564ad06.with-local-changes');
+    const VERSION$2 = new Version('13.0.0-next.1+29.sha-66f1962.with-local-changes');
 
     /**
      * @license
