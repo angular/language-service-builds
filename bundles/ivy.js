@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.2+3.sha-bed121c.with-local-changes
+ * @license Angular v13.0.0-next.2+8.sha-c389052.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19938,7 +19938,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.2+3.sha-bed121c.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.2+8.sha-c389052.with-local-changes');
 
     /**
      * @license
@@ -20577,7 +20577,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+8.sha-c389052.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20617,7 +20617,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+8.sha-c389052.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20834,7 +20834,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+8.sha-c389052.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20876,7 +20876,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+8.sha-c389052.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20955,7 +20955,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+8.sha-c389052.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20992,7 +20992,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+8.sha-c389052.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21050,7 +21050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+8.sha-c389052.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21082,7 +21082,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('13.0.0-next.2+3.sha-bed121c.with-local-changes');
+    const VERSION$2 = new Version('13.0.0-next.2+8.sha-c389052.with-local-changes');
 
     /**
      * @license
@@ -26546,6 +26546,26 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 }
             }
         }
+        extendedTemplateCheck(sf, extendedTemplateChecker) {
+            const classes = this.fileToClasses.get(sf);
+            if (classes === undefined) {
+                return [];
+            }
+            const diagnostics = [];
+            for (const clazz of classes) {
+                if (!isNamedClassDeclaration(clazz)) {
+                    continue;
+                }
+                const record = this.classes.get(clazz);
+                for (const trait of record.traits) {
+                    if (trait.handler.extendedTemplateCheck === undefined) {
+                        continue;
+                    }
+                    diagnostics.push(...trait.handler.extendedTemplateCheck(clazz, extendedTemplateChecker));
+                }
+            }
+            return diagnostics;
+        }
         index(ctx) {
             for (const clazz of this.classes.keys()) {
                 const record = this.classes.get(clazz);
@@ -30552,6 +30572,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const binder = new R3TargetBinder(scope.matcher);
             ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file, meta.template.errors);
+        }
+        extendedTemplateCheck(component, extendedTemplateChecker) {
+            return extendedTemplateChecker.getExtendedTemplateDiagnosticsForComponent(component);
         }
         resolve(node, analysis, symbol) {
             if (this.semanticDepGraphUpdater !== null && analysis.baseClass instanceof Reference$1) {
@@ -40140,6 +40163,141 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    class ExtendedTemplateCheckerImpl {
+        constructor(templateTypeChecker, typeChecker, templateChecks) {
+            this.templateTypeChecker = templateTypeChecker;
+            this.typeChecker = typeChecker;
+            this.templateChecks = templateChecks;
+        }
+        getExtendedTemplateDiagnosticsForComponent(component) {
+            const template = this.templateTypeChecker.getTemplate(component);
+            // Skip checks if component has no template. This can happen if the user writes a
+            // `@Component()` but doesn't add the template, could happen in the language service
+            // when users are in the middle of typing code.
+            if (template === null) {
+                return [];
+            }
+            const diagnostics = [];
+            const ctx = {
+                templateTypeChecker: this.templateTypeChecker,
+                typeChecker: this.typeChecker,
+                component
+            };
+            for (const check of this.templateChecks) {
+                diagnostics.push(...deduplicateDiagnostics(check.run(ctx, template)));
+            }
+            return diagnostics;
+        }
+    }
+    // Filter out duplicated diagnostics, this is possible due to the way the compiler
+    // handles desugaring and produces `AST`s. Ex.
+    //
+    // ```
+    // <div *ngIf="true" (foo)="bar">test</div>
+    // ```
+    //
+    // Would result in the following AST:
+    //
+    // ```
+    // Template {
+    //   outputs: [
+    //    BoundEvent {
+    //      name: 'foo',
+    //      /.../
+    //    }
+    //   ],
+    //   children: [
+    //     Element {
+    //       outputs: [
+    //         BoundEvent {
+    //           name: 'foo',
+    //           /.../
+    //         }
+    //       ]
+    //     }
+    //   ],
+    //   /.../
+    // }
+    // ```
+    //
+    // In this case a duplicated diagnostic could be generated for the output `foo`.
+    // TODO(danieltrevino): handle duplicated diagnostics when they are being generated
+    // to avoid extra work (could be directly in the visitor).
+    // https://github.com/angular/angular/pull/42984#discussion_r684823926
+    function deduplicateDiagnostics(diagnostics) {
+        const result = [];
+        for (const newDiag of diagnostics) {
+            const isDuplicateDiag = result.some(existingDiag => areDiagnosticsEqual(newDiag, existingDiag));
+            if (!isDuplicateDiag) {
+                result.push(newDiag);
+            }
+        }
+        return result;
+    }
+    function areDiagnosticsEqual(first, second) {
+        var _a, _b;
+        return ((_a = first.file) === null || _a === void 0 ? void 0 : _a.fileName) === ((_b = second.file) === null || _b === void 0 ? void 0 : _b.fileName) && first.start === second.start &&
+            first.length === second.length && first.code === second.code;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Ensures the two-way binding syntax is correct.
+     * Parentheses should be inside the brackets "[()]".
+     * Will return diagnostic information when "([])" is found.
+     */
+    class InvalidBananaInBoxCheck {
+        constructor() {
+            this.code = 8101;
+        }
+        run(ctx, template) {
+            const visitor = new BananaVisitor(ctx);
+            return visitor.getDiagnostics(template);
+        }
+    }
+    class BananaVisitor extends RecursiveVisitor {
+        constructor(ctx) {
+            super();
+            this.ctx = ctx;
+            this.diagnostics = [];
+        }
+        /**
+         * Check for outputs with names surrounded in brackets "[]".
+         * The syntax '([foo])="bar"' would be interpreted as an @Output()
+         * with name '[foo]'. Just like '(foo)="bar"' would have the name 'foo'.
+         * Generate diagnostic information for the cases found.
+         */
+        visitBoundEvent(boundEvent) {
+            const name = boundEvent.name;
+            if (name.startsWith('[') && name.endsWith(']')) {
+                const boundSyntax = boundEvent.sourceSpan.toString();
+                const expectedBoundSyntax = boundSyntax.replace(`(${name})`, `[(${name.slice(1, -1)})]`);
+                this.diagnostics.push(this.ctx.templateTypeChecker.makeTemplateDiagnostic(this.ctx.component, boundEvent.sourceSpan, ts$1.DiagnosticCategory.Warning, ErrorCode.INVALID_BANANA_IN_BOX, `In the two-way binding syntax the parentheses should be inside the brackets, ex. '${expectedBoundSyntax}'. 
+                Find more at https://angular.io/guide/two-way-binding`));
+            }
+        }
+        getDiagnostics(template) {
+            this.diagnostics = [];
+            for (const node of template) {
+                node.visit(this);
+            }
+            return this.diagnostics;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Discriminant type for a `CompilationTicket`.
      */
@@ -40249,6 +40407,10 @@ Either add the @Injectable() decorator to '${provider.node.name
              * with each fresh compilation.
              */
             this.delegatingPerfRecorder = new DelegatingPerfRecorder(this.perfRecorder);
+            if (this.options._extendedTemplateDiagnostics === true &&
+                this.options.strictTemplates === false) {
+                throw new Error('The \'_extendedTemplateDiagnostics\' option requires \'strictTemplates\' to also be enabled.');
+            }
             this.constructionDiagnostics.push(...this.adapter.constructionDiagnostics);
             const incompatibleTypeCheckOptionsDiagnostic = verifyCompatibleTypeCheckOptions(this.options);
             if (incompatibleTypeCheckOptionsDiagnostic !== null) {
@@ -40358,7 +40520,12 @@ Either add the @Injectable() decorator to '${provider.node.name
          * Get all Angular-related diagnostics for this compilation.
          */
         getDiagnostics() {
-            return this.addMessageTextDetails([...this.getNonTemplateDiagnostics(), ...this.getTemplateDiagnostics()]);
+            const diagnostics = [];
+            diagnostics.push(...this.getNonTemplateDiagnostics(), ...this.getTemplateDiagnostics());
+            if (this.options._extendedTemplateDiagnostics) {
+                diagnostics.push(...this.getExtendedTemplateDiagnostics());
+            }
+            return this.addMessageTextDetails(diagnostics);
         }
         /**
          * Get all Angular-related diagnostics for this compilation.
@@ -40366,10 +40533,12 @@ Either add the @Injectable() decorator to '${provider.node.name
          * If a `ts.SourceFile` is passed, only diagnostics related to that file are returned.
          */
         getDiagnosticsForFile(file, optimizeFor) {
-            return this.addMessageTextDetails([
-                ...this.getNonTemplateDiagnostics().filter(diag => diag.file === file),
-                ...this.getTemplateDiagnosticsForFile(file, optimizeFor)
-            ]);
+            const diagnostics = [];
+            diagnostics.push(...this.getNonTemplateDiagnostics().filter(diag => diag.file === file), ...this.getTemplateDiagnosticsForFile(file, optimizeFor));
+            if (this.options._extendedTemplateDiagnostics) {
+                diagnostics.push(...this.getExtendedTemplateDiagnostics(file));
+            }
+            return this.addMessageTextDetails(diagnostics);
         }
         /**
          * Add Angular.io error guide links to diagnostics for this compilation.
@@ -40758,6 +40927,26 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             return this.nonTemplateDiagnostics;
+        }
+        /**
+         * Calls the `extendedTemplateCheck` phase of the trait compiler
+         * @param sf optional parameter to get diagnostics for a certain file
+         *     or all files in the program if `sf` is undefined
+         * @returns generated extended template diagnostics
+         */
+        getExtendedTemplateDiagnostics(sf) {
+            const diagnostics = [];
+            const compilation = this.ensureAnalyzed();
+            const typeChecker = this.inputProgram.getTypeChecker();
+            const templateChecks = [new InvalidBananaInBoxCheck()];
+            const extendedTemplateChecker = new ExtendedTemplateCheckerImpl(compilation.templateTypeChecker, typeChecker, templateChecks);
+            if (sf !== undefined) {
+                return compilation.traitCompiler.extendedTemplateCheck(sf, extendedTemplateChecker);
+            }
+            for (const sf of this.inputProgram.getSourceFiles()) {
+                diagnostics.push(...compilation.traitCompiler.extendedTemplateCheck(sf, extendedTemplateChecker));
+            }
+            return diagnostics;
         }
         makeCompilation() {
             const checker = this.inputProgram.getTypeChecker();
