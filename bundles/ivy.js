@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.2+2.sha-e57691c.with-local-changes
+ * @license Angular v13.0.0-next.2+3.sha-bed121c.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19938,7 +19938,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.2+2.sha-e57691c.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.2+3.sha-bed121c.with-local-changes');
 
     /**
      * @license
@@ -20577,7 +20577,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('13.0.0-next.2+2.sha-e57691c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20617,7 +20617,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('13.0.0-next.2+2.sha-e57691c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20834,7 +20834,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('13.0.0-next.2+2.sha-e57691c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20876,7 +20876,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('13.0.0-next.2+2.sha-e57691c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20955,7 +20955,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('13.0.0-next.2+2.sha-e57691c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20992,7 +20992,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('13.0.0-next.2+2.sha-e57691c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21050,7 +21050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('13.0.0-next.2+2.sha-e57691c.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.2+3.sha-bed121c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21082,7 +21082,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('13.0.0-next.2+2.sha-e57691c.with-local-changes');
+    const VERSION$2 = new Version('13.0.0-next.2+3.sha-bed121c.with-local-changes');
 
     /**
      * @license
@@ -28777,7 +28777,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * If no such metadata is present, this function returns `null`. Otherwise, the call is returned
      * as a `Statement` for inclusion along with the class.
      */
-    function extractClassMetadata(clazz, reflection, isCore, annotateForClosureCompiler) {
+    function extractClassMetadata(clazz, reflection, isCore, annotateForClosureCompiler, angularDecoratorTransform = dec => dec) {
         if (!reflection.isClass(clazz)) {
             return null;
         }
@@ -28789,7 +28789,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             return null;
         }
         const ngClassDecorators = classDecorators.filter(dec => isAngularDecorator$1(dec, isCore))
-            .map(decorator => decoratorToMetadata(decorator, annotateForClosureCompiler))
+            .map(decorator => decoratorToMetadata(angularDecoratorTransform(decorator), annotateForClosureCompiler))
             // Since the `setClassMetadata` call is intended to be emitted after the class
             // declaration, we have to strip references to the existing identifiers or
             // TypeScript might generate invalid code when it emits to JS. In particular
@@ -28892,8 +28892,8 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     /**
      * Recursively recreates all of the `Identifier` descendant nodes with a particular name inside
-     * of an AST node, thus removing any references to them. Useful if a particular node has to be t
-     * aken from one place any emitted to another one exactly as it has been written.
+     * of an AST node, thus removing any references to them. Useful if a particular node has to be
+     * taken from one place any emitted to another one exactly as it has been written.
      */
     function removeIdentifierReferences(node, name) {
         const result = ts$1.transform(node, [context => root => ts$1.visitNode(root, function walk(current) {
@@ -30476,7 +30476,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // analyzed and the full compilation scope for the component can be realized.
                         animations, viewProviders: wrappedViewProviders, i18nUseExternalIds: this.i18nUseExternalIds, relativeContextFilePath }),
                     typeCheckMeta: extractDirectiveTypeCheckMeta(node, inputs, this.reflector),
-                    classMetadata: extractClassMetadata(node, this.reflector, this.isCore, this.annotateForClosureCompiler),
+                    classMetadata: extractClassMetadata(node, this.reflector, this.isCore, this.annotateForClosureCompiler, dec => this._transformDecoratorToInlineResources(dec, component, styles, template)),
                     template,
                     providersRequiringFactory,
                     viewProvidersRequiringFactory,
@@ -30773,6 +30773,46 @@ Either add the @Injectable() decorator to '${provider.node.name
                 compileDeclareClassMetadata(analysis.classMetadata).toStmt() :
                 null;
             return compileResults(fac, def, classMetadata, 'ɵcmp');
+        }
+        /**
+         * Transforms the given decorator to inline external resources. i.e. if the decorator
+         * resolves to `@Component`, the `templateUrl` and `styleUrls` metadata fields will be
+         * transformed to their semantically-equivalent inline variants.
+         *
+         * This method is used for serializing decorators into the class metadata. The emitted
+         * class metadata should not refer to external resources as this would be inconsistent
+         * with the component definitions/declarations which already inline external resources.
+         *
+         * Additionally, the references to external resources would require libraries to ship
+         * external resources exclusively for the class metadata.
+         */
+        _transformDecoratorToInlineResources(dec, component, styles, template) {
+            if (dec.name !== 'Component') {
+                return dec;
+            }
+            // If no external resources are referenced, preserve the original decorator
+            // for the best source map experience when the decorator is emitted in TS.
+            if (!component.has('templateUrl') && !component.has('styleUrls')) {
+                return dec;
+            }
+            const metadata = new Map(component);
+            // Set the `template` property if the `templateUrl` property is set.
+            if (metadata.has('templateUrl')) {
+                metadata.delete('templateUrl');
+                metadata.set('template', ts$1.createStringLiteral(template.content));
+            }
+            // Set the `styles` property if the `styleUrls` property is set.
+            if (metadata.has('styleUrls')) {
+                metadata.delete('styleUrls');
+                metadata.set('styles', ts$1.createArrayLiteral(styles.map(s => ts$1.createStringLiteral(s))));
+            }
+            // Convert the metadata to TypeScript AST object literal element nodes.
+            const newMetadataFields = [];
+            for (const [name, value] of metadata.entries()) {
+                newMetadataFields.push(ts$1.createPropertyAssignment(name, value));
+            }
+            // Return the original decorator with the overridden metadata argument.
+            return Object.assign(Object.assign({}, dec), { args: [ts$1.createObjectLiteral(newMetadataFields)] });
         }
         _resolveLiteral(decorator) {
             if (this.literalCache.has(decorator)) {
