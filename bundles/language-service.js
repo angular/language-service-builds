@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.2+9.sha-ccb09b4.with-local-changes
+ * @license Angular v13.0.0-next.2+11.sha-6e92431.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21475,7 +21475,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.2+9.sha-ccb09b4.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.2+11.sha-6e92431.with-local-changes');
 
     /**
      * @license
@@ -49491,7 +49491,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.2+9.sha-ccb09b4.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.2+11.sha-6e92431.with-local-changes');
 
     /**
      * @license
@@ -60130,6 +60130,10 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             // Not implemented in VE Language Service
             return undefined;
         }
+        function getTemplateLocationForComponent(fileName, position) {
+            // Not implemented in VE Language Service
+            return undefined;
+        }
         function getComponentLocationsForTemplate(fileName) {
             // Not implemented in VE Language Service
             return [];
@@ -60142,7 +60146,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             getDefinitionAtPosition,
             getDefinitionAndBoundSpan,
             getTcb,
-            getComponentLocationsForTemplate });
+            getComponentLocationsForTemplate,
+            getTemplateLocationForComponent });
     }
 
     exports.create = create;
