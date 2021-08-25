@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.2+9.sha-d7b6416.with-local-changes
+ * @license Angular v12.2.2+16.sha-b46ce7d.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19938,7 +19938,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.2+9.sha-d7b6416.with-local-changes');
+    const VERSION$1 = new Version('12.2.2+16.sha-b46ce7d.with-local-changes');
 
     /**
      * @license
@@ -20577,7 +20577,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.2+9.sha-d7b6416.with-local-changes'));
+        definitionMap.set('version', literal('12.2.2+16.sha-b46ce7d.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20617,7 +20617,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.2+9.sha-d7b6416.with-local-changes'));
+        definitionMap.set('version', literal('12.2.2+16.sha-b46ce7d.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20834,7 +20834,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.2+9.sha-d7b6416.with-local-changes'));
+        definitionMap.set('version', literal('12.2.2+16.sha-b46ce7d.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20876,7 +20876,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.2+9.sha-d7b6416.with-local-changes'));
+        definitionMap.set('version', literal('12.2.2+16.sha-b46ce7d.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20955,7 +20955,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.2+9.sha-d7b6416.with-local-changes'));
+        definitionMap.set('version', literal('12.2.2+16.sha-b46ce7d.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20992,7 +20992,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.2+9.sha-d7b6416.with-local-changes'));
+        definitionMap.set('version', literal('12.2.2+16.sha-b46ce7d.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21050,7 +21050,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.2+9.sha-d7b6416.with-local-changes'));
+        definitionMap.set('version', literal('12.2.2+16.sha-b46ce7d.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21082,7 +21082,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.2+9.sha-d7b6416.with-local-changes');
+    const VERSION$2 = new Version('12.2.2+16.sha-b46ce7d.with-local-changes');
 
     /**
      * @license
@@ -30574,7 +30574,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             ctx.addTemplate(new Reference$1(node), binder, meta.template.diagNodes, scope.pipes, scope.schemas, meta.template.sourceMapping, meta.template.file, meta.template.errors);
         }
         extendedTemplateCheck(component, extendedTemplateChecker) {
-            return extendedTemplateChecker.getExtendedTemplateDiagnosticsForComponent(component);
+            return extendedTemplateChecker.getDiagnosticsForComponent(component);
         }
         resolve(node, analysis, symbol) {
             if (this.semanticDepGraphUpdater !== null && analysis.baseClass instanceof Reference$1) {
@@ -39754,7 +39754,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const fileRecord = this.state.get(sfPath);
             const templateId = fileRecord.sourceManager.getTemplateId(clazz);
             const mapping = fileRecord.sourceManager.getSourceMapping(templateId);
-            return makeTemplateDiagnostic(templateId, mapping, sourceSpan, category, errorCode, message, relatedInformation);
+            return Object.assign(Object.assign({}, makeTemplateDiagnostic(templateId, mapping, sourceSpan, category, ngErrorCode(errorCode), message, relatedInformation)), { __ngCode: errorCode });
         }
         getOrCreateCompletionEngine(component) {
             if (this.completionCache.has(component)) {
@@ -40129,7 +40129,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.typeChecker = typeChecker;
             this.templateChecks = templateChecks;
         }
-        getExtendedTemplateDiagnosticsForComponent(component) {
+        getDiagnosticsForComponent(component) {
             const template = this.templateTypeChecker.getTemplate(component);
             // Skip checks if component has no template. This can happen if the user writes a
             // `@Component()` but doesn't add the template, could happen in the language service
@@ -40497,6 +40497,20 @@ Either add the @Injectable() decorator to '${provider.node.name
             diagnostics.push(...this.getNonTemplateDiagnostics().filter(diag => diag.file === file), ...this.getTemplateDiagnosticsForFile(file, optimizeFor));
             if (this.options._extendedTemplateDiagnostics) {
                 diagnostics.push(...this.getExtendedTemplateDiagnostics(file));
+            }
+            return this.addMessageTextDetails(diagnostics);
+        }
+        /**
+         * Get all `ts.Diagnostic`s currently available that pertain to the given component.
+         */
+        getDiagnosticsForComponent(component) {
+            const compilation = this.ensureAnalyzed();
+            const ttc = compilation.templateTypeChecker;
+            const diagnostics = [];
+            diagnostics.push(...ttc.getDiagnosticsForComponent(component));
+            if (this.options._extendedTemplateDiagnostics) {
+                const extendedTemplateChecker = compilation.extendedTemplateChecker;
+                diagnostics.push(...extendedTemplateChecker.getDiagnosticsForComponent(component));
             }
             return this.addMessageTextDetails(diagnostics);
         }
@@ -40897,9 +40911,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         getExtendedTemplateDiagnostics(sf) {
             const diagnostics = [];
             const compilation = this.ensureAnalyzed();
-            const typeChecker = this.inputProgram.getTypeChecker();
-            const templateChecks = [new InvalidBananaInBoxCheck()];
-            const extendedTemplateChecker = new ExtendedTemplateCheckerImpl(compilation.templateTypeChecker, typeChecker, templateChecks);
+            const extendedTemplateChecker = compilation.extendedTemplateChecker;
             if (sf !== undefined) {
                 return compilation.traitCompiler.extendedTemplateCheck(sf, extendedTemplateChecker);
             }
@@ -41021,6 +41033,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 this.currentProgram = program;
             });
             const templateTypeChecker = new TemplateTypeCheckerImpl(this.inputProgram, notifyingDriver, traitCompiler, this.getTypeCheckingConfig(), refEmitter, reflector, this.adapter, this.incrementalCompilation, scopeRegistry, typeCheckScopeRegistry, this.delegatingPerfRecorder);
+            const templateChecks = [new InvalidBananaInBoxCheck()];
+            const extendedTemplateChecker = new ExtendedTemplateCheckerImpl(templateTypeChecker, checker, templateChecks);
             return {
                 isCore,
                 traitCompiler,
@@ -41035,6 +41049,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 refEmitter,
                 templateTypeChecker,
                 resourceRegistry,
+                extendedTemplateChecker
             };
         }
     }
@@ -44598,7 +44613,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         getSemanticDiagnostics(fileName) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsDiagnostics, (compiler) => {
-                const ttc = compiler.getTemplateTypeChecker();
                 const diagnostics = [];
                 if (isTypeScriptFile(fileName)) {
                     const program = compiler.getCurrentProgram();
@@ -44634,7 +44648,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     const components = compiler.getComponentsWithTemplateFile(fileName);
                     for (const component of components) {
                         if (ts.isClassDeclaration(component)) {
-                            diagnostics.push(...ttc.getDiagnosticsForComponent(component));
+                            diagnostics.push(...compiler.getDiagnosticsForComponent(component));
                         }
                     }
                 }
