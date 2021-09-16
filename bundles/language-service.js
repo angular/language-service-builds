@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.6+15.sha-def6315.with-local-changes
+ * @license Angular v12.2.6+21.sha-b43f21b.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -8086,7 +8086,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     const _polyfillHostRe = /-shadowcsshost/gim;
     const _colonHostRe = /:host/gim;
     const _colonHostContextRe = /:host-context/gim;
-    const _commentRe = /\/\*\s*[\s\S]*?\*\//g;
+    const _commentRe = /\/\*[\s\S]*?\*\//g;
     function stripComments(input) {
         return input.replace(_commentRe, '');
     }
@@ -21475,7 +21475,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.6+15.sha-def6315.with-local-changes');
+    const VERSION$1 = new Version('12.2.6+21.sha-b43f21b.with-local-changes');
 
     /**
      * @license
@@ -36690,7 +36690,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.6+15.sha-def6315.with-local-changes');
+    const VERSION$2 = new Version$1('12.2.6+21.sha-b43f21b.with-local-changes');
 
     /**
      * @license
