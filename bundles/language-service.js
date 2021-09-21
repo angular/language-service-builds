@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.6+56.sha-77bd253.with-local-changes
+ * @license Angular v13.0.0-next.6+57.sha-2028c39.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -819,9 +819,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         key(index, type, sourceSpan) {
             return new ReadKeyExpr(this, index, type, sourceSpan);
         }
-        callMethod(name, params, sourceSpan) {
-            return new InvokeMethodExpr(this, name, params, null, sourceSpan);
-        }
         callFn(params, sourceSpan, pure) {
             return new InvokeFunctionExpr(this, params, null, sourceSpan, pure);
         }
@@ -1023,31 +1020,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         BuiltinMethod[BuiltinMethod["SubscribeObservable"] = 1] = "SubscribeObservable";
         BuiltinMethod[BuiltinMethod["Bind"] = 2] = "Bind";
     })(BuiltinMethod || (BuiltinMethod = {}));
-    class InvokeMethodExpr extends Expression {
-        constructor(receiver, method, args, type, sourceSpan) {
-            super(type, sourceSpan);
-            this.receiver = receiver;
-            this.args = args;
-            if (typeof method === 'string') {
-                this.name = method;
-                this.builtin = null;
-            }
-            else {
-                this.name = null;
-                this.builtin = method;
-            }
-        }
-        isEquivalent(e) {
-            return e instanceof InvokeMethodExpr && this.receiver.isEquivalent(e.receiver) &&
-                this.name === e.name && this.builtin === e.builtin && areAllEquivalent(this.args, e.args);
-        }
-        isConstant() {
-            return false;
-        }
-        visitExpression(visitor, context) {
-            return visitor.visitInvokeMethodExpr(this, context);
-        }
-    }
     class InvokeFunctionExpr extends Expression {
         constructor(fn, args, type, sourceSpan, pure = false) {
             super(type, sourceSpan);
@@ -1917,7 +1889,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.visitWriteVarExpr = invalid;
             this.visitWriteKeyExpr = invalid;
             this.visitWritePropExpr = invalid;
-            this.visitInvokeMethodExpr = invalid;
             this.visitInvokeFunctionExpr = invalid;
             this.visitTaggedTemplateExpr = invalid;
             this.visitInstantiateExpr = invalid;
@@ -3993,21 +3964,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return null;
         }
-        visitInvokeMethodExpr(expr, ctx) {
-            expr.receiver.visitExpression(this, ctx);
-            let name = expr.name;
-            if (expr.builtin != null) {
-                name = this.getBuiltinMethodName(expr.builtin);
-                if (name == null) {
-                    // some builtins just mean to skip the call.
-                    return null;
-                }
-            }
-            ctx.print(expr, `.${name}(`);
-            this.visitAllExpressions(expr.args, ctx, `,`);
-            ctx.print(expr, `)`);
-            return null;
-        }
         visitInvokeFunctionExpr(expr, ctx) {
             expr.fn.visitExpression(this, ctx);
             ctx.print(expr, `(`);
@@ -4646,7 +4602,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         return createFactoryFunction(unwrappedType);
     }
     function createFactoryFunction(type) {
-        return fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ɵfac', [variable('t')]))]);
+        return fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.prop('ɵfac').callFn([variable('t')]))]);
     }
 
     /**
@@ -6021,38 +5977,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             return visitor.visitNonNullAssert(this, context);
         }
     }
-    class MethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
-            super(span, sourceSpan, nameSpan);
-            this.receiver = receiver;
-            this.name = name;
-            this.args = args;
-            this.argumentSpan = argumentSpan;
-        }
-        visit(visitor, context = null) {
-            return visitor.visitMethodCall(this, context);
-        }
-    }
-    class SafeMethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
-            super(span, sourceSpan, nameSpan);
-            this.receiver = receiver;
-            this.name = name;
-            this.args = args;
-            this.argumentSpan = argumentSpan;
-        }
-        visit(visitor, context = null) {
-            return visitor.visitSafeMethodCall(this, context);
-        }
-    }
-    class FunctionCall extends AST {
-        constructor(span, sourceSpan, target, args) {
+    class Call extends AST {
+        constructor(span, sourceSpan, receiver, args, argumentSpan) {
             super(span, sourceSpan);
-            this.target = target;
+            this.receiver = receiver;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
-            return visitor.visitFunctionCall(this, context);
+            return visitor.visitCall(this, context);
         }
     }
     /**
@@ -6138,12 +6071,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.visit(ast.exp, context);
             this.visitAll(ast.args, context);
         }
-        visitFunctionCall(ast, context) {
-            if (ast.target) {
-                this.visit(ast.target, context);
-            }
-            this.visitAll(ast.args, context);
-        }
         visitImplicitReceiver(ast, context) { }
         visitThisReceiver(ast, context) { }
         visitInterpolation(ast, context) {
@@ -6165,10 +6092,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             this.visitAll(ast.values, context);
         }
         visitLiteralPrimitive(ast, context) { }
-        visitMethodCall(ast, context) {
-            this.visit(ast.receiver, context);
-            this.visitAll(ast.args, context);
-        }
         visitPrefixNot(ast, context) {
             this.visit(ast.expression, context);
         }
@@ -6185,13 +6108,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitSafePropertyRead(ast, context) {
             this.visit(ast.receiver, context);
         }
-        visitSafeMethodCall(ast, context) {
-            this.visit(ast.receiver, context);
-            this.visitAll(ast.args, context);
-        }
         visitSafeKeyedRead(ast, context) {
             this.visit(ast.receiver, context);
             this.visit(ast.key, context);
+        }
+        visitCall(ast, context) {
+            this.visit(ast.receiver, context);
+            this.visitAll(ast.args, context);
         }
         visitQuote(ast, context) { }
         // This is not part of the AstVisitor interface, just a helper method
@@ -6222,15 +6145,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         visitSafePropertyRead(ast, context) {
             return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name);
-        }
-        visitMethodCall(ast, context) {
-            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
-        }
-        visitSafeMethodCall(ast, context) {
-            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
-        }
-        visitFunctionCall(ast, context) {
-            return new FunctionCall(ast.span, ast.sourceSpan, ast.target.visit(this), this.visitAll(ast.args));
         }
         visitLiteralArray(ast, context) {
             return new LiteralArray(ast.span, ast.sourceSpan, this.visitAll(ast.expressions));
@@ -6268,6 +6182,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         visitKeyedWrite(ast, context) {
             return new KeyedWrite(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.key.visit(this), ast.value.visit(this));
+        }
+        visitCall(ast, context) {
+            return new Call(ast.span, ast.sourceSpan, ast.receiver.visit(this), this.visitAll(ast.args), ast.argumentSpan);
         }
         visitAll(asts) {
             const res = [];
@@ -6323,30 +6240,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const receiver = ast.receiver.visit(this);
             if (receiver !== ast.receiver) {
                 return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name);
-            }
-            return ast;
-        }
-        visitMethodCall(ast, context) {
-            const receiver = ast.receiver.visit(this);
-            const args = this.visitAll(ast.args);
-            if (receiver !== ast.receiver || args !== ast.args) {
-                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
-            }
-            return ast;
-        }
-        visitSafeMethodCall(ast, context) {
-            const receiver = ast.receiver.visit(this);
-            const args = this.visitAll(ast.args);
-            if (receiver !== ast.receiver || args !== ast.args) {
-                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
-            }
-            return ast;
-        }
-        visitFunctionCall(ast, context) {
-            const target = ast.target && ast.target.visit(this);
-            const args = this.visitAll(ast.args);
-            if (target !== ast.target || args !== ast.args) {
-                return new FunctionCall(ast.span, ast.sourceSpan, target, args);
             }
             return ast;
         }
@@ -6449,6 +6342,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const expressions = this.visitAll(ast.expressions);
             if (expressions !== ast.expressions) {
                 return new Chain(ast.span, ast.sourceSpan, expressions);
+            }
+            return ast;
+        }
+        visitCall(ast, context) {
+            const receiver = ast.receiver.visit(this);
+            const args = this.visitAll(ast.args);
+            if (receiver !== ast.receiver || args !== ast.args) {
+                return new Call(ast.span, ast.sourceSpan, receiver, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -6984,18 +6885,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitPipe(ast, mode) {
             throw new Error(`Illegal state: Pipes should have been converted into functions. Pipe: ${ast.name}`);
         }
-        visitFunctionCall(ast, mode) {
-            const convertedArgs = this.visitAll(ast.args, _Mode.Expression);
-            let fnResult;
-            if (ast instanceof BuiltinFunctionCall) {
-                fnResult = ast.converter(convertedArgs);
-            }
-            else {
-                fnResult = this._visit(ast.target, _Mode.Expression)
-                    .callFn(convertedArgs, this.convertSourceSpan(ast.span));
-            }
-            return convertToStatementIfNeeded(mode, fnResult);
-        }
         visitImplicitReceiver(ast, mode) {
             ensureExpressionMode(mode, ast);
             this.usesImplicitReceiver = true;
@@ -7060,40 +6949,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return this._localResolver.getLocal(name);
         }
-        visitMethodCall(ast, mode) {
-            if (ast.receiver instanceof ImplicitReceiver &&
-                !(ast.receiver instanceof ThisReceiver) && ast.name === '$any') {
-                const args = this.visitAll(ast.args, _Mode.Expression);
-                if (args.length != 1) {
-                    throw new Error(`Invalid call to $any, expected 1 argument but received ${args.length || 'none'}`);
-                }
-                return args[0].cast(DYNAMIC_TYPE, this.convertSourceSpan(ast.span));
-            }
-            const leftMostSafe = this.leftMostSafeNode(ast);
-            if (leftMostSafe) {
-                return this.convertSafeAccess(ast, leftMostSafe, mode);
-            }
-            else {
-                const args = this.visitAll(ast.args, _Mode.Expression);
-                const prevUsesImplicitReceiver = this.usesImplicitReceiver;
-                let result = null;
-                const receiver = this._visit(ast.receiver, _Mode.Expression);
-                if (receiver === this._implicitReceiver) {
-                    const varExpr = this._getLocal(ast.name, ast.receiver);
-                    if (varExpr) {
-                        // Restore the previous "usesImplicitReceiver" state since the implicit
-                        // receiver has been replaced with a resolved local expression.
-                        this.usesImplicitReceiver = prevUsesImplicitReceiver;
-                        result = varExpr.callFn(args);
-                        this.addImplicitReceiverAccess(ast.name);
-                    }
-                }
-                if (result == null) {
-                    result = receiver.callMethod(ast.name, args, this.convertSourceSpan(ast.span));
-                }
-                return convertToStatementIfNeeded(mode, result);
-            }
-        }
         visitPrefixNot(ast, mode) {
             return convertToStatementIfNeeded(mode, not(this._visit(ast.expression, _Mode.Expression)));
         }
@@ -7119,7 +6974,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
                 }
                 if (result == null) {
-                    result = receiver.prop(ast.name);
+                    result = receiver.prop(ast.name, this.convertSourceSpan(ast.span));
                 }
                 return convertToStatementIfNeeded(mode, result);
             }
@@ -7152,14 +7007,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // If no local expression could be produced, use the original receiver's
             // property as the target.
             if (varExpr === null) {
-                varExpr = receiver.prop(ast.name);
+                varExpr = receiver.prop(ast.name, this.convertSourceSpan(ast.span));
             }
             return convertToStatementIfNeeded(mode, varExpr.set(this._visit(ast.value, _Mode.Expression)));
         }
         visitSafePropertyRead(ast, mode) {
-            return this.convertSafeAccess(ast, this.leftMostSafeNode(ast), mode);
-        }
-        visitSafeMethodCall(ast, mode) {
             return this.convertSafeAccess(ast, this.leftMostSafeNode(ast), mode);
         }
         visitSafeKeyedRead(ast, mode) {
@@ -7171,6 +7023,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitQuote(ast, mode) {
             throw new Error(`Quotes are not supported for evaluation!
         Statement: ${ast.uninterpretedExpression} located at ${ast.location}`);
+        }
+        visitCall(ast, mode) {
+            const convertedArgs = this.visitAll(ast.args, _Mode.Expression);
+            if (ast instanceof BuiltinFunctionCall) {
+                return convertToStatementIfNeeded(mode, ast.converter(convertedArgs));
+            }
+            const receiver = ast.receiver;
+            if (receiver instanceof PropertyRead &&
+                receiver.receiver instanceof ImplicitReceiver &&
+                !(receiver.receiver instanceof ThisReceiver) && receiver.name === '$any') {
+                if (convertedArgs.length !== 1) {
+                    throw new Error(`Invalid call to $any, expected 1 argument but received ${convertedArgs.length || 'none'}`);
+                }
+                return convertedArgs[0]
+                    .cast(DYNAMIC_TYPE, this.convertSourceSpan(ast.span));
+            }
+            const leftMostSafe = this.leftMostSafeNode(ast);
+            if (leftMostSafe) {
+                return this.convertSafeAccess(ast, leftMostSafe, mode);
+            }
+            const call = this._visit(receiver, _Mode.Expression)
+                .callFn(convertedArgs, this.convertSourceSpan(ast.span));
+            return convertToStatementIfNeeded(mode, call);
         }
         _visit(ast, mode) {
             const result = this._resultMap.get(ast);
@@ -7228,10 +7103,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const condition = guardedExpression.isBlank();
             // Convert the ast to an unguarded access to the receiver's member. The map will substitute
             // leftMostNode with its unguarded version in the call to `this.visit()`.
-            if (leftMostSafe instanceof SafeMethodCall) {
-                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args, leftMostSafe.argumentSpan));
-            }
-            else if (leftMostSafe instanceof SafeKeyedRead) {
+            if (leftMostSafe instanceof SafeKeyedRead) {
                 this._nodeMap.set(leftMostSafe, new KeyedRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.receiver, leftMostSafe.key));
             }
             else {
@@ -7287,8 +7159,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 visitConditional(ast) {
                     return null;
                 },
-                visitFunctionCall(ast) {
-                    return null;
+                visitCall(ast) {
+                    return visit(this, ast.receiver);
                 },
                 visitImplicitReceiver(ast) {
                     return null;
@@ -7314,9 +7186,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 visitLiteralPrimitive(ast) {
                     return null;
                 },
-                visitMethodCall(ast) {
-                    return visit(this, ast.receiver);
-                },
                 visitPipe(ast) {
                     return null;
                 },
@@ -7334,9 +7203,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 },
                 visitQuote(ast) {
                     return null;
-                },
-                visitSafeMethodCall(ast) {
-                    return visit(this, ast.receiver) || ast;
                 },
                 visitSafePropertyRead(ast) {
                     return visit(this, ast.receiver) || ast;
@@ -7369,7 +7235,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 visitConditional(ast) {
                     return visit(this, ast.condition) || visit(this, ast.trueExp) || visit(this, ast.falseExp);
                 },
-                visitFunctionCall(ast) {
+                visitCall(ast) {
                     return true;
                 },
                 visitImplicitReceiver(ast) {
@@ -7396,9 +7262,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 visitLiteralPrimitive(ast) {
                     return false;
                 },
-                visitMethodCall(ast) {
-                    return true;
-                },
                 visitPipe(ast) {
                     return true;
                 },
@@ -7416,9 +7279,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 },
                 visitQuote(ast) {
                     return false;
-                },
-                visitSafeMethodCall(ast) {
-                    return true;
                 },
                 visitSafePropertyRead(ast) {
                     return false;
@@ -7504,9 +7364,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         }
         return null;
     }
-    class BuiltinFunctionCall extends FunctionCall {
+    class BuiltinFunctionCall extends Call {
         constructor(span, sourceSpan, args, converter) {
-            super(span, sourceSpan, null, args);
+            super(span, sourceSpan, new EmptyExpr(span, sourceSpan), args, null);
             this.converter = converter;
         }
     }
@@ -16285,22 +16145,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             let result = this.parsePrimary();
             while (true) {
                 if (this.consumeOptionalCharacter($PERIOD)) {
-                    result = this.parseAccessMemberOrMethodCall(result, start, false);
+                    result = this.parseAccessMemberOrCall(result, start, false);
                 }
                 else if (this.consumeOptionalOperator('?.')) {
                     result = this.consumeOptionalCharacter($LBRACKET) ?
                         this.parseKeyedReadOrWrite(result, start, true) :
-                        this.parseAccessMemberOrMethodCall(result, start, true);
+                        this.parseAccessMemberOrCall(result, start, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
                     result = this.parseKeyedReadOrWrite(result, start, false);
                 }
                 else if (this.consumeOptionalCharacter($LPAREN)) {
+                    const argumentStart = this.inputIndex;
                     this.rparensExpected++;
                     const args = this.parseCallArguments();
+                    const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
                     this.rparensExpected--;
                     this.expectCharacter($RPAREN);
-                    result = new FunctionCall(this.span(start), this.sourceSpan(start), result, args);
+                    result = new Call(this.span(start), this.sourceSpan(start), result, args, argumentSpan);
                 }
                 else if (this.consumeOptionalOperator('!')) {
                     result = new NonNullAssert(this.span(start), this.sourceSpan(start), result);
@@ -16350,7 +16212,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return this.parseLiteralMap();
             }
             else if (this.next.isIdentifier()) {
-                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
+                return this.parseAccessMemberOrCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
             }
             else if (this.next.isNumber()) {
                 const value = this.next.toNumber();
@@ -16418,17 +16280,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             }
             return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
         }
-        parseAccessMemberOrMethodCall(receiver, start, isSafe) {
+        parseAccessMemberOrCall(readReceiver, start, isSafe) {
             const nameStart = this.inputIndex;
             const id = this.withContext(ParseContextFlags.Writable, () => {
                 var _a;
                 const id = (_a = this.expectIdentifierOrKeyword()) !== null && _a !== void 0 ? _a : '';
                 if (id.length === 0) {
-                    this.error(`Expected identifier for property access`, receiver.span.end);
+                    this.error(`Expected identifier for property access`, readReceiver.span.end);
                 }
                 return id;
             });
             const nameSpan = this.sourceSpan(nameStart);
+            let receiver;
+            if (isSafe) {
+                if (this.consumeOptionalOperator('=')) {
+                    this.error('The \'?.\' operator cannot be used in the assignment');
+                    receiver = new EmptyExpr(this.span(start), this.sourceSpan(start));
+                }
+                else {
+                    receiver = new SafePropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
+                }
+            }
+            else {
+                if (this.consumeOptionalOperator('=')) {
+                    if (!this.parseAction) {
+                        this.error('Bindings cannot contain assignments');
+                        return new EmptyExpr(this.span(start), this.sourceSpan(start));
+                    }
+                    const value = this.parseConditional();
+                    receiver = new PropertyWrite(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id, value);
+                }
+                else {
+                    receiver =
+                        new PropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
+                }
+            }
             if (this.consumeOptionalCharacter($LPAREN)) {
                 const argumentStart = this.inputIndex;
                 this.rparensExpected++;
@@ -16438,34 +16324,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 this.rparensExpected--;
                 const span = this.span(start);
                 const sourceSpan = this.sourceSpan(start);
-                return isSafe ?
-                    new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan) :
-                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan);
+                return new Call(span, sourceSpan, receiver, args, argumentSpan);
             }
-            else {
-                if (isSafe) {
-                    if (this.consumeOptionalOperator('=')) {
-                        this.error('The \'?.\' operator cannot be used in the assignment');
-                        return new EmptyExpr(this.span(start), this.sourceSpan(start));
-                    }
-                    else {
-                        return new SafePropertyRead(this.span(start), this.sourceSpan(start), nameSpan, receiver, id);
-                    }
-                }
-                else {
-                    if (this.consumeOptionalOperator('=')) {
-                        if (!this.parseAction) {
-                            this.error('Bindings cannot contain assignments');
-                            return new EmptyExpr(this.span(start), this.sourceSpan(start));
-                        }
-                        const value = this.parseConditional();
-                        return new PropertyWrite(this.span(start), this.sourceSpan(start), nameSpan, receiver, id, value);
-                    }
-                    else {
-                        return new PropertyRead(this.span(start), this.sourceSpan(start), nameSpan, receiver, id);
-                    }
-                }
-            }
+            return receiver;
         }
         parseCallArguments() {
             if (this.next.isCharacter($RPAREN))
@@ -16761,9 +16622,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         visitPropertyRead(ast, context) { }
         visitPropertyWrite(ast, context) { }
         visitSafePropertyRead(ast, context) { }
-        visitMethodCall(ast, context) { }
-        visitSafeMethodCall(ast, context) { }
-        visitFunctionCall(ast, context) { }
+        visitCall(ast, context) { }
         visitLiteralArray(ast, context) {
             this.visitAll(ast.expressions, context);
         }
@@ -19938,11 +19797,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const convertedArgs = isVarLength ?
                 this.visitAll([new LiteralArray(pipe.span, pipe.sourceSpan, args)]) :
                 this.visitAll(args);
-            const pipeBindExpr = new FunctionCall(pipe.span, pipe.sourceSpan, target, [
+            const pipeBindExpr = new Call(pipe.span, pipe.sourceSpan, target, [
                 new LiteralPrimitive(pipe.span, pipe.sourceSpan, slot),
                 new LiteralPrimitive(pipe.span, pipe.sourceSpan, pureFunctionSlot),
                 ...convertedArgs,
-            ]);
+            ], null);
             this._pipeBindExprs.push(pipeBindExpr);
             return pipeBindExpr;
         }
@@ -20737,7 +20596,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 return fn([], [new ReturnStatement(list)]);
             case 2 /* ClosureResolved */:
                 // directives: function () { return [MyDir].map(ng.resolveForwardRef); }
-                const resolvedList = list.callMethod('map', [importExpr(Identifiers.resolveForwardRef)]);
+                const resolvedList = list.prop('map').callFn([importExpr(Identifiers.resolveForwardRef)]);
                 return fn([], [new ReturnStatement(resolvedList)]);
         }
     }
@@ -21610,7 +21469,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.6+56.sha-77bd253.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.6+57.sha-2028c39.with-local-changes');
 
     /**
      * @license
@@ -25711,26 +25570,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             ast.falseExp.visit(this);
             return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
         }
-        visitFunctionCall(ast) {
-            // The type of a function call is the return type of the selected signature.
-            // The signature is selected based on the types of the arguments. Angular doesn't
-            // support contextual typing of arguments so this is simpler than TypeScript's
-            // version.
-            const args = ast.args.map(arg => this.getType(arg));
-            const target = this.getType(ast.target);
-            if (!target || !target.callable) {
-                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.call_target_not_callable, this.sourceOf(ast.target), target.name));
-                return this.anyType;
-            }
-            const signature = target.selectSignature(args);
-            if (signature) {
-                return signature.result;
-            }
-            // TODO: Consider a better error message here. See `typescript_symbols#selectSignature` for more
-            // details.
-            this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unable_to_resolve_compatible_call_signature));
-            return this.anyType;
-        }
         visitImplicitReceiver(_ast) {
             const _this = this;
             // Return a pseudo-symbol for the implicit receiver.
@@ -25818,9 +25657,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     }
             }
         }
-        visitMethodCall(ast) {
-            return this.resolveMethodCall(this.getType(ast.receiver), ast);
-        }
         visitPipe(ast) {
             // The type of a pipe node is the return type of the pipe's transform method. The table returned
             // by getPipes() is expected to contain symbols with the corresponding transform method type.
@@ -25858,9 +25694,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             // The type of a quoted expression is any.
             return this.query.getBuiltinType(BuiltinType$1.Any);
         }
-        visitSafeMethodCall(ast) {
-            return this.resolveMethodCall(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
-        }
         visitSafePropertyRead(ast) {
             return this.resolvePropertyRead(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
         }
@@ -25869,6 +25702,56 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const keyType = this.getType(ast.key);
             const result = targetType.indexed(keyType, ast.key instanceof LiteralPrimitive ? ast.key.value : undefined);
             return result || this.anyType;
+        }
+        visitCall(ast) {
+            if (ast.receiver instanceof Call) {
+                // The type of a function call is the return type of the selected signature.
+                // The signature is selected based on the types of the arguments. Angular doesn't
+                // support contextual typing of arguments so this is simpler than TypeScript's
+                // version.
+                const args = ast.args.map(arg => this.getType(arg));
+                const target = this.getType(ast.receiver);
+                if (!target || !target.callable) {
+                    this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.call_target_not_callable, this.sourceOf(ast.receiver), target.name));
+                    return this.anyType;
+                }
+                const signature = target.selectSignature(args);
+                if (signature) {
+                    return signature.result;
+                }
+                // TODO: Consider a better error message here. See `typescript_symbols#selectSignature` for
+                // more details.
+                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unable_to_resolve_compatible_call_signature));
+                return this.anyType;
+            }
+            if (ast.receiver instanceof PropertyRead || ast.receiver instanceof SafePropertyRead) {
+                const receiver = ast.receiver;
+                const receiverType = receiver instanceof SafePropertyRead ?
+                    this.query.getNonNullableType(this.getType(receiver.receiver)) :
+                    this.getType(receiver.receiver);
+                if (this.isAny(receiverType)) {
+                    return this.anyType;
+                }
+                const methodType = this.resolvePropertyRead(receiverType, receiver);
+                if (!methodType) {
+                    this.diagnostics.push(createDiagnostic(refinedSpan(receiver), Diagnostic.could_not_resolve_type, receiver.name));
+                    return this.anyType;
+                }
+                if (this.isAny(methodType)) {
+                    return this.anyType;
+                }
+                if (!methodType.callable) {
+                    this.diagnostics.push(createDiagnostic(refinedSpan(receiver), Diagnostic.identifier_not_callable, receiver.name));
+                    return this.anyType;
+                }
+                const signature = methodType.selectSignature(ast.args.map(arg => this.getType(arg)));
+                if (!signature) {
+                    this.diagnostics.push(createDiagnostic(refinedSpan(receiver), Diagnostic.unable_to_resolve_signature, receiver.name));
+                    return this.anyType;
+                }
+                return signature.result;
+            }
+            return this.anyType;
         }
         /**
          * Gets the source of an expession AST.
@@ -25891,29 +25774,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 result = this._undefinedType = this.query.getBuiltinType(BuiltinType$1.Undefined);
             }
             return result;
-        }
-        resolveMethodCall(receiverType, ast) {
-            if (this.isAny(receiverType)) {
-                return this.anyType;
-            }
-            const methodType = this.resolvePropertyRead(receiverType, ast);
-            if (!methodType) {
-                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.could_not_resolve_type, ast.name));
-                return this.anyType;
-            }
-            if (this.isAny(methodType)) {
-                return this.anyType;
-            }
-            if (!methodType.callable) {
-                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.identifier_not_callable, ast.name));
-                return this.anyType;
-            }
-            const signature = methodType.selectSignature(ast.args.map(arg => this.getType(arg)));
-            if (!signature) {
-                this.diagnostics.push(createDiagnostic(refinedSpan(ast), Diagnostic.unable_to_resolve_signature, ast.name));
-                return this.anyType;
-            }
-            return signature.result;
         }
         resolvePropertyRead(receiverType, ast) {
             if (this.isAny(receiverType)) {
@@ -26357,7 +26217,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitBinary(_ast) { },
             visitChain(_ast) { },
             visitConditional(_ast) { },
-            visitFunctionCall(_ast) { },
+            visitCall(_ast) { },
             visitImplicitReceiver(_ast) { },
             visitThisReceiver(_ast) { },
             visitInterpolation(_ast) {
@@ -26378,7 +26238,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                     result = undefined;
                 }
             },
-            visitMethodCall(_ast) { },
             visitPipe(ast) {
                 if (position >= ast.exp.span.end &&
                     (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
@@ -26399,10 +26258,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitQuote(_ast) {
                 // For a quote, return the members of any (if there are any).
                 result = templateInfo.query.getBuiltinType(BuiltinType$1.Any).members();
-            },
-            visitSafeMethodCall(ast) {
-                const receiverType = getType(ast.receiver);
-                result = receiverType ? receiverType.members() : scope;
             },
             visitSafePropertyRead(ast) {
                 const receiverType = getType(ast.receiver);
@@ -26447,7 +26302,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitBinary(_ast) { },
             visitChain(_ast) { },
             visitConditional(_ast) { },
-            visitFunctionCall(_ast) { },
+            visitCall(_ast) { },
             visitImplicitReceiver(_ast) { },
             visitThisReceiver(_ast) { },
             visitInterpolation(_ast) { },
@@ -26457,11 +26312,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             visitLiteralArray(_ast) { },
             visitLiteralMap(_ast) { },
             visitLiteralPrimitive(_ast) { },
-            visitMethodCall(ast) {
-                const receiverType = getType(ast.receiver);
-                symbol = receiverType && receiverType.members().get(ast.name);
-                span = spanFromName(ast);
-            },
             visitPipe(ast) {
                 if (inSpan(position, ast.nameSpan, /* exclusive */ true)) {
                     // We are in a position a pipe name is expected.
@@ -26483,11 +26333,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 span = spanFromName(ast);
             },
             visitQuote(_ast) { },
-            visitSafeMethodCall(ast) {
-                const receiverType = getType(ast.receiver);
-                symbol = receiverType && receiverType.members().get(ast.name);
-                span = spanFromName(ast);
-            },
             visitSafePropertyRead(ast) {
                 const receiverType = getType(ast.receiver);
                 symbol = receiverType && receiverType.members().get(ast.name);
@@ -36825,7 +36670,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.6+56.sha-77bd253.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.6+57.sha-2028c39.with-local-changes');
 
     /**
      * @license
