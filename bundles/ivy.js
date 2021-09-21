@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.6+56.sha-77bd253.with-local-changes
+ * @license Angular v13.0.0-next.6+57.sha-2028c39.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -1193,9 +1193,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         key(index, type, sourceSpan) {
             return new ReadKeyExpr(this, index, type, sourceSpan);
         }
-        callMethod(name, params, sourceSpan) {
-            return new InvokeMethodExpr(this, name, params, null, sourceSpan);
-        }
         callFn(params, sourceSpan, pure) {
             return new InvokeFunctionExpr(this, params, null, sourceSpan, pure);
         }
@@ -1397,31 +1394,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         BuiltinMethod[BuiltinMethod["SubscribeObservable"] = 1] = "SubscribeObservable";
         BuiltinMethod[BuiltinMethod["Bind"] = 2] = "Bind";
     })(BuiltinMethod || (BuiltinMethod = {}));
-    class InvokeMethodExpr extends Expression {
-        constructor(receiver, method, args, type, sourceSpan) {
-            super(type, sourceSpan);
-            this.receiver = receiver;
-            this.args = args;
-            if (typeof method === 'string') {
-                this.name = method;
-                this.builtin = null;
-            }
-            else {
-                this.name = null;
-                this.builtin = method;
-            }
-        }
-        isEquivalent(e) {
-            return e instanceof InvokeMethodExpr && this.receiver.isEquivalent(e.receiver) &&
-                this.name === e.name && this.builtin === e.builtin && areAllEquivalent(this.args, e.args);
-        }
-        isConstant() {
-            return false;
-        }
-        visitExpression(visitor, context) {
-            return visitor.visitInvokeMethodExpr(this, context);
-        }
-    }
     class InvokeFunctionExpr extends Expression {
         constructor(fn, args, type, sourceSpan, pure = false) {
             super(type, sourceSpan);
@@ -2298,7 +2270,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.visitWriteVarExpr = invalid;
             this.visitWriteKeyExpr = invalid;
             this.visitWritePropExpr = invalid;
-            this.visitInvokeMethodExpr = invalid;
             this.visitInvokeFunctionExpr = invalid;
             this.visitTaggedTemplateExpr = invalid;
             this.visitInstantiateExpr = invalid;
@@ -4395,21 +4366,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return null;
         }
-        visitInvokeMethodExpr(expr, ctx) {
-            expr.receiver.visitExpression(this, ctx);
-            let name = expr.name;
-            if (expr.builtin != null) {
-                name = this.getBuiltinMethodName(expr.builtin);
-                if (name == null) {
-                    // some builtins just mean to skip the call.
-                    return null;
-                }
-            }
-            ctx.print(expr, `.${name}(`);
-            this.visitAllExpressions(expr.args, ctx, `,`);
-            ctx.print(expr, `)`);
-            return null;
-        }
         visitInvokeFunctionExpr(expr, ctx) {
             expr.fn.visitExpression(this, ctx);
             ctx.print(expr, `(`);
@@ -5051,7 +5007,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return createFactoryFunction(unwrappedType);
     }
     function createFactoryFunction(type) {
-        return fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.callMethod('ɵfac', [variable('t')]))]);
+        return fn([new FnParam('t', DYNAMIC_TYPE)], [new ReturnStatement(type.prop('ɵfac').callFn([variable('t')]))]);
     }
 
     /**
@@ -6384,38 +6340,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return visitor.visitNonNullAssert(this, context);
         }
     }
-    class MethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
-            super(span, sourceSpan, nameSpan);
-            this.receiver = receiver;
-            this.name = name;
-            this.args = args;
-            this.argumentSpan = argumentSpan;
-        }
-        visit(visitor, context = null) {
-            return visitor.visitMethodCall(this, context);
-        }
-    }
-    class SafeMethodCall extends ASTWithName {
-        constructor(span, sourceSpan, nameSpan, receiver, name, args, argumentSpan) {
-            super(span, sourceSpan, nameSpan);
-            this.receiver = receiver;
-            this.name = name;
-            this.args = args;
-            this.argumentSpan = argumentSpan;
-        }
-        visit(visitor, context = null) {
-            return visitor.visitSafeMethodCall(this, context);
-        }
-    }
-    class FunctionCall extends AST {
-        constructor(span, sourceSpan, target, args) {
+    class Call extends AST {
+        constructor(span, sourceSpan, receiver, args, argumentSpan) {
             super(span, sourceSpan);
-            this.target = target;
+            this.receiver = receiver;
             this.args = args;
+            this.argumentSpan = argumentSpan;
         }
         visit(visitor, context = null) {
-            return visitor.visitFunctionCall(this, context);
+            return visitor.visitCall(this, context);
         }
     }
     /**
@@ -6501,12 +6434,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.visit(ast.exp, context);
             this.visitAll(ast.args, context);
         }
-        visitFunctionCall(ast, context) {
-            if (ast.target) {
-                this.visit(ast.target, context);
-            }
-            this.visitAll(ast.args, context);
-        }
         visitImplicitReceiver(ast, context) { }
         visitThisReceiver(ast, context) { }
         visitInterpolation(ast, context) {
@@ -6528,10 +6455,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.visitAll(ast.values, context);
         }
         visitLiteralPrimitive(ast, context) { }
-        visitMethodCall(ast, context) {
-            this.visit(ast.receiver, context);
-            this.visitAll(ast.args, context);
-        }
         visitPrefixNot(ast, context) {
             this.visit(ast.expression, context);
         }
@@ -6548,13 +6471,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitSafePropertyRead(ast, context) {
             this.visit(ast.receiver, context);
         }
-        visitSafeMethodCall(ast, context) {
-            this.visit(ast.receiver, context);
-            this.visitAll(ast.args, context);
-        }
         visitSafeKeyedRead(ast, context) {
             this.visit(ast.receiver, context);
             this.visit(ast.key, context);
+        }
+        visitCall(ast, context) {
+            this.visit(ast.receiver, context);
+            this.visitAll(ast.args, context);
         }
         visitQuote(ast, context) { }
         // This is not part of the AstVisitor interface, just a helper method
@@ -6585,15 +6508,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitSafePropertyRead(ast, context) {
             return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name);
-        }
-        visitMethodCall(ast, context) {
-            return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
-        }
-        visitSafeMethodCall(ast, context) {
-            return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, ast.receiver.visit(this), ast.name, this.visitAll(ast.args), ast.argumentSpan);
-        }
-        visitFunctionCall(ast, context) {
-            return new FunctionCall(ast.span, ast.sourceSpan, ast.target.visit(this), this.visitAll(ast.args));
         }
         visitLiteralArray(ast, context) {
             return new LiteralArray(ast.span, ast.sourceSpan, this.visitAll(ast.expressions));
@@ -6631,6 +6545,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitKeyedWrite(ast, context) {
             return new KeyedWrite(ast.span, ast.sourceSpan, ast.receiver.visit(this), ast.key.visit(this), ast.value.visit(this));
+        }
+        visitCall(ast, context) {
+            return new Call(ast.span, ast.sourceSpan, ast.receiver.visit(this), this.visitAll(ast.args), ast.argumentSpan);
         }
         visitAll(asts) {
             const res = [];
@@ -6686,30 +6603,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const receiver = ast.receiver.visit(this);
             if (receiver !== ast.receiver) {
                 return new SafePropertyRead(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name);
-            }
-            return ast;
-        }
-        visitMethodCall(ast, context) {
-            const receiver = ast.receiver.visit(this);
-            const args = this.visitAll(ast.args);
-            if (receiver !== ast.receiver || args !== ast.args) {
-                return new MethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
-            }
-            return ast;
-        }
-        visitSafeMethodCall(ast, context) {
-            const receiver = ast.receiver.visit(this);
-            const args = this.visitAll(ast.args);
-            if (receiver !== ast.receiver || args !== ast.args) {
-                return new SafeMethodCall(ast.span, ast.sourceSpan, ast.nameSpan, receiver, ast.name, args, ast.argumentSpan);
-            }
-            return ast;
-        }
-        visitFunctionCall(ast, context) {
-            const target = ast.target && ast.target.visit(this);
-            const args = this.visitAll(ast.args);
-            if (target !== ast.target || args !== ast.args) {
-                return new FunctionCall(ast.span, ast.sourceSpan, target, args);
             }
             return ast;
         }
@@ -6812,6 +6705,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const expressions = this.visitAll(ast.expressions);
             if (expressions !== ast.expressions) {
                 return new Chain(ast.span, ast.sourceSpan, expressions);
+            }
+            return ast;
+        }
+        visitCall(ast, context) {
+            const receiver = ast.receiver.visit(this);
+            const args = this.visitAll(ast.args);
+            if (receiver !== ast.receiver || args !== ast.args) {
+                return new Call(ast.span, ast.sourceSpan, receiver, args, ast.argumentSpan);
             }
             return ast;
         }
@@ -7341,18 +7242,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitPipe(ast, mode) {
             throw new Error(`Illegal state: Pipes should have been converted into functions. Pipe: ${ast.name}`);
         }
-        visitFunctionCall(ast, mode) {
-            const convertedArgs = this.visitAll(ast.args, _Mode.Expression);
-            let fnResult;
-            if (ast instanceof BuiltinFunctionCall) {
-                fnResult = ast.converter(convertedArgs);
-            }
-            else {
-                fnResult = this._visit(ast.target, _Mode.Expression)
-                    .callFn(convertedArgs, this.convertSourceSpan(ast.span));
-            }
-            return convertToStatementIfNeeded(mode, fnResult);
-        }
         visitImplicitReceiver(ast, mode) {
             ensureExpressionMode(mode, ast);
             this.usesImplicitReceiver = true;
@@ -7417,40 +7306,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return this._localResolver.getLocal(name);
         }
-        visitMethodCall(ast, mode) {
-            if (ast.receiver instanceof ImplicitReceiver &&
-                !(ast.receiver instanceof ThisReceiver) && ast.name === '$any') {
-                const args = this.visitAll(ast.args, _Mode.Expression);
-                if (args.length != 1) {
-                    throw new Error(`Invalid call to $any, expected 1 argument but received ${args.length || 'none'}`);
-                }
-                return args[0].cast(DYNAMIC_TYPE, this.convertSourceSpan(ast.span));
-            }
-            const leftMostSafe = this.leftMostSafeNode(ast);
-            if (leftMostSafe) {
-                return this.convertSafeAccess(ast, leftMostSafe, mode);
-            }
-            else {
-                const args = this.visitAll(ast.args, _Mode.Expression);
-                const prevUsesImplicitReceiver = this.usesImplicitReceiver;
-                let result = null;
-                const receiver = this._visit(ast.receiver, _Mode.Expression);
-                if (receiver === this._implicitReceiver) {
-                    const varExpr = this._getLocal(ast.name, ast.receiver);
-                    if (varExpr) {
-                        // Restore the previous "usesImplicitReceiver" state since the implicit
-                        // receiver has been replaced with a resolved local expression.
-                        this.usesImplicitReceiver = prevUsesImplicitReceiver;
-                        result = varExpr.callFn(args);
-                        this.addImplicitReceiverAccess(ast.name);
-                    }
-                }
-                if (result == null) {
-                    result = receiver.callMethod(ast.name, args, this.convertSourceSpan(ast.span));
-                }
-                return convertToStatementIfNeeded(mode, result);
-            }
-        }
         visitPrefixNot(ast, mode) {
             return convertToStatementIfNeeded(mode, not(this._visit(ast.expression, _Mode.Expression)));
         }
@@ -7476,7 +7331,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     }
                 }
                 if (result == null) {
-                    result = receiver.prop(ast.name);
+                    result = receiver.prop(ast.name, this.convertSourceSpan(ast.span));
                 }
                 return convertToStatementIfNeeded(mode, result);
             }
@@ -7509,14 +7364,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // If no local expression could be produced, use the original receiver's
             // property as the target.
             if (varExpr === null) {
-                varExpr = receiver.prop(ast.name);
+                varExpr = receiver.prop(ast.name, this.convertSourceSpan(ast.span));
             }
             return convertToStatementIfNeeded(mode, varExpr.set(this._visit(ast.value, _Mode.Expression)));
         }
         visitSafePropertyRead(ast, mode) {
-            return this.convertSafeAccess(ast, this.leftMostSafeNode(ast), mode);
-        }
-        visitSafeMethodCall(ast, mode) {
             return this.convertSafeAccess(ast, this.leftMostSafeNode(ast), mode);
         }
         visitSafeKeyedRead(ast, mode) {
@@ -7528,6 +7380,29 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitQuote(ast, mode) {
             throw new Error(`Quotes are not supported for evaluation!
         Statement: ${ast.uninterpretedExpression} located at ${ast.location}`);
+        }
+        visitCall(ast, mode) {
+            const convertedArgs = this.visitAll(ast.args, _Mode.Expression);
+            if (ast instanceof BuiltinFunctionCall) {
+                return convertToStatementIfNeeded(mode, ast.converter(convertedArgs));
+            }
+            const receiver = ast.receiver;
+            if (receiver instanceof PropertyRead &&
+                receiver.receiver instanceof ImplicitReceiver &&
+                !(receiver.receiver instanceof ThisReceiver) && receiver.name === '$any') {
+                if (convertedArgs.length !== 1) {
+                    throw new Error(`Invalid call to $any, expected 1 argument but received ${convertedArgs.length || 'none'}`);
+                }
+                return convertedArgs[0]
+                    .cast(DYNAMIC_TYPE, this.convertSourceSpan(ast.span));
+            }
+            const leftMostSafe = this.leftMostSafeNode(ast);
+            if (leftMostSafe) {
+                return this.convertSafeAccess(ast, leftMostSafe, mode);
+            }
+            const call = this._visit(receiver, _Mode.Expression)
+                .callFn(convertedArgs, this.convertSourceSpan(ast.span));
+            return convertToStatementIfNeeded(mode, call);
         }
         _visit(ast, mode) {
             const result = this._resultMap.get(ast);
@@ -7585,10 +7460,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const condition = guardedExpression.isBlank();
             // Convert the ast to an unguarded access to the receiver's member. The map will substitute
             // leftMostNode with its unguarded version in the call to `this.visit()`.
-            if (leftMostSafe instanceof SafeMethodCall) {
-                this._nodeMap.set(leftMostSafe, new MethodCall(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.nameSpan, leftMostSafe.receiver, leftMostSafe.name, leftMostSafe.args, leftMostSafe.argumentSpan));
-            }
-            else if (leftMostSafe instanceof SafeKeyedRead) {
+            if (leftMostSafe instanceof SafeKeyedRead) {
                 this._nodeMap.set(leftMostSafe, new KeyedRead(leftMostSafe.span, leftMostSafe.sourceSpan, leftMostSafe.receiver, leftMostSafe.key));
             }
             else {
@@ -7644,8 +7516,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 visitConditional(ast) {
                     return null;
                 },
-                visitFunctionCall(ast) {
-                    return null;
+                visitCall(ast) {
+                    return visit(this, ast.receiver);
                 },
                 visitImplicitReceiver(ast) {
                     return null;
@@ -7671,9 +7543,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 visitLiteralPrimitive(ast) {
                     return null;
                 },
-                visitMethodCall(ast) {
-                    return visit(this, ast.receiver);
-                },
                 visitPipe(ast) {
                     return null;
                 },
@@ -7691,9 +7560,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 },
                 visitQuote(ast) {
                     return null;
-                },
-                visitSafeMethodCall(ast) {
-                    return visit(this, ast.receiver) || ast;
                 },
                 visitSafePropertyRead(ast) {
                     return visit(this, ast.receiver) || ast;
@@ -7726,7 +7592,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 visitConditional(ast) {
                     return visit(this, ast.condition) || visit(this, ast.trueExp) || visit(this, ast.falseExp);
                 },
-                visitFunctionCall(ast) {
+                visitCall(ast) {
                     return true;
                 },
                 visitImplicitReceiver(ast) {
@@ -7753,9 +7619,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 visitLiteralPrimitive(ast) {
                     return false;
                 },
-                visitMethodCall(ast) {
-                    return true;
-                },
                 visitPipe(ast) {
                     return true;
                 },
@@ -7773,9 +7636,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 },
                 visitQuote(ast) {
                     return false;
-                },
-                visitSafeMethodCall(ast) {
-                    return true;
                 },
                 visitSafePropertyRead(ast) {
                     return false;
@@ -7861,9 +7721,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return null;
     }
-    class BuiltinFunctionCall extends FunctionCall {
+    class BuiltinFunctionCall extends Call {
         constructor(span, sourceSpan, args, converter) {
-            super(span, sourceSpan, null, args);
+            super(span, sourceSpan, new EmptyExpr(span, sourceSpan), args, null);
             this.converter = converter;
         }
     }
@@ -14748,22 +14608,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             let result = this.parsePrimary();
             while (true) {
                 if (this.consumeOptionalCharacter($PERIOD)) {
-                    result = this.parseAccessMemberOrMethodCall(result, start, false);
+                    result = this.parseAccessMemberOrCall(result, start, false);
                 }
                 else if (this.consumeOptionalOperator('?.')) {
                     result = this.consumeOptionalCharacter($LBRACKET) ?
                         this.parseKeyedReadOrWrite(result, start, true) :
-                        this.parseAccessMemberOrMethodCall(result, start, true);
+                        this.parseAccessMemberOrCall(result, start, true);
                 }
                 else if (this.consumeOptionalCharacter($LBRACKET)) {
                     result = this.parseKeyedReadOrWrite(result, start, false);
                 }
                 else if (this.consumeOptionalCharacter($LPAREN)) {
+                    const argumentStart = this.inputIndex;
                     this.rparensExpected++;
                     const args = this.parseCallArguments();
+                    const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
                     this.rparensExpected--;
                     this.expectCharacter($RPAREN);
-                    result = new FunctionCall(this.span(start), this.sourceSpan(start), result, args);
+                    result = new Call(this.span(start), this.sourceSpan(start), result, args, argumentSpan);
                 }
                 else if (this.consumeOptionalOperator('!')) {
                     result = new NonNullAssert(this.span(start), this.sourceSpan(start), result);
@@ -14813,7 +14675,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return this.parseLiteralMap();
             }
             else if (this.next.isIdentifier()) {
-                return this.parseAccessMemberOrMethodCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
+                return this.parseAccessMemberOrCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
             }
             else if (this.next.isNumber()) {
                 const value = this.next.toNumber();
@@ -14881,17 +14743,41 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
         }
-        parseAccessMemberOrMethodCall(receiver, start, isSafe) {
+        parseAccessMemberOrCall(readReceiver, start, isSafe) {
             const nameStart = this.inputIndex;
             const id = this.withContext(ParseContextFlags.Writable, () => {
                 var _a;
                 const id = (_a = this.expectIdentifierOrKeyword()) !== null && _a !== void 0 ? _a : '';
                 if (id.length === 0) {
-                    this.error(`Expected identifier for property access`, receiver.span.end);
+                    this.error(`Expected identifier for property access`, readReceiver.span.end);
                 }
                 return id;
             });
             const nameSpan = this.sourceSpan(nameStart);
+            let receiver;
+            if (isSafe) {
+                if (this.consumeOptionalOperator('=')) {
+                    this.error('The \'?.\' operator cannot be used in the assignment');
+                    receiver = new EmptyExpr(this.span(start), this.sourceSpan(start));
+                }
+                else {
+                    receiver = new SafePropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
+                }
+            }
+            else {
+                if (this.consumeOptionalOperator('=')) {
+                    if (!this.parseAction) {
+                        this.error('Bindings cannot contain assignments');
+                        return new EmptyExpr(this.span(start), this.sourceSpan(start));
+                    }
+                    const value = this.parseConditional();
+                    receiver = new PropertyWrite(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id, value);
+                }
+                else {
+                    receiver =
+                        new PropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
+                }
+            }
             if (this.consumeOptionalCharacter($LPAREN)) {
                 const argumentStart = this.inputIndex;
                 this.rparensExpected++;
@@ -14901,34 +14787,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 this.rparensExpected--;
                 const span = this.span(start);
                 const sourceSpan = this.sourceSpan(start);
-                return isSafe ?
-                    new SafeMethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan) :
-                    new MethodCall(span, sourceSpan, nameSpan, receiver, id, args, argumentSpan);
+                return new Call(span, sourceSpan, receiver, args, argumentSpan);
             }
-            else {
-                if (isSafe) {
-                    if (this.consumeOptionalOperator('=')) {
-                        this.error('The \'?.\' operator cannot be used in the assignment');
-                        return new EmptyExpr(this.span(start), this.sourceSpan(start));
-                    }
-                    else {
-                        return new SafePropertyRead(this.span(start), this.sourceSpan(start), nameSpan, receiver, id);
-                    }
-                }
-                else {
-                    if (this.consumeOptionalOperator('=')) {
-                        if (!this.parseAction) {
-                            this.error('Bindings cannot contain assignments');
-                            return new EmptyExpr(this.span(start), this.sourceSpan(start));
-                        }
-                        const value = this.parseConditional();
-                        return new PropertyWrite(this.span(start), this.sourceSpan(start), nameSpan, receiver, id, value);
-                    }
-                    else {
-                        return new PropertyRead(this.span(start), this.sourceSpan(start), nameSpan, receiver, id);
-                    }
-                }
-            }
+            return receiver;
         }
         parseCallArguments() {
             if (this.next.isCharacter($RPAREN))
@@ -15224,9 +15085,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitPropertyRead(ast, context) { }
         visitPropertyWrite(ast, context) { }
         visitSafePropertyRead(ast, context) { }
-        visitMethodCall(ast, context) { }
-        visitSafeMethodCall(ast, context) { }
-        visitFunctionCall(ast, context) { }
+        visitCall(ast, context) { }
         visitLiteralArray(ast, context) {
             this.visitAll(ast.expressions, context);
         }
@@ -18401,11 +18260,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const convertedArgs = isVarLength ?
                 this.visitAll([new LiteralArray(pipe.span, pipe.sourceSpan, args)]) :
                 this.visitAll(args);
-            const pipeBindExpr = new FunctionCall(pipe.span, pipe.sourceSpan, target, [
+            const pipeBindExpr = new Call(pipe.span, pipe.sourceSpan, target, [
                 new LiteralPrimitive(pipe.span, pipe.sourceSpan, slot),
                 new LiteralPrimitive(pipe.span, pipe.sourceSpan, pureFunctionSlot),
                 ...convertedArgs,
-            ]);
+            ], null);
             this._pipeBindExprs.push(pipeBindExpr);
             return pipeBindExpr;
         }
@@ -19200,7 +19059,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return fn([], [new ReturnStatement(list)]);
             case 2 /* ClosureResolved */:
                 // directives: function () { return [MyDir].map(ng.resolveForwardRef); }
-                const resolvedList = list.callMethod('map', [importExpr(Identifiers.resolveForwardRef)]);
+                const resolvedList = list.prop('map').callFn([importExpr(Identifiers.resolveForwardRef)]);
                 return fn([], [new ReturnStatement(resolvedList)]);
         }
     }
@@ -20073,7 +19932,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.6+56.sha-77bd253.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.6+57.sha-2028c39.with-local-changes');
 
     /**
      * @license
@@ -20571,14 +20430,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.maybeMap(context, ast, ast.name);
             return super.visitPropertyWrite(ast, context);
         }
-        visitMethodCall(ast, context) {
-            this.maybeMap(context, ast, ast.name);
-            return super.visitMethodCall(ast, context);
-        }
-        visitSafeMethodCall(ast, context) {
-            this.maybeMap(context, ast, ast.name);
-            return super.visitSafeMethodCall(ast, context);
-        }
         maybeMap(scope, ast, name) {
             // If the receiver of the expression isn't the `ImplicitReceiver`, this isn't the root of an
             // `AST` expression that maps to a `Variable` or `Reference`.
@@ -20712,7 +20563,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('13.0.0-next.6+56.sha-77bd253.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.6+57.sha-2028c39.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20752,7 +20603,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('13.0.0-next.6+56.sha-77bd253.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.6+57.sha-2028c39.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20969,7 +20820,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('13.0.0-next.6+56.sha-77bd253.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.6+57.sha-2028c39.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21011,7 +20862,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('13.0.0-next.6+56.sha-77bd253.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.6+57.sha-2028c39.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21090,7 +20941,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('13.0.0-next.6+56.sha-77bd253.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.6+57.sha-2028c39.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21127,7 +20978,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('13.0.0-next.6+56.sha-77bd253.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.6+57.sha-2028c39.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21185,7 +21036,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('13.0.0-next.6+56.sha-77bd253.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.6+57.sha-2028c39.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21217,7 +21068,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('13.0.0-next.6+56.sha-77bd253.with-local-changes');
+    const VERSION$2 = new Version('13.0.0-next.6+57.sha-2028c39.with-local-changes');
 
     /**
      * @license
@@ -27001,11 +26852,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const target = this.factory.createPropertyAccess(expr.receiver.visitExpression(this, context), expr.name);
             return this.factory.createAssignment(target, expr.value.visitExpression(this, context));
         }
-        visitInvokeMethodExpr(ast, context) {
-            const target = ast.receiver.visitExpression(this, context);
-            return this.setSourceMapRange(this.factory.createCallExpression(ast.name !== null ? this.factory.createPropertyAccess(target, ast.name) : target, ast.args.map(arg => arg.visitExpression(this, context)), 
-            /* pure */ false), ast.sourceSpan);
-        }
         visitInvokeFunctionExpr(ast, context) {
             return this.setSourceMapRange(this.factory.createCallExpression(ast.fn.visitExpression(this, context), ast.args.map(arg => arg.visitExpression(this, context)), ast.pure), ast.sourceSpan);
         }
@@ -27298,9 +27144,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             throw new Error('Method not implemented.');
         }
         visitWritePropExpr(expr, context) {
-            throw new Error('Method not implemented.');
-        }
-        visitInvokeMethodExpr(ast, context) {
             throw new Error('Method not implemented.');
         }
         visitInvokeFunctionExpr(ast, context) {
@@ -33011,10 +32854,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         visit(ast) {
             ast.visit(this);
         }
-        visitMethodCall(ast, context) {
-            this.visitIdentifier(ast, IdentifierKind.Method);
-            super.visitMethodCall(ast, context);
-        }
         visitPropertyRead(ast, context) {
             this.visitIdentifier(ast, IdentifierKind.Property);
             super.visitPropertyRead(ast, context);
@@ -35135,15 +34974,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // Completion works inside property reads and method calls.
             let tsExpr = null;
-            if (expr instanceof PropertyRead || expr instanceof MethodCall ||
-                expr instanceof PropertyWrite) {
+            if (expr instanceof PropertyRead || expr instanceof PropertyWrite) {
                 // Non-safe navigation operations are trivial: `foo.bar` or `foo.bar()`
                 tsExpr = findFirstMatchingNode(this.tcb, {
                     filter: ts$1.isPropertyAccessExpression,
                     withSpan: expr.nameSpan,
                 });
             }
-            else if (expr instanceof SafePropertyRead || expr instanceof SafeMethodCall) {
+            else if (expr instanceof SafePropertyRead) {
                 // Safe navigation operations are a little more complex, and involve a ternary. Completion
                 // happens in the "true" case of the ternary.
                 const ternaryExpr = findFirstMatchingNode(this.tcb, {
@@ -35154,11 +34992,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     return null;
                 }
                 const whenTrue = ternaryExpr.expression.whenTrue;
-                if (expr instanceof SafePropertyRead && ts$1.isPropertyAccessExpression(whenTrue)) {
+                if (ts$1.isPropertyAccessExpression(whenTrue)) {
                     tsExpr = whenTrue;
                 }
-                else if (expr instanceof SafeMethodCall && ts$1.isCallExpression(whenTrue) &&
-                    ts$1.isPropertyAccessExpression(whenTrue.expression)) {
+                else if (ts$1.isCallExpression(whenTrue) && ts$1.isPropertyAccessExpression(whenTrue.expression)) {
                     tsExpr = whenTrue.expression;
                 }
             }
@@ -36562,13 +36399,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
-        visitFunctionCall(ast) {
-            const receiver = wrapForDiagnostics(this.translate(ast.target));
-            const args = ast.args.map(expr => this.translate(expr));
-            const node = ts$1.createCall(receiver, undefined, args);
-            addParseSpanInfo(node, ast.sourceSpan);
-            return node;
-        }
         visitImplicitReceiver(ast) {
             throw new Error('Method not implemented.');
         }
@@ -36631,15 +36461,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
-        visitMethodCall(ast) {
-            const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const method = ts$1.createPropertyAccess(receiver, ast.name);
-            addParseSpanInfo(method, ast.nameSpan);
-            const args = ast.args.map(expr => this.translate(expr));
-            const node = ts$1.createCall(method, undefined, args);
-            addParseSpanInfo(node, ast.sourceSpan);
-            return node;
-        }
         visitNonNullAssert(ast) {
             const expr = wrapForDiagnostics(this.translate(ast.expression));
             const node = ts$1.createNonNullExpression(expr);
@@ -36688,33 +36509,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         visitQuote(ast) {
             return NULL_AS_ANY;
-        }
-        visitSafeMethodCall(ast) {
-            // See the comments in SafePropertyRead above for an explanation of the cases here.
-            let node;
-            const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const args = ast.args.map(expr => this.translate(expr));
-            if (this.config.strictSafeNavigationTypes) {
-                // "a?.method(...)" becomes (null as any ? a!.method(...) : undefined)
-                const method = ts$1.createPropertyAccess(ts$1.createNonNullExpression(receiver), ast.name);
-                addParseSpanInfo(method, ast.nameSpan);
-                const call = ts$1.createCall(method, undefined, args);
-                node = ts$1.createParen(ts$1.createConditional(NULL_AS_ANY, call, UNDEFINED));
-            }
-            else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
-                // "a?.method(...)" becomes (a as any).method(...)
-                const method = ts$1.createPropertyAccess(tsCastToAny(receiver), ast.name);
-                addParseSpanInfo(method, ast.nameSpan);
-                node = ts$1.createCall(method, undefined, args);
-            }
-            else {
-                // "a?.method(...)" becomes (a!.method(...) as any)
-                const method = ts$1.createPropertyAccess(ts$1.createNonNullExpression(receiver), ast.name);
-                addParseSpanInfo(method, ast.nameSpan);
-                node = tsCastToAny(ts$1.createCall(method, undefined, args));
-            }
-            addParseSpanInfo(node, ast.sourceSpan);
-            return node;
         }
         visitSafePropertyRead(ast) {
             let node;
@@ -36772,6 +36566,33 @@ Either add the @Injectable() decorator to '${provider.node.name
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
+        visitCall(ast) {
+            const args = ast.args.map(expr => this.translate(expr));
+            const expr = wrapForDiagnostics(this.translate(ast.receiver));
+            let node;
+            // Safe property/keyed reads will produce a ternary whose value is nullable.
+            // We have to generate a similar ternary around the call.
+            if (ast.receiver instanceof SafePropertyRead || ast.receiver instanceof SafeKeyedRead) {
+                if (this.config.strictSafeNavigationTypes) {
+                    // "a?.method(...)" becomes (null as any ? a!.method(...) : undefined)
+                    const call = ts$1.createCall(ts$1.createNonNullExpression(expr), undefined, args);
+                    node = ts$1.createParen(ts$1.createConditional(NULL_AS_ANY, call, UNDEFINED));
+                }
+                else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
+                    // "a?.method(...)" becomes (a as any).method(...)
+                    node = ts$1.createCall(tsCastToAny(expr), undefined, args);
+                }
+                else {
+                    // "a?.method(...)" becomes (a!.method(...) as any)
+                    node = tsCastToAny(ts$1.createCall(ts$1.createNonNullExpression(expr), undefined, args));
+                }
+            }
+            else {
+                node = ts$1.createCall(expr, undefined, args);
+            }
+            addParseSpanInfo(node, ast.sourceSpan);
+            return node;
+        }
     }
     /**
      * Checks whether View Engine will infer a type of 'any' for the left-hand side of a safe navigation
@@ -36789,7 +36610,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     class VeSafeLhsInferenceBugDetector {
         static veWillInferAnyFor(ast) {
             const visitor = VeSafeLhsInferenceBugDetector.SINGLETON;
-            return ast instanceof SafeKeyedRead ? ast.receiver.visit(visitor) : ast.receiver.visit(visitor);
+            return ast instanceof Call ? ast.visit(visitor) : ast.receiver.visit(visitor);
         }
         visitUnary(ast) {
             return ast.expr.visit(this);
@@ -36803,7 +36624,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitConditional(ast) {
             return ast.condition.visit(this) || ast.trueExp.visit(this) || ast.falseExp.visit(this);
         }
-        visitFunctionCall(ast) {
+        visitCall(ast) {
             return true;
         }
         visitImplicitReceiver(ast) {
@@ -36830,9 +36651,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitLiteralPrimitive(ast) {
             return false;
         }
-        visitMethodCall(ast) {
-            return true;
-        }
         visitPipe(ast) {
             return true;
         }
@@ -36850,9 +36668,6 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         visitQuote(ast) {
             return false;
-        }
-        visitSafeMethodCall(ast) {
-            return true;
         }
         visitSafePropertyRead(ast) {
             return false;
@@ -38435,15 +38250,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             else if (ast instanceof ImplicitReceiver) {
                 // AST instances representing variables and references look very similar to property reads
                 // or method calls from the component context: both have the shape
-                // PropertyRead(ImplicitReceiver, 'propName') or MethodCall(ImplicitReceiver, 'methodName').
+                // PropertyRead(ImplicitReceiver, 'propName') or Call(ImplicitReceiver, 'methodName').
                 //
-                // `translate` will first try to `resolve` the outer PropertyRead/MethodCall. If this works,
+                // `translate` will first try to `resolve` the outer PropertyRead/Call. If this works,
                 // it's because the `BoundTarget` found an expression target for the whole expression, and
                 // therefore `translate` will never attempt to `resolve` the ImplicitReceiver of that
-                // PropertyRead/MethodCall.
+                // PropertyRead/Call.
                 //
                 // Therefore if `resolve` is called on an `ImplicitReceiver`, it's because no outer
-                // PropertyRead/MethodCall resolved to a variable or reference, and therefore this is a
+                // PropertyRead/Call resolved to a variable or reference, and therefore this is a
                 // property read or method call on the component context itself.
                 return ts$1.createIdentifier('ctx');
             }
@@ -38474,11 +38289,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                 addParseSpanInfo(result, ast.sourceSpan);
                 return result;
             }
-            else if (ast instanceof MethodCall && ast.receiver instanceof ImplicitReceiver &&
-                !(ast.receiver instanceof ThisReceiver)) {
+            else if (ast instanceof Call &&
+                (ast.receiver instanceof PropertyRead || ast.receiver instanceof SafePropertyRead) &&
+                !(ast.receiver.receiver instanceof ThisReceiver)) {
                 // Resolve the special `$any(expr)` syntax to insert a cast of the argument to type `any`.
                 // `$any(expr)` -> `expr as any`
-                if (ast.name === '$any' && ast.args.length === 1) {
+                if (ast.receiver.name === '$any' && ast.args.length === 1) {
                     const expr = this.translate(ast.args[0]);
                     const exprAsAny = ts$1.createAsExpression(expr, ts$1.createKeywordTypeNode(ts$1.SyntaxKind.AnyKeyword));
                     const result = ts$1.createParen(exprAsAny);
@@ -38494,7 +38310,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     return null;
                 }
                 const method = wrapForDiagnostics(receiver);
-                addParseSpanInfo(method, ast.nameSpan);
+                addParseSpanInfo(method, ast.receiver.nameSpan);
                 const args = ast.args.map(arg => this.translate(arg));
                 const node = ts$1.createCall(method, undefined, args);
                 addParseSpanInfo(node, ast.sourceSpan);
@@ -39619,11 +39435,15 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (expressionTarget !== null) {
                 return this.getSymbol(expressionTarget);
             }
-            // The `name` part of a `PropertyWrite` and `MethodCall` does not have its own
+            let withSpan = expression.sourceSpan;
+            // The `name` part of a `PropertyWrite` and a non-safe `Call` does not have its own
             // AST so there is no way to retrieve a `Symbol` for just the `name` via a specific node.
-            const withSpan = (expression instanceof PropertyWrite || expression instanceof MethodCall) ?
-                expression.nameSpan :
-                expression.sourceSpan;
+            if (expression instanceof PropertyWrite) {
+                withSpan = expression.nameSpan;
+            }
+            else if (expression instanceof Call && expression.receiver instanceof PropertyRead) {
+                withSpan = expression.receiver.nameSpan;
+            }
             let node = null;
             // Property reads in templates usually map to a `PropertyAccessExpression`
             // (e.g. `ctx.foo`) so try looking for one first.
@@ -39645,9 +39465,10 @@ Either add the @Injectable() decorator to '${provider.node.name
             // - If our expression is a pipe binding ("a | test:b:c"), we want the Symbol for the
             // `transform` on the pipe.
             // - Otherwise, we retrieve the symbol for the node itself with no special considerations
-            if ((expression instanceof SafePropertyRead || expression instanceof SafeMethodCall) &&
+            if ((expression instanceof SafePropertyRead ||
+                (expression instanceof Call && expression.receiver instanceof SafePropertyRead)) &&
                 ts$1.isConditionalExpression(node)) {
-                const whenTrueSymbol = (expression instanceof SafeMethodCall && ts$1.isCallExpression(node.whenTrue)) ?
+                const whenTrueSymbol = (expression instanceof Call && ts$1.isCallExpression(node.whenTrue)) ?
                     this.getSymbolOfTsNode(node.whenTrue.expression) :
                     this.getSymbolOfTsNode(node.whenTrue);
                 if (whenTrueSymbol === null) {
@@ -41796,11 +41617,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         if (isTemplateNodeWithKeyAndValue(node)) {
             return toTextSpan(node.keySpan);
         }
-        else if (node instanceof PropertyWrite || node instanceof MethodCall ||
-            node instanceof BindingPipe || node instanceof PropertyRead) {
-            // The `name` part of a `PropertyWrite`, `MethodCall`, and `BindingPipe` does not
-            // have its own AST so there is no way to retrieve a `Symbol` for just the `name` via a specific
-            // node.
+        else if (node instanceof PropertyWrite || node instanceof BindingPipe ||
+            node instanceof PropertyRead) {
+            // The `name` part of a `PropertyWrite` and `BindingPipe` does not have its own AST
+            // so there is no way to retrieve a `Symbol` for just the `name` via a specific node.
             return toTextSpan(node.nameSpan);
         }
         else {
@@ -42703,7 +42523,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     var TargetNodeKind;
     (function (TargetNodeKind) {
         TargetNodeKind[TargetNodeKind["RawExpression"] = 0] = "RawExpression";
-        TargetNodeKind[TargetNodeKind["MethodCallExpressionInArgContext"] = 1] = "MethodCallExpressionInArgContext";
+        TargetNodeKind[TargetNodeKind["CallExpressionInArgContext"] = 1] = "CallExpressionInArgContext";
         TargetNodeKind[TargetNodeKind["RawTemplateNode"] = 2] = "RawTemplateNode";
         TargetNodeKind[TargetNodeKind["ElementInTagContext"] = 3] = "ElementInTagContext";
         TargetNodeKind[TargetNodeKind["ElementInBodyContext"] = 4] = "ElementInBodyContext";
@@ -42749,10 +42569,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         // Given the candidate node, determine the full targeted context.
         let nodeInContext;
-        if ((candidate instanceof MethodCall || candidate instanceof SafeMethodCall) &&
-            isWithin(position, candidate.argumentSpan)) {
+        if (candidate instanceof Call && isWithin(position, candidate.argumentSpan)) {
             nodeInContext = {
-                kind: TargetNodeKind.MethodCallExpressionInArgContext,
+                kind: TargetNodeKind.CallExpressionInArgContext,
                 node: candidate,
             };
         }
@@ -43155,8 +42974,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * expressions.
          */
         isPropertyExpressionCompletion() {
-            return this.node instanceof PropertyRead || this.node instanceof MethodCall ||
-                this.node instanceof SafePropertyRead || this.node instanceof SafeMethodCall ||
+            return this.node instanceof PropertyRead || this.node instanceof SafePropertyRead ||
                 this.node instanceof PropertyWrite || this.node instanceof EmptyExpr ||
                 // BoundEvent nodes only count as property completions if in an EventValue context.
                 (this.node instanceof BoundEvent && this.nodeContext === CompletionNodeContext.EventValue);
@@ -43910,9 +43728,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return { text: node.valueSpan.toString(), span: toTextSpan(node.valueSpan) };
             }
         }
-        if (node instanceof PropertyRead || node instanceof MethodCall || node instanceof PropertyWrite ||
-            node instanceof SafePropertyRead || node instanceof SafeMethodCall ||
-            node instanceof BindingPipe) {
+        if (node instanceof PropertyRead || node instanceof PropertyWrite ||
+            node instanceof SafePropertyRead || node instanceof BindingPipe) {
             return { text: node.name, span: toTextSpan(node.nameSpan) };
         }
         else if (node instanceof LiteralPrimitive) {
@@ -44251,19 +44068,27 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     class QuickInfoBuilder {
-        constructor(tsLS, compiler, component, node) {
+        constructor(tsLS, compiler, component, node, parent) {
             this.tsLS = tsLS;
             this.compiler = compiler;
             this.component = component;
             this.node = node;
+            this.parent = parent;
             this.typeChecker = this.compiler.getCurrentProgram().getTypeChecker();
         }
         get() {
             const symbol = this.compiler.getTemplateTypeChecker().getSymbolOfNode(this.node, this.component);
-            if (symbol === null) {
-                return isDollarAny(this.node) ? createDollarAnyQuickInfo(this.node) : undefined;
+            if (symbol !== null) {
+                return this.getQuickInfoForSymbol(symbol);
             }
-            return this.getQuickInfoForSymbol(symbol);
+            if (isDollarAny(this.node)) {
+                return createDollarAnyQuickInfo(this.node);
+            }
+            // If the cursor lands on the receiver of a method call, we have to look
+            // at the entire call in order to figure out if it's a call to `$any`.
+            if (this.parent !== null && isDollarAny(this.parent) && this.parent.receiver === this.node) {
+                return createDollarAnyQuickInfo(this.parent);
+            }
         }
         getQuickInfoForSymbol(symbol) {
             switch (symbol.kind) {
@@ -44386,11 +44211,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         return a.text === b.text && a.kind === b.kind;
     }
     function isDollarAny(node) {
-        return node instanceof MethodCall && node.receiver instanceof ImplicitReceiver &&
-            !(node.receiver instanceof ThisReceiver) && node.name === '$any' && node.args.length === 1;
+        return node instanceof Call && node.receiver instanceof PropertyRead &&
+            node.receiver.receiver instanceof ImplicitReceiver &&
+            !(node.receiver.receiver instanceof ThisReceiver) && node.receiver.name === '$any' &&
+            node.args.length === 1;
     }
     function createDollarAnyQuickInfo(node) {
-        return createQuickInfo('$any', DisplayInfoKind.METHOD, getTextSpanOfNode(node), 
+        return createQuickInfo('$any', DisplayInfoKind.METHOD, getTextSpanOfNode(node.receiver), 
         /** containerName */ undefined, 'any', [{
                 kind: SYMBOL_TEXT,
                 text: 'function to cast an expression to the `any` type',
@@ -44765,7 +44592,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return undefined;
         }
         if (targetInfo.context.kind !== TargetNodeKind.RawExpression &&
-            targetInfo.context.kind !== TargetNodeKind.MethodCallExpressionInArgContext) {
+            targetInfo.context.kind !== TargetNodeKind.CallExpressionInArgContext) {
             // Signature completions are only available in expressions.
             return undefined;
         }
@@ -44774,38 +44601,37 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return undefined;
         }
         // Determine a shim position to use in the request to the TypeScript Language Service.
-        // Additionally, extract the `MethodCall` or `SafeMethodCall` node for which signature help is
-        // being queried, as this is needed to construct the correct span for the results later.
+        // Additionally, extract the `Call` node for which signature help is being queried, as this
+        // is needed to construct the correct span for the results later.
         let shimPosition;
         let expr;
         switch (targetInfo.context.kind) {
             case TargetNodeKind.RawExpression:
                 // For normal expressions, just use the primary TCB position of the expression.
                 shimPosition = symbol.shimLocation.positionInShimFile;
-                // Walk up the parents of this expression and try to find a `MethodCall` or `SafeMethodCall`
-                // for which signature information is being fetched.
+                // Walk up the parents of this expression and try to find a
+                // `Call` for which signature information is being fetched.
                 let callExpr = null;
                 const parents = targetInfo.context.parents;
                 for (let i = parents.length - 1; i >= 0; i--) {
                     const parent = parents[i];
-                    if (parent instanceof MethodCall || parent instanceof SafeMethodCall) {
+                    if (parent instanceof Call) {
                         callExpr = parent;
                         break;
                     }
                 }
-                // If no MethodCall or SafeMethodCall node could be found, then this query cannot be safely
+                // If no Call node could be found, then this query cannot be safely
                 // answered as a correct span for the results will not be obtainable.
                 if (callExpr === null) {
                     return undefined;
                 }
                 expr = callExpr;
                 break;
-            case TargetNodeKind.MethodCallExpressionInArgContext:
-                // The `Symbol` points to a `MethodCall` or `SafeMethodCall` expression in the TCB (where it
-                // will be represented as a `ts.CallExpression`) *and* the template position was within the
-                // argument list of the method call. This happens when there was no narrower expression inside
-                // the argument list that matched the template position, such as when the call has no
-                // arguments: `foo(|)`.
+            case TargetNodeKind.CallExpressionInArgContext:
+                // The `Symbol` points to a `Call` expression in the TCB (where it will be represented as a
+                // `ts.CallExpression`) *and* the template position was within the argument list of the method
+                // call. This happens when there was no narrower expression inside the argument list that
+                // matched the template position, such as when the call has no arguments: `foo(|)`.
                 //
                 // The `Symbol`'s shim position is to the start of the call expression (`|foo()`) and
                 // therefore wouldn't return accurate signature help from the TS language service. For that, a
@@ -44841,8 +44667,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         // The TS language service results are almost returnable as-is. However, they contain an
         // `applicableSpan` which marks the entire argument list, and that span is in the context of the
-        // TCB's `ts.CallExpression`. It needs to be replaced with the span for the `MethodCall` (or
-        // `SafeMethodCall`) argument list.
+        // TCB's `ts.CallExpression`. It needs to be replaced with the span for the `Call` argument list.
         return Object.assign(Object.assign({}, res), { applicableSpan: {
                 start: expr.argumentSpan.start,
                 length: expr.argumentSpan.end - expr.argumentSpan.start,
@@ -44957,7 +44782,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const node = positionDetails.context.kind === TargetNodeKind.TwoWayBindingContext ?
                 positionDetails.context.nodes[0] :
                 positionDetails.context.node;
-            return new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node).get();
+            return new QuickInfoBuilder(this.tsLS, compiler, templateInfo.component, node, positionDetails.parent)
+                .get();
         }
         getReferencesAtPosition(fileName, position) {
             return this.withCompilerAndPerfTracing(PerfPhase.LsReferencesAndRenames, (compiler) => {
