@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.7+10.sha-cc427d1.with-local-changes
+ * @license Angular v13.0.0-next.7+11.sha-ea61ec2.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -5939,6 +5939,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             super(span, sourceSpan, binaryOp, binaryLeft, binaryRight);
             this.operator = operator;
             this.expr = expr;
+            // Redeclare the properties that are inherited from `Binary` as `never`, as consumers should not
+            // depend on these fields when operating on `Unary`.
+            this.left = null;
+            this.right = null;
+            this.operation = null;
         }
         /**
          * Creates a unary minus expression "-x", represented as `Binary` using "0 - x".
@@ -21469,7 +21474,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.7+10.sha-cc427d1.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.7+11.sha-ea61ec2.with-local-changes');
 
     /**
      * @license
@@ -33417,12 +33422,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * or downleveled to ES5 with `downlevelIteration` for TypeScript >= 4.2:
      * ```
      *   function MyClass() {
-     *     var _this = _super.apply(this, __spreadArray([], __read(arguments))) || this;
+     *     var _this = _super.apply(this, __spreadArray([], __read(arguments), false)) || this;
      * ```
      *
      * More details can be found in: https://github.com/angular/angular/issues/38453.
      */
-    const ES5_DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*(arguments|(?:[^()]+\(\[\],)?[^()]+\(arguments\))\)/;
+    const ES5_DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*(arguments|(?:[^()]+\(\[\],)?[^()]+\(arguments\).*)\)/;
     /** Regular expression that detects ES2015 classes which extend from other classes. */
     const ES2015_INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{/;
     /**
@@ -48607,7 +48612,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.7+10.sha-cc427d1.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.7+11.sha-ea61ec2.with-local-changes');
 
     /**
      * @license
