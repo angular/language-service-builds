@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.7+11.sha-ea61ec2.with-local-changes
+ * @license Angular v13.0.0-next.7+29.sha-d9d8f95.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21474,7 +21474,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.7+11.sha-ea61ec2.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.7+29.sha-d9d8f95.with-local-changes');
 
     /**
      * @license
@@ -46084,7 +46084,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      *
      * @param locale The locale code.
      * @returns The locale data.
-     * @see [Internationalization (i18n) Guide](https://angular.io/guide/i18n)
+     * @see [Internationalization (i18n) Guide](https://angular.io/guide/i18n-overview)
      */
     function findLocaleData(locale) {
         const normalizedLocale = normalizeLocale(locale);
@@ -46109,7 +46109,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * @param locale A locale code for the locale format rules to use.
      * @returns The plural function for the locale.
      * @see `NgPlural`
-     * @see [Internationalization (i18n) Guide](https://angular.io/guide/i18n)
+     * @see [Internationalization (i18n) Guide](https://angular.io/guide/i18n-overview)
      */
     function getLocalePluralCase(locale) {
         const data = findLocaleData(locale);
@@ -48612,7 +48612,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.7+11.sha-ea61ec2.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.7+29.sha-d9d8f95.with-local-changes');
 
     /**
      * @license
@@ -54946,7 +54946,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * It is used for i18n extraction, by i18n pipes (DatePipe, I18nPluralPipe, CurrencyPipe,
      * DecimalPipe and PercentPipe) and by ICU expressions.
      *
-     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
+     * See the [i18n guide](guide/i18n-common-locale-id) for more information.
      *
      * @usageNotes
      * ### Example
@@ -54969,7 +54969,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * CurrencyPipe when there is no currency code passed into it. This is only used by
      * CurrencyPipe and has no relation to locale currency. Defaults to USD if not configured.
      *
-     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
+     * See the [i18n guide](guide/i18n-common-locale-id) for more information.
      *
      * <div class="alert is-helpful">
      *
@@ -55007,7 +55007,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Use this token at bootstrap to provide the content of your translation file (`xtb`,
      * `xlf` or `xlf2`) when you want to translate your application in another language.
      *
-     * See the [i18n guide](guide/i18n#merge) for more information.
+     * See the [i18n guide](guide/i18n-common-merge) for more information.
      *
      * @usageNotes
      * ### Example
@@ -55032,7 +55032,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Provide this token at bootstrap to set the format of your {@link TRANSLATIONS}: `xtb`,
      * `xlf` or `xlf2`.
      *
-     * See the [i18n guide](guide/i18n#merge) for more information.
+     * See the [i18n guide](guide/i18n-common-merge) for more information.
      *
      * @usageNotes
      * ### Example
@@ -55057,7 +55057,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * - Warning (default): show a warning in the console and/or shell.
      * - Ignore: do nothing.
      *
-     * See the [i18n guide](guide/i18n#missing-translation) for more information.
+     * See the [i18n guide](guide/i18n-common-merge#report-missing-translations) for more information.
      *
      * @usageNotes
      * ### Example
