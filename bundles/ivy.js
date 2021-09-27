@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.8+1.sha-353cad2.with-local-changes
+ * @license Angular v13.0.0-next.8+2.sha-3e37e89.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -15452,27 +15452,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         constructor() {
             super();
             this._schema = {};
+            // We don't allow binding to events for security reasons. Allowing event bindings would almost
+            // certainly introduce bad XSS vulnerabilities. Instead, we store events in a separate schema.
+            this._eventSchema = {};
             SCHEMA.forEach(encodedType => {
                 const type = {};
+                const events = new Set();
                 const [strType, strProperties] = encodedType.split('|');
                 const properties = strProperties.split(',');
                 const [typeNames, superName] = strType.split('^');
-                typeNames.split(',').forEach(tag => this._schema[tag.toLowerCase()] = type);
+                typeNames.split(',').forEach(tag => {
+                    this._schema[tag.toLowerCase()] = type;
+                    this._eventSchema[tag.toLowerCase()] = events;
+                });
                 const superType = superName && this._schema[superName.toLowerCase()];
                 if (superType) {
                     Object.keys(superType).forEach((prop) => {
                         type[prop] = superType[prop];
                     });
+                    for (const superEvent of this._eventSchema[superName.toLowerCase()]) {
+                        events.add(superEvent);
+                    }
                 }
                 properties.forEach((property) => {
                     if (property.length > 0) {
                         switch (property[0]) {
                             case '*':
-                                // We don't yet support events.
-                                // If ever allowing to bind to events, GO THROUGH A SECURITY REVIEW, allowing events
-                                // will
-                                // almost certainly introduce bad XSS vulnerabilities.
-                                // type[property.substring(1)] = EVENT;
+                                events.add(property.substring(1));
                                 break;
                             case '!':
                                 type[property.substring(1)] = BOOLEAN;
@@ -15583,6 +15589,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const elementProperties = this._schema[tagName.toLowerCase()] || this._schema['unknown'];
             // Convert properties to attributes.
             return Object.keys(elementProperties).map(prop => { var _a; return (_a = _PROP_TO_ATTR[prop]) !== null && _a !== void 0 ? _a : prop; });
+        }
+        allKnownEventsOfElement(tagName) {
+            var _a;
+            return Array.from((_a = this._eventSchema[tagName.toLowerCase()]) !== null && _a !== void 0 ? _a : []);
         }
         normalizeAnimationStyleProperty(propName) {
             return dashCaseToCamelCase(propName);
@@ -19937,7 +19947,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.8+1.sha-353cad2.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.8+2.sha-3e37e89.with-local-changes');
 
     /**
      * @license
@@ -20568,7 +20578,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('13.0.0-next.8+1.sha-353cad2.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+2.sha-3e37e89.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20608,7 +20618,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('13.0.0-next.8+1.sha-353cad2.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+2.sha-3e37e89.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20825,7 +20835,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('13.0.0-next.8+1.sha-353cad2.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+2.sha-3e37e89.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20867,7 +20877,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('13.0.0-next.8+1.sha-353cad2.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+2.sha-3e37e89.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20946,7 +20956,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('13.0.0-next.8+1.sha-353cad2.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+2.sha-3e37e89.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20983,7 +20993,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('13.0.0-next.8+1.sha-353cad2.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+2.sha-3e37e89.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21041,7 +21051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('13.0.0-next.8+1.sha-353cad2.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+2.sha-3e37e89.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21073,7 +21083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('13.0.0-next.8+1.sha-353cad2.with-local-changes');
+    const VERSION$2 = new Version('13.0.0-next.8+2.sha-3e37e89.with-local-changes');
 
     /**
      * @license
@@ -39971,6 +39981,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 property: REGISTRY$1.getMappedPropName(attribute),
             }));
         }
+        getPotentialDomEvents(tagName) {
+            return REGISTRY$1.allKnownEventsOfElement(tagName);
+        }
         getScopeData(component) {
             if (this.scopeCache.has(component)) {
                 return this.scopeCache.get(component);
@@ -42138,24 +42151,28 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          */
         AttributeCompletionKind[AttributeCompletionKind["DomProperty"] = 1] = "DomProperty";
         /**
+         * Completion of an event from the DOM schema.
+         */
+        AttributeCompletionKind[AttributeCompletionKind["DomEvent"] = 2] = "DomEvent";
+        /**
          * Completion of an attribute that results in a new directive being matched on an element.
          */
-        AttributeCompletionKind[AttributeCompletionKind["DirectiveAttribute"] = 2] = "DirectiveAttribute";
+        AttributeCompletionKind[AttributeCompletionKind["DirectiveAttribute"] = 3] = "DirectiveAttribute";
         /**
          * Completion of an attribute that results in a new structural directive being matched on an
          * element.
          */
-        AttributeCompletionKind[AttributeCompletionKind["StructuralDirectiveAttribute"] = 3] = "StructuralDirectiveAttribute";
+        AttributeCompletionKind[AttributeCompletionKind["StructuralDirectiveAttribute"] = 4] = "StructuralDirectiveAttribute";
         /**
          * Completion of an input from a directive which is either present on the element, or becomes
          * present after the addition of this attribute.
          */
-        AttributeCompletionKind[AttributeCompletionKind["DirectiveInput"] = 4] = "DirectiveInput";
+        AttributeCompletionKind[AttributeCompletionKind["DirectiveInput"] = 5] = "DirectiveInput";
         /**
          * Completion of an output from a directive which is either present on the element, or becomes
          * present after the addition of this attribute.
          */
-        AttributeCompletionKind[AttributeCompletionKind["DirectiveOutput"] = 5] = "DirectiveOutput";
+        AttributeCompletionKind[AttributeCompletionKind["DirectiveOutput"] = 6] = "DirectiveOutput";
     })(AttributeCompletionKind || (AttributeCompletionKind = {}));
     /**
      * Given an element and its context, produce a `Map` of all possible attribute completions.
@@ -42318,6 +42335,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     });
                 }
             }
+            for (const event of checker.getPotentialDomEvents(element.name)) {
+                table.set(event, {
+                    kind: AttributeCompletionKind.DomEvent,
+                    eventName: event,
+                });
+            }
         }
         return table;
     }
@@ -42437,6 +42460,16 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         replacementSpan,
                     });
                 }
+                break;
+            }
+            case AttributeCompletionKind.DomEvent: {
+                entries.push({
+                    kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.EVENT),
+                    name: `(${completion.eventName})`,
+                    sortText: completion.eventName,
+                    replacementSpan,
+                });
+                break;
             }
         }
     }
@@ -42444,6 +42477,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         var _a;
         switch (completion.kind) {
             case AttributeCompletionKind.DomAttribute:
+            case AttributeCompletionKind.DomEvent:
             case AttributeCompletionKind.DomProperty:
                 return null;
             case AttributeCompletionKind.DirectiveAttribute:
@@ -43290,6 +43324,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 // the user is completing on a property binding `[foo|]`, don't offer output event
                 // completions.
                 switch (completion.kind) {
+                    case AttributeCompletionKind.DomEvent:
+                        if (this.node instanceof BoundAttribute) {
+                            continue;
+                        }
+                        break;
                     case AttributeCompletionKind.DomAttribute:
                     case AttributeCompletionKind.DomProperty:
                         if (this.node instanceof BoundEvent) {
@@ -43354,6 +43393,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             let documentation = undefined;
             let info;
             switch (completion.kind) {
+                case AttributeCompletionKind.DomEvent:
                 case AttributeCompletionKind.DomAttribute:
                 case AttributeCompletionKind.DomProperty:
                     // TODO(alxhub): ideally we would show the same documentation as quick info here. However,
