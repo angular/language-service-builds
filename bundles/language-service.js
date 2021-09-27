@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.8+1.sha-353cad2.with-local-changes
+ * @license Angular v13.0.0-next.8+2.sha-3e37e89.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -16989,27 +16989,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
         constructor() {
             super();
             this._schema = {};
+            // We don't allow binding to events for security reasons. Allowing event bindings would almost
+            // certainly introduce bad XSS vulnerabilities. Instead, we store events in a separate schema.
+            this._eventSchema = {};
             SCHEMA.forEach(encodedType => {
                 const type = {};
+                const events = new Set();
                 const [strType, strProperties] = encodedType.split('|');
                 const properties = strProperties.split(',');
                 const [typeNames, superName] = strType.split('^');
-                typeNames.split(',').forEach(tag => this._schema[tag.toLowerCase()] = type);
+                typeNames.split(',').forEach(tag => {
+                    this._schema[tag.toLowerCase()] = type;
+                    this._eventSchema[tag.toLowerCase()] = events;
+                });
                 const superType = superName && this._schema[superName.toLowerCase()];
                 if (superType) {
                     Object.keys(superType).forEach((prop) => {
                         type[prop] = superType[prop];
                     });
+                    for (const superEvent of this._eventSchema[superName.toLowerCase()]) {
+                        events.add(superEvent);
+                    }
                 }
                 properties.forEach((property) => {
                     if (property.length > 0) {
                         switch (property[0]) {
                             case '*':
-                                // We don't yet support events.
-                                // If ever allowing to bind to events, GO THROUGH A SECURITY REVIEW, allowing events
-                                // will
-                                // almost certainly introduce bad XSS vulnerabilities.
-                                // type[property.substring(1)] = EVENT;
+                                events.add(property.substring(1));
                                 break;
                             case '!':
                                 type[property.substring(1)] = BOOLEAN;
@@ -17120,6 +17126,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
             const elementProperties = this._schema[tagName.toLowerCase()] || this._schema['unknown'];
             // Convert properties to attributes.
             return Object.keys(elementProperties).map(prop => { var _a; return (_a = _PROP_TO_ATTR[prop]) !== null && _a !== void 0 ? _a : prop; });
+        }
+        allKnownEventsOfElement(tagName) {
+            var _a;
+            return Array.from((_a = this._eventSchema[tagName.toLowerCase()]) !== null && _a !== void 0 ? _a : []);
         }
         normalizeAnimationStyleProperty(propName) {
             return dashCaseToCamelCase(propName);
@@ -21474,7 +21484,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.8+1.sha-353cad2.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.8+2.sha-3e37e89.with-local-changes');
 
     /**
      * @license
@@ -36675,7 +36685,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.8+1.sha-353cad2.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.8+2.sha-3e37e89.with-local-changes');
 
     /**
      * @license
