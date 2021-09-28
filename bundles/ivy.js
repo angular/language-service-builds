@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.8+11.sha-de662da.with-local-changes
+ * @license Angular v13.0.0-next.8+13.sha-8d2b6af.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19947,7 +19947,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.8+11.sha-de662da.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.8+13.sha-8d2b6af.with-local-changes');
 
     /**
      * @license
@@ -20578,7 +20578,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('13.0.0-next.8+11.sha-de662da.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+13.sha-8d2b6af.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20618,7 +20618,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('13.0.0-next.8+11.sha-de662da.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+13.sha-8d2b6af.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20835,7 +20835,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('13.0.0-next.8+11.sha-de662da.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+13.sha-8d2b6af.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20877,7 +20877,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('13.0.0-next.8+11.sha-de662da.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+13.sha-8d2b6af.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20956,7 +20956,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('13.0.0-next.8+11.sha-de662da.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+13.sha-8d2b6af.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20993,7 +20993,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('13.0.0-next.8+11.sha-de662da.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+13.sha-8d2b6af.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21051,7 +21051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('13.0.0-next.8+11.sha-de662da.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+13.sha-8d2b6af.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21083,7 +21083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('13.0.0-next.8+11.sha-de662da.with-local-changes');
+    const VERSION$2 = new Version('13.0.0-next.8+13.sha-8d2b6af.with-local-changes');
 
     /**
      * @license
@@ -31465,7 +31465,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         function maybeUpdateDecorator(dec, reflector, token) {
             const source = reflector.getImportOfIdentifier(dec);
             if (source === null || source.from !== '@angular/core') {
-                return;
+                return false;
             }
             switch (source.name) {
                 case 'Inject':
@@ -31482,16 +31482,23 @@ Either add the @Injectable() decorator to '${provider.node.name
                 case 'Self':
                     meta.self = true;
                     break;
+                default:
+                    return false;
             }
+            return true;
         }
         if (ts$1.isArrayLiteralExpression(dep)) {
             dep.elements.forEach(el => {
+                let isDecorator = false;
                 if (ts$1.isIdentifier(el)) {
-                    maybeUpdateDecorator(el, reflector);
+                    isDecorator = maybeUpdateDecorator(el, reflector);
                 }
                 else if (ts$1.isNewExpression(el) && ts$1.isIdentifier(el.expression)) {
                     const token = el.arguments && el.arguments.length > 0 && el.arguments[0] || undefined;
-                    maybeUpdateDecorator(el.expression, reflector, token);
+                    isDecorator = maybeUpdateDecorator(el.expression, reflector, token);
+                }
+                if (!isDecorator) {
+                    meta.token = new WrappedNodeExpr(el);
                 }
             });
         }
