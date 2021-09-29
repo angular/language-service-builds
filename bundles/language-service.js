@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.8+30.sha-ab3de40.with-local-changes
+ * @license Angular v13.0.0-next.8+31.sha-7dccbdd.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21484,7 +21484,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.8+30.sha-ab3de40.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.8+31.sha-7dccbdd.with-local-changes');
 
     /**
      * @license
@@ -48622,7 +48622,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.8+30.sha-ab3de40.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.8+31.sha-7dccbdd.with-local-changes');
 
     /**
      * @license
@@ -48631,1058 +48631,24 @@ Please check that 1) the type for the parameter at index ${index} is correct and
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    class DefaultIterableDifferFactory {
-        constructor() { }
-        supports(obj) {
-            return isListLikeIterable(obj);
-        }
-        create(trackByFn) {
-            return new DefaultIterableDiffer(trackByFn);
-        }
-    }
-    const trackByIdentity = (index, item) => item;
-    /**
-     * @deprecated v4.0.0 - Should not be part of public API.
-     * @publicApi
-     */
-    class DefaultIterableDiffer {
-        constructor(trackByFn) {
-            this.length = 0;
-            // Keeps track of the used records at any point in time (during & across `_check()` calls)
-            this._linkedRecords = null;
-            // Keeps track of the removed records at any point in time during `_check()` calls.
-            this._unlinkedRecords = null;
-            this._previousItHead = null;
-            this._itHead = null;
-            this._itTail = null;
-            this._additionsHead = null;
-            this._additionsTail = null;
-            this._movesHead = null;
-            this._movesTail = null;
-            this._removalsHead = null;
-            this._removalsTail = null;
-            // Keeps track of records where custom track by is the same, but item identity has changed
-            this._identityChangesHead = null;
-            this._identityChangesTail = null;
-            this._trackByFn = trackByFn || trackByIdentity;
-        }
-        forEachItem(fn) {
-            let record;
-            for (record = this._itHead; record !== null; record = record._next) {
-                fn(record);
-            }
-        }
-        forEachOperation(fn) {
-            let nextIt = this._itHead;
-            let nextRemove = this._removalsHead;
-            let addRemoveOffset = 0;
-            let moveOffsets = null;
-            while (nextIt || nextRemove) {
-                // Figure out which is the next record to process
-                // Order: remove, add, move
-                const record = !nextRemove ||
-                    nextIt &&
-                        nextIt.currentIndex <
-                            getPreviousIndex(nextRemove, addRemoveOffset, moveOffsets) ?
-                    nextIt :
-                    nextRemove;
-                const adjPreviousIndex = getPreviousIndex(record, addRemoveOffset, moveOffsets);
-                const currentIndex = record.currentIndex;
-                // consume the item, and adjust the addRemoveOffset and update moveDistance if necessary
-                if (record === nextRemove) {
-                    addRemoveOffset--;
-                    nextRemove = nextRemove._nextRemoved;
-                }
-                else {
-                    nextIt = nextIt._next;
-                    if (record.previousIndex == null) {
-                        addRemoveOffset++;
-                    }
-                    else {
-                        // INVARIANT:  currentIndex < previousIndex
-                        if (!moveOffsets)
-                            moveOffsets = [];
-                        const localMovePreviousIndex = adjPreviousIndex - addRemoveOffset;
-                        const localCurrentIndex = currentIndex - addRemoveOffset;
-                        if (localMovePreviousIndex != localCurrentIndex) {
-                            for (let i = 0; i < localMovePreviousIndex; i++) {
-                                const offset = i < moveOffsets.length ? moveOffsets[i] : (moveOffsets[i] = 0);
-                                const index = offset + i;
-                                if (localCurrentIndex <= index && index < localMovePreviousIndex) {
-                                    moveOffsets[i] = offset + 1;
-                                }
-                            }
-                            const previousIndex = record.previousIndex;
-                            moveOffsets[previousIndex] = localCurrentIndex - localMovePreviousIndex;
-                        }
-                    }
-                }
-                if (adjPreviousIndex !== currentIndex) {
-                    fn(record, adjPreviousIndex, currentIndex);
-                }
-            }
-        }
-        forEachPreviousItem(fn) {
-            let record;
-            for (record = this._previousItHead; record !== null; record = record._nextPrevious) {
-                fn(record);
-            }
-        }
-        forEachAddedItem(fn) {
-            let record;
-            for (record = this._additionsHead; record !== null; record = record._nextAdded) {
-                fn(record);
-            }
-        }
-        forEachMovedItem(fn) {
-            let record;
-            for (record = this._movesHead; record !== null; record = record._nextMoved) {
-                fn(record);
-            }
-        }
-        forEachRemovedItem(fn) {
-            let record;
-            for (record = this._removalsHead; record !== null; record = record._nextRemoved) {
-                fn(record);
-            }
-        }
-        forEachIdentityChange(fn) {
-            let record;
-            for (record = this._identityChangesHead; record !== null; record = record._nextIdentityChange) {
-                fn(record);
-            }
-        }
-        diff(collection) {
-            if (collection == null)
-                collection = [];
-            if (!isListLikeIterable(collection)) {
-                throw new Error(`Error trying to diff '${stringify$1(collection)}'. Only arrays and iterables are allowed`);
-            }
-            if (this.check(collection)) {
-                return this;
-            }
-            else {
-                return null;
-            }
-        }
-        onDestroy() { }
-        check(collection) {
-            this._reset();
-            let record = this._itHead;
-            let mayBeDirty = false;
-            let index;
-            let item;
-            let itemTrackBy;
-            if (Array.isArray(collection)) {
-                this.length = collection.length;
-                for (let index = 0; index < this.length; index++) {
-                    item = collection[index];
-                    itemTrackBy = this._trackByFn(index, item);
-                    if (record === null || !Object.is(record.trackById, itemTrackBy)) {
-                        record = this._mismatch(record, item, itemTrackBy, index);
-                        mayBeDirty = true;
-                    }
-                    else {
-                        if (mayBeDirty) {
-                            // TODO(misko): can we limit this to duplicates only?
-                            record = this._verifyReinsertion(record, item, itemTrackBy, index);
-                        }
-                        if (!Object.is(record.item, item))
-                            this._addIdentityChange(record, item);
-                    }
-                    record = record._next;
-                }
-            }
-            else {
-                index = 0;
-                iterateListLike(collection, (item) => {
-                    itemTrackBy = this._trackByFn(index, item);
-                    if (record === null || !Object.is(record.trackById, itemTrackBy)) {
-                        record = this._mismatch(record, item, itemTrackBy, index);
-                        mayBeDirty = true;
-                    }
-                    else {
-                        if (mayBeDirty) {
-                            // TODO(misko): can we limit this to duplicates only?
-                            record = this._verifyReinsertion(record, item, itemTrackBy, index);
-                        }
-                        if (!Object.is(record.item, item))
-                            this._addIdentityChange(record, item);
-                    }
-                    record = record._next;
-                    index++;
-                });
-                this.length = index;
-            }
-            this._truncate(record);
-            this.collection = collection;
-            return this.isDirty;
-        }
-        /* CollectionChanges is considered dirty if it has any additions, moves, removals, or identity
-         * changes.
-         */
-        get isDirty() {
-            return this._additionsHead !== null || this._movesHead !== null ||
-                this._removalsHead !== null || this._identityChangesHead !== null;
-        }
-        /**
-         * Reset the state of the change objects to show no changes. This means set previousKey to
-         * currentKey, and clear all of the queues (additions, moves, removals).
-         * Set the previousIndexes of moved and added items to their currentIndexes
-         * Reset the list of additions, moves and removals
-         *
-         * @internal
-         */
-        _reset() {
-            if (this.isDirty) {
-                let record;
-                for (record = this._previousItHead = this._itHead; record !== null; record = record._next) {
-                    record._nextPrevious = record._next;
-                }
-                for (record = this._additionsHead; record !== null; record = record._nextAdded) {
-                    record.previousIndex = record.currentIndex;
-                }
-                this._additionsHead = this._additionsTail = null;
-                for (record = this._movesHead; record !== null; record = record._nextMoved) {
-                    record.previousIndex = record.currentIndex;
-                }
-                this._movesHead = this._movesTail = null;
-                this._removalsHead = this._removalsTail = null;
-                this._identityChangesHead = this._identityChangesTail = null;
-                // TODO(vicb): when assert gets supported
-                // assert(!this.isDirty);
-            }
-        }
-        /**
-         * This is the core function which handles differences between collections.
-         *
-         * - `record` is the record which we saw at this position last time. If null then it is a new
-         *   item.
-         * - `item` is the current item in the collection
-         * - `index` is the position of the item in the collection
-         *
-         * @internal
-         */
-        _mismatch(record, item, itemTrackBy, index) {
-            // The previous record after which we will append the current one.
-            let previousRecord;
-            if (record === null) {
-                previousRecord = this._itTail;
-            }
-            else {
-                previousRecord = record._prev;
-                // Remove the record from the collection since we know it does not match the item.
-                this._remove(record);
-            }
-            // See if we have evicted the item, which used to be at some anterior position of _itHead list.
-            record = this._unlinkedRecords === null ? null : this._unlinkedRecords.get(itemTrackBy, null);
-            if (record !== null) {
-                // It is an item which we have evicted earlier: reinsert it back into the list.
-                // But first we need to check if identity changed, so we can update in view if necessary.
-                if (!Object.is(record.item, item))
-                    this._addIdentityChange(record, item);
-                this._reinsertAfter(record, previousRecord, index);
-            }
-            else {
-                // Attempt to see if the item is at some posterior position of _itHead list.
-                record = this._linkedRecords === null ? null : this._linkedRecords.get(itemTrackBy, index);
-                if (record !== null) {
-                    // We have the item in _itHead at/after `index` position. We need to move it forward in the
-                    // collection.
-                    // But first we need to check if identity changed, so we can update in view if necessary.
-                    if (!Object.is(record.item, item))
-                        this._addIdentityChange(record, item);
-                    this._moveAfter(record, previousRecord, index);
-                }
-                else {
-                    // It is a new item: add it.
-                    record =
-                        this._addAfter(new IterableChangeRecord_(item, itemTrackBy), previousRecord, index);
-                }
-            }
-            return record;
-        }
-        /**
-         * This check is only needed if an array contains duplicates. (Short circuit of nothing dirty)
-         *
-         * Use case: `[a, a]` => `[b, a, a]`
-         *
-         * If we did not have this check then the insertion of `b` would:
-         *   1) evict first `a`
-         *   2) insert `b` at `0` index.
-         *   3) leave `a` at index `1` as is. <-- this is wrong!
-         *   3) reinsert `a` at index 2. <-- this is wrong!
-         *
-         * The correct behavior is:
-         *   1) evict first `a`
-         *   2) insert `b` at `0` index.
-         *   3) reinsert `a` at index 1.
-         *   3) move `a` at from `1` to `2`.
-         *
-         *
-         * Double check that we have not evicted a duplicate item. We need to check if the item type may
-         * have already been removed:
-         * The insertion of b will evict the first 'a'. If we don't reinsert it now it will be reinserted
-         * at the end. Which will show up as the two 'a's switching position. This is incorrect, since a
-         * better way to think of it is as insert of 'b' rather then switch 'a' with 'b' and then add 'a'
-         * at the end.
-         *
-         * @internal
-         */
-        _verifyReinsertion(record, item, itemTrackBy, index) {
-            let reinsertRecord = this._unlinkedRecords === null ? null : this._unlinkedRecords.get(itemTrackBy, null);
-            if (reinsertRecord !== null) {
-                record = this._reinsertAfter(reinsertRecord, record._prev, index);
-            }
-            else if (record.currentIndex != index) {
-                record.currentIndex = index;
-                this._addToMoves(record, index);
-            }
-            return record;
-        }
-        /**
-         * Get rid of any excess {@link IterableChangeRecord_}s from the previous collection
-         *
-         * - `record` The first excess {@link IterableChangeRecord_}.
-         *
-         * @internal
-         */
-        _truncate(record) {
-            // Anything after that needs to be removed;
-            while (record !== null) {
-                const nextRecord = record._next;
-                this._addToRemovals(this._unlink(record));
-                record = nextRecord;
-            }
-            if (this._unlinkedRecords !== null) {
-                this._unlinkedRecords.clear();
-            }
-            if (this._additionsTail !== null) {
-                this._additionsTail._nextAdded = null;
-            }
-            if (this._movesTail !== null) {
-                this._movesTail._nextMoved = null;
-            }
-            if (this._itTail !== null) {
-                this._itTail._next = null;
-            }
-            if (this._removalsTail !== null) {
-                this._removalsTail._nextRemoved = null;
-            }
-            if (this._identityChangesTail !== null) {
-                this._identityChangesTail._nextIdentityChange = null;
-            }
-        }
-        /** @internal */
-        _reinsertAfter(record, prevRecord, index) {
-            if (this._unlinkedRecords !== null) {
-                this._unlinkedRecords.remove(record);
-            }
-            const prev = record._prevRemoved;
-            const next = record._nextRemoved;
-            if (prev === null) {
-                this._removalsHead = next;
-            }
-            else {
-                prev._nextRemoved = next;
-            }
-            if (next === null) {
-                this._removalsTail = prev;
-            }
-            else {
-                next._prevRemoved = prev;
-            }
-            this._insertAfter(record, prevRecord, index);
-            this._addToMoves(record, index);
-            return record;
-        }
-        /** @internal */
-        _moveAfter(record, prevRecord, index) {
-            this._unlink(record);
-            this._insertAfter(record, prevRecord, index);
-            this._addToMoves(record, index);
-            return record;
-        }
-        /** @internal */
-        _addAfter(record, prevRecord, index) {
-            this._insertAfter(record, prevRecord, index);
-            if (this._additionsTail === null) {
-                // TODO(vicb):
-                // assert(this._additionsHead === null);
-                this._additionsTail = this._additionsHead = record;
-            }
-            else {
-                // TODO(vicb):
-                // assert(_additionsTail._nextAdded === null);
-                // assert(record._nextAdded === null);
-                this._additionsTail = this._additionsTail._nextAdded = record;
-            }
-            return record;
-        }
-        /** @internal */
-        _insertAfter(record, prevRecord, index) {
-            // TODO(vicb):
-            // assert(record != prevRecord);
-            // assert(record._next === null);
-            // assert(record._prev === null);
-            const next = prevRecord === null ? this._itHead : prevRecord._next;
-            // TODO(vicb):
-            // assert(next != record);
-            // assert(prevRecord != record);
-            record._next = next;
-            record._prev = prevRecord;
-            if (next === null) {
-                this._itTail = record;
-            }
-            else {
-                next._prev = record;
-            }
-            if (prevRecord === null) {
-                this._itHead = record;
-            }
-            else {
-                prevRecord._next = record;
-            }
-            if (this._linkedRecords === null) {
-                this._linkedRecords = new _DuplicateMap();
-            }
-            this._linkedRecords.put(record);
-            record.currentIndex = index;
-            return record;
-        }
-        /** @internal */
-        _remove(record) {
-            return this._addToRemovals(this._unlink(record));
-        }
-        /** @internal */
-        _unlink(record) {
-            if (this._linkedRecords !== null) {
-                this._linkedRecords.remove(record);
-            }
-            const prev = record._prev;
-            const next = record._next;
-            // TODO(vicb):
-            // assert((record._prev = null) === null);
-            // assert((record._next = null) === null);
-            if (prev === null) {
-                this._itHead = next;
-            }
-            else {
-                prev._next = next;
-            }
-            if (next === null) {
-                this._itTail = prev;
-            }
-            else {
-                next._prev = prev;
-            }
-            return record;
-        }
-        /** @internal */
-        _addToMoves(record, toIndex) {
-            // TODO(vicb):
-            // assert(record._nextMoved === null);
-            if (record.previousIndex === toIndex) {
-                return record;
-            }
-            if (this._movesTail === null) {
-                // TODO(vicb):
-                // assert(_movesHead === null);
-                this._movesTail = this._movesHead = record;
-            }
-            else {
-                // TODO(vicb):
-                // assert(_movesTail._nextMoved === null);
-                this._movesTail = this._movesTail._nextMoved = record;
-            }
-            return record;
-        }
-        _addToRemovals(record) {
-            if (this._unlinkedRecords === null) {
-                this._unlinkedRecords = new _DuplicateMap();
-            }
-            this._unlinkedRecords.put(record);
-            record.currentIndex = null;
-            record._nextRemoved = null;
-            if (this._removalsTail === null) {
-                // TODO(vicb):
-                // assert(_removalsHead === null);
-                this._removalsTail = this._removalsHead = record;
-                record._prevRemoved = null;
-            }
-            else {
-                // TODO(vicb):
-                // assert(_removalsTail._nextRemoved === null);
-                // assert(record._nextRemoved === null);
-                record._prevRemoved = this._removalsTail;
-                this._removalsTail = this._removalsTail._nextRemoved = record;
-            }
-            return record;
-        }
-        /** @internal */
-        _addIdentityChange(record, item) {
-            record.item = item;
-            if (this._identityChangesTail === null) {
-                this._identityChangesTail = this._identityChangesHead = record;
-            }
-            else {
-                this._identityChangesTail = this._identityChangesTail._nextIdentityChange = record;
-            }
-            return record;
-        }
-    }
-    class IterableChangeRecord_ {
-        constructor(item, trackById) {
-            this.item = item;
-            this.trackById = trackById;
-            this.currentIndex = null;
-            this.previousIndex = null;
-            /** @internal */
-            this._nextPrevious = null;
-            /** @internal */
-            this._prev = null;
-            /** @internal */
-            this._next = null;
-            /** @internal */
-            this._prevDup = null;
-            /** @internal */
-            this._nextDup = null;
-            /** @internal */
-            this._prevRemoved = null;
-            /** @internal */
-            this._nextRemoved = null;
-            /** @internal */
-            this._nextAdded = null;
-            /** @internal */
-            this._nextMoved = null;
-            /** @internal */
-            this._nextIdentityChange = null;
-        }
-    }
-    // A linked list of IterableChangeRecords with the same IterableChangeRecord_.item
-    class _DuplicateItemRecordList {
-        constructor() {
-            /** @internal */
-            this._head = null;
-            /** @internal */
-            this._tail = null;
-        }
-        /**
-         * Append the record to the list of duplicates.
-         *
-         * Note: by design all records in the list of duplicates hold the same value in record.item.
-         */
-        add(record) {
-            if (this._head === null) {
-                this._head = this._tail = record;
-                record._nextDup = null;
-                record._prevDup = null;
-            }
-            else {
-                // TODO(vicb):
-                // assert(record.item ==  _head.item ||
-                //       record.item is num && record.item.isNaN && _head.item is num && _head.item.isNaN);
-                this._tail._nextDup = record;
-                record._prevDup = this._tail;
-                record._nextDup = null;
-                this._tail = record;
-            }
-        }
-        // Returns a IterableChangeRecord_ having IterableChangeRecord_.trackById == trackById and
-        // IterableChangeRecord_.currentIndex >= atOrAfterIndex
-        get(trackById, atOrAfterIndex) {
-            let record;
-            for (record = this._head; record !== null; record = record._nextDup) {
-                if ((atOrAfterIndex === null || atOrAfterIndex <= record.currentIndex) &&
-                    Object.is(record.trackById, trackById)) {
-                    return record;
-                }
-            }
-            return null;
-        }
-        /**
-         * Remove one {@link IterableChangeRecord_} from the list of duplicates.
-         *
-         * Returns whether the list of duplicates is empty.
-         */
-        remove(record) {
-            // TODO(vicb):
-            // assert(() {
-            //  // verify that the record being removed is in the list.
-            //  for (IterableChangeRecord_ cursor = _head; cursor != null; cursor = cursor._nextDup) {
-            //    if (identical(cursor, record)) return true;
-            //  }
-            //  return false;
-            //});
-            const prev = record._prevDup;
-            const next = record._nextDup;
-            if (prev === null) {
-                this._head = next;
-            }
-            else {
-                prev._nextDup = next;
-            }
-            if (next === null) {
-                this._tail = prev;
-            }
-            else {
-                next._prevDup = prev;
-            }
-            return this._head === null;
-        }
-    }
-    class _DuplicateMap {
-        constructor() {
-            this.map = new Map();
-        }
-        put(record) {
-            const key = record.trackById;
-            let duplicates = this.map.get(key);
-            if (!duplicates) {
-                duplicates = new _DuplicateItemRecordList();
-                this.map.set(key, duplicates);
-            }
-            duplicates.add(record);
-        }
-        /**
-         * Retrieve the `value` using key. Because the IterableChangeRecord_ value may be one which we
-         * have already iterated over, we use the `atOrAfterIndex` to pretend it is not there.
-         *
-         * Use case: `[a, b, c, a, a]` if we are at index `3` which is the second `a` then asking if we
-         * have any more `a`s needs to return the second `a`.
-         */
-        get(trackById, atOrAfterIndex) {
-            const key = trackById;
-            const recordList = this.map.get(key);
-            return recordList ? recordList.get(trackById, atOrAfterIndex) : null;
-        }
-        /**
-         * Removes a {@link IterableChangeRecord_} from the list of duplicates.
-         *
-         * The list of duplicates also is removed from the map if it gets empty.
-         */
-        remove(record) {
-            const key = record.trackById;
-            const recordList = this.map.get(key);
-            // Remove the list of duplicates when it gets empty
-            if (recordList.remove(record)) {
-                this.map.delete(key);
-            }
-            return record;
-        }
-        get isEmpty() {
-            return this.map.size === 0;
-        }
-        clear() {
-            this.map.clear();
-        }
-    }
-    function getPreviousIndex(item, addRemoveOffset, moveOffsets) {
-        const previousIndex = item.previousIndex;
-        if (previousIndex === null)
-            return previousIndex;
-        let moveOffset = 0;
-        if (moveOffsets && previousIndex < moveOffsets.length) {
-            moveOffset = moveOffsets[previousIndex];
-        }
-        return previousIndex + addRemoveOffset + moveOffset;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class DefaultKeyValueDifferFactory {
-        constructor() { }
-        supports(obj) {
-            return obj instanceof Map || isJsObject(obj);
-        }
-        create() {
-            return new DefaultKeyValueDiffer();
-        }
-    }
-    class DefaultKeyValueDiffer {
-        constructor() {
-            this._records = new Map();
-            this._mapHead = null;
-            // _appendAfter is used in the check loop
-            this._appendAfter = null;
-            this._previousMapHead = null;
-            this._changesHead = null;
-            this._changesTail = null;
-            this._additionsHead = null;
-            this._additionsTail = null;
-            this._removalsHead = null;
-            this._removalsTail = null;
-        }
-        get isDirty() {
-            return this._additionsHead !== null || this._changesHead !== null ||
-                this._removalsHead !== null;
-        }
-        forEachItem(fn) {
-            let record;
-            for (record = this._mapHead; record !== null; record = record._next) {
-                fn(record);
-            }
-        }
-        forEachPreviousItem(fn) {
-            let record;
-            for (record = this._previousMapHead; record !== null; record = record._nextPrevious) {
-                fn(record);
-            }
-        }
-        forEachChangedItem(fn) {
-            let record;
-            for (record = this._changesHead; record !== null; record = record._nextChanged) {
-                fn(record);
-            }
-        }
-        forEachAddedItem(fn) {
-            let record;
-            for (record = this._additionsHead; record !== null; record = record._nextAdded) {
-                fn(record);
-            }
-        }
-        forEachRemovedItem(fn) {
-            let record;
-            for (record = this._removalsHead; record !== null; record = record._nextRemoved) {
-                fn(record);
-            }
-        }
-        diff(map) {
-            if (!map) {
-                map = new Map();
-            }
-            else if (!(map instanceof Map || isJsObject(map))) {
-                throw new Error(`Error trying to diff '${stringify$1(map)}'. Only maps and objects are allowed`);
-            }
-            return this.check(map) ? this : null;
-        }
-        onDestroy() { }
-        /**
-         * Check the current state of the map vs the previous.
-         * The algorithm is optimised for when the keys do no change.
-         */
-        check(map) {
-            this._reset();
-            let insertBefore = this._mapHead;
-            this._appendAfter = null;
-            this._forEach(map, (value, key) => {
-                if (insertBefore && insertBefore.key === key) {
-                    this._maybeAddToChanges(insertBefore, value);
-                    this._appendAfter = insertBefore;
-                    insertBefore = insertBefore._next;
-                }
-                else {
-                    const record = this._getOrCreateRecordForKey(key, value);
-                    insertBefore = this._insertBeforeOrAppend(insertBefore, record);
-                }
-            });
-            // Items remaining at the end of the list have been deleted
-            if (insertBefore) {
-                if (insertBefore._prev) {
-                    insertBefore._prev._next = null;
-                }
-                this._removalsHead = insertBefore;
-                for (let record = insertBefore; record !== null; record = record._nextRemoved) {
-                    if (record === this._mapHead) {
-                        this._mapHead = null;
-                    }
-                    this._records.delete(record.key);
-                    record._nextRemoved = record._next;
-                    record.previousValue = record.currentValue;
-                    record.currentValue = null;
-                    record._prev = null;
-                    record._next = null;
-                }
-            }
-            // Make sure tails have no next records from previous runs
-            if (this._changesTail)
-                this._changesTail._nextChanged = null;
-            if (this._additionsTail)
-                this._additionsTail._nextAdded = null;
-            return this.isDirty;
-        }
-        /**
-         * Inserts a record before `before` or append at the end of the list when `before` is null.
-         *
-         * Notes:
-         * - This method appends at `this._appendAfter`,
-         * - This method updates `this._appendAfter`,
-         * - The return value is the new value for the insertion pointer.
-         */
-        _insertBeforeOrAppend(before, record) {
-            if (before) {
-                const prev = before._prev;
-                record._next = before;
-                record._prev = prev;
-                before._prev = record;
-                if (prev) {
-                    prev._next = record;
-                }
-                if (before === this._mapHead) {
-                    this._mapHead = record;
-                }
-                this._appendAfter = before;
-                return before;
-            }
-            if (this._appendAfter) {
-                this._appendAfter._next = record;
-                record._prev = this._appendAfter;
-            }
-            else {
-                this._mapHead = record;
-            }
-            this._appendAfter = record;
-            return null;
-        }
-        _getOrCreateRecordForKey(key, value) {
-            if (this._records.has(key)) {
-                const record = this._records.get(key);
-                this._maybeAddToChanges(record, value);
-                const prev = record._prev;
-                const next = record._next;
-                if (prev) {
-                    prev._next = next;
-                }
-                if (next) {
-                    next._prev = prev;
-                }
-                record._next = null;
-                record._prev = null;
-                return record;
-            }
-            const record = new KeyValueChangeRecord_(key);
-            this._records.set(key, record);
-            record.currentValue = value;
-            this._addToAdditions(record);
-            return record;
-        }
-        /** @internal */
-        _reset() {
-            if (this.isDirty) {
-                let record;
-                // let `_previousMapHead` contain the state of the map before the changes
-                this._previousMapHead = this._mapHead;
-                for (record = this._previousMapHead; record !== null; record = record._next) {
-                    record._nextPrevious = record._next;
-                }
-                // Update `record.previousValue` with the value of the item before the changes
-                // We need to update all changed items (that's those which have been added and changed)
-                for (record = this._changesHead; record !== null; record = record._nextChanged) {
-                    record.previousValue = record.currentValue;
-                }
-                for (record = this._additionsHead; record != null; record = record._nextAdded) {
-                    record.previousValue = record.currentValue;
-                }
-                this._changesHead = this._changesTail = null;
-                this._additionsHead = this._additionsTail = null;
-                this._removalsHead = null;
-            }
-        }
-        // Add the record or a given key to the list of changes only when the value has actually changed
-        _maybeAddToChanges(record, newValue) {
-            if (!Object.is(newValue, record.currentValue)) {
-                record.previousValue = record.currentValue;
-                record.currentValue = newValue;
-                this._addToChanges(record);
-            }
-        }
-        _addToAdditions(record) {
-            if (this._additionsHead === null) {
-                this._additionsHead = this._additionsTail = record;
-            }
-            else {
-                this._additionsTail._nextAdded = record;
-                this._additionsTail = record;
-            }
-        }
-        _addToChanges(record) {
-            if (this._changesHead === null) {
-                this._changesHead = this._changesTail = record;
-            }
-            else {
-                this._changesTail._nextChanged = record;
-                this._changesTail = record;
-            }
-        }
-        /** @internal */
-        _forEach(obj, fn) {
-            if (obj instanceof Map) {
-                obj.forEach(fn);
-            }
-            else {
-                Object.keys(obj).forEach(k => fn(obj[k], k));
-            }
-        }
-    }
-    class KeyValueChangeRecord_ {
-        constructor(key) {
-            this.key = key;
-            this.previousValue = null;
-            this.currentValue = null;
-            /** @internal */
-            this._nextPrevious = null;
-            /** @internal */
-            this._next = null;
-            /** @internal */
-            this._prev = null;
-            /** @internal */
-            this._nextAdded = null;
-            /** @internal */
-            this._nextRemoved = null;
-            /** @internal */
-            this._nextChanged = null;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function defaultIterableDiffersFactory() {
-        return new IterableDiffers([new DefaultIterableDifferFactory()]);
-    }
-    /**
-     * A repository of different iterable diffing strategies used by NgFor, NgClass, and others.
-     *
-     * @publicApi
-     */
-    class IterableDiffers {
-        constructor(factories) {
-            this.factories = factories;
-        }
-        static create(factories, parent) {
-            if (parent != null) {
-                const copied = parent.factories.slice();
-                factories = factories.concat(copied);
-            }
-            return new IterableDiffers(factories);
-        }
-        /**
-         * Takes an array of {@link IterableDifferFactory} and returns a provider used to extend the
-         * inherited {@link IterableDiffers} instance with the provided factories and return a new
-         * {@link IterableDiffers} instance.
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * The following example shows how to extend an existing list of factories,
-         * which will only be applied to the injector for this component and its children.
-         * This step is all that's required to make a new {@link IterableDiffer} available.
-         *
-         * ```
-         * @Component({
-         *   viewProviders: [
-         *     IterableDiffers.extend([new ImmutableListDiffer()])
-         *   ]
-         * })
-         * ```
-         */
-        static extend(factories) {
-            return {
-                provide: IterableDiffers,
-                useFactory: (parent) => {
-                    // if parent is null, it means that we are in the root injector and we have just overridden
-                    // the default injection mechanism for IterableDiffers, in such a case just assume
-                    // `defaultIterableDiffersFactory`.
-                    return IterableDiffers.create(factories, parent || defaultIterableDiffersFactory());
-                },
-                // Dependency technically isn't optional, but we can provide a better error message this way.
-                deps: [[IterableDiffers, new SkipSelf(), new Optional()]]
-            };
-        }
-        find(iterable) {
-            const factory = this.factories.find(f => f.supports(iterable));
-            if (factory != null) {
-                return factory;
-            }
-            else {
-                throw new Error(`Cannot find a differ supporting object '${iterable}' of type '${getTypeNameForDebugging(iterable)}'`);
-            }
-        }
-    }
-    /** @nocollapse */
-    IterableDiffers.ɵprov = ɵɵdefineInjectable({ token: IterableDiffers, providedIn: 'root', factory: defaultIterableDiffersFactory });
-    function getTypeNameForDebugging(type) {
-        return type['name'] || typeof type;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function defaultKeyValueDiffersFactory() {
-        return new KeyValueDiffers([new DefaultKeyValueDifferFactory()]);
-    }
-    /**
-     * A repository of different Map diffing strategies used by NgClass, NgStyle, and others.
-     *
-     * @publicApi
-     */
-    class KeyValueDiffers {
-        constructor(factories) {
-            this.factories = factories;
-        }
-        static create(factories, parent) {
-            if (parent) {
-                const copied = parent.factories.slice();
-                factories = factories.concat(copied);
-            }
-            return new KeyValueDiffers(factories);
-        }
-        /**
-         * Takes an array of {@link KeyValueDifferFactory} and returns a provider used to extend the
-         * inherited {@link KeyValueDiffers} instance with the provided factories and return a new
-         * {@link KeyValueDiffers} instance.
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * The following example shows how to extend an existing list of factories,
-         * which will only be applied to the injector for this component and its children.
-         * This step is all that's required to make a new {@link KeyValueDiffer} available.
-         *
-         * ```
-         * @Component({
-         *   viewProviders: [
-         *     KeyValueDiffers.extend([new ImmutableMapDiffer()])
-         *   ]
-         * })
-         * ```
-         */
-        static extend(factories) {
-            return {
-                provide: KeyValueDiffers,
-                useFactory: (parent) => {
-                    // if parent is null, it means that we are in the root injector and we have just overridden
-                    // the default injection mechanism for KeyValueDiffers, in such a case just assume
-                    // `defaultKeyValueDiffersFactory`.
-                    return KeyValueDiffers.create(factories, parent || defaultKeyValueDiffersFactory());
-                },
-                // Dependency technically isn't optional, but we can provide a better error message this way.
-                deps: [[KeyValueDiffers, new SkipSelf(), new Optional()]]
-            };
-        }
-        find(kv) {
-            const factory = this.factories.find(f => f.supports(kv));
-            if (factory) {
-                return factory;
-            }
-            throw new Error(`Cannot find a differ supporting object '${kv}'`);
-        }
-    }
-    /** @nocollapse */
-    KeyValueDiffers.ɵprov = ɵɵdefineInjectable({ token: KeyValueDiffers, providedIn: 'root', factory: defaultKeyValueDiffersFactory });
+    // This default value is when checking the hierarchy for a token.
+    //
+    // It means both:
+    // - the token is not provided by the current injector,
+    // - only the element injectors should be checked (ie do not check module injectors
+    //
+    //          mod1
+    //         /
+    //       el1   mod2
+    //         \  /
+    //         el2
+    //
+    // When requesting el2.injector.get(token), we should check in the following order and return the
+    // first found value:
+    // - el2.injector.get(token, default)
+    // - el1.injector.get(token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) -> do not check the module
+    // - mod2.injector.get(token, default)
+    const NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR = {};
 
     /**
      * @license
@@ -50024,494 +48990,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         }
     }
 
-    const SWITCH_CHANGE_DETECTOR_REF_FACTORY__POST_R3__ = injectChangeDetectorRef;
-    const SWITCH_CHANGE_DETECTOR_REF_FACTORY = SWITCH_CHANGE_DETECTOR_REF_FACTORY__POST_R3__;
-    /**
-     * Base class that provides change detection functionality.
-     * A change-detection tree collects all views that are to be checked for changes.
-     * Use the methods to add and remove views from the tree, initiate change-detection,
-     * and explicitly mark views as _dirty_, meaning that they have changed and need to be re-rendered.
-     *
-     * @see [Using change detection hooks](guide/lifecycle-hooks#using-change-detection-hooks)
-     * @see [Defining custom change detection](guide/lifecycle-hooks#defining-custom-change-detection)
-     *
-     * @usageNotes
-     *
-     * The following examples demonstrate how to modify default change-detection behavior
-     * to perform explicit detection when needed.
-     *
-     * ### Use `markForCheck()` with `CheckOnce` strategy
-     *
-     * The following example sets the `OnPush` change-detection strategy for a component
-     * (`CheckOnce`, rather than the default `CheckAlways`), then forces a second check
-     * after an interval. See [live demo](https://plnkr.co/edit/GC512b?p=preview).
-     *
-     * <code-example path="core/ts/change_detect/change-detection.ts"
-     * region="mark-for-check"></code-example>
-     *
-     * ### Detach change detector to limit how often check occurs
-     *
-     * The following example defines a component with a large list of read-only data
-     * that is expected to change constantly, many times per second.
-     * To improve performance, we want to check and update the list
-     * less often than the changes actually occur. To do that, we detach
-     * the component's change detector and perform an explicit local check every five seconds.
-     *
-     * <code-example path="core/ts/change_detect/change-detection.ts" region="detach"></code-example>
-     *
-     *
-     * ### Reattaching a detached component
-     *
-     * The following example creates a component displaying live data.
-     * The component detaches its change detector from the main change detector tree
-     * when the `live` property is set to false, and reattaches it when the property
-     * becomes true.
-     *
-     * <code-example path="core/ts/change_detect/change-detection.ts" region="reattach"></code-example>
-     *
-     * @publicApi
-     */
-    class ChangeDetectorRef {
-    }
-    /**
-     * @internal
-     * @nocollapse
-     */
-    ChangeDetectorRef.__NG_ELEMENT_ID__ = SWITCH_CHANGE_DETECTOR_REF_FACTORY;
-    /** Returns a ChangeDetectorRef (a.k.a. a ViewRef) */
-    function injectChangeDetectorRef(flags) {
-        return createViewRef(getCurrentTNode(), getLView(), (flags & 16 /* ForPipe */) === 16 /* ForPipe */);
-    }
-    /**
-     * Creates a ViewRef and stores it on the injector as ChangeDetectorRef (public alias).
-     *
-     * @param tNode The node that is requesting a ChangeDetectorRef
-     * @param lView The view to which the node belongs
-     * @param isPipe Whether the view is being injected into a pipe.
-     * @returns The ChangeDetectorRef to use
-     */
-    function createViewRef(tNode, lView, isPipe) {
-        if (isComponentHost(tNode) && !isPipe) {
-            // The LView represents the location where the component is declared.
-            // Instead we want the LView for the component View and so we need to look it up.
-            const componentView = getComponentLViewByIndex(tNode.index, lView); // look down
-            return new ViewRef(componentView, componentView);
-        }
-        else if (tNode.type & (3 /* AnyRNode */ | 12 /* AnyContainer */ | 32 /* Icu */)) {
-            // The LView represents the location where the injection is requested from.
-            // We need to locate the containing LView (in case where the `lView` is an embedded view)
-            const hostComponentView = lView[DECLARATION_COMPONENT_VIEW]; // look up
-            return new ViewRef(hostComponentView, lView);
-        }
-        return null;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Structural diffing for `Object`s and `Map`s.
-     */
-    const keyValDiff = [new DefaultKeyValueDifferFactory()];
-    /**
-     * Structural diffing for `Iterable` types such as `Array`s.
-     */
-    const iterableDiff = [new DefaultIterableDifferFactory()];
-    const defaultIterableDiffers = new IterableDiffers(iterableDiff);
-    const defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const SWITCH_TEMPLATE_REF_FACTORY__POST_R3__ = injectTemplateRef;
-    const SWITCH_TEMPLATE_REF_FACTORY = SWITCH_TEMPLATE_REF_FACTORY__POST_R3__;
-    /**
-     * Represents an embedded template that can be used to instantiate embedded views.
-     * To instantiate embedded views based on a template, use the `ViewContainerRef`
-     * method `createEmbeddedView()`.
-     *
-     * Access a `TemplateRef` instance by placing a directive on an `<ng-template>`
-     * element (or directive prefixed with `*`). The `TemplateRef` for the embedded view
-     * is injected into the constructor of the directive,
-     * using the `TemplateRef` token.
-     *
-     * You can also use a `Query` to find a `TemplateRef` associated with
-     * a component or a directive.
-     *
-     * @see `ViewContainerRef`
-     * @see [Navigate the Component Tree with DI](guide/dependency-injection-navtree)
-     *
-     * @publicApi
-     */
-    class TemplateRef {
-    }
-    /**
-     * @internal
-     * @nocollapse
-     */
-    TemplateRef.__NG_ELEMENT_ID__ = SWITCH_TEMPLATE_REF_FACTORY;
-    const ViewEngineTemplateRef = TemplateRef;
-    const R3TemplateRef = class TemplateRef extends ViewEngineTemplateRef {
-        constructor(_declarationLView, _declarationTContainer, elementRef) {
-            super();
-            this._declarationLView = _declarationLView;
-            this._declarationTContainer = _declarationTContainer;
-            this.elementRef = elementRef;
-        }
-        createEmbeddedView(context) {
-            const embeddedTView = this._declarationTContainer.tViews;
-            const embeddedLView = createLView(this._declarationLView, embeddedTView, context, 16 /* CheckAlways */, null, embeddedTView.declTNode, null, null, null, null);
-            const declarationLContainer = this._declarationLView[this._declarationTContainer.index];
-            ngDevMode && assertLContainer(declarationLContainer);
-            embeddedLView[DECLARATION_LCONTAINER] = declarationLContainer;
-            const declarationViewLQueries = this._declarationLView[QUERIES];
-            if (declarationViewLQueries !== null) {
-                embeddedLView[QUERIES] = declarationViewLQueries.createEmbeddedView(embeddedTView);
-            }
-            renderView(embeddedTView, embeddedLView, context);
-            return new ViewRef(embeddedLView);
-        }
-    };
-    /**
-     * Creates a TemplateRef given a node.
-     *
-     * @returns The TemplateRef instance to use
-     */
-    function injectTemplateRef() {
-        return createTemplateRef(getCurrentTNode(), getLView());
-    }
-    /**
-     * Creates a TemplateRef and stores it on the injector.
-     *
-     * @param hostTNode The node on which a TemplateRef is requested
-     * @param hostLView The `LView` to which the node belongs
-     * @returns The TemplateRef instance or null if we can't create a TemplateRef on a given node type
-     */
-    function createTemplateRef(hostTNode, hostLView) {
-        if (hostTNode.type & 4 /* Container */) {
-            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-            return new R3TemplateRef(hostLView, hostTNode, createElementRef(hostTNode, hostLView));
-        }
-        return null;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents an instance of an `NgModule` created by an `NgModuleFactory`.
-     * Provides access to the `NgModule` instance and related objects.
-     *
-     * @publicApi
-     */
-    class NgModuleRef {
-    }
-    /**
-     * @publicApi
-     */
-    class NgModuleFactory {
-    }
-
-    const SWITCH_VIEW_CONTAINER_REF_FACTORY__POST_R3__ = injectViewContainerRef;
-    const SWITCH_VIEW_CONTAINER_REF_FACTORY = SWITCH_VIEW_CONTAINER_REF_FACTORY__POST_R3__;
-    /**
-     * Represents a container where one or more views can be attached to a component.
-     *
-     * Can contain *host views* (created by instantiating a
-     * component with the `createComponent()` method), and *embedded views*
-     * (created by instantiating a `TemplateRef` with the `createEmbeddedView()` method).
-     *
-     * A view container instance can contain other view containers,
-     * creating a [view hierarchy](guide/glossary#view-tree).
-     *
-     * @see `ComponentRef`
-     * @see `EmbeddedViewRef`
-     *
-     * @publicApi
-     */
-    class ViewContainerRef {
-    }
-    /**
-     * @internal
-     * @nocollapse
-     */
-    ViewContainerRef.__NG_ELEMENT_ID__ = SWITCH_VIEW_CONTAINER_REF_FACTORY;
-    /**
-     * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
-     * already exists, retrieves the existing ViewContainerRef.
-     *
-     * @returns The ViewContainerRef instance to use
-     */
-    function injectViewContainerRef() {
-        const previousTNode = getCurrentTNode();
-        return createContainerRef(previousTNode, getLView());
-    }
-    const VE_ViewContainerRef = ViewContainerRef;
-    const R3ViewContainerRef = class ViewContainerRef extends VE_ViewContainerRef {
-        constructor(_lContainer, _hostTNode, _hostLView) {
-            super();
-            this._lContainer = _lContainer;
-            this._hostTNode = _hostTNode;
-            this._hostLView = _hostLView;
-        }
-        get element() {
-            return createElementRef(this._hostTNode, this._hostLView);
-        }
-        get injector() {
-            return new NodeInjector(this._hostTNode, this._hostLView);
-        }
-        /** @deprecated No replacement */
-        get parentInjector() {
-            const parentLocation = getParentInjectorLocation(this._hostTNode, this._hostLView);
-            if (hasParentInjector(parentLocation)) {
-                const parentView = getParentInjectorView(parentLocation, this._hostLView);
-                const injectorIndex = getParentInjectorIndex(parentLocation);
-                ngDevMode && assertNodeInjector(parentView, injectorIndex);
-                const parentTNode = parentView[TVIEW].data[injectorIndex + 8 /* TNODE */];
-                return new NodeInjector(parentTNode, parentView);
-            }
-            else {
-                return new NodeInjector(null, this._hostLView);
-            }
-        }
-        clear() {
-            while (this.length > 0) {
-                this.remove(this.length - 1);
-            }
-        }
-        get(index) {
-            const viewRefs = getViewRefs(this._lContainer);
-            return viewRefs !== null && viewRefs[index] || null;
-        }
-        get length() {
-            return this._lContainer.length - CONTAINER_HEADER_OFFSET;
-        }
-        createEmbeddedView(templateRef, context, index) {
-            const viewRef = templateRef.createEmbeddedView(context || {});
-            this.insert(viewRef, index);
-            return viewRef;
-        }
-        createComponent(componentFactory, index, injector, projectableNodes, ngModuleRef) {
-            const contextInjector = injector || this.parentInjector;
-            if (!ngModuleRef && componentFactory.ngModule == null && contextInjector) {
-                // DO NOT REFACTOR. The code here used to have a `value || undefined` expression
-                // which seems to cause internal google apps to fail. This is documented in the
-                // following internal bug issue: go/b/142967802
-                const result = contextInjector.get(NgModuleRef, null);
-                if (result) {
-                    ngModuleRef = result;
-                }
-            }
-            const componentRef = componentFactory.create(contextInjector, projectableNodes, undefined, ngModuleRef);
-            this.insert(componentRef.hostView, index);
-            return componentRef;
-        }
-        insert(viewRef, index) {
-            const lView = viewRef._lView;
-            const tView = lView[TVIEW];
-            if (ngDevMode && viewRef.destroyed) {
-                throw new Error('Cannot insert a destroyed View in a ViewContainer!');
-            }
-            if (viewAttachedToContainer(lView)) {
-                // If view is already attached, detach it first so we clean up references appropriately.
-                const prevIdx = this.indexOf(viewRef);
-                // A view might be attached either to this or a different container. The `prevIdx` for
-                // those cases will be:
-                // equal to -1 for views attached to this ViewContainerRef
-                // >= 0 for views attached to a different ViewContainerRef
-                if (prevIdx !== -1) {
-                    this.detach(prevIdx);
-                }
-                else {
-                    const prevLContainer = lView[PARENT];
-                    ngDevMode &&
-                        assertEqual(isLContainer(prevLContainer), true, 'An attached view should have its PARENT point to a container.');
-                    // We need to re-create a R3ViewContainerRef instance since those are not stored on
-                    // LView (nor anywhere else).
-                    const prevVCRef = new R3ViewContainerRef(prevLContainer, prevLContainer[T_HOST], prevLContainer[PARENT]);
-                    prevVCRef.detach(prevVCRef.indexOf(viewRef));
-                }
-            }
-            // Logical operation of adding `LView` to `LContainer`
-            const adjustedIdx = this._adjustIndex(index);
-            const lContainer = this._lContainer;
-            insertView(tView, lView, lContainer, adjustedIdx);
-            // Physical operation of adding the DOM nodes.
-            const beforeNode = getBeforeNodeForView(adjustedIdx, lContainer);
-            const renderer = lView[RENDERER];
-            const parentRNode = nativeParentNode(renderer, lContainer[NATIVE]);
-            if (parentRNode !== null) {
-                addViewToContainer(tView, lContainer[T_HOST], renderer, lView, parentRNode, beforeNode);
-            }
-            viewRef.attachToViewContainerRef();
-            addToArray(getOrCreateViewRefs(lContainer), adjustedIdx, viewRef);
-            return viewRef;
-        }
-        move(viewRef, newIndex) {
-            if (ngDevMode && viewRef.destroyed) {
-                throw new Error('Cannot move a destroyed View in a ViewContainer!');
-            }
-            return this.insert(viewRef, newIndex);
-        }
-        indexOf(viewRef) {
-            const viewRefsArr = getViewRefs(this._lContainer);
-            return viewRefsArr !== null ? viewRefsArr.indexOf(viewRef) : -1;
-        }
-        remove(index) {
-            const adjustedIdx = this._adjustIndex(index, -1);
-            const detachedView = detachView(this._lContainer, adjustedIdx);
-            if (detachedView) {
-                // Before destroying the view, remove it from the container's array of `ViewRef`s.
-                // This ensures the view container length is updated before calling
-                // `destroyLView`, which could recursively call view container methods that
-                // rely on an accurate container length.
-                // (e.g. a method on this view container being called by a child directive's OnDestroy
-                // lifecycle hook)
-                removeFromArray(getOrCreateViewRefs(this._lContainer), adjustedIdx);
-                destroyLView(detachedView[TVIEW], detachedView);
-            }
-        }
-        detach(index) {
-            const adjustedIdx = this._adjustIndex(index, -1);
-            const view = detachView(this._lContainer, adjustedIdx);
-            const wasDetached = view && removeFromArray(getOrCreateViewRefs(this._lContainer), adjustedIdx) != null;
-            return wasDetached ? new ViewRef(view) : null;
-        }
-        _adjustIndex(index, shift = 0) {
-            if (index == null) {
-                return this.length + shift;
-            }
-            if (ngDevMode) {
-                assertGreaterThan(index, -1, `ViewRef index must be positive, got ${index}`);
-                // +1 because it's legal to insert at the end.
-                assertLessThan(index, this.length + 1 + shift, 'index');
-            }
-            return index;
-        }
-    };
-    function getViewRefs(lContainer) {
-        return lContainer[VIEW_REFS];
-    }
-    function getOrCreateViewRefs(lContainer) {
-        return (lContainer[VIEW_REFS] || (lContainer[VIEW_REFS] = []));
-    }
-    /**
-     * Creates a ViewContainerRef and stores it on the injector.
-     *
-     * @param ViewContainerRefToken The ViewContainerRef type
-     * @param ElementRefToken The ElementRef type
-     * @param hostTNode The node that is requesting a ViewContainerRef
-     * @param hostLView The view to which the node belongs
-     * @returns The ViewContainerRef instance to use
-     */
-    function createContainerRef(hostTNode, hostLView) {
-        ngDevMode && assertTNodeType(hostTNode, 12 /* AnyContainer */ | 3 /* AnyRNode */);
-        let lContainer;
-        const slotValue = hostLView[hostTNode.index];
-        if (isLContainer(slotValue)) {
-            // If the host is a container, we don't need to create a new LContainer
-            lContainer = slotValue;
-        }
-        else {
-            let commentNode;
-            // If the host is an element container, the native host element is guaranteed to be a
-            // comment and we can reuse that comment as anchor element for the new LContainer.
-            // The comment node in question is already part of the DOM structure so we don't need to append
-            // it again.
-            if (hostTNode.type & 8 /* ElementContainer */) {
-                commentNode = unwrapRNode(slotValue);
-            }
-            else {
-                // If the host is a regular element, we have to insert a comment node manually which will
-                // be used as an anchor when inserting elements. In this specific case we use low-level DOM
-                // manipulation to insert it.
-                const renderer = hostLView[RENDERER];
-                ngDevMode && ngDevMode.rendererCreateComment++;
-                commentNode = renderer.createComment(ngDevMode ? 'container' : '');
-                const hostNative = getNativeByTNode(hostTNode, hostLView);
-                const parentOfHostNative = nativeParentNode(renderer, hostNative);
-                nativeInsertBefore(renderer, parentOfHostNative, commentNode, nativeNextSibling(renderer, hostNative), false);
-            }
-            hostLView[hostTNode.index] = lContainer =
-                createLContainer(slotValue, hostLView, commentNode, hostTNode);
-            addToViewTree(hostLView, lContainer);
-        }
-        return new R3ViewContainerRef(lContainer, hostTNode, hostLView);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const _tokenKeyCache = new Map();
-    function tokenKey(token) {
-        let key = _tokenKeyCache.get(token);
-        if (!key) {
-            key = stringify$1(token) + '_' + _tokenKeyCache.size;
-            _tokenKeyCache.set(token, key);
-        }
-        return key;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const InjectorRefTokenKey = tokenKey(Injector);
-    const INJECTORRefTokenKey = tokenKey(INJECTOR$1);
-    const NgModuleRefTokenKey = tokenKey(NgModuleRef);
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const Renderer2TokenKey = tokenKey(Renderer2);
-    const ElementRefTokenKey = tokenKey(ElementRef);
-    const ViewContainerRefTokenKey = tokenKey(ViewContainerRef);
-    const TemplateRefTokenKey = tokenKey(TemplateRef);
-    const ChangeDetectorRefTokenKey = tokenKey(ChangeDetectorRef);
-    const InjectorRefTokenKey$1 = tokenKey(Injector);
-    const INJECTORRefTokenKey$1 = tokenKey(INJECTOR$1);
-    // This default value is when checking the hierarchy for a token.
-    //
-    // It means both:
-    // - the token is not provided by the current injector,
-    // - only the element injectors should be checked (ie do not check module injectors
-    //
-    //          mod1
-    //         /
-    //       el1   mod2
-    //         \  /
-    //         el2
-    //
-    // When requesting el2.injector.get(token), we should check in the following order and return the
-    // first found value:
-    // - el2.injector.get(token, default)
-    // - el1.injector.get(token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) -> do not check the module
-    // - mod2.injector.get(token, default)
-    const NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR = {};
-
     /**
      * @license
      * Copyright Google LLC All Rights Reserved.
@@ -50742,6 +49220,27 @@ Please check that 1) the type for the parameter at index ${index} is correct and
                 }
             }
         });
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Represents an instance of an `NgModule` created by an `NgModuleFactory`.
+     * Provides access to the `NgModule` instance and related objects.
+     *
+     * @publicApi
+     */
+    class NgModuleRef {
+    }
+    /**
+     * @publicApi
+     */
+    class NgModuleFactory {
     }
 
     /**
@@ -53074,6 +51573,347 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             this.changes.complete();
             this.changes.unsubscribe();
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const SWITCH_TEMPLATE_REF_FACTORY__POST_R3__ = injectTemplateRef;
+    const SWITCH_TEMPLATE_REF_FACTORY = SWITCH_TEMPLATE_REF_FACTORY__POST_R3__;
+    /**
+     * Represents an embedded template that can be used to instantiate embedded views.
+     * To instantiate embedded views based on a template, use the `ViewContainerRef`
+     * method `createEmbeddedView()`.
+     *
+     * Access a `TemplateRef` instance by placing a directive on an `<ng-template>`
+     * element (or directive prefixed with `*`). The `TemplateRef` for the embedded view
+     * is injected into the constructor of the directive,
+     * using the `TemplateRef` token.
+     *
+     * You can also use a `Query` to find a `TemplateRef` associated with
+     * a component or a directive.
+     *
+     * @see `ViewContainerRef`
+     * @see [Navigate the Component Tree with DI](guide/dependency-injection-navtree)
+     *
+     * @publicApi
+     */
+    class TemplateRef {
+    }
+    /**
+     * @internal
+     * @nocollapse
+     */
+    TemplateRef.__NG_ELEMENT_ID__ = SWITCH_TEMPLATE_REF_FACTORY;
+    const ViewEngineTemplateRef = TemplateRef;
+    const R3TemplateRef = class TemplateRef extends ViewEngineTemplateRef {
+        constructor(_declarationLView, _declarationTContainer, elementRef) {
+            super();
+            this._declarationLView = _declarationLView;
+            this._declarationTContainer = _declarationTContainer;
+            this.elementRef = elementRef;
+        }
+        createEmbeddedView(context) {
+            const embeddedTView = this._declarationTContainer.tViews;
+            const embeddedLView = createLView(this._declarationLView, embeddedTView, context, 16 /* CheckAlways */, null, embeddedTView.declTNode, null, null, null, null);
+            const declarationLContainer = this._declarationLView[this._declarationTContainer.index];
+            ngDevMode && assertLContainer(declarationLContainer);
+            embeddedLView[DECLARATION_LCONTAINER] = declarationLContainer;
+            const declarationViewLQueries = this._declarationLView[QUERIES];
+            if (declarationViewLQueries !== null) {
+                embeddedLView[QUERIES] = declarationViewLQueries.createEmbeddedView(embeddedTView);
+            }
+            renderView(embeddedTView, embeddedLView, context);
+            return new ViewRef(embeddedLView);
+        }
+    };
+    /**
+     * Creates a TemplateRef given a node.
+     *
+     * @returns The TemplateRef instance to use
+     */
+    function injectTemplateRef() {
+        return createTemplateRef(getCurrentTNode(), getLView());
+    }
+    /**
+     * Creates a TemplateRef and stores it on the injector.
+     *
+     * @param hostTNode The node on which a TemplateRef is requested
+     * @param hostLView The `LView` to which the node belongs
+     * @returns The TemplateRef instance or null if we can't create a TemplateRef on a given node type
+     */
+    function createTemplateRef(hostTNode, hostLView) {
+        if (hostTNode.type & 4 /* Container */) {
+            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
+            return new R3TemplateRef(hostLView, hostTNode, createElementRef(hostTNode, hostLView));
+        }
+        return null;
+    }
+
+    const SWITCH_VIEW_CONTAINER_REF_FACTORY__POST_R3__ = injectViewContainerRef;
+    const SWITCH_VIEW_CONTAINER_REF_FACTORY = SWITCH_VIEW_CONTAINER_REF_FACTORY__POST_R3__;
+    /**
+     * Represents a container where one or more views can be attached to a component.
+     *
+     * Can contain *host views* (created by instantiating a
+     * component with the `createComponent()` method), and *embedded views*
+     * (created by instantiating a `TemplateRef` with the `createEmbeddedView()` method).
+     *
+     * A view container instance can contain other view containers,
+     * creating a [view hierarchy](guide/glossary#view-tree).
+     *
+     * @see `ComponentRef`
+     * @see `EmbeddedViewRef`
+     *
+     * @publicApi
+     */
+    class ViewContainerRef {
+    }
+    /**
+     * @internal
+     * @nocollapse
+     */
+    ViewContainerRef.__NG_ELEMENT_ID__ = SWITCH_VIEW_CONTAINER_REF_FACTORY;
+    /**
+     * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
+     * already exists, retrieves the existing ViewContainerRef.
+     *
+     * @returns The ViewContainerRef instance to use
+     */
+    function injectViewContainerRef() {
+        const previousTNode = getCurrentTNode();
+        return createContainerRef(previousTNode, getLView());
+    }
+    const VE_ViewContainerRef = ViewContainerRef;
+    const R3ViewContainerRef = class ViewContainerRef extends VE_ViewContainerRef {
+        constructor(_lContainer, _hostTNode, _hostLView) {
+            super();
+            this._lContainer = _lContainer;
+            this._hostTNode = _hostTNode;
+            this._hostLView = _hostLView;
+        }
+        get element() {
+            return createElementRef(this._hostTNode, this._hostLView);
+        }
+        get injector() {
+            return new NodeInjector(this._hostTNode, this._hostLView);
+        }
+        /** @deprecated No replacement */
+        get parentInjector() {
+            const parentLocation = getParentInjectorLocation(this._hostTNode, this._hostLView);
+            if (hasParentInjector(parentLocation)) {
+                const parentView = getParentInjectorView(parentLocation, this._hostLView);
+                const injectorIndex = getParentInjectorIndex(parentLocation);
+                ngDevMode && assertNodeInjector(parentView, injectorIndex);
+                const parentTNode = parentView[TVIEW].data[injectorIndex + 8 /* TNODE */];
+                return new NodeInjector(parentTNode, parentView);
+            }
+            else {
+                return new NodeInjector(null, this._hostLView);
+            }
+        }
+        clear() {
+            while (this.length > 0) {
+                this.remove(this.length - 1);
+            }
+        }
+        get(index) {
+            const viewRefs = getViewRefs(this._lContainer);
+            return viewRefs !== null && viewRefs[index] || null;
+        }
+        get length() {
+            return this._lContainer.length - CONTAINER_HEADER_OFFSET;
+        }
+        createEmbeddedView(templateRef, context, index) {
+            const viewRef = templateRef.createEmbeddedView(context || {});
+            this.insert(viewRef, index);
+            return viewRef;
+        }
+        createComponent(componentFactoryOrType, indexOrOptions, injector, projectableNodes, ngModuleRef) {
+            const isComponentFactory = componentFactoryOrType && !isType(componentFactoryOrType);
+            let index;
+            // This function supports 2 signatures and we need to handle options correctly for both:
+            //   1. When first argument is a Component type. This signature also requires extra
+            //      options to be provided as as object (more ergonomic option).
+            //   2. First argument is a Component factory. In this case extra options are represented as
+            //      positional arguments. This signature is less ergonomic and will be deprecated.
+            if (isComponentFactory) {
+                if (ngDevMode) {
+                    assertEqual(typeof indexOrOptions !== 'object', true, 'It looks like Component factory was provided as the first argument ' +
+                        'and an options object as the second argument. This combination of arguments ' +
+                        'is incompatible. You can either change the first argument to provide Component ' +
+                        'type or change the second argument to be a number (representing an index at ' +
+                        'which to insert the new component\'s host view into this container)');
+                }
+                index = indexOrOptions;
+            }
+            else {
+                if (ngDevMode) {
+                    assertDefined(getComponentDef(componentFactoryOrType), `Provided Component class doesn't contain Component definition. ` +
+                        `Please check whether provided class has @Component decorator.`);
+                    assertEqual(typeof indexOrOptions !== 'number', true, 'It looks like Component type was provided as the first argument ' +
+                        'and a number (representing an index at which to insert the new component\'s ' +
+                        'host view into this container as the second argument. This combination of arguments ' +
+                        'is incompatible. Please use an object as the second argument instead.');
+                }
+                const options = (indexOrOptions || {});
+                index = options.index;
+                injector = options.injector;
+                projectableNodes = options.projectableNodes;
+                ngModuleRef = options.ngModuleRef;
+            }
+            const componentFactory = isComponentFactory ?
+                componentFactoryOrType :
+                new ComponentFactory$1(getComponentDef(componentFactoryOrType));
+            const contextInjector = injector || this.parentInjector;
+            if (!ngModuleRef && componentFactory.ngModule == null && contextInjector) {
+                // DO NOT REFACTOR. The code here used to have a `value || undefined` expression
+                // which seems to cause internal google apps to fail. This is documented in the
+                // following internal bug issue: go/b/142967802
+                const result = contextInjector.get(NgModuleRef, null);
+                if (result) {
+                    ngModuleRef = result;
+                }
+            }
+            const componentRef = componentFactory.create(contextInjector, projectableNodes, undefined, ngModuleRef);
+            this.insert(componentRef.hostView, index);
+            return componentRef;
+        }
+        insert(viewRef, index) {
+            const lView = viewRef._lView;
+            const tView = lView[TVIEW];
+            if (ngDevMode && viewRef.destroyed) {
+                throw new Error('Cannot insert a destroyed View in a ViewContainer!');
+            }
+            if (viewAttachedToContainer(lView)) {
+                // If view is already attached, detach it first so we clean up references appropriately.
+                const prevIdx = this.indexOf(viewRef);
+                // A view might be attached either to this or a different container. The `prevIdx` for
+                // those cases will be:
+                // equal to -1 for views attached to this ViewContainerRef
+                // >= 0 for views attached to a different ViewContainerRef
+                if (prevIdx !== -1) {
+                    this.detach(prevIdx);
+                }
+                else {
+                    const prevLContainer = lView[PARENT];
+                    ngDevMode &&
+                        assertEqual(isLContainer(prevLContainer), true, 'An attached view should have its PARENT point to a container.');
+                    // We need to re-create a R3ViewContainerRef instance since those are not stored on
+                    // LView (nor anywhere else).
+                    const prevVCRef = new R3ViewContainerRef(prevLContainer, prevLContainer[T_HOST], prevLContainer[PARENT]);
+                    prevVCRef.detach(prevVCRef.indexOf(viewRef));
+                }
+            }
+            // Logical operation of adding `LView` to `LContainer`
+            const adjustedIdx = this._adjustIndex(index);
+            const lContainer = this._lContainer;
+            insertView(tView, lView, lContainer, adjustedIdx);
+            // Physical operation of adding the DOM nodes.
+            const beforeNode = getBeforeNodeForView(adjustedIdx, lContainer);
+            const renderer = lView[RENDERER];
+            const parentRNode = nativeParentNode(renderer, lContainer[NATIVE]);
+            if (parentRNode !== null) {
+                addViewToContainer(tView, lContainer[T_HOST], renderer, lView, parentRNode, beforeNode);
+            }
+            viewRef.attachToViewContainerRef();
+            addToArray(getOrCreateViewRefs(lContainer), adjustedIdx, viewRef);
+            return viewRef;
+        }
+        move(viewRef, newIndex) {
+            if (ngDevMode && viewRef.destroyed) {
+                throw new Error('Cannot move a destroyed View in a ViewContainer!');
+            }
+            return this.insert(viewRef, newIndex);
+        }
+        indexOf(viewRef) {
+            const viewRefsArr = getViewRefs(this._lContainer);
+            return viewRefsArr !== null ? viewRefsArr.indexOf(viewRef) : -1;
+        }
+        remove(index) {
+            const adjustedIdx = this._adjustIndex(index, -1);
+            const detachedView = detachView(this._lContainer, adjustedIdx);
+            if (detachedView) {
+                // Before destroying the view, remove it from the container's array of `ViewRef`s.
+                // This ensures the view container length is updated before calling
+                // `destroyLView`, which could recursively call view container methods that
+                // rely on an accurate container length.
+                // (e.g. a method on this view container being called by a child directive's OnDestroy
+                // lifecycle hook)
+                removeFromArray(getOrCreateViewRefs(this._lContainer), adjustedIdx);
+                destroyLView(detachedView[TVIEW], detachedView);
+            }
+        }
+        detach(index) {
+            const adjustedIdx = this._adjustIndex(index, -1);
+            const view = detachView(this._lContainer, adjustedIdx);
+            const wasDetached = view && removeFromArray(getOrCreateViewRefs(this._lContainer), adjustedIdx) != null;
+            return wasDetached ? new ViewRef(view) : null;
+        }
+        _adjustIndex(index, shift = 0) {
+            if (index == null) {
+                return this.length + shift;
+            }
+            if (ngDevMode) {
+                assertGreaterThan(index, -1, `ViewRef index must be positive, got ${index}`);
+                // +1 because it's legal to insert at the end.
+                assertLessThan(index, this.length + 1 + shift, 'index');
+            }
+            return index;
+        }
+    };
+    function getViewRefs(lContainer) {
+        return lContainer[VIEW_REFS];
+    }
+    function getOrCreateViewRefs(lContainer) {
+        return (lContainer[VIEW_REFS] || (lContainer[VIEW_REFS] = []));
+    }
+    /**
+     * Creates a ViewContainerRef and stores it on the injector.
+     *
+     * @param ViewContainerRefToken The ViewContainerRef type
+     * @param ElementRefToken The ElementRef type
+     * @param hostTNode The node that is requesting a ViewContainerRef
+     * @param hostLView The view to which the node belongs
+     * @returns The ViewContainerRef instance to use
+     */
+    function createContainerRef(hostTNode, hostLView) {
+        ngDevMode && assertTNodeType(hostTNode, 12 /* AnyContainer */ | 3 /* AnyRNode */);
+        let lContainer;
+        const slotValue = hostLView[hostTNode.index];
+        if (isLContainer(slotValue)) {
+            // If the host is a container, we don't need to create a new LContainer
+            lContainer = slotValue;
+        }
+        else {
+            let commentNode;
+            // If the host is an element container, the native host element is guaranteed to be a
+            // comment and we can reuse that comment as anchor element for the new LContainer.
+            // The comment node in question is already part of the DOM structure so we don't need to append
+            // it again.
+            if (hostTNode.type & 8 /* ElementContainer */) {
+                commentNode = unwrapRNode(slotValue);
+            }
+            else {
+                // If the host is a regular element, we have to insert a comment node manually which will
+                // be used as an anchor when inserting elements. In this specific case we use low-level DOM
+                // manipulation to insert it.
+                const renderer = hostLView[RENDERER];
+                ngDevMode && ngDevMode.rendererCreateComment++;
+                commentNode = renderer.createComment(ngDevMode ? 'container' : '');
+                const hostNative = getNativeByTNode(hostTNode, hostLView);
+                const parentOfHostNative = nativeParentNode(renderer, hostNative);
+                nativeInsertBefore(renderer, parentOfHostNative, commentNode, nativeNextSibling(renderer, hostNative), false);
+            }
+            hostLView[hostTNode.index] = lContainer =
+                createLContainer(slotValue, hostLView, commentNode, hostTNode);
+            addToViewTree(hostLView, lContainer);
+        }
+        return new R3ViewContainerRef(lContainer, hostTNode, hostLView);
     }
 
     /**
@@ -56640,6 +55480,1166 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         return value;
     }
 
+    const SWITCH_CHANGE_DETECTOR_REF_FACTORY__POST_R3__ = injectChangeDetectorRef;
+    const SWITCH_CHANGE_DETECTOR_REF_FACTORY = SWITCH_CHANGE_DETECTOR_REF_FACTORY__POST_R3__;
+    /**
+     * Base class that provides change detection functionality.
+     * A change-detection tree collects all views that are to be checked for changes.
+     * Use the methods to add and remove views from the tree, initiate change-detection,
+     * and explicitly mark views as _dirty_, meaning that they have changed and need to be re-rendered.
+     *
+     * @see [Using change detection hooks](guide/lifecycle-hooks#using-change-detection-hooks)
+     * @see [Defining custom change detection](guide/lifecycle-hooks#defining-custom-change-detection)
+     *
+     * @usageNotes
+     *
+     * The following examples demonstrate how to modify default change-detection behavior
+     * to perform explicit detection when needed.
+     *
+     * ### Use `markForCheck()` with `CheckOnce` strategy
+     *
+     * The following example sets the `OnPush` change-detection strategy for a component
+     * (`CheckOnce`, rather than the default `CheckAlways`), then forces a second check
+     * after an interval. See [live demo](https://plnkr.co/edit/GC512b?p=preview).
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts"
+     * region="mark-for-check"></code-example>
+     *
+     * ### Detach change detector to limit how often check occurs
+     *
+     * The following example defines a component with a large list of read-only data
+     * that is expected to change constantly, many times per second.
+     * To improve performance, we want to check and update the list
+     * less often than the changes actually occur. To do that, we detach
+     * the component's change detector and perform an explicit local check every five seconds.
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts" region="detach"></code-example>
+     *
+     *
+     * ### Reattaching a detached component
+     *
+     * The following example creates a component displaying live data.
+     * The component detaches its change detector from the main change detector tree
+     * when the `live` property is set to false, and reattaches it when the property
+     * becomes true.
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts" region="reattach"></code-example>
+     *
+     * @publicApi
+     */
+    class ChangeDetectorRef {
+    }
+    /**
+     * @internal
+     * @nocollapse
+     */
+    ChangeDetectorRef.__NG_ELEMENT_ID__ = SWITCH_CHANGE_DETECTOR_REF_FACTORY;
+    /** Returns a ChangeDetectorRef (a.k.a. a ViewRef) */
+    function injectChangeDetectorRef(flags) {
+        return createViewRef(getCurrentTNode(), getLView(), (flags & 16 /* ForPipe */) === 16 /* ForPipe */);
+    }
+    /**
+     * Creates a ViewRef and stores it on the injector as ChangeDetectorRef (public alias).
+     *
+     * @param tNode The node that is requesting a ChangeDetectorRef
+     * @param lView The view to which the node belongs
+     * @param isPipe Whether the view is being injected into a pipe.
+     * @returns The ChangeDetectorRef to use
+     */
+    function createViewRef(tNode, lView, isPipe) {
+        if (isComponentHost(tNode) && !isPipe) {
+            // The LView represents the location where the component is declared.
+            // Instead we want the LView for the component View and so we need to look it up.
+            const componentView = getComponentLViewByIndex(tNode.index, lView); // look down
+            return new ViewRef(componentView, componentView);
+        }
+        else if (tNode.type & (3 /* AnyRNode */ | 12 /* AnyContainer */ | 32 /* Icu */)) {
+            // The LView represents the location where the injection is requested from.
+            // We need to locate the containing LView (in case where the `lView` is an embedded view)
+            const hostComponentView = lView[DECLARATION_COMPONENT_VIEW]; // look up
+            return new ViewRef(hostComponentView, lView);
+        }
+        return null;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class DefaultIterableDifferFactory {
+        constructor() { }
+        supports(obj) {
+            return isListLikeIterable(obj);
+        }
+        create(trackByFn) {
+            return new DefaultIterableDiffer(trackByFn);
+        }
+    }
+    const trackByIdentity = (index, item) => item;
+    /**
+     * @deprecated v4.0.0 - Should not be part of public API.
+     * @publicApi
+     */
+    class DefaultIterableDiffer {
+        constructor(trackByFn) {
+            this.length = 0;
+            // Keeps track of the used records at any point in time (during & across `_check()` calls)
+            this._linkedRecords = null;
+            // Keeps track of the removed records at any point in time during `_check()` calls.
+            this._unlinkedRecords = null;
+            this._previousItHead = null;
+            this._itHead = null;
+            this._itTail = null;
+            this._additionsHead = null;
+            this._additionsTail = null;
+            this._movesHead = null;
+            this._movesTail = null;
+            this._removalsHead = null;
+            this._removalsTail = null;
+            // Keeps track of records where custom track by is the same, but item identity has changed
+            this._identityChangesHead = null;
+            this._identityChangesTail = null;
+            this._trackByFn = trackByFn || trackByIdentity;
+        }
+        forEachItem(fn) {
+            let record;
+            for (record = this._itHead; record !== null; record = record._next) {
+                fn(record);
+            }
+        }
+        forEachOperation(fn) {
+            let nextIt = this._itHead;
+            let nextRemove = this._removalsHead;
+            let addRemoveOffset = 0;
+            let moveOffsets = null;
+            while (nextIt || nextRemove) {
+                // Figure out which is the next record to process
+                // Order: remove, add, move
+                const record = !nextRemove ||
+                    nextIt &&
+                        nextIt.currentIndex <
+                            getPreviousIndex(nextRemove, addRemoveOffset, moveOffsets) ?
+                    nextIt :
+                    nextRemove;
+                const adjPreviousIndex = getPreviousIndex(record, addRemoveOffset, moveOffsets);
+                const currentIndex = record.currentIndex;
+                // consume the item, and adjust the addRemoveOffset and update moveDistance if necessary
+                if (record === nextRemove) {
+                    addRemoveOffset--;
+                    nextRemove = nextRemove._nextRemoved;
+                }
+                else {
+                    nextIt = nextIt._next;
+                    if (record.previousIndex == null) {
+                        addRemoveOffset++;
+                    }
+                    else {
+                        // INVARIANT:  currentIndex < previousIndex
+                        if (!moveOffsets)
+                            moveOffsets = [];
+                        const localMovePreviousIndex = adjPreviousIndex - addRemoveOffset;
+                        const localCurrentIndex = currentIndex - addRemoveOffset;
+                        if (localMovePreviousIndex != localCurrentIndex) {
+                            for (let i = 0; i < localMovePreviousIndex; i++) {
+                                const offset = i < moveOffsets.length ? moveOffsets[i] : (moveOffsets[i] = 0);
+                                const index = offset + i;
+                                if (localCurrentIndex <= index && index < localMovePreviousIndex) {
+                                    moveOffsets[i] = offset + 1;
+                                }
+                            }
+                            const previousIndex = record.previousIndex;
+                            moveOffsets[previousIndex] = localCurrentIndex - localMovePreviousIndex;
+                        }
+                    }
+                }
+                if (adjPreviousIndex !== currentIndex) {
+                    fn(record, adjPreviousIndex, currentIndex);
+                }
+            }
+        }
+        forEachPreviousItem(fn) {
+            let record;
+            for (record = this._previousItHead; record !== null; record = record._nextPrevious) {
+                fn(record);
+            }
+        }
+        forEachAddedItem(fn) {
+            let record;
+            for (record = this._additionsHead; record !== null; record = record._nextAdded) {
+                fn(record);
+            }
+        }
+        forEachMovedItem(fn) {
+            let record;
+            for (record = this._movesHead; record !== null; record = record._nextMoved) {
+                fn(record);
+            }
+        }
+        forEachRemovedItem(fn) {
+            let record;
+            for (record = this._removalsHead; record !== null; record = record._nextRemoved) {
+                fn(record);
+            }
+        }
+        forEachIdentityChange(fn) {
+            let record;
+            for (record = this._identityChangesHead; record !== null; record = record._nextIdentityChange) {
+                fn(record);
+            }
+        }
+        diff(collection) {
+            if (collection == null)
+                collection = [];
+            if (!isListLikeIterable(collection)) {
+                throw new Error(`Error trying to diff '${stringify$1(collection)}'. Only arrays and iterables are allowed`);
+            }
+            if (this.check(collection)) {
+                return this;
+            }
+            else {
+                return null;
+            }
+        }
+        onDestroy() { }
+        check(collection) {
+            this._reset();
+            let record = this._itHead;
+            let mayBeDirty = false;
+            let index;
+            let item;
+            let itemTrackBy;
+            if (Array.isArray(collection)) {
+                this.length = collection.length;
+                for (let index = 0; index < this.length; index++) {
+                    item = collection[index];
+                    itemTrackBy = this._trackByFn(index, item);
+                    if (record === null || !Object.is(record.trackById, itemTrackBy)) {
+                        record = this._mismatch(record, item, itemTrackBy, index);
+                        mayBeDirty = true;
+                    }
+                    else {
+                        if (mayBeDirty) {
+                            // TODO(misko): can we limit this to duplicates only?
+                            record = this._verifyReinsertion(record, item, itemTrackBy, index);
+                        }
+                        if (!Object.is(record.item, item))
+                            this._addIdentityChange(record, item);
+                    }
+                    record = record._next;
+                }
+            }
+            else {
+                index = 0;
+                iterateListLike(collection, (item) => {
+                    itemTrackBy = this._trackByFn(index, item);
+                    if (record === null || !Object.is(record.trackById, itemTrackBy)) {
+                        record = this._mismatch(record, item, itemTrackBy, index);
+                        mayBeDirty = true;
+                    }
+                    else {
+                        if (mayBeDirty) {
+                            // TODO(misko): can we limit this to duplicates only?
+                            record = this._verifyReinsertion(record, item, itemTrackBy, index);
+                        }
+                        if (!Object.is(record.item, item))
+                            this._addIdentityChange(record, item);
+                    }
+                    record = record._next;
+                    index++;
+                });
+                this.length = index;
+            }
+            this._truncate(record);
+            this.collection = collection;
+            return this.isDirty;
+        }
+        /* CollectionChanges is considered dirty if it has any additions, moves, removals, or identity
+         * changes.
+         */
+        get isDirty() {
+            return this._additionsHead !== null || this._movesHead !== null ||
+                this._removalsHead !== null || this._identityChangesHead !== null;
+        }
+        /**
+         * Reset the state of the change objects to show no changes. This means set previousKey to
+         * currentKey, and clear all of the queues (additions, moves, removals).
+         * Set the previousIndexes of moved and added items to their currentIndexes
+         * Reset the list of additions, moves and removals
+         *
+         * @internal
+         */
+        _reset() {
+            if (this.isDirty) {
+                let record;
+                for (record = this._previousItHead = this._itHead; record !== null; record = record._next) {
+                    record._nextPrevious = record._next;
+                }
+                for (record = this._additionsHead; record !== null; record = record._nextAdded) {
+                    record.previousIndex = record.currentIndex;
+                }
+                this._additionsHead = this._additionsTail = null;
+                for (record = this._movesHead; record !== null; record = record._nextMoved) {
+                    record.previousIndex = record.currentIndex;
+                }
+                this._movesHead = this._movesTail = null;
+                this._removalsHead = this._removalsTail = null;
+                this._identityChangesHead = this._identityChangesTail = null;
+                // TODO(vicb): when assert gets supported
+                // assert(!this.isDirty);
+            }
+        }
+        /**
+         * This is the core function which handles differences between collections.
+         *
+         * - `record` is the record which we saw at this position last time. If null then it is a new
+         *   item.
+         * - `item` is the current item in the collection
+         * - `index` is the position of the item in the collection
+         *
+         * @internal
+         */
+        _mismatch(record, item, itemTrackBy, index) {
+            // The previous record after which we will append the current one.
+            let previousRecord;
+            if (record === null) {
+                previousRecord = this._itTail;
+            }
+            else {
+                previousRecord = record._prev;
+                // Remove the record from the collection since we know it does not match the item.
+                this._remove(record);
+            }
+            // See if we have evicted the item, which used to be at some anterior position of _itHead list.
+            record = this._unlinkedRecords === null ? null : this._unlinkedRecords.get(itemTrackBy, null);
+            if (record !== null) {
+                // It is an item which we have evicted earlier: reinsert it back into the list.
+                // But first we need to check if identity changed, so we can update in view if necessary.
+                if (!Object.is(record.item, item))
+                    this._addIdentityChange(record, item);
+                this._reinsertAfter(record, previousRecord, index);
+            }
+            else {
+                // Attempt to see if the item is at some posterior position of _itHead list.
+                record = this._linkedRecords === null ? null : this._linkedRecords.get(itemTrackBy, index);
+                if (record !== null) {
+                    // We have the item in _itHead at/after `index` position. We need to move it forward in the
+                    // collection.
+                    // But first we need to check if identity changed, so we can update in view if necessary.
+                    if (!Object.is(record.item, item))
+                        this._addIdentityChange(record, item);
+                    this._moveAfter(record, previousRecord, index);
+                }
+                else {
+                    // It is a new item: add it.
+                    record =
+                        this._addAfter(new IterableChangeRecord_(item, itemTrackBy), previousRecord, index);
+                }
+            }
+            return record;
+        }
+        /**
+         * This check is only needed if an array contains duplicates. (Short circuit of nothing dirty)
+         *
+         * Use case: `[a, a]` => `[b, a, a]`
+         *
+         * If we did not have this check then the insertion of `b` would:
+         *   1) evict first `a`
+         *   2) insert `b` at `0` index.
+         *   3) leave `a` at index `1` as is. <-- this is wrong!
+         *   3) reinsert `a` at index 2. <-- this is wrong!
+         *
+         * The correct behavior is:
+         *   1) evict first `a`
+         *   2) insert `b` at `0` index.
+         *   3) reinsert `a` at index 1.
+         *   3) move `a` at from `1` to `2`.
+         *
+         *
+         * Double check that we have not evicted a duplicate item. We need to check if the item type may
+         * have already been removed:
+         * The insertion of b will evict the first 'a'. If we don't reinsert it now it will be reinserted
+         * at the end. Which will show up as the two 'a's switching position. This is incorrect, since a
+         * better way to think of it is as insert of 'b' rather then switch 'a' with 'b' and then add 'a'
+         * at the end.
+         *
+         * @internal
+         */
+        _verifyReinsertion(record, item, itemTrackBy, index) {
+            let reinsertRecord = this._unlinkedRecords === null ? null : this._unlinkedRecords.get(itemTrackBy, null);
+            if (reinsertRecord !== null) {
+                record = this._reinsertAfter(reinsertRecord, record._prev, index);
+            }
+            else if (record.currentIndex != index) {
+                record.currentIndex = index;
+                this._addToMoves(record, index);
+            }
+            return record;
+        }
+        /**
+         * Get rid of any excess {@link IterableChangeRecord_}s from the previous collection
+         *
+         * - `record` The first excess {@link IterableChangeRecord_}.
+         *
+         * @internal
+         */
+        _truncate(record) {
+            // Anything after that needs to be removed;
+            while (record !== null) {
+                const nextRecord = record._next;
+                this._addToRemovals(this._unlink(record));
+                record = nextRecord;
+            }
+            if (this._unlinkedRecords !== null) {
+                this._unlinkedRecords.clear();
+            }
+            if (this._additionsTail !== null) {
+                this._additionsTail._nextAdded = null;
+            }
+            if (this._movesTail !== null) {
+                this._movesTail._nextMoved = null;
+            }
+            if (this._itTail !== null) {
+                this._itTail._next = null;
+            }
+            if (this._removalsTail !== null) {
+                this._removalsTail._nextRemoved = null;
+            }
+            if (this._identityChangesTail !== null) {
+                this._identityChangesTail._nextIdentityChange = null;
+            }
+        }
+        /** @internal */
+        _reinsertAfter(record, prevRecord, index) {
+            if (this._unlinkedRecords !== null) {
+                this._unlinkedRecords.remove(record);
+            }
+            const prev = record._prevRemoved;
+            const next = record._nextRemoved;
+            if (prev === null) {
+                this._removalsHead = next;
+            }
+            else {
+                prev._nextRemoved = next;
+            }
+            if (next === null) {
+                this._removalsTail = prev;
+            }
+            else {
+                next._prevRemoved = prev;
+            }
+            this._insertAfter(record, prevRecord, index);
+            this._addToMoves(record, index);
+            return record;
+        }
+        /** @internal */
+        _moveAfter(record, prevRecord, index) {
+            this._unlink(record);
+            this._insertAfter(record, prevRecord, index);
+            this._addToMoves(record, index);
+            return record;
+        }
+        /** @internal */
+        _addAfter(record, prevRecord, index) {
+            this._insertAfter(record, prevRecord, index);
+            if (this._additionsTail === null) {
+                // TODO(vicb):
+                // assert(this._additionsHead === null);
+                this._additionsTail = this._additionsHead = record;
+            }
+            else {
+                // TODO(vicb):
+                // assert(_additionsTail._nextAdded === null);
+                // assert(record._nextAdded === null);
+                this._additionsTail = this._additionsTail._nextAdded = record;
+            }
+            return record;
+        }
+        /** @internal */
+        _insertAfter(record, prevRecord, index) {
+            // TODO(vicb):
+            // assert(record != prevRecord);
+            // assert(record._next === null);
+            // assert(record._prev === null);
+            const next = prevRecord === null ? this._itHead : prevRecord._next;
+            // TODO(vicb):
+            // assert(next != record);
+            // assert(prevRecord != record);
+            record._next = next;
+            record._prev = prevRecord;
+            if (next === null) {
+                this._itTail = record;
+            }
+            else {
+                next._prev = record;
+            }
+            if (prevRecord === null) {
+                this._itHead = record;
+            }
+            else {
+                prevRecord._next = record;
+            }
+            if (this._linkedRecords === null) {
+                this._linkedRecords = new _DuplicateMap();
+            }
+            this._linkedRecords.put(record);
+            record.currentIndex = index;
+            return record;
+        }
+        /** @internal */
+        _remove(record) {
+            return this._addToRemovals(this._unlink(record));
+        }
+        /** @internal */
+        _unlink(record) {
+            if (this._linkedRecords !== null) {
+                this._linkedRecords.remove(record);
+            }
+            const prev = record._prev;
+            const next = record._next;
+            // TODO(vicb):
+            // assert((record._prev = null) === null);
+            // assert((record._next = null) === null);
+            if (prev === null) {
+                this._itHead = next;
+            }
+            else {
+                prev._next = next;
+            }
+            if (next === null) {
+                this._itTail = prev;
+            }
+            else {
+                next._prev = prev;
+            }
+            return record;
+        }
+        /** @internal */
+        _addToMoves(record, toIndex) {
+            // TODO(vicb):
+            // assert(record._nextMoved === null);
+            if (record.previousIndex === toIndex) {
+                return record;
+            }
+            if (this._movesTail === null) {
+                // TODO(vicb):
+                // assert(_movesHead === null);
+                this._movesTail = this._movesHead = record;
+            }
+            else {
+                // TODO(vicb):
+                // assert(_movesTail._nextMoved === null);
+                this._movesTail = this._movesTail._nextMoved = record;
+            }
+            return record;
+        }
+        _addToRemovals(record) {
+            if (this._unlinkedRecords === null) {
+                this._unlinkedRecords = new _DuplicateMap();
+            }
+            this._unlinkedRecords.put(record);
+            record.currentIndex = null;
+            record._nextRemoved = null;
+            if (this._removalsTail === null) {
+                // TODO(vicb):
+                // assert(_removalsHead === null);
+                this._removalsTail = this._removalsHead = record;
+                record._prevRemoved = null;
+            }
+            else {
+                // TODO(vicb):
+                // assert(_removalsTail._nextRemoved === null);
+                // assert(record._nextRemoved === null);
+                record._prevRemoved = this._removalsTail;
+                this._removalsTail = this._removalsTail._nextRemoved = record;
+            }
+            return record;
+        }
+        /** @internal */
+        _addIdentityChange(record, item) {
+            record.item = item;
+            if (this._identityChangesTail === null) {
+                this._identityChangesTail = this._identityChangesHead = record;
+            }
+            else {
+                this._identityChangesTail = this._identityChangesTail._nextIdentityChange = record;
+            }
+            return record;
+        }
+    }
+    class IterableChangeRecord_ {
+        constructor(item, trackById) {
+            this.item = item;
+            this.trackById = trackById;
+            this.currentIndex = null;
+            this.previousIndex = null;
+            /** @internal */
+            this._nextPrevious = null;
+            /** @internal */
+            this._prev = null;
+            /** @internal */
+            this._next = null;
+            /** @internal */
+            this._prevDup = null;
+            /** @internal */
+            this._nextDup = null;
+            /** @internal */
+            this._prevRemoved = null;
+            /** @internal */
+            this._nextRemoved = null;
+            /** @internal */
+            this._nextAdded = null;
+            /** @internal */
+            this._nextMoved = null;
+            /** @internal */
+            this._nextIdentityChange = null;
+        }
+    }
+    // A linked list of IterableChangeRecords with the same IterableChangeRecord_.item
+    class _DuplicateItemRecordList {
+        constructor() {
+            /** @internal */
+            this._head = null;
+            /** @internal */
+            this._tail = null;
+        }
+        /**
+         * Append the record to the list of duplicates.
+         *
+         * Note: by design all records in the list of duplicates hold the same value in record.item.
+         */
+        add(record) {
+            if (this._head === null) {
+                this._head = this._tail = record;
+                record._nextDup = null;
+                record._prevDup = null;
+            }
+            else {
+                // TODO(vicb):
+                // assert(record.item ==  _head.item ||
+                //       record.item is num && record.item.isNaN && _head.item is num && _head.item.isNaN);
+                this._tail._nextDup = record;
+                record._prevDup = this._tail;
+                record._nextDup = null;
+                this._tail = record;
+            }
+        }
+        // Returns a IterableChangeRecord_ having IterableChangeRecord_.trackById == trackById and
+        // IterableChangeRecord_.currentIndex >= atOrAfterIndex
+        get(trackById, atOrAfterIndex) {
+            let record;
+            for (record = this._head; record !== null; record = record._nextDup) {
+                if ((atOrAfterIndex === null || atOrAfterIndex <= record.currentIndex) &&
+                    Object.is(record.trackById, trackById)) {
+                    return record;
+                }
+            }
+            return null;
+        }
+        /**
+         * Remove one {@link IterableChangeRecord_} from the list of duplicates.
+         *
+         * Returns whether the list of duplicates is empty.
+         */
+        remove(record) {
+            // TODO(vicb):
+            // assert(() {
+            //  // verify that the record being removed is in the list.
+            //  for (IterableChangeRecord_ cursor = _head; cursor != null; cursor = cursor._nextDup) {
+            //    if (identical(cursor, record)) return true;
+            //  }
+            //  return false;
+            //});
+            const prev = record._prevDup;
+            const next = record._nextDup;
+            if (prev === null) {
+                this._head = next;
+            }
+            else {
+                prev._nextDup = next;
+            }
+            if (next === null) {
+                this._tail = prev;
+            }
+            else {
+                next._prevDup = prev;
+            }
+            return this._head === null;
+        }
+    }
+    class _DuplicateMap {
+        constructor() {
+            this.map = new Map();
+        }
+        put(record) {
+            const key = record.trackById;
+            let duplicates = this.map.get(key);
+            if (!duplicates) {
+                duplicates = new _DuplicateItemRecordList();
+                this.map.set(key, duplicates);
+            }
+            duplicates.add(record);
+        }
+        /**
+         * Retrieve the `value` using key. Because the IterableChangeRecord_ value may be one which we
+         * have already iterated over, we use the `atOrAfterIndex` to pretend it is not there.
+         *
+         * Use case: `[a, b, c, a, a]` if we are at index `3` which is the second `a` then asking if we
+         * have any more `a`s needs to return the second `a`.
+         */
+        get(trackById, atOrAfterIndex) {
+            const key = trackById;
+            const recordList = this.map.get(key);
+            return recordList ? recordList.get(trackById, atOrAfterIndex) : null;
+        }
+        /**
+         * Removes a {@link IterableChangeRecord_} from the list of duplicates.
+         *
+         * The list of duplicates also is removed from the map if it gets empty.
+         */
+        remove(record) {
+            const key = record.trackById;
+            const recordList = this.map.get(key);
+            // Remove the list of duplicates when it gets empty
+            if (recordList.remove(record)) {
+                this.map.delete(key);
+            }
+            return record;
+        }
+        get isEmpty() {
+            return this.map.size === 0;
+        }
+        clear() {
+            this.map.clear();
+        }
+    }
+    function getPreviousIndex(item, addRemoveOffset, moveOffsets) {
+        const previousIndex = item.previousIndex;
+        if (previousIndex === null)
+            return previousIndex;
+        let moveOffset = 0;
+        if (moveOffsets && previousIndex < moveOffsets.length) {
+            moveOffset = moveOffsets[previousIndex];
+        }
+        return previousIndex + addRemoveOffset + moveOffset;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class DefaultKeyValueDifferFactory {
+        constructor() { }
+        supports(obj) {
+            return obj instanceof Map || isJsObject(obj);
+        }
+        create() {
+            return new DefaultKeyValueDiffer();
+        }
+    }
+    class DefaultKeyValueDiffer {
+        constructor() {
+            this._records = new Map();
+            this._mapHead = null;
+            // _appendAfter is used in the check loop
+            this._appendAfter = null;
+            this._previousMapHead = null;
+            this._changesHead = null;
+            this._changesTail = null;
+            this._additionsHead = null;
+            this._additionsTail = null;
+            this._removalsHead = null;
+            this._removalsTail = null;
+        }
+        get isDirty() {
+            return this._additionsHead !== null || this._changesHead !== null ||
+                this._removalsHead !== null;
+        }
+        forEachItem(fn) {
+            let record;
+            for (record = this._mapHead; record !== null; record = record._next) {
+                fn(record);
+            }
+        }
+        forEachPreviousItem(fn) {
+            let record;
+            for (record = this._previousMapHead; record !== null; record = record._nextPrevious) {
+                fn(record);
+            }
+        }
+        forEachChangedItem(fn) {
+            let record;
+            for (record = this._changesHead; record !== null; record = record._nextChanged) {
+                fn(record);
+            }
+        }
+        forEachAddedItem(fn) {
+            let record;
+            for (record = this._additionsHead; record !== null; record = record._nextAdded) {
+                fn(record);
+            }
+        }
+        forEachRemovedItem(fn) {
+            let record;
+            for (record = this._removalsHead; record !== null; record = record._nextRemoved) {
+                fn(record);
+            }
+        }
+        diff(map) {
+            if (!map) {
+                map = new Map();
+            }
+            else if (!(map instanceof Map || isJsObject(map))) {
+                throw new Error(`Error trying to diff '${stringify$1(map)}'. Only maps and objects are allowed`);
+            }
+            return this.check(map) ? this : null;
+        }
+        onDestroy() { }
+        /**
+         * Check the current state of the map vs the previous.
+         * The algorithm is optimised for when the keys do no change.
+         */
+        check(map) {
+            this._reset();
+            let insertBefore = this._mapHead;
+            this._appendAfter = null;
+            this._forEach(map, (value, key) => {
+                if (insertBefore && insertBefore.key === key) {
+                    this._maybeAddToChanges(insertBefore, value);
+                    this._appendAfter = insertBefore;
+                    insertBefore = insertBefore._next;
+                }
+                else {
+                    const record = this._getOrCreateRecordForKey(key, value);
+                    insertBefore = this._insertBeforeOrAppend(insertBefore, record);
+                }
+            });
+            // Items remaining at the end of the list have been deleted
+            if (insertBefore) {
+                if (insertBefore._prev) {
+                    insertBefore._prev._next = null;
+                }
+                this._removalsHead = insertBefore;
+                for (let record = insertBefore; record !== null; record = record._nextRemoved) {
+                    if (record === this._mapHead) {
+                        this._mapHead = null;
+                    }
+                    this._records.delete(record.key);
+                    record._nextRemoved = record._next;
+                    record.previousValue = record.currentValue;
+                    record.currentValue = null;
+                    record._prev = null;
+                    record._next = null;
+                }
+            }
+            // Make sure tails have no next records from previous runs
+            if (this._changesTail)
+                this._changesTail._nextChanged = null;
+            if (this._additionsTail)
+                this._additionsTail._nextAdded = null;
+            return this.isDirty;
+        }
+        /**
+         * Inserts a record before `before` or append at the end of the list when `before` is null.
+         *
+         * Notes:
+         * - This method appends at `this._appendAfter`,
+         * - This method updates `this._appendAfter`,
+         * - The return value is the new value for the insertion pointer.
+         */
+        _insertBeforeOrAppend(before, record) {
+            if (before) {
+                const prev = before._prev;
+                record._next = before;
+                record._prev = prev;
+                before._prev = record;
+                if (prev) {
+                    prev._next = record;
+                }
+                if (before === this._mapHead) {
+                    this._mapHead = record;
+                }
+                this._appendAfter = before;
+                return before;
+            }
+            if (this._appendAfter) {
+                this._appendAfter._next = record;
+                record._prev = this._appendAfter;
+            }
+            else {
+                this._mapHead = record;
+            }
+            this._appendAfter = record;
+            return null;
+        }
+        _getOrCreateRecordForKey(key, value) {
+            if (this._records.has(key)) {
+                const record = this._records.get(key);
+                this._maybeAddToChanges(record, value);
+                const prev = record._prev;
+                const next = record._next;
+                if (prev) {
+                    prev._next = next;
+                }
+                if (next) {
+                    next._prev = prev;
+                }
+                record._next = null;
+                record._prev = null;
+                return record;
+            }
+            const record = new KeyValueChangeRecord_(key);
+            this._records.set(key, record);
+            record.currentValue = value;
+            this._addToAdditions(record);
+            return record;
+        }
+        /** @internal */
+        _reset() {
+            if (this.isDirty) {
+                let record;
+                // let `_previousMapHead` contain the state of the map before the changes
+                this._previousMapHead = this._mapHead;
+                for (record = this._previousMapHead; record !== null; record = record._next) {
+                    record._nextPrevious = record._next;
+                }
+                // Update `record.previousValue` with the value of the item before the changes
+                // We need to update all changed items (that's those which have been added and changed)
+                for (record = this._changesHead; record !== null; record = record._nextChanged) {
+                    record.previousValue = record.currentValue;
+                }
+                for (record = this._additionsHead; record != null; record = record._nextAdded) {
+                    record.previousValue = record.currentValue;
+                }
+                this._changesHead = this._changesTail = null;
+                this._additionsHead = this._additionsTail = null;
+                this._removalsHead = null;
+            }
+        }
+        // Add the record or a given key to the list of changes only when the value has actually changed
+        _maybeAddToChanges(record, newValue) {
+            if (!Object.is(newValue, record.currentValue)) {
+                record.previousValue = record.currentValue;
+                record.currentValue = newValue;
+                this._addToChanges(record);
+            }
+        }
+        _addToAdditions(record) {
+            if (this._additionsHead === null) {
+                this._additionsHead = this._additionsTail = record;
+            }
+            else {
+                this._additionsTail._nextAdded = record;
+                this._additionsTail = record;
+            }
+        }
+        _addToChanges(record) {
+            if (this._changesHead === null) {
+                this._changesHead = this._changesTail = record;
+            }
+            else {
+                this._changesTail._nextChanged = record;
+                this._changesTail = record;
+            }
+        }
+        /** @internal */
+        _forEach(obj, fn) {
+            if (obj instanceof Map) {
+                obj.forEach(fn);
+            }
+            else {
+                Object.keys(obj).forEach(k => fn(obj[k], k));
+            }
+        }
+    }
+    class KeyValueChangeRecord_ {
+        constructor(key) {
+            this.key = key;
+            this.previousValue = null;
+            this.currentValue = null;
+            /** @internal */
+            this._nextPrevious = null;
+            /** @internal */
+            this._next = null;
+            /** @internal */
+            this._prev = null;
+            /** @internal */
+            this._nextAdded = null;
+            /** @internal */
+            this._nextRemoved = null;
+            /** @internal */
+            this._nextChanged = null;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function defaultIterableDiffersFactory() {
+        return new IterableDiffers([new DefaultIterableDifferFactory()]);
+    }
+    /**
+     * A repository of different iterable diffing strategies used by NgFor, NgClass, and others.
+     *
+     * @publicApi
+     */
+    class IterableDiffers {
+        constructor(factories) {
+            this.factories = factories;
+        }
+        static create(factories, parent) {
+            if (parent != null) {
+                const copied = parent.factories.slice();
+                factories = factories.concat(copied);
+            }
+            return new IterableDiffers(factories);
+        }
+        /**
+         * Takes an array of {@link IterableDifferFactory} and returns a provider used to extend the
+         * inherited {@link IterableDiffers} instance with the provided factories and return a new
+         * {@link IterableDiffers} instance.
+         *
+         * @usageNotes
+         * ### Example
+         *
+         * The following example shows how to extend an existing list of factories,
+         * which will only be applied to the injector for this component and its children.
+         * This step is all that's required to make a new {@link IterableDiffer} available.
+         *
+         * ```
+         * @Component({
+         *   viewProviders: [
+         *     IterableDiffers.extend([new ImmutableListDiffer()])
+         *   ]
+         * })
+         * ```
+         */
+        static extend(factories) {
+            return {
+                provide: IterableDiffers,
+                useFactory: (parent) => {
+                    // if parent is null, it means that we are in the root injector and we have just overridden
+                    // the default injection mechanism for IterableDiffers, in such a case just assume
+                    // `defaultIterableDiffersFactory`.
+                    return IterableDiffers.create(factories, parent || defaultIterableDiffersFactory());
+                },
+                // Dependency technically isn't optional, but we can provide a better error message this way.
+                deps: [[IterableDiffers, new SkipSelf(), new Optional()]]
+            };
+        }
+        find(iterable) {
+            const factory = this.factories.find(f => f.supports(iterable));
+            if (factory != null) {
+                return factory;
+            }
+            else {
+                throw new Error(`Cannot find a differ supporting object '${iterable}' of type '${getTypeNameForDebugging(iterable)}'`);
+            }
+        }
+    }
+    /** @nocollapse */
+    IterableDiffers.ɵprov = ɵɵdefineInjectable({ token: IterableDiffers, providedIn: 'root', factory: defaultIterableDiffersFactory });
+    function getTypeNameForDebugging(type) {
+        return type['name'] || typeof type;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function defaultKeyValueDiffersFactory() {
+        return new KeyValueDiffers([new DefaultKeyValueDifferFactory()]);
+    }
+    /**
+     * A repository of different Map diffing strategies used by NgClass, NgStyle, and others.
+     *
+     * @publicApi
+     */
+    class KeyValueDiffers {
+        constructor(factories) {
+            this.factories = factories;
+        }
+        static create(factories, parent) {
+            if (parent) {
+                const copied = parent.factories.slice();
+                factories = factories.concat(copied);
+            }
+            return new KeyValueDiffers(factories);
+        }
+        /**
+         * Takes an array of {@link KeyValueDifferFactory} and returns a provider used to extend the
+         * inherited {@link KeyValueDiffers} instance with the provided factories and return a new
+         * {@link KeyValueDiffers} instance.
+         *
+         * @usageNotes
+         * ### Example
+         *
+         * The following example shows how to extend an existing list of factories,
+         * which will only be applied to the injector for this component and its children.
+         * This step is all that's required to make a new {@link KeyValueDiffer} available.
+         *
+         * ```
+         * @Component({
+         *   viewProviders: [
+         *     KeyValueDiffers.extend([new ImmutableMapDiffer()])
+         *   ]
+         * })
+         * ```
+         */
+        static extend(factories) {
+            return {
+                provide: KeyValueDiffers,
+                useFactory: (parent) => {
+                    // if parent is null, it means that we are in the root injector and we have just overridden
+                    // the default injection mechanism for KeyValueDiffers, in such a case just assume
+                    // `defaultKeyValueDiffersFactory`.
+                    return KeyValueDiffers.create(factories, parent || defaultKeyValueDiffersFactory());
+                },
+                // Dependency technically isn't optional, but we can provide a better error message this way.
+                deps: [[KeyValueDiffers, new SkipSelf(), new Optional()]]
+            };
+        }
+        find(kv) {
+            const factory = this.factories.find(f => f.supports(kv));
+            if (factory) {
+                return factory;
+            }
+            throw new Error(`Cannot find a differ supporting object '${kv}'`);
+        }
+    }
+    /** @nocollapse */
+    KeyValueDiffers.ɵprov = ɵɵdefineInjectable({ token: KeyValueDiffers, providedIn: 'root', factory: defaultKeyValueDiffersFactory });
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Structural diffing for `Object`s and `Map`s.
+     */
+    const keyValDiff = [new DefaultKeyValueDifferFactory()];
+    /**
+     * Structural diffing for `Iterable` types such as `Array`s.
+     */
+    const iterableDiff = [new DefaultIterableDifferFactory()];
+    const defaultIterableDiffers = new IterableDiffers(iterableDiff);
+    const defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
+
     /**
      * @license
      * Copyright Google LLC All Rights Reserved.
@@ -56777,6 +56777,49 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             type: NgModule,
             args: [{ providers: APPLICATION_MODULE_PROVIDERS }]
         }], function () { return [{ type: ApplicationRef }]; }, null); })();
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const _tokenKeyCache = new Map();
+    function tokenKey(token) {
+        let key = _tokenKeyCache.get(token);
+        if (!key) {
+            key = stringify$1(token) + '_' + _tokenKeyCache.size;
+            _tokenKeyCache.set(token, key);
+        }
+        return key;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const InjectorRefTokenKey = tokenKey(Injector);
+    const INJECTORRefTokenKey = tokenKey(INJECTOR$1);
+    const NgModuleRefTokenKey = tokenKey(NgModuleRef);
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const Renderer2TokenKey = tokenKey(Renderer2);
+    const ElementRefTokenKey = tokenKey(ElementRef);
+    const ViewContainerRefTokenKey = tokenKey(ViewContainerRef);
+    const TemplateRefTokenKey = tokenKey(TemplateRef);
+    const ChangeDetectorRefTokenKey = tokenKey(ChangeDetectorRef);
+    const InjectorRefTokenKey$1 = tokenKey(Injector);
+    const INJECTORRefTokenKey$1 = tokenKey(INJECTOR$1);
 
     /**
      * @license
