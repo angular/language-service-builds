@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.8+31.sha-7dccbdd.with-local-changes
+ * @license Angular v13.0.0-next.8+34.sha-94c6dee.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -19947,7 +19947,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.8+31.sha-7dccbdd.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.8+34.sha-94c6dee.with-local-changes');
 
     /**
      * @license
@@ -20578,7 +20578,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('13.0.0-next.8+31.sha-7dccbdd.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+34.sha-94c6dee.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20618,7 +20618,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('13.0.0-next.8+31.sha-7dccbdd.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+34.sha-94c6dee.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20835,7 +20835,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('13.0.0-next.8+31.sha-7dccbdd.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+34.sha-94c6dee.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20877,7 +20877,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('13.0.0-next.8+31.sha-7dccbdd.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+34.sha-94c6dee.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -20956,7 +20956,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('13.0.0-next.8+31.sha-7dccbdd.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+34.sha-94c6dee.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -20993,7 +20993,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('13.0.0-next.8+31.sha-7dccbdd.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+34.sha-94c6dee.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21051,7 +21051,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('13.0.0-next.8+31.sha-7dccbdd.with-local-changes'));
+        definitionMap.set('version', literal('13.0.0-next.8+34.sha-94c6dee.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21083,7 +21083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('13.0.0-next.8+31.sha-7dccbdd.with-local-changes');
+    const VERSION$2 = new Version('13.0.0-next.8+34.sha-94c6dee.with-local-changes');
 
     /**
      * @license
@@ -29669,7 +29669,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Compiles @NgModule annotations to ngModuleDef fields.
      */
     class NgModuleDecoratorHandler {
-        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, factoryTracker, annotateForClosureCompiler, injectableRegistry, perf, localeId) {
+        constructor(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, refEmitter, factoryTracker, annotateForClosureCompiler, injectableRegistry, perf, localeId) {
             this.reflector = reflector;
             this.evaluator = evaluator;
             this.metaReader = metaReader;
@@ -29677,7 +29677,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.scopeRegistry = scopeRegistry;
             this.referencesRegistry = referencesRegistry;
             this.isCore = isCore;
-            this.routeAnalyzer = routeAnalyzer;
             this.refEmitter = refEmitter;
             this.factoryTracker = factoryTracker;
             this.annotateForClosureCompiler = annotateForClosureCompiler;
@@ -29747,16 +29746,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return { diagnostics };
             }
             let importRefs = [];
-            let rawImports = null;
             if (ngModule.has('imports')) {
-                rawImports = ngModule.get('imports');
+                const rawImports = ngModule.get('imports');
                 const importsMeta = this.evaluator.evaluate(rawImports, moduleResolvers);
                 importRefs = this.resolveTypeList(rawImports, importsMeta, name, 'imports');
             }
             let exportRefs = [];
-            let rawExports = null;
             if (ngModule.has('exports')) {
-                rawExports = ngModule.get('exports');
+                const rawExports = ngModule.get('exports');
                 const exportsMeta = this.evaluator.evaluate(rawExports, moduleResolvers);
                 exportRefs = this.resolveTypeList(rawExports, exportsMeta, name, 'exports');
                 this.referencesRegistry.add(node, ...exportRefs);
@@ -29840,9 +29837,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             const injectorImports = [];
             if (ngModule.has('imports')) {
                 injectorImports.push(new WrappedNodeExpr(ngModule.get('imports')));
-            }
-            if (this.routeAnalyzer !== null) {
-                this.routeAnalyzer.add(node.getSourceFile(), name, rawImports, rawExports, rawProviders);
             }
             const injectorMetadata = {
                 name,
@@ -33416,287 +33410,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             realpath: (_b = adapter.realpath) === null || _b === void 0 ? void 0 : _b.bind(adapter),
             trace: (_c = adapter.trace) === null || _c === void 0 ? void 0 : _c.bind(adapter),
         };
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class RouterEntryPointImpl {
-        constructor(filePath, moduleName) {
-            this.filePath = filePath;
-            this.moduleName = moduleName;
-        }
-        get name() {
-            return this.moduleName;
-        }
-        // For debugging purposes.
-        toString() {
-            return `RouterEntryPoint(name: ${this.name}, filePath: ${this.filePath})`;
-        }
-    }
-    class RouterEntryPointManager {
-        constructor(moduleResolver) {
-            this.moduleResolver = moduleResolver;
-            this.map = new Map();
-        }
-        resolveLoadChildrenIdentifier(loadChildrenIdentifier, context) {
-            const [relativeFile, moduleName] = loadChildrenIdentifier.split('#');
-            if (moduleName === undefined) {
-                return null;
-            }
-            const resolvedSf = this.moduleResolver.resolveModule(relativeFile, context.fileName);
-            if (resolvedSf === null) {
-                return null;
-            }
-            return this.fromNgModule(resolvedSf, moduleName);
-        }
-        fromNgModule(sf, moduleName) {
-            const key = entryPointKeyFor(sf.fileName, moduleName);
-            if (!this.map.has(key)) {
-                this.map.set(key, new RouterEntryPointImpl(sf.fileName, moduleName));
-            }
-            return this.map.get(key);
-        }
-    }
-    function entryPointKeyFor(filePath, moduleName) {
-        // Drop the extension to be compatible with how cli calls `listLazyRoutes(entryRoute)`.
-        return `${filePath.replace(/\.tsx?$/i, '')}#${moduleName}`;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const ROUTES_MARKER = '__ngRoutesMarker__';
-    function scanForCandidateTransitiveModules(expr, evaluator) {
-        if (expr === null) {
-            return [];
-        }
-        const candidateModuleKeys = [];
-        const entries = evaluator.evaluate(expr);
-        function recursivelyAddModules(entry) {
-            if (Array.isArray(entry)) {
-                for (const e of entry) {
-                    recursivelyAddModules(e);
-                }
-            }
-            else if (entry instanceof Map) {
-                if (entry.has('ngModule')) {
-                    recursivelyAddModules(entry.get('ngModule'));
-                }
-            }
-            else if ((entry instanceof Reference$1) && hasIdentifier(entry.node)) {
-                const filePath = entry.node.getSourceFile().fileName;
-                const moduleName = entry.node.name.text;
-                candidateModuleKeys.push(entryPointKeyFor(filePath, moduleName));
-            }
-        }
-        recursivelyAddModules(entries);
-        return candidateModuleKeys;
-    }
-    function scanForRouteEntryPoints(ngModule, moduleName, data, entryPointManager, evaluator) {
-        const loadChildrenIdentifiers = [];
-        const from = entryPointManager.fromNgModule(ngModule, moduleName);
-        if (data.providers !== null) {
-            loadChildrenIdentifiers.push(...scanForProviders(data.providers, evaluator));
-        }
-        if (data.imports !== null) {
-            loadChildrenIdentifiers.push(...scanForRouterModuleUsage(data.imports, evaluator));
-        }
-        if (data.exports !== null) {
-            loadChildrenIdentifiers.push(...scanForRouterModuleUsage(data.exports, evaluator));
-        }
-        const routes = [];
-        for (const loadChildren of loadChildrenIdentifiers) {
-            const resolvedTo = entryPointManager.resolveLoadChildrenIdentifier(loadChildren, ngModule);
-            if (resolvedTo !== null) {
-                routes.push({
-                    loadChildren,
-                    from,
-                    resolvedTo,
-                });
-            }
-        }
-        return routes;
-    }
-    function scanForProviders(expr, evaluator) {
-        const loadChildrenIdentifiers = [];
-        const providers = evaluator.evaluate(expr);
-        function recursivelyAddProviders(provider) {
-            if (Array.isArray(provider)) {
-                for (const entry of provider) {
-                    recursivelyAddProviders(entry);
-                }
-            }
-            else if (provider instanceof Map) {
-                if (provider.has('provide') && provider.has('useValue')) {
-                    const provide = provider.get('provide');
-                    const useValue = provider.get('useValue');
-                    if (isRouteToken(provide) && Array.isArray(useValue)) {
-                        loadChildrenIdentifiers.push(...scanForLazyRoutes(useValue));
-                    }
-                }
-            }
-        }
-        recursivelyAddProviders(providers);
-        return loadChildrenIdentifiers;
-    }
-    function scanForRouterModuleUsage(expr, evaluator) {
-        const loadChildrenIdentifiers = [];
-        const imports = evaluator.evaluate(expr, routerModuleFFR);
-        function recursivelyAddRoutes(imp) {
-            if (Array.isArray(imp)) {
-                for (const entry of imp) {
-                    recursivelyAddRoutes(entry);
-                }
-            }
-            else if (imp instanceof Map) {
-                if (imp.has(ROUTES_MARKER) && imp.has('routes')) {
-                    const routes = imp.get('routes');
-                    if (Array.isArray(routes)) {
-                        loadChildrenIdentifiers.push(...scanForLazyRoutes(routes));
-                    }
-                }
-            }
-        }
-        recursivelyAddRoutes(imports);
-        return loadChildrenIdentifiers;
-    }
-    function scanForLazyRoutes(routes) {
-        const loadChildrenIdentifiers = [];
-        function recursivelyScanRoutes(routes) {
-            for (let route of routes) {
-                if (!(route instanceof Map)) {
-                    continue;
-                }
-                if (route.has('loadChildren')) {
-                    const loadChildren = route.get('loadChildren');
-                    if (typeof loadChildren === 'string') {
-                        loadChildrenIdentifiers.push(loadChildren);
-                    }
-                }
-                else if (route.has('children')) {
-                    const children = route.get('children');
-                    if (Array.isArray(children)) {
-                        recursivelyScanRoutes(children);
-                    }
-                }
-            }
-        }
-        recursivelyScanRoutes(routes);
-        return loadChildrenIdentifiers;
-    }
-    /**
-     * A foreign function resolver that converts `RouterModule.forRoot/forChild(X)` to a special object
-     * of the form `{__ngRoutesMarker__: true, routes: X}`.
-     *
-     * These objects are then recognizable inside the larger set of imports/exports.
-     */
-    const routerModuleFFR = function routerModuleFFR(ref, args) {
-        if (!isMethodNodeReference(ref) || !ts$1.isClassDeclaration(ref.node.parent)) {
-            return null;
-        }
-        else if (ref.bestGuessOwningModule === null ||
-            ref.bestGuessOwningModule.specifier !== '@angular/router') {
-            return null;
-        }
-        else if (ref.node.parent.name === undefined || ref.node.parent.name.text !== 'RouterModule') {
-            return null;
-        }
-        else if (!ts$1.isIdentifier(ref.node.name) ||
-            (ref.node.name.text !== 'forRoot' && ref.node.name.text !== 'forChild')) {
-            return null;
-        }
-        const routes = args[0];
-        return ts$1.createObjectLiteral([
-            ts$1.createPropertyAssignment(ROUTES_MARKER, ts$1.createTrue()),
-            ts$1.createPropertyAssignment('routes', routes),
-        ]);
-    };
-    function hasIdentifier(node) {
-        const node_ = node;
-        return (node_.name !== undefined) && ts$1.isIdentifier(node_.name);
-    }
-    function isMethodNodeReference(ref) {
-        return ts$1.isMethodDeclaration(ref.node);
-    }
-    function isRouteToken(ref) {
-        return ref instanceof Reference$1 && ref.bestGuessOwningModule !== null &&
-            ref.bestGuessOwningModule.specifier === '@angular/router' && ref.debugName === 'ROUTES';
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class NgModuleRouteAnalyzer {
-        constructor(moduleResolver, evaluator) {
-            this.evaluator = evaluator;
-            this.modules = new Map();
-            this.entryPointManager = new RouterEntryPointManager(moduleResolver);
-        }
-        add(sourceFile, moduleName, imports, exports, providers) {
-            const key = entryPointKeyFor(sourceFile.fileName, moduleName);
-            if (this.modules.has(key)) {
-                throw new Error(`Double route analyzing for '${key}'.`);
-            }
-            this.modules.set(key, {
-                sourceFile,
-                moduleName,
-                imports,
-                exports,
-                providers,
-            });
-        }
-        listLazyRoutes(entryModuleKey) {
-            if ((entryModuleKey !== undefined) && !this.modules.has(entryModuleKey)) {
-                throw new Error(`Failed to list lazy routes: Unknown module '${entryModuleKey}'.`);
-            }
-            const routes = [];
-            const scannedModuleKeys = new Set();
-            const pendingModuleKeys = entryModuleKey ? [entryModuleKey] : Array.from(this.modules.keys());
-            // When listing lazy routes for a specific entry module, we need to recursively extract
-            // "transitive" routes from imported/exported modules. This is not necessary when listing all
-            // lazy routes, because all analyzed modules will be scanned anyway.
-            const scanRecursively = entryModuleKey !== undefined;
-            while (pendingModuleKeys.length > 0) {
-                const key = pendingModuleKeys.pop();
-                if (scannedModuleKeys.has(key)) {
-                    continue;
-                }
-                else {
-                    scannedModuleKeys.add(key);
-                }
-                const data = this.modules.get(key);
-                const entryPoints = scanForRouteEntryPoints(data.sourceFile, data.moduleName, data, this.entryPointManager, this.evaluator);
-                routes.push(...entryPoints.map(entryPoint => ({
-                    route: entryPoint.loadChildren,
-                    module: entryPoint.from,
-                    referencedModule: entryPoint.resolvedTo,
-                })));
-                if (scanRecursively) {
-                    pendingModuleKeys.push(...[
-                        // Scan the retrieved lazy route entry points.
-                        ...entryPoints.map(({ resolvedTo }) => entryPointKeyFor(resolvedTo.filePath, resolvedTo.moduleName)),
-                        // Scan the current module's imported modules.
-                        ...scanForCandidateTransitiveModules(data.imports, this.evaluator),
-                        // Scan the current module's exported modules.
-                        ...scanForCandidateTransitiveModules(data.exports, this.evaluator),
-                    ].filter(key => this.modules.has(key)));
-                }
-            }
-            return routes;
-        }
     }
 
     /**
@@ -40720,40 +40433,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         /**
-         * List lazy routes detected during analysis.
-         *
-         * This can be called for one specific route, or to retrieve all top-level routes.
-         */
-        listLazyRoutes(entryRoute) {
-            if (entryRoute) {
-                // htts://github.com/angular/angular/blob/50732e156/packages/compiler-cli/src/transformers/compiler_host.ts#L175-L188).
-                //
-                // `@angular/cli` will always call this API with an absolute path, so the resolution step is
-                // not necessary, but keeping it backwards compatible in case someone else is using the API.
-                // Relative entry paths are disallowed.
-                if (entryRoute.startsWith('.')) {
-                    throw new Error(`Failed to list lazy routes: Resolution of relative paths (${entryRoute}) is not supported.`);
-                }
-                // Non-relative entry paths fall into one of the following categories:
-                // - Absolute system paths (e.g. `/foo/bar/my-project/my-module`), which are unaffected by the
-                //   logic below.
-                // - Paths to enternal modules (e.g. `some-lib`).
-                // - Paths mapped to directories in `tsconfig.json` (e.g. `shared/my-module`).
-                //   (See https://www.typescriptlang.org/docs/handbook/module-resolution.html#path-mapping.)
-                //
-                // In all cases above, the `containingFile` argument is ignored, so we can just take the first
-                // of the root files.
-                const containingFile = this.inputProgram.getRootFileNames()[0];
-                const [entryPath, moduleName] = entryRoute.split('#');
-                const resolvedModule = resolveModuleName(entryPath, containingFile, this.options, this.adapter, null);
-                if (resolvedModule) {
-                    entryRoute = entryPointKeyFor(resolvedModule.resolvedFileName, moduleName);
-                }
-            }
-            const compilation = this.ensureAnalyzed();
-            return compilation.routeAnalyzer.listLazyRoutes(entryRoute);
-        }
-        /**
          * Fetch transformers and other information which is necessary for a consumer to `emit` the
          * program with Angular-added definitions.
          */
@@ -41089,7 +40768,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             else {
                 referencesRegistry = new NoopReferencesRegistry();
             }
-            const routeAnalyzer = new NgModuleRouteAnalyzer(this.moduleResolver, evaluator);
             const dtsTransforms = new DtsTransformRegistry();
             const isCore = isAngularCorePackage(this.inputProgram);
             const resourceRegistry = new ResourceRegistry();
@@ -41112,7 +40790,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // before injectable factories (so injectable factories can delegate to them)
                 new PipeDecoratorHandler(reflector, evaluator, metaRegistry, scopeRegistry, injectableRegistry, isCore, this.delegatingPerfRecorder),
                 new InjectableDecoratorHandler(reflector, isCore, this.options.strictInjectionParameters || false, injectableRegistry, this.delegatingPerfRecorder),
-                new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, routeAnalyzer, refEmitter, this.adapter.factoryTracker, this.closureCompilerEnabled, injectableRegistry, this.delegatingPerfRecorder, this.options.i18nInLocale),
+                new NgModuleDecoratorHandler(reflector, evaluator, metaReader, metaRegistry, scopeRegistry, referencesRegistry, isCore, refEmitter, this.adapter.factoryTracker, this.closureCompilerEnabled, injectableRegistry, this.delegatingPerfRecorder, this.options.i18nInLocale),
             ];
             const traitCompiler = new TraitCompiler(handlers, reflector, this.delegatingPerfRecorder, this.incrementalCompilation, this.options.compileNonExportedClasses !== false, compilationMode, dtsTransforms, semanticDepGraphUpdater);
             // Template type-checking may use the `ProgramDriver` to produce new `ts.Program`(s). If this
@@ -41134,7 +40812,6 @@ Either add the @Injectable() decorator to '${provider.node.name
                 scopeRegistry,
                 dtsTransforms,
                 exportReferenceGraph,
-                routeAnalyzer,
                 metaReader,
                 typeCheckScopeRegistry,
                 aliasingHost,
