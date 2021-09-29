@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.8+31.sha-7dccbdd.with-local-changes
+ * @license Angular v13.0.0-next.8+34.sha-94c6dee.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21484,7 +21484,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.8+31.sha-7dccbdd.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.8+34.sha-94c6dee.with-local-changes');
 
     /**
      * @license
@@ -48622,7 +48622,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.8+31.sha-7dccbdd.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.8+34.sha-94c6dee.with-local-changes');
 
     /**
      * @license
@@ -55405,79 +55405,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const result = [];
         parts.forEach((part) => part && result.push(...part));
         return result;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const _SEPARATOR = '#';
-    const FACTORY_CLASS_SUFFIX = 'NgFactory';
-    /**
-     * Configuration for SystemJsNgModuleLoader.
-     * token.
-     *
-     * @publicApi
-     * @deprecated the `string` form of `loadChildren` is deprecated, and `SystemJsNgModuleLoaderConfig`
-     * is part of its implementation. See `LoadChildren` for more details.
-     */
-    class SystemJsNgModuleLoaderConfig {
-    }
-    const DEFAULT_CONFIG = {
-        factoryPathPrefix: '',
-        factoryPathSuffix: '.ngfactory',
-    };
-    /**
-     * NgModuleFactoryLoader that uses SystemJS to load NgModuleFactory
-     * @publicApi
-     * @deprecated the `string` form of `loadChildren` is deprecated, and `SystemJsNgModuleLoader` is
-     * part of its implementation. See `LoadChildren` for more details.
-     */
-    class SystemJsNgModuleLoader {
-        constructor(_compiler, config) {
-            this._compiler = _compiler;
-            this._config = config || DEFAULT_CONFIG;
-        }
-        load(path) {
-            return  this.loadAndCompile(path);
-        }
-        loadAndCompile(path) {
-            let [module, exportName] = path.split(_SEPARATOR);
-            if (exportName === undefined) {
-                exportName = 'default';
-            }
-            return System.import(module)
-                .then((module) => module[exportName])
-                .then((type) => checkNotEmpty(type, module, exportName))
-                .then((type) => this._compiler.compileModuleAsync(type));
-        }
-        loadFactory(path) {
-            let [module, exportName] = path.split(_SEPARATOR);
-            let factoryClassSuffix = FACTORY_CLASS_SUFFIX;
-            if (exportName === undefined) {
-                exportName = 'default';
-                factoryClassSuffix = '';
-            }
-            return System.import(this._config.factoryPathPrefix + module + this._config.factoryPathSuffix)
-                .then((module) => module[exportName + factoryClassSuffix])
-                .then((factory) => checkNotEmpty(factory, module, exportName));
-        }
-    }
-    SystemJsNgModuleLoader.ɵfac = function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(ɵɵinject(Compiler), ɵɵinject(SystemJsNgModuleLoaderConfig, 8)); };
-    SystemJsNgModuleLoader.ɵprov = /*@__PURE__*/ ɵɵdefineInjectable({ token: SystemJsNgModuleLoader, factory: SystemJsNgModuleLoader.ɵfac });
-    (function () { (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SystemJsNgModuleLoader, [{
-            type: Injectable
-        }], function () { return [{ type: Compiler }, { type: SystemJsNgModuleLoaderConfig, decorators: [{
-                    type: Optional
-                }] }]; }, null); })();
-    function checkNotEmpty(value, modulePath, exportName) {
-        if (!value) {
-            throw new Error(`Cannot find '${exportName}' in '${modulePath}'`);
-        }
-        return value;
     }
 
     const SWITCH_CHANGE_DETECTOR_REF_FACTORY__POST_R3__ = injectChangeDetectorRef;
