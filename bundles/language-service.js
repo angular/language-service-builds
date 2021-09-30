@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.7+9.sha-2306a32.with-local-changes
+ * @license Angular v12.2.7+32.sha-cadef4c.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -21610,7 +21610,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.7+9.sha-2306a32.with-local-changes');
+    const VERSION$1 = new Version('12.2.7+32.sha-cadef4c.with-local-changes');
 
     /**
      * @license
@@ -36825,7 +36825,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('12.2.7+9.sha-2306a32.with-local-changes');
+    const VERSION$2 = new Version$1('12.2.7+32.sha-cadef4c.with-local-changes');
 
     /**
      * @license
@@ -40554,7 +40554,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * It is used for i18n extraction, by i18n pipes (DatePipe, I18nPluralPipe, CurrencyPipe,
      * DecimalPipe and PercentPipe) and by ICU expressions.
      *
-     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
+     * See the [i18n guide](guide/i18n-common-locale-id) for more information.
      *
      * @usageNotes
      * ### Example
@@ -40577,7 +40577,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * CurrencyPipe when there is no currency code passed into it. This is only used by
      * CurrencyPipe and has no relation to locale currency. Defaults to USD if not configured.
      *
-     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
+     * See the [i18n guide](guide/i18n-common-locale-id) for more information.
      *
      * <div class="alert is-helpful">
      *
@@ -40615,7 +40615,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use this token at bootstrap to provide the content of your translation file (`xtb`,
      * `xlf` or `xlf2`) when you want to translate your application in another language.
      *
-     * See the [i18n guide](guide/i18n#merge) for more information.
+     * See the [i18n guide](guide/i18n-common-merge) for more information.
      *
      * @usageNotes
      * ### Example
@@ -40640,7 +40640,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Provide this token at bootstrap to set the format of your {@link TRANSLATIONS}: `xtb`,
      * `xlf` or `xlf2`.
      *
-     * See the [i18n guide](guide/i18n#merge) for more information.
+     * See the [i18n guide](guide/i18n-common-merge) for more information.
      *
      * @usageNotes
      * ### Example
@@ -40665,7 +40665,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * - Warning (default): show a warning in the console and/or shell.
      * - Ignore: do nothing.
      *
-     * See the [i18n guide](guide/i18n#missing-translation) for more information.
+     * See the [i18n guide](guide/i18n-common-merge#report-missing-translations) for more information.
      *
      * @usageNotes
      * ### Example
