@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.9+6.sha-74ca3c5.with-local-changes
+ * @license Angular v13.0.0-next.9+10.sha-9eba260.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6525,7 +6525,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.pipeDef = { name: 'ɵpid', moduleName: CORE$1 };
     Identifiers$1.nodeValue = { name: 'ɵnov', moduleName: CORE$1 };
     Identifiers$1.ngContentDef = { name: 'ɵncd', moduleName: CORE$1 };
-    Identifiers$1.unwrapValue = { name: 'ɵunv', moduleName: CORE$1 };
     Identifiers$1.createRendererType2 = { name: 'ɵcrt', moduleName: CORE$1 };
     // type only
     Identifiers$1.RendererType2 = {
@@ -21193,7 +21192,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 type: wrapReference(meta.type),
                 internalType: new WrappedNodeExpr(meta.type),
                 typeArgumentCount: 0,
-                deps: meta.deps && meta.deps.map(convertR3DeclareDependencyMetadata),
+                deps: Array.isArray(meta.deps) ? meta.deps.map(convertR3DeclareDependencyMetadata) :
+                    meta.deps,
                 target: meta.target,
             });
             return this.jitExpression(factoryRes.expression, angularCoreEnv, sourceMapUrl, factoryRes.statements);
@@ -21484,7 +21484,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.9+6.sha-74ca3c5.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.9+10.sha-9eba260.with-local-changes');
 
     /**
      * @license
@@ -36685,7 +36685,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.9+6.sha-74ca3c5.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.9+10.sha-9eba260.with-local-changes');
 
     /**
      * @license
