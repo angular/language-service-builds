@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.9+6.sha-74ca3c5.with-local-changes
+ * @license Angular v13.0.0-next.9+10.sha-9eba260.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -6525,7 +6525,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
     Identifiers$1.pipeDef = { name: 'ɵpid', moduleName: CORE$1 };
     Identifiers$1.nodeValue = { name: 'ɵnov', moduleName: CORE$1 };
     Identifiers$1.ngContentDef = { name: 'ɵncd', moduleName: CORE$1 };
-    Identifiers$1.unwrapValue = { name: 'ɵunv', moduleName: CORE$1 };
     Identifiers$1.createRendererType2 = { name: 'ɵcrt', moduleName: CORE$1 };
     // type only
     Identifiers$1.RendererType2 = {
@@ -21193,7 +21192,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
                 type: wrapReference(meta.type),
                 internalType: new WrappedNodeExpr(meta.type),
                 typeArgumentCount: 0,
-                deps: meta.deps && meta.deps.map(convertR3DeclareDependencyMetadata),
+                deps: Array.isArray(meta.deps) ? meta.deps.map(convertR3DeclareDependencyMetadata) :
+                    meta.deps,
                 target: meta.target,
             });
             return this.jitExpression(factoryRes.expression, angularCoreEnv, sourceMapUrl, factoryRes.statements);
@@ -21484,7 +21484,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'typescript', 'path'], func
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('13.0.0-next.9+6.sha-74ca3c5.with-local-changes');
+    const VERSION$1 = new Version('13.0.0-next.9+10.sha-9eba260.with-local-changes');
 
     /**
      * @license
@@ -41216,47 +41216,6 @@ Please check that 1) the type for the parameter at index ${index} is correct and
             }
         }
     }
-    /**
-     * Indicates that the result of a {@link Pipe} transformation has changed even though the
-     * reference has not changed.
-     *
-     * Wrapped values are unwrapped automatically during the change detection, and the unwrapped value
-     * is stored.
-     *
-     * Example:
-     *
-     * ```
-     * if (this._latestValue === this._latestReturnedValue) {
-     *    return this._latestReturnedValue;
-     *  } else {
-     *    this._latestReturnedValue = this._latestValue;
-     *    return WrappedValue.wrap(this._latestValue); // this will force update
-     *  }
-     * ```
-     *
-     * @publicApi
-     * @deprecated from v10 stop using. (No replacement, deemed unnecessary.)
-     */
-    class WrappedValue {
-        constructor(value) {
-            this.wrapped = value;
-        }
-        /** Creates a wrapped value. */
-        static wrap(value) {
-            return new WrappedValue(value);
-        }
-        /**
-         * Returns the underlying value of a wrapped value.
-         * Returns the given `value` when it is not wrapped.
-         **/
-        static unwrap(value) {
-            return WrappedValue.isWrapped(value) ? value.wrapped : value;
-        }
-        /** Returns true if `value` is a wrapped value. */
-        static isWrapped(value) {
-            return value instanceof WrappedValue;
-        }
-    }
     function isListLikeIterable(obj) {
         if (!isJsObject(obj))
             return false;
@@ -48622,7 +48581,7 @@ Please check that 1) the type for the parameter at index ${index} is correct and
     /**
      * @publicApi
      */
-    const VERSION$2 = new Version$1('13.0.0-next.9+6.sha-74ca3c5.with-local-changes');
+    const VERSION$2 = new Version$1('13.0.0-next.9+10.sha-9eba260.with-local-changes');
 
     /**
      * @license
@@ -49809,9 +49768,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const adjustedIndex = index + HEADER_OFFSET;
         const lView = getLView();
         const pipeInstance = load(lView, adjustedIndex);
-        return unwrapValue(lView, isPure(lView, adjustedIndex) ?
+        return isPure(lView, adjustedIndex) ?
             pureFunction1Internal(lView, getBindingRoot(), slotOffset, pipeInstance.transform, v1, pipeInstance) :
-            pipeInstance.transform(v1));
+            pipeInstance.transform(v1);
     }
     /**
      * Invokes a pipe with 2 arguments.
@@ -49830,9 +49789,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const adjustedIndex = index + HEADER_OFFSET;
         const lView = getLView();
         const pipeInstance = load(lView, adjustedIndex);
-        return unwrapValue(lView, isPure(lView, adjustedIndex) ?
+        return isPure(lView, adjustedIndex) ?
             pureFunction2Internal(lView, getBindingRoot(), slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
-            pipeInstance.transform(v1, v2));
+            pipeInstance.transform(v1, v2);
     }
     /**
      * Invokes a pipe with 3 arguments.
@@ -49852,8 +49811,9 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const adjustedIndex = index + HEADER_OFFSET;
         const lView = getLView();
         const pipeInstance = load(lView, adjustedIndex);
-        return unwrapValue(lView, isPure(lView, adjustedIndex) ? pureFunction3Internal(lView, getBindingRoot(), slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
-            pipeInstance.transform(v1, v2, v3));
+        return isPure(lView, adjustedIndex) ?
+            pureFunction3Internal(lView, getBindingRoot(), slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
+            pipeInstance.transform(v1, v2, v3);
     }
     /**
      * Invokes a pipe with 4 arguments.
@@ -49874,8 +49834,8 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const adjustedIndex = index + HEADER_OFFSET;
         const lView = getLView();
         const pipeInstance = load(lView, adjustedIndex);
-        return unwrapValue(lView, isPure(lView, adjustedIndex) ? pureFunction4Internal(lView, getBindingRoot(), slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
-            pipeInstance.transform(v1, v2, v3, v4));
+        return isPure(lView, adjustedIndex) ? pureFunction4Internal(lView, getBindingRoot(), slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
+            pipeInstance.transform(v1, v2, v3, v4);
     }
     /**
      * Invokes a pipe with variable number of arguments.
@@ -49893,29 +49853,12 @@ Please check that 1) the type for the parameter at index ${index} is correct and
         const adjustedIndex = index + HEADER_OFFSET;
         const lView = getLView();
         const pipeInstance = load(lView, adjustedIndex);
-        return unwrapValue(lView, isPure(lView, adjustedIndex) ?
+        return isPure(lView, adjustedIndex) ?
             pureFunctionVInternal(lView, getBindingRoot(), slotOffset, pipeInstance.transform, values, pipeInstance) :
-            pipeInstance.transform.apply(pipeInstance, values));
+            pipeInstance.transform.apply(pipeInstance, values);
     }
     function isPure(lView, index) {
         return lView[TVIEW].data[index].pure;
-    }
-    /**
-     * Unwrap the output of a pipe transformation.
-     * In order to trick change detection into considering that the new value is always different from
-     * the old one, the old value is overwritten by NO_CHANGE.
-     *
-     * @param newValue the pipe transformation output.
-     */
-    function unwrapValue(lView, newValue) {
-        if (WrappedValue.isWrapped(newValue)) {
-            newValue = WrappedValue.unwrap(newValue);
-            // The NO_CHANGE value needs to be written at the index where the impacted binding value is
-            // stored
-            const bindingToInvalidateIdx = getBindingIndex();
-            lView[bindingToInvalidateIdx] = NO_CHANGE;
-        }
-        return newValue;
     }
 
     /*! *****************************************************************************
