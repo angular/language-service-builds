@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.11+14.sha-c14085e.with-local-changes
+ * @license Angular v13.0.0-next.11+16.sha-7acf3be.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20064,7 +20064,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0-next.11+14.sha-c14085e.with-local-changes');
+    new Version('13.0.0-next.11+16.sha-7acf3be.with-local-changes');
 
     /**
      * @license
@@ -20693,7 +20693,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.0.0-next.11+14.sha-c14085e.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.11+16.sha-7acf3be.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20733,7 +20733,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.0.0-next.11+14.sha-c14085e.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.11+16.sha-7acf3be.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20950,7 +20950,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.0.0-next.11+14.sha-c14085e.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.11+16.sha-7acf3be.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20992,7 +20992,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.0.0-next.11+14.sha-c14085e.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.11+16.sha-7acf3be.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21071,7 +21071,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.0.0-next.11+14.sha-c14085e.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.11+16.sha-7acf3be.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21108,7 +21108,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.0.0-next.11+14.sha-c14085e.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.11+16.sha-7acf3be.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21166,7 +21166,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.0.0-next.11+14.sha-c14085e.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.11+16.sha-7acf3be.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21198,7 +21198,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0-next.11+14.sha-c14085e.with-local-changes');
+    new Version('13.0.0-next.11+16.sha-7acf3be.with-local-changes');
 
     /**
      * @license
@@ -41799,6 +41799,22 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         return { templateUrl, span };
     }
+    function isBoundEventWithSyntheticHandler(event) {
+        // An event binding with no value (e.g. `(event|)`) parses to a `BoundEvent` with a
+        // `LiteralPrimitive` handler with value `'ERROR'`, as opposed to a property binding with no
+        // value which has an `EmptyExpr` as its value. This is a synthetic node created by the binding
+        // parser, and is not suitable to use for Language Service analysis. Skip it.
+        //
+        // TODO(alxhub): modify the parser to generate an `EmptyExpr` instead.
+        let handler = event.handler;
+        if (handler instanceof ASTWithSource) {
+            handler = handler.ast;
+        }
+        if (handler instanceof LiteralPrimitive && handler.value === 'ERROR') {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * @license
@@ -42222,6 +42238,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         return table;
     }
+    function buildSnippet(insertSnippet, text) {
+        return insertSnippet ? `${text}="$1"` : undefined;
+    }
     /**
      * Given an `AttributeCompletion`, add any available completions to a `ts.CompletionEntry` array of
      * results.
@@ -42233,8 +42252,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * is generated. Note that this completion does not have the `[]` property binding sugar as its
      * implicitly present in a property binding context (we're already completing within an `[attr|]`
      * expression).
+     *
+     * If the `insertSnippet` is `true`, the completion entries should includes the property or event
+     * binding sugar in some case. For Example `<div (my¦) />`, the `replacementSpan` is `(my)`, and the
+     * `insertText` is `(myOutput)="$0"`.
      */
-    function addAttributeCompletionEntries(entries, completion, isAttributeContext, isElementContext, replacementSpan) {
+    function addAttributeCompletionEntries(entries, completion, isAttributeContext, isElementContext, replacementSpan, insertSnippet) {
         switch (completion.kind) {
             case AttributeCompletionKind.DirectiveAttribute: {
                 entries.push({
@@ -42253,17 +42276,21 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 entries.push({
                     kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.DIRECTIVE),
                     name: prefix + completion.attribute,
+                    insertText: buildSnippet(insertSnippet, prefix + completion.attribute),
+                    isSnippet: insertSnippet,
                     sortText: prefix + completion.attribute,
                     replacementSpan,
                 });
                 break;
             }
             case AttributeCompletionKind.DirectiveInput: {
-                if (isAttributeContext) {
+                if (isAttributeContext || insertSnippet) {
                     // Offer a completion of a property binding.
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PROPERTY),
                         name: `[${completion.propertyName}]`,
+                        insertText: buildSnippet(insertSnippet, `[${completion.propertyName}]`),
+                        isSnippet: insertSnippet,
                         sortText: completion.propertyName,
                         replacementSpan,
                     });
@@ -42272,6 +42299,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                         entries.push({
                             kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PROPERTY),
                             name: `[(${completion.propertyName})]`,
+                            insertText: buildSnippet(insertSnippet, `[(${completion.propertyName})]`),
+                            isSnippet: insertSnippet,
                             // This completion should sort after the property binding.
                             sortText: completion.propertyName + '_1',
                             replacementSpan,
@@ -42281,6 +42310,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.ATTRIBUTE),
                         name: completion.propertyName,
+                        insertText: buildSnippet(insertSnippet, completion.propertyName),
+                        isSnippet: insertSnippet,
                         // This completion should sort after both property binding options (one-way and two-way).
                         sortText: completion.propertyName + '_2',
                         replacementSpan,
@@ -42290,6 +42321,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PROPERTY),
                         name: completion.propertyName,
+                        insertText: buildSnippet(insertSnippet, completion.propertyName),
+                        isSnippet: insertSnippet,
                         sortText: completion.propertyName,
                         replacementSpan,
                     });
@@ -42297,10 +42330,12 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 break;
             }
             case AttributeCompletionKind.DirectiveOutput: {
-                if (isAttributeContext) {
+                if (isAttributeContext || insertSnippet) {
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.EVENT),
                         name: `(${completion.eventName})`,
+                        insertText: buildSnippet(insertSnippet, `(${completion.eventName})`),
+                        isSnippet: insertSnippet,
                         sortText: completion.eventName,
                         replacementSpan,
                     });
@@ -42309,6 +42344,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.EVENT),
                         name: completion.eventName,
+                        insertText: buildSnippet(insertSnippet, completion.eventName),
+                        isSnippet: insertSnippet,
                         sortText: completion.eventName,
                         replacementSpan,
                     });
@@ -42316,11 +42353,13 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 break;
             }
             case AttributeCompletionKind.DomAttribute: {
-                if (isAttributeContext && completion.isAlsoProperty) {
+                if ((isAttributeContext || insertSnippet) && completion.isAlsoProperty) {
                     // Offer a completion of a property binding to the DOM property.
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PROPERTY),
                         name: `[${completion.attribute}]`,
+                        insertText: buildSnippet(insertSnippet, `[${completion.attribute}]`),
+                        isSnippet: insertSnippet,
                         // In the case of DOM attributes, the property binding should sort after the attribute
                         // binding.
                         sortText: completion.attribute + '_1',
@@ -42334,6 +42373,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     entries.push({
                         kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.PROPERTY),
                         name: completion.property,
+                        insertText: buildSnippet(insertSnippet, completion.property),
+                        isSnippet: insertSnippet,
                         sortText: completion.property,
                         replacementSpan,
                     });
@@ -42344,6 +42385,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 entries.push({
                     kind: unsafeCastDisplayInfoKindToScriptElementKind(DisplayInfoKind.EVENT),
                     name: `(${completion.eventName})`,
+                    insertText: buildSnippet(insertSnippet, `(${completion.eventName})`),
+                    isSnippet: insertSnippet,
                     sortText: completion.eventName,
                     replacementSpan,
                 });
@@ -42663,21 +42706,10 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             visitor.visit(attribute.value, this.path);
         }
         visitBoundEvent(event) {
-            // An event binding with no value (e.g. `(event|)`) parses to a `BoundEvent` with a
-            // `LiteralPrimitive` handler with value `'ERROR'`, as opposed to a property binding with no
-            // value which has an `EmptyExpr` as its value. This is a synthetic node created by the binding
-            // parser, and is not suitable to use for Language Service analysis. Skip it.
-            //
-            // TODO(alxhub): modify the parser to generate an `EmptyExpr` instead.
-            let handler = event.handler;
-            if (handler instanceof ASTWithSource) {
-                handler = handler.ast;
+            if (!isBoundEventWithSyntheticHandler(event)) {
+                const visitor = new ExpressionVisitor(this.position);
+                visitor.visit(event.handler, this.path);
             }
-            if (handler instanceof LiteralPrimitive && handler.value === 'ERROR') {
-                return;
-            }
-            const visitor = new ExpressionVisitor(this.position);
-            visitor.visit(event.handler, this.path);
         }
         visitText(text) {
             // Text has no template nodes or expression nodes.
@@ -42797,7 +42829,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return this.getElementTagCompletion();
             }
             else if (this.isElementAttributeCompletion()) {
-                return this.getElementAttributeCompletions();
+                return this.getElementAttributeCompletions(options);
             }
             else if (this.isPipeCompletion()) {
                 return this.getPipeCompletions();
@@ -43194,7 +43226,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 (this.node instanceof Element$1 || this.node instanceof BoundAttribute ||
                     this.node instanceof TextAttribute || this.node instanceof BoundEvent);
         }
-        getElementAttributeCompletions() {
+        getElementAttributeCompletions(options) {
             let element;
             if (this.node instanceof Element$1) {
                 element = this.node;
@@ -43211,6 +43243,42 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 this.node instanceof TextAttribute) &&
                 this.node.keySpan !== undefined) {
                 replacementSpan = makeReplacementSpanFromParseSourceSpan(this.node.keySpan);
+            }
+            let insertSnippet;
+            if (options?.includeCompletionsWithSnippetText && options.includeCompletionsWithInsertText) {
+                if (this.node instanceof BoundEvent && isBoundEventWithSyntheticHandler(this.node)) {
+                    replacementSpan = makeReplacementSpanFromParseSourceSpan(this.node.sourceSpan);
+                    insertSnippet = true;
+                }
+                const isBoundAttributeValueEmpty = this.node instanceof BoundAttribute &&
+                    (this.node.valueSpan === undefined ||
+                        (this.node.value instanceof ASTWithSource && this.node.value.ast instanceof EmptyExpr));
+                if (isBoundAttributeValueEmpty) {
+                    replacementSpan = makeReplacementSpanFromParseSourceSpan(this.node.sourceSpan);
+                    insertSnippet = true;
+                }
+                if (this.node instanceof TextAttribute && this.node.keySpan !== undefined) {
+                    // The `sourceSpan` only includes `ngFor` and the `valueSpan` is always empty even if there
+                    // is something there because we split this up into the desugared AST, `ngFor ngForOf=""`.
+                    const nodeStart = this.node.keySpan.start.getContext(1, 1);
+                    if (nodeStart?.before[0] === '*') {
+                        const nodeEnd = this.node.keySpan.end.getContext(1, 1);
+                        if (nodeEnd?.after[0] !== '=') {
+                            // *ngFor -> *ngFor="¦"
+                            insertSnippet = true;
+                        }
+                    }
+                    else {
+                        if (this.node.value === '') {
+                            replacementSpan = makeReplacementSpanFromParseSourceSpan(this.node.sourceSpan);
+                            insertSnippet = true;
+                        }
+                    }
+                }
+                if (this.node instanceof Element$1) {
+                    // <div ¦ />
+                    insertSnippet = true;
+                }
             }
             const attrTable = buildAttributeCompletionTable(this.component, element, this.compiler.getTemplateTypeChecker());
             let entries = [];
@@ -43255,7 +43323,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 const isAttributeContext = (this.node instanceof Element$1 || this.node instanceof TextAttribute);
                 // Is the completion for an element (not an <ng-template>)?
                 const isElementContext = this.node instanceof Element$1 || this.nodeParent instanceof Element$1;
-                addAttributeCompletionEntries(entries, completion, isAttributeContext, isElementContext, replacementSpan);
+                addAttributeCompletionEntries(entries, completion, isAttributeContext, isElementContext, replacementSpan, insertSnippet);
             }
             return {
                 entries,
